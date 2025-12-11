@@ -61,18 +61,41 @@ class _AboutScreenState extends State<AboutScreen> {
                   const Icon(Icons.note_rounded, size: 80, color: Colors.blue),
                   const SizedBox(height: 16),
                   const Text(
-                    'Sinan Note',
+                    'Sinan Note | سنان نوت',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     _version,
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    ),
+                    child: const Text(
+                      '🏪 نسخة رسمية - Google Play',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   const Text(
-                    'تطبيق ملاحظات ذكي واحترافي',
+                    'رفيقك الحاد والموثوق للتدوين',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Your sharp and reliable note-taking companion',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   if (_deviceInfo.isNotEmpty) ...[const SizedBox(height: 16),
                     Container(
@@ -97,6 +120,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
             // Links Section
             _buildSection('الروابط المهمة', [
+              _buildLink('صفحة التطبيق على Google Play', 'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note'),
               _buildLink('سياسة الخصوصية', 'https://apexflow.dev/privacy'),
               _buildLink('شروط الخدمة', 'https://apexflow.dev/terms'),
               _buildLink('التراخيص', null, onTap: _showLicenses),
@@ -106,12 +130,16 @@ class _AboutScreenState extends State<AboutScreen> {
             // Legal Section
             _buildSection('المعلومات القانونية', [
               _buildLegalText(
+                'حقوق النشر',
+                '© 2025 Apex Flow Group. جميع الحقوق محفوظة.\nالاستخدام الشخصي مسموح. الاستخدام التجاري يتطلب إذناً.',
+              ),
+              _buildLegalText(
                 'إخلاء المسؤولية',
                 'هذا التطبيق يُقدم "كما هو" بدون أي ضمانات. Apex Flow Group غير مسؤولة عن أي خسائر أو أضرار ناجمة عن استخدام التطبيق.',
               ),
               _buildLegalText(
-                'حقوق النشر',
-                '© 2025 Apex Flow Group. جميع الحقوق محفوظة.',
+                'النسخة الرسمية',
+                'هذه النسخة الرسمية المعتمدة من Sinan Note المتوفرة على متجر Google Play. احذر من النسخ المقلدة أو غير الرسمية.',
               ),
             ]),
             const SizedBox(height: 24),
@@ -125,32 +153,31 @@ class _AboutScreenState extends State<AboutScreen> {
             ]),
             const SizedBox(height: 24),
 
-            // Flavor Info
-            if (!FlavorConfig.hasTransferFeature)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info, color: Colors.blue, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'ميزة المشاركة عبر WiFi متاحة فقط في نسخة F-Droid',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[700],
-                          height: 1.4,
-                        ),
+            // Store Info
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.verified, color: Colors.green, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green[700],
+                        height: 1.4,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
             const SizedBox(height: 32),
 
             // Footer

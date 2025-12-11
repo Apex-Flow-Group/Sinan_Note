@@ -5,10 +5,14 @@ const String flavorString = String.fromEnvironment('FLAVOR', defaultValue: 'fDro
 enum Flavor { googlePlay, fDroid }
 
 class FlavorConfig {
-  static final Flavor _flavor = _initFlavor();
+  static Flavor _flavor = _initFlavor();
 
   static Flavor _initFlavor() {
     return flavorString == 'googlePlay' ? Flavor.googlePlay : Flavor.fDroid;
+  }
+
+  static void overrideFlavor(Flavor flavor) {
+    _flavor = flavor;
   }
 
   static Flavor get flavor => _flavor;

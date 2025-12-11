@@ -10,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:async';
 import 'screens/cinematic_intro_screen.dart';
 import 'screens/splash_screen.dart';
@@ -35,6 +36,12 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🕵️ الكشف الذكي عن النسخة بناءً على اسم الحزمة
+  final packageInfo = await PackageInfo.fromPlatform();
+  if (packageInfo.packageName == 'com.apexflow.app.sinan') {
+    FlavorConfig.overrideFlavor(Flavor.googlePlay);
+  }
 
   // تهيئة محرك التشخيص الأعمى مرة واحدة فقط
   final appDir = await getApplicationDocumentsDirectory();
