@@ -120,7 +120,8 @@ class _AboutScreenState extends State<AboutScreen> {
 
             // Links Section
             _buildSection('الروابط المهمة', [
-              _buildLink('صفحة التطبيق على Google Play', 'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note'),
+              if (FlavorConfig.isGooglePlay)
+                _buildLink('صفحة التطبيق على Google Play', 'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note'),
               _buildLink('سياسة الخصوصية', 'https://apexflow.dev/privacy'),
               _buildLink('شروط الخدمة', 'https://apexflow.dev/terms'),
               _buildLink('التراخيص', null, onTap: _showLicenses),
@@ -153,31 +154,57 @@ class _AboutScreenState extends State<AboutScreen> {
             ]),
             const SizedBox(height: 24),
 
-            // Store Info
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.verified, color: Colors.green, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.green[700],
-                        height: 1.4,
+            // Store Info - Dynamic based on flavor
+            if (FlavorConfig.isGooglePlay)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.verified, color: Colors.green, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green[700],
+                          height: 1.4,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info, color: Colors.blue, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'نسخة F-Droid - مفتوحة المصدر\nميزة المشاركة عبر WiFi متاحة',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
             const SizedBox(height: 32),
 
             // Footer
