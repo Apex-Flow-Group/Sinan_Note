@@ -1,0 +1,1053 @@
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appName => 'Sinan Note';
+
+  @override
+  String get newNote => 'New Note';
+
+  @override
+  String get editNote => 'Edit Note';
+
+  @override
+  String get untitled => 'Untitled';
+
+  @override
+  String get title => 'Title';
+
+  @override
+  String get writeNote => 'Write your note here...';
+
+  @override
+  String get deleteNote => 'Delete Note';
+
+  @override
+  String get deleteConfirm => 'Are you sure you want to delete this note?';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get movedToTrash => 'Note moved to trash';
+
+  @override
+  String get textCopied => 'Text copied';
+
+  @override
+  String get wordCount => 'Words';
+
+  @override
+  String get charCount => 'Characters';
+
+  @override
+  String get myNotes => 'My Notes';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get archive => 'Archive';
+
+  @override
+  String get trash => 'Trash';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get cloudUpload => 'Upload to Cloud';
+
+  @override
+  String get backupSoon => 'Backup will be available soon';
+
+  @override
+  String get noNotes => 'No notes';
+
+  @override
+  String get searchNotes => 'Search...';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get copyCreated => 'Copy created';
+
+  @override
+  String get movedToArchive => 'Note moved to archive';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get arabic => 'Arabic';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get system => 'System';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get fontSize => 'Font Size';
+
+  @override
+  String get exportBackup => 'Export Backup';
+
+  @override
+  String get exportBackupDesc => 'Save notes as JSON file';
+
+  @override
+  String get importBackup => 'Import Backup';
+
+  @override
+  String get importBackupDesc => 'Restore notes from JSON file';
+
+  @override
+  String get shareApp => 'Share App';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get appDescription => 'Smart and Professional Notes App';
+
+  @override
+  String get allRightsReserved => '© 2025 All rights reserved.';
+
+  @override
+  String get swipeGestures => 'Swipe Gestures';
+
+  @override
+  String get swipeGesturesDesc => 'Swipe to perform actions';
+
+  @override
+  String get swipeRight => 'Swipe Right';
+
+  @override
+  String get swipeLeft => 'Swipe Left';
+
+  @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String get actionArchive => 'Archive';
+
+  @override
+  String get actionShare => 'Share';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get deleteNoteTitle => 'Delete Note';
+
+  @override
+  String get deleteNoteMessage => 'Do you want to delete';
+
+  @override
+  String get simpleNote => 'Simple Note';
+
+  @override
+  String get simpleNoteDesc => 'Quick text without formatting';
+
+  @override
+  String get reminder => 'Reminder';
+
+  @override
+  String get reminderDesc => 'Task with notification';
+
+  @override
+  String get proEditor => 'Pro Editor';
+
+  @override
+  String get proEditorDesc => 'Code highlighting and formatting';
+
+  @override
+  String get locked => 'Locked';
+
+  @override
+  String get lockedNote => 'Locked Note';
+
+  @override
+  String get enterPassword => 'Enter password';
+
+  @override
+  String get wrongPassword => 'Wrong password';
+
+  @override
+  String get decryptionFailed => 'Decryption failed';
+
+  @override
+  String get lockNote => 'Lock Note';
+
+  @override
+  String get unlockNote => 'Unlock Note';
+
+  @override
+  String get unlockNoteConfirmation => 'Do you want to unlock this note and move it to regular notes?';
+
+  @override
+  String get enterPasswordHint => 'Enter password (4+ characters)';
+
+  @override
+  String get noteLocked => 'Note locked';
+
+  @override
+  String get noteUnlocked => 'Unlocked';
+
+  @override
+  String get passwordTooShort => 'Password too short';
+
+  @override
+  String get renameNote => 'Rename Note';
+
+  @override
+  String get enterCustomTitle => 'Enter custom title';
+
+  @override
+  String get automatic => 'Automatic';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get addReminder => 'Add Reminder';
+
+  @override
+  String get reminderAdded => 'Reminder added';
+
+  @override
+  String get saveNoteFirst => 'Save note first';
+
+  @override
+  String get chooseColor => 'Choose Color';
+
+  @override
+  String get encryptedContent => '🔒 Encrypted content';
+
+  @override
+  String get startWriting => 'Start writing...';
+
+  @override
+  String get noteCopy => 'Copy';
+
+  @override
+  String get importedNotes => 'Imported';
+
+  @override
+  String get notesSuccessfully => 'notes successfully!';
+
+  @override
+  String get noNotesToExport => 'No notes to export';
+
+  @override
+  String get allNotesEmpty => 'All notes are empty';
+
+  @override
+  String get noFileSelected => 'No file selected';
+
+  @override
+  String get fileEmpty => 'File is empty';
+
+  @override
+  String get noNotesInFile => 'No notes in file';
+
+  @override
+  String get allNotesInFileEmpty => 'All notes in file are empty';
+
+  @override
+  String get readFileFailed => 'Failed to read file';
+
+  @override
+  String get shareFileFailed => 'Failed to share file';
+
+  @override
+  String get movedTo => 'Moved';
+
+  @override
+  String get toTrash => 'to trash';
+
+  @override
+  String get toArchive => 'to archive';
+
+  @override
+  String get sum => 'Sum';
+
+  @override
+  String get insert => 'Insert';
+
+  @override
+  String get autoSaved => 'Auto saved';
+
+  @override
+  String get newNoteTitle => 'New Note';
+
+  @override
+  String get savedToDownloads => 'Saved in Downloads folder';
+
+  @override
+  String get warning => 'Warning!';
+
+  @override
+  String get replaceAllNotes => 'All current notes will be replaced. Are you sure?';
+
+  @override
+  String get replace => 'Replace';
+
+  @override
+  String get restoredSuccessfully => 'Restored successfully';
+
+  @override
+  String get importedSuccessfully => 'notes imported successfully!';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get noteRestored => 'Note restored';
+
+  @override
+  String get notesRestored => 'Notes restored';
+
+  @override
+  String get permanentDelete => 'Permanent Delete';
+
+  @override
+  String get confirmPermanentDelete => 'Do you want to permanently delete this note? This action cannot be undone.';
+
+  @override
+  String get confirmPermanentDeleteMultiple => 'Do you want to permanently delete';
+
+  @override
+  String get notesQuestion => 'notes?';
+
+  @override
+  String get noteDeleted => 'Note permanently deleted';
+
+  @override
+  String get notesDeleted => 'Notes permanently deleted';
+
+  @override
+  String get confirmDeleteAll => 'Do you want to permanently delete all notes?';
+
+  @override
+  String get emptyTrash => 'Trash is empty';
+
+  @override
+  String get selected => 'selected';
+
+  @override
+  String get backupSaved => 'Saved';
+
+  @override
+  String get notesIn => 'notes in:';
+
+  @override
+  String get backupFailed => 'Backup failed:';
+
+  @override
+  String get shareFailed => 'Share failed:';
+
+  @override
+  String get comingSoon => 'This feature is coming in the next update';
+
+  @override
+  String get soon => 'Soon';
+
+  @override
+  String get signInSuccess => 'Signed in successfully';
+
+  @override
+  String get signInFailed => 'Sign in failed:';
+
+  @override
+  String get syncSuccess => 'Synced successfully';
+
+  @override
+  String get syncFailed => 'Sync failed:';
+
+  @override
+  String get toHome => 'to home';
+
+  @override
+  String get unarchive => 'Unarchive';
+
+  @override
+  String get noArchivedNotes => 'No archived notes';
+
+  @override
+  String get fillAllFields => 'Please fill all fields';
+
+  @override
+  String get cameraBlocked => 'Camera blocked';
+
+  @override
+  String get copiedOldVersion => 'Copied old version text';
+
+  @override
+  String get textCopiedToClipboard => 'Text copied to clipboard';
+
+  @override
+  String get approximateSum => 'Approximate Sum:';
+
+  @override
+  String get experimental => 'Experimental';
+
+  @override
+  String get noNumbersFound => 'No numbers found';
+
+  @override
+  String get calculated => 'Calculated';
+
+  @override
+  String get noValidExpression => 'No valid math expression found';
+
+  @override
+  String get invalidCode => 'Invalid code';
+
+  @override
+  String get saveAsFile => 'Save as File';
+
+  @override
+  String get savedSuccessfully => 'Saved successfully';
+
+  @override
+  String get saveFailed => 'Save failed';
+
+  @override
+  String get info => 'Info';
+
+  @override
+  String get noteHistory => 'Note History';
+
+  @override
+  String get noHistory => 'No history';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get deleteFailed => 'Delete failed';
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String get remindersOnly => 'Reminders Only';
+
+  @override
+  String get byColor => 'By Color';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get thisWeek => 'This Week';
+
+  @override
+  String get sortAZ => 'Sort A-Z';
+
+  @override
+  String get clearFilter => 'Clear Filter';
+
+  @override
+  String get protectedContent => 'Protected Content';
+
+  @override
+  String get created => 'Created';
+
+  @override
+  String get viewNote => 'View Note';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get reminders => 'Reminders';
+
+  @override
+  String get professional => 'Professional';
+
+  @override
+  String get upcoming => 'Upcoming';
+
+  @override
+  String get scheduled => 'Scheduled';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get noUpcomingReminders => 'No upcoming reminders';
+
+  @override
+  String get noScheduledReminders => 'No scheduled reminders';
+
+  @override
+  String get noExpiredReminders => 'No expired reminders';
+
+  @override
+  String get noProfessionalNotes => 'No professional notes';
+
+  @override
+  String get noteSaved => 'Saved';
+
+  @override
+  String get secureVault => 'Secure Vault';
+
+  @override
+  String get importFromInside => 'Import from Inside';
+
+  @override
+  String get sessionProtection => 'Session Protection';
+
+  @override
+  String get authenticationFailed => 'Authentication Failed';
+
+  @override
+  String get noUnlockedNotes => 'No unlocked notes available';
+
+  @override
+  String get importNotes => 'Import Notes';
+
+  @override
+  String get lockNotes => 'Lock Note(s)';
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get chooseTextColor => 'Choose Text Color';
+
+  @override
+  String get formattingHint => 'Formatting Hint';
+
+  @override
+  String get formattingHintMessage => 'Styles like Bold and Italic are shown as symbols here. They will be rendered beautifully when you save and view the note.';
+
+  @override
+  String get dontShowAgain => 'Don\'t show this again';
+
+  @override
+  String get gotIt => 'Got it';
+
+  @override
+  String get output => 'Output';
+
+  @override
+  String get fileMayContainErrors => 'File may contain errors or is incorrect';
+
+  @override
+  String get saveAnyway => 'Save Anyway';
+
+  @override
+  String get saveAsMarkdown => 'Save as Markdown';
+
+  @override
+  String get detected => 'Detected: ';
+
+  @override
+  String get date => 'Date: ';
+
+  @override
+  String get protectedNote => 'Protected Note';
+
+  @override
+  String get verifyingIdentity => 'Verifying Identity...';
+
+  @override
+  String get transferSuccess => 'Transfer Successful!';
+
+  @override
+  String get pleaseEnterIP => 'Please enter IP address';
+
+  @override
+  String get connectToDevice => 'Connect to Device';
+
+  @override
+  String get requestingCameraPermission => 'Requesting camera permission...';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get connect => 'Connect';
+
+  @override
+  String get sendNotes => 'Send Notes';
+
+  @override
+  String get unlockApp => 'Unlock App';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get syncNow => 'Sync Now';
+
+  @override
+  String get noHistoryYet => 'No history yet';
+
+  @override
+  String get googleDrive => 'Google Drive';
+
+  @override
+  String get importedFile => 'Imported File';
+
+  @override
+  String get simpleNotes => 'Simple Notes';
+
+  @override
+  String get professionalNotes => 'Professional Notes';
+
+  @override
+  String get reminderNotes => 'Reminder Notes';
+
+  @override
+  String get checklists => 'Checklists';
+
+  @override
+  String get pinnedOnly => 'Pinned Only';
+
+  @override
+  String get decryptingVault => 'Decrypting Vault...';
+
+  @override
+  String get noLockedNotes => 'No locked notes';
+
+  @override
+  String get import => 'Import';
+
+  @override
+  String lockNotesCount(int count) {
+    return 'Lock $count Note(s)';
+  }
+
+  @override
+  String get sortByDate => 'Sort by Date';
+
+  @override
+  String get sortByTitle => 'Sort by Title';
+
+  @override
+  String get noResults => 'No results';
+
+  @override
+  String get poweredBy => 'Powered by';
+
+  @override
+  String get companyName => 'Apex Flow Group';
+
+  @override
+  String get copyrightNotice => '© 2025 Apex Flow Group';
+
+  @override
+  String get transferTitle => 'Sinan Transfer';
+
+  @override
+  String get cameraPermissionMsg => 'Requesting camera permission...';
+
+  @override
+  String get enterIpError => 'Please enter IP address';
+
+  @override
+  String get sortDoneToBottom => 'Done to Bottom';
+
+  @override
+  String get sortOriginal => 'Original Order';
+
+  @override
+  String get noNotesFound => 'No notes available';
+
+  @override
+  String get transferError => 'Error';
+
+  @override
+  String get securityAlert => 'Security Alert';
+
+  @override
+  String get sortDoneToTop => 'Done to Top';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get noNotesAvailable => 'No notes available';
+
+  @override
+  String get selectNote => 'Select Note';
+
+  @override
+  String get tapToSelect => 'Tap to select +';
+
+  @override
+  String get selectList => 'Select List';
+
+  @override
+  String get authenticateAndEnter => 'Authenticate & Enter';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get noLockButtonsOutside => 'No lock buttons outside. Enter the vault and drag the notes you want to protect.';
+
+  @override
+  String get dataEncryptedOnExit => 'Once you exit, data is encrypted and memory is cleared immediately.';
+
+  @override
+  String get precisePermissionRequired => 'Failed! Precise permission required. 💡';
+
+  @override
+  String get fileContainsErrors => 'The file you want to save may contain errors or is incorrect. It\'s better to save it as markdown.';
+
+  @override
+  String get savedAsMarkdownSuccess => 'Saved as Markdown';
+
+  @override
+  String get security => 'Security';
+
+  @override
+  String get securityCode => 'Security Code';
+
+  @override
+  String get encryptionUsed => 'Encryption Used';
+
+  @override
+  String get cannotReadWithoutKey => 'Cannot be read without your device\'s encryption key.';
+
+  @override
+  String get uninstallWarning => 'If you uninstall the app, the encryption key will be lost permanently.';
+
+  @override
+  String get clearDataWarning => 'If you clear app data, the encryption key will be lost permanently.';
+
+  @override
+  String get backupUnencryptedAdvice => 'Keep a backup of your important notes in unencrypted format (unlock first).';
+
+  @override
+  String get encryptionRiskWarning => 'Encryption provides security but increases the risk of data loss if the key is lost.';
+
+  @override
+  String get biometricError => 'Biometric check error';
+
+  @override
+  String get authenticateWithBiometric => 'Authenticate using biometric or device password';
+
+  @override
+  String get pleaseAuthenticateToOpen => 'Please authenticate to open the note';
+
+  @override
+  String get authenticationError => 'Authentication error';
+
+  @override
+  String get invalidSecurityCode => 'Invalid security code';
+
+  @override
+  String get wontTransferForSecurity => 'Won\'t be transferred for security.';
+
+  @override
+  String get openVaultTab => 'Open vault tab.';
+
+  @override
+  String get swipeRightToUnlock => 'Swipe right on note → \"Unlock\".';
+
+  @override
+  String get chooseDefaultColor => 'Choose Default Color';
+
+  @override
+  String get hideContentInBackground => 'Hide Content in Background';
+
+  @override
+  String get applyBlurEffect => 'Apply blur effect in app list';
+
+  @override
+  String get restoreFromBackup => 'Restore from backup';
+
+  @override
+  String get saveAsJsonFile => 'Save as JSON file';
+
+  @override
+  String get chooseTheme => 'Choose Theme';
+
+  @override
+  String get saveToFolder => 'Save to Folder';
+
+  @override
+  String get importantBackupWarning => 'Important Warning - Encrypted Notes Backup';
+
+  @override
+  String lockedNotesCount(int count) {
+    return 'You have $count locked and encrypted notes.';
+  }
+
+  @override
+  String get noteType => 'Note Type';
+
+  @override
+  String get noteStatus => 'Note Status';
+
+  @override
+  String get noStartFresh => 'No, Start Fresh';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get editor => 'Editor';
+
+  @override
+  String get noteColors => 'Note Colors';
+
+  @override
+  String get cardShineEffect => 'Card Shine Effect';
+
+  @override
+  String get enabled => 'Enabled';
+
+  @override
+  String get disabled => 'Disabled';
+
+  @override
+  String get appLock => 'App Lock';
+
+  @override
+  String get data => 'Data';
+
+  @override
+  String get localNetworkTransfer => 'Local network transfer';
+
+  @override
+  String get exportDatabase => 'Export database';
+
+  @override
+  String get exportJson => 'Export JSON';
+
+  @override
+  String get importJson => 'Import JSON';
+
+  @override
+  String get restoreFromJson => 'Restore from JSON';
+
+  @override
+  String get feedback => 'Feedback';
+
+  @override
+  String get contactUs => 'Contact us';
+
+  @override
+  String get aboutApp => 'About';
+
+  @override
+  String get diagnostics => 'Diagnostics';
+
+  @override
+  String get developersOnly => 'Developers only';
+
+  @override
+  String get systemTheme => 'System';
+
+  @override
+  String get lightTheme => 'Light';
+
+  @override
+  String get darkTheme => 'Dark';
+
+  @override
+  String get disclaimer => 'Disclaimer';
+
+  @override
+  String get continueAction => 'Continue';
+
+  @override
+  String get merge => 'Merge';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get cleared => 'Cleared';
+
+  @override
+  String get errorLog => 'Error Log';
+
+  @override
+  String get showIntroAgain => 'Show Intro Again';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get restoreSuccessful => 'Restore Successful';
+
+  @override
+  String get mergedSuccessfully => 'Merged successfully';
+
+  @override
+  String get createNote => 'Create Note';
+
+  @override
+  String get startSending => 'Start Sending';
+
+  @override
+  String get manualEntry => 'Manual Entry';
+
+  @override
+  String get dataConflict => 'Data Conflict';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get receive => 'Receive';
+
+  @override
+  String get oldPhone => 'Old Phone';
+
+  @override
+  String get noNotesToShare => 'No notes to share';
+
+  @override
+  String get createNoteFirst => 'Create a note first to enable sharing';
+
+  @override
+  String get tapButtonToShare => 'Tap the button to start sharing your notes';
+
+  @override
+  String get scanQrCode => 'Scan QR Code';
+
+  @override
+  String get newPhone => 'New Phone';
+
+  @override
+  String get chooseConnectionMethod => 'Choose connection method';
+
+  @override
+  String get viewTransferPolicy => 'View Transfer Policy for Locked Notes';
+
+  @override
+  String get unsavedChanges => 'Unsaved Changes';
+
+  @override
+  String get unsavedChangesMessage => 'You have unsaved changes. What would you like to do?';
+
+  @override
+  String get saveAndExit => 'Save & Exit';
+
+  @override
+  String get discardChanges => 'Discard';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get tourPage1Title => 'Note Types';
+
+  @override
+  String get tourPage1Desc => 'Choose the right type for your needs';
+
+  @override
+  String get tourPage2Title => 'Smart Calculations';
+
+  @override
+  String get tourPage2Desc => 'Write math expression and press = to see result';
+
+  @override
+  String get tourPage3Title => 'Smart Dates';
+
+  @override
+  String get tourPage3Desc => 'Type date keywords and they convert automatically';
+
+  @override
+  String get tourPage4Title => 'Secure Vault';
+
+  @override
+  String get tourPage4Desc => 'Lock sensitive notes with strong encryption';
+
+  @override
+  String get tourPage5Title => 'Transfer & Backup';
+
+  @override
+  String get tourPage5Desc => 'Transfer your notes between devices easily';
+
+  @override
+  String get tourPage6Title => 'Customization';
+
+  @override
+  String get tourPage6Desc => 'Customize your experience as you like';
+
+  @override
+  String get startNow => 'Start Now';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get haveSavedNotes => 'Have saved notes?';
+
+  @override
+  String get transferFromOldPhone => 'Transfer from your old phone now';
+
+  @override
+  String get yesRestoreNow => 'Yes, Restore Now';
+
+  @override
+  String get simpleNoteMenu => 'Simple Note';
+
+  @override
+  String get richNoteMenu => 'Rich Note';
+
+  @override
+  String get codeEditorMenu => 'Code Editor';
+
+  @override
+  String get checklistMenu => 'Checklist';
+
+  @override
+  String get attachDeviceInfo => 'Attach Device Information';
+
+  @override
+  String get helpsDiagnose => 'Helps us diagnose the issue';
+
+  @override
+  String get canRemoveFromEmail => 'You can remove it from the email before sending';
+
+  @override
+  String get privacyAndData => 'Privacy and Data';
+
+  @override
+  String get privacyDescription => 'We respect your privacy. Your data will only be used to improve technical support.';
+
+  @override
+  String get readPrivacyPolicy => 'Read Privacy Policy';
+
+  @override
+  String get agreeToPolicy => 'I agree to the privacy policy';
+}

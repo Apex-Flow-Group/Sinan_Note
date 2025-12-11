@@ -1,0 +1,167 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../l10n/l10n_migration_helper.dart';
+import 'apex_snackbar.dart';
+
+class CustomShareSheet {
+  static void show(BuildContext context, String text, {String? subject}) {
+    final strings = L10nHelper.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).padding.bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.outline.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Title
+            Text(
+              isArabic ? 'مشاركة الملاحظة' : 'Share Note',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            
+            // Subtitle
+            Text(
+              isArabic ? 'اختر طريقة المشاركة' : 'Choose sharing method',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Share options grid
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _ShareOption(
+                  icon: Icons.share_outlined,
+                  label: isArabic ? 'مشاركة' : 'Share',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Share.share(text, subject: subject);
+                  },
+                ),
+                _ShareOption(
+                  icon: Icons.copy_outlined,
+                  label: isArabic ? 'نسخ' : 'Copy',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await Clipboard.setData(ClipboardData(text: text));
+                    HapticFeedback.lightImpact();
+                    if (context.mounted) {
+                      ApexSnackBar.show(
+                        context,
+                        isArabic ? 'تم النسخ إلى الحافظة' : strings.textCopiedToClipboard,
+                        type: SnackBarType.success,
+                        duration: const Duration(seconds: 2),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ShareOption extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ShareOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  State<_ShareOption> createState() => _ShareOptionState();
+}
+
+class _ShareOptionState extends State<_ShareOption> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                widget.icon,
+                size: 32,
+                color: colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              widget.label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

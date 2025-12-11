@@ -1,0 +1,80 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_highlight/themes/monokai-sublime.dart';
+import 'package:flutter_highlight/themes/github.dart';
+
+class ProfessionalCodeEditor extends StatefulWidget {
+  final CodeController controller;
+  final UndoHistoryController undoController;
+  final String? detectedLanguage;
+  final Color backgroundColor;
+
+  const ProfessionalCodeEditor({
+    super.key,
+    required this.controller,
+    required this.undoController,
+    this.detectedLanguage,
+    this.backgroundColor = Colors.white,
+  });
+
+  @override
+  State<ProfessionalCodeEditor> createState() => _ProfessionalCodeEditorState();
+}
+
+class _ProfessionalCodeEditorState extends State<ProfessionalCodeEditor> {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.backgroundColor.computeLuminance() < 0.5;
+    final theme = _buildTheme(isDark);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final gutterColor = isDark ? Colors.white38 : Colors.black38;
+
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: CodeTheme(
+        data: CodeThemeData(styles: theme),
+        child: CodeField(
+          controller: widget.controller,
+          undoController: widget.undoController,
+          textStyle: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 14,
+            height: 1.5,
+            color: textColor,
+          ),
+          gutterStyle: GutterStyle(
+            showLineNumbers: true,
+            showFoldingHandles: false,
+            showErrors: false,
+            textStyle: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              color: gutterColor,
+            ),
+            background: Colors.transparent,
+            margin: 8,
+            width: 60,
+          ),
+          background: Colors.transparent,
+          expands: false,
+          wrap: false,
+          maxLines: null,
+          minLines: 1,
+        ),
+      ),
+    );
+  }
+
+  Map<String, TextStyle> _buildTheme(bool isDark) {
+    final baseTheme = isDark
+        ? Map<String, TextStyle>.from(monokaiSublimeTheme)
+        : Map<String, TextStyle>.from(githubTheme);
+    baseTheme['root'] = TextStyle(
+      backgroundColor: Colors.transparent,
+      color: isDark ? Colors.white : Colors.black87,
+    );
+    return baseTheme;
+  }
+}

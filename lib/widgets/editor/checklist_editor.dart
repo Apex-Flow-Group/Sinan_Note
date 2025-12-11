@@ -1,0 +1,569 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import '../../utils/checklist_formatter.dart';
+
+class ChecklistUndoRedoController {
+  final VoidCallback undo;
+  final VoidCallback redo;
+  final bool canUndo;
+  final bool canRedo;
+
+  ChecklistUndoRedoController({
+    required this.undo,
+    required this.redo,
+    required this.canUndo,
+    required this.canRedo,
+  });
+}
+
+class ChecklistEditor extends StatefulWidget {
+  final String initialContent;
+  final Function(String jsonContent) onChanged;
+  final Color backgroundColor;
+  final VoidCallback? onUndoRedoChanged;
+  final Function(ChecklistUndoRedoController)? onUndoRedoControllerCreated;
+
+  const ChecklistEditor({
+    super.key,
+    required this.initialContent,
+    required this.onChanged,
+    required this.backgroundColor,
+    this.onUndoRedoChanged,
+    this.onUndoRedoControllerCreated,
+  });
+
+  @override
+  State<ChecklistEditor> createState() => _ChecklistEditorState();
+}
+
+class _ChecklistEditorState extends State<ChecklistEditor> {
+  List<ChecklistItem> _items = [];
+  final Map<String, TextEditingController> _controllers = {};
+  final Map<String, FocusNode> _focusNodes = {};
+  final Map<String, VoidCallback> _listeners = {}; // Store listener references
+  final TextEditingController _titleController = TextEditingController();
+
+  // Undo/Redo support
+  final List<String> _history = [];
+  int _historyIndex = -1;
+  bool _isUndoRedoAction = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _parseContent();
+    _titleController.addListener(_notifyParent);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onUndoRedoControllerCreated?.call(
+        ChecklistUndoRedoController(
+          undo: undo,
+          redo: redo,
+          canUndo: canUndo,
+          canRedo: canRedo,
+        ),
+      );
+    });
+  }
+
+  void _parseContent() {
+    if (widget.initialContent.trim().isEmpty) {
+      _addNewItem();
+      return;
+    }
+
+    try {
+      final dynamic decoded = jsonDecode(widget.initialContent);
+
+      if (decoded is Map<String, dynamic>) {
+        _titleController.text = decoded['title'] ?? '';
+        if (decoded['items'] != null) {
+          _items = (decoded['items'] as List)
+              .map((e) => ChecklistItem.fromJson(e))
+              .toList();
+        }
+      } else if (decoded is List) {
+        _items = decoded.map((e) => ChecklistItem.fromJson(e)).toList();
+      }
+    } catch (e) {
+      final lines = widget.initialContent
+          .split('\n')
+          .where((l) => l.trim().isNotEmpty)
+          .toList();
+      _items = lines.map((line) {
+        return ChecklistItem(
+          id: DateTime.now().millisecondsSinceEpoch.toString() +
+              line.hashCode.toString(),
+          text: line.replaceAll(RegExp(r'^-\s*\[.\]\s*'), '').trim(),
+        );
+      }).toList();
+    }
+
+    if (_items.isEmpty) _addNewItem();
+
+    for (var item in _items) {
+      _initializeController(item);
+    }
+  }
+
+  void _initializeController(ChecklistItem item) {
+    _controllers[item.id] = TextEditingController(text: item.text);
+    _focusNodes[item.id] = FocusNode();
+
+    // Store listener reference so we can remove it later
+    void listener() {
+      item.text = _controllers[item.id]!.text;
+      _notifyParent();
+    }
+    _listeners[item.id] = listener;
+    _controllers[item.id]!.addListener(listener);
+
+    _focusNodes[item.id]!.addListener(() {
+      if (_focusNodes[item.id]!.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          final context = _focusNodes[item.id]!.context;
+          if (context != null && context.mounted) {
+            Scrollable.ensureVisible(
+              context,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              alignment: 0.5,
+            );
+          }
+        });
+      }
+    });
+  }
+
+  void _addNewItem({int? insertIndex, bool autoFocus = false}) {
+    final newItem = ChecklistItem(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+
+    setState(() {
+      if (insertIndex != null) {
+        _items.insert(insertIndex, newItem);
+      } else {
+        _items.add(newItem);
+      }
+      _initializeController(newItem);
+    });
+
+    if (autoFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusNodes[newItem.id]?.requestFocus();
+      });
+    }
+    _notifyParent();
+  }
+
+  void _deleteItem(String id) {
+    final index = _items.indexWhere((e) => e.id == id);
+    if (index == -1 || _items.length == 1) return;
+
+    setState(() {
+      _items.removeAt(index);
+      // Remove listener before disposing
+      if (_controllers.containsKey(id) && _listeners.containsKey(id)) {
+        _controllers[id]!.removeListener(_listeners[id]!);
+      }
+      _controllers[id]?.dispose();
+      _focusNodes[id]?.dispose();
+      _controllers.remove(id);
+      _focusNodes.remove(id);
+      _listeners.remove(id);
+    });
+
+    if (index > 0 && _items.isNotEmpty) {
+      _focusNodes[_items[index - 1].id]?.requestFocus();
+    }
+    _notifyParent();
+  }
+
+  void _toggleDone(ChecklistItem item) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      item.isDone = !item.isDone;
+    });
+    _notifyParent();
+  }
+
+  void sortItems(String type) {
+    setState(() {
+      if (type == 'doneBottom') {
+        _items.sort((a, b) => a.isDone == b.isDone ? 0 : (a.isDone ? 1 : -1));
+      } else if (type == 'doneTop') {
+        _items.sort((a, b) => a.isDone == b.isDone ? 0 : (a.isDone ? -1 : 1));
+      } else if (type == 'original') {
+        _items.sort((a, b) => a.id.toString().compareTo(b.id.toString()));
+      }
+    });
+    _notifyParent();
+  }
+
+  void _notifyParent() {
+    // 🛑 CRITICAL: Stop if widget is closing/disposed to prevent saving empty data
+    if (!mounted) return;
+    
+    // 🛡️ SAFETY NET: Force sync all controllers to models before save
+    for (var item in _items) {
+      if (_controllers.containsKey(item.id)) {
+        item.text = _controllers[item.id]!.text;
+      }
+    }
+    
+    final data = {
+      'title': _titleController.text.trim(),
+      'items': _items.map((e) => e.toJson()).toList(),
+    };
+    final jsonData = jsonEncode(data);
+
+    // Save to history for undo/redo
+    if (!_isUndoRedoAction) {
+      _history.removeRange(_historyIndex + 1, _history.length);
+      _history.add(jsonData);
+      _historyIndex = _history.length - 1;
+      // MEMORY FIX: Reduced from 50 to 20 to limit memory usage
+      if (_history.length > 20) {
+        _history.removeAt(0);
+        _historyIndex--;
+      }
+    }
+
+    widget.onChanged(jsonData);
+    _updateUndoRedoController();
+    widget.onUndoRedoChanged?.call();
+  }
+
+  void _updateUndoRedoController() {
+    widget.onUndoRedoControllerCreated?.call(
+      ChecklistUndoRedoController(
+        undo: undo,
+        redo: redo,
+        canUndo: canUndo,
+        canRedo: canRedo,
+      ),
+    );
+  }
+
+  void undo() {
+    if (_historyIndex > 0) {
+      _historyIndex--;
+      _restoreState(_history[_historyIndex]);
+      widget.onUndoRedoChanged?.call();
+    }
+  }
+
+  void redo() {
+    if (_historyIndex < _history.length - 1) {
+      _historyIndex++;
+      _restoreState(_history[_historyIndex]);
+      widget.onUndoRedoChanged?.call();
+    }
+  }
+
+  bool get canUndo => _historyIndex > 0;
+  bool get canRedo => _historyIndex < _history.length - 1;
+
+  void _restoreState(String jsonData) {
+    _isUndoRedoAction = true;
+    try {
+      final decoded = jsonDecode(jsonData);
+      _titleController.text = decoded['title'] ?? '';
+
+      // Clear old items
+      for (var controller in _controllers.values) {
+        controller.dispose();
+      }
+      for (var node in _focusNodes.values) {
+        node.dispose();
+      }
+      _controllers.clear();
+      _focusNodes.clear();
+
+      // Restore items
+      _items = (decoded['items'] as List)
+          .map((e) => ChecklistItem.fromJson(e))
+          .toList();
+
+      for (var item in _items) {
+        _initializeController(item);
+      }
+
+      setState(() {});
+    } finally {
+      _isUndoRedoAction = false;
+    }
+  }
+
+  double get _progress {
+    if (_items.isEmpty) return 0.0;
+    final done = _items.where((e) => e.isDone).length;
+    return done / _items.length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final bool isLightColor = widget.backgroundColor.computeLuminance() > 0.5;
+    final Color textColor = isLightColor ? Colors.black87 : Colors.white;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _titleController,
+                    textDirection: Directionality.of(context),
+                    textAlign: Directionality.of(context) == TextDirection.rtl ? TextAlign.right : TextAlign.left,
+                    textAlignVertical: TextAlignVertical.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Checklist Title',
+                      hintStyle:
+                          TextStyle(color: textColor.withValues(alpha: 0.4)),
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    maxLines: null,
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.sort_rounded,
+                      color: textColor.withValues(alpha: 0.6)),
+                  tooltip: 'Sort',
+                  onSelected: sortItems,
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'doneBottom',
+                      child: Row(children: [
+                        const Icon(Icons.arrow_downward, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.sortDoneToBottom, textDirection: Directionality.of(context)),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'doneTop',
+                      child: Row(children: [
+                        const Icon(Icons.arrow_upward, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.sortDoneToTop, textDirection: Directionality.of(context)),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'original',
+                      child: Row(children: [
+                        const Icon(Icons.restore, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.sortOriginal, textDirection: Directionality.of(context)),
+                      ]),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_items.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: _progress,
+                  backgroundColor: textColor.withValues(alpha: 0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    _progress == 1.0 ? Colors.green : Colors.blue,
+                  ),
+                  minHeight: 6,
+                ),
+              ),
+            ),
+          ),
+        SliverReorderableList(
+          itemBuilder: (context, index) {
+            final item = _items[index];
+            return _buildItemRow(item, index, textColor);
+          },
+          itemCount: _items.length,
+          onReorder: (oldIndex, newIndex) {
+            setState(() {
+              if (newIndex > oldIndex) newIndex -= 1;
+              final item = _items.removeAt(oldIndex);
+              _items.insert(newIndex, item);
+            });
+            _notifyParent();
+          },
+          proxyDecorator: (child, index, animation) {
+            return Material(
+              color: Colors.transparent,
+              shadowColor: Colors.black26,
+              elevation: 10,
+              child: ScaleTransition(scale: animation, child: child),
+            );
+          },
+        ),
+        SliverPadding(padding: EdgeInsets.only(bottom: keyboardHeight)),
+      ],
+    );
+  }
+
+  Widget _buildItemRow(ChecklistItem item, int index, Color textColor) {
+    final isDone = item.isDone;
+    final controller = _controllers[item.id]!;
+    final focusNode = _focusNodes[item.id]!;
+
+    return Container(
+      key: ValueKey(item.id),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        color: widget.backgroundColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDone ? Colors.transparent : textColor.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: Icon(Icons.add_circle_outline,
+                color: textColor.withValues(alpha: 0.6), size: 20),
+            onPressed: () =>
+                _addNewItem(insertIndex: index + 1, autoFocus: true),
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(),
+          ),
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding:
+                  const EdgeInsets.only(left: 4, right: 8, top: 12, bottom: 12),
+              child: Icon(Icons.drag_indicator,
+                  color: textColor.withValues(alpha: 0.4), size: 20),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => _toggleDone(item),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 12),
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isDone ? Colors.green : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color:
+                      isDone ? Colors.green : textColor.withValues(alpha: 0.5),
+                  width: 2,
+                ),
+              ),
+              child: isDone
+                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  : null,
+            ),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              textDirection: Directionality.of(context),
+              textAlign: Directionality.of(context) == TextDirection.rtl ? TextAlign.right : TextAlign.left,
+              textAlignVertical: TextAlignVertical.center,
+              maxLines: null,
+              textInputAction: TextInputAction.newline,
+              onSubmitted: (_) {
+                _addNewItem(insertIndex: index + 1, autoFocus: true);
+              },
+              onChanged: (text) {
+                // Removed auto-delete on empty text
+              },
+              style: TextStyle(
+                fontSize: 16,
+                decoration:
+                    isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                color: isDone ? textColor.withValues(alpha: 0.5) : textColor,
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Mission...',
+                hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          if (_items.length > 1)
+            IconButton(
+              icon: Icon(Icons.close,
+                  size: 18, color: textColor.withValues(alpha: 0.4)),
+              onPressed: () => _deleteItem(item.id),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String get checklistTitle {
+    if (_titleController.text.trim().isNotEmpty) {
+      return _titleController.text.trim();
+    }
+    if (_items.isNotEmpty && _items.first.text.isNotEmpty) {
+      return _items.first.text;
+    }
+    return 'Checklist';
+  }
+
+  @override
+  void dispose() {
+    // 🛑 CRITICAL: Remove title listener BEFORE clearing
+    _titleController.removeListener(_notifyParent);
+    _titleController.clear();
+    _titleController.dispose();
+    
+    // 🛑 CRITICAL: Remove ALL item listeners BEFORE clearing to prevent empty save
+    for (var item in _items) {
+      if (_controllers.containsKey(item.id) && _listeners.containsKey(item.id)) {
+        _controllers[item.id]!.removeListener(_listeners[item.id]!);
+      }
+    }
+    _listeners.clear();
+    
+    // Now safe to clear and dispose
+    for (var controller in _controllers.values) {
+      controller.clear();
+      controller.dispose();
+    }
+    _controllers.clear();
+    
+    // Dispose focus nodes
+    for (var node in _focusNodes.values) {
+      node.dispose();
+    }
+    _focusNodes.clear();
+    
+    // CRITICAL: Clear undo/redo history to free memory
+    _history.clear();
+    _historyIndex = -1;
+    
+    // Clear items list
+    _items.clear();
+    
+    super.dispose();
+  }
+}
