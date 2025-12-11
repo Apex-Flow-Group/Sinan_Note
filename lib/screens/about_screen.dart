@@ -76,13 +76,20 @@ class _AboutScreenState extends State<AboutScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                     ),
-                    child: const Text(
-                      '🏪 نسخة رسمية - Google Play',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.green,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.verified, size: 14, color: Colors.green),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'نسخة رسمية - Google Play',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.green,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -211,12 +218,27 @@ class _AboutScreenState extends State<AboutScreen> {
             Center(
               child: Column(
                 children: [
-                  Text(
-                    'صُنع بـ ❤️ في العالم العربي',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'صُنع بـ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.favorite, size: 14, color: Colors.red[400]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'في العالم العربي',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   const Text(

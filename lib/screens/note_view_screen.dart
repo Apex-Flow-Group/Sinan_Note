@@ -212,7 +212,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
               final widgetName = isChecklistNote ? 'ويدجت القوائم' : 'ويدجت الملاحظات';
               ApexSnackBar.show(
                 context,
-                '✅ تم التثبيت في $widgetName',
+                'تم التثبيت في $widgetName',
                 type: SnackBarType.success,
                 duration: const Duration(seconds: 2),
               );

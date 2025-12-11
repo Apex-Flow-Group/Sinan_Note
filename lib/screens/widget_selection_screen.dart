@@ -65,8 +65,15 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(
-              'تم تثبيت "${note.title.isEmpty ? 'الملاحظة' : note.title}" في الويدجت ✅')),
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('تم تثبيت "${note.title.isEmpty ? 'الملاحظة' : note.title}" في الويدجت'),
+              ),
+            ],
+          )),
     );
 
     Navigator.pop(context);

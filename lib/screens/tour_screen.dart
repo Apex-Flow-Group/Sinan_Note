@@ -76,10 +76,10 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage1Title,
       description: l10n.tourPage1Desc,
       features: [
-        '📝 ${l10n.simpleNote}: ${l10n.simpleNoteDesc}',
-        '💻 ${l10n.proEditor}: ${l10n.proEditorDesc}',
-        '⏰ ${l10n.reminder}: ${l10n.reminderDesc}',
-        '✅ ${l10n.checklists}',
+        _FeatureItem(icon: Icons.note_outlined, text: '${l10n.simpleNote}: ${l10n.simpleNoteDesc}'),
+        _FeatureItem(icon: Icons.code, text: '${l10n.proEditor}: ${l10n.proEditorDesc}'),
+        _FeatureItem(icon: Icons.alarm, text: '${l10n.reminder}: ${l10n.reminderDesc}'),
+        _FeatureItem(icon: Icons.check_box, text: l10n.checklists),
       ],
     );
   }
@@ -91,10 +91,10 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage2Title,
       description: l10n.tourPage2Desc,
       features: [
-        '➕ 50 + 20 =',
-        '✨ = 70',
-        '🔢 +, -, ×, ÷',
-        '📊 ${l10n.approximateSum}',
+        _FeatureItem(icon: Icons.add, text: '50 + 20 ='),
+        _FeatureItem(icon: Icons.auto_awesome, text: '= 70'),
+        _FeatureItem(icon: Icons.functions, text: '+, -, ×, ÷'),
+        _FeatureItem(icon: Icons.analytics_outlined, text: l10n.approximateSum),
       ],
     );
   }
@@ -106,10 +106,10 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage3Title,
       description: l10n.tourPage3Desc,
       features: [
-        '📅 ${l10n.today}',
-        '📆 ${l10n.thisWeek}',
-        '🗓️ ${l10n.date}',
-        '⏰ ${l10n.addReminder}',
+        _FeatureItem(icon: Icons.today, text: l10n.today),
+        _FeatureItem(icon: Icons.date_range, text: l10n.thisWeek),
+        _FeatureItem(icon: Icons.event, text: l10n.date),
+        _FeatureItem(icon: Icons.alarm_add, text: l10n.addReminder),
       ],
     );
   }
@@ -121,10 +121,10 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage4Title,
       description: l10n.tourPage4Desc,
       features: [
-        '🔐 ${l10n.encryptionUsed}',
-        '👆 ${l10n.authenticateWithBiometric}',
-        '🔒 ${l10n.sessionProtection}',
-        '🛡️ ${l10n.dataEncryptedOnExit}',
+        _FeatureItem(icon: Icons.enhanced_encryption, text: l10n.encryptionUsed),
+        _FeatureItem(icon: Icons.fingerprint, text: l10n.authenticateWithBiometric),
+        _FeatureItem(icon: Icons.lock_clock, text: l10n.sessionProtection),
+        _FeatureItem(icon: Icons.security, text: l10n.dataEncryptedOnExit),
       ],
     );
   }
@@ -136,10 +136,10 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage5Title,
       description: l10n.tourPage5Desc,
       features: [
-        if (FlavorConfig.hasTransferFeature) '📱 ${l10n.localNetworkTransfer}',
-        '📤 ${l10n.exportJson}',
-        '📥 ${l10n.importJson}',
-        '💾 ${l10n.restoreFromBackup}',
+        if (FlavorConfig.hasTransferFeature) _FeatureItem(icon: Icons.phone_android, text: l10n.localNetworkTransfer),
+        _FeatureItem(icon: Icons.upload_file, text: l10n.exportJson),
+        _FeatureItem(icon: Icons.download, text: l10n.importJson),
+        _FeatureItem(icon: Icons.restore, text: l10n.restoreFromBackup),
       ],
     );
   }
@@ -151,10 +151,10 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage6Title,
       description: l10n.tourPage6Desc,
       features: [
-        '🎨 ${l10n.noteColors}',
-        '🌙 ${l10n.theme}',
-        '🔍 ${l10n.filter}',
-        '📌 ${l10n.archive}',
+        _FeatureItem(icon: Icons.palette, text: l10n.noteColors),
+        _FeatureItem(icon: Icons.dark_mode, text: l10n.theme),
+        _FeatureItem(icon: Icons.filter_list, text: l10n.filter),
+        _FeatureItem(icon: Icons.archive, text: l10n.archive),
       ],
     );
   }
@@ -308,7 +308,7 @@ class _TourPage extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
-  final List<String> features;
+  final List<_FeatureItem> features;
 
   const _TourPage({
     required this.icon,
@@ -375,13 +375,21 @@ class _TourPage extends StatelessWidget {
                   const SizedBox(height: 24),
                   ...features.map((feature) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          feature,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            height: 1.4,
-                          ),
+                        child: Row(
+                          children: [
+                            Icon(feature.icon, size: 20, color: const Color(0xFFFFD700)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                feature.text,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       )),
                 ],
@@ -395,3 +403,10 @@ class _TourPage extends StatelessWidget {
 }
 
 
+
+class _FeatureItem {
+  final IconData icon;
+  final String text;
+
+  const _FeatureItem({required this.icon, required this.text});
+}

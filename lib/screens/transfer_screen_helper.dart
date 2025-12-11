@@ -34,17 +34,17 @@ class TransferAgreementDialog {
                       isArabic
                           ? '''تحذير هام - نقل البيانات
 
-⚠️ لديك $lockedCount ملاحظة مقفلة ومشفرة.
+تحذير: لديك $lockedCount ملاحظة مقفلة ومشفرة.
 
-🚫 سياسة النقل:
+سياسة النقل:
 لأسباب أمنية، لن يتم نقل الملاحظات المقفلة عبر Sinan Transfer.
 
-📋 ما سيحدث:
+ما سيحدث:
 • سيتم نقل جميع الملاحظات العادية (غير المقفلة).
 • سيتم استبعاد الملاحظات المقفلة تلقائياً.
 • ستبقى الملاحظات المقفلة على الجهاز القديم.
 
-🔒 لماذا لا يتم نقلها؟
+لماذا لا يتم نقلها؟
 1. الأمان:
    • الملاحظات المقفلة مشفرة بمفتاح خاص بجهازك.
    • لا يمكن فك تشفيرها على جهاز آخر.
@@ -54,14 +54,14 @@ class TransferAgreementDialog {
    • منع نقل الملاحظات الحساسة عبر الشبكة.
    • حماية خصوصيتك في حالة اعتراض النقل.
 
-💡 كيف تنقل الملاحظات المقفلة؟
+كيف تنقل الملاحظات المقفلة؟
 إذا كنت تريد نقلها:
 1. افتح تبويب الخزنة.
 2. اسحب لليمين على الملاحظة → "فك القفل".
 3. ستصبح ملاحظة عادية ويمكن نقلها.
 4. بعد النقل، يمكنك قفلها مجدداً على الجهاز الجديد.
 
-📜 إخلاء المسؤولية:
+إخلاء المسؤولية:
 • Apex Flow Group غير مسؤولة عن فقدان الملاحظات المقفلة.
 • هذه سياسة أمنية لحماية بياناتك.
 • أنت المسؤول عن فك قفل الملاحظات قبل النقل.
@@ -72,17 +72,17 @@ class TransferAgreementDialog {
 ✓ تدرك أن هذه سياسة أمنية لحمايتك.'''
                           : '''Important Warning - Data Transfer
 
-⚠️ You have $lockedCount locked and encrypted notes.
+Warning: You have $lockedCount locked and encrypted notes.
 
-🚫 Transfer Policy:
+Transfer Policy:
 For security reasons, locked notes will NOT be transferred via Sinan Transfer.
 
-📋 What will happen:
+What will happen:
 • All regular (unlocked) notes will be transferred.
 • Locked notes will be automatically excluded.
 • Locked notes will remain on the old device.
 
-🔒 Why not transfer them?
+Why not transfer them?
 1. Security:
    • Locked notes are encrypted with your device-specific key.
    • They cannot be decrypted on another device.
@@ -92,14 +92,14 @@ For security reasons, locked notes will NOT be transferred via Sinan Transfer.
    • Prevents transfer of sensitive notes over network.
    • Protects your privacy if transfer is intercepted.
 
-💡 How to transfer locked notes?
+How to transfer locked notes?
 If you want to transfer them:
 1. Open the Vault tab.
 2. Swipe right on the note → "Unlock".
 3. It becomes a regular note and can be transferred.
 4. After transfer, you can lock it again on the new device.
 
-📜 Disclaimer:
+Disclaimer:
 • Apex Flow Group is NOT responsible for loss of locked notes.
 • This is a security policy to protect your data.
 • You are responsible for unlocking notes before transfer.

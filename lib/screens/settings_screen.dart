@@ -736,9 +736,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       lang == 'ar'
                           ? '''تحذير هام - النسخ الاحتياطي للملاحظات المشفرة
 
-⚠️ لديك $lockedCount ملاحظة مقفلة ومشفرة.
+تحذير: لديك $lockedCount ملاحظة مقفلة ومشفرة.
 
-📋 ما يجب أن تعرفه:
+ما يجب أن تعرفه:
 
 1. التشفير المستخدم:
    • يستخدم التطبيق تشفير AES-256 لحماية ملاحظاتك المقفلة.
@@ -753,17 +753,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
    • إذا قمت بتثبيت التطبيق على جهاز جديد، سيتم إنشاء مفتاح تشفير جديد.
    • الملاحظات المقفلة من الجهاز القديم ستبقى مشفرة ولن يمكن فك تشفيرها.
 
-⚠️ تحذير حرج:
+تحذير حرج:
    • إذا قمت بإلغاء تثبيت التطبيق، سيتم فقدان مفتاح التشفير نهائياً.
    • إذا قمت بمسح بيانات التطبيق، سيتم فقدان مفتاح التشفير نهائياً.
    • لا توجد طريقة لاستعادة الملاحظات المشفرة بدون المفتاح الأصلي.
 
-💡 التوصيات:
+التوصيات:
    • احتفظ بنسخة احتياطية من ملاحظاتك المهمة بصيغة غير مشفرة (فك القفل أولاً).
    • لا تعتمد على النسخ الاحتياطية المشفرة كمصدر وحيد.
    • تأكد من حفظ ملاحظاتك الحساسة في أماكن متعددة.
 
-📜 إخلاء المسؤولية:
+إخلاء المسؤولية:
    • Apex Flow Group غير مسؤولة عن فقدان البيانات المشفرة.
    • أنت المسؤول الوحيد عن إدارة نسخك الاحتياطية.
    • التشفير يوفر الأمان لكنه يزيد من خطر فقدان البيانات في حالة فقدان المفتاح.
@@ -774,9 +774,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 ✓ تدرك أنه لا يمكن استعادة البيانات المشفرة بدون المفتاح الأصلي.'''
                           : '''Important Warning - Encrypted Notes Backup
 
-⚠️ You have $lockedCount locked and encrypted notes.
+Warning: You have $lockedCount locked and encrypted notes.
 
-📋 What you need to know:
+What you need to know:
 
 1. Encryption Used:
    • The app uses AES-256 encryption to protect your locked notes.
@@ -791,17 +791,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
    • If you install the app on a new device, a new encryption key will be generated.
    • Locked notes from the old device will remain encrypted and cannot be decrypted.
 
-⚠️ Critical Warning:
+Critical Warning:
    • If you uninstall the app, the encryption key will be permanently lost.
    • If you clear app data, the encryption key will be permanently lost.
    • There is NO way to recover encrypted notes without the original key.
 
-💡 Recommendations:
+Recommendations:
    • Keep a backup of important notes in unencrypted format (unlock first).
    • Don't rely solely on encrypted backups.
    • Ensure you save sensitive notes in multiple locations.
 
-📜 Disclaimer:
+Disclaimer:
    • Apex Flow Group is NOT responsible for loss of encrypted data.
    • You are solely responsible for managing your backups.
    • Encryption provides security but increases risk of data loss if key is lost.

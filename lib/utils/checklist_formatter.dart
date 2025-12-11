@@ -103,7 +103,7 @@ class ChecklistFormatter {
       for (var item in itemsJson) {
         final text = item['text'] ?? '';
         final isDone = item['isDone'] ?? false;
-        final checkbox = isDone ? '✅' : '⬜';
+        final checkbox = isDone ? '☑' : '☐'; // ☑ ☐
         buffer.writeln('$checkbox $text');
       }
 
