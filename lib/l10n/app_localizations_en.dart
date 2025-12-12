@@ -1193,4 +1193,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get justNow => 'Just now';
+
+  @override
+  String get lockDelay => 'Lock Delay';
+
+  @override
+  String get lockDelayDesc => 'Delay app lock after going to background';
+
+  @override
+  String get selectLockDelay => 'Select Lock Delay';
+
+  @override
+  String get seconds30 => '30 seconds';
+
+  @override
+  String get minutes2 => '2 minutes';
+
+  @override
+  String get minutes3 => '3 minutes';
+
+  @override
+  String get minutes5 => '5 minutes';
+
+  @override
+  String get immediate => 'Immediate';
+
+  @override
+  String get supportTerms => 'Terms';
+
+  @override
+  String get supportTermsDesc =>
+      'By sending this message, you agree to:\n• Share your device information automatically\n• Use your data to improve technical support\n• Comply with our privacy policy';
+
+  @override
+  String get supportSharedData => 'Shared Data';
+
+  @override
+  String get supportSharedDataDesc =>
+      'Will be sent:\n• Your name\n• Issue category\n• Your message\n• Device information (automatically):\n  - Device model\n  - OS version\n  - Build number';
+
+  @override
+  String get supportReason => 'Reason';
+
+  @override
+  String get supportReasonDesc =>
+      'We use this data to:\n• Diagnose technical issues\n• Improve app quality\n• Provide better support';
+
+  @override
+  String get privacyUsagePolicy => 'Privacy & Usage Policy';
+
+  @override
+  String get supportMessageSent => 'Message sent successfully';
+
+  @override
+  String get supportMessageFailed => 'Failed to send message';
+
+  @override
+  String get supportCategory => 'Category';
+
+  @override
+  String get supportSubject => 'Subject';
+
+  @override
+  String get supportMessage => 'Message';
+
+  @override
+  String get checklistTitle => 'Checklist Title';
+
+  @override
+  String get checklistItemHint => 'Mission...';
+
+  @override
+  String get sort => 'Sort';
+
+  @override
+  String get checklist => 'Checklist';
 }

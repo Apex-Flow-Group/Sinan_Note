@@ -2419,6 +2419,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Just now'**
   String get justNow;
+
+  /// No description provided for @lockDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Delay'**
+  String get lockDelay;
+
+  /// No description provided for @lockDelayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Delay app lock after going to background'**
+  String get lockDelayDesc;
+
+  /// No description provided for @selectLockDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Lock Delay'**
+  String get selectLockDelay;
+
+  /// No description provided for @seconds30.
+  ///
+  /// In en, this message translates to:
+  /// **'30 seconds'**
+  String get seconds30;
+
+  /// No description provided for @minutes2.
+  ///
+  /// In en, this message translates to:
+  /// **'2 minutes'**
+  String get minutes2;
+
+  /// No description provided for @minutes3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 minutes'**
+  String get minutes3;
+
+  /// No description provided for @minutes5.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes'**
+  String get minutes5;
+
+  /// No description provided for @immediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate'**
+  String get immediate;
+
+  /// No description provided for @supportTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get supportTerms;
+
+  /// No description provided for @supportTermsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'By sending this message, you agree to:\n• Share your device information automatically\n• Use your data to improve technical support\n• Comply with our privacy policy'**
+  String get supportTermsDesc;
+
+  /// No description provided for @supportSharedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Data'**
+  String get supportSharedData;
+
+  /// No description provided for @supportSharedDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Will be sent:\n• Your name\n• Issue category\n• Your message\n• Device information (automatically):\n  - Device model\n  - OS version\n  - Build number'**
+  String get supportSharedDataDesc;
+
+  /// No description provided for @supportReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get supportReason;
+
+  /// No description provided for @supportReasonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We use this data to:\n• Diagnose technical issues\n• Improve app quality\n• Provide better support'**
+  String get supportReasonDesc;
+
+  /// No description provided for @privacyUsagePolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Usage Policy'**
+  String get privacyUsagePolicy;
+
+  /// No description provided for @supportMessageSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Message sent successfully'**
+  String get supportMessageSent;
+
+  /// No description provided for @supportMessageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send message'**
+  String get supportMessageFailed;
+
+  /// No description provided for @supportCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get supportCategory;
+
+  /// No description provided for @supportSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get supportSubject;
+
+  /// No description provided for @supportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get supportMessage;
+
+  /// No description provided for @checklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist Title'**
+  String get checklistTitle;
+
+  /// No description provided for @checklistItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mission...'**
+  String get checklistItemHint;
+
+  /// No description provided for @sort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sort;
+
+  /// No description provided for @checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get checklist;
 }
 
 class _AppLocalizationsDelegate

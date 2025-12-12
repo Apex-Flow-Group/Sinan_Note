@@ -1149,4 +1149,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get justNow => 'الآن';
+
+  @override
+  String get lockDelay => 'تأخير القفل';
+
+  @override
+  String get lockDelayDesc => 'تأخير قفل التطبيق بعد الخروج للخلفية';
+
+  @override
+  String get selectLockDelay => 'اختر مدة التأخير';
+
+  @override
+  String get seconds30 => '30 ثانية';
+
+  @override
+  String get minutes2 => 'دقيقتان';
+
+  @override
+  String get minutes3 => '3 دقائق';
+
+  @override
+  String get minutes5 => '5 دقائق';
+
+  @override
+  String get immediate => 'فوري';
+
+  @override
+  String get supportTerms => 'الشروط';
+
+  @override
+  String get supportTermsDesc => 'بإرسالك هذه الرسالة، أنت توافق على:\n• مشاركة معلومات جهازك تلقائياً\n• استخدام بياناتك لتحسين الدعم الفني\n• الامتثال لسياسة الخصوصية الخاصة بنا';
+
+  @override
+  String get supportSharedData => 'البيانات المشاركة';
+
+  @override
+  String get supportSharedDataDesc => 'سيتم إرسال:\n• اسمك\n• فئة المشكلة\n• نص رسالتك\n• معلومات الجهاز (تلقائياً):\n  - نموذج الجهاز\n  - إصدار نظام التشغيل\n  - رقم البناء';
+
+  @override
+  String get supportReason => 'السبب';
+
+  @override
+  String get supportReasonDesc => 'نستخدم هذه البيانات لـ:\n• تشخيص المشاكل التقنية\n• تحسين جودة التطبيق\n• تقديم دعم أفضل لك';
+
+  @override
+  String get privacyUsagePolicy => 'سياسة الاستخدام والخصوصية';
+
+  @override
+  String get supportMessageSent => 'تم إرسال الرسالة بنجاح';
+
+  @override
+  String get supportMessageFailed => 'فشل إرسال الرسالة';
+
+  @override
+  String get supportCategory => 'الفئة';
+
+  @override
+  String get supportSubject => 'الموضوع';
+
+  @override
+  String get supportMessage => 'الرسالة';
+
+  @override
+  String get checklistTitle => 'عنوان القائمة';
+
+  @override
+  String get checklistItemHint => 'مهمة...';
+
+  @override
+  String get sort => 'ترتيب';
+
+  @override
+  String get checklist => 'قائمة مهام';
 }

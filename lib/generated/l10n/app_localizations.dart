@@ -2210,6 +2210,30 @@ abstract class AppLocalizations {
   String get syncing;
   String get pleaseSignIn;
   String get justNow;
+  String get lockDelay;
+  String get lockDelayDesc;
+  String get selectLockDelay;
+  String get seconds30;
+  String get minutes2;
+  String get minutes3;
+  String get minutes5;
+  String get immediate;
+  String get supportTerms;
+  String get supportTermsDesc;
+  String get supportSharedData;
+  String get supportSharedDataDesc;
+  String get supportReason;
+  String get supportReasonDesc;
+  String get privacyUsagePolicy;
+  String get supportMessageSent;
+  String get supportMessageFailed;
+  String get supportCategory;
+  String get supportSubject;
+  String get supportMessage;
+  String get checklistTitle;
+  String get checklistItemHint;
+  String get sort;
+  String get checklist;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

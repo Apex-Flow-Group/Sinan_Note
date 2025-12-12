@@ -24,6 +24,7 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
   bool _isAuthenticated = false;
   bool _isAuthenticating = false;
   bool _showPrivacyScreen = false;
+  DateTime? _backgroundTime;
 
   @override
   void initState() {
@@ -66,10 +67,11 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
         state == AppLifecycleState.paused) {
       if (mounted) {
         setState(() {
-          if (settings.isAppLockEnabled && settings.hideContentInBackground) {
+          if (settings.hideContentInBackground) {
             _showPrivacyScreen = true;
           }
           if (settings.isAppLockEnabled) {
+            _backgroundTime = DateTime.now();
             _isAuthenticated = false;
           }
         });
@@ -81,6 +83,18 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
           !_isAuthenticated &&
           !_isAuthenticating &&
           mounted) {
+        // Check if delay is enabled and time hasn't exceeded
+        if (settings.lockDelayEnabled && _backgroundTime != null) {
+          final elapsed = DateTime.now().difference(_backgroundTime!).inSeconds;
+          if (elapsed < settings.lockDelaySeconds) {
+            // Within delay period - don't require auth
+            setState(() {
+              _isAuthenticated = true;
+              _showPrivacyScreen = false;
+            });
+            return;
+          }
+        }
         _requireAuthentication();
       }
     }

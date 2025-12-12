@@ -22,7 +22,6 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
   String? _selectedCategory;
   bool _isLoading = false;
   bool _privacyAccepted = false;
-  bool _includeDeviceInfo = true;
   static const String _appEmail = 'contact.apex.flow@gmail.com';
 
   @override
@@ -58,13 +57,13 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
     if (!_formKey.currentState!.validate() || !_privacyAccepted) return;
 
     setState(() => _isLoading = true);
+    final l10n = context.l10n;
 
     try {
+      // جمع معلومات الجهاز تلقائياً
       String deviceInfoText = '';
-      if (_includeDeviceInfo) {
-        final info = await DeviceInfoService().getDeviceInfo();
-        deviceInfoText = '\n---\nDevice: ${info['device']}\nOS: ${info['os']}\nBuild: ${info['build']}';
-      }
+      final info = await DeviceInfoService().getDeviceInfo();
+      deviceInfoText = '\n---\nDevice: ${info['device']}\nOS: ${info['os']}\nBuild: ${info['build']}';
 
       final name = _nameController.text;
       final subject = _subjectController.text;
@@ -82,7 +81,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
           _clearForm();
           ApexSnackBar.show(
             context,
-            context.l10n.transferSuccess,
+            l10n.supportMessageSent,
             type: SnackBarType.success,
           );
         }
@@ -93,7 +92,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       if (mounted) {
         ApexSnackBar.show(
           context,
-          'Error: $e',
+          '${l10n.supportMessageFailed}: $e',
           type: SnackBarType.error,
         );
       }
@@ -112,36 +111,28 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
   }
 
   void _showPrivacyDialog() {
+    final l10n = context.l10n;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('سياسة الاستخدام والخصوصية'),
+        title: Text(l10n.privacyUsagePolicy),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDialogSection(
-                'الشروط',
-                'بإرسالك هذه الرسالة، أنت توافق على:\n• مشاركة بيانات جهازك\n• استخدام بياناتك لتحسين الدعم الفني\n• الامتثال لسياسة الخصوصية الخاصة بنا',
-              ),
+              _buildDialogSection(l10n.supportTerms, l10n.supportTermsDesc),
               const SizedBox(height: 16),
-              _buildDialogSection(
-                'البيانات المشاركة',
-                'سيتم إرسال:\n• اسمك\n• فئة المشكلة\n• نص رسالتك\n• معلومات الجهاز (اختياري):\n  - نموذج الجهاز\n  - إصدار نظام التشغيل\n  - رقم البناء',
-              ),
+              _buildDialogSection(l10n.supportSharedData, l10n.supportSharedDataDesc),
               const SizedBox(height: 16),
-              _buildDialogSection(
-                'السبب',
-                'نستخدم هذه البيانات لـ:\n• تشخيص المشاكل التقنية\n• تحسين جودة التطبيق\n• تقديم دعم أفضل لك',
-              ),
+              _buildDialogSection(l10n.supportReason, l10n.supportReasonDesc),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('فهمت'),
+            child: Text(l10n.gotIt),
           ),
         ],
       ),
@@ -211,7 +202,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
               const SizedBox(height: 16),
 
               _buildDropdown(
-                label: l10n.noteType,
+                label: l10n.supportCategory,
                 value: _selectedCategory,
                 items: categories,
                 onChanged: (value) => setState(() => _selectedCategory = value),
@@ -225,7 +216,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _subjectController,
-                label: l10n.title,
+                label: l10n.supportSubject,
                 icon: Icons.subject,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -237,7 +228,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _bodyController,
-                label: l10n.writeNote,
+                label: l10n.supportMessage,
                 icon: Icons.description,
                 maxLines: 6,
                 validator: (value) {
@@ -247,42 +238,24 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _includeDeviceInfo,
-                onChanged: (val) => setState(() => _includeDeviceInfo = val),
-                title: Text(l10n.attachDeviceInfo),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.helpsDiagnose),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.canRemoveFromEmail,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 32),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'الخصوصية والبيانات',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.privacyAndData,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'نحن نحترم خصوصيتك. سيتم استخدام بياناتك فقط لتحسين الدعم الفني.',
-                    style: TextStyle(fontSize: 13),
+                  Text(
+                    l10n.privacyDescription,
+                    style: const TextStyle(fontSize: 13),
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(
                     onTap: _showPrivacyDialog,
                     child: Text(
-                      'اقرأ سياسة الاستخدام',
+                      l10n.readPrivacyPolicy,
                       style: TextStyle(
                         fontSize: 13,
                         color: colorScheme.primary,
@@ -297,7 +270,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                     onChanged: (val) {
                       if (val != null) _savePrivacyConsent(val);
                     },
-                    title: const Text('أوافق على سياسة الاستخدام'),
+                    title: Text(l10n.agreeToPolicy),
                     activeColor: colorScheme.primary,
                   ),
                 ],

@@ -27,8 +27,9 @@ enum ViewType { grid, listExpanded, listCompact }
 
 class HomeScreen extends StatefulWidget {
   final String? sharedText;
+  final Function(bool)? onDrawerChanged;
 
-  const HomeScreen({super.key, this.sharedText});
+  const HomeScreen({super.key, this.sharedText, this.onDrawerChanged});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -43,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isTransitioning = false; // Temporal Lock
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier(0);
   ViewType _viewType = ViewType.listExpanded;
+  late final ValueNotifier<String> _viewTypeNotifier;
   bool _showAddMenu = false;
   Timer? _debounce;
   final Set<int> _selectedNoteIds = {};
@@ -52,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadViewType();
+    _viewTypeNotifier = ValueNotifier(_viewType.name);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NotesProvider>(context, listen: false).loadNotes();
     });
@@ -220,6 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     _closeAllSlidables.dispose();
+    _viewTypeNotifier.dispose();
     super.dispose();
   }
 
@@ -259,6 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Scaffold(
               key: _scaffoldKey,
+              onDrawerChanged: widget.onDrawerChanged,
               drawer: HomeDrawerWidget(
                 onBackupTap: () {
                   final tempStrings = {
@@ -272,48 +277,52 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 onNotesChanged: () {},
               ),
-              body: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () {
-                  _closeAllSlidables.value++;
-                  // Critical: Only unfocus if NOT actively interacting with search
-                  // This prevents race condition with AppBar icon
-                  if (!_isSearchActive || _searchController.text.isEmpty) {
-                    FocusScope.of(context).unfocus();
-                  }
-                },
-                child: SlidableAutoCloseBehavior(
-                  child: Stack(
-                    children: [
-                      SafeArea(
-                        child: NotificationListener<ScrollNotification>(
-                          onNotification: (notification) {
-                            if (notification is ScrollStartNotification) {
-                              _closeAllSlidables.value++;
-                            }
-                            return false;
-                          },
-                          child: CustomScrollView(
-                            controller: _scrollController,
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            physics: const BouncingScrollPhysics(),
-                            slivers: [
-                              _buildHeader(context, l10n, isDark, allNotes),
-                              _buildContent(filteredNotes, l10n),
-                            ],
+              body: MediaQuery.removeViewInsets(
+                context: context,
+                removeBottom: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    _closeAllSlidables.value++;
+                    // Critical: Only unfocus if NOT actively interacting with search
+                    // This prevents race condition with AppBar icon
+                    if (!_isSearchActive || _searchController.text.isEmpty) {
+                      FocusScope.of(context).unfocus();
+                    }
+                  },
+                  child: SlidableAutoCloseBehavior(
+                    child: Stack(
+                      children: [
+                        SafeArea(
+                          child: NotificationListener<ScrollNotification>(
+                            onNotification: (notification) {
+                              if (notification is ScrollStartNotification) {
+                                _closeAllSlidables.value++;
+                              }
+                              return false;
+                            },
+                            child: CustomScrollView(
+                              controller: _scrollController,
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              physics: const BouncingScrollPhysics(),
+                              slivers: [
+                                _buildHeader(context, l10n, isDark, allNotes),
+                                _buildContent(filteredNotes, l10n),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      AddMenuWidget(
-                        showMenu: _showAddMenu,
-                        onToggle: () {
-                          setState(() => _showAddMenu = !_showAddMenu);
-                          isMenuOpenNotifier.value = _showAddMenu;
-                        },
-                        onModeSelected: _navigateToEditor,
-                      ),
-                    ],
+                        AddMenuWidget(
+                          showMenu: _showAddMenu,
+                          onToggle: () {
+                            setState(() => _showAddMenu = !_showAddMenu);
+                            isMenuOpenNotifier.value = _showAddMenu;
+                          },
+                          onModeSelected: _navigateToEditor,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -416,17 +425,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: BreathingSearchField(
-                        key: ValueKey(_viewType),
                         controller: _searchController,
                         focusNode: _searchFocusNode,
                         hintText: l10n.searchNotes,
-                        compactView: _viewType != ViewType.grid,
+                        viewTypeNotifier: _viewTypeNotifier,
                         onViewToggle: () {
                           FocusScope.of(context).unfocus();
                           setState(() {
                             int nextIndex =
                                 (_viewType.index + 1) % ViewType.values.length;
                             _viewType = ViewType.values[nextIndex];
+                            _viewTypeNotifier.value = _viewType.name;
                           });
                           final settings = Provider.of<SettingsProvider>(
                               context,

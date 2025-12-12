@@ -12,7 +12,7 @@ class BreathingSearchField extends StatefulWidget {
   final VoidCallback? onMenuTap;
   final VoidCallback? onViewToggle;
   final VoidCallback? onFilterTap;
-  final bool compactView;
+  final ValueNotifier<String> viewTypeNotifier;
 
   const BreathingSearchField({
     super.key,
@@ -22,7 +22,7 @@ class BreathingSearchField extends StatefulWidget {
     this.onMenuTap,
     this.onViewToggle,
     this.onFilterTap,
-    this.compactView = false,
+    required this.viewTypeNotifier,
   });
 
   @override
@@ -39,7 +39,6 @@ class _BreathingSearchFieldState extends State<BreathingSearchField>
   late AnimationType _animationType;
   bool _hasTriggered = false;
   late FocusNode _focusNode;
-
   @override
   void initState() {
     super.initState();
@@ -136,6 +135,8 @@ class _BreathingSearchFieldState extends State<BreathingSearchField>
     }
   }
 
+
+
   @override
   void dispose() {
     _controller.dispose();
@@ -229,15 +230,22 @@ class _BreathingSearchFieldState extends State<BreathingSearchField>
                       ),
                     ),
                     if (widget.onViewToggle != null)
-                      IconButton(
-                        icon: Icon(
-                          widget.compactView
-                              ? Icons.grid_view
-                              : Icons.view_list,
-                          color: contentColor.withValues(alpha: 0.7),
-                        ),
-                        onPressed: widget.onViewToggle,
-                        splashRadius: 24,
+                      ValueListenableBuilder<String>(
+                        valueListenable: widget.viewTypeNotifier,
+                        builder: (context, viewType, child) {
+                          return IconButton(
+                            icon: Icon(
+                              viewType == 'listExpanded'
+                                  ? Icons.view_compact
+                                  : viewType == 'listCompact'
+                                      ? Icons.grid_view
+                                      : Icons.view_agenda,
+                              color: contentColor.withValues(alpha: 0.7),
+                            ),
+                            onPressed: widget.onViewToggle,
+                            splashRadius: 24,
+                          );
+                        },
                       ),
                     if (widget.onFilterTap != null)
                       IconButton(

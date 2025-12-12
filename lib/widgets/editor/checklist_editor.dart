@@ -332,7 +332,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                       color: textColor,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Checklist Title',
+                      hintText: l10n.checklistTitle,
                       hintStyle:
                           TextStyle(color: textColor.withValues(alpha: 0.4)),
                       border: InputBorder.none,
@@ -344,7 +344,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                 PopupMenuButton<String>(
                   icon: Icon(Icons.sort_rounded,
                       color: textColor.withValues(alpha: 0.6)),
-                  tooltip: 'Sort',
+                  tooltip: l10n.sort,
                   onSelected: sortItems,
                   itemBuilder: (context) => [
                     PopupMenuItem(
@@ -423,6 +423,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   }
 
   Widget _buildItemRow(ChecklistItem item, int index, Color textColor) {
+    final l10n = AppLocalizations.of(context)!;
     final isDone = item.isDone;
     final controller = _controllers[item.id]!;
     final focusNode = _focusNodes[item.id]!;
@@ -501,7 +502,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'Mission...',
+                hintText: l10n.checklistItemHint,
                 hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -526,7 +527,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     if (_items.isNotEmpty && _items.first.text.isNotEmpty) {
       return _items.first.text;
     }
-    return 'Checklist';
+    return AppLocalizations.of(context)?.checklist ?? 'Checklist';
   }
 
   @override

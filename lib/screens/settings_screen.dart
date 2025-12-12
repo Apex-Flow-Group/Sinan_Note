@@ -187,12 +187,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SwitchListTile(
                   contentPadding:
                       const EdgeInsetsDirectional.only(start: 72, end: 16),
-                  secondary: const Icon(Icons.visibility_off),
-                  title: Text(l10n.hideContentInBackground),
-                  subtitle: Text(l10n.applyBlurEffect),
-                  value: settings.hideContentInBackground,
-                  onChanged: (val) => settings.setHideContentInBackground(val),
+                  title: Text(l10n.lockDelay),
+                  subtitle: Text(settings.lockDelayEnabled
+                      ? _getLockDelayText(settings.lockDelaySeconds, l10n)
+                      : l10n.immediate),
+                  value: settings.lockDelayEnabled,
+                  onChanged: (val) async {
+                    if (val) {
+                      await _showLockDelayDialog(context, settings, l10n);
+                    } else {
+                      await settings.setLockDelayEnabled(false);
+                    }
+                  },
                 ),
+              const Divider(height: 1),
+              SwitchListTile(
+                secondary: const Icon(Icons.visibility_off),
+                title: Text(l10n.hideContentInBackground),
+                subtitle: Text(l10n.applyBlurEffect),
+                value: settings.hideContentInBackground,
+                onChanged: (val) => settings.setHideContentInBackground(val),
+              ),
 
               // DATA SECTION
               _buildSectionHeader(l10n.data),
@@ -1107,6 +1122,60 @@ By continuing, you acknowledge that:
             type: SnackBarType.error);
       }
     }
+  }
+
+  String _getLockDelayText(int seconds, AppLocalizations l10n) {
+    switch (seconds) {
+      case 30:
+        return l10n.seconds30;
+      case 120:
+        return l10n.minutes2;
+      case 180:
+        return l10n.minutes3;
+      case 300:
+        return l10n.minutes5;
+      default:
+        return '$seconds ${l10n.seconds30.split(' ')[1]}';
+    }
+  }
+
+  Future<void> _showLockDelayDialog(
+      BuildContext context, SettingsProvider settings, AppLocalizations l10n) async {
+    final delays = [
+      {'seconds': 30, 'label': l10n.seconds30},
+      {'seconds': 120, 'label': l10n.minutes2},
+      {'seconds': 180, 'label': l10n.minutes3},
+      {'seconds': 300, 'label': l10n.minutes5},
+    ];
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.selectLockDelay),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: delays.map((delay) {
+            return ListTile(
+              title: Text(delay['label'] as String),
+              leading: Radio<int>(
+                value: delay['seconds'] as int,
+                groupValue: settings.lockDelaySeconds,
+                onChanged: (val) async {
+                  await settings.setLockDelaySeconds(val!);
+                  await settings.setLockDelayEnabled(true);
+                  Navigator.pop(ctx);
+                },
+              ),
+              onTap: () async {
+                await settings.setLockDelaySeconds(delay['seconds'] as int);
+                await settings.setLockDelayEnabled(true);
+                Navigator.pop(ctx);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
   }
 
   void _showDiagnostics(

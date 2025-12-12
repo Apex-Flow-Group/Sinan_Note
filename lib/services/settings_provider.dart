@@ -16,6 +16,8 @@ class SettingsProvider with ChangeNotifier {
   String _viewType = 'listCompact';
   bool _isAppLockEnabled = false;
   bool _hideContentInBackground = true;
+  bool _lockDelayEnabled = false;
+  int _lockDelaySeconds = 30;
   bool _hasSeenLockedIntro = false;
   bool _isFirstLaunch = true;
   final Map<String, int> _defaultColorIndices = {
@@ -34,6 +36,8 @@ class SettingsProvider with ChangeNotifier {
   String get viewType => _viewType;
   bool get isAppLockEnabled => _isAppLockEnabled;
   bool get hideContentInBackground => _hideContentInBackground;
+  bool get lockDelayEnabled => _lockDelayEnabled;
+  int get lockDelaySeconds => _lockDelaySeconds;
   bool get hasSeenLockedIntro => _hasSeenLockedIntro;
   bool get isFirstLaunch => _isFirstLaunch;
   bool get isSetupCompleted => !_isFirstLaunch;
@@ -109,11 +113,9 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> setAppLockEnabled(bool enabled) async {
     _isAppLockEnabled = enabled;
-    if (enabled) _hideContentInBackground = true;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('appLockEnabled', enabled);
-    if (enabled) await prefs.setBool('hideContentInBackground', true);
     await _updateNativeSecureFlag();
   }
 
@@ -132,6 +134,20 @@ class SettingsProvider with ChangeNotifier {
     } catch (e) {
       // Platform channel not available (iOS or error)
     }
+  }
+
+  Future<void> setLockDelayEnabled(bool enabled) async {
+    _lockDelayEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('lockDelayEnabled', enabled);
+  }
+
+  Future<void> setLockDelaySeconds(int seconds) async {
+    _lockDelaySeconds = seconds;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('lockDelaySeconds', seconds);
   }
 
   Future<void> setLockedIntroSeen(bool value) async {
@@ -168,7 +184,9 @@ class SettingsProvider with ChangeNotifier {
     _cardMotionEnabled = prefs.getBool('cardMotionEnabled') ?? false;
     _viewType = prefs.getString('viewType') ?? 'listCompact';
     _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
-    _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? true;
+    _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? false;
+    _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
+    _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
     _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;
     _isFirstLaunch = prefs.getBool('first_launch') ?? true;
     _defaultColorIndices['simple'] = prefs.getInt('colorIndex_simple') ?? 8;

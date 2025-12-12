@@ -97,44 +97,42 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
             ),
           ),
         ),
-        // Interactive Elements - Safe from notch/edges
-        SafeArea(
-          child: Stack(
-            children: [
-              if (isVisible) ..._buildAnimatedMenuItems(context),
-              Positioned(
-                bottom: 80,
-                right: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Colors.blue[400]!, Colors.blue[600]!],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+        // Menu items in SafeArea
+        if (isVisible)
+          SafeArea(
+            child: Stack(children: _buildAnimatedMenuItems(context)),
+          ),
+        // FAB outside SafeArea - fixed position
+        Positioned(
+          bottom: 80,
+          right: 16,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Colors.blue[400]!, Colors.blue[600]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: FloatingActionButton(
-                heroTag: null,
-                onPressed: widget.onToggle,
-                backgroundColor: Colors.blue,
-                elevation: 0,
-                child: AnimatedRotation(
-                  turns: widget.showMenu ? 0.125 : 0,
-                  duration: const Duration(milliseconds: 300),
-                  child: const Icon(Icons.add, size: 32),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
+              ],
+            ),
+            child: FloatingActionButton(
+              heroTag: null,
+              onPressed: widget.onToggle,
+              backgroundColor: Colors.blue,
+              elevation: 0,
+              child: AnimatedRotation(
+                turns: widget.showMenu ? 0.125 : 0,
+                duration: const Duration(milliseconds: 300),
+                child: const Icon(Icons.add, size: 32),
               ),
             ),
-          ),
-            ],
           ),
         ),
       ],

@@ -27,14 +27,24 @@ class MainLayoutScreen extends StatefulWidget {
 class _MainLayoutScreenState extends State<MainLayoutScreen> {
   int _currentIndex = 0;
   bool _isScrollHidden = false;
+  bool _isDrawerOpen = false;
 
   void _handleScrollNotification(bool isScrollingDown) {
-    if (_currentIndex != 0) return;
+    if (_currentIndex != 0 || _isDrawerOpen) return;
     if (isScrollingDown && !_isScrollHidden) {
       setState(() => _isScrollHidden = true);
     } else if (!isScrollingDown && _isScrollHidden) {
       setState(() => _isScrollHidden = false);
     }
+  }
+
+  void _onDrawerChanged(bool isOpen) {
+    setState(() {
+      _isDrawerOpen = isOpen;
+      if (!isOpen) {
+        _isScrollHidden = false;
+      }
+    });
   }
 
   @override
@@ -48,35 +58,47 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final screens = [
       NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
-          if (notification.direction == ScrollDirection.reverse) {
-            _handleScrollNotification(true);
-          } else if (notification.direction == ScrollDirection.forward) {
-            _handleScrollNotification(false);
+          if (!_isDrawerOpen) {
+            if (notification.direction == ScrollDirection.reverse) {
+              _handleScrollNotification(true);
+            } else if (notification.direction == ScrollDirection.forward) {
+              _handleScrollNotification(false);
+            }
           }
           return false;
         },
-        child: HomeScreen(sharedText: widget.sharedText),
+        child: HomeScreen(
+          sharedText: widget.sharedText,
+          onDrawerChanged: _onDrawerChanged,
+        ),
       ),
       const ReminderDashboard(),
       const ProfessionalTab(),
     ];
 
     return Scaffold(
-      body: Stack(
-        children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: screens,
-          ),
-          if (showBottomBar)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
+      resizeToAvoidBottomInset: false,
+      onDrawerChanged: _onDrawerChanged,
+      body: MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: Stack(
+          children: [
+            IndexedStack(
+              index: _currentIndex,
+              children: screens,
+            ),
+            if (showBottomBar)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
               child: AnimatedSlide(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOutCubic,
-                offset: _isScrollHidden ? const Offset(0, 1) : Offset.zero,
+                offset: _isDrawerOpen 
+                    ? const Offset(0, 1) 
+                    : (_isScrollHidden ? const Offset(0, 1) : Offset.zero),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: BackdropFilter(
@@ -138,7 +160,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -37,41 +37,6 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     });
   }
 
-  Future<void> _handleSignIn() async {
-    setState(() => _isLoading = true);
-    try {
-      final success = await GoogleDriveService.signIn();
-      if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.signInSuccess),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.signInFailed),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        setState(() {});
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context)!.signInFailed} $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   Future<void> _handleSignOut() async {
     setState(() => _isLoading = true);
@@ -392,7 +357,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: _handleSignIn,
+                  onPressed: null,
                   icon: const Icon(Icons.login),
                   label: Text(l10n.signIn),
                 ),
