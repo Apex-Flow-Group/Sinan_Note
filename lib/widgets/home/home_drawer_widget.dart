@@ -9,6 +9,7 @@ import '../../services/database_service.dart';
 import '../../screens/locked_notes_intro_screen.dart';
 import '../../screens/locked_notes_screen.dart';
 import '../../screens/transfer_screen_helper.dart';
+import '../../screens/google_drive_screen.dart';
 import '../../l10n/l10n_migration_helper.dart';
 import '../../config/flavor_config.dart';
 
@@ -79,11 +80,18 @@ class HomeDrawerWidget extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.cloud_upload_rounded,
-                  title: l10n.cloudUpload,
+                  icon: Icons.cloud_rounded,
+                  title: l10n.googleDrive,
+                  subtitle: isArabic ? 'مزامنة السحابة' : 'Cloud sync',
+                  iconColor: const Color(0xFF4285F4),
                   onTap: () {
                     Navigator.pop(context);
-                    onBackupTap();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GoogleDriveScreen(),
+                      ),
+                    );
                   },
                 ),
                 _buildDrawerItem(

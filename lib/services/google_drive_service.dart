@@ -13,10 +13,15 @@ class GoogleDriveService {
     scopes: [drive.DriveApi.driveFileScope],
   );
 
-  GoogleSignInAccount? _currentUser;
-  drive.DriveApi? _driveApi;
+  static GoogleSignInAccount? _currentUser;
+  static drive.DriveApi? _driveApi;
+  static DateTime? _lastSyncTime;
 
-  Future<bool> signIn() async {
+  static bool get isSignedIn => _currentUser != null;
+  static String? get currentUserEmail => _currentUser?.email;
+  static DateTime? get lastSyncTime => _lastSyncTime;
+
+  static Future<bool> signIn() async {
     try {
       _currentUser = await _googleSignIn.signIn();
       if (_currentUser == null) return false;
@@ -34,16 +39,14 @@ class GoogleDriveService {
     }
   }
 
-  Future<void> signOut() async {
+  static Future<void> signOut() async {
     await _googleSignIn.signOut();
     _currentUser = null;
     _driveApi = null;
+    _lastSyncTime = null;
   }
 
-  bool get isSignedIn => _currentUser != null;
-  String? get userEmail => _currentUser?.email;
-
-  Future<String?> uploadDatabase() async {
+  static Future<bool> uploadDatabase(dynamic context) async {
     if (_driveApi == null) throw Exception('Not signed in');
 
     try {
@@ -60,27 +63,29 @@ class GoogleDriveService {
       final media = drive.Media(dbFile.openRead(), await dbFile.length());
 
       if (existingFile != null) {
-        // Update existing file
         await _driveApi!.files.update(
           drive.File(),
           existingFile.id!,
           uploadMedia: media,
         );
-        return existingFile.id;
       } else {
-        // Create new file
         final driveFile = drive.File()
           ..name = fileName
           ..mimeType = 'application/octet-stream';
 
-        final response = await _driveApi!.files.create(
+        await _driveApi!.files.create(
           driveFile,
           uploadMedia: media,
         );
-        return response.id;
       }
+      
+      _lastSyncTime = DateTime.now();
+      return true;
     } catch (e) {
-      throw Exception('Upload failed: $e');
+      if (kDebugMode) {
+        print('Upload failed: $e');
+      }
+      return false;
     }
   }
 
@@ -100,7 +105,7 @@ class GoogleDriveService {
     }
   }
 
-  Future<void> downloadDatabase() async {
+  static Future<bool> downloadDatabase(dynamic context) async {
     if (_driveApi == null) throw Exception('Not signed in');
 
     try {
@@ -124,25 +129,32 @@ class GoogleDriveService {
 
       await sink.close();
 
-      // Verify downloaded file
       if (!await tempFile.exists() || await tempFile.length() < 1024) {
         await tempFile.delete();
         throw Exception('Downloaded file is invalid');
       }
 
-      // Replace current database
       final dbFile = File(dbPath);
       if (await dbFile.exists()) {
         await dbFile.delete();
       }
 
       await tempFile.rename(dbPath);
+      _lastSyncTime = DateTime.now();
+      return true;
     } catch (e) {
-      throw Exception('Download failed: $e');
+      if (kDebugMode) {
+        print('Download failed: $e');
+      }
+      return false;
     }
   }
 
-  Future<drive.File?> _findFile(String fileName) async {
+  static Future<bool> syncDatabase(dynamic context) async {
+    return await uploadDatabase(context);
+  }
+
+  static Future<drive.File?> _findFile(String fileName) async {
     try {
       final fileList = await _driveApi!.files.list(
         q: "name='$fileName' and trashed=false",

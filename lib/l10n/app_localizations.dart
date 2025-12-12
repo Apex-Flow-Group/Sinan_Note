@@ -587,7 +587,7 @@ abstract class AppLocalizations {
   /// No description provided for @encryptedContent.
   ///
   /// In en, this message translates to:
-  /// **'🔒 Encrypted content'**
+  /// **'Encrypted content'**
   String get encryptedContent;
 
   /// No description provided for @startWriting.
@@ -2221,6 +2221,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I agree to the privacy policy'**
   String get agreeToPolicy;
+
+  /// No description provided for @googleDriveSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive Sync'**
+  String get googleDriveSync;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @notSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get notSignedIn;
+
+  /// No description provided for @signedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as'**
+  String get signedInAs;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// No description provided for @syncStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Status'**
+  String get syncStatus;
+
+  /// No description provided for @lastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Sync'**
+  String get lastSync;
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
+
+  /// No description provided for @syncActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Actions'**
+  String get syncActions;
+
+  /// No description provided for @uploadDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Database'**
+  String get uploadDatabase;
+
+  /// No description provided for @uploadDatabaseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload all notes to Google Drive'**
+  String get uploadDatabaseDesc;
+
+  /// No description provided for @downloadDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Database'**
+  String get downloadDatabase;
+
+  /// No description provided for @downloadDatabaseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore notes from Google Drive'**
+  String get downloadDatabaseDesc;
+
+  /// No description provided for @autoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Sync'**
+  String get autoSync;
+
+  /// No description provided for @autoSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically sync when app opens'**
+  String get autoSyncDesc;
+
+  /// No description provided for @syncHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync History'**
+  String get syncHistory;
+
+  /// No description provided for @noSyncHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No sync history'**
+  String get noSyncHistory;
+
+  /// No description provided for @uploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded'**
+  String get uploaded;
+
+  /// No description provided for @downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get downloaded;
+
+  /// No description provided for @failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed;
+
+  /// No description provided for @uploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Database uploaded successfully'**
+  String get uploadSuccess;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload database'**
+  String get uploadFailed;
+
+  /// No description provided for @downloadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Database downloaded successfully'**
+  String get downloadSuccess;
+
+  /// No description provided for @downloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download database'**
+  String get downloadFailed;
+
+  /// No description provided for @signOutSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out successfully'**
+  String get signOutSuccess;
+
+  /// No description provided for @signOutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to sign out'**
+  String get signOutFailed;
+
+  /// No description provided for @confirmDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Download'**
+  String get confirmDownload;
+
+  /// No description provided for @confirmDownloadMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All current notes will be replaced with notes from Google Drive. Are you sure?'**
+  String get confirmDownloadMessage;
+
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// No description provided for @upload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get upload;
+
+  /// No description provided for @syncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing'**
+  String get syncing;
+
+  /// No description provided for @pleaseSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in first'**
+  String get pleaseSignIn;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
 }
 
 class _AppLocalizationsDelegate

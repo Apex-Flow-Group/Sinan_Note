@@ -76,12 +76,12 @@ class _AboutScreenState extends State<AboutScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.verified, size: 14, color: Colors.green),
-                        const SizedBox(width: 4),
-                        const Text(
+                        Icon(Icons.verified, size: 14, color: Colors.green),
+                        SizedBox(width: 4),
+                        Text(
                           'نسخة رسمية - Google Play',
                           style: TextStyle(
                             fontSize: 11,

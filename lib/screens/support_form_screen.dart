@@ -377,7 +377,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: const Icon(Icons.category),

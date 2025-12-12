@@ -22,7 +22,7 @@ class ArchiveScreen extends StatefulWidget {
 class _ArchiveScreenState extends State<ArchiveScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  ViewType _viewType = ViewType.listExpanded;
+  final ViewType _viewType = ViewType.listExpanded;
   String _sortBy = 'date';
   bool _selectionMode = false;
   final Set<int> _selectedNoteIds = {};

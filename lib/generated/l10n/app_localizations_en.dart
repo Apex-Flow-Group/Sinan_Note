@@ -1050,4 +1050,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agreeToPolicy => 'I agree to the privacy policy';
+
+  @override
+  String get googleDriveSync => 'Google Drive Sync';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get notSignedIn => 'Not signed in';
+
+  @override
+  String get signedInAs => 'Signed in as';
+
+  @override
+  String get signOut => 'Sign Out';
+
+  @override
+  String get syncStatus => 'Sync Status';
+
+  @override
+  String get lastSync => 'Last Sync';
+
+  @override
+  String get never => 'Never';
+
+  @override
+  String get syncActions => 'Sync Actions';
+
+  @override
+  String get uploadDatabase => 'Upload Database';
+
+  @override
+  String get uploadDatabaseDesc => 'Upload all notes to Google Drive';
+
+  @override
+  String get downloadDatabase => 'Download Database';
+
+  @override
+  String get downloadDatabaseDesc => 'Restore notes from Google Drive';
+
+  @override
+  String get autoSync => 'Auto Sync';
+
+  @override
+  String get autoSyncDesc => 'Automatically sync when app opens';
+
+  @override
+  String get syncHistory => 'Sync History';
+
+  @override
+  String get noSyncHistory => 'No sync history';
+
+  @override
+  String get uploaded => 'Uploaded';
+
+  @override
+  String get downloaded => 'Downloaded';
+
+  @override
+  String get failed => 'Failed';
+
+  @override
+  String get uploadSuccess => 'Database uploaded successfully';
+
+  @override
+  String get uploadFailed => 'Failed to upload database';
+
+  @override
+  String get downloadSuccess => 'Database downloaded successfully';
+
+  @override
+  String get downloadFailed => 'Failed to download database';
+
+  @override
+  String get signOutSuccess => 'Signed out successfully';
+
+  @override
+  String get signOutFailed => 'Failed to sign out';
+
+  @override
+  String get confirmDownload => 'Confirm Download';
+
+  @override
+  String get confirmDownloadMessage => 'All current notes will be replaced with notes from Google Drive. Are you sure?';
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String get upload => 'Upload';
+
+  @override
+  String get syncing => 'Syncing';
+
+  @override
+  String get pleaseSignIn => 'Please sign in first';
+
+  @override
+  String get justNow => 'Just now';
 }

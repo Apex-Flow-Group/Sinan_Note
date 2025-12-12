@@ -2176,6 +2176,40 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I agree to the privacy policy'**
   String get agreeToPolicy;
+
+  String get googleDriveSync;
+  String get account;
+  String get notSignedIn;
+  String get signedInAs;
+  String get signOut;
+  String get syncStatus;
+  String get lastSync;
+  String get never;
+  String get syncActions;
+  String get uploadDatabase;
+  String get uploadDatabaseDesc;
+  String get downloadDatabase;
+  String get downloadDatabaseDesc;
+  String get autoSync;
+  String get autoSyncDesc;
+  String get syncHistory;
+  String get noSyncHistory;
+  String get uploaded;
+  String get downloaded;
+  String get failed;
+  String get uploadSuccess;
+  String get uploadFailed;
+  String get downloadSuccess;
+  String get downloadFailed;
+  String get signOutSuccess;
+  String get signOutFailed;
+  String get confirmDownload;
+  String get confirmDownloadMessage;
+  String get download;
+  String get upload;
+  String get syncing;
+  String get pleaseSignIn;
+  String get justNow;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

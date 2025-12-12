@@ -1050,4 +1050,103 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agreeToPolicy => 'أوافق على سياسة الاستخدام';
+
+  @override
+  String get googleDriveSync => 'مزامنة Google Drive';
+
+  @override
+  String get account => 'الحساب';
+
+  @override
+  String get notSignedIn => 'غير مسجل الدخول';
+
+  @override
+  String get signedInAs => 'مسجل الدخول كـ';
+
+  @override
+  String get signOut => 'تسجيل الخروج';
+
+  @override
+  String get syncStatus => 'حالة المزامنة';
+
+  @override
+  String get lastSync => 'آخر مزامنة';
+
+  @override
+  String get never => 'أبداً';
+
+  @override
+  String get syncActions => 'إجراءات المزامنة';
+
+  @override
+  String get uploadDatabase => 'رفع قاعدة البيانات';
+
+  @override
+  String get uploadDatabaseDesc => 'رفع جميع الملاحظات إلى Google Drive';
+
+  @override
+  String get downloadDatabase => 'تنزيل قاعدة البيانات';
+
+  @override
+  String get downloadDatabaseDesc => 'استعادة الملاحظات من Google Drive';
+
+  @override
+  String get autoSync => 'المزامنة التلقائية';
+
+  @override
+  String get autoSyncDesc => 'مزامنة تلقائية عند فتح التطبيق';
+
+  @override
+  String get syncHistory => 'سجل المزامنة';
+
+  @override
+  String get noSyncHistory => 'لا يوجد سجل مزامنة';
+
+  @override
+  String get uploaded => 'تم الرفع';
+
+  @override
+  String get downloaded => 'تم التنزيل';
+
+  @override
+  String get failed => 'فشل';
+
+  @override
+  String get uploadSuccess => 'تم رفع قاعدة البيانات بنجاح';
+
+  @override
+  String get uploadFailed => 'فشل رفع قاعدة البيانات';
+
+  @override
+  String get downloadSuccess => 'تم تنزيل قاعدة البيانات بنجاح';
+
+  @override
+  String get downloadFailed => 'فشل تنزيل قاعدة البيانات';
+
+  @override
+  String get signOutSuccess => 'تم تسجيل الخروج بنجاح';
+
+  @override
+  String get signOutFailed => 'فشل تسجيل الخروج';
+
+  @override
+  String get confirmDownload => 'تأكيد التنزيل';
+
+  @override
+  String get confirmDownloadMessage => 'سيتم استبدال جميع الملاحظات الحالية بالملاحظات من Google Drive. هل أنت متأكد؟';
+
+  @override
+  String get download => 'تنزيل';
+
+  @override
+  String get upload => 'رفع';
+
+  @override
+  String get syncing => 'جاري المزامنة';
+
+  @override
+  String get pleaseSignIn => 'يرجى تسجيل الدخول أولاً';
+
+  @override
+  String get justNow => 'الآن';
 }

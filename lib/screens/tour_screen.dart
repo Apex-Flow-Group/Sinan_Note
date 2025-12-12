@@ -91,9 +91,9 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage2Title,
       description: l10n.tourPage2Desc,
       features: [
-        _FeatureItem(icon: Icons.add, text: '50 + 20 ='),
-        _FeatureItem(icon: Icons.auto_awesome, text: '= 70'),
-        _FeatureItem(icon: Icons.functions, text: '+, -, ×, ÷'),
+        const _FeatureItem(icon: Icons.add, text: '50 + 20 ='),
+        const _FeatureItem(icon: Icons.auto_awesome, text: '= 70'),
+        const _FeatureItem(icon: Icons.functions, text: '+, -, ×, ÷'),
         _FeatureItem(icon: Icons.analytics_outlined, text: l10n.approximateSum),
       ],
     );
