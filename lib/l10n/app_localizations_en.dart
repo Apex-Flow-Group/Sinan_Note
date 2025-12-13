@@ -1223,21 +1223,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportTermsDesc =>
-      'By sending this message, you agree to:\n• Share your device information automatically\n• Use your data to improve technical support\n• Comply with our privacy policy';
+      'By sending this message, you agree to:\n• Share only the information you enter\n• Use your message to improve technical support\n• Comply with our privacy policy';
 
   @override
   String get supportSharedData => 'Shared Data';
 
   @override
   String get supportSharedDataDesc =>
-      'Will be sent:\n• Your name\n• Issue category\n• Your message\n• Device information (automatically):\n  - Device model\n  - OS version\n  - Build number';
+      'Only the following will be sent:\n• Your name\n• Issue category\n• Your message\n\nNo device information will be collected automatically.';
 
   @override
   String get supportReason => 'Reason';
 
   @override
   String get supportReasonDesc =>
-      'We use this data to:\n• Diagnose technical issues\n• Improve app quality\n• Provide better support';
+      'We use your message to:\n• Respond to your inquiries\n• Improve app quality\n• Provide better support';
 
   @override
   String get privacyUsagePolicy => 'Privacy & Usage Policy';

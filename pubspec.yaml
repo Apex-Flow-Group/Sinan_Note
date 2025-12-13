@@ -39,7 +39,8 @@ dependencies:
   dio: ^5.4.0
   permission_handler: ^11.0.0
   package_info_plus: ^8.0.0
-  device_info_plus: ^9.0.0
+  flutter_file_dialog: ^3.0.3
+
   flutter_code_editor: ^0.3.3
   highlight: ^0.7.0
   flutter_highlight: ^0.7.0

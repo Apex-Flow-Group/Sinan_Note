@@ -8,7 +8,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import '../config/flavor_config.dart';
 import 'apex_error_manager.dart';
 import 'database_service.dart';
 
@@ -36,24 +37,17 @@ class BackupService {
   Future<bool> _requestStoragePermission() async {
     if (!Platform.isAndroid) return true;
 
-    final deviceInfo = DeviceInfoPlugin();
-    final androidInfo = await deviceInfo.androidInfo;
-    final sdkVersion = androidInfo.version.sdkInt;
-
-    // Android 13+ (API 33+) doesn't need permission for Downloads folder
-    if (sdkVersion >= 33) return true;
-
-    // Android 11-12 (API 30-32) needs manageExternalStorage
-    if (sdkVersion >= 30) {
-      var status = await Permission.manageExternalStorage.status;
-      if (status.isGranted) return true;
-      status = await Permission.manageExternalStorage.request();
-      return status.isGranted;
-    }
-
-    // Android 10 and below need storage permission
-    var status = await Permission.storage.status;
+    // Try manageExternalStorage first (Android 11+)
+    var status = await Permission.manageExternalStorage.status;
     if (status.isGranted) return true;
+    
+    status = await Permission.manageExternalStorage.request();
+    if (status.isGranted) return true;
+
+    // Fallback to storage permission (Android 10 and below)
+    status = await Permission.storage.status;
+    if (status.isGranted) return true;
+    
     status = await Permission.storage.request();
     return status.isGranted;
   }
@@ -66,16 +60,28 @@ class BackupService {
 
       if (!await dbFile.exists()) throw Exception('لا توجد قاعدة بيانات');
 
-      final hasPermission = await _requestStoragePermission();
-      if (!hasPermission) throw Exception('يجب منح إذن التخزين');
-
       final now = DateTime.now();
       final fileName =
           'ApexNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}.db';
 
-      final directory = await _getBackupDirectory();
-      final outputPath = join(directory.path, fileName);
-      await dbFile.copy(outputPath);
+      if (FlavorConfig.isGooglePlay) {
+        // Google Play: Use scoped storage with file picker
+        final params = SaveFileDialogParams(
+          sourceFilePath: dbPath,
+          fileName: fileName,
+          mimeTypesFilter: ['application/octet-stream'],
+        );
+        final result = await FlutterFileDialog.saveFile(params: params);
+        if (result == null) throw Exception('تم إلغاء الحفظ');
+      } else {
+        // F-Droid: Direct path with MANAGE_EXTERNAL_STORAGE
+        final hasPermission = await _requestStoragePermission();
+        if (!hasPermission) throw Exception('يجب منح إذن التخزين');
+        
+        final directory = await _getBackupDirectory();
+        final outputPath = join(directory.path, fileName);
+        await dbFile.copy(outputPath);
+      }
     }, 'Backup_Export');
   }
 

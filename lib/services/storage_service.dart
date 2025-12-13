@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import '../config/flavor_config.dart';
 import '../models/note.dart';
 import 'database_service.dart';
 
@@ -25,29 +27,49 @@ class StorageService {
       final fileName =
           'sinan_notes_${DateTime.now().millisecondsSinceEpoch}.json';
 
-      Directory? directory;
-      if (Platform.isAndroid) {
-        directory = await getExternalStorageDirectory();
-        final backupDir = Directory(join(directory!.path, 'SinanNotes'));
-        if (!await backupDir.exists()) {
-          await backupDir.create(recursive: true);
-        }
-        directory = backupDir;
-      } else if (Platform.isWindows) {
-        directory = await getDownloadsDirectory();
+      if (FlavorConfig.isGooglePlay && Platform.isAndroid) {
+        // Google Play: Use scoped storage with file picker
+        final tempDir = await getTemporaryDirectory();
+        final tempPath = join(tempDir.path, fileName);
+        final tempFile = File(tempPath);
+        await tempFile.writeAsString(jsonString, flush: true);
+
+        final params = SaveFileDialogParams(
+          sourceFilePath: tempPath,
+          fileName: fileName,
+          mimeTypesFilter: ['application/json', 'text/plain'],
+        );
+        final result = await FlutterFileDialog.saveFile(params: params);
+        
+        await tempFile.delete();
+        
+        if (result == null) throw Exception('تم إلغاء الحفظ');
+        return 'تم حفظ ${validNotes.length} ملاحظة';
       } else {
-        directory = await getApplicationDocumentsDirectory();
+        // F-Droid or other platforms: Direct path
+        Directory? directory;
+        if (Platform.isAndroid) {
+          final dir = Directory('/storage/emulated/0/Download/SinanNotes');
+          if (!await dir.exists()) {
+            await dir.create(recursive: true);
+          }
+          directory = dir;
+        } else if (Platform.isWindows) {
+          directory = await getDownloadsDirectory();
+        } else {
+          directory = await getApplicationDocumentsDirectory();
+        }
+
+        final outputPath = join(directory!.path, fileName);
+        final file = File(outputPath);
+        await file.writeAsString(jsonString, flush: true);
+
+        if (!await file.exists()) {
+          throw Exception('فشل في إنشاء الملف');
+        }
+
+        return 'تم حفظ ${validNotes.length} ملاحظة في:\n$outputPath';
       }
-
-      final outputPath = join(directory!.path, fileName);
-      final file = File(outputPath);
-      await file.writeAsString(jsonString, flush: true);
-
-      if (!await file.exists()) {
-        throw Exception('فشل في إنشاء الملف');
-      }
-
-      return 'تم حفظ ${validNotes.length} ملاحظة في:\n$outputPath';
     } catch (e) {
       if (e.toString().contains('Exception:')) rethrow;
       throw Exception('فشل التصدير: ${e.toString()}');

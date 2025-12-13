@@ -2477,7 +2477,7 @@ abstract class AppLocalizations {
   /// No description provided for @supportTermsDesc.
   ///
   /// In en, this message translates to:
-  /// **'By sending this message, you agree to:\n• Share your device information automatically\n• Use your data to improve technical support\n• Comply with our privacy policy'**
+  /// **'By sending this message, you agree to:\n• Share only the information you enter\n• Use your message to improve technical support\n• Comply with our privacy policy'**
   String get supportTermsDesc;
 
   /// No description provided for @supportSharedData.
@@ -2489,7 +2489,7 @@ abstract class AppLocalizations {
   /// No description provided for @supportSharedDataDesc.
   ///
   /// In en, this message translates to:
-  /// **'Will be sent:\n• Your name\n• Issue category\n• Your message\n• Device information (automatically):\n  - Device model\n  - OS version\n  - Build number'**
+  /// **'Only the following will be sent:\n• Your name\n• Issue category\n• Your message\n\nNo device information will be collected automatically.'**
   String get supportSharedDataDesc;
 
   /// No description provided for @supportReason.
@@ -2501,7 +2501,7 @@ abstract class AppLocalizations {
   /// No description provided for @supportReasonDesc.
   ///
   /// In en, this message translates to:
-  /// **'We use this data to:\n• Diagnose technical issues\n• Improve app quality\n• Provide better support'**
+  /// **'We use your message to:\n• Respond to your inquiries\n• Improve app quality\n• Provide better support'**
   String get supportReasonDesc;
 
   /// No description provided for @privacyUsagePolicy.

@@ -2,19 +2,8 @@
 
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
 class PermissionService {
-  static Future<int> _getAndroidSdkVersion() async {
-    if (!Platform.isAndroid) return 0;
-    try {
-      final deviceInfo = DeviceInfoPlugin();
-      final androidInfo = await deviceInfo.androidInfo;
-      return androidInfo.version.sdkInt;
-    } catch (e) {
-      return 0;
-    }
-  }
 
   static Future<bool> requestCameraPermission() async {
     if (!Platform.isAndroid && !Platform.isIOS) {
@@ -45,33 +34,14 @@ class PermissionService {
       return true;
     }
 
-    final sdkVersion = await _getAndroidSdkVersion();
-
-    // Android 13+ (API 33+) requires explicit notification permission
-    if (Platform.isAndroid && sdkVersion >= 33) {
-      var status = await Permission.notification.status;
-      if (status.isGranted) return true;
-      if (status.isPermanentlyDenied) {
-        await openSettings();
-        return false;
-      }
-      status = await Permission.notification.request();
-      return status.isGranted;
+    var status = await Permission.notification.status;
+    if (status.isGranted) return true;
+    if (status.isPermanentlyDenied) {
+      await openSettings();
+      return false;
     }
-
-    // iOS always requires notification permission
-    if (Platform.isIOS) {
-      var status = await Permission.notification.status;
-      if (status.isGranted) return true;
-      if (status.isPermanentlyDenied) {
-        await openSettings();
-        return false;
-      }
-      status = await Permission.notification.request();
-      return status.isGranted;
-    }
-
-    return true;
+    status = await Permission.notification.request();
+    return status.isGranted;
   }
 
   /// Request storage permission (Android 13+ uses scoped storage)
@@ -80,30 +50,26 @@ class PermissionService {
       return true;
     }
 
-    final sdkVersion = await _getAndroidSdkVersion();
-
-    // Android 13+ (API 33+) uses granular media permissions
-    if (sdkVersion >= 33) {
-      // For media files, request photos/videos/audio instead of storage
-      var status = await Permission.photos.status;
-      if (status.isGranted || status.isLimited) return true;
-      if (status.isPermanentlyDenied) {
-        await openSettings();
-        return false;
-      }
+    // Try photos permission first (Android 13+)
+    var status = await Permission.photos.status;
+    if (status.isGranted || status.isLimited) return true;
+    
+    if (!status.isPermanentlyDenied) {
       status = await Permission.photos.request();
-      return status.isGranted || status.isLimited;
-    } else {
-      // Android 12 and below use storage permission
-      var status = await Permission.storage.status;
-      if (status.isGranted) return true;
-      if (status.isPermanentlyDenied) {
-        await openSettings();
-        return false;
-      }
-      status = await Permission.storage.request();
-      return status.isGranted;
+      if (status.isGranted || status.isLimited) return true;
     }
+
+    // Fallback to storage permission (Android 12 and below)
+    status = await Permission.storage.status;
+    if (status.isGranted) return true;
+    
+    if (status.isPermanentlyDenied) {
+      await openSettings();
+      return false;
+    }
+    
+    status = await Permission.storage.request();
+    return status.isGranted;
   }
 
   /// Check if any permission is permanently denied

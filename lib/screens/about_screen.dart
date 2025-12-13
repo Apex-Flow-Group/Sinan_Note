@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/flavor_config.dart';
-import '../services/device_info_service.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -15,7 +14,6 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   String _version = '...';
-  Map<String, String> _deviceInfo = {};
 
   @override
   void initState() {
@@ -26,11 +24,9 @@ class _AboutScreenState extends State<AboutScreen> {
   Future<void> _loadInfo() async {
     try {
       final info = await PackageInfo.fromPlatform();
-      final deviceInfo = await DeviceInfoService().getDeviceInfo();
       if (mounted) {
         setState(() {
           _version = 'v${info.version}';
-          _deviceInfo = deviceInfo;
         });
       }
     } catch (e) {
@@ -104,22 +100,6 @@ class _AboutScreenState extends State<AboutScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
-                  if (_deviceInfo.isNotEmpty) ...[const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildInfoRow('الجهاز', _deviceInfo['device'] ?? 'Unknown'),
-                          _buildInfoRow('النظام', _deviceInfo['os'] ?? 'Unknown'),
-                          _buildInfoRow('البناء', _deviceInfo['build'] ?? 'Unknown'),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -358,25 +338,6 @@ class _AboutScreenState extends State<AboutScreen> {
       context: context,
       applicationName: 'Sinan Note',
       applicationVersion: _version,
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          ),
-          Text(
-            value,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-        ],
-      ),
     );
   }
 }

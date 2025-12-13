@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/l10n_migration_helper.dart';
 import '../widgets/apex_snackbar.dart';
-import '../services/device_info_service.dart';
 
 class SupportFormScreen extends StatefulWidget {
   const SupportFormScreen({super.key});
@@ -60,16 +59,11 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
     final l10n = context.l10n;
 
     try {
-      // جمع معلومات الجهاز تلقائياً
-      String deviceInfoText = '';
-      final info = await DeviceInfoService().getDeviceInfo();
-      deviceInfoText = '\n---\nDevice: ${info['device']}\nOS: ${info['os']}\nBuild: ${info['build']}';
-
       final name = _nameController.text;
       final subject = _subjectController.text;
       final category = _selectedCategory ?? 'Other';
 
-      final body = 'Name: $name\nCategory: $category\n\nMessage:\n${_bodyController.text}$deviceInfoText';
+      final body = 'Name: $name\nCategory: $category\n\nMessage:\n${_bodyController.text}';
 
       final String encodedSubject = Uri.encodeComponent('[Sinan Note Support] $subject');
       final String encodedBody = Uri.encodeComponent(body);
