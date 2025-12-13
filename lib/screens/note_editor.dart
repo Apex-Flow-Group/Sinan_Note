@@ -11,11 +11,13 @@ import '../models/note_mode.dart';
 import '../models/note_version.dart';
 import '../services/database_service.dart';
 import '../services/notes_provider.dart';
+import '../services/settings_provider.dart';
 import '../utils/adaptive_color.dart';
 import '../utils/apex_smart_controller.dart';
 import '../utils/checklist_formatter.dart';
 import '../l10n/l10n_migration_helper.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:intl/intl.dart' show Bidi;
 import '../widgets/editor/apex_editor_header.dart';
 import '../widgets/editor/toolbars/editor_toolbar_factory.dart';
 import '../widgets/editor/professional_code_editor.dart';
@@ -77,8 +79,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   String? _notePassword;
   bool _isAuthenticated = false;
   double _fontSize = 18.0;
-  TextAlign _textAlign = TextAlign.right;
-  TextDirection _textDirection = TextDirection.rtl;
   Color _textColor = Colors.black87;
   Timer? _autosaveTimer;
   String? _detectedLanguage;
@@ -206,16 +206,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     if (mounted) {
       setState(() {
         _fontSize = settings['fontSize'];
-        final alignStr = settings['textAlign'];
-        _textAlign = alignStr == 'left'
-            ? TextAlign.left
-            : alignStr == 'center'
-                ? TextAlign.center
-                : TextAlign.right;
-        _textDirection = settings['textDirection'] == 'ltr'
-            ? TextDirection.ltr
-            : TextDirection.rtl;
-
         final lastColorIndex = settings['noteColorIndex'];
         if (lastColorIndex != null) {
           _colorIndex = lastColorIndex;
@@ -531,13 +521,24 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             final color = adaptiveColor.getColor(brightness);
             
             return GestureDetector(
-              onTap: () {
+              onTap: () async {
                 setState(() {
                   _colorIndex = index;
                   final isDarkBg = color.computeLuminance() < 0.5;
                   _textColor = isDarkBg ? Colors.white : Colors.black87;
                   _isDirty = true;
                 });
+                
+                // Save last used color for this note type
+                final settings = Provider.of<SettingsProvider>(context, listen: false);
+                String colorMode = 'simple';
+                if (widget.mode == NoteMode.reminder) {
+                  colorMode = 'reminder';
+                } else if (widget.mode == NoteMode.code) {
+                  colorMode = 'professional';
+                }
+                await settings.setDefaultColorIndex(colorMode, index);
+                
                 Navigator.pop(ctx);
               },
               child: Container(
@@ -886,18 +887,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       });
     }
 
-    // EXPERIMENTAL FIX: Disable auto math/date analysis in RTL mode
-    // Issue #10: Cursor jumps incorrectly when typing in RTL (Arabic)
-    // Root cause: _analyzeMathAndDates() calculates cursor offset assuming LTR
-    // When text is added (e.g., " = 70"), offset calculation doesn't account for RTL direction
-    if (widget.mode == NoteMode.simple && _textDirection == TextDirection.ltr) {
+    if (widget.mode == NoteMode.simple) {
       _analyzeMathAndDates();
     }
-
-    // OLD CODE (before fix):
-    // if (widget.mode == NoteMode.simple) {
-    //   _analyzeMathAndDates();
-    // }
   }
 
   void _updateUndoRedoState() {
@@ -1025,7 +1017,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final isTablet = screenWidth > 600;
     final sidePadding = isTablet ? 40.0 : 20.0;
 
-    return PopScope(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: _backgroundColor,
+        systemNavigationBarIconBrightness: isLightColor ? Brightness.dark : Brightness.light,
+      ),
+      child: PopScope(
       canPop: !_isSavingOnExit,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
         if (didPop) return;
@@ -1083,6 +1080,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             _buildToolbar(finalTextColor, l10n),
           ],
         ),
+      ),
       ),
     );
   }
@@ -1190,36 +1188,42 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                     ),
                   ),
                 ),
-              TextField(
-                controller: _contentController,
-                undoController: _undoController,
-                focusNode: _textFieldFocusNode,
-                scrollPadding: const EdgeInsets.only(bottom: 120.0),
-                onTap: () {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    final text = _contentController.text;
-                    final selection = _contentController.selection;
-                    if (selection.baseOffset > text.length) {
-                      _contentController.selection = TextSelection.collapsed(
-                        offset: text.length,
-                      );
-                    }
-                  });
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _contentController,
+                builder: (context, value, child) {
+                  final isRtl = value.text.isNotEmpty && Bidi.detectRtlDirectionality(value.text);
+                  return TextField(
+                    controller: _contentController,
+                    undoController: _undoController,
+                    focusNode: _textFieldFocusNode,
+                    scrollPadding: const EdgeInsets.only(bottom: 120.0),
+                    onTap: () {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        final text = _contentController.text;
+                        final selection = _contentController.selection;
+                        if (selection.baseOffset > text.length) {
+                          _contentController.selection = TextSelection.collapsed(
+                            offset: text.length,
+                          );
+                        }
+                      });
+                    },
+                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                    textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                    style: TextStyle(
+                        fontSize: _fontSize, height: 1.5, color: finalTextColor),
+                    cursorColor: finalTextColor.withValues(alpha: 0.8),
+                    cursorWidth: 2.5,
+                    cursorRadius: const Radius.circular(2),
+                    decoration: InputDecoration(
+                      hintText: l10n.startWriting,
+                      hintStyle: TextStyle(color: finalHintColor),
+                      border: InputBorder.none,
+                    ),
+                    maxLines: null,
+                    autofocus: widget.note == null,
+                  );
                 },
-                textAlign: _textAlign,
-                textDirection: _textDirection,
-                style: TextStyle(
-                    fontSize: _fontSize, height: 1.5, color: finalTextColor),
-                cursorColor: finalTextColor.withValues(alpha: 0.8),
-                cursorWidth: 2.5,
-                cursorRadius: const Radius.circular(2),
-                decoration: InputDecoration(
-                  hintText: l10n.startWriting,
-                  hintStyle: TextStyle(color: finalHintColor),
-                  border: InputBorder.none,
-                ),
-                maxLines: null,
-                autofocus: widget.note == null,
               ),
             ],
           ),
@@ -1296,21 +1300,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         color: _backgroundColor,
         child: SafeArea(
           top: false,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: _backgroundColor.withValues(alpha: 0.7),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 16,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: EditorToolbarFactory.build(
+          child: Container(
+            decoration: BoxDecoration(
+              color: _backgroundColor,
+            ),
+            child: EditorToolbarFactory.build(
                   mode: widget.mode,
                   backgroundColor: _backgroundColor,
                   textColor: finalTextColor,
@@ -1430,25 +1424,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                     HapticFeedback.mediumImpact();
                     _showInlineColorPicker();
                   },
-                  onAlignLeft: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _textAlign = TextAlign.left);
-                  },
-                  onAlignCenter: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _textAlign = TextAlign.center);
-                  },
-                  onAlignRight: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _textAlign = TextAlign.right);
-                  },
-                  onDirectionToggle: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _textDirection =
-                        _textDirection == TextDirection.rtl
-                            ? TextDirection.ltr
-                            : TextDirection.rtl);
-                  },
                   onInsertSymbol: (symbol) {
                     if (widget.mode == NoteMode.code) {
                       final text = _codeController.text;
@@ -1488,8 +1463,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   onRunCode: _detectedLanguage != null ? _runCode : null,
                   onExportCode: _detectedLanguage != null ? _exportCode : null,
                 ),
-              ),
-            ),
           ),
         ),
       ),
@@ -1555,8 +1528,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     _storageController.saveStickySettings(
       fontSize: _fontSize,
-      textAlign: _textAlign,
-      textDirection: _textDirection,
       backgroundColor: _backgroundColor,
     );
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../utils/checklist_formatter.dart';
+import 'package:intl/intl.dart' show Bidi;
 
 class ChecklistUndoRedoController {
   final VoidCallback undo;
@@ -321,24 +322,30 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _titleController,
-                    textDirection: Directionality.of(context),
-                    textAlign: Directionality.of(context) == TextDirection.rtl ? TextAlign.right : TextAlign.left,
-                    textAlignVertical: TextAlignVertical.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: l10n.checklistTitle,
-                      hintStyle:
-                          TextStyle(color: textColor.withValues(alpha: 0.4)),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                    maxLines: null,
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _titleController,
+                    builder: (context, value, child) {
+                      final isRtl = value.text.isNotEmpty && Bidi.detectRtlDirectionality(value.text);
+                      return TextField(
+                        controller: _titleController,
+                        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                        textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                        textAlignVertical: TextAlignVertical.center,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: l10n.checklistTitle,
+                          hintStyle:
+                              TextStyle(color: textColor.withValues(alpha: 0.4)),
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                        maxLines: null,
+                      );
+                    },
                   ),
                 ),
                 PopupMenuButton<String>(
@@ -480,33 +487,39 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
             ),
           ),
           Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              textDirection: Directionality.of(context),
-              textAlign: Directionality.of(context) == TextDirection.rtl ? TextAlign.right : TextAlign.left,
-              textAlignVertical: TextAlignVertical.center,
-              maxLines: null,
-              textInputAction: TextInputAction.newline,
-              onSubmitted: (_) {
-                _addNewItem(insertIndex: index + 1, autoFocus: true);
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                final isRtl = value.text.isNotEmpty && Bidi.detectRtlDirectionality(value.text);
+                return TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                  textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                  textAlignVertical: TextAlignVertical.center,
+                  maxLines: null,
+                  textInputAction: TextInputAction.newline,
+                  onSubmitted: (_) {
+                    _addNewItem(insertIndex: index + 1, autoFocus: true);
+                  },
+                  onChanged: (text) {
+                    // Removed auto-delete on empty text
+                  },
+                  style: TextStyle(
+                    fontSize: 16,
+                    decoration:
+                        isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                    color: isDone ? textColor.withValues(alpha: 0.5) : textColor,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: l10n.checklistItemHint,
+                    hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                );
               },
-              onChanged: (text) {
-                // Removed auto-delete on empty text
-              },
-              style: TextStyle(
-                fontSize: 16,
-                decoration:
-                    isDone ? TextDecoration.lineThrough : TextDecoration.none,
-                color: isDone ? textColor.withValues(alpha: 0.5) : textColor,
-              ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: l10n.checklistItemHint,
-                hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
             ),
           ),
           if (_items.length > 1)

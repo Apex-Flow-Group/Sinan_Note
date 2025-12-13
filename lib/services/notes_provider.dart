@@ -8,7 +8,7 @@ import 'notification_service.dart';
 import 'widget_service.dart';
 import 'encryption_service.dart';
 
-class NotesProvider extends ChangeNotifier with WidgetsBindingObserver {
+class NotesProvider extends ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
 
   // SINGLE SOURCE OF TRUTH: قائمة واحدة مركزية
@@ -44,32 +44,6 @@ class NotesProvider extends ChangeNotifier with WidgetsBindingObserver {
     _vaultUnlockedAt = null;
     clearLockedSession();
     notifyListeners();
-  }
-
-  // 🔒 SECURITY: Monitor app lifecycle for instant vault lock
-  void startLifecycleMonitoring() {
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  void stopLifecycleMonitoring() {
-    WidgetsBinding.instance.removeObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 🔒 Lock vault immediately when app goes to background or becomes inactive
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      if (_isVaultUnlocked) {
-        debugPrint('🔒 SECURITY: App backgrounded - Locking vault immediately');
-        lockVault();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    stopLifecycleMonitoring();
-    super.dispose();
   }
 
   // SMART GETTERS: الفلترة في الذاكرة

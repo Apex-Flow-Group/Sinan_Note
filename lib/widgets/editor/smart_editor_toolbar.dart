@@ -31,10 +31,6 @@ class SmartEditorToolbar extends StatefulWidget {
 
   // Style Callbacks
   final VoidCallback onColorTap;
-  final VoidCallback onAlignLeft;
-  final VoidCallback onAlignCenter;
-  final VoidCallback onAlignRight;
-  final VoidCallback onDirectionToggle;
   final VoidCallback? onBackgroundColorTap;
 
   const SmartEditorToolbar({
@@ -55,10 +51,6 @@ class SmartEditorToolbar extends StatefulWidget {
     required this.onH2,
     required this.onChecklist,
     required this.onColorTap,
-    required this.onAlignLeft,
-    required this.onAlignCenter,
-    required this.onAlignRight,
-    required this.onDirectionToggle,
     this.onBackgroundColorTap,
     this.mode = ToolbarMode.main,
     this.hasReminder = false,
@@ -317,13 +309,7 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
             color: widget.textColor.withValues(alpha: 0.2)),
         if (widget.onBackgroundColorTap != null)
           _buildIconBtn(Icons.color_lens, widget.onBackgroundColorTap),
-        const SizedBox(width: 10),
-        _buildIconBtn(Icons.format_align_right_rounded, widget.onAlignRight),
-        _buildIconBtn(Icons.format_align_center_rounded, widget.onAlignCenter),
-        _buildIconBtn(Icons.format_align_left_rounded, widget.onAlignLeft),
-        const SizedBox(width: 10),
-        _buildIconBtn(Icons.format_textdirection_r_to_l_rounded,
-            widget.onDirectionToggle),
+        _buildIconBtn(Icons.format_color_text_rounded, widget.onColorTap),
       ],
     );
   }

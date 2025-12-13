@@ -14,7 +14,6 @@ import '../services/backup_service.dart';
 import '../services/database_service.dart';
 import '../services/apex_diagnostics_engine.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../utils/adaptive_color.dart';
 import '../widgets/apex_snackbar.dart';
 import 'transfer_screen.dart';
 import 'transfer_screen_helper.dart';
@@ -114,18 +113,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // EDITOR SECTION
               _buildSectionHeader(l10n.editor),
-              ListTile(
-                leading: const Icon(Icons.palette),
-                title: Text(l10n.noteColors),
-                subtitle: Text(l10n.chooseDefaultColor),
-              ),
-              _buildColorOption(
-                  context, settings, 'simple', l10n.simpleNote, currentLang),
-              _buildColorOption(
-                  context, settings, 'reminder', l10n.reminder, currentLang),
-              _buildColorOption(context, settings, 'professional',
-                  l10n.proEditor, currentLang),
-              const Divider(height: 1),
               SwitchListTile(
                 secondary: const Icon(Icons.auto_awesome),
                 title: Text(l10n.cardShineEffect),
@@ -366,31 +353,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _buildColorOption(BuildContext context, SettingsProvider settings,
-      String mode, String title, String lang) {
-    final brightness = Theme.of(context).brightness;
-    final colorIndex = settings.getDefaultColorIndex(mode);
-    final color = AppColorPalette.palette[colorIndex].getColor(brightness);
-    
-    return ListTile(
-      contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-      title: Text(title),
-      trailing: GestureDetector(
-        onTap: () => _showColorPicker(context, settings, mode, lang),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(
-                color: Theme.of(context).colorScheme.outline, width: 2),
-          ),
-        ),
-      ),
-    );
-  }
-
   // Dialog Methods (keeping existing implementations)
   void _showLanguageDialog(
       BuildContext context, SettingsProvider settings, AppLocalizations l10n) {
@@ -406,10 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<String>(
                 value: 'system',
                 groupValue: settings.languageCode,
-                onChanged: (val) {
-                  settings.setLanguage(val!);
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 settings.setLanguage('system');
@@ -421,10 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<String>(
                 value: 'ar',
                 groupValue: settings.languageCode,
-                onChanged: (val) {
-                  settings.setLanguage(val!);
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 settings.setLanguage('ar');
@@ -436,10 +392,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<String>(
                 value: 'en',
                 groupValue: settings.languageCode,
-                onChanged: (val) {
-                  settings.setLanguage(val!);
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 settings.setLanguage('en');
@@ -467,10 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<ThemeMode>(
                 value: ThemeMode.system,
                 groupValue: settings.themeMode,
-                onChanged: (val) {
-                  settings.setThemeMode(val!);
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 settings.setThemeMode(ThemeMode.system);
@@ -482,10 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<ThemeMode>(
                 value: ThemeMode.light,
                 groupValue: settings.themeMode,
-                onChanged: (val) {
-                  settings.setThemeMode(val!);
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 settings.setThemeMode(ThemeMode.light);
@@ -497,10 +444,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<ThemeMode>(
                 value: ThemeMode.dark,
                 groupValue: settings.themeMode,
-                onChanged: (val) {
-                  settings.setThemeMode(val!);
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 settings.setThemeMode(ThemeMode.dark);
@@ -530,14 +474,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<String>(
                 value: 'delete',
                 groupValue: currentValue,
-                onChanged: (val) {
-                  if (isRight) {
-                    settings.setSwipeRightAction(val!);
-                  } else {
-                    settings.setSwipeLeftAction(val!);
-                  }
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 if (isRight) {
@@ -553,14 +490,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<String>(
                 value: 'archive',
                 groupValue: currentValue,
-                onChanged: (val) {
-                  if (isRight) {
-                    settings.setSwipeRightAction(val!);
-                  } else {
-                    settings.setSwipeLeftAction(val!);
-                  }
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 if (isRight) {
@@ -576,14 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Radio<String>(
                 value: 'share',
                 groupValue: currentValue,
-                onChanged: (val) {
-                  if (isRight) {
-                    settings.setSwipeRightAction(val!);
-                  } else {
-                    settings.setSwipeLeftAction(val!);
-                  }
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () {
                 if (isRight) {
@@ -595,49 +518,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showColorPicker(BuildContext context, SettingsProvider settings,
-      String mode, String lang) {
-    final l10n = AppLocalizations.of(context)!;
-    final brightness = Theme.of(context).brightness;
-    final currentIndex = settings.getDefaultColorIndex(mode);
-    
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.chooseColor),
-        content: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: List.generate(AppColorPalette.palette.length, (index) {
-            final adaptiveColor = AppColorPalette.palette[index];
-            final color = adaptiveColor.getColor(brightness);
-            
-            return GestureDetector(
-              onTap: () {
-                settings.setDefaultColorIndex(mode, index);
-                Navigator.pop(ctx);
-              },
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: currentIndex == index
-                        ? Theme.of(context).colorScheme.onSurface
-                        : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-              ),
-            );
-          }),
         ),
       ),
     );
@@ -1160,11 +1040,7 @@ By continuing, you acknowledge that:
               leading: Radio<int>(
                 value: delay['seconds'] as int,
                 groupValue: settings.lockDelaySeconds,
-                onChanged: (val) async {
-                  await settings.setLockDelaySeconds(val!);
-                  await settings.setLockDelayEnabled(true);
-                  Navigator.pop(ctx);
-                },
+                onChanged: null,
               ),
               onTap: () async {
                 await settings.setLockDelaySeconds(delay['seconds'] as int);

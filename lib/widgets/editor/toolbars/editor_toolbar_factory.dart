@@ -31,10 +31,6 @@ class EditorToolbarFactory {
     VoidCallback? onList,
     VoidCallback? onChecklist,
     VoidCallback? onColorTap,
-    VoidCallback? onAlignLeft,
-    VoidCallback? onAlignCenter,
-    VoidCallback? onAlignRight,
-    VoidCallback? onDirectionToggle,
     Function(String)? onInsertSymbol,
     VoidCallback? onRunCode,
     VoidCallback? onExportCode,
@@ -82,10 +78,6 @@ class EditorToolbarFactory {
           onShareTap: onShareTap ?? () {},
           onArchiveTap: onArchiveTap ?? () {},
           onDeleteTap: onDeleteTap ?? () {},
-          onAlignLeft: onAlignLeft ?? () {},
-          onAlignCenter: onAlignCenter ?? () {},
-          onAlignRight: onAlignRight ?? () {},
-          onDirectionToggle: onDirectionToggle ?? () {},
         );
 
       case NoteMode.rich:
@@ -110,10 +102,6 @@ class EditorToolbarFactory {
           onList: onList ?? () {},
           onChecklist: onChecklist ?? () {},
           onColorTap: onColorTap ?? () {},
-          onAlignLeft: onAlignLeft ?? () {},
-          onAlignCenter: onAlignCenter ?? () {},
-          onAlignRight: onAlignRight ?? () {},
-          onDirectionToggle: onDirectionToggle ?? () {},
         );
     }
   }
@@ -133,10 +121,6 @@ class _SimpleToolbar extends StatelessWidget {
   final VoidCallback onShareTap;
   final VoidCallback onArchiveTap;
   final VoidCallback onDeleteTap;
-  final VoidCallback onAlignLeft;
-  final VoidCallback onAlignCenter;
-  final VoidCallback onAlignRight;
-  final VoidCallback onDirectionToggle;
 
   const _SimpleToolbar({
     required this.backgroundColor,
@@ -151,10 +135,6 @@ class _SimpleToolbar extends StatelessWidget {
     required this.onShareTap,
     required this.onArchiveTap,
     required this.onDeleteTap,
-    required this.onAlignLeft,
-    required this.onAlignCenter,
-    required this.onAlignRight,
-    required this.onDirectionToggle,
   });
 
   @override

@@ -175,10 +175,11 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         title: Text(
             _currentNote.title.isEmpty ? l10n.viewNote : _currentNote.title),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.widgets_outlined),
-            tooltip: 'Pin to Widget',
-            onPressed: () async {
+          if (!_currentNote.isTrashed)
+            IconButton(
+              icon: const Icon(Icons.widgets_outlined),
+              tooltip: 'Pin to Widget',
+              onPressed: () async {
               
               // Check if note ID exists
               if (_currentNote.id == null) {
@@ -216,8 +217,8 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                 type: SnackBarType.success,
                 duration: const Duration(seconds: 2),
               );
-            },
-          ),
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.copy),
             tooltip: l10n.copy,
@@ -348,10 +349,10 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: widget.showRestore
+      bottomNavigationBar: _currentNote.isTrashed
           ? _buildRestoreBar(context, l10n)
           : _buildActionBar(context, l10n),
-      floatingActionButton: !widget.showRestore
+      floatingActionButton: !_currentNote.isTrashed
           ? FloatingActionButton(
               heroTag: 'note_view_edit_fab',
               onPressed: () => _editNote(context),

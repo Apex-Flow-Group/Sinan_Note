@@ -28,8 +28,6 @@ class EditorStorageController {
     final prefs = await SharedPreferences.getInstance();
     return {
       'fontSize': prefs.getDouble('last_font_size') ?? 18.0,
-      'textAlign': prefs.getString('last_text_align') ?? 'right',
-      'textDirection': prefs.getString('last_text_direction') ?? 'rtl',
       'noteColorIndex': prefs.getInt('last_note_color'),
     };
   }
@@ -37,25 +35,11 @@ class EditorStorageController {
   /// Save sticky settings to SharedPreferences
   Future<void> saveStickySettings({
     required double fontSize,
-    required TextAlign textAlign,
-    required TextDirection textDirection,
     required Color backgroundColor,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('last_font_size', fontSize);
-      await prefs.setString(
-        'last_text_align',
-        textAlign == TextAlign.left
-            ? 'left'
-            : textAlign == TextAlign.center
-                ? 'center'
-                : 'right',
-      );
-      await prefs.setString(
-        'last_text_direction',
-        textDirection == TextDirection.ltr ? 'ltr' : 'rtl',
-      );
       await prefs.setInt('last_note_color', _colorToInt(backgroundColor));
     } catch (e) {
       debugPrint('❌ Failed to save sticky settings: $e');

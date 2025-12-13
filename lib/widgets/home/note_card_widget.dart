@@ -232,7 +232,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
         isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
 
     // SECURITY: Locked notes use PopupMenu instead of swipe
-    final bool enableSwipe = !widget.selectionMode && settings.swipeEnabled && !widget.note.isLocked;
+    // Disable swipe in archive screen (like trash screen)
+    final bool enableSwipe = !widget.selectionMode && settings.swipeEnabled && !widget.note.isLocked && widget.source != 'archive';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),

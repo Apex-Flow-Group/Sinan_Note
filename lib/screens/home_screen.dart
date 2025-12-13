@@ -73,17 +73,20 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => NoteEditorImmersive(
-              mode: NoteMode.code,
-              note: Note(
-                title: context.l10n.importedFile,
-                content: widget.sharedText!,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-                colorIndex: 0,
-                noteType: NoteMode.code.name,
-              ),
-            ),
+            builder: (context) {
+              final settings = Provider.of<SettingsProvider>(context, listen: false);
+              return NoteEditorImmersive(
+                mode: NoteMode.code,
+                note: Note(
+                  title: context.l10n.importedFile,
+                  content: widget.sharedText!,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                  colorIndex: settings.getDefaultColorIndex('professional'),
+                  noteType: NoteMode.code.name,
+                ),
+              );
+            },
           ),
         );
       }
@@ -192,6 +195,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToEditor(NoteMode mode) async {
     setState(() => _showAddMenu = false);
     isMenuOpenNotifier.value = false;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    String colorMode = 'simple';
+    if (mode == NoteMode.reminder) {
+      colorMode = 'reminder';
+    } else if (mode == NoteMode.code) {
+      colorMode = 'professional';
+    }
+    
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -202,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
             content: '',
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
-            colorIndex: 0,
+            colorIndex: settings.getDefaultColorIndex(colorMode),
             noteType: mode.name,
             isChecklist: mode == NoteMode.checklist,
             isProfessional: mode == NoteMode.code,
@@ -277,54 +288,54 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 onNotesChanged: () {},
               ),
-              body: MediaQuery.removeViewInsets(
-                context: context,
-                removeBottom: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () {
-                    _closeAllSlidables.value++;
-                    // Critical: Only unfocus if NOT actively interacting with search
-                    // This prevents race condition with AppBar icon
-                    if (!_isSearchActive || _searchController.text.isEmpty) {
-                      FocusScope.of(context).unfocus();
-                    }
-                  },
-                  child: SlidableAutoCloseBehavior(
-                    child: Stack(
-                      children: [
-                        SafeArea(
-                          child: NotificationListener<ScrollNotification>(
-                            onNotification: (notification) {
-                              if (notification is ScrollStartNotification) {
-                                _closeAllSlidables.value++;
-                              }
-                              return false;
-                            },
-                            child: CustomScrollView(
-                              controller: _scrollController,
-                              keyboardDismissBehavior:
-                                  ScrollViewKeyboardDismissBehavior.onDrag,
-                              physics: const BouncingScrollPhysics(),
-                              slivers: [
-                                _buildHeader(context, l10n, isDark, allNotes),
-                                _buildContent(filteredNotes, l10n),
-                              ],
-                            ),
+              body: Stack(
+                children: [
+                  SafeArea(
+                    child: MediaQuery.removeViewInsets(
+                      context: context,
+                      removeBottom: true,
+                      child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () {
+                        _closeAllSlidables.value++;
+                        // Critical: Only unfocus if NOT actively interacting with search
+                        // This prevents race condition with AppBar icon
+                        if (!_isSearchActive || _searchController.text.isEmpty) {
+                          FocusScope.of(context).unfocus();
+                        }
+                      },
+                      child: SlidableAutoCloseBehavior(
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            if (notification is ScrollStartNotification) {
+                              _closeAllSlidables.value++;
+                            }
+                            return false;
+                          },
+                          child: CustomScrollView(
+                            controller: _scrollController,
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            physics: const BouncingScrollPhysics(),
+                            slivers: [
+                              _buildHeader(context, l10n, isDark, allNotes),
+                              _buildContent(filteredNotes, l10n),
+                            ],
                           ),
                         ),
-                        AddMenuWidget(
-                          showMenu: _showAddMenu,
-                          onToggle: () {
-                            setState(() => _showAddMenu = !_showAddMenu);
-                            isMenuOpenNotifier.value = _showAddMenu;
-                          },
-                          onModeSelected: _navigateToEditor,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
+                  AddMenuWidget(
+                    showMenu: _showAddMenu,
+                    onToggle: () {
+                      setState(() => _showAddMenu = !_showAddMenu);
+                      isMenuOpenNotifier.value = _showAddMenu;
+                    },
+                    onModeSelected: _navigateToEditor,
+                  ),
+                ],
               ),
             ),
           ),
@@ -336,7 +347,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader(BuildContext context, AppLocalizations l10n, bool isDark,
       List<Note> allNotes) {
     return SliverPersistentHeader(
-      floating: true,
+      pinned: true,
+      floating: false,
       delegate: SmoothSearchHeaderDelegate(
         expandedHeight: 80.0,
         isDark: isDark,
@@ -479,8 +491,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_viewType == ViewType.grid) {
+      final fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
+      final bottomPadding = fabBottom + 56 + 8;
       return SliverPadding(
-        padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 160),
+        padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
         sliver: SliverMasonryGrid.count(
           crossAxisCount: MediaQuery.of(context).size.width >= 1200
               ? 4
@@ -496,8 +510,10 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    final fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
+    final bottomPadding = fabBottom + 56 + 8;
     return SliverPadding(
-      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 160),
+      padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => _buildNoteCard(filteredNotes[index], 'home_list'),

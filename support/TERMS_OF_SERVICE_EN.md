@@ -8,16 +8,21 @@ By using the Sinan Note application, you agree to these terms in their entirety.
 
 ## 2. License and Usage
 
-### 2.1 Limited License
-We grant you a limited, non-exclusive, non-transferable license to use the app for personal purposes only.
+### 2.1 Google Play Version
+- Proprietary license
+- Personal use permitted
+- Commercial use requires permission
 
-### 2.2 Restrictions
+### 2.2 F-Droid Version
+- Fully open source
+- You can view and modify source code
+- Available on GitHub
+
+### 2.3 General Restrictions
 You may not:
-- ❌ Copy or modify the app
-- ❌ Sell or distribute the app
-- ❌ Attempt to access source code
+- ❌ Sell the app commercially without permission
 - ❌ Use the app for illegal purposes
-- ❌ Abuse our servers or network
+- ❌ Abuse the service
 
 ## 3. User Content
 
@@ -83,17 +88,21 @@ We will attempt to notify you of material changes, but we do not guarantee this.
 You agree to use the app only in a lawful manner.
 
 ### 7.2 Age Requirements
-- You must be at least 13 years old to use the app
-- Children under 13 must use the app under parental supervision
+- The app is suitable for all ages
+- Parental supervision is recommended for children
 
 ## 8. Intellectual Property
 
 ### 8.1 Our Rights
-- All code, designs, and trademarks are our property
-- You may not use them without permission
+- The "Sinan Note" trademark belongs to Apex Flow Group
+- Designs and icons are protected
 
-### 8.2 Open Source
-Some parts of the app are licensed under open source licenses. See the licenses file for details.
+### 8.2 Open Source Libraries
+The app uses Flutter and Dart open source libraries. See the "Licenses" page in the app.
+
+### 8.3 User Content
+- You retain complete ownership of your notes
+- We do not own any rights to your content
 
 ## 9. Termination
 
@@ -108,13 +117,12 @@ We may discontinue service if you:
 
 ## 10. Governing Law
 
-These terms are governed by the laws of the Kingdom of Saudi Arabia.
+These terms are subject to international intellectual property laws.
 
 ## 11. Contact
 
 For questions about these terms:
 - Email: contact.apex.flow@gmail.com
-- Use the support form in the app
 
 ---
 

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../services/biometric_service.dart';
 import '../services/settings_provider.dart';
+import '../services/notes_provider.dart';
 
 /// Wrapper that handles global app lock with biometric authentication
 /// Monitors app lifecycle and triggers auth when app resumes from background
@@ -60,41 +61,45 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    if (!mounted) return;
+    
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
-    // SECURITY: Lock app when going to background or screen locked
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
-      if (mounted) {
-        setState(() {
-          if (settings.hideContentInBackground) {
-            _showPrivacyScreen = true;
-          }
-          if (settings.isAppLockEnabled) {
-            _backgroundTime = DateTime.now();
-            _isAuthenticated = false;
-          }
-        });
-      }
+    // SECURITY: Lock app when going to background
+    if (state == AppLifecycleState.paused) {
+      setState(() {
+        // Always show privacy screen if enabled
+        if (settings.hideContentInBackground) {
+          _showPrivacyScreen = true;
+        }
+        // Lock app if enabled
+        if (settings.isAppLockEnabled) {
+          _backgroundTime = DateTime.now();
+          _isAuthenticated = false;
+        }
+      });
+      // Lock vault when app goes to background
+      notesProvider.lockVault();
     }
 
+    // SECURITY: Handle app resume
     if (state == AppLifecycleState.resumed) {
-      if (settings.isAppLockEnabled &&
-          !_isAuthenticated &&
-          !_isAuthenticating &&
-          mounted) {
-        // Check if delay is enabled and time hasn't exceeded
+      // Always hide privacy screen on resume
+      setState(() => _showPrivacyScreen = false);
+      
+      // Check if authentication is needed
+      if (settings.isAppLockEnabled && !_isAuthenticated && !_isAuthenticating) {
+        // Check lock delay
         if (settings.lockDelayEnabled && _backgroundTime != null) {
           final elapsed = DateTime.now().difference(_backgroundTime!).inSeconds;
           if (elapsed < settings.lockDelaySeconds) {
-            // Within delay period - don't require auth
-            setState(() {
-              _isAuthenticated = true;
-              _showPrivacyScreen = false;
-            });
+            // Within delay - skip auth
+            setState(() => _isAuthenticated = true);
             return;
           }
         }
+        // Require authentication
         _requireAuthentication();
       }
     }
@@ -111,7 +116,7 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
       if (!mounted) return;
       setState(() {
         _isAuthenticated = authenticated;
-        if (authenticated) _showPrivacyScreen = false;
+        _showPrivacyScreen = false; // Always hide privacy screen
       });
     } finally {
       if (mounted) {

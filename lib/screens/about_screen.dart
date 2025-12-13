@@ -36,8 +36,10 @@ class _AboutScreenState extends State<AboutScreen> {
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // Failed to launch URL
     }
   }
 
@@ -109,8 +111,10 @@ class _AboutScreenState extends State<AboutScreen> {
             _buildSection('الروابط المهمة', [
               if (FlavorConfig.isGooglePlay)
                 _buildLink('صفحة التطبيق على Google Play', 'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note'),
-              _buildLink('سياسة الخصوصية', 'https://apexflow.dev/privacy'),
-              _buildLink('شروط الخدمة', 'https://apexflow.dev/terms'),
+              _buildLink('سياسة الخصوصية (عربي)', 'https://docs.google.com/document/d/e/2PACX-1vTrXOHmrayvY-OLX00VfzN872b5_H6dAbbxDDP9ce4qaa0Hq1v2CjzD0e5GqXZk26QmYvFEyzzH5p2W/pub'),
+              _buildLink('Privacy Policy (English)', 'https://docs.google.com/document/d/e/2PACX-1vSteJ2fwHp0nBT8vpUHAT1B0OOyRSlkfpwJxW2bLn17fy_9lTKzwOHLmZ4SRljtLxgtXluvkp3qAzNV/pub'),
+              _buildLink('شروط الخدمة (عربي)', 'https://docs.google.com/document/d/e/2PACX-1vTkHjTUla85oqqHOXcN9dxjiC5tkJ-Y-vPd9yUfJIQIS5xWtftxjvio4fFKnedHdX5lHGWEV7ZlsL9z/pub'),
+              _buildLink('Terms of Service (English)', 'https://docs.google.com/document/d/e/2PACX-1vTWx4FoSMwyeNKLiwll5oJnjvOW10vWT-YH9qrA3TaCkCva62zfwUvP-__Ztys83nBQEaYs8d8JZPZ5/pub'),
               _buildLink('التراخيص', null, onTap: _showLicenses),
             ]),
             const SizedBox(height: 24),

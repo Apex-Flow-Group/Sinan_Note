@@ -88,11 +88,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (context) {
-          final provider = NotesProvider();
-          provider.startLifecycleMonitoring(); // 🔒 Start security monitoring
-          return provider;
-        }),
+        ChangeNotifierProvider(create: (_) => NotesProvider()),
       ],
       child: const ApexNoteApp(),
     ),

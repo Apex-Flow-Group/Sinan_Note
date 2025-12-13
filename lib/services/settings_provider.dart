@@ -130,7 +130,9 @@ class SettingsProvider with ChangeNotifier {
   Future<void> _updateNativeSecureFlag() async {
     try {
       const platform = MethodChannel('com.apexflow.app.sinan/security');
-      await platform.invokeMethod('updateSecureFlag');
+      await platform.invokeMethod('updateSecureFlag', {
+        'enabled': _hideContentInBackground || _isAppLockEnabled,
+      });
     } catch (e) {
       // Platform channel not available (iOS or error)
     }
@@ -184,7 +186,7 @@ class SettingsProvider with ChangeNotifier {
     _cardMotionEnabled = prefs.getBool('cardMotionEnabled') ?? false;
     _viewType = prefs.getString('viewType') ?? 'listCompact';
     _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
-    _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? false;
+    _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? true;
     _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
     _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
     _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;

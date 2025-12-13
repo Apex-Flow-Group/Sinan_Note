@@ -8,38 +8,31 @@ We at Apex Flow Group are committed to protecting your privacy. This policy expl
 ## 2. Data We Collect
 
 ### 2.1 Local Data
-- **Notes and Content**: All notes you create are stored locally on your device only
-- **App Data**: Settings and personal preferences
-- **Encryption Data**: Encryption keys for locked notes
+- **Notes and Content**: All notes (simple, code, checklists) are stored locally only
+- **Reminders**: Stored locally and never sent to any server
+- **App Data**: Settings, themes, language, view preferences
+- **Encryption Data**: AES-256 encryption keys for locked notes
+- **Biometric Data**: Used locally only for authentication
 
-### 2.2 Transmitted Data (Optional)
-- **Support Form**: When you submit a support request, we collect:
-  - Name and email address
-  - Problem description
-  - Device information (model, OS version)
-  - App version
-
-### 2.3 Data We Don't Collect
+### 2.2 Data We Don't Collect
 - ❌ Location data
 - ❌ Contact information
 - ❌ Browsing history
 - ❌ Advertising identifiers
+- ❌ Analytics or statistics
+- ❌ Your notes content is never sent to any server
 
 ## 3. How We Use Your Data
 
 ### 3.1 Notes and Content
-- Used only to provide app functionality
-- Not sent to our servers unless you choose to share
+- Used only to provide app functionality locally
+- Never sent to any server
 - Remains under your complete control
 
-### 3.2 Support Data
-- Used only to respond to your inquiries
-- May be used to improve the app
-- Not shared with third parties
-
-### 3.3 Performance Data
-- We may collect error information (via ApexDiagnosticsEngine)
-- Used only to improve app stability
+### 3.2 Reminders
+- Processed locally only
+- Used to send notifications at scheduled times
+- Not shared with any third party
 
 ## 4. Security and Encryption
 
@@ -47,16 +40,25 @@ We at Apex Flow Group are committed to protecting your privacy. This policy expl
 - Locked notes are encrypted using **AES-256**
 - Keys are stored in secure storage on your device
 - Notes cannot be decrypted without the original key
+- **Temporary Session**: Automatically expires after 5 minutes of inactivity
+- **Memory Wipe**: On vault exit
 
-### 4.2 Data Transfer
-- When using network transfer feature:
+### 4.2 Biometric Authentication
+- Uses fingerprint/face for vault access
+- Biometric data is not stored in the app
+- Processed by the operating system only
+
+### 4.3 Data Transfer (F-Droid version only)
+- When using WiFi Transfer feature:
   - A random security token is generated
-  - Data transfers over local HTTP only
-  - Not stored on our servers
+  - Data transfers over local HTTP only (same network)
+  - Not stored on our servers or the internet
+  - Direct device-to-device connection (P2P)
 
-### 4.3 Backups
-- Local backups remain on your device
+### 4.4 Backups
+- JSON backups remain on your device
 - Encrypted backups retain encryption
+- You can export/import data manually
 
 ## 5. Your Rights
 
@@ -70,22 +72,36 @@ We at Apex Flow Group are committed to protecting your privacy. This policy expl
 - We will not share with advertisers
 - We will not use for marketing purposes
 
-## 6. External Libraries
+## 6. Version Differences
 
-The app uses the following libraries that may collect data:
-- **Firebase** (if enabled): May collect performance data
-- **Google Play Services**: May collect device identifiers
-- **url_launcher**: Does not collect data
+### 6.1 Google Play Version
+- **Google Play Services**: May collect device identifiers for updates
+- **No WiFi Transfer feature**: Due to store policies
+- Automatic updates via store
 
-## 7. Policy Changes
+### 6.2 F-Droid Version
+- **No Google Services**: Complete privacy
+- **WiFi Transfer feature available**: P2P device transfer
+- Fully open source
+
+## 7. Libraries Used
+
+The app uses the following libraries:
+- **Flutter & Dart**: Core framework
+- **Provider**: State management (does not collect data)
+- **Sqflite**: Local database (does not collect data)
+- **local_auth**: Biometric authentication (local only)
+- **flutter_local_notifications**: Notifications (local only)
+- **url_launcher**: Open links (does not collect data)
+
+## 8. Policy Changes
 
 We may update this policy from time to time. You will be notified of any material changes when opening the app.
 
-## 8. Contact Us
+## 9. Contact Us
 
 If you have questions about this privacy policy:
 - Email: contact.apex.flow@gmail.com
-- Use the support form in the app
 
 ---
 

@@ -97,14 +97,12 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
             ),
           ),
         ),
-        // Menu items in SafeArea
+        // Menu items without SafeArea
         if (isVisible)
-          SafeArea(
-            child: Stack(children: _buildAnimatedMenuItems(context)),
-          ),
-        // FAB outside SafeArea - fixed position
+          Stack(children: _buildAnimatedMenuItems(context)),
+        // FAB outside SafeArea - dynamic position
         Positioned(
-          bottom: 80,
+          bottom: MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16,
           right: 16,
           child: Container(
             decoration: BoxDecoration(
@@ -169,7 +167,10 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
       },
     ];
 
-    const double baseBottom = 154.0;
+    final double fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
+    const double fabSize = 56.0;
+    const double itemSpacing = 8.0;
+    final double baseBottom = fabBottom + fabSize + itemSpacing;
 
     return List.generate(items.length, (index) {
       final item = items[index];
