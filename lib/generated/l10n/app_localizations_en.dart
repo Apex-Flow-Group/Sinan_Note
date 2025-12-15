@@ -1221,4 +1221,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checklist => 'Checklist';
+
+  @override
+  String get vaultFullyEncrypted => 'A fully encrypted space accessible only with your biometric.';
+
+  @override
+  String get restoredToArchive => 'Note restored to Archive';
+
+  @override
+  String get restoredToHome => 'Note restored to Home';
+
+  @override
+  String get notesRestoredMixed => 'Notes restored';
 }

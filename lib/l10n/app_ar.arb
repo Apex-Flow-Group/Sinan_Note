@@ -245,6 +245,7 @@
   "next": "التالي",
   "noLockButtonsOutside": "لا توجد أزرار قفل في الخارج. ادخل الخزنة واسحب الملاحظات التي تريد حمايتها.",
   "dataEncryptedOnExit": "بمجرد خروجك، يتم تشفير البيانات ومسح الذاكرة فوراً.",
+  "vaultFullyEncrypted": "مساحة مشفرة بالكامل لا يمكن الوصول إليها إلا ببصمتك.",
   "precisePermissionRequired": "فشل! الإذن الدقيق مطلوب. 💡",
   "fileContainsErrors": "الملف الذي تود حفظه قد يحتوي على أخطاء أو غير صحيح. يفضل حفظه كماركت داون.",
   "savedAsMarkdownSuccess": "تم الحفظ كـ Markdown",
@@ -426,5 +427,8 @@
   "checklistTitle": "عنوان القائمة",
   "checklistItemHint": "مهمة...",
   "sort": "ترتيب",
-  "checklist": "قائمة مهام"
+  "checklist": "قائمة مهام",
+  "restoredToArchive": "تمت استعادة الملاحظة إلى الأرشيف",
+  "restoredToHome": "تمت استعادة الملاحظة إلى القائمة الرئيسية",
+  "notesRestoredMixed": "تمت استعادة الملاحظات"
 }

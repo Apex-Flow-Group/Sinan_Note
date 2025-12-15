@@ -1221,4 +1221,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get checklist => 'قائمة مهام';
+
+  @override
+  String get vaultFullyEncrypted => 'مساحة مشفرة بالكامل لا يمكن الوصول إليها إلا ببصمتك.';
+
+  @override
+  String get restoredToArchive => 'تمت استعادة الملاحظة إلى الأرشيف';
+
+  @override
+  String get restoredToHome => 'تمت استعادة الملاحظة إلى القائمة الرئيسية';
+
+  @override
+  String get notesRestoredMixed => 'تمت استعادة الملاحظات';
 }

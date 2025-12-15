@@ -17,7 +17,7 @@ import '../../screens/note_editor.dart';
 import '../../screens/home_screen.dart' show ViewType;
 import '../../models/note_mode.dart';
 import '../../utils/checklist_formatter.dart';
-import '../apex_snackbar.dart';
+import '../../services/toast_service.dart';
 import '../premium_card_effect.dart';
 import '../custom_share_sheet.dart';
 
@@ -309,6 +309,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                         note: decryptedNote,
                         mode: mode,
                         skipAuthentication: true,
+                        originallyLocked: true,
                       ),
                     ),
                   );
@@ -602,10 +603,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
           if (confirmed == true) {
             await notesProvider.toggleLockStatus(widget.note.id!, false);
             widget.onNoteChanged();
-            ApexSnackBar.show(
-              context,
-              l10n.noteUnlocked,
-              type: SnackBarType.success,
+            ToastService().showToast(
+              context: context,
+              message: l10n.noteUnlocked,
+              type: ToastType.success,
             );
           }
         } else if (value == 'delete') {
@@ -632,10 +633,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
             final noteId = widget.note.id!;
             await notesProvider.trashNote(noteId);
             widget.onNoteChanged();
-            ApexSnackBar.show(
-              context,
-              l10n.noteDeleted,
-              type: SnackBarType.info,
+            ToastService().showToast(
+              context: context,
+              message: l10n.noteDeleted,
+              type: ToastType.info,
             );
           }
         }
@@ -685,15 +686,22 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
           final noteId = widget.note.id!;
+          final noteTitle = widget.note.title;
+          
           await notesProvider.trashNote(noteId);
-          ApexSnackBar.show(
-            context,
-            '${l10n.movedTo} "${widget.note.title}" ${l10n.toTrash}',
-            type: SnackBarType.info,
-            actionLabel: l10n.undo,
-            onAction: () async {
+          
+          if (!context.mounted) return;
+          
+          ToastService().showUndoToast(
+            context: context,
+            message: '${l10n.movedTo} "$noteTitle" ${l10n.toTrash}',
+            actionKey: 'swipe_delete_$noteId',
+            type: ToastType.info,
+            onExecute: () {},
+            onUndo: () async {
               await notesProvider.restoreNote(noteId);
             },
+            undoLabel: l10n.undo,
           );
         };
         break;
@@ -704,15 +712,22 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
           final noteId = widget.note.id!;
+          final noteTitle = widget.note.title;
+          
           await notesProvider.archiveNote(noteId);
-          ApexSnackBar.show(
-            context,
-            '${l10n.movedTo} "${widget.note.title}" ${l10n.toArchive}',
-            type: SnackBarType.success,
-            actionLabel: l10n.undo,
-            onAction: () async {
+          
+          if (!context.mounted) return;
+          
+          ToastService().showUndoToast(
+            context: context,
+            message: '${l10n.movedTo} "$noteTitle" ${l10n.toArchive}',
+            actionKey: 'swipe_archive_$noteId',
+            type: ToastType.success,
+            onExecute: () {},
+            onUndo: () async {
               await notesProvider.unarchiveNote(noteId);
             },
+            undoLabel: l10n.undo,
           );
         };
         break;

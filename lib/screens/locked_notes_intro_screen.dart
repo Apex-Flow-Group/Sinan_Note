@@ -22,7 +22,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         _IntroSlide(
           icon: Icons.lock_outline,
           title: l10n.secureVault,
-          description: 'مساحة مشفرة بالكامل لا يمكن الوصول إليها إلا ببصمتك.',
+          description: l10n.vaultFullyEncrypted,
           color: Colors.orange,
         ),
         _IntroSlide(

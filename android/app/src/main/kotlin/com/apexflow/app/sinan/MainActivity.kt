@@ -28,7 +28,8 @@ class MainActivity: FlutterFragmentActivity() {
         val isAppLockEnabled = prefs.getBoolean("flutter.appLockEnabled", false)
         val isRecentsBlurEnabled = prefs.getBoolean("flutter.hideContentInBackground", true)
 
-        if (isAppLockEnabled && isRecentsBlurEnabled) {
+        // Apply FLAG_SECURE if EITHER setting is enabled (independent controls)
+        if (isAppLockEnabled || isRecentsBlurEnabled) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)

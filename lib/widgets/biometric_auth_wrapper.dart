@@ -24,7 +24,7 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
   bool _isLoading = true;
   bool _isAuthenticated = false;
   bool _isAuthenticating = false;
-  bool _showPrivacyScreen = false;
+  bool _showPrivacy = false;
   DateTime? _backgroundTime;
 
   @override
@@ -66,41 +66,43 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
-    // SECURITY: Lock app when going to background
-    if (state == AppLifecycleState.paused) {
+    // CASE 1: PAUSED/INACTIVE - Going to Background
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       setState(() {
-        // Always show privacy screen if enabled
-        if (settings.hideContentInBackground) {
-          _showPrivacyScreen = true;
-        }
+        // Controller: ONLY hideContentInBackground (for Recents)
+        _showPrivacy = settings.hideContentInBackground;
+        
         // Lock app if enabled
         if (settings.isAppLockEnabled) {
           _backgroundTime = DateTime.now();
           _isAuthenticated = false;
         }
       });
-      // Lock vault when app goes to background
       notesProvider.lockVault();
     }
 
-    // SECURITY: Handle app resume
+    // CASE 2: RESUMED - Coming to Foreground
     if (state == AppLifecycleState.resumed) {
-      // Always hide privacy screen on resume
-      setState(() => _showPrivacyScreen = false);
+      // ALWAYS hide privacy overlay first (for Recents dimming)
+      setState(() => _showPrivacy = false);
       
-      // Check if authentication is needed
-      if (settings.isAppLockEnabled && !_isAuthenticated && !_isAuthenticating) {
+      // Then handle biometric lock separately
+      if (settings.isAppLockEnabled) {
         // Check lock delay
+        bool skipAuth = false;
         if (settings.lockDelayEnabled && _backgroundTime != null) {
           final elapsed = DateTime.now().difference(_backgroundTime!).inSeconds;
           if (elapsed < settings.lockDelaySeconds) {
-            // Within delay - skip auth
-            setState(() => _isAuthenticated = true);
-            return;
+            skipAuth = true;
           }
         }
-        // Require authentication
-        _requireAuthentication();
+        
+        if (skipAuth) {
+          setState(() => _isAuthenticated = true);
+        } else if (!_isAuthenticating) {
+          // Show lock screen (different from privacy overlay)
+          _requireAuthentication();
+        }
       }
     }
   }
@@ -116,7 +118,7 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
       if (!mounted) return;
       setState(() {
         _isAuthenticated = authenticated;
-        _showPrivacyScreen = false; // Always hide privacy screen
+        _showPrivacy = !authenticated; // Hide only on success
       });
     } finally {
       if (mounted) {
@@ -242,7 +244,7 @@ class _BiometricAuthWrapperState extends State<BiometricAuthWrapper>
     return Stack(
       children: [
         widget.child,
-        if (settings.hideContentInBackground && _showPrivacyScreen)
+        if (_showPrivacy)
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),

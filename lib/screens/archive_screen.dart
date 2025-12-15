@@ -10,7 +10,7 @@ import '../l10n/l10n_migration_helper.dart';
 import '../widgets/home/home_drawer_widget.dart';
 import '../widgets/home/note_card_widget.dart';
 import '../screens/home_screen.dart' show ViewType;
-import '../widgets/apex_snackbar.dart';
+import '../services/toast_service.dart';
 
 class ArchiveScreen extends StatefulWidget {
   const ArchiveScreen({super.key});
@@ -41,6 +41,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    ToastService().cancelAll();
     super.dispose();
   }
 
@@ -61,69 +62,47 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
   }
 
   void _restoreSelected() async {
-    final l10n = context.l10n;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.restore),
-        content: Text('${l10n.restore} ${_selectedNoteIds.length} ${l10n.notesQuestion}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.unarchive, style: const TextStyle(color: Colors.green)),
-          ),
-        ],
-      ),
-    );
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final ids = List<int>.from(_selectedNoteIds);
     
-    if (confirm == true) {
-      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-      for (final noteId in _selectedNoteIds) {
-        await notesProvider.unarchiveNote(noteId);
-      }
-      setState(() {
-        _selectedNoteIds.clear();
-        _selectionMode = false;
-      });
-      ApexSnackBar.show(context, l10n.notesRestored, type: SnackBarType.success);
+    for (final id in ids) {
+      await notesProvider.unarchiveNote(id);
     }
+    
+    setState(() {
+      _selectedNoteIds.clear();
+      _selectionMode = false;
+    });
+    
+    if (!mounted) return;
+    
+    ToastService().showToast(
+      context: context,
+      message: '${ids.length} notes restored',
+      type: ToastType.success,
+    );
   }
 
   void _deleteSelected() async {
-    final l10n = context.l10n;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.delete),
-        content: Text('${l10n.delete} ${_selectedNoteIds.length} ${l10n.notesQuestion}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final ids = List<int>.from(_selectedNoteIds);
     
-    if (confirm == true) {
-      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-      for (final noteId in _selectedNoteIds) {
-        await notesProvider.trashNote(noteId);
-      }
-      setState(() {
-        _selectedNoteIds.clear();
-        _selectionMode = false;
-      });
-      ApexSnackBar.show(context, l10n.notesDeleted, type: SnackBarType.success);
+    for (final id in ids) {
+      await notesProvider.trashNote(id);
     }
+    
+    setState(() {
+      _selectedNoteIds.clear();
+      _selectionMode = false;
+    });
+    
+    if (!mounted) return;
+    
+    ToastService().showToast(
+      context: context,
+      message: '${ids.length} notes moved to trash',
+      type: ToastType.info,
+    );
   }
 
   @override

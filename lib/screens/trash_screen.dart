@@ -8,7 +8,7 @@ import '../utils/adaptive_color.dart';
 
 import '../l10n/l10n_migration_helper.dart';
 
-import '../widgets/apex_snackbar.dart';
+import '../services/toast_service.dart';
 import '../widgets/home/home_drawer_widget.dart';
 import 'note_view_screen.dart';
 import '../utils/checklist_formatter.dart';
@@ -48,6 +48,7 @@ class _TrashScreenState extends State<TrashScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    ToastService().cancelAll();
     super.dispose();
   }
 
@@ -160,15 +161,36 @@ class _TrashScreenState extends State<TrashScreen> {
                 IconButton(
                   icon: const Icon(Icons.restore, color: Colors.green),
                   onPressed: () async {
-                    for (var id in _selectedNotes) {
+                    final ids = List<int>.from(_selectedNotes);
+                    final notes = trashedNotes.where((n) => ids.contains(n.id)).toList();
+                    final hasArchived = notes.any((n) => n.isArchived);
+                    final hasActive = notes.any((n) => !n.isArchived);
+                    
+                    for (var id in ids) {
                       await notesProvider.restoreNote(id);
                     }
+                    
                     setState(() {
                       _selectionMode = false;
                       _selectedNotes.clear();
                     });
-                    ApexSnackBar.show(context, l10n.notesRestored,
-                        type: SnackBarType.success);
+                    
+                    if (!mounted) return;
+                    
+                    String message;
+                    if (hasArchived && hasActive) {
+                      message = l10n.notesRestoredMixed;
+                    } else if (hasArchived) {
+                      message = l10n.restoredToArchive;
+                    } else {
+                      message = l10n.restoredToHome;
+                    }
+                    
+                    ToastService().showToast(
+                      context: context,
+                      message: message,
+                      type: ToastType.success,
+                    );
                   },
                 ),
                 IconButton(
@@ -194,15 +216,14 @@ class _TrashScreenState extends State<TrashScreen> {
                       ),
                     );
                     if (confirm == true) {
-                      for (var id in _selectedNotes) {
-                        await notesProvider.deleteNote(id);
-                      }
+                      final ids = List<int>.from(_selectedNotes);
                       setState(() {
                         _selectionMode = false;
                         _selectedNotes.clear();
                       });
-                      ApexSnackBar.show(context, l10n.notesDeleted,
-                          type: SnackBarType.success);
+                      for (var id in ids) {
+                        await notesProvider.deleteNote(id);
+                      }
                     }
                   },
                 ),

@@ -21,6 +21,7 @@ import '../widgets/home/selection_action_bar.dart';
 
 import '../widgets/home/dialogs/backup_options_dialog.dart';
 import '../widgets/custom_share_sheet.dart';
+import '../services/toast_service.dart';
 import 'note_editor.dart';
 
 enum ViewType { grid, listExpanded, listCompact }
@@ -235,6 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchFocusNode.dispose();
     _closeAllSlidables.dispose();
     _viewTypeNotifier.dispose();
+    ToastService().cancelAll();
     super.dispose();
   }
 
@@ -347,8 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader(BuildContext context, AppLocalizations l10n, bool isDark,
       List<Note> allNotes) {
     return SliverPersistentHeader(
-      pinned: true,
-      floating: false,
+      pinned: false,
+      floating: true,
       delegate: SmoothSearchHeaderDelegate(
         expandedHeight: 80.0,
         isDark: isDark,
@@ -528,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
       note: note,
       viewType: _viewType,
       closeAllSlidables: _closeAllSlidables,
-      onNoteChanged: () {},
+      onNoteChanged: () => setState(() {}),
       isSelected: _selectedNoteIds.contains(note.id),
       selectionMode: _selectedNoteIds.isNotEmpty,
       source: source,
@@ -649,6 +651,8 @@ class _HomeScreenState extends State<HomeScreen> {
       AppLocalizations l10n, List<Note> allNotes) async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
+    final isPinning = !allNotes.firstWhere((n) => n.id == ids.first).isPinned;
+    
     for (final id in ids) {
       final note = allNotes.firstWhere((n) => n.id == id);
       final updatedNote = Note(
@@ -673,35 +677,70 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (mounted) {
       setState(() => _selectedNoteIds.clear());
+      ToastService().showToast(
+        context: context,
+        message: isPinning ? '${ids.length} notes pinned' : '${ids.length} notes unpinned',
+        type: ToastType.success,
+      );
     }
   }
 
   Future<void> _archiveSelected(AppLocalizations l10n) async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
+    
+    setState(() => _selectedNoteIds.clear());
+    
+    // Execute immediately
     for (final id in ids) {
       await notesProvider.archiveNote(id);
     }
-    if (mounted) {
-      setState(() => _selectedNoteIds.clear());
-    }
+    
+    if (!mounted) return;
+    
+    // Show toast with undo
+    ToastService().showUndoToast(
+      context: context,
+      message: '${ids.length} notes archived',
+      actionKey: 'archive_home',
+      type: ToastType.success,
+      onExecute: () {},
+      onUndo: () async {
+        for (final id in ids) {
+          await notesProvider.unarchiveNote(id);
+        }
+      },
+      undoLabel: l10n.undo,
+    );
   }
 
   Future<void> _deleteSelected(AppLocalizations l10n) async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
 
-    // Clear selection immediately to prevent StateError
-    if (mounted) {
-      setState(() => _selectedNoteIds.clear());
-    }
-
+    setState(() => _selectedNoteIds.clear());
+    
+    // Execute immediately
     for (final id in ids) {
       await notesProvider.trashNote(id);
     }
-
-    // Reload notes to ensure UI is in sync
-    await notesProvider.loadNotes();
+    
+    if (!mounted) return;
+    
+    // Show toast with undo
+    ToastService().showUndoToast(
+      context: context,
+      message: '${ids.length} notes deleted',
+      actionKey: 'delete_home',
+      type: ToastType.info,
+      onExecute: () {},
+      onUndo: () async {
+        for (final id in ids) {
+          await notesProvider.restoreNote(id);
+        }
+      },
+      undoLabel: l10n.undo,
+    );
   }
 
   void _shareSelected(List<Note> allNotes) {

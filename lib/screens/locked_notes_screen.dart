@@ -385,17 +385,6 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                     });
                   },
                 ),
-                IconButton(
-                  icon: Icon(
-                      _viewType == ViewType.grid ? Icons.view_list : Icons.grid_view),
-                  onPressed: () {
-                    setState(() {
-                      _viewType = _viewType == ViewType.grid
-                          ? ViewType.listExpanded
-                          : ViewType.grid;
-                    });
-                  },
-                ),
               ]
             : [],
       ),

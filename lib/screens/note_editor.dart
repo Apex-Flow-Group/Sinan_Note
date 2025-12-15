@@ -41,12 +41,14 @@ class NoteEditorImmersive extends StatefulWidget {
   final Note? note;
   final NoteMode mode;
   final bool skipAuthentication;
+  final bool originallyLocked;
 
   const NoteEditorImmersive(
       {super.key,
       this.note,
       this.mode = NoteMode.simple,
-      this.skipAuthentication = false});
+      this.skipAuthentication = false,
+      this.originallyLocked = false});
 
   @override
   State<NoteEditorImmersive> createState() => _NoteEditorImmersiveState();
@@ -78,6 +80,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   int _colorIndex = 0;
   String? _notePassword;
   bool _isAuthenticated = false;
+  late bool _initialLockState; // Frozen snapshot of original lock status
   double _fontSize = 18.0;
   Color _textColor = Colors.black87;
   Timer? _autosaveTimer;
@@ -140,10 +143,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     WidgetsBinding.instance.addObserver(this);
     _isAuthenticated = true;
 
+    // Capture initial lock state IMMEDIATELY (State Snapshot)
+    _initialLockState = widget.originallyLocked || (widget.note?.isLocked ?? false);
+
     if (widget.note != null) {
       _colorIndex = widget.note!.colorIndex;
       // CRITICAL: Checklists don't need authentication (plain JSON)
-      _isAuthenticated = widget.note!.isChecklist ? true : false;
+      _isAuthenticated = widget.note!.isChecklist ? true : widget.skipAuthentication;
     } else {
       _loadStickySettings();
     }
@@ -186,15 +192,17 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         _isDirty = true;
         _isAuthenticated = true; // ملاحظة جديدة لا تحتاج مصادقة
       } else if (widget.note!.isLocked && !widget.skipAuthentication && !widget.note!.isChecklist) {
-        // تحقق من الجلسة قبل طلب المصادقة (SKIP for Checklists)
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final provider = Provider.of<NotesProvider>(context, listen: false);
-          if (provider.isVaultUnlocked) {
-            _loadDecryptedContent();
-          } else {
-            _promptForPassword();
-          }
-        });
+        // تحقق من الجلسة مرة واحدة فقط عند الإنشاء الأولي
+        if (!_isAuthenticated) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final provider = Provider.of<NotesProvider>(context, listen: false);
+            if (provider.isVaultUnlocked) {
+              _loadDecryptedContent();
+            } else {
+              _promptForPassword();
+            }
+          });
+        }
       } else {
         _isAuthenticated = true;
       }
@@ -355,9 +363,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         noteType = widget.mode.name;
       }
 
-      // CRITICAL: If skipAuthentication=true, content is decrypted, so save as unlocked
-      // then notes_provider will encrypt it. This prevents double encryption.
-      final bool shouldBeLocked = widget.note?.isLocked ?? false;
+      // CRITICAL: Use frozen snapshot - ignore runtime state changes
+      final bool shouldBeLocked = _initialLockState;
 
       _notesProviderRef ??= Provider.of<NotesProvider>(context, listen: false);
 
@@ -383,8 +390,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             widget.note?.isChecklist ?? (widget.mode == NoteMode.checklist),
       );
 
-      // Save using the provider's unified method
-      final newId = await _notesProviderRef!.addOrUpdateNote(noteToSave);
+      // Save using the provider's unified method (silent to prevent rebuild)
+      final newId = await _notesProviderRef!.addOrUpdateNote(noteToSave, silent: true);
 
       // Log version history
       try {
@@ -441,7 +448,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
 
     if (hasRealContent) {
+      _notesProviderRef ??= Provider.of<NotesProvider>(context, listen: false);
       await _saveNoteToDatabase(isManualSave: true);
+      _notesProviderRef!.loadNotes();
 
       final l10n = context.l10n;
 

@@ -2234,6 +2234,10 @@ abstract class AppLocalizations {
   String get checklistItemHint;
   String get sort;
   String get checklist;
+  String get vaultFullyEncrypted;
+  String get restoredToArchive;
+  String get restoredToHome;
+  String get notesRestoredMixed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

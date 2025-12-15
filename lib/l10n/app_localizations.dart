@@ -1526,6 +1526,12 @@ abstract class AppLocalizations {
   /// **'Once you exit, data is encrypted and memory is cleared immediately.'**
   String get dataEncryptedOnExit;
 
+  /// No description provided for @vaultFullyEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'A fully encrypted space accessible only with your biometric.'**
+  String get vaultFullyEncrypted;
+
   /// No description provided for @precisePermissionRequired.
   ///
   /// In en, this message translates to:
@@ -2563,6 +2569,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checklist'**
   String get checklist;
+
+  /// No description provided for @restoredToArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Note restored to Archive'**
+  String get restoredToArchive;
+
+  /// No description provided for @restoredToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Note restored to Home'**
+  String get restoredToHome;
+
+  /// No description provided for @notesRestoredMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes restored'**
+  String get notesRestoredMixed;
 }
 
 class _AppLocalizationsDelegate

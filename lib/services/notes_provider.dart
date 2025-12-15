@@ -7,6 +7,7 @@ import 'database_service.dart';
 import 'notification_service.dart';
 import 'widget_service.dart';
 import 'encryption_service.dart';
+import '../utils/checklist_formatter.dart';
 
 class NotesProvider extends ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
@@ -219,7 +220,7 @@ class NotesProvider extends ChangeNotifier {
     return addNote(note);
   }
 
-  Future<int> updateNote(Note note) async {
+  Future<int> updateNote(Note note, {bool silent = false}) async {
     // CRITICAL: Encrypt content if locked (EXCEPT Checklists - they stay as plain JSON)
     Note noteToUpdate = note;
     if (note.isLocked && note.content.isNotEmpty && !note.isChecklist) {
@@ -276,7 +277,10 @@ class NotesProvider extends ChangeNotifier {
 
     await _handleReminderSideEffect(note);
 
-    notifyListeners();
+    // Only notify if not silent (auto-save from editor should be silent)
+    if (!silent) {
+      notifyListeners();
+    }
 
     // 🔄 تحديث الويدجت إذا كانت الملاحظة مثبتة
     await WidgetService.checkAndUpdateIfPinned(note);
@@ -415,32 +419,17 @@ class NotesProvider extends ChangeNotifier {
 
   Future<int> restoreNote(int id) async {
     final result = await _dbService.restoreNote(id);
-    final index = _allNotes.indexWhere((n) => n.id == id);
-    if (index != -1) {
-      final note = _allNotes[index];
-      final restoredNote = Note(
-        id: note.id,
-        title: note.title,
-        content: note.content,
-        createdAt: note.createdAt,
-        updatedAt: DateTime.now(),
-        colorIndex: note.colorIndex,
-        isArchived: note.isArchived,
-        isTrashed: false,
-        reminderDateTime: note.reminderDateTime,
-        isLocked: note.isLocked,
-        noteType: note.noteType,
-        recurrenceRule: note.recurrenceRule,
-        isCompleted: note.isCompleted,
-        isProfessional: note.isProfessional,
-        isPinned: note.isPinned,
-        isChecklist: note.isChecklist,
-      );
-      _allNotes.removeAt(index);
-      _allNotes.insert(0, restoredNote); // نقل للمقدمة
+    final freshNote = await _dbService.getNoteById(id);
+    
+    if (freshNote != null) {
+      final index = _allNotes.indexWhere((n) => n.id == id);
+      if (index != -1) {
+        _allNotes.removeAt(index);
+      }
+      _allNotes.insert(0, freshNote);
 
       // Side Effect: إعادة جدولة التذكير عند الاستعادة
-      await _handleReminderSideEffect(restoredNote);
+      await _handleReminderSideEffect(freshNote);
     }
 
     notifyListeners();
@@ -452,9 +441,9 @@ class NotesProvider extends ChangeNotifier {
   }
 
   // Add or update note (unified method for saving)
-  Future<int> addOrUpdateNote(Note note) async {
+  Future<int> addOrUpdateNote(Note note, {bool silent = false}) async {
     if (note.id != null) {
-      await updateNote(note);
+      await updateNote(note, silent: silent);
       return note.id!;
     } else {
       return await addNote(note);
@@ -546,14 +535,25 @@ class NotesProvider extends ChangeNotifier {
           return false; // فشل الجدولة
         }
 
+        String notificationBody;
+        if (note.isChecklist) {
+          notificationBody = ChecklistFormatter.formatForSharing(note.title, note.content);
+          if (notificationBody.length > 100) {
+            notificationBody = '${notificationBody.substring(0, 100)}...';
+          }
+        } else {
+          notificationBody = note.content.length > 100
+              ? '${note.content.substring(0, 100)}...'
+              : note.content;
+        }
+        
         await notificationService.scheduleNotification(
           id: note.id!,
           title: note.title.isEmpty ? 'تذكير' : note.title,
-          body: note.content.length > 100
-              ? '${note.content.substring(0, 100)}...'
-              : note.content,
+          body: notificationBody,
           scheduledTime: note.reminderDateTime!,
           recurrenceRule: note.recurrenceRule,
+          payload: note.id.toString(),
         );
       }
       return true;

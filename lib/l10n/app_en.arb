@@ -245,6 +245,7 @@
   "next": "Next",
   "noLockButtonsOutside": "No lock buttons outside. Enter the vault and drag the notes you want to protect.",
   "dataEncryptedOnExit": "Once you exit, data is encrypted and memory is cleared immediately.",
+  "vaultFullyEncrypted": "A fully encrypted space accessible only with your biometric.",
   "precisePermissionRequired": "Failed! Precise permission required. 💡",
   "fileContainsErrors": "The file you want to save may contain errors or is incorrect. It's better to save it as markdown.",
   "savedAsMarkdownSuccess": "Saved as Markdown",
@@ -426,5 +427,8 @@
   "checklistTitle": "Checklist Title",
   "checklistItemHint": "Mission...",
   "sort": "Sort",
-  "checklist": "Checklist"
+  "checklist": "Checklist",
+  "restoredToArchive": "Note restored to Archive",
+  "restoredToHome": "Note restored to Home",
+  "notesRestoredMixed": "Notes restored"
 }

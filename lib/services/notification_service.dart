@@ -2,9 +2,14 @@
 
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'database_service.dart';
+import '../screens/note_view_screen.dart';
+import '../main.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -17,12 +22,29 @@ class NotificationService {
   Future<void> initialize() async {
     // تهيئة المناطق الزمنية
     tz.initializeTimeZones();
+    
+    // كشف توقيت جهاز المستخدم الحالي
+    try {
+      final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      if (kDebugMode) {
+        print('✅ Timezone set to: $timeZoneName');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Failed to set local timezone, using UTC fallback');
+      }
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
 
-    await _notifications.initialize(initSettings);
+    await _notifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _onNotificationTapped,
+    );
 
     // طلب الأذونات للإشعارات والتنبيهات الدقيقة
     if (Platform.isAndroid) {
@@ -111,6 +133,7 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
     String? recurrenceRule,
+    String? payload,
   }) async {
     // Verify permissions before scheduling
     if (Platform.isAndroid) {
@@ -167,6 +190,7 @@ class NotificationService {
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
+          payload: payload,
         );
       } else {
         // Recurring notification
@@ -197,6 +221,7 @@ class NotificationService {
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
             matchDateTimeComponents: matchDateTimeComponents,
+            payload: payload,
           );
         }
       }
@@ -225,5 +250,33 @@ class NotificationService {
 
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
+  }
+
+  static void _onNotificationTapped(NotificationResponse response) async {
+    final payload = response.payload;
+    if (payload != null) {
+      final noteId = int.tryParse(payload);
+      if (noteId != null) {
+        await _openNoteById(noteId);
+      }
+    }
+  }
+
+  static Future<void> _openNoteById(int noteId) async {
+    try {
+      final dbService = DatabaseService();
+      final note = await dbService.getNoteById(noteId);
+      if (note != null && navigatorKey.currentState != null) {
+        navigatorKey.currentState!.push(
+          MaterialPageRoute(
+            builder: (context) => NoteViewScreen(note: note, showRestore: false),
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error opening note: $e');
+      }
+    }
   }
 }

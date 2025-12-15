@@ -63,7 +63,38 @@ class ApexSnackBar {
                 ),
               ),
             ),
-            if (dismissible)
+            if (actionLabel != null && onAction != null)
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: duration,
+                    builder: (context, value, _) {
+                      return SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(
+                          value: 1.0 - value,
+                          strokeWidth: 2.5,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.undo, color: Colors.white, size: 20),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      onAction();
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            if (dismissible && (actionLabel == null || onAction == null))
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white, size: 18),
                 onPressed: () =>
@@ -86,13 +117,6 @@ class ApexSnackBar {
               )
             : const EdgeInsets.all(16),
         duration: duration,
-        action: actionLabel != null && onAction != null
-            ? SnackBarAction(
-                label: actionLabel,
-                textColor: Colors.white,
-                onPressed: onAction,
-              )
-            : null,
       ),
     );
   }

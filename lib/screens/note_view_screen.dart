@@ -352,53 +352,75 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       bottomNavigationBar: _currentNote.isTrashed
           ? _buildRestoreBar(context, l10n)
           : _buildActionBar(context, l10n),
-      floatingActionButton: !_currentNote.isTrashed
-          ? FloatingActionButton(
-              heroTag: 'note_view_edit_fab',
-              onPressed: () => _editNote(context),
-              child: const Icon(Icons.edit),
-            )
-          : null,
-      floatingActionButtonLocation: _RTLAwareFloatingActionButtonLocation(),
 
     );
   }
 
   Widget _buildActionBar(BuildContext context, AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).bottomAppBarTheme.color ??
             Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
       child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.share),
-              tooltip: l10n.share,
-              onPressed: _onShareTap,
-            ),
-            IconButton(
-              icon: Icon(
-                  _currentNote.isArchived ? Icons.unarchive : Icons.archive),
-              tooltip: _currentNote.isArchived ? l10n.unarchive : l10n.archive,
-              onPressed: () => _toggleArchive(context, l10n),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              tooltip: l10n.delete,
-              onPressed: () => _confirmDelete(context, l10n),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                tooltip: l10n.share,
+                onPressed: _onShareTap,
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(
+                    _currentNote.isArchived ? Icons.unarchive_outlined : Icons.archive_outlined),
+                tooltip: _currentNote.isArchived ? l10n.unarchive : l10n.archive,
+                onPressed: () => _toggleArchive(context, l10n),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                tooltip: l10n.delete,
+                onPressed: () => _confirmDelete(context, l10n),
+              ),
+              const Spacer(),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () => _editNote(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: const Icon(Icons.edit, size: 20),
+                  label: Text(
+                    l10n.edit,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -435,6 +457,8 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
   }
 
   Future<void> _editNote(BuildContext context) async {
+    if (_currentNote.isTrashed) return;
+    
     // Map noteType to NoteMode
     final codeTypes = [
       'python',
@@ -630,16 +654,4 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
 }
 
 
-// Custom FloatingActionButton location that always positions on the right
-class _RTLAwareFloatingActionButtonLocation extends FloatingActionButtonLocation {
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    // Always position on the right (16px from right edge, 80px from bottom)
-    final double fabX = scaffoldGeometry.scaffoldSize.width - 
-                        scaffoldGeometry.floatingActionButtonSize.width - 16.0;
-    final double fabY = scaffoldGeometry.scaffoldSize.height - 
-                        scaffoldGeometry.floatingActionButtonSize.height - 
-                        scaffoldGeometry.minInsets.bottom - 80.0;
-    return Offset(fabX, fabY);
-  }
-}
+
