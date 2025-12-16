@@ -28,7 +28,7 @@
                 android:text="Select Checklist"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="@color/widget_title_text"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
@@ -39,7 +39,7 @@
                 android:text="0 / 0"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="?android:attr/textColorSecondary"
+                android:textColor="@color/widget_title_text"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -50,7 +50,7 @@
             android:layout_weight="1"
             android:text="Tap to select a checklist"
             android:textSize="14sp"
-            android:textColor="?android:attr/textColorSecondary"
+            android:textColor="@color/widget_content_text"
             android:lineSpacingExtra="4dp"
             android:gravity="top|start" />
     </LinearLayout>

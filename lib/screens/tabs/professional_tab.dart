@@ -7,6 +7,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../models/note.dart';
 import '../../models/note_mode.dart';
 import '../../services/notes_provider.dart';
+import '../../services/settings_provider.dart';
 
 import '../../l10n/l10n_migration_helper.dart';
 import '../../widgets/home/note_card_widget.dart';
@@ -32,12 +33,29 @@ class _ProfessionalTabState extends State<ProfessionalTab> {
   @override
   void initState() {
     super.initState();
+    _loadViewType();
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NotesProvider>(context, listen: false).loadNotes();
     });
+  }
+
+  void _loadViewType() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final savedType = await settings.getViewType('professional');
+    if (mounted) {
+      setState(() {
+        if (savedType == 'grid') {
+          _viewType = ViewType.grid;
+        } else if (savedType == 'listCompact') {
+          _viewType = ViewType.listCompact;
+        } else {
+          _viewType = ViewType.listExpanded;
+        }
+      });
+    }
   }
 
   @override
@@ -127,12 +145,14 @@ class _ProfessionalTabState extends State<ProfessionalTab> {
                         icon: Icon(_viewType == ViewType.grid
                             ? Icons.view_list
                             : Icons.grid_view),
-                        onPressed: () {
+                        onPressed: () async {
                           setState(() {
                             _viewType = _viewType == ViewType.grid
                                 ? ViewType.listExpanded
                                 : ViewType.grid;
                           });
+                          final settings = Provider.of<SettingsProvider>(context, listen: false);
+                          await settings.setViewType('professional', _viewType.name);
                         },
                       ),
                       PopupMenuButton<String>(

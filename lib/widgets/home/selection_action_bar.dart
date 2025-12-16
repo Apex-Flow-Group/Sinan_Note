@@ -8,7 +8,7 @@ class SelectionActionBar extends StatelessWidget {
   final VoidCallback onPin;
   final VoidCallback onArchive;
   final VoidCallback onDelete;
-  final VoidCallback onShare;
+  final VoidCallback? onShare;
   final bool isDark;
   final bool allPinned;
 
@@ -75,6 +75,7 @@ class SelectionActionBar extends StatelessWidget {
             icon: const Icon(Icons.share_outlined),
             onPressed: onShare,
             tooltip: 'Share',
+            color: onShare == null ? Colors.grey : null,
           ),
           const SizedBox(width: 8),
         ],

@@ -25,7 +25,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
-  ViewType _viewType = ViewType.listExpanded;
+  final ViewType _viewType = ViewType.listExpanded;
   bool _isLoading = true;
   List<Note> _decryptedNotes = [];
   NotesProvider? _providerRef;
@@ -249,9 +249,14 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final l10n = context.l10n;
 
     return PopScope(
+      canPop: _selectedNoteIds.isEmpty,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
           _providerRef?.clearLockedSession(notify: false);
+          return;
+        }
+        if (_selectedNoteIds.isNotEmpty) {
+          setState(() => _selectedNoteIds.clear());
         }
       },
       child: Scaffold(

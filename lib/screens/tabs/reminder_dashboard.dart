@@ -6,6 +6,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../models/note.dart';
 import '../../models/note_mode.dart';
 import '../../services/notes_provider.dart';
+import '../../services/settings_provider.dart';
 
 import '../../l10n/l10n_migration_helper.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
@@ -35,12 +36,29 @@ class _ReminderDashboardState extends State<ReminderDashboard>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadViewType();
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NotesProvider>(context, listen: false).loadNotes();
     });
+  }
+
+  void _loadViewType() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final savedType = await settings.getViewType('reminder');
+    if (mounted) {
+      setState(() {
+        if (savedType == 'grid') {
+          _viewType = ViewType.grid;
+        } else if (savedType == 'listCompact') {
+          _viewType = ViewType.listCompact;
+        } else {
+          _viewType = ViewType.listExpanded;
+        }
+      });
+    }
   }
 
   @override
@@ -149,12 +167,14 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                         icon: Icon(_viewType == ViewType.grid
                             ? Icons.view_list
                             : Icons.grid_view),
-                        onPressed: () {
+                        onPressed: () async {
                           setState(() {
                             _viewType = _viewType == ViewType.grid
                                 ? ViewType.listExpanded
                                 : ViewType.grid;
                           });
+                          final settings = Provider.of<SettingsProvider>(context, listen: false);
+                          await settings.setViewType('reminder', _viewType.name);
                         },
                       ),
                       PopupMenuButton<String>(

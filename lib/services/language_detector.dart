@@ -5,13 +5,22 @@ class LanguageDetector {
     'Dart': '.dart',
     'Python': '.py',
     'JavaScript': '.js',
+    'TypeScript': '.ts',
     'Java': '.java',
     'C++': '.cpp',
     'C': '.c',
+    'C#': '.cs',
+    'PHP': '.php',
+    'Ruby': '.rb',
+    'Go': '.go',
+    'Rust': '.rs',
+    'Kotlin': '.kt',
+    'Swift': '.swift',
     'HTML': '.html',
     'CSS': '.css',
     'SQL': '.sql',
     'JSON': '.json',
+    'XML': '.xml',
     'Bash': '.sh',
   };
 
@@ -23,79 +32,165 @@ class LanguageDetector {
     return _extensions[language] ?? '.txt';
   }
 
+  /// البحث العكسي: من الامتداد إلى اسم اللغة
+  static String? getLanguageFromExtension(String extension) {
+    // توحيد الصيغة: التأكد من وجود النقطة
+    final normalizedExt = extension.startsWith('.') ? extension : '.$extension';
+    
+    // البحث في الـ Map عن المفتاح الذي يملك هذه القيمة
+    for (var entry in _extensions.entries) {
+      if (entry.value == normalizedExt) {
+        return entry.key; // إرجاع اسم اللغة (مثلاً Python)
+      }
+    }
+    return null; // لم يتم العثور عليها
+  }
+
   static String? detectLanguage(String code) {
     if (code.trim().isEmpty) return null;
 
-    final patterns = <String, List<RegExp>>{
+    final patterns = <String, List<MapEntry<RegExp, int>>>{
+      // --- اللغات الرئيسية (تمت مراجعتها) ---
       'Dart': [
-        RegExp(r'\bvoid\s+main\s*\('),
-        RegExp(r'\bclass\s+\w+\s+extends\s+StatelessWidget'),
-        RegExp(r'\bclass\s+\w+\s+extends\s+StatefulWidget'),
-        RegExp(r'\bimport\s+package:'),
-        RegExp(r"\bimport\s+'package:"),
-        RegExp(r'=>'),
-        RegExp(r'\brunApp\s*\('),
-        RegExp(r'\bconst\s+'),
-        RegExp(r'\bfinal\s+'),
-        RegExp(r'\bWidget\b'),
-        RegExp(r'\bsetState\s*\('),
+        MapEntry(RegExp(r'import\s+package:'), 10), // علامة قوية جداً لدارت/فلاتر
+        MapEntry(RegExp(r'void\s+main\(\)'), 3),
+        MapEntry(RegExp(r'class\s+\w+\s+extends\s+State'), 8),
+        MapEntry(RegExp(r'Widget\s+build'), 8),
+        MapEntry(RegExp(r'setState\s*\('), 5),
+        MapEntry(RegExp(r'@override'), 2),
       ],
       'Python': [
-        RegExp(r'\bdef\s+\w+\s*\('),
-        RegExp(r'\bimport\s+\w+'),
-        RegExp(r'\bfrom\s+\w+\s+import'),
-        RegExp(r'\bprint\s*\('),
-        RegExp(r':\s*$', multiLine: true),
+        MapEntry(RegExp(r'def\s+\w+\s*\(.*\)\s*:'), 6), // النقطتان : مهمة
+        MapEntry(RegExp(r'if __name__ == "__main__"'), 10),
+        MapEntry(RegExp(r'from\s+[\w.]+\s+import'), 4),
+        MapEntry(RegExp(r'elif\s+'), 5), // خاصة ببايثون
+        MapEntry(RegExp(r'print\s*\('), 1), // ضعيفة (مشتركة مع سويفت وغيرها)
       ],
       'JavaScript': [
-        RegExp(r'\bfunction\s+\w+\s*\('),
-        RegExp(r'\bconst\s+\w+\s*='),
-        RegExp(r'\blet\s+\w+\s*='),
-        RegExp(r'\bconsole\.log\s*\('),
-        RegExp(r'=>'),
+        MapEntry(RegExp(r'console\.log'), 5),
+        MapEntry(RegExp(r'const\s+\w+\s*='), 2),
+        MapEntry(RegExp(r'function\s+\w+\s*\('), 2), // مشتركة
+        MapEntry(RegExp(r'document\.getElementById'), 5),
+        MapEntry(RegExp(r'export\s+default'), 4),
+        MapEntry(RegExp(r'=>'), 2), // Arrow function
       ],
+      'TypeScript': [
+        MapEntry(RegExp(r'interface\s+\w+\s*\{'), 5),
+        MapEntry(RegExp(r':\s*(string|number|boolean|any)'), 4), // تحديد الأنواع
+        MapEntry(RegExp(r'implements\s+\w+'), 3),
+      ],
+      
+      // --- عائلة C ---
       'Java': [
-        RegExp(r'\bpublic\s+class\s+\w+'),
-        RegExp(r'\bpublic\s+static\s+void\s+main'),
-        RegExp(r'\bSystem\.out\.println'),
-        RegExp(r'\bimport\s+java\.'),
+        MapEntry(RegExp(r'public\s+static\s+void\s+main'), 10),
+        MapEntry(RegExp(r'System\.out\.println'), 10),
+        MapEntry(RegExp(r'package\s+[\w.]+;'), 3),
+        MapEntry(RegExp(r'extends\s+\w+'), 2),
+      ],
+      'C#': [
+        MapEntry(RegExp(r'using\s+System;'), 10),
+        MapEntry(RegExp(r'Console\.WriteLine'), 10),
+        MapEntry(RegExp(r'namespace\s+\w+'), 5),
+        MapEntry(RegExp(r'public\s+class\s+\w+'), 2),
       ],
       'C++': [
-        RegExp(r'#include\s*<'),
-        RegExp(r'\bstd::'),
-        RegExp(r'\bint\s+main\s*\('),
-        RegExp(r'\bcout\s*<<'),
+        MapEntry(RegExp(r'#include\s*<iostream>'), 10),
+        MapEntry(RegExp(r'std::'), 6),
+        MapEntry(RegExp(r'cout\s*<<'), 6),
+        MapEntry(RegExp(r'using\s+namespace\s+std;'), 5),
       ],
       'C': [
-        RegExp(r'#include\s*<stdio\.h>'),
-        RegExp(r'\bprintf\s*\('),
-        RegExp(r'\bint\s+main\s*\('),
+        MapEntry(RegExp(r'#include\s*<stdio\.h>'), 10),
+        MapEntry(RegExp(r'#include\s*<stdlib\.h>'), 5),
+        MapEntry(RegExp(r'printf\s*\('), 3),
+        MapEntry(RegExp(r'struct\s+\w+\s*\{'), 2),
       ],
+
+      // --- تطوير الويب والبيانات ---
       'HTML': [
-        RegExp(r'<!DOCTYPE\s+html>', caseSensitive: false),
-        RegExp(r'<html'),
-        RegExp(r'<div'),
-        RegExp(r'<body'),
+        MapEntry(RegExp(r'<!DOCTYPE\s+html>', caseSensitive: false), 20),
+        MapEntry(RegExp(r'</div>'), 5),
+        MapEntry(RegExp(r'<body'), 5),
+        MapEntry(RegExp(r'<script'), 3),
       ],
       'CSS': [
-        RegExp(r'\.\w+\s*\{'),
-        RegExp(r'#\w+\s*\{'),
-        RegExp(r'\w+\s*:\s*[^;]+;'),
-      ],
-      'SQL': [
-        RegExp(r'\bSELECT\s+', caseSensitive: false),
-        RegExp(r'\bFROM\s+', caseSensitive: false),
-        RegExp(r'\bWHERE\s+', caseSensitive: false),
-        RegExp(r'\bINSERT\s+INTO\s+', caseSensitive: false),
+        MapEntry(RegExp(r'\.[\w-]+\s*\{'), 3), // Classes
+        MapEntry(RegExp(r'#[\w-]+\s*\{'), 3), // IDs
+        MapEntry(RegExp(r'color:\s*#'), 4),
+        MapEntry(RegExp(r'margin:\s*'), 2),
+        MapEntry(RegExp(r'!important'), 5),
       ],
       'JSON': [
-        RegExp(r'^\s*\{'),
-        RegExp(r'"\w+"\s*:'),
+        // JSON صعب لأنه يشبه JS Object، لذا نبحث عن المفاتيح المقتبسة بدقة
+        MapEntry(RegExp(r'"\w+"\s*:\s*'), 5), 
+        MapEntry(RegExp(r'^\s*[\{\[]'), 2), // يبدأ بقوس
+        MapEntry(RegExp(r'[\}\]]\s*\$'), 2), // ينتهي بقوس
+        MapEntry(RegExp(r'true|false|null'), 2),
+      ],
+      'XML': [
+        MapEntry(RegExp(r'<\?xml\s+version'), 20),
+        MapEntry(RegExp(r'xmlns:'), 5),
+        MapEntry(RegExp(r'</\w+>'), 3), // Closing tag
+      ],
+      'SQL': [
+        MapEntry(RegExp(r'SELECT\s+.*\s+FROM', caseSensitive: false), 8),
+        MapEntry(RegExp(r'INSERT\s+INTO', caseSensitive: false), 8),
+        MapEntry(RegExp(r'CREATE\s+TABLE', caseSensitive: false), 8),
+        MapEntry(RegExp(r'PRIMARY\s+KEY', caseSensitive: false), 5),
+        MapEntry(RegExp(r'WHERE\s+'), 2),
+      ],
+
+      // --- لغات السيرفر والسكربت ---
+      'PHP': [
+        MapEntry(RegExp(r'<\?php'), 20), // علامة مؤكدة
+        MapEntry(RegExp(r'\$\w+'), 4), // المتغيرات تبدأ بـ \$
+        MapEntry(RegExp(r'echo\s+'), 2),
+        MapEntry(RegExp(r'->'), 2), // Object operator
+      ],
+      'Ruby': [
+        MapEntry(RegExp(r'def\s+\w+'), 2),
+        MapEntry(RegExp(r'end'), 1), // كلمة end شائعة جداً في روبي
+        MapEntry(RegExp(r'puts\s+'), 4),
+        MapEntry(RegExp(r'require_relative'), 5),
+        MapEntry(RegExp(r'attr_accessor'), 8),
       ],
       'Bash': [
-        RegExp(r'^#!/bin/bash'),
-        RegExp(r'\becho\s+'),
-        RegExp(r'\$\w+'),
+        MapEntry(RegExp(r'^#!/bin/bash'), 20),
+        MapEntry(RegExp(r'^#!/bin/sh'), 20),
+        MapEntry(RegExp(r'echo\s+'), 1),
+        MapEntry(RegExp(r'fi\$'), 5), // إغلاق if
+        MapEntry(RegExp(r'esac\$'), 5), // إغلاق case
+        MapEntry(RegExp(r'sudo\s+'), 3),
+      ],
+
+      // --- لغات حديثة (Modern Systems) ---
+      'Go': [
+        MapEntry(RegExp(r'package\s+main'), 10),
+        MapEntry(RegExp(r'fmt\.Print'), 8),
+        MapEntry(RegExp(r'func\s+\w+\('), 3),
+        MapEntry(RegExp(r':='), 4), // تعريف قصير
+      ],
+      'Rust': [
+        MapEntry(RegExp(r'fn\s+main'), 5),
+        MapEntry(RegExp(r'let\s+mut\s+'), 6), // تعريف متغير قابل للتغيير
+        MapEntry(RegExp(r'println!'), 8), // الماكرو ! مميز جداً
+        MapEntry(RegExp(r'impl\s+\w+'), 5),
+        MapEntry(RegExp(r'pub\s+fn'), 4),
+      ],
+      'Kotlin': [
+        MapEntry(RegExp(r'fun\s+main'), 5),
+        MapEntry(RegExp(r'val\s+\w+'), 2),
+        MapEntry(RegExp(r'data\s+class'), 6),
+        MapEntry(RegExp(r'companion\s+object'), 8),
+        MapEntry(RegExp(r'override\s+fun'), 4),
+      ],
+      'Swift': [
+        MapEntry(RegExp(r'import\s+UIKit'), 10),
+        MapEntry(RegExp(r'import\s+SwiftUI'), 10),
+        MapEntry(RegExp(r'var\s+\w+:\s*'), 2),
+        MapEntry(RegExp(r'let\s+\w+'), 1),
+        MapEntry(RegExp(r'func\s+\w+'), 2),
+        MapEntry(RegExp(r'struct\s+\w+\s*:\s*View'), 8), // SwiftUI
       ],
     };
 
@@ -103,9 +198,9 @@ class LanguageDetector {
 
     for (var entry in patterns.entries) {
       int score = 0;
-      for (var pattern in entry.value) {
-        if (pattern.hasMatch(code)) {
-          score++;
+      for (var patternEntry in entry.value) {
+        if (patternEntry.key.hasMatch(code)) {
+          score += patternEntry.value; // إضافة الوزن
         }
       }
       if (score > 0) {
@@ -116,6 +211,6 @@ class LanguageDetector {
     if (scores.isEmpty) return null;
 
     var maxEntry = scores.entries.reduce((a, b) => a.value > b.value ? a : b);
-    return maxEntry.value >= 2 ? maxEntry.key : null;
+    return maxEntry.value >= 5 ? maxEntry.key : null; // رفع العتبة إلى 5
   }
 }

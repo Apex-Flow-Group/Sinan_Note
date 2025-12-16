@@ -20,10 +20,14 @@ class SettingsProvider with ChangeNotifier {
   int _lockDelaySeconds = 30;
   bool _hasSeenLockedIntro = false;
   bool _isFirstLaunch = true;
+  static const int _defaultBlueIndex = 8;
+  static const int _defaultYellowIndex = 4;
+  static const int _defaultPurpleIndex = 9;
+  
   final Map<String, int> _defaultColorIndices = {
-    'simple': 8,      // Blue
-    'reminder': 4,    // Yellow
-    'professional': 9, // Purple
+    'simple': _defaultBlueIndex,
+    'reminder': _defaultYellowIndex,
+    'professional': _defaultPurpleIndex,
   };
 
   ThemeMode get themeMode => _themeMode;
@@ -47,7 +51,11 @@ class SettingsProvider with ChangeNotifier {
   bool get isLoaded => _isInitialized;
 
   SettingsProvider() {
-    _loadSettings();
+    _loadSettings().catchError((e) {
+      debugPrint('Error loading settings: $e');
+      _isInitialized = true;
+      notifyListeners();
+    });
   }
 
   Future<void> ensureInitialized() async {
@@ -104,11 +112,18 @@ class SettingsProvider with ChangeNotifier {
     await prefs.setBool('cardMotionEnabled', enabled);
   }
 
-  Future<void> setViewType(String type) async {
-    _viewType = type;
+  Future<void> setViewType(String key, String type) async {
+    if (key == 'home') {
+      _viewType = type;
+    }
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('viewType', type);
+    await prefs.setString('viewType_$key', type);
+  }
+
+  Future<String> getViewType(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('viewType_$key') ?? 'listCompact';
   }
 
   Future<void> setAppLockEnabled(bool enabled) async {
@@ -134,7 +149,7 @@ class SettingsProvider with ChangeNotifier {
         'enabled': _hideContentInBackground || _isAppLockEnabled,
       });
     } catch (e) {
-      // Platform channel not available (iOS or error)
+      debugPrint('Native secure flag update failed: $e');
     }
   }
 
@@ -174,10 +189,14 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    int? themeIndex = prefs.getInt('themeMode');
-    _themeMode =
-        themeIndex != null ? ThemeMode.values[themeIndex] : ThemeMode.system;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int? themeIndex = prefs.getInt('themeMode');
+      if (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length) {
+        _themeMode = ThemeMode.values[themeIndex];
+      } else {
+        _themeMode = ThemeMode.system;
+      }
     _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
     _languageCode = prefs.getString('language') ?? 'system';
     _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
@@ -191,11 +210,16 @@ class SettingsProvider with ChangeNotifier {
     _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
     _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;
     _isFirstLaunch = prefs.getBool('first_launch') ?? true;
-    _defaultColorIndices['simple'] = prefs.getInt('colorIndex_simple') ?? 8;
-    _defaultColorIndices['reminder'] = prefs.getInt('colorIndex_reminder') ?? 4;
-    _defaultColorIndices['professional'] = prefs.getInt('colorIndex_professional') ?? 9;
-    _isInitialized = true;
-    notifyListeners();
+      _defaultColorIndices['simple'] = prefs.getInt('colorIndex_simple') ?? _defaultBlueIndex;
+      _defaultColorIndices['reminder'] = prefs.getInt('colorIndex_reminder') ?? _defaultYellowIndex;
+      _defaultColorIndices['professional'] = prefs.getInt('colorIndex_professional') ?? _defaultPurpleIndex;
+      _isInitialized = true;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading settings: $e');
+      _isInitialized = true;
+      notifyListeners();
+    }
   }
 
   Locale? get locale {
@@ -204,7 +228,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   int getDefaultColorIndex(String mode) {
-    return _defaultColorIndices[mode] ?? 8;
+    return _defaultColorIndices[mode] ?? _defaultBlueIndex;
   }
 
   Future<void> setDefaultColorIndex(String mode, int index) async {

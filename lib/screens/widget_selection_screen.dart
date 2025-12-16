@@ -6,6 +6,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../services/widget_service.dart';
 import '../services/database_service.dart';
 import '../models/note.dart';
+import '../utils/checklist_formatter.dart';
 
 class WidgetSelectionScreen extends StatefulWidget {
   final String widgetType; // 'note' or 'checklist'
@@ -148,7 +149,9 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          note.content,
+                          note.isChecklist
+                              ? ChecklistFormatter.toDisplayText(note.content)
+                              : note.content,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),

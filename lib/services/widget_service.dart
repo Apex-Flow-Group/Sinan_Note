@@ -20,6 +20,27 @@ class WidgetService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
     try {
+      // 1. فحص النوت المثبتة أولاً
+      final prefs = await SharedPreferences.getInstance();
+      final savedNoteId = prefs.getInt('flutter.note_id') ?? 0;
+      
+      if (savedNoteId > 0) {
+        final specificNote = await _dbService.getNoteById(savedNoteId);
+        if (specificNote != null && 
+            !specificNote.isLocked && 
+            !specificNote.isTrashed && 
+            !specificNote.isArchived &&
+            !specificNote.isChecklist &&
+            specificNote.noteType != 'checklist') {
+          await updateNoteWidget(specificNote);
+          if (kDebugMode) {
+            print('✅ Note widget updated with pinned note ID: $savedNoteId');
+          }
+          return; // ✅ استخدام النوت المثبتة
+        }
+      }
+      
+      // 2. فقط إذا لم توجد نوت مثبتة، استخدم المزامنة العامة
       final notes = await _dbService.getAllNotes();
       
       // STRICT FILTER: Only NON-checklist notes (pinned first, then recent)
@@ -55,7 +76,7 @@ class WidgetService {
       await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
       
       if (kDebugMode) {
-        print('✅ Note widget updated');
+        print('✅ Note widget updated with general sync');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -68,6 +89,36 @@ class WidgetService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
     try {
+      // 1. فحص القائمة المثبتة أولاً
+      final prefs = await SharedPreferences.getInstance();
+      final savedChecklistId = prefs.getInt('flutter.checklist_note_id') ?? 0;
+      
+      if (savedChecklistId > 0) {
+        final specificChecklist = await _dbService.getNoteById(savedChecklistId);
+        if (specificChecklist != null && 
+            !specificChecklist.isLocked && 
+            !specificChecklist.isTrashed && 
+            !specificChecklist.isArchived &&
+            (specificChecklist.isChecklist || specificChecklist.noteType == 'checklist')) {
+          final title = specificChecklist.title.isEmpty ? 'Checklist' : specificChecklist.title;
+          final stats = _parseChecklistStats(specificChecklist.content);
+          
+          await updateChecklistWidget(
+            specificChecklist.id ?? 0,
+            title,
+            specificChecklist.content,
+            specificChecklist.colorIndex,
+            totalItems: stats['total'] ?? 0,
+            completedItems: stats['completed'] ?? 0,
+          );
+          if (kDebugMode) {
+            print('✅ Checklist widget updated with pinned list ID: $savedChecklistId');
+          }
+          return; // ✅ استخدام القائمة المثبتة
+        }
+      }
+      
+      // 2. فقط إذا لم توجد قائمة مثبتة، استخدم المزامنة العامة
       final notes = await _dbService.getAllNotes();
       
       // STRICT FILTER: ONLY checklists (pinned first, then recent)
@@ -103,7 +154,7 @@ class WidgetService {
       }
       
       if (kDebugMode) {
-        print('✅ Checklist widget updated');
+        print('✅ Checklist widget updated with general sync');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -181,11 +232,16 @@ class WidgetService {
       } else {
         final formattedContent = _formatChecklistContent(content);
 
+        // 🔥 CRITICAL: حفظ الـ ID في كل من HomeWidget و SharedPreferences
         await HomeWidget.saveWidgetData<int>('checklist_note_id', noteId);
         await HomeWidget.saveWidgetData<String>('checklist_title', title);
         await HomeWidget.saveWidgetData<String>('checklist_content', formattedContent);
         await HomeWidget.saveWidgetData<int>('checklist_total', totalItems);
         await HomeWidget.saveWidgetData<int>('checklist_completed', completedItems);
+        
+        // حفظ في SharedPreferences أيضاً للتأكد
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('flutter.checklist_note_id', noteId);
       }
 
       await HomeWidget.updateWidget(androidName: 'ChecklistWidgetProvider');
@@ -214,6 +270,10 @@ class WidgetService {
       await HomeWidget.saveWidgetData<String>('title', title);
       await HomeWidget.saveWidgetData<String>('content', content);
       await HomeWidget.saveWidgetData<int>('note_id', note.id ?? 0);
+      
+      // حفظ في SharedPreferences أيضاً للتأكد
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('flutter.note_id', note.id ?? 0);
 
       await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
     } catch (e) {
@@ -272,10 +332,13 @@ class WidgetService {
       final pinnedChecklistId = prefs.getInt('flutter.checklist_note_id') ?? 0;
 
       final service = WidgetService();
+      
+      // 🔥 تحقق من noteType أيضاً لضمان التعرف الصحيح
+      final isChecklistNote = note.isChecklist || note.noteType == 'checklist';
 
-      if (note.id == pinnedNoteId && !note.isChecklist) {
+      if (note.id == pinnedNoteId && !isChecklistNote) {
         await service.updateNoteWidget(note);
-      } else if (note.id == pinnedChecklistId && note.isChecklist) {
+      } else if (note.id == pinnedChecklistId && isChecklistNote) {
         final title = note.title.isEmpty ? 'Checklist' : note.title;
         final stats = service._parseChecklistStats(note.content);
         

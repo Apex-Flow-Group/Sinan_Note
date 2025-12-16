@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/note.dart';
 import '../models/note_version.dart';
 import 'apex_error_manager.dart';
@@ -387,6 +388,39 @@ class DatabaseService {
     }, name: 'GetHistory_$noteId');
   }
 
+  /// Get last version only (for smart version control)
+  Future<NoteVersion?> getLastNoteVersion(int noteId) async {
+    return await ApexErrorManager.monitorDB(() async {
+      final db = await database;
+      final res = await db.query(
+        'note_versions',
+        where: 'note_id = ?',
+        whereArgs: [noteId],
+        orderBy: 'timestamp DESC',
+        limit: 1,
+      );
+      if (res.isNotEmpty) return NoteVersion.fromMap(res.first);
+      return null;
+    }, name: 'GetLastVersion_$noteId');
+  }
+
+  /// Smart pruning: Keep only newest X versions
+  Future<void> keepMaxVersions(int noteId, int maxLimit) async {
+    await ApexErrorManager.monitorDB(() async {
+      final db = await database;
+      await db.rawDelete('''
+        DELETE FROM note_versions 
+        WHERE note_id = ? 
+        AND id NOT IN (
+          SELECT id FROM note_versions 
+          WHERE note_id = ? 
+          ORDER BY timestamp DESC 
+          LIMIT ?
+        )
+      ''', [noteId, noteId, maxLimit]);
+    }, name: 'PruneVersions_$noteId');
+  }
+
   Future<void> _migrateOldDatabase() async {
     try {
       final dbDir = await getDatabasesPath();
@@ -560,5 +594,58 @@ class DatabaseService {
     // Force reinitialization
     _database = await _initDB();
     debugPrint('✓ Database reopened successfully');
+  }
+
+  /// One-time legacy history cleanup (Deep Clean Operation)
+  /// Removes old versions for notes with >20 versions
+  Future<void> runLegacyHistoryCleanup() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Check if cleanup already done
+    bool isCleaned = prefs.getBool('is_legacy_history_cleaned_v1') ?? false;
+    if (isCleaned) return;
+
+    if (kDebugMode) print('🧹 Starting legacy history cleanup...');
+    final db = await database;
+
+    try {
+      // Find notes with >20 versions
+      final List<Map<String, dynamic>> targetNotes = await db.rawQuery('''
+        SELECT note_id, COUNT(*) as count 
+        FROM note_versions 
+        GROUP BY note_id 
+        HAVING count > 20
+      ''');
+
+      if (targetNotes.isEmpty) {
+        if (kDebugMode) print('✅ No cleanup needed');
+        await prefs.setBool('is_legacy_history_cleaned_v1', true);
+        return;
+      }
+
+      if (kDebugMode) print('⚠️ Found ${targetNotes.length} notes with excess versions. Cleaning...');
+
+      // Batch cleanup using transaction
+      await db.transaction((txn) async {
+        for (var row in targetNotes) {
+          int noteId = row['note_id'];
+          await txn.rawDelete('''
+            DELETE FROM note_versions 
+            WHERE note_id = ? 
+            AND id NOT IN (
+              SELECT id FROM note_versions 
+              WHERE note_id = ? 
+              ORDER BY timestamp DESC 
+              LIMIT 20
+            )
+          ''', [noteId, noteId]);
+        }
+      });
+
+      if (kDebugMode) print('🎉 Database cleanup completed successfully!');
+      await prefs.setBool('is_legacy_history_cleaned_v1', true);
+    } catch (e) {
+      if (kDebugMode) print('❌ Cleanup error: $e');
+    }
   }
 }

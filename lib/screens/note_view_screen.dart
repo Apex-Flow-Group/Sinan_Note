@@ -107,6 +107,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       return Text(
         content,
         style: TextStyle(fontSize: 16, height: 1.5, color: textColor),
+        maxLines: null,
       );
     }
 
@@ -137,6 +138,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                         : textColor,
                     decoration: item.isDone ? TextDecoration.lineThrough : null,
                   ),
+                  maxLines: null,
                 ),
               ),
             ],
@@ -264,7 +266,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                     : Directionality(
                         textDirection: _getDirection(_currentNote.content),
                         child: MarkdownBody(
-                          data: _currentNote.content,
+                          data: _currentNote.content.replaceAll('\n', '  \n'),
                           checkboxBuilder: (bool checked) => Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: Icon(

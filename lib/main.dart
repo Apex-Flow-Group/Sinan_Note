@@ -50,6 +50,9 @@ void main() async {
   // Initialize error manager with navigator key
   ApexErrorManager.setNavigatorKey(navigatorKey);
 
+  // 🧹 One-time legacy cleanup (runs in background)
+  DatabaseService().runLegacyHistoryCleanup();
+
   if (Platform.isLinux || Platform.isWindows) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;

@@ -4,15 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/note.dart';
 import '../../../models/note_mode.dart';
-import '../../../models/note_version.dart';
-import '../../../services/database_service.dart';
 import '../../../services/encryption_service.dart';
 import '../../../services/biometric_service.dart';
 import '../../../services/notes_provider.dart';
+import '../../../services/version_control_service.dart';
 
 /// Handles all storage operations (save, load, encryption)
 class EditorStorageController {
-  final DatabaseService _db = DatabaseService();
+  final VersionControlService _versionControl = VersionControlService();
 
   /// Convert Color to int (ARGB) - avoids deprecated .value
   int _colorToInt(Color color) {
@@ -126,26 +125,24 @@ class EditorStorageController {
 
     if (existingNoteId != null || existingNote != null) {
       final noteId = existingNoteId ?? existingNote!.id!;
-      final version = NoteVersion(
+      // Smart version control (manual save)
+      await _versionControl.smartLogVersion(
         noteId: noteId,
         title: title,
         content: content,
-        timestamp: DateTime.now(),
-        action: 'update',
+        isManualAction: true,
       );
-      await _db.logNoteVersion(version);
       await provider.updateNote(note);
       return noteId;
     } else {
       final newId = await provider.addNote(note);
-      final version = NoteVersion(
+      // Smart version control (create)
+      await _versionControl.smartLogVersion(
         noteId: newId,
         title: title,
         content: content,
-        timestamp: DateTime.now(),
-        action: 'create',
+        isManualAction: true,
       );
-      await _db.logNoteVersion(version);
       return newId;
     }
   }

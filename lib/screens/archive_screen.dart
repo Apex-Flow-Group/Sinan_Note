@@ -113,7 +113,18 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
       builder: (context, notesProvider, _) {
         final archivedNotes = _filterNotes(notesProvider.archivedNotes);
 
-        return Scaffold(
+        return PopScope(
+          canPop: !_selectionMode,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            if (_selectionMode) {
+              setState(() {
+                _selectionMode = false;
+                _selectedNoteIds.clear();
+              });
+            }
+          },
+          child: Scaffold(
           drawer: HomeDrawerWidget(
             onBackupTap: () {},
             onNotesChanged: () {},
@@ -250,6 +261,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                     );
                   },
                 ),
+          ),
         );
       },
     );

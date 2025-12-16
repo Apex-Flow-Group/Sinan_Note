@@ -122,7 +122,18 @@ class _TrashScreenState extends State<TrashScreen> {
       builder: (context, notesProvider, _) {
         final trashedNotes = _filterNotes(notesProvider.trashedNotes);
 
-        return Scaffold(
+        return PopScope(
+          canPop: !_selectionMode,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            if (_selectionMode) {
+              setState(() {
+                _selectionMode = false;
+                _selectedNotes.clear();
+              });
+            }
+          },
+          child: Scaffold(
           drawer: HomeDrawerWidget(
             onBackupTap: () {},
             onNotesChanged: () {},
@@ -413,6 +424,7 @@ class _TrashScreenState extends State<TrashScreen> {
                     );
                   },
                 ),
+          ),
         );
       },
     );

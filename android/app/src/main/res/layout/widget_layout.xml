@@ -20,9 +20,9 @@
             android:text="Select Note"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
+            android:textColor="@color/widget_title_text"
             android:paddingBottom="8dp"
-            android:maxLines="2"
+            android:maxLines="1"
             android:ellipsize="end" />
 
         <TextView
@@ -32,7 +32,7 @@
             android:layout_weight="1"
             android:text="Tap to select a note"
             android:textSize="14sp"
-            android:textColor="?android:attr/textColorSecondary"
+            android:textColor="@color/widget_content_text"
             android:lineSpacingExtra="2dp"
             android:gravity="top|start" />
     </LinearLayout>

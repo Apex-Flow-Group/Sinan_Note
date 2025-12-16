@@ -8,10 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
 import '../models/note_mode.dart';
-import '../models/note_version.dart';
-import '../services/database_service.dart';
 import '../services/notes_provider.dart';
 import '../services/settings_provider.dart';
+import '../services/language_detector.dart';
+import '../services/version_control_service.dart';
 import '../utils/adaptive_color.dart';
 import '../utils/apex_smart_controller.dart';
 import '../utils/checklist_formatter.dart';
@@ -150,6 +150,20 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       _colorIndex = widget.note!.colorIndex;
       // CRITICAL: Checklists don't need authentication (plain JSON)
       _isAuthenticated = widget.note!.isChecklist ? true : widget.skipAuthentication;
+      
+      // استعادة اللغة المحفوظة من noteType
+      if (widget.mode == NoteMode.code && widget.note!.noteType.isNotEmpty) {
+        // محاولة استخراج اسم اللغة من الامتداد المحفوظ
+        String? restoredLanguage = LanguageDetector.getLanguageFromExtension(widget.note!.noteType);
+        
+        // إذا لم تنجح، استخدم القيمة المحفوظة كما هي
+        restoredLanguage ??= _mapNoteTypeToLanguage(widget.note!.noteType);
+        
+        if (restoredLanguage != null) {
+          _detectedLanguage = restoredLanguage;
+          _isLanguageManuallySelected = true; // 🔒 قفل الكشف التلقائي
+        }
+      }
     } else {
       _loadStickySettings();
     }
@@ -393,17 +407,14 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       // Save using the provider's unified method (silent to prevent rebuild)
       final newId = await _notesProviderRef!.addOrUpdateNote(noteToSave, silent: true);
 
-      // Log version history
+      // Smart version control
       try {
-        final version = NoteVersion(
+        await VersionControlService().smartLogVersion(
           noteId: newId,
           title: _currentTitle,
           content: contentToSave,
-          timestamp: DateTime.now(),
-          action:
-              (_savedNoteId ?? widget.note?.id) == null ? 'create' : 'update',
+          isManualAction: isManualSave,
         );
-        await DatabaseService().logNoteVersion(version);
       } catch (e) {
         // History logging failed, but note was saved successfully
       }
@@ -881,7 +892,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
           if (detectedLang != null && detectedLang != _detectedLanguage) {
             setState(() => _detectedLanguage = detectedLang);
-            if (mounted) {
+            // عرض الإشعار فقط للملاحظات الجديدة
+            if (mounted && widget.note?.id == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('${context.l10n.detected}: $detectedLang'),
@@ -1349,7 +1361,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                     final normalizedLang = newLang == 'Auto' ? null : newLang;
                     setState(() {
                       _detectedLanguage = normalizedLang;
-                      _isLanguageManuallySelected = normalizedLang != null;
+                      _isLanguageManuallySelected = normalizedLang != null; // 🔒 تفعيل القفل عند الاختيار اليدوي
                       _isDirty = true;
                     });
                     if (normalizedLang != null) {
@@ -1517,6 +1529,32 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         Navigator.of(context).pop();
       }
     }
+  }
+
+  String? _mapNoteTypeToLanguage(String noteType) {
+    final languageMap = {
+      'python': 'Python',
+      'javascript': 'JavaScript',
+      'java': 'Java',
+      'cpp': 'C++',
+      'c': 'C',
+      'csharp': 'C#',
+      'php': 'PHP',
+      'ruby': 'Ruby',
+      'go': 'Go',
+      'rust': 'Rust',
+      'kotlin': 'Kotlin',
+      'swift': 'Swift',
+      'typescript': 'TypeScript',
+      'html': 'HTML',
+      'css': 'CSS',
+      'sql': 'SQL',
+      'shell': 'Shell',
+      'dart': 'Dart',
+      'json': 'JSON',
+      'xml': 'XML',
+    };
+    return languageMap[noteType.toLowerCase()];
   }
 
   @override

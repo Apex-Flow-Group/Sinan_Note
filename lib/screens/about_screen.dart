@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../config/flavor_config.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -45,8 +46,11 @@ class _AboutScreenState extends State<AboutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('حول التطبيق')),
+      appBar: AppBar(title: Text(l10n.aboutApp)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -108,14 +112,25 @@ class _AboutScreenState extends State<AboutScreen> {
             const SizedBox(height: 32),
 
             // Links Section
-            _buildSection('الروابط المهمة', [
+            _buildSection(isArabic ? 'الروابط المهمة' : 'Important Links', [
               if (FlavorConfig.isGooglePlay)
-                _buildLink('صفحة التطبيق على Google Play', 'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note'),
-              _buildLink('سياسة الخصوصية (عربي)', 'https://docs.google.com/document/d/e/2PACX-1vTrXOHmrayvY-OLX00VfzN872b5_H6dAbbxDDP9ce4qaa0Hq1v2CjzD0e5GqXZk26QmYvFEyzzH5p2W/pub'),
-              _buildLink('Privacy Policy (English)', 'https://docs.google.com/document/d/e/2PACX-1vSteJ2fwHp0nBT8vpUHAT1B0OOyRSlkfpwJxW2bLn17fy_9lTKzwOHLmZ4SRljtLxgtXluvkp3qAzNV/pub'),
-              _buildLink('شروط الخدمة (عربي)', 'https://docs.google.com/document/d/e/2PACX-1vTkHjTUla85oqqHOXcN9dxjiC5tkJ-Y-vPd9yUfJIQIS5xWtftxjvio4fFKnedHdX5lHGWEV7ZlsL9z/pub'),
-              _buildLink('Terms of Service (English)', 'https://docs.google.com/document/d/e/2PACX-1vTWx4FoSMwyeNKLiwll5oJnjvOW10vWT-YH9qrA3TaCkCva62zfwUvP-__Ztys83nBQEaYs8d8JZPZ5/pub'),
-              _buildLink('التراخيص', null, onTap: _showLicenses),
+                _buildLink(
+                  isArabic ? 'صفحة التطبيق على Google Play' : 'App Page on Google Play',
+                  'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note',
+                ),
+              _buildLink(
+                isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
+                isArabic 
+                  ? 'https://docs.google.com/document/d/e/2PACX-1vRVJmMZMx5-mzCV2tqLCz6Nx9usUCH1KHxEHeopj5XTxmGV2CeSFg-TbqEcLtfZNarZ5kHJPlG7DsQg/pub'
+                  : 'https://docs.google.com/document/d/e/2PACX-1vSteJ2fwHp0nBT8vpUHAT1B0OOyRSlkfpwJxW2bLn17fy_9lTKzwOHLmZ4SRljtLxgtXluvkp3qAzNV/pub',
+              ),
+              _buildLink(
+                isArabic ? 'شروط الخدمة' : 'Terms of Service',
+                isArabic
+                  ? 'https://docs.google.com/document/d/e/2PACX-1vTWx4FoSMwyeNKLiwll5oJnjvOW10vWT-YH9qrA3TaCkCva62zfwUvP-__Ztys83nBQEaYs8d8JZPZ5/pub'
+                  : 'https://docs.google.com/document/d/e/2PACX-1vTkHjTUla85oqqHOXcN9dxjiC5tkJ-Y-vPd9yUfJIQIS5xWtftxjvio4fFKnedHdX5lHGWEV7ZlsL9z/pub',
+              ),
+              _buildLink(isArabic ? 'التراخيص' : 'Licenses', null, onTap: _showLicenses),
             ]),
             const SizedBox(height: 24),
 

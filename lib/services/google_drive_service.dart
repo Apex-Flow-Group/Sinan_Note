@@ -9,8 +9,16 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class GoogleDriveService {
+  // TODO: Replace with your Web Client ID from Google Cloud Console
+  static const String _serverClientId = '308129072326-kvf02s0mmvvddtqfchv2rfibtqjumm48.apps.googleusercontent.com';
+  
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [drive.DriveApi.driveFileScope],
+    scopes: [
+      drive.DriveApi.driveFileScope,
+      'https://www.googleapis.com/auth/drive.appdata',
+      'https://www.googleapis.com/auth/drive.file',
+    ],
+    serverClientId: _serverClientId,
   );
 
   static GoogleSignInAccount? _currentUser;
@@ -23,13 +31,29 @@ class GoogleDriveService {
 
   static Future<bool> signIn() async {
     try {
+      // Sign out first to clear any cached state
+      await _googleSignIn.signOut();
+      
       _currentUser = await _googleSignIn.signIn();
-      if (_currentUser == null) return false;
+      if (_currentUser == null) {
+        if (kDebugMode) {
+          print('Sign in cancelled by user');
+        }
+        return false;
+      }
 
       final authClient = await _googleSignIn.authenticatedClient();
-      if (authClient == null) return false;
+      if (authClient == null) {
+        if (kDebugMode) {
+          print('Failed to get authenticated client');
+        }
+        return false;
+      }
 
       _driveApi = drive.DriveApi(authClient);
+      if (kDebugMode) {
+        print('Successfully signed in as: ${_currentUser!.email}');
+      }
       return true;
     } catch (e) {
       if (kDebugMode) {

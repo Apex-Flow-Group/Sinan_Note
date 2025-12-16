@@ -18,6 +18,7 @@ import '../widgets/home/add_menu_widget.dart' show AddMenuWidget, isMenuOpenNoti
 import '../widgets/home/home_drawer_widget.dart';
 import '../widgets/home/smooth_search_header_delegate.dart';
 import '../widgets/home/selection_action_bar.dart';
+import '../utils/checklist_formatter.dart';
 
 import '../widgets/home/dialogs/backup_options_dialog.dart';
 import '../widgets/custom_share_sheet.dart';
@@ -46,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier(0);
   ViewType _viewType = ViewType.listExpanded;
   late final ValueNotifier<String> _viewTypeNotifier;
+  final ValueNotifier<int> _selectionCountNotifier = ValueNotifier(0);
   bool _showAddMenu = false;
   Timer? _debounce;
   final Set<int> _selectedNoteIds = {};
@@ -236,6 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchFocusNode.dispose();
     _closeAllSlidables.dispose();
     _viewTypeNotifier.dispose();
+    _selectionCountNotifier.dispose();
     ToastService().cancelAll();
     super.dispose();
   }
@@ -251,9 +254,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final filteredNotes = _filterNotes(allNotes);
 
         return PopScope(
-          canPop: !_showAddMenu && !_isSearchActive,
+          canPop: !_showAddMenu && !_isSearchActive && _selectedNoteIds.isEmpty,
           onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
+            if (_selectedNoteIds.isNotEmpty) {
+              setState(() => _selectedNoteIds.clear());
+              return;
+            }
             if (_showAddMenu) {
               setState(() => _showAddMenu = false);
               isMenuOpenNotifier.value = false;
@@ -349,8 +356,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader(BuildContext context, AppLocalizations l10n, bool isDark,
       List<Note> allNotes) {
     return SliverPersistentHeader(
-      pinned: false,
-      floating: true,
+      pinned: _selectedNoteIds.isNotEmpty,
+      floating: _selectedNoteIds.isEmpty,
       delegate: SmoothSearchHeaderDelegate(
         expandedHeight: 80.0,
         isDark: isDark,
@@ -362,28 +369,34 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-              child: SelectionActionBar(
-                selectedCount: _selectedNoteIds.length,
-                isDark: isDark,
-                allPinned: _selectedNoteIds.isNotEmpty &&
-                    _selectedNoteIds.every((id) => allNotes
-                        .firstWhere((n) => n.id == id,
-                            orElse: () => Note(
-                                id: -1,
-                                title: '',
-                                content: '',
-                                createdAt: DateTime.now(),
-                                updatedAt: DateTime.now(),
-                                colorIndex: 0,
-                                isLocked: false,
-                                noteType: '',
-                                isPinned: false))
-                        .isPinned),
-                onClear: () => setState(() => _selectedNoteIds.clear()),
-                onPin: () => _togglePinSelected(l10n, allNotes),
-                onArchive: () => _archiveSelected(l10n),
-                onDelete: () => _deleteSelected(l10n),
-                onShare: () => _shareSelected(allNotes),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _selectionCountNotifier,
+                builder: (context, count, _) => SelectionActionBar(
+                  selectedCount: count,
+                  isDark: isDark,
+                  allPinned: _selectedNoteIds.isNotEmpty &&
+                      _selectedNoteIds.every((id) => allNotes
+                          .firstWhere((n) => n.id == id,
+                              orElse: () => Note(
+                                  id: -1,
+                                  title: '',
+                                  content: '',
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                  colorIndex: 0,
+                                  isLocked: false,
+                                  noteType: '',
+                                  isPinned: false))
+                          .isPinned),
+                  onClear: () => setState(() {
+                    _selectedNoteIds.clear();
+                    _selectionCountNotifier.value = 0;
+                  }),
+                  onPin: () => _togglePinSelected(l10n, allNotes),
+                  onArchive: () => _archiveSelected(l10n),
+                  onDelete: () => _deleteSelected(l10n),
+                  onShare: count == 1 ? () => _shareSelected(allNotes) : null,
+                ),
               ),
             ),
           ),
@@ -454,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           final settings = Provider.of<SettingsProvider>(
                               context,
                               listen: false);
-                          settings.setViewType(_viewType.name);
+                          settings.setViewType('home', _viewType.name);
                         },
                         onFilterTap: () {
                           FocusScope.of(context).unfocus();
@@ -534,7 +547,10 @@ class _HomeScreenState extends State<HomeScreen> {
       isSelected: _selectedNoteIds.contains(note.id),
       selectionMode: _selectedNoteIds.isNotEmpty,
       source: source,
-      onLongPress: () => setState(() => _selectedNoteIds.add(note.id!)),
+      onLongPress: () => setState(() {
+        _selectedNoteIds.add(note.id!);
+        _selectionCountNotifier.value = _selectedNoteIds.length;
+      }),
       onTap: () {
         if (_selectedNoteIds.isNotEmpty) {
           setState(() {
@@ -543,6 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
             } else {
               _selectedNoteIds.add(note.id!);
             }
+            _selectionCountNotifier.value = _selectedNoteIds.length;
           });
         }
       },
@@ -746,9 +763,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _shareSelected(List<Note> allNotes) {
     final selectedNotes =
         allNotes.where((n) => _selectedNoteIds.contains(n.id)).toList();
-    final text = selectedNotes
-        .map((n) => '${n.title}\n\n${n.content}')
-        .join('\n\n---\n\n');
+    final text = selectedNotes.map((n) {
+      if (n.isChecklist) {
+        return ChecklistFormatter.formatForSharing(n.title, n.content);
+      }
+      return '${n.title}\n\n${n.content}';
+    }).join('\n\n---\n\n');
     CustomShareSheet.show(context, text);
     setState(() => _selectedNoteIds.clear());
   }
