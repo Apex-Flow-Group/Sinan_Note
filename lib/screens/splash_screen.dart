@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/settings_provider.dart';
-import '../widgets/biometric_auth_wrapper.dart';
 import 'main_layout_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -30,9 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            settings.isAppLockEnabled
-                ? const BiometricAuthWrapper(child: MainLayoutScreen())
-                : const MainLayoutScreen(),
+            const MainLayoutScreen(),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),

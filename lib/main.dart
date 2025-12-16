@@ -28,6 +28,7 @@ import 'package:home_widget/home_widget.dart';
 import 'services/apex_diagnostics_engine.dart';
 import 'services/apex_error_manager.dart';
 import 'services/database_service.dart';
+import 'services/security_gate.dart';
 import 'screens/note_view_screen.dart';
 import 'screens/widget_selection_screen.dart';
 
@@ -36,6 +37,14 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔒 Initialize SecurityController IMMEDIATELY with default safe config
+  // This registers the lifecycle observer BEFORE any events can occur
+  SecurityController().initialize(const SecurityConfig(
+    lockEnabled: false,
+    lockDelaySeconds: 0,
+    privacyBlurEnabled: false,
+  ));
 
   // 🕵️ الكشف الذكي عن النسخة بناءً على اسم الحزمة
   final packageInfo = await PackageInfo.fromPlatform();
@@ -199,6 +208,9 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
+        // SettingsProvider automatically updates SecurityController via _updateSecurityController()
+        // No need for manual initialization here - observer is already registered in main()
+
         return DynamicColorBuilder(
           builder: (lightDynamic, darkDynamic) {
             return MaterialApp(
@@ -216,6 +228,12 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                 GlobalCupertinoLocalizations.delegate,
               ],
               themeMode: settings.themeMode,
+              builder: (context, child) {
+                return SecurityGate(
+                  controller: SecurityController(),
+                  child: child!,
+                );
+              },
               theme: ThemeData(
                 colorScheme:
                     lightDynamic ?? ColorScheme.fromSeed(seedColor: Colors.blue),

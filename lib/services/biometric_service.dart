@@ -26,8 +26,6 @@ class BiometricService {
   /// المصادقة باستخدام البصمة أو كلمة مرور الجهاز
   static Future<bool> authenticate() async {
     if (Platform.isLinux || Platform.isWindows) return true;
-    final isAvailable = await hasBiometrics();
-    if (!isAvailable) return false;
 
     try {
       return await _auth.authenticate(

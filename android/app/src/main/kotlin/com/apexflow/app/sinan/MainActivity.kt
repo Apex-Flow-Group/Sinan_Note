@@ -14,26 +14,7 @@ class MainActivity: FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        updateSecureFlag()
         startIntent = intent
-    }
-
-    override fun onResume() {
-        super.onResume()
-        updateSecureFlag()
-    }
-
-    private fun updateSecureFlag() {
-        val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val isAppLockEnabled = prefs.getBoolean("flutter.appLockEnabled", false)
-        val isRecentsBlurEnabled = prefs.getBoolean("flutter.hideContentInBackground", true)
-
-        // Apply FLAG_SECURE if EITHER setting is enabled (independent controls)
-        if (isAppLockEnabled || isRecentsBlurEnabled) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -66,9 +47,14 @@ class MainActivity: FlutterFragmentActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SECURITY_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "updateSecureFlag" -> {
-                    updateSecureFlag()
-                    result.success(null)
+                "secureScreen" -> {
+                    val secure = call.argument<Boolean>("secure") ?: false
+                    if (secure) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                    result.success(true)
                 }
                 else -> result.notImplemented()
             }

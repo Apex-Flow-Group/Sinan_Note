@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'security_gate.dart';
 
 class SettingsProvider with ChangeNotifier {
 
@@ -131,7 +131,9 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('appLockEnabled', enabled);
-    await _updateNativeSecureFlag();
+    
+    // CRITICAL: Direct update to SecurityController
+    _updateSecurityController();
   }
 
   Future<void> setHideContentInBackground(bool enabled) async {
@@ -139,18 +141,9 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hideContentInBackground', enabled);
-    await _updateNativeSecureFlag();
-  }
-
-  Future<void> _updateNativeSecureFlag() async {
-    try {
-      const platform = MethodChannel('com.apexflow.app.sinan/security');
-      await platform.invokeMethod('updateSecureFlag', {
-        'enabled': _hideContentInBackground || _isAppLockEnabled,
-      });
-    } catch (e) {
-      debugPrint('Native secure flag update failed: $e');
-    }
+    
+    // Update SecurityController with new privacy setting
+    _updateSecurityController();
   }
 
   Future<void> setLockDelayEnabled(bool enabled) async {
@@ -158,6 +151,9 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('lockDelayEnabled', enabled);
+    
+    // Update SecurityController with new delay setting
+    _updateSecurityController();
   }
 
   Future<void> setLockDelaySeconds(int seconds) async {
@@ -165,6 +161,9 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('lockDelaySeconds', seconds);
+    
+    // Update SecurityController with new delay value
+    _updateSecurityController();
   }
 
   Future<void> setLockedIntroSeen(bool value) async {
@@ -197,24 +196,28 @@ class SettingsProvider with ChangeNotifier {
       } else {
         _themeMode = ThemeMode.system;
       }
-    _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
-    _languageCode = prefs.getString('language') ?? 'system';
-    _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
-    _swipeLeftAction = prefs.getString('swipeLeft') ?? 'archive';
-    _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
-    _cardMotionEnabled = prefs.getBool('cardMotionEnabled') ?? false;
-    _viewType = prefs.getString('viewType') ?? 'listCompact';
-    _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
-    _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? true;
-    _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
-    _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
-    _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;
-    _isFirstLaunch = prefs.getBool('first_launch') ?? true;
+      _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
+      _languageCode = prefs.getString('language') ?? 'system';
+      _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
+      _swipeLeftAction = prefs.getString('swipeLeft') ?? 'archive';
+      _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
+      _cardMotionEnabled = prefs.getBool('cardMotionEnabled') ?? false;
+      _viewType = prefs.getString('viewType') ?? 'listCompact';
+      _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
+      _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? true;
+      _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
+      _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
+      _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;
+      _isFirstLaunch = prefs.getBool('first_launch') ?? true;
       _defaultColorIndices['simple'] = prefs.getInt('colorIndex_simple') ?? _defaultBlueIndex;
       _defaultColorIndices['reminder'] = prefs.getInt('colorIndex_reminder') ?? _defaultYellowIndex;
       _defaultColorIndices['professional'] = prefs.getInt('colorIndex_professional') ?? _defaultPurpleIndex;
+      
       _isInitialized = true;
       notifyListeners();
+      
+      // CRITICAL: Update SecurityController after loading settings
+      _updateSecurityController();
     } catch (e) {
       debugPrint('Error loading settings: $e');
       _isInitialized = true;
@@ -236,5 +239,19 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('colorIndex_$mode', index);
+  }
+
+  void _updateSecurityController() {
+    final effectiveDelaySeconds = _lockDelayEnabled ? _lockDelaySeconds : 0;
+    
+    debugPrint('🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground');
+    
+    final config = SecurityConfig(
+      lockEnabled: _isAppLockEnabled,
+      lockDelaySeconds: effectiveDelaySeconds,
+      privacyBlurEnabled: _hideContentInBackground,
+    );
+    
+    SecurityController().updateConfig(config);
   }
 }
