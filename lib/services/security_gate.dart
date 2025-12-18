@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'biometric_service.dart';
-import '../screens/lock_screen.dart';
 
 /// Immutable security configuration
 class SecurityConfig {
@@ -34,6 +33,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
 
   bool _isLocked = false;
   bool _isAuthenticating = false;
+  bool _ignoreLifecycle = false; // 🔇 Silencing flag
   DateTime? _pausedTime;
 
   bool get isLocked => _isLocked;
@@ -69,6 +69,12 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     debugPrint('🔴 GATE: Lifecycle State Changed to: $state');
 
+    // 🔇 SILENCE: Ignore all lifecycle events during biometric authentication
+    if (_ignoreLifecycle) {
+      debugPrint('🔇 GATE: Lifecycle IGNORED (Silenced during auth)');
+      return;
+    }
+
     switch (state) {
       case AppLifecycleState.paused:
         _handlePause();
@@ -97,7 +103,13 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
   void _handlePause() {
     debugPrint('🔴 GATE: Paused (app in background)');
     
-    // Save pause time for lock calculation (only if lock is enabled and not already paused)
+    // ✅ Ignore pause events during biometric authentication
+    if (_isAuthenticating || _ignoreLifecycle) {
+      debugPrint('🔴 GATE: Ignoring pause (biometric in progress)');
+      return;
+    }
+    
+    // Save pause time for lock calculation
     if (_config.lockEnabled && _pausedTime == null) {
       _pausedTime = DateTime.now();
       debugPrint('🔴 GATE: Saving pause time: $_pausedTime (delay: ${_config.lockDelaySeconds}s)');
@@ -111,47 +123,74 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     debugPrint('🔴 GATE: Disabling FLAG_SECURE');
     _setSecureFlag(false);
 
-    // Lock logic (only if lock is enabled and we have a pause time)
+    // 1. ✅ Ignore resume events during biometric authentication
+    if (_isAuthenticating) {
+      debugPrint('🔴 GATE: Ignoring resume (Auth in progress)');
+      return;
+    }
+
+    // 2. If lock is enabled and we have pause time, trigger lock
     if (_config.lockEnabled && _pausedTime != null) {
       final elapsed = DateTime.now().difference(_pausedTime!).inSeconds;
-      debugPrint('🔴 GATE: Time Difference: $elapsed seconds. Limit: ${_config.lockDelaySeconds}s');
-      
-      // Lock if elapsed time >= delay (0 means immediate lock)
+      debugPrint('🔴 GATE: Elapsed time: $elapsed seconds. Limit: ${_config.lockDelaySeconds}s');
+
       if (elapsed >= _config.lockDelaySeconds) {
         _isLocked = true;
-        debugPrint('🔴 GATE: Lock triggered (elapsed: ${elapsed}s >= delay: ${_config.lockDelaySeconds}s)');
-        
+        debugPrint('🔴 GATE: Lock triggered - will show SplashScreen');
         notifyListeners();
-        
-        // Trigger biometric authentication
-        if (!_isAuthenticating) {
-          debugPrint('🔴 GATE: Triggering biometric authentication');
-          _authenticate();
-        }
-      } else {
-        debugPrint('🔴 GATE: No lock (elapsed: ${elapsed}s < delay: ${_config.lockDelaySeconds}s)');
       }
-    } else if (_config.lockEnabled) {
-      debugPrint('🔴 GATE: Lock enabled but no pause time recorded');
     }
+    
+    // Clean up pause time
+    _pausedTime = null;
   }
 
   Future<void> _authenticate() async {
-    if (_isAuthenticating) return;
+    // 🛡️ Guard Clause #1: Already unlocked? Don't authenticate again!
+    if (!_isLocked) {
+      debugPrint('⚠️ GATE: Auth blocked (Already Unlocked)');
+      return;
+    }
 
+    // 🛡️ Guard Clause #2: Already authenticating?
+    if (_isAuthenticating) {
+      debugPrint('⚠️ GATE: Auth blocked (Already authenticating)');
+      return;
+    }
+
+    debugPrint('🔒 GATE: Starting authentication...');
     _isAuthenticating = true;
+    _ignoreLifecycle = true; // 🔇 MUTE: Silence lifecycle listener
     notifyListeners();
 
     try {
+      debugPrint('🔇 GATE: Lifecycle listener MUTED');
       final authenticated = await BiometricService.authenticate();
       
       if (authenticated) {
+        debugPrint('✅ GATE: Auth Success! Unlocking UI immediately...');
         _isLocked = false;
         _pausedTime = null;
+        
+        // 🚀 INSTANT DISMISSAL: Update UI immediately to hide lock screen
+        notifyListeners();
+      } else {
+        debugPrint('❌ GATE: Authentication failed or cancelled');
       }
+    } catch (e) {
+      debugPrint('⚠️ GATE: Authentication error: $e');
     } finally {
       _isAuthenticating = false;
-      notifyListeners();
+      
+      // 🔇 Safety period: Keep silencing for 500ms in background
+      // Screen is already gone, user is using the app
+      // But we protect against delayed Resume events
+      debugPrint('🔇 GATE: Waiting 500ms safety period...');
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      _ignoreLifecycle = false; // 🔊 UNMUTE: Re-enable lifecycle listener
+      debugPrint('🔊 GATE: Safety period ended. Listening enabled.');
+      // No notifyListeners here - already called above
     }
   }
 
@@ -169,17 +208,18 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Update configuration at runtime
   void updateConfig(SecurityConfig config) {
-    debugPrint('🔴 GATE: Config Updated -> Lock: ${config.lockEnabled}, Delay: ${config.lockDelaySeconds}s, Privacy: ${config.privacyBlurEnabled}');
-    final bool lockWasEnabled = _config.lockEnabled;
+    final bool wasLockEnabled = _config.lockEnabled;
     _config = config;
-    
-    // Only unlock if lock was disabled (not for privacy/timer changes)
-    if (lockWasEnabled && !_config.lockEnabled) {
+    debugPrint('⚙️ GATE: Config received. Enabled: ${config.lockEnabled}, Old: $wasLockEnabled');
+
+    // Unlock if switching from ON to OFF
+    if (!config.lockEnabled && wasLockEnabled) {
+      debugPrint('🔓 GATE: Lock switched OFF → Unlocking app');
       _isLocked = false;
+      _pausedTime = null;
       notifyListeners();
-      debugPrint('🔴 GATE: Lock disabled, unlocking app');
     }
-    // Don't trigger any authentication for privacy/timer changes
+    // Don't lock when enabling - wait for next pause/resume cycle
   }
 
   /// Set native FLAG_SECURE
@@ -196,29 +236,6 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
   }
 }
 
-/// Security Gate Widget - Wraps entire app
-class SecurityGate extends StatelessWidget {
-  final Widget child;
-  final SecurityController controller;
 
-  const SecurityGate({
-    super.key,
-    required this.child,
-    required this.controller,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) {
-        if (controller.isLocked) {
-          return const LockScreen();
-        }
-        return child;
-      },
-    );
-  }
-}
 
 
