@@ -23,6 +23,7 @@ import '../utils/checklist_formatter.dart';
 import '../widgets/home/dialogs/backup_options_dialog.dart';
 import '../widgets/custom_share_sheet.dart';
 import '../services/toast_service.dart';
+import '../widgets/rename_dialog.dart';
 import 'note_editor.dart';
 
 enum ViewType { grid, listExpanded, listCompact }
@@ -392,6 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _selectedNoteIds.clear();
                     _selectionCountNotifier.value = 0;
                   }),
+                  onRename: count == 1 ? () => _renameSelected(l10n, allNotes) : null,
                   onPin: () => _togglePinSelected(l10n, allNotes),
                   onArchive: () => _archiveSelected(l10n),
                   onDelete: () => _deleteSelected(l10n),
@@ -668,10 +670,39 @@ class _HomeScreenState extends State<HomeScreen> {
       AppLocalizations l10n, List<Note> allNotes) async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
-    final isPinning = !allNotes.firstWhere((n) => n.id == ids.first).isPinned;
+    final firstNote = allNotes.firstWhere(
+      (n) => n.id == ids.first,
+      orElse: () => Note(
+        id: -1,
+        title: '',
+        content: '',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        colorIndex: 0,
+        isLocked: false,
+        noteType: '',
+        isPinned: false,
+      ),
+    );
+    if (firstNote.id == -1) return; // Note not found, abort
+    final isPinning = !firstNote.isPinned;
     
     for (final id in ids) {
-      final note = allNotes.firstWhere((n) => n.id == id);
+      final note = allNotes.firstWhere(
+        (n) => n.id == id,
+        orElse: () => Note(
+          id: -1,
+          title: '',
+          content: '',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          colorIndex: 0,
+          isLocked: false,
+          noteType: '',
+          isPinned: false,
+        ),
+      );
+      if (note.id == -1) continue; // Skip deleted notes
       final updatedNote = Note(
         id: note.id,
         title: note.title,
@@ -758,6 +789,51 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       undoLabel: l10n.undo,
     );
+  }
+
+  Future<void> _renameSelected(AppLocalizations l10n, List<Note> allNotes) async {
+    final selectedNote = allNotes.firstWhere((n) => _selectedNoteIds.contains(n.id));
+    
+    final newTitle = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => RenameDialog(
+        initialTitle: selectedNote.title,
+        hintText: l10n.enterCustomTitle,
+        titleText: l10n.renameNote,
+        cancelText: l10n.cancel,
+        saveText: l10n.save,
+      ),
+    );
+
+    if (newTitle != null && newTitle.isNotEmpty) {
+      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+      final updatedNote = Note(
+        id: selectedNote.id,
+        title: newTitle,
+        content: selectedNote.content,
+        createdAt: selectedNote.createdAt,
+        updatedAt: DateTime.now(),
+        colorIndex: selectedNote.colorIndex,
+        isArchived: selectedNote.isArchived,
+        isTrashed: selectedNote.isTrashed,
+        reminderDateTime: selectedNote.reminderDateTime,
+        isLocked: selectedNote.isLocked,
+        noteType: selectedNote.noteType,
+        recurrenceRule: selectedNote.recurrenceRule,
+        isCompleted: selectedNote.isCompleted,
+        isProfessional: selectedNote.isProfessional,
+        isPinned: selectedNote.isPinned,
+        isChecklist: selectedNote.isChecklist,
+      );
+      await notesProvider.addOrUpdateNote(updatedNote);
+      setState(() => _selectedNoteIds.clear());
+      ToastService().showToast(
+        context: context,
+        message: l10n.noteSaved,
+        type: ToastType.success,
+      );
+    }
   }
 
   void _shareSelected(List<Note> allNotes) {

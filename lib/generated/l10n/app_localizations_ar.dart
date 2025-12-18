@@ -1233,4 +1233,79 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notesRestoredMixed => 'تمت استعادة الملاحظات';
+
+  @override
+  String get appTagline => 'رفيقك الحاد والموثوق للتدوين';
+
+  @override
+  String get appTaglineAr => 'رفيقك الحاد والموثوق للتدوين';
+
+  @override
+  String get officialVersion => 'نسخة رسمية - Google Play';
+
+  @override
+  String get importantLinks => 'الروابط المهمة';
+
+  @override
+  String get appPageGooglePlay => 'صفحة التطبيق على Google Play';
+
+  @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get termsOfService => 'شروط الخدمة';
+
+  @override
+  String get licenses => 'التراخيص';
+
+  @override
+  String get legalInfo => 'المعلومات القانونية';
+
+  @override
+  String get copyright => 'حقوق النشر';
+
+  @override
+  String get copyrightText => '© 2025 Apex Flow Group. جميع الحقوق محفوظة.\nالاستخدام الشخصي مسموح. الاستخدام التجاري يتطلب إذناً.';
+
+  @override
+  String get disclaimerTitle => 'إخلاء المسؤولية';
+
+  @override
+  String get disclaimerText => 'هذا التطبيق يُقدم "كما هو" بدون أي ضمانات. Apex Flow Group غير مسؤولة عن أي خسائر أو أضرار ناجمة عن استخدام التطبيق.';
+
+  @override
+  String get officialVersionTitle => 'النسخة الرسمية';
+
+  @override
+  String get officialVersionText => 'هذه النسخة الرسمية المعتمدة من Sinan Note المتوفرة على متجر Google Play. احذر من النسخ المقلدة أو غير الرسمية.';
+
+  @override
+  String get librariesUsed => 'المكتبات المستخدمة';
+
+  @override
+  String get flutterFramework => 'إطار عمل من Google';
+
+  @override
+  String get dartLanguage => 'لغة البرمجة';
+
+  @override
+  String get providerStateManagement => 'إدارة الحالة';
+
+  @override
+  String get sqfliteDatabase => 'قاعدة البيانات المحلية';
+
+  @override
+  String get officialGooglePlay => 'نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون';
+
+  @override
+  String get fdroidVersion => 'نسخة F-Droid - مفتوحة المصدر\nميزة المشاركة عبر WiFi متاحة';
+
+  @override
+  String get madeWithLove => 'صُنع بـ';
+
+  @override
+  String get inArabWorld => 'في العالم العربي';
+
+  @override
+  String get contactEmail => 'contact.apex.flow@gmail.com';
 }

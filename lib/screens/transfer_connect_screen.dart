@@ -86,6 +86,9 @@ class _TransferConnectScreenState extends State<TransferConnectScreen>
 
     try {
       final parts = ip.split(':');
+      if (parts.isEmpty) {
+        throw Exception('Invalid connection string format');
+      }
       final host = parts[0];
       final port = parts.length > 1 ? parts[1] : '8765';
       final token = parts.length > 2 ? parts[2] : '';
@@ -101,12 +104,12 @@ class _TransferConnectScreenState extends State<TransferConnectScreen>
       );
       navigator.pushNamedAndRemoveUntil('/home', (route) => false);
     } catch (e) {
-      navigator.pop();
-      final l10n = AppLocalizations.of(context)!;
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text('${l10n.transferError}: $e')),
-      );
       if (mounted) {
+        navigator.pop();
+        final l10n = AppLocalizations.of(context)!;
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('${l10n.transferError}: $e')),
+        );
         setState(() => _isProcessing = false);
         _controller.start();
       }

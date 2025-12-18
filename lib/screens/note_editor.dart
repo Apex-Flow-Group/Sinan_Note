@@ -26,6 +26,7 @@ import '../widgets/editor/note_history_sheet.dart';
 import '../widgets/editor/reminder_picker_sheet.dart';
 import '../widgets/apex_snackbar.dart';
 import '../widgets/custom_share_sheet.dart';
+import '../widgets/rename_dialog.dart';
 
 import '../services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -95,7 +96,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   String? _recurrenceRule;
   bool _canUndo = false;
   bool _canRedo = false;
-  bool _isSavingOnExit = false;
+  
+  // 📸 Original content snapshot for dirty check
+  String _originalContent = '';
+  String _originalTitle = '';
+  int _originalColorIndex = 0;
+  DateTime? _originalReminderDateTime;
+  String? _originalRecurrenceRule;
 
   @override
   bool get wantKeepAlive => true;
@@ -180,6 +187,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       _codeController.addListener(_onContentChanged);
       _codeUndoController.addListener(_updateUndoRedoState);
     }
+    
+    // 📸 Capture original state for dirty check
+    _originalContent = initialText;
+    _originalTitle = widget.note?.title ?? '';
+    _originalColorIndex = _colorIndex;
+    _originalReminderDateTime = widget.note?.reminderDateTime;
+    _originalRecurrenceRule = widget.note?.recurrenceRule;
 
     if (widget.mode == NoteMode.checklist) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -296,11 +310,19 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         widget.note?.id == null &&
         _savedNoteId == null;
 
-    if (!forceUpdate &&
-        !_isDirty &&
-        !isNewLockedNote &&
-        (_savedNoteId != null || widget.note != null)) {
-      return;
+    // 🧠 Smart dirty check: Compare current state with original
+    if (!forceUpdate && !isNewLockedNote && (_savedNoteId != null || widget.note != null)) {
+      final currentContent = widget.mode == NoteMode.code ? _codeController.text : _contentController.text;
+      final currentTitle = _currentTitle;
+      final hasContentChanged = currentContent != _originalContent;
+      final hasTitleChanged = currentTitle != _originalTitle;
+      final hasColorChanged = _colorIndex != _originalColorIndex;
+      final hasReminderChanged = _reminderDateTime != _originalReminderDateTime || _recurrenceRule != _originalRecurrenceRule;
+      
+      if (!hasContentChanged && !hasTitleChanged && !hasColorChanged && !hasReminderChanged) {
+        debugPrint('✋ Save skipped: No real changes detected');
+        return;
+      }
     }
 
     _isSaving = true;
@@ -423,9 +445,14 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         if (mounted) setState(() => _savedNoteId = newId);
       }
 
-      // فقط امسح _isDirty عند الحفظ اليدوي أو عند الخروج
+      // 📸 Update original snapshot after successful save
       if (isManualSave) {
         _isDirty = false;
+        _originalContent = contentToSave;
+        _originalTitle = _currentTitle;
+        _originalColorIndex = _colorIndex;
+        _originalReminderDateTime = _reminderDateTime;
+        _originalRecurrenceRule = _recurrenceRule;
       }
     } catch (e) {
       // Ignore save errors
@@ -641,6 +668,38 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void _showHistorySheet() {
     if (widget.note?.id == null) return;
     NoteHistorySheet.show(context, widget.note!.id!);
+  }
+
+  void _showRenameTitleDialog() async {
+    if (!mounted) return;
+    
+    final l10n = context.l10n;
+    final currentTitle = _customTitle ?? _currentTitle;
+    final theme = Theme.of(context);
+    final dialogBg = theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface;
+    final dialogText = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+
+    final newTitle = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => RenameDialog(
+        initialTitle: currentTitle,
+        backgroundColor: dialogBg,
+        textColor: dialogText,
+        hintText: l10n.enterCustomTitle,
+        titleText: l10n.renameNote,
+        cancelText: l10n.cancel,
+        saveText: l10n.save,
+      ),
+    );
+
+    // 🛑 المنطقة الآمنة: المتحكم تم تنظيفه تلقائياً
+    if (newTitle != null && newTitle.isNotEmpty && mounted) {
+      setState(() {
+        _customTitle = newTitle;
+        _isDirty = true;
+      });
+    }
   }
 
   void _handleSmartCalculation() {
@@ -1044,10 +1103,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         systemNavigationBarIconBrightness: isLightColor ? Brightness.dark : Brightness.light,
       ),
       child: PopScope(
-      canPop: !_isSavingOnExit,
+      canPop: false,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
         if (didPop) return;
-        if (_isSavingOnExit) return;
 
         _autosaveTimer?.cancel();
         _languageDetectionTimer?.cancel();
@@ -1055,29 +1113,51 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         final currentText = widget.mode == NoteMode.code
             ? _codeController.text
             : _contentController.text;
-        final isNewLockedNote = widget.note?.isLocked == true &&
-            widget.note?.id == null &&
-            _savedNoteId == null;
+        final currentTitle = _currentTitle;
+        
+        // 📸 Precise change detection (character-by-character)
+        final hasContentChanged = currentText != _originalContent;
+        final hasTitleChanged = currentTitle != _originalTitle;
+        final hasColorChanged = _colorIndex != _originalColorIndex;
+        final hasReminderChanged = _reminderDateTime != _originalReminderDateTime || _recurrenceRule != _originalRecurrenceRule;
+        final hasRealChanges = hasContentChanged || hasTitleChanged || hasColorChanged || hasReminderChanged;
 
-        // احفظ تلقائياً إذا كان هناك محتوى وتغييرات
-        if ((currentText.isNotEmpty || isNewLockedNote) &&
-            (_isDirty || isNewLockedNote)) {
-          setState(() => _isSavingOnExit = true);
-          await _saveNoteToDatabase(isManualSave: true);
-          
-          // MEMORY FIX: Clear all text buffers immediately after save
-          _contentController.clear();
-          if (widget.mode == NoteMode.code) {
-            _codeController.clear();
+        if (hasRealChanges && currentText.isNotEmpty) {
+          // 🛑 Show save confirmation dialog
+          final shouldSave = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: _backgroundColor,
+              title: Text(l10n.unsavedChanges, style: TextStyle(color: finalTextColor)),
+              content: Text(l10n.unsavedChangesMessage, style: TextStyle(color: finalTextColor)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.discardChanges, style: const TextStyle(color: Colors.red)),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(l10n.save),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldSave == true) {
+            // Force save (bypass smart filters)
+            await _saveNoteToDatabase(forceUpdate: true, isManualSave: true);
           }
           
-          if (mounted) Navigator.of(context).pop();
+          // Clear buffers and exit
+          if (mounted) {
+            _contentController.clear();
+            if (widget.mode == NoteMode.code) _codeController.clear();
+            Navigator.of(context).pop();
+          }
         } else {
-          // MEMORY FIX: Clear buffers even if not saving
+          // No changes or empty content - exit directly
           _contentController.clear();
-          if (widget.mode == NoteMode.code) {
-            _codeController.clear();
-          }
+          if (widget.mode == NoteMode.code) _codeController.clear();
           if (mounted) Navigator.of(context).pop();
         }
       },
@@ -1286,6 +1366,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   _showReminderDialog();
                 },
                 onHistoryTap: _showHistorySheet,
+                onTitleTap: () {
+                  HapticFeedback.lightImpact();
+                  _showRenameTitleDialog();
+                },
                 onSaveTap: () async {
                   HapticFeedback.mediumImpact();
                   if (widget.mode == NoteMode.code &&
@@ -1563,8 +1647,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _autosaveTimer?.cancel();
     _languageDetectionTimer?.cancel();
 
-    // SAFETY NET: Force save if dirty and not already saving
-    if (_isDirty && !_isSavingOnExit) {
+    // SAFETY NET: Force save if dirty
+    if (_isDirty) {
       final currentText = widget.mode == NoteMode.code
           ? _codeController.text
           : _contentController.text;
@@ -1595,6 +1679,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
     
     _textFieldFocusNode.dispose();
+    
+    // Dispose feature controllers if they have dispose methods
+    // Note: These controllers don't have dispose methods currently
+    // If they're updated to hold resources, add dispose calls here
     
     // Clear checklist undo/redo history
     _checklistUndoRedo = null;

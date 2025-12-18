@@ -82,26 +82,32 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
       if (decoded is Map<String, dynamic>) {
         _titleController.text = decoded['title'] ?? '';
-        if (decoded['items'] != null) {
+        if (decoded['items'] != null && decoded['items'] is List) {
           _items = (decoded['items'] as List)
               .map((e) => ChecklistItem.fromJson(e))
               .toList();
         }
       } else if (decoded is List) {
-        _items = decoded.map((e) => ChecklistItem.fromJson(e)).toList();
+        _items = decoded
+            .whereType<Map>()
+            .map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>))
+            .toList();
       }
     } catch (e) {
-      final lines = widget.initialContent
-          .split('\n')
-          .where((l) => l.trim().isNotEmpty)
-          .toList();
-      _items = lines.map((line) {
-        return ChecklistItem(
-          id: DateTime.now().millisecondsSinceEpoch.toString() +
-              line.hashCode.toString(),
-          text: line.replaceAll(RegExp(r'^-\s*\[.\]\s*'), '').trim(),
-        );
-      }).toList();
+      // Fallback: Parse as plain text
+      if (widget.initialContent.trim().isNotEmpty) {
+        final lines = widget.initialContent
+            .split('\n')
+            .where((l) => l.trim().isNotEmpty)
+            .toList();
+        _items = lines.map((line) {
+          return ChecklistItem(
+            id: DateTime.now().millisecondsSinceEpoch.toString() +
+                line.hashCode.toString(),
+            text: line.replaceAll(RegExp(r'^-\s*\[.\]\s*'), '').trim(),
+          );
+        }).toList();
+      }
     }
 
     if (_items.isEmpty) _addNewItem();
@@ -179,7 +185,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       _listeners.remove(id);
     });
 
-    if (index > 0 && _items.isNotEmpty) {
+    // Safe focus: Check bounds before accessing
+    if (index > 0 && _items.isNotEmpty && index - 1 < _items.length) {
       _focusNodes[_items[index - 1].id]?.requestFocus();
     }
     _notifyParent();

@@ -34,8 +34,7 @@ class HomeDrawerWidget extends StatelessWidget {
           SizedBox(height: MediaQuery.of(context).padding.top),
           Expanded(
             child: ListView(
-              padding: EdgeInsets.only(
-                  top: 16, bottom: MediaQuery.of(context).padding.bottom + 8),
+              padding: const EdgeInsets.only(top: 16, bottom: 8),
               children: [
                 _buildDrawerItem(
                   context,
@@ -125,7 +124,7 @@ class HomeDrawerWidget extends StatelessWidget {
           ),
           Container(
             padding:
-                const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 24),
+                EdgeInsets.only(left: 16, right: 16, top: 16, bottom: MediaQuery.of(context).padding.bottom + 24),
             child: const Text(
               '© 2025 Apex Flow Group',
               style: TextStyle(

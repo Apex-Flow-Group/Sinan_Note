@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/settings_provider.dart';
+import '../services/biometric_service.dart';
 import 'main_layout_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -25,11 +26,21 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // التوجيه الفوري بدون أنيميشن
+    // If lock is enabled, request biometric authentication
+    if (settings.isAppLockEnabled) {
+      final authenticated = await BiometricService.authenticate();
+      if (!authenticated) {
+        // User cancelled or failed - exit app
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
+    // Navigate to MainLayoutScreen
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const MainLayoutScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => const MainLayoutScreen(),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),

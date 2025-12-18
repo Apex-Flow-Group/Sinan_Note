@@ -358,49 +358,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
       BuildContext context, SettingsProvider settings, AppLocalizations l10n) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SimpleDialog(
         title: Text(l10n.language),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text(l10n.system),
-              leading: Radio<String>(
-                value: 'system',
-                groupValue: settings.languageCode,
-                onChanged: null,
-              ),
-              onTap: () {
-                settings.setLanguage('system');
-                Navigator.pop(ctx);
-              },
+        children: [
+          SimpleDialogOption(
+            onPressed: () {
+              settings.setLanguage('system');
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  settings.languageCode == 'system' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.system),
+              ],
             ),
-            ListTile(
-              title: Text(l10n.arabic),
-              leading: Radio<String>(
-                value: 'ar',
-                groupValue: settings.languageCode,
-                onChanged: null,
-              ),
-              onTap: () {
-                settings.setLanguage('ar');
-                Navigator.pop(ctx);
-              },
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              settings.setLanguage('ar');
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  settings.languageCode == 'ar' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.arabic),
+              ],
             ),
-            ListTile(
-              title: Text(l10n.english),
-              leading: Radio<String>(
-                value: 'en',
-                groupValue: settings.languageCode,
-                onChanged: null,
-              ),
-              onTap: () {
-                settings.setLanguage('en');
-                Navigator.pop(ctx);
-              },
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              settings.setLanguage('en');
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  settings.languageCode == 'en' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.english),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -410,49 +419,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SimpleDialog(
         title: Text(l10n.chooseTheme),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text(l10n.systemTheme),
-              leading: Radio<ThemeMode>(
-                value: ThemeMode.system,
-                groupValue: settings.themeMode,
-                onChanged: null,
-              ),
-              onTap: () {
-                settings.setThemeMode(ThemeMode.system);
-                Navigator.pop(ctx);
-              },
+        children: [
+          SimpleDialogOption(
+            onPressed: () {
+              settings.setThemeMode(ThemeMode.system);
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  settings.themeMode == ThemeMode.system ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.systemTheme),
+              ],
             ),
-            ListTile(
-              title: Text(l10n.lightTheme),
-              leading: Radio<ThemeMode>(
-                value: ThemeMode.light,
-                groupValue: settings.themeMode,
-                onChanged: null,
-              ),
-              onTap: () {
-                settings.setThemeMode(ThemeMode.light);
-                Navigator.pop(ctx);
-              },
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              settings.setThemeMode(ThemeMode.light);
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  settings.themeMode == ThemeMode.light ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.lightTheme),
+              ],
             ),
-            ListTile(
-              title: Text(l10n.darkTheme),
-              leading: Radio<ThemeMode>(
-                value: ThemeMode.dark,
-                groupValue: settings.themeMode,
-                onChanged: null,
-              ),
-              onTap: () {
-                settings.setThemeMode(ThemeMode.dark);
-                Navigator.pop(ctx);
-              },
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              settings.setThemeMode(ThemeMode.dark);
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  settings.themeMode == ThemeMode.dark ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.darkTheme),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -464,61 +482,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SimpleDialog(
         title: Text(isRight ? l10n.swipeRight : l10n.swipeLeft),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text(l10n.delete),
-              leading: Radio<String>(
-                value: 'delete',
-                groupValue: currentValue,
-                onChanged: null,
-              ),
-              onTap: () {
-                if (isRight) {
-                  settings.setSwipeRightAction('delete');
-                } else {
-                  settings.setSwipeLeftAction('delete');
-                }
-                Navigator.pop(ctx);
-              },
+        children: [
+          SimpleDialogOption(
+            onPressed: () {
+              if (isRight) {
+                settings.setSwipeRightAction('delete');
+              } else {
+                settings.setSwipeLeftAction('delete');
+              }
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  currentValue == 'delete' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.delete),
+              ],
             ),
-            ListTile(
-              title: Text(l10n.archive),
-              leading: Radio<String>(
-                value: 'archive',
-                groupValue: currentValue,
-                onChanged: null,
-              ),
-              onTap: () {
-                if (isRight) {
-                  settings.setSwipeRightAction('archive');
-                } else {
-                  settings.setSwipeLeftAction('archive');
-                }
-                Navigator.pop(ctx);
-              },
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              if (isRight) {
+                settings.setSwipeRightAction('archive');
+              } else {
+                settings.setSwipeLeftAction('archive');
+              }
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  currentValue == 'archive' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.archive),
+              ],
             ),
-            ListTile(
-              title: Text(l10n.share),
-              leading: Radio<String>(
-                value: 'share',
-                groupValue: currentValue,
-                onChanged: null,
-              ),
-              onTap: () {
-                if (isRight) {
-                  settings.setSwipeRightAction('share');
-                } else {
-                  settings.setSwipeLeftAction('share');
-                }
-                Navigator.pop(ctx);
-              },
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              if (isRight) {
+                settings.setSwipeRightAction('share');
+              } else {
+                settings.setSwipeLeftAction('share');
+              }
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  currentValue == 'share' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(l10n.share),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1030,26 +1057,27 @@ By continuing, you acknowledge that:
 
     await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SimpleDialog(
         title: Text(l10n.selectLockDelay),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: delays.map((delay) {
-            return ListTile(
-              title: Text(delay['label'] as String),
-              leading: Radio<int>(
-                value: delay['seconds'] as int,
-                groupValue: settings.lockDelaySeconds,
-                onChanged: null,
-              ),
-              onTap: () async {
-                await settings.setLockDelaySeconds(delay['seconds'] as int);
-                await settings.setLockDelayEnabled(true);
-                Navigator.pop(ctx);
-              },
-            );
-          }).toList(),
-        ),
+        children: delays.map((delay) {
+          return SimpleDialogOption(
+            onPressed: () async {
+              await settings.setLockDelaySeconds(delay['seconds'] as int);
+              await settings.setLockDelayEnabled(true);
+              Navigator.pop(ctx);
+            },
+            child: Row(
+              children: [
+                Icon(
+                  settings.lockDelaySeconds == delay['seconds'] ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(delay['label'] as String),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

@@ -228,12 +228,6 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                 GlobalCupertinoLocalizations.delegate,
               ],
               themeMode: settings.themeMode,
-              builder: (context, child) {
-                return SecurityGate(
-                  controller: SecurityController(),
-                  child: child!,
-                );
-              },
               theme: ThemeData(
                 colorScheme:
                     lightDynamic ?? ColorScheme.fromSeed(seedColor: Colors.blue),

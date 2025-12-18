@@ -1233,4 +1233,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesRestoredMixed => 'Notes restored';
+
+  @override
+  String get appTagline => 'Your sharp and reliable note-taking companion';
+
+  @override
+  String get appTaglineAr => 'رفيقك الحاد والموثوق للتدوين';
+
+  @override
+  String get officialVersion => 'Official Version - Google Play';
+
+  @override
+  String get importantLinks => 'Important Links';
+
+  @override
+  String get appPageGooglePlay => 'App Page on Google Play';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get licenses => 'Licenses';
+
+  @override
+  String get legalInfo => 'Legal Information';
+
+  @override
+  String get copyright => 'Copyright';
+
+  @override
+  String get copyrightText => '© 2025 Apex Flow Group. All rights reserved.\nPersonal use permitted. Commercial use requires permission.';
+
+  @override
+  String get disclaimerTitle => 'Disclaimer';
+
+  @override
+  String get disclaimerText => 'This app is provided "as is" without any warranties. Apex Flow Group is not responsible for any losses or damages resulting from the use of the app.';
+
+  @override
+  String get officialVersionTitle => 'Official Version';
+
+  @override
+  String get officialVersionText => 'This is the official certified version of Sinan Note available on Google Play Store. Beware of fake or unofficial copies.';
+
+  @override
+  String get librariesUsed => 'Libraries Used';
+
+  @override
+  String get flutterFramework => 'Framework from Google';
+
+  @override
+  String get dartLanguage => 'Programming Language';
+
+  @override
+  String get providerStateManagement => 'State Management';
+
+  @override
+  String get sqfliteDatabase => 'Local Database';
+
+  @override
+  String get officialGooglePlay => 'Official certified version from Google Play Store\nAutomatic updates and guaranteed security';
+
+  @override
+  String get fdroidVersion => 'F-Droid Version - Open Source\nWiFi sharing feature available';
+
+  @override
+  String get madeWithLove => 'Made with';
+
+  @override
+  String get inArabWorld => 'in the Arab World';
+
+  @override
+  String get contactEmail => 'contact.apex.flow@gmail.com';
 }

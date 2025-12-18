@@ -2587,6 +2587,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notes restored'**
   String get notesRestoredMixed;
+
+  /// No description provided for @appTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sharp and reliable note-taking companion'**
+  String get appTagline;
+
+  /// No description provided for @appTaglineAr.
+  ///
+  /// In en, this message translates to:
+  /// **'رفيقك الحاد والموثوق للتدوين'**
+  String get appTaglineAr;
+
+  /// No description provided for @officialVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Official Version - Google Play'**
+  String get officialVersion;
+
+  /// No description provided for @importantLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Important Links'**
+  String get importantLinks;
+
+  /// No description provided for @appPageGooglePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'App Page on Google Play'**
+  String get appPageGooglePlay;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @licenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses'**
+  String get licenses;
+
+  /// No description provided for @legalInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Information'**
+  String get legalInfo;
+
+  /// No description provided for @copyright.
+  ///
+  /// In en, this message translates to:
+  /// **'Copyright'**
+  String get copyright;
+
+  /// No description provided for @copyrightText.
+  ///
+  /// In en, this message translates to:
+  /// **'© 2025 Apex Flow Group. All rights reserved.\nPersonal use permitted. Commercial use requires permission.'**
+  String get copyrightText;
+
+  /// No description provided for @disclaimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disclaimer'**
+  String get disclaimerTitle;
+
+  /// No description provided for @disclaimerText.
+  ///
+  /// In en, this message translates to:
+  /// **'This app is provided \"as is\" without any warranties. Apex Flow Group is not responsible for any losses or damages resulting from the use of the app.'**
+  String get disclaimerText;
+
+  /// No description provided for @officialVersionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Official Version'**
+  String get officialVersionTitle;
+
+  /// No description provided for @officialVersionText.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the official certified version of Sinan Note available on Google Play Store. Beware of fake or unofficial copies.'**
+  String get officialVersionText;
+
+  /// No description provided for @librariesUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Libraries Used'**
+  String get librariesUsed;
+
+  /// No description provided for @flutterFramework.
+  ///
+  /// In en, this message translates to:
+  /// **'Framework from Google'**
+  String get flutterFramework;
+
+  /// No description provided for @dartLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Programming Language'**
+  String get dartLanguage;
+
+  /// No description provided for @providerStateManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'State Management'**
+  String get providerStateManagement;
+
+  /// No description provided for @sqfliteDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Database'**
+  String get sqfliteDatabase;
+
+  /// No description provided for @officialGooglePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Official certified version from Google Play Store\nAutomatic updates and guaranteed security'**
+  String get officialGooglePlay;
+
+  /// No description provided for @fdroidVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'F-Droid Version - Open Source\nWiFi sharing feature available'**
+  String get fdroidVersion;
+
+  /// No description provided for @madeWithLove.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with'**
+  String get madeWithLove;
+
+  /// No description provided for @inArabWorld.
+  ///
+  /// In en, this message translates to:
+  /// **'in the Arab World'**
+  String get inArabWorld;
+
+  /// No description provided for @contactEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'contact.apex.flow@gmail.com'**
+  String get contactEmail;
 }
 
 class _AppLocalizationsDelegate

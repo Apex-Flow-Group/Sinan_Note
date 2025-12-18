@@ -6,10 +6,12 @@ import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../services/settings_provider.dart';
 import '../services/notes_provider.dart';
+import '../services/security_gate.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'tabs/reminder_dashboard.dart';
 import 'tabs/professional_tab.dart';
+import 'splash_screen.dart';
 import '../widgets/home/add_menu_widget.dart' show isMenuOpenNotifier;
 
 class MainLayoutScreen extends StatefulWidget {
@@ -28,6 +30,32 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   int _currentIndex = 0;
   bool _isScrollHidden = false;
   bool _isDrawerOpen = false;
+  final _securityController = SecurityController();
+
+  @override
+  void initState() {
+    super.initState();
+    _securityController.addListener(_onSecurityChanged);
+  }
+
+  @override
+  void dispose() {
+    _securityController.removeListener(_onSecurityChanged);
+    super.dispose();
+  }
+
+  void _onSecurityChanged() {
+    if (_securityController.isLocked && mounted) {
+      // Immediate transition without animation
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const SplashScreen(),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        ),
+      );
+    }
+  }
 
   void _handleScrollNotification(bool isScrollingDown) {
     if (_currentIndex != 0 || _isDrawerOpen) return;

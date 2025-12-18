@@ -52,7 +52,7 @@ class _AboutScreenState extends State<AboutScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.aboutApp)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -60,7 +60,17 @@ class _AboutScreenState extends State<AboutScreen> {
             Center(
               child: Column(
                 children: [
-                  const Icon(Icons.note_rounded, size: 80, color: Colors.blue),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/images/app_icon.png',
+                      width: 100,
+                      height: 100,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.note_rounded, size: 80, color: Colors.blue);
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'Sinan Note | سنان نوت',
@@ -78,14 +88,14 @@ class _AboutScreenState extends State<AboutScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.verified, size: 14, color: Colors.green),
-                        SizedBox(width: 4),
+                        const Icon(Icons.verified, size: 14, color: Colors.green),
+                        const SizedBox(width: 4),
                         Text(
-                          'نسخة رسمية - Google Play',
-                          style: TextStyle(
+                          l10n.officialVersion,
+                          style: const TextStyle(
                             fontSize: 11,
                             color: Colors.green,
                             fontWeight: FontWeight.w600,
@@ -95,14 +105,14 @@ class _AboutScreenState extends State<AboutScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'رفيقك الحاد والموثوق للتدوين',
+                  Text(
+                    isArabic ? l10n.appTaglineAr : l10n.appTagline,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Your sharp and reliable note-taking companion',
+                    isArabic ? l10n.appTagline : l10n.appTaglineAr,
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
@@ -112,51 +122,51 @@ class _AboutScreenState extends State<AboutScreen> {
             const SizedBox(height: 32),
 
             // Links Section
-            _buildSection(isArabic ? 'الروابط المهمة' : 'Important Links', [
+            _buildSection(l10n.importantLinks, [
               if (FlavorConfig.isGooglePlay)
                 _buildLink(
-                  isArabic ? 'صفحة التطبيق على Google Play' : 'App Page on Google Play',
+                  l10n.appPageGooglePlay,
                   'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note',
                 ),
               _buildLink(
-                isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
+                l10n.privacyPolicy,
                 isArabic 
                   ? 'https://docs.google.com/document/d/e/2PACX-1vRVJmMZMx5-mzCV2tqLCz6Nx9usUCH1KHxEHeopj5XTxmGV2CeSFg-TbqEcLtfZNarZ5kHJPlG7DsQg/pub'
                   : 'https://docs.google.com/document/d/e/2PACX-1vSteJ2fwHp0nBT8vpUHAT1B0OOyRSlkfpwJxW2bLn17fy_9lTKzwOHLmZ4SRljtLxgtXluvkp3qAzNV/pub',
               ),
               _buildLink(
-                isArabic ? 'شروط الخدمة' : 'Terms of Service',
+                l10n.termsOfService,
                 isArabic
                   ? 'https://docs.google.com/document/d/e/2PACX-1vTWx4FoSMwyeNKLiwll5oJnjvOW10vWT-YH9qrA3TaCkCva62zfwUvP-__Ztys83nBQEaYs8d8JZPZ5/pub'
                   : 'https://docs.google.com/document/d/e/2PACX-1vTkHjTUla85oqqHOXcN9dxjiC5tkJ-Y-vPd9yUfJIQIS5xWtftxjvio4fFKnedHdX5lHGWEV7ZlsL9z/pub',
               ),
-              _buildLink(isArabic ? 'التراخيص' : 'Licenses', null, onTap: _showLicenses),
+              _buildLink(l10n.licenses, null, onTap: _showLicenses),
             ]),
             const SizedBox(height: 24),
 
             // Legal Section
-            _buildSection('المعلومات القانونية', [
+            _buildSection(l10n.legalInfo, [
               _buildLegalText(
-                'حقوق النشر',
-                '© 2025 Apex Flow Group. جميع الحقوق محفوظة.\nالاستخدام الشخصي مسموح. الاستخدام التجاري يتطلب إذناً.',
+                l10n.copyright,
+                l10n.copyrightText,
               ),
               _buildLegalText(
-                'إخلاء المسؤولية',
-                'هذا التطبيق يُقدم "كما هو" بدون أي ضمانات. Apex Flow Group غير مسؤولة عن أي خسائر أو أضرار ناجمة عن استخدام التطبيق.',
+                l10n.disclaimerTitle,
+                l10n.disclaimerText,
               ),
               _buildLegalText(
-                'النسخة الرسمية',
-                'هذه النسخة الرسمية المعتمدة من Sinan Note المتوفرة على متجر Google Play. احذر من النسخ المقلدة أو غير الرسمية.',
+                l10n.officialVersionTitle,
+                l10n.officialVersionText,
               ),
             ]),
             const SizedBox(height: 24),
 
             // Credits Section
-            _buildSection('المكتبات المستخدمة', [
-              _buildCredit('Flutter', 'إطار عمل من Google'),
-              _buildCredit('Dart', 'لغة البرمجة'),
-              _buildCredit('Provider', 'إدارة الحالة'),
-              _buildCredit('Sqflite', 'قاعدة البيانات المحلية'),
+            _buildSection(l10n.librariesUsed, [
+              _buildCredit('Flutter', l10n.flutterFramework),
+              _buildCredit('Dart', l10n.dartLanguage),
+              _buildCredit('Provider', l10n.providerStateManagement),
+              _buildCredit('Sqflite', l10n.sqfliteDatabase),
             ]),
             const SizedBox(height: 24),
 
@@ -175,7 +185,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون',
+                        l10n.officialGooglePlay,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.green[700],
@@ -200,7 +210,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'نسخة F-Droid - مفتوحة المصدر\nميزة المشاركة عبر WiFi متاحة',
+                        l10n.fdroidVersion,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.blue[700],
@@ -211,7 +221,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   ],
                 ),
               ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
 
             // Footer
             Center(
@@ -221,7 +231,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'صُنع بـ',
+                        l10n.madeWithLove,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -231,7 +241,7 @@ class _AboutScreenState extends State<AboutScreen> {
                       Icon(Icons.favorite, size: 14, color: Colors.red[400]),
                       const SizedBox(width: 4),
                       Text(
-                        'في العالم العربي',
+                        l10n.inArabWorld,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -240,9 +250,9 @@ class _AboutScreenState extends State<AboutScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'contact.apex.flow@gmail.com',
-                    style: TextStyle(
+                  Text(
+                    l10n.contactEmail,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.blue,
                     ),

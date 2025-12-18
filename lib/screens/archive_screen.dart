@@ -221,7 +221,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                       left: 8, 
                       right: 8, 
                       top: 8, 
-                      bottom: MediaQuery.of(context).padding.bottom + 16),
+                      bottom: MediaQuery.of(context).padding.bottom + 80),
                   itemCount: archivedNotes.length,
                   itemBuilder: (context, index) {
                     final note = archivedNotes[index];

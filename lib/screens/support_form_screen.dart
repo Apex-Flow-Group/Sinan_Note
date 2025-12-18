@@ -169,7 +169,12 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).padding.bottom + 80,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -269,7 +274,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(

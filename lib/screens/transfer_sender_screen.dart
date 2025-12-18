@@ -95,6 +95,7 @@ class _TransferSenderScreenState extends State<TransferSenderScreen> {
     if (_tempDbPath != null) {
       _backupService.cleanupSanitizedDatabase();
     }
+    // BackupService is stateless, no dispose needed
     super.dispose();
   }
 

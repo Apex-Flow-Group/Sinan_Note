@@ -12,6 +12,7 @@ class ApexEditorHeader extends StatelessWidget {
   final VoidCallback onSaveTap;
   final bool hasReminder;
   final VoidCallback? onReminderTap;
+  final VoidCallback? onTitleTap;
 
   const ApexEditorHeader({
     super.key,
@@ -24,6 +25,7 @@ class ApexEditorHeader extends StatelessWidget {
     required this.onSaveTap,
     this.hasReminder = false,
     this.onReminderTap,
+    this.onTitleTap,
   });
 
   @override
@@ -45,15 +47,34 @@ class ApexEditorHeader extends StatelessWidget {
               splashRadius: 24,
             ),
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: textColor.withValues(alpha: 0.7),
-                  fontSize: 16,
-                  fontWeight: FontWeight.normal,
+              child: GestureDetector(
+                onTap: onTitleTap,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: textColor.withValues(alpha: 0.7),
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (onTitleTap != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.edit,
+                        size: 14,
+                        color: textColor.withValues(alpha: 0.4),
+                      ),
+                    ]
+                  ],
                 ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             if (onReminderTap != null)
