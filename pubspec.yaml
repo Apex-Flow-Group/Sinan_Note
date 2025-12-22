@@ -64,3 +64,5 @@ flutter:
   generate: true
   assets:
     - assets/images/app_icon.png
+    - assets/legal/TERMS_OF_SERVICE_AR.md
+    - assets/legal/TERMS_OF_SERVICE_EN.md

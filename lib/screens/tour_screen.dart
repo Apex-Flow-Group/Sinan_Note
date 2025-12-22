@@ -6,6 +6,7 @@ import '../services/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'main_layout_screen.dart';
 import 'transfer_screen.dart';
+import 'terms_screen.dart';
 import '../config/flavor_config.dart';
 
 class TourScreen extends StatefulWidget {
@@ -247,8 +248,14 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
+  /// Opens Terms of Service screen
+  /// Uses local markdown files from assets/legal/
+  /// - Arabic: TERMS_OF_SERVICE_AR.md
+  /// - English: TERMS_OF_SERVICE_EN.md
   void _openTerms() {
-    // TODO: Open Terms of Service
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const TermsScreen()),
+    );
   }
 
   Widget _buildPage7(BuildContext context) {
