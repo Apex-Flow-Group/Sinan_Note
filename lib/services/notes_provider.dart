@@ -287,7 +287,6 @@ class NotesProvider extends ChangeNotifier {
 
     return result;
 
-    return result;
   }
 
   Future<int> deleteNote(int id) async {

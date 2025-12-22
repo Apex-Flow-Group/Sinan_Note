@@ -198,10 +198,6 @@ class WidgetService {
     }
   }
 
-  /// Legacy method - delegates to snapshot strategy
-  String _formatChecklistContent(String content) {
-    return _generateChecklistSnapshot(content);
-  }
 
   /// Parse checklist statistics
   Map<String, int> _parseChecklistStats(String content) {
