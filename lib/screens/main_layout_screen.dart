@@ -82,6 +82,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final notesProvider = Provider.of<NotesProvider>(context);
     final bool showBottomBar =
         settings.isSetupCompleted || notesProvider.isInitialDataLoaded;
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
+    final isLargeScreen = MediaQuery.of(context).size.width >= 600;
 
     final screens = [
       NotificationListener<UserScrollNotification>(
@@ -110,28 +112,106 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       body: MediaQuery.removeViewInsets(
         context: context,
         removeBottom: true,
-        child: Stack(
+        child: Row(
+          textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
           children: [
-            IndexedStack(
-              index: _currentIndex,
-              children: screens,
+            Expanded(
+              child: Stack(
+                children: [
+                  IndexedStack(
+                    index: _currentIndex,
+                    children: screens,
+                  ),
+                  if (showBottomBar && !isLargeScreen)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    child: AnimatedSlide(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubic,
+                      offset: _isDrawerOpen 
+                          ? const Offset(0, 1)
+                          : (_isScrollHidden ? const Offset(0, 1) : Offset.zero),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.85),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, -5),
+                                ),
+                              ],
+                            ),
+                            child: BottomNavigationBar(
+                              currentIndex: _currentIndex,
+                              onTap: (index) {
+                                if (isMenuOpenNotifier.value) {
+                                  isMenuOpenNotifier.value = false;
+                                }
+                                setState(() {
+                                  _currentIndex = index;
+                                  if (index != 0) _isScrollHidden = false;
+                                });
+                              },
+                              type: BottomNavigationBarType.fixed,
+                              backgroundColor: Colors.transparent,
+                              elevation: 0,
+                              selectedItemColor: Theme.of(context).colorScheme.primary,
+                              unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              selectedFontSize: 12,
+                              unselectedFontSize: 11,
+                              selectedLabelStyle:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                              unselectedLabelStyle:
+                                  const TextStyle(fontWeight: FontWeight.normal),
+                              items: [
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.grid_view_rounded),
+                                  activeIcon:
+                                      const Icon(Icons.grid_view_rounded, size: 28),
+                                  label: l10n.home,
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.alarm_rounded),
+                                  activeIcon: const Icon(Icons.alarm_rounded, size: 28),
+                                  label: l10n.reminders,
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.code_rounded),
+                                  activeIcon: const Icon(Icons.code_rounded, size: 28),
+                                  label: l10n.professional,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            if (showBottomBar)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-              child: AnimatedSlide(
+            if (showBottomBar && isLargeScreen)
+              AnimatedSlide(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOutCubic,
                 offset: _isDrawerOpen 
-                    ? const Offset(0, 1) 
-                    : (_isScrollHidden ? const Offset(0, 1) : Offset.zero),
+                    ? (isRTL ? const Offset(1, 0) : const Offset(-1, 0))
+                    : (_isScrollHidden ? (isRTL ? const Offset(1, 0) : const Offset(-1, 0)) : Offset.zero),
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: isRTL 
+                      ? const BorderRadius.horizontal(left: Radius.circular(16))
+                      : const BorderRadius.horizontal(right: Radius.circular(16)),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
+                      width: 80,
                       decoration: BoxDecoration(
                         color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.85),
                         boxShadow: [
@@ -142,9 +222,9 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                           ),
                         ],
                       ),
-                      child: BottomNavigationBar(
-                        currentIndex: _currentIndex,
-                        onTap: (index) {
+                      child: NavigationRail(
+                        selectedIndex: _currentIndex,
+                        onDestinationSelected: (index) {
                           if (isMenuOpenNotifier.value) {
                             isMenuOpenNotifier.value = false;
                           }
@@ -153,33 +233,41 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                             if (index != 0) _isScrollHidden = false;
                           });
                         },
-                        type: BottomNavigationBarType.fixed,
                         backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        selectedItemColor: Theme.of(context).colorScheme.primary,
-                        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        selectedFontSize: 12,
-                        unselectedFontSize: 11,
-                        selectedLabelStyle:
-                            const TextStyle(fontWeight: FontWeight.w600),
-                        unselectedLabelStyle:
-                            const TextStyle(fontWeight: FontWeight.normal),
-                        items: [
-                          BottomNavigationBarItem(
+                        selectedIconTheme: IconThemeData(
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 28,
+                        ),
+                        unselectedIconTheme: IconThemeData(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          size: 24,
+                        ),
+                        labelType: NavigationRailLabelType.all,
+                        selectedLabelTextStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        unselectedLabelTextStyle: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.normal,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        destinations: [
+                          NavigationRailDestination(
                             icon: const Icon(Icons.grid_view_rounded),
-                            activeIcon:
-                                const Icon(Icons.grid_view_rounded, size: 28),
-                            label: l10n.home,
+                            selectedIcon: const Icon(Icons.grid_view_rounded),
+                            label: Text(l10n.home),
                           ),
-                          BottomNavigationBarItem(
+                          NavigationRailDestination(
                             icon: const Icon(Icons.alarm_rounded),
-                            activeIcon: const Icon(Icons.alarm_rounded, size: 28),
-                            label: l10n.reminders,
+                            selectedIcon: const Icon(Icons.alarm_rounded),
+                            label: Text(l10n.reminders),
                           ),
-                          BottomNavigationBarItem(
+                          NavigationRailDestination(
                             icon: const Icon(Icons.code_rounded),
-                            activeIcon: const Icon(Icons.code_rounded, size: 28),
-                            label: l10n.professional,
+                            selectedIcon: const Icon(Icons.code_rounded),
+                            label: Text(l10n.professional),
                           ),
                         ],
                       ),
@@ -187,7 +275,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

@@ -1019,16 +1019,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yesRestoreNow => 'نعم، استعد الآن';
 
   @override
-  String get simpleNoteMenu => 'بسيط';
+  String get simpleNoteMenu => 'ملاحظة نصية';
 
   @override
-  String get richNoteMenu => 'منسق';
+  String get richNoteMenu => 'ملاحظة منسقة';
 
   @override
-  String get codeEditorMenu => 'كود';
+  String get codeEditorMenu => 'محرر كود';
 
   @override
-  String get checklistMenu => 'قائمة';
+  String get checklistMenu => 'قائمة مهام';
 
   @override
   String get attachDeviceInfo => 'إرفاق معلومات الجهاز';
@@ -1308,4 +1308,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contactEmail => 'contact.apex.flow@gmail.com';
+
+  @override
+  String get agreeToTerms => 'أوافق على شروط الخدمة';
 }

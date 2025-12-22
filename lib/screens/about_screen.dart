@@ -51,11 +51,14 @@ class _AboutScreenState extends State<AboutScreen> {
     
     return Scaffold(
       appBar: AppBar(title: Text(l10n.aboutApp)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             // App Info
             Center(
               child: Column(
@@ -261,6 +264,8 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
           ],
+        ),
+          ),
         ),
       ),
     );

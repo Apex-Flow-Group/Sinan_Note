@@ -73,7 +73,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
   void _parseContent() {
     if (widget.initialContent.trim().isEmpty) {
-      _addNewItem();
+      // 🎯 SMART SOLUTION: Add auto item for UX, but mark it as "ghost"
+      _addNewItem(isGhostItem: true);
       return;
     }
 
@@ -110,7 +111,10 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       }
     }
 
-    if (_items.isEmpty) _addNewItem();
+    // Only add item if we have existing content but no parsed items
+    if (_items.isEmpty && widget.initialContent.trim().isNotEmpty) {
+      _addNewItem();
+    }
 
     for (var item in _items) {
       _initializeController(item);
@@ -146,9 +150,10 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     });
   }
 
-  void _addNewItem({int? insertIndex, bool autoFocus = false}) {
+  void _addNewItem({int? insertIndex, bool autoFocus = false, bool isGhostItem = false}) {
     final newItem = ChecklistItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      isGhost: isGhostItem, // Mark as ghost for smart filtering
     );
 
     setState(() {
@@ -165,7 +170,11 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
         _focusNodes[newItem.id]?.requestFocus();
       });
     }
-    _notifyParent();
+    
+    // Only notify parent if not a ghost item or if ghost item gets content
+    if (!isGhostItem) {
+      _notifyParent();
+    }
   }
 
   void _deleteItem(String id) {
@@ -221,12 +230,21 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     for (var item in _items) {
       if (_controllers.containsKey(item.id)) {
         item.text = _controllers[item.id]!.text;
+        // 🎯 SMART: Convert ghost to real item when user types
+        if (item.isGhost && item.text.trim().isNotEmpty) {
+          item.isGhost = false;
+        }
       }
     }
     
+    // 🎯 SMART FILTERING: Remove empty ghost items before saving
+    final realItems = _items.where((item) => 
+      !item.isGhost || item.text.trim().isNotEmpty
+    ).toList();
+    
     final data = {
       'title': _titleController.text.trim(),
-      'items': _items.map((e) => e.toJson()).toList(),
+      'items': realItems.map((e) => e.toJson()).toList(),
     };
     final jsonData = jsonEncode(data);
 
@@ -547,7 +565,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     if (_items.isNotEmpty && _items.first.text.isNotEmpty) {
       return _items.first.text;
     }
-    return AppLocalizations.of(context)?.checklist ?? 'Checklist';
+    return 'Checklist'; // Safe fallback without context access
   }
 
   @override

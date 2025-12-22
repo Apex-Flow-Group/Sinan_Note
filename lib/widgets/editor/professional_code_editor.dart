@@ -10,6 +10,7 @@ class ProfessionalCodeEditor extends StatefulWidget {
   final UndoHistoryController undoController;
   final String? detectedLanguage;
   final Color backgroundColor;
+  final FocusNode? focusNode;
 
   const ProfessionalCodeEditor({
     super.key,
@@ -17,6 +18,7 @@ class ProfessionalCodeEditor extends StatefulWidget {
     required this.undoController,
     this.detectedLanguage,
     this.backgroundColor = Colors.white,
+    this.focusNode,
   });
 
   @override
@@ -38,6 +40,7 @@ class _ProfessionalCodeEditorState extends State<ProfessionalCodeEditor> {
         child: CodeField(
           controller: widget.controller,
           undoController: widget.undoController,
+          focusNode: widget.focusNode,
           textStyle: TextStyle(
             fontFamily: 'monospace',
             fontSize: 14,

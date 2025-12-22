@@ -171,8 +171,8 @@ class WidgetService {
         : content;
   }
 
-  /// Format checklist content with checkboxes
-  String _formatChecklistContent(String content) {
+  /// SNAPSHOT STRATEGY: Generate simple text snapshot for widget persistence
+  String _generateChecklistSnapshot(String content) {
     if (content.trim().isEmpty) return 'Empty checklist';
     
     try {
@@ -187,6 +187,7 @@ class WidgetService {
 
       if (items.isEmpty) return 'Empty checklist';
 
+      // Generate persistent text snapshot (max 5 items for widget)
       return items.take(5).map((item) {
         final text = item['text'] ?? '';
         final isDone = item['isDone'] ?? false;
@@ -195,6 +196,11 @@ class WidgetService {
     } catch (e) {
       return _formatNoteContent(content, 150);
     }
+  }
+
+  /// Legacy method - delegates to snapshot strategy
+  String _formatChecklistContent(String content) {
+    return _generateChecklistSnapshot(content);
   }
 
   /// Parse checklist statistics
@@ -230,12 +236,13 @@ class WidgetService {
       if (noteId == 0) {
         await _resetChecklistWidget();
       } else {
-        final formattedContent = _formatChecklistContent(content);
+        // 🎯 SNAPSHOT STRATEGY: Generate persistent text snapshot
+        final textSnapshot = _generateChecklistSnapshot(content);
 
-        // 🔥 CRITICAL: حفظ الـ ID في كل من HomeWidget و SharedPreferences
+        // 🔥 CRITICAL: Save simple text snapshot for persistence
         await HomeWidget.saveWidgetData<int>('checklist_note_id', noteId);
         await HomeWidget.saveWidgetData<String>('checklist_title', title);
-        await HomeWidget.saveWidgetData<String>('checklist_content', formattedContent);
+        await HomeWidget.saveWidgetData<String>('checklist_preview', textSnapshot); // NEW: Simple text
         await HomeWidget.saveWidgetData<int>('checklist_total', totalItems);
         await HomeWidget.saveWidgetData<int>('checklist_completed', completedItems);
         
@@ -255,7 +262,7 @@ class WidgetService {
   Future<void> _resetChecklistWidget() async {
     await HomeWidget.saveWidgetData<int>('checklist_note_id', 0);
     await HomeWidget.saveWidgetData<String>('checklist_title', await _getSelectListText());
-    await HomeWidget.saveWidgetData<String>('checklist_content', await _getTapToSelectText());
+    await HomeWidget.saveWidgetData<String>('checklist_preview', await _getTapToSelectText()); // Use preview key
     await HomeWidget.saveWidgetData<int>('checklist_total', 0);
     await HomeWidget.saveWidgetData<int>('checklist_completed', 0);
   }
@@ -341,7 +348,6 @@ class WidgetService {
       } else if (note.id == pinnedChecklistId && isChecklistNote) {
         final title = note.title.isEmpty ? 'Checklist' : note.title;
         final stats = service._parseChecklistStats(note.content);
-        
         await service.updateChecklistWidget(
           note.id ?? 0,
           title,

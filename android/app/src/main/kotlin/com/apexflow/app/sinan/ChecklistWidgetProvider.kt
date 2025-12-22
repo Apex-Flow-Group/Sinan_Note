@@ -20,13 +20,13 @@ class ChecklistWidgetProvider : HomeWidgetProvider() {
         appWidgetIds.forEach { widgetId ->
             val views = RemoteViews(context.packageName, R.layout.widget_checklist_layout).apply {
                 val title = widgetData.getString("checklist_title", "Select Checklist") ?: "Select Checklist"
-                val content = widgetData.getString("checklist_content", "Tap to select a checklist") ?: "Tap to select a checklist"
+                val preview = widgetData.getString("checklist_preview", "Tap to select a checklist") ?: "Tap to select a checklist"
                 val noteId = widgetData.getInt("checklist_note_id", 0)
                 val totalItems = widgetData.getInt("checklist_total", 0)
                 val completedItems = widgetData.getInt("checklist_completed", 0)
                 
                 setTextViewText(R.id.checklist_title, title)
-                setTextViewText(R.id.checklist_content, content)
+                setTextViewText(R.id.checklist_content, preview) // Use simple text snapshot
                 
                 // Show progress if available
                 if (totalItems > 0) {

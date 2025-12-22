@@ -63,8 +63,20 @@ void main() async {
   DatabaseService().runLegacyHistoryCleanup();
 
   if (Platform.isLinux || Platform.isWindows) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    try {
+      // Set library path for Fedora/RHEL systems
+      if (Platform.isLinux) {
+        sqfliteFfiInit();
+      } else {
+        sqfliteFfiInit();
+      }
+      databaseFactory = databaseFactoryFfi;
+    } catch (e) {
+      if (kDebugMode) {
+        print('SQLite FFI initialization failed: $e');
+        print('This is expected on Linux desktop - app works on Android/iOS');
+      }
+    }
   }
 
   if (Platform.isAndroid || Platform.isIOS) {

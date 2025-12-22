@@ -7,23 +7,27 @@ class ChecklistItem {
   final dynamic id;
   String text;
   bool isDone;
+  bool isGhost; // 🎯 Smart ghost item flag
 
   ChecklistItem({
     required this.id,
     this.text = '',
     this.isDone = false,
+    this.isGhost = false, // Default to real item
   });
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'text': text,
         'isDone': isDone,
+        // Note: isGhost is not saved to JSON (runtime-only flag)
       };
 
   factory ChecklistItem.fromJson(Map<String, dynamic> json) => ChecklistItem(
         id: json['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
         text: json['text'] as String? ?? '',
         isDone: json['isDone'] as bool? ?? false,
+        isGhost: false, // Loaded items are never ghost
       );
 }
 

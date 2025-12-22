@@ -15,7 +15,7 @@ class SettingsProvider with ChangeNotifier {
   bool _cardMotionEnabled = false;
   String _viewType = 'listCompact';
   bool _isAppLockEnabled = false;
-  bool _hideContentInBackground = true;
+  bool _hideContentInBackground = false;
   bool _lockDelayEnabled = false;
   int _lockDelaySeconds = 30;
   bool _hasSeenLockedIntro = false;
@@ -204,7 +204,7 @@ class SettingsProvider with ChangeNotifier {
       _cardMotionEnabled = prefs.getBool('cardMotionEnabled') ?? false;
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
-      _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? true;
+      _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? false;
       _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
       _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
       _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;

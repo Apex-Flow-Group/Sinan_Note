@@ -2388,6 +2388,7 @@ abstract class AppLocalizations {
   String get restoredToArchive;
   String get restoredToHome;
   String get notesRestoredMixed;
+  String get agreeToTerms;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

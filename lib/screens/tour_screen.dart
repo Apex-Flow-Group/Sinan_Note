@@ -18,6 +18,7 @@ class TourScreen extends StatefulWidget {
 class _TourScreenState extends State<TourScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isAgreed = false;
 
   @override
   void dispose() {
@@ -216,6 +217,7 @@ class _TourScreenState extends State<TourScreen> {
   }
 
   void _navigateToTransfer() async {
+    if (!_isAgreed) return;
     await Provider.of<SettingsProvider>(context, listen: false).completeSetup();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -230,6 +232,7 @@ class _TourScreenState extends State<TourScreen> {
   }
 
   void _navigateToHome() async {
+    if (!_isAgreed) return;
     await Provider.of<SettingsProvider>(context, listen: false).completeSetup();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -242,6 +245,10 @@ class _TourScreenState extends State<TourScreen> {
       ),
       (route) => false,
     );
+  }
+
+  void _openTerms() {
+    // TODO: Open Terms of Service
   }
 
   Widget _buildPage7(BuildContext context) {
@@ -268,10 +275,31 @@ class _TourScreenState extends State<TourScreen> {
             style: const TextStyle(fontSize: 16, color: Colors.white70),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Checkbox(
+                value: _isAgreed,
+                onChanged: (val) => setState(() => _isAgreed = val ?? false),
+                activeColor: const Color(0xFFFFD700),
+              ),
+              GestureDetector(
+                onTap: _openTerms,
+                child: Text(
+                  l10n.agreeToTerms,
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
           if (FlavorConfig.hasTransferFeature)
             ElevatedButton(
-              onPressed: _navigateToTransfer,
+              onPressed: _isAgreed ? _navigateToTransfer : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFD700),
                 foregroundColor: const Color(0xFF0A1929),
@@ -286,7 +314,7 @@ class _TourScreenState extends State<TourScreen> {
           if (FlavorConfig.hasTransferFeature)
             const SizedBox(height: 16),
           OutlinedButton(
-            onPressed: _navigateToHome,
+            onPressed: _isAgreed ? _navigateToHome : null,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
               side: const BorderSide(color: Colors.white30),

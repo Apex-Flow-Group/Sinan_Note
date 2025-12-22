@@ -428,6 +428,10 @@
   "checklistItemHint": "Mission...",
   "sort": "Sort",
   "checklist": "Checklist",
+  "checklistMenu": "Checklist",
+  "codeEditorMenu": "Code Editor",
+  "richNoteMenu": "Formatted Note",
+  "simpleNoteMenu": "Simple Note",
   "restoredToArchive": "Note restored to Archive",
   "restoredToHome": "Note restored to Home",
   "notesRestoredMixed": "Notes restored",
@@ -455,5 +459,6 @@
   "fdroidVersion": "F-Droid Version - Open Source\nWiFi sharing feature available",
   "madeWithLove": "Made with",
   "inArabWorld": "in the Arab World",
-  "contactEmail": "contact.apex.flow@gmail.com"
+  "contactEmail": "contact.apex.flow@gmail.com",
+  "agreeToTerms": "I agree to the Terms of Service"
 }

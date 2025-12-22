@@ -27,7 +27,17 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
   void initState() {
     super.initState();
     _loadPrivacyConsent();
+    _nameController.addListener(() => setState(() {}));
+    _subjectController.addListener(() => setState(() {}));
+    _bodyController.addListener(() => setState(() {}));
   }
+
+  bool get _canSend =>
+      _nameController.text.isNotEmpty &&
+      _subjectController.text.isNotEmpty &&
+      _bodyController.text.isNotEmpty &&
+      _privacyAccepted &&
+      !_isLoading;
 
   Future<void> _loadPrivacyConsent() async {
     final prefs = await SharedPreferences.getInstance();
@@ -40,6 +50,10 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('privacy_consented', value);
     setState(() => _privacyAccepted = value);
+  }
+
+  Future<void> _submitFeedback() async {
+    if (_canSend) await _submitForm();
   }
 
   @override
@@ -167,17 +181,27 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       appBar: AppBar(
         title: Text(l10n.contactUs),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.send),
+            onPressed: _canSend ? _submitFeedback : null,
+            tooltip: l10n.send,
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: MediaQuery.of(context).padding.bottom + 80,
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -278,7 +302,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: (_isLoading || !_privacyAccepted) ? null : _submitForm,
+                  onPressed: _canSend ? _submitFeedback : null,
                   icon: _isLoading
                       ? SizedBox(
                           width: 20,
@@ -296,9 +320,11 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
       ),
     );
   }

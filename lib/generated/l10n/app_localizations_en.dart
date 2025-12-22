@@ -1308,4 +1308,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactEmail => 'contact.apex.flow@gmail.com';
+
+  @override
+  String get agreeToTerms => 'I agree to the Terms of Service';
 }

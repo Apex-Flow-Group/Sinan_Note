@@ -2570,6 +2570,30 @@ abstract class AppLocalizations {
   /// **'Checklist'**
   String get checklist;
 
+  /// No description provided for @checklistMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get checklistMenu;
+
+  /// No description provided for @codeEditorMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Editor'**
+  String get codeEditorMenu;
+
+  /// No description provided for @richNoteMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatted Note'**
+  String get richNoteMenu;
+
+  /// No description provided for @simpleNoteMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple Note'**
+  String get simpleNoteMenu;
+
   /// No description provided for @restoredToArchive.
   ///
   /// In en, this message translates to:
@@ -2737,6 +2761,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'contact.apex.flow@gmail.com'**
   String get contactEmail;
+
+  /// No description provided for @agreeToTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the Terms of Service'**
+  String get agreeToTerms;
 }
 
 class _AppLocalizationsDelegate

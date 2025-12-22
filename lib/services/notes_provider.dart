@@ -277,13 +277,15 @@ class NotesProvider extends ChangeNotifier {
 
     await _handleReminderSideEffect(note);
 
+    // 🔄 تحديث الويدجت إذا كانت الملاحظة مثبتة (INSTANT SYNC)
+    await WidgetService.checkAndUpdateIfPinned(note);
+
     // Only notify if not silent (auto-save from editor should be silent)
     if (!silent) {
       notifyListeners();
     }
 
-    // 🔄 تحديث الويدجت إذا كانت الملاحظة مثبتة
-    await WidgetService.checkAndUpdateIfPinned(note);
+    return result;
 
     return result;
   }

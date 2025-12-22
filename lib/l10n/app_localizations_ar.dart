@@ -1270,6 +1270,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checklist => 'قائمة مهام';
 
   @override
+  String get checklistMenu => 'قائمة مهام';
+
+  @override
+  String get codeEditorMenu => 'محرر كود';
+
+  @override
+  String get richNoteMenu => 'ملاحظة منسقة';
+
+  @override
+  String get simpleNoteMenu => 'ملاحظة نصية';
+
+  @override
   String get restoredToArchive => 'تمت استعادة الملاحظة إلى الأرشيف';
 
   @override
@@ -1357,4 +1369,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contactEmail => 'contact.apex.flow@gmail.com';
+
+  @override
+  String get agreeToTerms => 'أوافق على شروط الخدمة';
 }

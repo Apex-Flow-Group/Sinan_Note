@@ -50,11 +50,11 @@ class MainActivity: FlutterFragmentActivity() {
                 "secureScreen" -> {
                     val secure = call.argument<Boolean>("secure") ?: false
                     if (secure) {
-                        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
                     } else {
                         window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                     }
-                    result.success(true)
+                    result.success(null)
                 }
                 else -> result.notImplemented()
             }

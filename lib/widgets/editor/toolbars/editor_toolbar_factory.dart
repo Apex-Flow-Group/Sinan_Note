@@ -1,11 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../../models/note_mode.dart';
 import '../smart_editor_toolbar.dart';
 import '../code_editor_toolbar.dart';
 import 'checklist_bottom_bar.dart';
+import 'editor_options_menu.dart';
 
 class EditorToolbarFactory {
   static Widget build({
@@ -59,6 +59,7 @@ class EditorToolbarFactory {
           onUndo: onUndo,
           onRedo: onRedo,
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
+          onReminderTap: onReminderTap,
           onShareTap: onShareTap ?? () {},
           onArchiveTap: onArchiveTap ?? () {},
           onDeleteTap: onDeleteTap ?? () {},
@@ -139,8 +140,6 @@ class _SimpleToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
@@ -182,88 +181,11 @@ class _SimpleToolbar extends StatelessWidget {
                       ),
                       Offset.zero & overlay.size,
                     );
-                    showMenu(
+                    EditorOptionsMenu.show(
                       context: context,
                       position: position,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF2D2D2D)
-                          : Colors.white,
-                      elevation: 8,
-                      items: [
-                        PopupMenuItem(
-                          value: 'reminder',
-                          child: Row(
-                            children: [
-                              Icon(
-                                hasReminder
-                                    ? Icons.alarm_on_rounded
-                                    : Icons.alarm_add_rounded,
-                                size: 20,
-                                color: hasReminder ? Colors.orange : null,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                hasReminder ? 'Edit Reminder' : 'Add Reminder',
-                                style: TextStyle(
-                                  color: hasReminder ? Colors.orange : null,
-                                  fontWeight: hasReminder
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'share',
-                          enabled: hasContent,
-                          child: Row(
-                            children: [
-                              Icon(Icons.share_outlined,
-                                  size: 20,
-                                  color: hasContent ? null : Colors.grey),
-                              const SizedBox(width: 12),
-                              Text(l10n.actionShare,
-                                  style: TextStyle(
-                                      color: hasContent ? null : Colors.grey)),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'archive',
-                          enabled: hasContent,
-                          child: Row(
-                            children: [
-                              Icon(Icons.archive_outlined,
-                                  size: 20,
-                                  color: hasContent ? null : Colors.grey),
-                              const SizedBox(width: 12),
-                              Text(l10n.actionArchive,
-                                  style: TextStyle(
-                                      color: hasContent ? null : Colors.grey)),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          enabled: hasContent,
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline_rounded,
-                                  color: hasContent ? Colors.red : Colors.grey,
-                                  size: 20),
-                              const SizedBox(width: 12),
-                              Text(l10n.actionDelete,
-                                  style: TextStyle(
-                                      color: hasContent
-                                          ? Colors.red
-                                          : Colors.grey)),
-                            ],
-                          ),
-                        ),
-                      ],
+                      hasContent: hasContent,
+                      showReminder: true,
                     ).then((value) {
                       if (value == 'reminder') {
                         onReminderTap();

@@ -1274,6 +1274,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checklist => 'Checklist';
 
   @override
+  String get checklistMenu => 'Checklist';
+
+  @override
+  String get codeEditorMenu => 'Code Editor';
+
+  @override
+  String get richNoteMenu => 'Formatted Note';
+
+  @override
+  String get simpleNoteMenu => 'Simple Note';
+
+  @override
   String get restoredToArchive => 'Note restored to Archive';
 
   @override
@@ -1361,4 +1373,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactEmail => 'contact.apex.flow@gmail.com';
+
+  @override
+  String get agreeToTerms => 'I agree to the Terms of Service';
 }

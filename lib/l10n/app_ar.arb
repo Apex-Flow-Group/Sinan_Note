@@ -428,6 +428,10 @@
   "checklistItemHint": "مهمة...",
   "sort": "ترتيب",
   "checklist": "قائمة مهام",
+  "checklistMenu": "قائمة مهام",
+  "codeEditorMenu": "محرر كود",
+  "richNoteMenu": "ملاحظة منسقة",
+  "simpleNoteMenu": "ملاحظة نصية",
   "restoredToArchive": "تمت استعادة الملاحظة إلى الأرشيف",
   "restoredToHome": "تمت استعادة الملاحظة إلى القائمة الرئيسية",
   "notesRestoredMixed": "تمت استعادة الملاحظات",
@@ -455,5 +459,6 @@
   "fdroidVersion": "نسخة F-Droid - مفتوحة المصدر\nميزة المشاركة عبر WiFi متاحة",
   "madeWithLove": "صُنع بـ",
   "inArabWorld": "في العالم العربي",
-  "contactEmail": "contact.apex.flow@gmail.com"
+  "contactEmail": "contact.apex.flow@gmail.com",
+  "agreeToTerms": "أوافق على شروط الخدمة"
 }

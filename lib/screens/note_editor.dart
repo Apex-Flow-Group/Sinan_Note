@@ -65,6 +65,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   // Checklist Undo/Redo state
   ChecklistUndoRedoController? _checklistUndoRedo;
   final FocusNode _textFieldFocusNode = FocusNode();
+  final FocusNode _codeFieldFocusNode = FocusNode();
 
   // Feature Controllers
   final EditorStorageController _storageController = EditorStorageController();
@@ -74,6 +75,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   // Providers
   NotesProvider? _notesProviderRef;
+  AppLocalizations? _l10nRef; // Safe localization reference
 
   // State Variables
   String? _customTitle;
@@ -108,6 +110,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   bool get wantKeepAlive => true;
 
   Color get _backgroundColor {
+    if (!mounted) return Colors.blue; // Safe fallback
     final brightness = Theme.of(context).brightness;
     return AppColorPalette.palette[_colorIndex].getColor(brightness);
   }
@@ -134,14 +137,14 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       return text.length > 40 ? "${text.substring(0, 40)}..." : text;
     }
 
-    final l10n = context.l10n;
-    return l10n.newNoteTitle;
+    return _l10nRef?.newNoteTitle ?? 'New Note'; // Safe fallback
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _notesProviderRef = Provider.of<NotesProvider>(context, listen: false);
+    _l10nRef = AppLocalizations.of(context); // Cache localization safely
   }
 
   @override
@@ -336,19 +339,16 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           widget.note?.noteType == 'checklist') {
         contentToSave = _contentController.text;
         
-        // Validate and ensure we have proper checklist JSON structure
+        // 🎯 FIX: Don't create empty structure for truly empty checklists
+        // Let them remain empty to avoid false "unsaved changes"
         if (contentToSave.trim().isEmpty) {
-          // Create minimal valid checklist structure
-          contentToSave = jsonEncode({
-            'title': '',
-            'items': [],
-          });
+          // Keep as empty - no auto-generation
         } else {
           // Verify it's valid JSON, if not, wrap it
           try {
             jsonDecode(contentToSave);
           } catch (e) {
-            // Invalid JSON, create proper structure
+            // Invalid JSON, create proper structure only if we have content
             contentToSave = jsonEncode({
               'title': '',
               'items': [],
@@ -366,14 +366,19 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       if (widget.mode == NoteMode.checklist ||
           widget.note?.noteType == 'checklist') {
         try {
-          final decoded = jsonDecode(contentToSave);
-          if (decoded is Map) {
-            final title = (decoded['title'] ?? '').toString().trim();
-            final items = decoded['items'] as List? ?? [];
-            final hasContent = title.isNotEmpty ||
-                items.any((item) =>
-                    (item['text'] ?? '').toString().trim().isNotEmpty);
-            isContentEmpty = !hasContent;
+          if (contentToSave.trim().isEmpty) {
+            // 🎯 FIX: Truly empty checklist = no content
+            isContentEmpty = true;
+          } else {
+            final decoded = jsonDecode(contentToSave);
+            if (decoded is Map) {
+              final title = (decoded['title'] ?? '').toString().trim();
+              final items = decoded['items'] as List? ?? [];
+              final hasContent = title.isNotEmpty ||
+                  items.any((item) =>
+                      (item['text'] ?? '').toString().trim().isNotEmpty);
+              isContentEmpty = !hasContent;
+            }
           }
         } catch (e) {
           isContentEmpty = true;
@@ -1197,13 +1202,22 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final totalBottomSpace = toolbarHeight + bottomPadding + 16;
 
     if (widget.mode == NoteMode.code) {
-      return SingleChildScrollView(
-        padding: EdgeInsets.only(top: 80, bottom: totalBottomSpace),
-        child: ProfessionalCodeEditor(
-          controller: _codeController,
-          undoController: _codeUndoController,
-          detectedLanguage: _detectedLanguage,
-          backgroundColor: _backgroundColor,
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          if (!_codeFieldFocusNode.hasFocus) {
+            _codeFieldFocusNode.requestFocus();
+          }
+        },
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(top: 80, bottom: totalBottomSpace),
+          child: ProfessionalCodeEditor(
+            controller: _codeController,
+            undoController: _codeUndoController,
+            detectedLanguage: _detectedLanguage,
+            backgroundColor: _backgroundColor,
+            focusNode: _codeFieldFocusNode,
+          ),
         ),
       );
     } else if (widget.mode == NoteMode.checklist) {
@@ -1241,92 +1255,100 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         ),
       );
     } else {
-      return SingleChildScrollView(
-        padding: EdgeInsets.only(
-            top: 80,
-            bottom: totalBottomSpace,
-            left: sidePadding,
-            right: sidePadding),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-              maxWidth: 800,
-              minHeight: MediaQuery.of(context).size.height - 180),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_reminderDateTime != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: InkWell(
-                    onTap: _showReminderDialog,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange, width: 2),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.alarm,
-                              color: Colors.orange, size: 24),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _smartController
-                                  .getTimeRemaining(_reminderDateTime),
-                              style: TextStyle(
-                                  color: finalTextColor,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          if (!_textFieldFocusNode.hasFocus) {
+            _textFieldFocusNode.requestFocus();
+          }
+        },
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+              top: 80,
+              bottom: totalBottomSpace,
+              left: sidePadding,
+              right: sidePadding),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxWidth: 800,
+                minHeight: MediaQuery.of(context).size.height - 180),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_reminderDateTime != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: InkWell(
+                      onTap: _showReminderDialog,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange, width: 2),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.alarm,
+                                color: Colors.orange, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _smartController
+                                    .getTimeRemaining(_reminderDateTime),
+                                style: TextStyle(
+                                    color: finalTextColor,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              ),
                             ),
-                          ),
-                          const Icon(Icons.edit,
-                              color: Colors.orange, size: 20),
-                        ],
+                            const Icon(Icons.edit,
+                                color: Colors.orange, size: 20),
+                          ],
+                        ),
                       ),
                     ),
                   ),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _contentController,
+                  builder: (context, value, child) {
+                    final isRtl = value.text.isNotEmpty && Bidi.detectRtlDirectionality(value.text);
+                    return TextField(
+                      controller: _contentController,
+                      undoController: _undoController,
+                      focusNode: _textFieldFocusNode,
+                      scrollPadding: const EdgeInsets.only(bottom: 120.0),
+                      onTap: () {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          final text = _contentController.text;
+                          final selection = _contentController.selection;
+                          if (selection.baseOffset > text.length) {
+                            _contentController.selection = TextSelection.collapsed(
+                              offset: text.length,
+                            );
+                          }
+                        });
+                      },
+                      textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                      style: TextStyle(
+                          fontSize: _fontSize, height: 1.5, color: finalTextColor),
+                      cursorColor: finalTextColor.withValues(alpha: 0.8),
+                      cursorWidth: 2.5,
+                      cursorRadius: const Radius.circular(2),
+                      decoration: InputDecoration(
+                        hintText: l10n.startWriting,
+                        hintStyle: TextStyle(color: finalHintColor),
+                        border: InputBorder.none,
+                      ),
+                      maxLines: null,
+                      autofocus: widget.note == null,
+                    );
+                  },
                 ),
-              ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _contentController,
-                builder: (context, value, child) {
-                  final isRtl = value.text.isNotEmpty && Bidi.detectRtlDirectionality(value.text);
-                  return TextField(
-                    controller: _contentController,
-                    undoController: _undoController,
-                    focusNode: _textFieldFocusNode,
-                    scrollPadding: const EdgeInsets.only(bottom: 120.0),
-                    onTap: () {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        final text = _contentController.text;
-                        final selection = _contentController.selection;
-                        if (selection.baseOffset > text.length) {
-                          _contentController.selection = TextSelection.collapsed(
-                            offset: text.length,
-                          );
-                        }
-                      });
-                    },
-                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
-                    textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-                    style: TextStyle(
-                        fontSize: _fontSize, height: 1.5, color: finalTextColor),
-                    cursorColor: finalTextColor.withValues(alpha: 0.8),
-                    cursorWidth: 2.5,
-                    cursorRadius: const Radius.circular(2),
-                    decoration: InputDecoration(
-                      hintText: l10n.startWriting,
-                      hintStyle: TextStyle(color: finalHintColor),
-                      border: InputBorder.none,
-                    ),
-                    maxLines: null,
-                    autofocus: widget.note == null,
-                  );
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -1647,44 +1669,60 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _autosaveTimer?.cancel();
     _languageDetectionTimer?.cancel();
 
-    // SAFETY NET: Force save if dirty
-    if (_isDirty) {
+    // 🛑 CRITICAL: No context access allowed in dispose()
+    // Remove all listeners first to prevent callbacks
+    _contentController.removeListener(_onContentChanged);
+    _undoController.removeListener(_updateUndoRedoState);
+    
+    if (widget.mode == NoteMode.code) {
+      _codeController.removeListener(_onContentChanged);
+      _codeUndoController.removeListener(_updateUndoRedoState);
+    }
+
+    // Simple save without context access
+    if (_isDirty && _notesProviderRef != null) {
       final currentText = widget.mode == NoteMode.code
           ? _codeController.text
           : _contentController.text;
       if (currentText.isNotEmpty) {
-        _saveNoteToDatabase(isManualSave: true);
+        try {
+          _notesProviderRef!.addOrUpdateNote(Note(
+            id: _savedNoteId ?? widget.note?.id,
+            title: _customTitle ?? 'Note',
+            content: currentText,
+            createdAt: widget.note?.createdAt ?? DateTime.now(),
+            updatedAt: DateTime.now(),
+            colorIndex: _colorIndex,
+            isLocked: _initialLockState,
+            noteType: widget.note?.noteType ?? widget.mode.name,
+            reminderDateTime: _reminderDateTime,
+            recurrenceRule: _recurrenceRule,
+            isArchived: widget.note?.isArchived ?? false,
+            isTrashed: widget.note?.isTrashed ?? false,
+            isCompleted: widget.note?.isCompleted ?? false,
+            isProfessional: widget.note?.isProfessional ?? (widget.mode == NoteMode.code),
+            isPinned: widget.note?.isPinned ?? false,
+            isChecklist: widget.note?.isChecklist ?? (widget.mode == NoteMode.checklist),
+          ), silent: true);
+        } catch (e) {
+          // Ignore save errors in dispose
+        }
       }
     }
 
-    _storageController.saveStickySettings(
-      fontSize: _fontSize,
-      backgroundColor: _backgroundColor,
-    );
-
-    // CRITICAL: Remove listener BEFORE clearing to prevent empty save trigger
-    _contentController.removeListener(_onContentChanged);
+    // Clean up controllers
     _contentController.clear();
     _contentController.dispose();
-    
-    _undoController.removeListener(_updateUndoRedoState);
     _undoController.dispose();
     
     if (widget.mode == NoteMode.code) {
-      _codeController.removeListener(_onContentChanged);
       _codeController.clear();
       _codeController.dispose();
-      _codeUndoController.removeListener(_updateUndoRedoState);
       _codeUndoController.dispose();
     }
     
     _textFieldFocusNode.dispose();
-    
-    // Dispose feature controllers if they have dispose methods
-    // Note: These controllers don't have dispose methods currently
-    // If they're updated to hold resources, add dispose calls here
-    
-    // Clear checklist undo/redo history
+    _codeFieldFocusNode.dispose();
     _checklistUndoRedo = null;
 
     super.dispose();
