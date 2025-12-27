@@ -1107,6 +1107,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       return Padding(
         padding: EdgeInsets.only(top: 80, bottom: totalBottomSpace),
         child: ChecklistEditor(
+          key: ValueKey('checklist_${widget.note?.id ?? 'new'}'),
           initialContent: _contentController.text,
           backgroundColor: _backgroundColor,
           onUndoRedoControllerCreated: (controller) {
