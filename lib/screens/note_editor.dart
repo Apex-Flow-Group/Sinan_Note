@@ -1115,8 +1115,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           },
           onUndoRedoChanged: _updateChecklistUndoRedo,
           onChanged: (jsonContent) {
-            // 🛑 CRITICAL: Stop if editor is closing to prevent crash
             if (!mounted) return;
+            
+            debugPrint('📥 RECEIVED: Checklist data (${jsonContent.length} chars)');
             
             _contentController.text = jsonContent;
             _isDirty = true;
