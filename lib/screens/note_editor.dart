@@ -38,6 +38,7 @@ import 'note_editor/controllers/editor_storage_controller.dart';
 import 'note_editor/controllers/editor_formatting_controller.dart';
 import 'note_editor/controllers/editor_smart_controller.dart';
 import 'note_editor/utils/note_editor_utils.dart';
+import 'note_editor/dialogs/editor_dialogs.dart';
 
 class NoteEditorImmersive extends StatefulWidget {
   final Note? note;
@@ -1483,7 +1484,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                           type: SnackBarType.warning);
                     }
                   },
-                  onDeleteTap: () => _handleDelete(finalTextColor),
+                  onDeleteTap: () => EditorDialogs.showDeleteDialog(
+                    context: context,
+                    backgroundColor: _backgroundColor,
+                    textColor: finalTextColor,
+                    noteId: _savedNoteId ?? widget.note?.id,
+                  ),
                   onBold: () {
                     HapticFeedback.lightImpact();
                     _formattingController.showFormattingHint(
@@ -1562,47 +1568,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         ),
       ),
     );
-  }
-
-  Future<void> _handleDelete(
-      Color finalTextColor) async {
-    HapticFeedback.heavyImpact();
-    final l10n = context.l10n;
-
-    final noteId = _savedNoteId ?? widget.note?.id;
-    if (noteId == null) {
-      Navigator.pop(context);
-      return;
-    }
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _backgroundColor,
-        title: Text(l10n.deleteNote, style: TextStyle(color: finalTextColor)),
-        content:
-            Text(l10n.deleteConfirm, style: TextStyle(color: finalTextColor)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel, style: TextStyle(color: finalTextColor)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      final provider = Provider.of<NotesProvider>(context, listen: false);
-      await provider.trashNote(noteId);
-      if (mounted) {
-        Navigator.of(context).pop();
-        Navigator.of(context).pop();
-      }
-    }
   }
 
 @override
