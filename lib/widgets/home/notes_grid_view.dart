@@ -143,14 +143,16 @@ class _NotesGridViewState extends State<NotesGridView> {
         source: source,
         onLongPress: () {
           // Long Press ONLY starts selection mode
-          if (selectedIds.isNotEmpty) return; // Already selecting - ignore
+          final currentSelection = widget.selectedNoteIdsNotifier.value;
+          if (currentSelection.isNotEmpty) return; // Already selecting - ignore
           widget.selectedNoteIdsNotifier.value = {note.id!};
         },
         onTap: () {
-          // Tap toggles selection when in selection mode
-          debugPrint('📱 onTap: note.id=${note.id}, selectionMode=${selectedIds.isNotEmpty}, currentSelection=$selectedIds');
-          if (selectedIds.isNotEmpty) {
-            final newSet = Set<int>.from(selectedIds);
+          // 🔥 FIX: Read LIVE value from notifier, not stale snapshot
+          final currentSelection = widget.selectedNoteIdsNotifier.value;
+          debugPrint('📱 onTap: note.id=${note.id}, selectionMode=${currentSelection.isNotEmpty}, currentSelection=$currentSelection');
+          if (currentSelection.isNotEmpty) {
+            final newSet = Set<int>.from(currentSelection);
             if (newSet.contains(note.id)) {
               newSet.remove(note.id);
               debugPrint('➖ Removed ${note.id}, newSet=$newSet');
@@ -158,7 +160,8 @@ class _NotesGridViewState extends State<NotesGridView> {
               newSet.add(note.id!);
               debugPrint('➕ Added ${note.id}, newSet=$newSet');
             }
-            widget.selectedNoteIdsNotifier.value = newSet;
+            // 💉 FORCE NOTIFICATION: Create completely new Set instance
+            widget.selectedNoteIdsNotifier.value = Set<int>.of(newSet);
           }
         },
       ),

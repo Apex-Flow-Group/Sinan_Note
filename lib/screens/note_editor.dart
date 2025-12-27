@@ -153,6 +153,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     WidgetsBinding.instance.addObserver(this);
     _isAuthenticated = true;
 
+    // 🔧 FIX: Capture existing note ID immediately to prevent duplication
+    if (widget.note?.id != null) {
+      _savedNoteId = widget.note!.id;
+    }
+
     // Capture initial lock state IMMEDIATELY (State Snapshot)
     _initialLockState = widget.originallyLocked || (widget.note?.isLocked ?? false);
 
@@ -313,7 +318,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         widget.note?.id == null &&
         _savedNoteId == null;
 
-    // 🧠 Smart dirty check: Compare current state with original
+    // 🧠 Smart dirty check
     if (!forceUpdate && !isNewLockedNote && (_savedNoteId != null || widget.note != null)) {
       final currentContent = widget.mode == NoteMode.code ? _codeController.text : _contentController.text;
       final currentTitle = _currentTitle;
@@ -323,7 +328,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       final hasReminderChanged = _reminderDateTime != _originalReminderDateTime || _recurrenceRule != _originalRecurrenceRule;
       
       if (!hasContentChanged && !hasTitleChanged && !hasColorChanged && !hasReminderChanged) {
-        debugPrint('✋ Save skipped: No real changes detected');
         return;
       }
     }
@@ -331,29 +335,33 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _isSaving = true;
 
     try {
-      // MEMORY FIX: Create local copy and clear references immediately
       String contentToSave;
       
-      // CRITICAL FIX: For checklist mode, ensure we have valid JSON content
-      if (widget.mode == NoteMode.checklist ||
-          widget.note?.noteType == 'checklist') {
+      if (widget.mode == NoteMode.checklist || widget.note?.noteType == 'checklist') {
         contentToSave = _contentController.text;
         
-        // 🎯 FIX: Don't create empty structure for truly empty checklists
-        // Let them remain empty to avoid false "unsaved changes"
+        // ✅ VALIDATION: Check if checklist is truly empty
         if (contentToSave.trim().isEmpty) {
-          // Keep as empty - no auto-generation
-        } else {
-          // Verify it's valid JSON, if not, wrap it
-          try {
-            jsonDecode(contentToSave);
-          } catch (e) {
-            // Invalid JSON, create proper structure only if we have content
-            contentToSave = jsonEncode({
-              'title': '',
-              'items': [],
-            });
+          _isSaving = false;
+          return; // Don't save empty checklist
+        }
+        
+        try {
+          final decoded = jsonDecode(contentToSave);
+          if (decoded is Map) {
+            final title = (decoded['title'] ?? '').toString().trim();
+            final items = decoded['items'] as List? ?? [];
+            final hasRealContent = title.isNotEmpty || 
+                items.any((item) => (item['text'] ?? '').toString().trim().isNotEmpty);
+            
+            if (!hasRealContent) {
+              _isSaving = false;
+              return; // Don't save empty checklist
+            }
           }
+        } catch (e) {
+          _isSaving = false;
+          return; // Invalid JSON, don't save
         }
       } else {
         contentToSave = widget.mode == NoteMode.code
@@ -363,33 +371,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       
       bool isContentEmpty = contentToSave.trim().isEmpty;
 
-      if (widget.mode == NoteMode.checklist ||
-          widget.note?.noteType == 'checklist') {
-        try {
-          if (contentToSave.trim().isEmpty) {
-            // 🎯 FIX: Truly empty checklist = no content
-            isContentEmpty = true;
-          } else {
-            final decoded = jsonDecode(contentToSave);
-            if (decoded is Map) {
-              final title = (decoded['title'] ?? '').toString().trim();
-              final items = decoded['items'] as List? ?? [];
-              final hasContent = title.isNotEmpty ||
-                  items.any((item) =>
-                      (item['text'] ?? '').toString().trim().isNotEmpty);
-              isContentEmpty = !hasContent;
-            }
-          }
-        } catch (e) {
-          isContentEmpty = true;
+      // Handle empty notes intelligently
+      if (isContentEmpty && !isNewLockedNote) {
+        // If existing note became empty -> delete it
+        final noteId = _savedNoteId ?? widget.note?.id;
+        if (noteId != null) {
+          await _notesProviderRef!.trashNote(noteId);
         }
-      }
-
-      // لا تحفظ الملاحظات الفارغة إلا إذا كانت مقفلة جديدة أو موجودة مسبقاً
-      if (isContentEmpty &&
-          !isNewLockedNote &&
-          _savedNoteId == null &&
-          widget.note?.id == null) {
         _isSaving = false;
         return;
       }

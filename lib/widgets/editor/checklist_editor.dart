@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../utils/checklist_formatter.dart';
 import 'package:intl/intl.dart' show Bidi;
+import 'checklist_item_widget.dart';
 
 class ChecklistUndoRedoController {
   final VoidCallback undo;
@@ -223,27 +224,36 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   }
 
   void _notifyParent() {
-    // 🛑 CRITICAL: Stop if widget is closing/disposed to prevent saving empty data
     if (!mounted) return;
     
-    // 🛡️ SAFETY NET: Force sync all controllers to models before save
+    // 🛡️ Force sync all controllers to models
     for (var item in _items) {
       if (_controllers.containsKey(item.id)) {
         item.text = _controllers[item.id]!.text;
-        // 🎯 SMART: Convert ghost to real item when user types
         if (item.isGhost && item.text.trim().isNotEmpty) {
           item.isGhost = false;
         }
       }
     }
     
-    // 🎯 SMART FILTERING: Remove empty ghost items before saving
+    // 🎯 Filter empty ghost items
     final realItems = _items.where((item) => 
       !item.isGhost || item.text.trim().isNotEmpty
     ).toList();
     
+    // ✅ VALIDATION: Prevent saving completely empty checklists
+    final title = _titleController.text.trim();
+    final hasContent = title.isNotEmpty || 
+        realItems.any((item) => item.text.trim().isNotEmpty);
+    
+    if (!hasContent) {
+      // Empty checklist - don't save garbage
+      widget.onChanged(jsonEncode({'title': '', 'items': []}));
+      return;
+    }
+    
     final data = {
-      'title': _titleController.text.trim(),
+      'title': title,
       'items': realItems.map((e) => e.toJson()).toList(),
     };
     final jsonData = jsonEncode(data);
@@ -455,106 +465,22 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   }
 
   Widget _buildItemRow(ChecklistItem item, int index, Color textColor) {
-    final l10n = AppLocalizations.of(context)!;
-    final isDone = item.isDone;
     final controller = _controllers[item.id]!;
     final focusNode = _focusNodes[item.id]!;
 
-    return Container(
-      key: ValueKey(item.id),
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      decoration: BoxDecoration(
-        color: widget.backgroundColor.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDone ? Colors.transparent : textColor.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: Icon(Icons.add_circle_outline,
-                color: textColor.withValues(alpha: 0.6), size: 20),
-            onPressed: () =>
-                _addNewItem(insertIndex: index + 1, autoFocus: true),
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(),
-          ),
-          ReorderableDragStartListener(
-            index: index,
-            child: Padding(
-              padding:
-                  const EdgeInsets.only(left: 4, right: 8, top: 12, bottom: 12),
-              child: Icon(Icons.drag_indicator,
-                  color: textColor.withValues(alpha: 0.4), size: 20),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => _toggleDone(item),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 12),
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isDone ? Colors.green : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color:
-                      isDone ? Colors.green : textColor.withValues(alpha: 0.5),
-                  width: 2,
-                ),
-              ),
-              child: isDone
-                  ? const Icon(Icons.check, size: 16, color: Colors.white)
-                  : null,
-            ),
-          ),
-          Expanded(
-            child: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: controller,
-              builder: (context, value, child) {
-                final isRtl = value.text.isNotEmpty && Bidi.detectRtlDirectionality(value.text);
-                return TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-                  textAlign: isRtl ? TextAlign.right : TextAlign.left,
-                  textAlignVertical: TextAlignVertical.center,
-                  maxLines: null,
-                  textInputAction: TextInputAction.newline,
-                  onSubmitted: (_) {
-                    _addNewItem(insertIndex: index + 1, autoFocus: true);
-                  },
-                  onChanged: (text) {
-                    // Removed auto-delete on empty text
-                  },
-                  style: TextStyle(
-                    fontSize: 16,
-                    decoration:
-                        isDone ? TextDecoration.lineThrough : TextDecoration.none,
-                    color: isDone ? textColor.withValues(alpha: 0.5) : textColor,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: l10n.checklistItemHint,
-                    hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                );
-              },
-            ),
-          ),
-          if (_items.length > 1)
-            IconButton(
-              icon: Icon(Icons.close,
-                  size: 18, color: textColor.withValues(alpha: 0.4)),
-              onPressed: () => _deleteItem(item.id),
-            ),
-        ],
-      ),
+    return ChecklistItemWidget(
+      item: item,
+      index: index,
+      controller: controller,
+      focusNode: focusNode,
+      textColor: textColor,
+      backgroundColor: widget.backgroundColor,
+      showControls: true,
+      canDelete: _items.length > 1,
+      onToggleDone: () => _toggleDone(item),
+      onDelete: () => _deleteItem(item.id),
+      onAddBelow: () => _addNewItem(insertIndex: index + 1, autoFocus: true),
+      onSubmitted: () => _addNewItem(insertIndex: index + 1, autoFocus: true),
     );
   }
 

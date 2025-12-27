@@ -5,8 +5,11 @@ import 'package:provider/provider.dart';
 import '../../services/notes_provider.dart';
 import '../../services/toast_service.dart';
 import '../../models/note.dart';
+import '../../models/note_mode.dart';  // ✏️ Import NoteMode
 import '../../l10n/l10n_migration_helper.dart';
+import '../../screens/note_editor.dart';  // ✏️ Import Editor
 import '../breathing_search_field.dart';
+import '../custom_share_sheet.dart';  // 📤 Import share widget
 import 'selection_action_bar.dart';
 import 'smooth_search_header_delegate.dart';
 
@@ -57,13 +60,41 @@ class _SmartHeaderState extends State<SmartHeader> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
                   child: SelectionActionBar(
-                    selectedCount: selectedIds.length,
+                    selectedIdsNotifier: widget.selectedNoteIdsNotifier,  // 🔥 Pass notifier directly
                     isDark: isDark,
                     allPinned: false,
                     onClear: () {
                       widget.selectedNoteIdsNotifier.value = {};
                     },
-                    onRename: null,
+                    onRename: selectedIds.length == 1 ? () async {
+                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                      final noteId = selectedIds.first;
+                      final note = provider.notes.firstWhere((n) => n.id == noteId);
+                      
+                      // Clear selection first
+                      widget.selectedNoteIdsNotifier.value = {};
+                      
+                      // Determine note mode
+                      NoteMode mode = NoteMode.simple;
+                      if (note.isChecklist) {
+                        mode = NoteMode.checklist;
+                      } else if (note.noteType == 'code' || note.isProfessional) {
+                        mode = NoteMode.code;
+                      } else if (note.reminderDateTime != null) {
+                        mode = NoteMode.reminder;
+                      }
+                      
+                      // Open editor
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoteEditorImmersive(
+                            note: note,
+                            mode: mode,
+                          ),
+                        ),
+                      );
+                    } : null,
                     onPin: () async {
                       final provider = Provider.of<NotesProvider>(context, listen: false);
                       final ids = List<int>.from(selectedIds);
@@ -161,7 +192,21 @@ class _SmartHeaderState extends State<SmartHeader> {
                         );
                       }
                     },
-                    onShare: null,
+                    onShare: selectedIds.length == 1 ? () {
+                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                      final noteId = selectedIds.first;
+                      final note = provider.notes.firstWhere((n) => n.id == noteId);
+                      
+                      // Clear selection first to prevent multiple taps
+                      widget.selectedNoteIdsNotifier.value = {};
+                      
+                      // 📤 Use CustomShareSheet widget
+                      CustomShareSheet.show(
+                        context,
+                        '${note.title}\n\n${note.content}',
+                        subject: note.title,
+                      );
+                    } : null,
                   ),
                 ),
               ),
