@@ -37,6 +37,7 @@ import 'package:highlight/languages/dart.dart';
 import 'note_editor/controllers/editor_storage_controller.dart';
 import 'note_editor/controllers/editor_formatting_controller.dart';
 import 'note_editor/controllers/editor_smart_controller.dart';
+import 'note_editor/utils/note_editor_utils.dart';
 
 class NoteEditorImmersive extends StatefulWidget {
   final Note? note;
@@ -110,34 +111,23 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   bool get wantKeepAlive => true;
 
   Color get _backgroundColor {
-    if (!mounted) return Colors.blue; // Safe fallback
+    if (!mounted) return Colors.blue;
     final brightness = Theme.of(context).brightness;
-    return AppColorPalette.palette[_colorIndex].getColor(brightness);
+    return NoteEditorUtils.getBackgroundColor(_colorIndex, brightness);
   }
 
   String get _currentTitle {
-    if (_customTitle != null && _customTitle!.isNotEmpty) {
-      return _customTitle!;
-    }
-    if (widget.mode == NoteMode.checklist ||
-        widget.note?.noteType == 'checklist') {
-      if (_checklistTitle != null && _checklistTitle!.isNotEmpty) {
-        return _checklistTitle!;
-      }
-      return 'Checklist';
-    }
     final text = widget.mode == NoteMode.code
         ? _codeController.text
         : _contentController.text;
-    if (text.isNotEmpty) {
-      final end = text.indexOf('\n');
-      if (end != -1 && end < 40) {
-        return text.substring(0, end);
-      }
-      return text.length > 40 ? "${text.substring(0, 40)}..." : text;
-    }
-
-    return _l10nRef?.newNoteTitle ?? 'New Note'; // Safe fallback
+    
+    return NoteEditorUtils.generateTitle(
+      customTitle: _customTitle,
+      checklistTitle: _checklistTitle,
+      content: text,
+      isChecklist: widget.mode == NoteMode.checklist || widget.note?.noteType == 'checklist',
+      fallback: _l10nRef?.newNoteTitle ?? 'New Note',
+    );
   }
 
   @override
@@ -170,9 +160,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       if (widget.mode == NoteMode.code && widget.note!.noteType.isNotEmpty) {
         // محاولة استخراج اسم اللغة من الامتداد المحفوظ
         String? restoredLanguage = LanguageDetector.getLanguageFromExtension(widget.note!.noteType);
-        
-        // إذا لم تنجح، استخدم القيمة المحفوظة كما هي
-        restoredLanguage ??= _mapNoteTypeToLanguage(widget.note!.noteType);
+        restoredLanguage ??= NoteEditorUtils.mapNoteTypeToLanguage(widget.note!.noteType);
         
         if (restoredLanguage != null) {
           _detectedLanguage = restoredLanguage;
@@ -986,16 +974,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
   }
 
-  /// MEMORY FIX: Cleanup method to release temporary buffers
   void _cleanupMemory() {
-    // Force Flutter to release unused memory by clearing undo history periodically
-    // This prevents memory accumulation during long editing sessions
-    if (widget.mode != NoteMode.checklist) {
-      // Keep only last 20 undo states to limit memory usage
-      // Note: UndoHistoryController doesn't expose history directly,
-      // but disposing and recreating would lose undo capability.
-      // Instead, we rely on Flutter's internal cleanup.
-    }
+    // Memory cleanup handled by Flutter internally
   }
 
 
@@ -1625,33 +1605,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
   }
 
-  String? _mapNoteTypeToLanguage(String noteType) {
-    final languageMap = {
-      'python': 'Python',
-      'javascript': 'JavaScript',
-      'java': 'Java',
-      'cpp': 'C++',
-      'c': 'C',
-      'csharp': 'C#',
-      'php': 'PHP',
-      'ruby': 'Ruby',
-      'go': 'Go',
-      'rust': 'Rust',
-      'kotlin': 'Kotlin',
-      'swift': 'Swift',
-      'typescript': 'TypeScript',
-      'html': 'HTML',
-      'css': 'CSS',
-      'sql': 'SQL',
-      'shell': 'Shell',
-      'dart': 'Dart',
-      'json': 'JSON',
-      'xml': 'XML',
-    };
-    return languageMap[noteType.toLowerCase()];
-  }
-
-  @override
+@override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _autosaveTimer?.cancel();
