@@ -329,9 +329,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       if (widget.mode == NoteMode.checklist || widget.note?.noteType == 'checklist') {
         contentToSave = _contentController.text;
         
-        debugPrint('💾 SAVE: Checklist content length: ${contentToSave.length}');
-        debugPrint('💾 SAVE: Content preview: ${contentToSave.substring(0, contentToSave.length > 100 ? 100 : contentToSave.length)}');
-        
         // ✅ VALIDATION: Check if checklist is truly empty
         if (contentToSave.trim().isEmpty) {
           _isSaving = false;
@@ -411,8 +408,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             widget.note?.isChecklist ?? (widget.mode == NoteMode.checklist),
       );
 
-      // Save using the provider's unified method (silent to prevent rebuild)
-      final newId = await _notesProviderRef!.addOrUpdateNote(noteToSave, silent: true);
+      // Save using the provider's unified method
+      final newId = await _notesProviderRef!.addOrUpdateNote(noteToSave, silent: false);
+      
+      // Force reload to update home screen widgets
+      if (isManualSave) {
+        await _notesProviderRef!.loadNotes();
+      }
 
       // Smart version control
       try {
@@ -1107,7 +1109,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       return Padding(
         padding: EdgeInsets.only(top: 80, bottom: totalBottomSpace),
         child: ChecklistEditor(
-          key: ValueKey('checklist_${widget.note?.id ?? 'new'}'),
           initialContent: _contentController.text,
           backgroundColor: _backgroundColor,
           onUndoRedoControllerCreated: (controller) {
@@ -1116,9 +1117,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           },
           onUndoRedoChanged: _updateChecklistUndoRedo,
           onChanged: (jsonContent) {
+            // 🛑 CRITICAL: Stop if editor is closing to prevent crash
             if (!mounted) return;
-            
-            debugPrint('📥 RECEIVED: Checklist data (${jsonContent.length} chars)');
             
             _contentController.text = jsonContent;
             _isDirty = true;

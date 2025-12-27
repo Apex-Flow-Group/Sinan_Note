@@ -257,11 +257,6 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       'items': realItems.map((e) => e.toJson()).toList(),
     };
     final jsonData = jsonEncode(data);
-    
-    debugPrint('🔍 CHECKLIST: Saving ${realItems.length} items');
-    for (var item in realItems) {
-      debugPrint('  - Item: "${item.text}" (done: ${item.isDone})');
-    }
 
     // Save to history for undo/redo
     if (!_isUndoRedoAction) {
