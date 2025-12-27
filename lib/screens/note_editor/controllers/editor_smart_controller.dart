@@ -1,9 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../../services/smart_analyzer.dart';
 import '../../../services/language_detector.dart';
 import '../../../services/code_executor.dart';
+import '../../../widgets/apex_snackbar.dart';
 
 /// Handles smart features (calculations, code execution, date analysis)
 class EditorSmartController {
@@ -171,5 +173,92 @@ class EditorSmartController {
     };
 
     return langToType[language] ?? 'code';
+  }
+
+  /// Show smart calculation result with snackbar
+  void showSmartCalculationResult(
+    BuildContext context,
+    TextEditingController controller,
+    AppLocalizations l10n,
+  ) {
+    final result = handleSmartCalculation(controller);
+    if (result == null) return;
+
+    if (result['type'] == 'sum') {
+      ApexSnackBar.show(
+        context,
+        '${l10n.approximateSum} ${result['result']} (${l10n.experimental})',
+        type: SnackBarType.success,
+        duration: const Duration(seconds: 2),
+        dismissible: true,
+        opacity: 0.85,
+        aboveToolbar: true,
+      );
+    } else if (result['type'] == 'calculated') {
+      ApexSnackBar.show(
+        context,
+        '${l10n.calculated} (${l10n.experimental})',
+        type: SnackBarType.success,
+        duration: const Duration(seconds: 2),
+        dismissible: true,
+        opacity: 0.85,
+        aboveToolbar: true,
+      );
+    } else if (result['type'] == 'error') {
+      ApexSnackBar.show(
+        context,
+        result['message'] as String,
+        type: SnackBarType.warning,
+        duration: const Duration(seconds: 2),
+        dismissible: true,
+        opacity: 0.85,
+        aboveToolbar: true,
+      );
+    }
+  }
+
+  /// Show code execution dialog
+  Future<void> showCodeExecutionDialog(
+    BuildContext context,
+    String code,
+    String? detectedLanguage,
+  ) async {
+    if (detectedLanguage == null) {
+      ApexSnackBar.show(context, 'Unable to detect language',
+          type: SnackBarType.warning);
+      return;
+    }
+
+    ApexSnackBar.show(context, 'Executing $detectedLanguage code...',
+        type: SnackBarType.info, duration: const Duration(seconds: 1));
+
+    final output = await executeCode(code, detectedLanguage);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.output),
+        content: SingleChildScrollView(
+          child: Text(output,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Handle code export
+  Future<String?> handleCodeExport(String code, String? detectedLanguage) async {
+    final lang = detectedLanguage ?? detectLanguage(code);
+    if (lang == null) return null;
+    return getExtensionForLanguage(lang);
   }
 }

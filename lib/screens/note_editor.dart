@@ -684,96 +684,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
   }
 
-  void _handleSmartCalculation() {
-    final result = _smartController.handleSmartCalculation(_contentController);
-
-    if (result == null) return;
-
-    final l10n = context.l10n;
-
-    if (result['type'] == 'sum') {
-      ApexSnackBar.show(
-        context,
-        '${l10n.approximateSum} ${result['result']} (${l10n.experimental})',
-        type: SnackBarType.success,
-        duration: const Duration(seconds: 2),
-        dismissible: true,
-        opacity: 0.85,
-        aboveToolbar: true,
-      );
-    } else if (result['type'] == 'calculated') {
-      ApexSnackBar.show(
-        context,
-        '${l10n.calculated} (${l10n.experimental})',
-        type: SnackBarType.success,
-        duration: const Duration(seconds: 2),
-        dismissible: true,
-        opacity: 0.85,
-        aboveToolbar: true,
-      );
-    } else if (result['type'] == 'error') {
-      ApexSnackBar.show(
-        context,
-        result['message'] as String,
-        type: SnackBarType.warning,
-        duration: const Duration(seconds: 2),
-        dismissible: true,
-        opacity: 0.85,
-        aboveToolbar: true,
-      );
-    }
-  }
-
-  Future<void> _runCode() async {
-    if (_detectedLanguage == null) {
-      ApexSnackBar.show(context, 'Unable to detect language',
-          type: SnackBarType.warning);
-      return;
-    }
-
-    ApexSnackBar.show(context, 'Executing $_detectedLanguage code...',
-        type: SnackBarType.info, duration: const Duration(seconds: 1));
-
-    final code = widget.mode == NoteMode.code
-        ? _codeController.text
-        : _contentController.text;
-    final output = await _smartController.executeCode(code, _detectedLanguage);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.output),
-        content: SingleChildScrollView(
-          child: Text(output,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(context)!.close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _exportCode() async {
-    final code = widget.mode == NoteMode.code
-        ? _codeController.text
-        : _contentController.text;
-    final detectedLang =
-        _detectedLanguage ?? _smartController.detectLanguage(code);
-
-    if (detectedLang == null) {
-      ApexSnackBar.show(context, 'Unable to detect language',
-          type: SnackBarType.warning);
-      return;
-    }
-
-    final expectedExt = _smartController.getExtensionForLanguage(detectedLang);
-    await _showSmartSaveDialog(expectedExt);
-  }
-
   Future<void> _showSmartSaveDialog(String selectedExtension) async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -1445,7 +1355,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   },
                   onCalculate: () {
                     HapticFeedback.mediumImpact();
-                    _handleSmartCalculation();
+                    _smartController.showSmartCalculationResult(
+                      context,
+                      _contentController,
+                      l10n,
+                    );
                   },
                   onBackgroundColorTap: () {
                     HapticFeedback.mediumImpact();
@@ -1561,8 +1475,31 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                           _contentController, symbol);
                     }
                   },
-                  onRunCode: _detectedLanguage != null ? _runCode : null,
-                  onExportCode: _detectedLanguage != null ? _exportCode : null,
+                  onRunCode: _detectedLanguage != null
+                      ? () => _smartController.showCodeExecutionDialog(
+                            context,
+                            widget.mode == NoteMode.code
+                                ? _codeController.text
+                                : _contentController.text,
+                            _detectedLanguage,
+                          )
+                      : null,
+                  onExportCode: _detectedLanguage != null
+                      ? () async {
+                          final ext = await _smartController.handleCodeExport(
+                            widget.mode == NoteMode.code
+                                ? _codeController.text
+                                : _contentController.text,
+                            _detectedLanguage,
+                          );
+                          if (ext != null) {
+                            await _showSmartSaveDialog(ext);
+                          } else {
+                            ApexSnackBar.show(context, 'Unable to detect language',
+                                type: SnackBarType.warning);
+                          }
+                        }
+                      : null,
                 ),
           ),
         ),
