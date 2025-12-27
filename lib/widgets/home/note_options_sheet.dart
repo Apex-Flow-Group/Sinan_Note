@@ -7,7 +7,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../models/note.dart';
 import '../../services/database_service.dart';
 import '../../screens/note_editor.dart';
-import '../apex_snackbar.dart';
+import '../../services/toast_service.dart';
 import '../custom_share_sheet.dart';
 
 class NoteOptionsSheet {
@@ -57,16 +57,21 @@ class NoteOptionsSheet {
 
                 final newId = await dbService.insertNote(newNote);
                 onNoteChanged();
-                ApexSnackBar.show(
-                  context,
-                  l10n.copyCreated,
-                  type: SnackBarType.success,
-                  actionLabel: l10n.undo,
-                  onAction: () async {
-                    await dbService.deleteNote(newId);
-                    onNoteChanged();
-                  },
-                );
+                
+                if (context.mounted) {
+                  ToastService().showUndoToast(
+                    context: context,
+                    message: l10n.copyCreated,
+                    actionKey: 'copy_note_$newId',
+                    type: ToastType.success,
+                    onExecute: () {},
+                    onUndo: () async {
+                      await dbService.deleteNote(newId);
+                      onNoteChanged();
+                    },
+                    undoLabel: l10n.undo,
+                  );
+                }
               },
             ),
             ListTile(
@@ -89,12 +94,22 @@ class NoteOptionsSheet {
                     final file = File('$result/${note.title}.txt');
                     await file
                         .writeAsString('${note.title}\n\n${note.content}');
-                    ApexSnackBar.show(context, l10n.savedSuccessfully,
-                        type: SnackBarType.success);
+                    if (context.mounted) {
+                      ToastService().showToast(
+                        context: context,
+                        message: l10n.savedSuccessfully,
+                        type: ToastType.success,
+                      );
+                    }
                   }
                 } catch (e) {
-                  ApexSnackBar.show(context, l10n.saveFailed,
-                      type: SnackBarType.error);
+                  if (context.mounted) {
+                    ToastService().showToast(
+                      context: context,
+                      message: l10n.saveFailed,
+                      type: ToastType.error,
+                    );
+                  }
                 }
               },
             ),
@@ -103,18 +118,25 @@ class NoteOptionsSheet {
               title: Text(l10n.archive),
               onTap: () async {
                 Navigator.pop(ctx);
+                
+                // IMMEDIATE: Execute action first (Google Keep style)
                 await dbService.archiveNote(note.id!);
                 onNoteChanged();
-                ApexSnackBar.show(
-                  context,
-                  l10n.movedToArchive,
-                  type: SnackBarType.success,
-                  actionLabel: l10n.undo,
-                  onAction: () async {
-                    await dbService.unarchiveNote(note.id!);
-                    onNoteChanged();
-                  },
-                );
+                
+                if (context.mounted) {
+                  ToastService().showUndoToast(
+                    context: context,
+                    message: l10n.movedToArchive,
+                    actionKey: 'archive_note_${note.id}',
+                    type: ToastType.success,
+                    onExecute: () {},
+                    onUndo: () async {
+                      await dbService.unarchiveNote(note.id!);
+                      onNoteChanged();
+                    },
+                    undoLabel: l10n.undo,
+                  );
+                }
               },
             ),
             ListTile(
@@ -161,24 +183,31 @@ class NoteOptionsSheet {
               onTap: () async {
                 Navigator.pop(ctx);
                 try {
+                  // IMMEDIATE: Execute action first (Google Keep style)
                   await dbService.trashNote(note.id!);
                   onNoteChanged();
+                  
                   if (context.mounted) {
-                    ApexSnackBar.show(
-                      context,
-                      l10n.movedToTrash,
-                      type: SnackBarType.success,
-                      actionLabel: l10n.undo,
-                      onAction: () async {
+                    ToastService().showUndoToast(
+                      context: context,
+                      message: l10n.movedToTrash,
+                      actionKey: 'delete_note_${note.id}',
+                      type: ToastType.info,
+                      onExecute: () {},
+                      onUndo: () async {
                         await dbService.restoreNote(note.id!);
                         onNoteChanged();
                       },
+                      undoLabel: l10n.undo,
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ApexSnackBar.show(context, l10n.deleteFailed,
-                        type: SnackBarType.error);
+                    ToastService().showToast(
+                      context: context,
+                      message: l10n.deleteFailed,
+                      type: ToastType.error,
+                    );
                   }
                 }
               },

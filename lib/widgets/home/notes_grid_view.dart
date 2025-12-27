@@ -52,12 +52,7 @@ class _NotesGridViewState extends State<NotesGridView> {
           note.content.toLowerCase().contains(searchQuery);
     }).toList();
     
-    filtered.sort((a, b) {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return b.updatedAt.compareTo(a.updatedAt);
-    });
-    
+    // OPTIMIZATION: No sorting here - NotesProvider already sorts by (pinned, updatedAt)
     return filtered;
   }
 
@@ -74,54 +69,60 @@ class _NotesGridViewState extends State<NotesGridView> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: widget.searchController,
-      builder: (context, _) {
-        return Selector<NotesProvider, List<Note>>(
-          selector: (_, provider) => _filterNotes(provider.notes),
-          shouldRebuild: (previous, next) => previous != next,
-          builder: (context, filteredNotes, _) {
-            if (filteredNotes.isEmpty) {
-              return SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.note_add_outlined, size: 80, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text('No notes', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                    ],
+    return ValueListenableBuilder<Set<int>>(
+      valueListenable: widget.selectedNoteIdsNotifier,
+      builder: (context, selectedIds, _) {
+        return ListenableBuilder(
+          listenable: widget.searchController,
+          builder: (context, _) {
+            return Selector<NotesProvider, List<Note>>(
+              selector: (_, provider) => _filterNotes(provider.notes),
+              shouldRebuild: (previous, next) => true,
+              builder: (context, filteredNotes, _) {
+                if (filteredNotes.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.note_add_outlined, size: 80, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text('No notes', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (widget.viewType == ViewType.grid) {
+                  final fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
+                  final bottomPadding = fabBottom + 56 + 8;
+                  return SliverPadding(
+                    padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
+                    sliver: SliverMasonryGrid.count(
+                      key: const PageStorageKey('notes_masonry_grid'),
+                      crossAxisCount: MediaQuery.of(context).size.width >= 1200 ? 4 : MediaQuery.of(context).size.width >= 600 ? 3 : 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      childCount: filteredNotes.length,
+                      itemBuilder: (context, index) => _buildNoteCard(filteredNotes[index], selectedIds, 'home_grid'),
+                    ),
+                  );
+                }
+
+                final fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
+                final bottomPadding = fabBottom + 56 + 8;
+                return SliverPadding(
+                  padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildNoteCard(filteredNotes[index], selectedIds, 'home_list'),
+                      childCount: filteredNotes.length,
+                    ),
                   ),
-                ),
-              );
-            }
-
-            if (widget.viewType == ViewType.grid) {
-              final fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
-              final bottomPadding = fabBottom + 56 + 8;
-              return SliverPadding(
-                padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
-                sliver: SliverMasonryGrid.count(
-                  crossAxisCount: MediaQuery.of(context).size.width >= 1200 ? 4 : MediaQuery.of(context).size.width >= 600 ? 3 : 2,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childCount: filteredNotes.length,
-                  itemBuilder: (context, index) => _buildNoteCard(filteredNotes[index], 'home_grid'),
-                ),
-              );
-            }
-
-            final fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
-            final bottomPadding = fabBottom + 56 + 8;
-            return SliverPadding(
-              padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildNoteCard(filteredNotes[index], 'home_list'),
-                  childCount: filteredNotes.length,
-                ),
-              ),
+                );
+              },
             );
           },
         );
@@ -129,7 +130,7 @@ class _NotesGridViewState extends State<NotesGridView> {
     );
   }
 
-  Widget _buildNoteCard(Note note, String source) {
+  Widget _buildNoteCard(Note note, Set<int> selectedIds, String source) {
     return RepaintBoundary(
       child: NoteCardWidget(
         key: ValueKey(note.id),
@@ -137,19 +138,25 @@ class _NotesGridViewState extends State<NotesGridView> {
         viewType: widget.viewType,
         closeAllSlidables: _closeAllSlidables,
         onNoteChanged: () => setState(() {}),
-        isSelected: widget.selectedNoteIdsNotifier.value.contains(note.id),
-        selectionMode: widget.selectedNoteIdsNotifier.value.isNotEmpty,
+        isSelected: selectedIds.contains(note.id),
+        selectionMode: selectedIds.isNotEmpty,
         source: source,
         onLongPress: () {
-          widget.selectedNoteIdsNotifier.value = {...widget.selectedNoteIdsNotifier.value, note.id!};
+          // Long Press ONLY starts selection mode
+          if (selectedIds.isNotEmpty) return; // Already selecting - ignore
+          widget.selectedNoteIdsNotifier.value = {note.id!};
         },
         onTap: () {
-          if (widget.selectedNoteIdsNotifier.value.isNotEmpty) {
-            final newSet = Set<int>.from(widget.selectedNoteIdsNotifier.value);
+          // Tap toggles selection when in selection mode
+          debugPrint('📱 onTap: note.id=${note.id}, selectionMode=${selectedIds.isNotEmpty}, currentSelection=$selectedIds');
+          if (selectedIds.isNotEmpty) {
+            final newSet = Set<int>.from(selectedIds);
             if (newSet.contains(note.id)) {
               newSet.remove(note.id);
+              debugPrint('➖ Removed ${note.id}, newSet=$newSet');
             } else {
               newSet.add(note.id!);
+              debugPrint('➕ Added ${note.id}, newSet=$newSet');
             }
             widget.selectedNoteIdsNotifier.value = newSet;
           }

@@ -46,6 +46,45 @@ class Note {
     return parts.length == 2 && parts[0].length >= 16;
   }
 
+  /// Immutable copy with updated fields
+  Note copyWith({
+    int? id,
+    String? title,
+    String? content,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? colorIndex,
+    bool? isArchived,
+    bool? isTrashed,
+    DateTime? reminderDateTime,
+    bool? isLocked,
+    String? noteType,
+    String? recurrenceRule,
+    bool? isCompleted,
+    bool? isProfessional,
+    bool? isPinned,
+    bool? isChecklist,
+  }) {
+    return Note(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      colorIndex: colorIndex ?? this.colorIndex,
+      isArchived: isArchived ?? this.isArchived,
+      isTrashed: isTrashed ?? this.isTrashed,
+      reminderDateTime: reminderDateTime ?? this.reminderDateTime,
+      isLocked: isLocked ?? this.isLocked,
+      noteType: noteType ?? this.noteType,
+      recurrenceRule: recurrenceRule ?? this.recurrenceRule,
+      isCompleted: isCompleted ?? this.isCompleted,
+      isProfessional: isProfessional ?? this.isProfessional,
+      isPinned: isPinned ?? this.isPinned,
+      isChecklist: isChecklist ?? this.isChecklist,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

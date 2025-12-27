@@ -66,8 +66,34 @@ class _SmartHeaderState extends State<SmartHeader> {
                     onRename: null,
                     onPin: () async {
                       final provider = Provider.of<NotesProvider>(context, listen: false);
-                      final count = selectedIds.length;
-                      final selectedNotes = selectedIds.map((id) => provider.notes.firstWhere((n) => n.id == id)).toList();
+                      final ids = List<int>.from(selectedIds);
+                      final count = ids.length;
+                      final notesToRestore = <Note>[];
+                      
+                      // IMMEDIATE: Execute action first (Google Keep style)
+                      for (final id in ids) {
+                        final note = provider.notes.firstWhere((n) => n.id == id);
+                        notesToRestore.add(note);
+                        final updatedNote = Note(
+                          id: note.id,
+                          title: note.title,
+                          content: note.content,
+                          createdAt: note.createdAt,
+                          updatedAt: DateTime.now(),
+                          colorIndex: note.colorIndex,
+                          isArchived: note.isArchived,
+                          isTrashed: note.isTrashed,
+                          reminderDateTime: note.reminderDateTime,
+                          isLocked: note.isLocked,
+                          noteType: note.noteType,
+                          recurrenceRule: note.recurrenceRule,
+                          isCompleted: note.isCompleted,
+                          isProfessional: note.isProfessional,
+                          isPinned: !note.isPinned,
+                          isChecklist: note.isChecklist,
+                        );
+                        await provider.updateNote(updatedNote);
+                      }
                       
                       widget.selectedNoteIdsNotifier.value = {};
                       
@@ -75,77 +101,63 @@ class _SmartHeaderState extends State<SmartHeader> {
                         ToastService().showUndoToast(
                           context: context,
                           message: '$count ${context.l10n.notesPinned}',
-                          actionKey: 'pin_notes',
-                          onExecute: () async {
-                            for (final note in selectedNotes) {
-                              final updatedNote = Note(
-                                id: note.id,
-                                title: note.title,
-                                content: note.content,
-                                createdAt: note.createdAt,
-                                updatedAt: DateTime.now(),
-                                colorIndex: note.colorIndex,
-                                isArchived: note.isArchived,
-                                isTrashed: note.isTrashed,
-                                reminderDateTime: note.reminderDateTime,
-                                isLocked: note.isLocked,
-                                noteType: note.noteType,
-                                recurrenceRule: note.recurrenceRule,
-                                isCompleted: note.isCompleted,
-                                isProfessional: note.isProfessional,
-                                isPinned: !note.isPinned,
-                                isChecklist: note.isChecklist,
-                              );
-                              await provider.updateNote(updatedNote);
+                          actionKey: 'bulk_pin',
+                          type: ToastType.success,
+                          onExecute: () {}, // Empty - action already executed
+                          onUndo: () async {
+                            for (final note in notesToRestore) {
+                              await provider.updateNote(note);
                             }
                           },
-                          onUndo: () {},
                           undoLabel: context.l10n.undo,
                         );
                       }
                     },
                     onArchive: () async {
                       final provider = Provider.of<NotesProvider>(context, listen: false);
-                      final count = selectedIds.length;
-                      final ids = selectedIds.toList();
+                      final ids = List<int>.from(selectedIds);
+                      final count = ids.length;
                       
+                      // IMMEDIATE: Execute batch action
+                      await provider.archiveNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
                       
                       if (context.mounted) {
                         ToastService().showUndoToast(
                           context: context,
                           message: '$count ${context.l10n.notesArchived}',
-                          actionKey: 'archive_notes',
-                          onExecute: () async {
-                            for (final id in ids) {
-                              await provider.archiveNote(id);
-                            }
+                          actionKey: 'bulk_archive',
+                          type: ToastType.success,
+                          onExecute: () {},
+                          onUndo: () async {
+                            await provider.unarchiveNotes(ids);
                           },
-                          onUndo: () {},
                           undoLabel: context.l10n.undo,
                         );
                       }
                     },
                     onDelete: () async {
                       final provider = Provider.of<NotesProvider>(context, listen: false);
-                      final count = selectedIds.length;
-                      final ids = selectedIds.toList();
+                      final ids = List<int>.from(selectedIds);
+                      final count = ids.length;
                       
+                      debugPrint('🎯 onDelete: selectedIds=$selectedIds, count=$count');
+                      
+                      // IMMEDIATE: Execute batch action
+                      await provider.trashNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
                       
                       if (context.mounted) {
                         ToastService().showUndoToast(
                           context: context,
                           message: '$count ${context.l10n.notesDeleted}',
-                          actionKey: 'delete_notes',
-                          onExecute: () async {
-                            for (final id in ids) {
-                              await provider.trashNote(id);
-                            }
+                          actionKey: 'bulk_delete',
+                          type: ToastType.info,
+                          onExecute: () {},
+                          onUndo: () async {
+                            await provider.restoreNotes(ids);
                           },
-                          onUndo: () {},
                           undoLabel: context.l10n.undo,
-                          type: ToastType.warning,
                         );
                       }
                     },

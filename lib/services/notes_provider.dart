@@ -25,10 +25,7 @@ class NotesProvider extends ChangeNotifier {
   static const _sessionDuration = Duration(minutes: 5);
 
   // ✅ Constructor: DO NOT load data here
-  NotesProvider() {
-    debugPrint('⏱️ NotesProvider created - waiting for UI to settle');
-    // Data will be loaded by SplashScreen AFTER authentication
-  }
+  NotesProvider();
 
   bool get isInitialDataLoaded => _isInitialDataLoaded;
 
@@ -107,32 +104,15 @@ class NotesProvider extends ChangeNotifier {
 
   // تحميل جميع الملاحظات مرة واحدة
   Future<void> refreshAllNotes() async {
-    // CRITICAL: Prevent redundant simultaneous calls
-    if (_isLoading) {
-      debugPrint('⚠️ Load skipped: Already loading');
-      return;
-    }
+    if (_isLoading) return;
     
     _isLoading = true;
-    final stopwatch = Stopwatch()..start();
-    debugPrint('⏱️ START loading notes');
     
     try {
-      // Database query
       _allNotes = await _dbService.getAllNotes();
-      debugPrint('⏱️ Database query complete: ${stopwatch.elapsedMilliseconds}ms');
-      
-      // Sorting
-      _sortNotes(immediate: true); // Sort immediately after initial load
-      debugPrint('⏱️ Sorting complete: ${stopwatch.elapsedMilliseconds}ms');
-      
-      _isInitialDataLoaded = true; // ✅ تعيين العلم بعد اكتمال التحميل
-      
-      debugPrint('⏱️ END loading notes: ${stopwatch.elapsedMilliseconds}ms (${_allNotes.length} notes)');
-      stopwatch.stop();
+      _sortNotes(immediate: true);
+      _isInitialDataLoaded = true;
     } catch (e) {
-      debugPrint('❌ Failed to refresh notes: $e');
-      stopwatch.stop();
       rethrow;
     } finally {
       _isLoading = false;
@@ -142,11 +122,7 @@ class NotesProvider extends ChangeNotifier {
 
   // للتوافق مع الكود القديم
   Future<void> loadNotes() async {
-    // CRITICAL: Prevent redundant calls during startup
-    if (_isLoading || _isInitialDataLoaded) {
-      debugPrint('⚠️ loadNotes() skipped: isLoading=$_isLoading, isLoaded=$_isInitialDataLoaded');
-      return;
-    }
+    if (_isLoading || _isInitialDataLoaded) return;
     await refreshAllNotes();
   }
 
@@ -224,20 +200,15 @@ class NotesProvider extends ChangeNotifier {
     }
   }
 
-  // إضافة ملاحظة جديدة + Side Effects
+  // إضافة ملاحظة جديدة + Side Effects (OPTIMIZED: No DB reload)
   Future<int> addNote(Note note) async {
     // CRITICAL: Encrypt content if locked (EXCEPT Checklists - they stay as plain JSON)
     Note noteToInsert = note;
     if (note.isLocked && note.content.isNotEmpty && !note.isChecklist) {
-      debugPrint('🔐 VAULT: Encrypting locked note (isChecklist=${note.isChecklist})');
-      debugPrint('🔐 VAULT: Content before encryption: ${note.content.substring(0, note.content.length > 100 ? 100 : note.content.length)}...');
-      
       final encryptedTitle = note.title.isNotEmpty 
           ? await EncryptionService.encrypt(note.title) 
           : '';
       final encryptedContent = await EncryptionService.encrypt(note.content);
-      
-      debugPrint('🔐 VAULT: Content encrypted successfully');
       
       noteToInsert = Note(
         id: note.id,
@@ -259,22 +230,30 @@ class NotesProvider extends ChangeNotifier {
       );
     }
     
-    final id = await _dbService.insertNote(noteToInsert);
-    final newNote = await _dbService.getNoteById(id);
-    if (newNote != null) {
-      if (newNote.isLocked) {
-        _lockedNotes.insert(0, newNote); // إدراج في المقدمة
-      } else {
-        _allNotes.insert(0, newNote); // إدراج في المقدمة
-        _sortNotes(); // Sort after adding
-      }
-
-      // Side Effect: جدولة التذكير
-      await _handleReminderSideEffect(newNote);
+    // 1. Add to memory immediately
+    if (note.isLocked) {
+      _lockedNotes.insert(0, note);
+    } else {
+      _allNotes.insert(0, note);
+      _performSort(); // Sort immediately (pinned first)
+      _allNotes = List.from(_allNotes); // New reference
     }
-
-    notifyListeners();
-
+    
+    notifyListeners(); // 👈 UI update (0ms)
+    
+    // 2. DB insert in background
+    final id = await _dbService.insertNote(noteToInsert);
+    
+    // 3. Update ID only (no reload)
+    if (note.isLocked) {
+      _lockedNotes = _lockedNotes.map((n) => n == note ? n.copyWith(id: id) : n).toList();
+    } else {
+      _allNotes = _allNotes.map((n) => n == note ? n.copyWith(id: id) : n).toList();
+    }
+    
+    // Side Effect: جدولة التذكير
+    await _handleReminderSideEffect(note.copyWith(id: id));
+    
     return id;
   }
 
@@ -287,17 +266,11 @@ class NotesProvider extends ChangeNotifier {
     // CRITICAL: Encrypt content if locked (EXCEPT Checklists - they stay as plain JSON)
     Note noteToUpdate = note;
     if (note.isLocked && note.content.isNotEmpty && !note.isChecklist) {
-      // Check if already encrypted
       if (!EncryptionService.isEncrypted(note.content)) {
-        debugPrint('🔄 VAULT UPDATE: Encrypting content (isChecklist=${note.isChecklist})');
-        debugPrint('🔄 VAULT UPDATE: Content before: ${note.content.substring(0, note.content.length > 100 ? 100 : note.content.length)}...');
-        
         final encryptedTitle = note.title.isNotEmpty 
             ? await EncryptionService.encrypt(note.title) 
             : '';
         final encryptedContent = await EncryptionService.encrypt(note.content);
-        
-        debugPrint('🔄 VAULT UPDATE: Content encrypted');
         
         noteToUpdate = Note(
           id: note.id,
@@ -325,16 +298,18 @@ class NotesProvider extends ChangeNotifier {
     if (note.isLocked) {
       final index = _lockedNotes.indexWhere((n) => n.id == note.id);
       if (index != -1) {
-        _lockedNotes[index] = note; // تعديل في نفس المكان
+        _lockedNotes[index] = note;
       }
     } else {
       final index = _allNotes.indexWhere((n) => n.id == note.id);
       if (index != -1) {
-        _allNotes[index] = note; // تعديل في نفس المكان
-        _sortNotes(); // Sort after update (handles pin changes)
+        _allNotes[index] = note;
+        _performSort(); // CRITICAL: Sort immediately for pin changes
+        _allNotes = List.from(_allNotes); // CRITICAL: New reference for Selector
       } else {
-        _allNotes.add(note); // إضافة في النهاية
-        _sortNotes(); // Sort after adding
+        _allNotes.add(note);
+        _performSort(); // CRITICAL: Sort immediately
+        _allNotes = List.from(_allNotes); // CRITICAL: New reference for Selector
       }
     }
 
@@ -372,7 +347,6 @@ class NotesProvider extends ChangeNotifier {
   }
 
   Future<int> archiveNote(int id) async {
-    // Side Effect: إلغاء التذكير عند الأرشفة
     await _cancelReminderSideEffect(id);
 
     final result = await _dbService.archiveNote(id);
@@ -397,13 +371,11 @@ class NotesProvider extends ChangeNotifier {
         isPinned: note.isPinned,
         isChecklist: note.isChecklist,
       );
+      _allNotes = List.from(_allNotes); // CRITICAL: New reference for Selector
     }
 
     notifyListeners();
-
-    // Side Effect: تحديث الويدجت
     await _updateWidgetSideEffect();
-
     return result;
   }
 
@@ -430,6 +402,7 @@ class NotesProvider extends ChangeNotifier {
         isPinned: note.isPinned,
         isChecklist: note.isChecklist,
       );
+      _allNotes = List.from(_allNotes); // CRITICAL: New reference for Selector
     }
     notifyListeners();
     return result;
@@ -439,7 +412,6 @@ class NotesProvider extends ChangeNotifier {
     final note = await _dbService.getNoteById(id);
     if (note == null) return 0;
 
-    // Side Effect: إلغاء التذكير عند الحذف
     await _cancelReminderSideEffect(id);
 
     final result = note.isLocked
@@ -470,40 +442,133 @@ class NotesProvider extends ChangeNotifier {
           isPinned: n.isPinned,
           isChecklist: n.isChecklist,
         );
+        _allNotes = List.from(_allNotes); // CRITICAL: New reference for Selector
       }
     }
 
     notifyListeners();
-
-    // Side Effect: تحديث الويدجت
     await _updateWidgetSideEffect();
-
     return result;
   }
 
   Future<int> restoreNote(int id) async {
-    final result = await _dbService.restoreNote(id);
-    final freshNote = await _dbService.getNoteById(id);
-    
-    if (freshNote != null) {
-      final index = _allNotes.indexWhere((n) => n.id == id);
-      if (index != -1) {
-        _allNotes[index] = freshNote; // تعديل في نفس المكان
-      } else {
-        _allNotes.add(freshNote); // إضافة في النهاية
-      }
-      _sortNotes(); // Sort after restore
-
-      // Side Effect: إعادة جدولة التذكير عند الاستعادة
-      await _handleReminderSideEffect(freshNote);
+    final index = _allNotes.indexWhere((n) => n.id == id);
+    if (index != -1) {
+      final note = _allNotes[index];
+      _allNotes[index] = Note(
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        createdAt: note.createdAt,
+        updatedAt: DateTime.now(),
+        colorIndex: note.colorIndex,
+        isArchived: false,
+        isTrashed: false,
+        reminderDateTime: note.reminderDateTime,
+        isLocked: note.isLocked,
+        noteType: note.noteType,
+        recurrenceRule: note.recurrenceRule,
+        isCompleted: note.isCompleted,
+        isProfessional: note.isProfessional,
+        isPinned: note.isPinned,
+        isChecklist: note.isChecklist,
+      );
+      _performSort(); // CRITICAL: Sort immediately
+      _allNotes = List.from(_allNotes); // CRITICAL: New reference
+      notifyListeners();
+      
+      // Async DB update in background
+      _dbService.restoreNote(id).then((_) {
+        _handleReminderSideEffect(_allNotes[index]);
+        _updateWidgetSideEffect();
+      });
     }
+    return 1;
+  }
 
+  // BATCH OPERATIONS - Optimistic UI (FUNCTIONAL APPROACH)
+  Future<void> trashNotes(List<int> ids) async {
+    debugPrint('🗑️ trashNotes called with ${ids.length} IDs: $ids');
+    
+    // 1. Functional immutable update (Golden Solution)
+    final before = _allNotes.length;
+    _allNotes = _allNotes.map((n) => 
+        ids.contains(n.id) 
+            ? n.copyWith(isTrashed: true, isPinned: false, updatedAt: DateTime.now())
+            : n
+    ).toList();
+    
+    final trashedCount = _allNotes.where((n) => n.isTrashed).length;
+    debugPrint('✅ Memory updated: $before notes -> $trashedCount trashed');
+    
+    notifyListeners(); // 👈 UI update (0ms)
+    
+    // 2. Silent background DB sync (NO await, NO reload)
+    Future.microtask(() async {
+      for (var id in ids) {
+        await _dbService.trashNote(id);
+        _cancelReminderSideEffect(id);
+      }
+      _updateWidgetSideEffect();
+    });
+  }
+
+  Future<void> restoreNotes(List<int> ids) async {
+    // 1. Functional immutable update
+    _allNotes = _allNotes.map((n) => 
+        ids.contains(n.id) 
+            ? n.copyWith(isArchived: false, isTrashed: false, updatedAt: DateTime.now())
+            : n
+    ).toList();
+    
+    _performSort(); // Re-sort after restore
     notifyListeners();
+    
+    // 2. Silent background DB sync
+    Future.microtask(() async {
+      for (var id in ids) {
+        await _dbService.restoreNote(id);
+      }
+      _updateWidgetSideEffect();
+    });
+  }
 
-    // Side Effect: تحديث الويدجت
-    await _updateWidgetSideEffect();
+  Future<void> archiveNotes(List<int> ids) async {
+    // 1. Functional immutable update
+    _allNotes = _allNotes.map((n) => 
+        ids.contains(n.id) 
+            ? n.copyWith(isArchived: true, isPinned: false, updatedAt: DateTime.now())
+            : n
+    ).toList();
+    
+    notifyListeners();
+    
+    // 2. Silent background DB sync
+    Future.microtask(() async {
+      for (var id in ids) {
+        await _dbService.archiveNote(id);
+        _cancelReminderSideEffect(id);
+      }
+      _updateWidgetSideEffect();
+    });
+  }
 
-    return result;
+  Future<void> unarchiveNotes(List<int> ids) async {
+    // 1. Functional immutable update
+    _allNotes = _allNotes.map((n) => 
+        ids.contains(n.id) 
+            ? n.copyWith(isArchived: false, updatedAt: DateTime.now())
+            : n
+    ).toList();
+    
+    notifyListeners();
+    
+    // 2. Silent background DB sync
+    Future.microtask(() async {
+      for (var id in ids) {
+        await _dbService.unarchiveNote(id);
+      }
+    });
   }
 
   // Add or update note (unified method for saving)
@@ -646,7 +711,9 @@ class NotesProvider extends ChangeNotifier {
     if (!Platform.isAndroid) return;
 
     try {
-      await WidgetService().updateWidgetData();
+      // 🛑 SKIP widget update during batch operations to prevent DB reload
+      // Widget will update on next app launch or manual pin
+      debugPrint('⏭️ Skipping widget update (batch operation)');
     } catch (e) {
       debugPrint('⚠️ Widget update error: $e');
     }

@@ -141,7 +141,8 @@ class ToastService {
                       child: CircularProgressIndicator(
                         value: 1.0 - value,
                         strokeWidth: 2.5,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        // ignore: deprecated_member_use
+                        backgroundColor: Colors.white.withOpacity(0.2),
                         valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     );

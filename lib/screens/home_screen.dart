@@ -48,12 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _selectedNoteIdsNotifier = ValueNotifier({});
     _loadViewType();
     
-    // ⏳ BREATHING ROOM: Wait 300ms for transition animation to complete
-    // Then, and only then, render the heavy Grid
+    // CRITICAL: 300ms delay prevents GPU memory crash
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        setState(() => _isReady = true);
-      }
+      if (mounted) setState(() => _isReady = true);
     });
     
     _searchController.addListener(_onSearchChanged);
@@ -169,7 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('⏱️ HOME BUILD START (Should appear only ONCE)');
     final l10n = context.l10n;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -240,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                           isSearchActive: _isSearchActive,
                         ),
-                        // ✅ Deferred rendering: Show Grid only after first frame
+                        // Deferred rendering: Show Grid only after 300ms delay
                         if (_isReady)
                           NotesGridView(
                             viewType: _viewType,

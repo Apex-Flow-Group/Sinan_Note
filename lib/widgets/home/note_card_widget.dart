@@ -691,7 +691,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
           final noteId = widget.note.id!;
           final noteTitle = widget.note.title;
           
+          // IMMEDIATE: Execute action first (Google Keep style)
           await notesProvider.trashNote(noteId);
+          widget.onNoteChanged(); // Update UI immediately
           
           if (!context.mounted) return;
           
@@ -700,9 +702,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toTrash}',
             actionKey: 'swipe_delete_$noteId',
             type: ToastType.info,
-            onExecute: () {},
+            onExecute: () {}, // Empty - action already executed
             onUndo: () async {
               await notesProvider.restoreNote(noteId);
+              widget.onNoteChanged(); // Update UI on undo
             },
             undoLabel: l10n.undo,
           );
@@ -717,7 +720,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
           final noteId = widget.note.id!;
           final noteTitle = widget.note.title;
           
+          // IMMEDIATE: Execute action first (Google Keep style)
           await notesProvider.archiveNote(noteId);
+          widget.onNoteChanged(); // Update UI immediately
           
           if (!context.mounted) return;
           
@@ -726,9 +731,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toArchive}',
             actionKey: 'swipe_archive_$noteId',
             type: ToastType.success,
-            onExecute: () {},
+            onExecute: () {}, // Empty - action already executed
             onUndo: () async {
               await notesProvider.unarchiveNote(noteId);
+              widget.onNoteChanged(); // Update UI on undo
             },
             undoLabel: l10n.undo,
           );

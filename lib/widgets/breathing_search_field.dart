@@ -118,14 +118,15 @@ class _BreathingSearchFieldState extends State<BreathingSearchField>
   }
 
   void _triggerAnimation() async {
+    if (!mounted) return;
     _hasTriggered = true;
 
     for (int i = 0; i < 3; i++) {
-      if (!mounted) break;
-      if (mounted) await _controller.forward();
-      if (!mounted) break;
-      if (mounted) await _controller.reverse();
-      if (!mounted) break;
+      if (!mounted) return;
+      await _controller.forward();
+      if (!mounted) return;
+      await _controller.reverse();
+      if (!mounted) return;
       await Future.delayed(const Duration(milliseconds: 200));
     }
 

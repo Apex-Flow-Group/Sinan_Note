@@ -38,11 +38,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // ✅ THE BOUNCER: Load data AFTER authentication, BEFORE navigation
-    debugPrint('⏱️ BOUNCER: UI settled, loading data now...');
+    // Load data AFTER authentication, BEFORE navigation
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     await notesProvider.loadNotes();
-    debugPrint('⏱️ BOUNCER: Data ready, navigating to home...');
 
     if (!mounted) return;
 
