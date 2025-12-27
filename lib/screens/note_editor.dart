@@ -550,6 +550,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             final color = adaptiveColor.getColor(brightness);
             
             return GestureDetector(
+              key: ValueKey('color_$index'),
               onTap: () async {
                 setState(() {
                   _colorIndex = index;
