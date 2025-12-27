@@ -469,6 +469,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     final focusNode = _focusNodes[item.id]!;
 
     return ChecklistItemWidget(
+      key: ValueKey(item.id),
       item: item,
       index: index,
       controller: controller,

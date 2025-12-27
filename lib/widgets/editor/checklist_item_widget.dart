@@ -45,7 +45,6 @@ class ChecklistItemWidget extends StatelessWidget {
     final isDone = item.isDone;
 
     return Container(
-      key: ValueKey(item.id),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
         color: backgroundColor.withValues(alpha: 0.3),
