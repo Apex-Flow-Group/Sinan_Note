@@ -329,6 +329,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       if (widget.mode == NoteMode.checklist || widget.note?.noteType == 'checklist') {
         contentToSave = _contentController.text;
         
+        debugPrint('💾 SAVE: Checklist content length: ${contentToSave.length}');
+        debugPrint('💾 SAVE: Content preview: ${contentToSave.substring(0, contentToSave.length > 100 ? 100 : contentToSave.length)}');
+        
         // ✅ VALIDATION: Check if checklist is truly empty
         if (contentToSave.trim().isEmpty) {
           _isSaving = false;
