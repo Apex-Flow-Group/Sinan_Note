@@ -1280,7 +1280,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get codeEditorMenu => 'Code Editor';
 
   @override
-  String get richNoteMenu => 'Formatted Note';
+  String get richNoteMenu => 'Rich Note';
 
   @override
   String get simpleNoteMenu => 'Simple Note';
@@ -1376,4 +1376,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agreeToTerms => 'I agree to the Terms of Service';
+
+  @override
+  String get widgetPinned => 'Widget pinned:';
+
+  @override
+  String get note => 'Note';
 }

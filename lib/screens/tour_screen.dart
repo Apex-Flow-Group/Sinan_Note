@@ -260,6 +260,10 @@ class _TourScreenState extends State<TourScreen> {
 
   Widget _buildPage7(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final systemLocale = View.of(context).platformDispatcher.locale.languageCode;
+    final currentLang = settings.languageCode == 'system' ? systemLocale : settings.languageCode;
+    final isArabic = currentLang == 'ar';
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -291,14 +295,30 @@ class _TourScreenState extends State<TourScreen> {
                 onChanged: (val) => setState(() => _isAgreed = val ?? false),
                 activeColor: const Color(0xFFFFD700),
               ),
-              GestureDetector(
-                onTap: _openTerms,
-                child: Text(
-                  l10n.agreeToTerms,
-                  style: const TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
+              Flexible(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: isArabic ? 'أوافق على ' : 'I agree to the ',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      WidgetSpan(
+                        child: GestureDetector(
+                          onTap: _openTerms,
+                          child: Text(
+                            isArabic ? 'شروط الخدمة' : 'Terms of Service',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
               ),
             ],

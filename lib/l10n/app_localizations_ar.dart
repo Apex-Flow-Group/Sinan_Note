@@ -1372,4 +1372,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agreeToTerms => 'أوافق على شروط الخدمة';
+
+  @override
+  String get widgetPinned => 'تم تثبيت الويدجت:';
+
+  @override
+  String get note => 'ملاحظة';
 }

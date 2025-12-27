@@ -244,14 +244,21 @@ class SettingsProvider with ChangeNotifier {
   void _updateSecurityController() {
     final effectiveDelaySeconds = _lockDelayEnabled ? _lockDelaySeconds : 0;
     
-    debugPrint('🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground');
-    
-    final config = SecurityConfig(
+    final newConfig = SecurityConfig(
       lockEnabled: _isAppLockEnabled,
       lockDelaySeconds: effectiveDelaySeconds,
       privacyBlurEnabled: _hideContentInBackground,
     );
     
-    SecurityController().updateConfig(config);
+    // Skip update if config hasn't changed
+    final controller = SecurityController();
+    if (controller.config.lockEnabled == newConfig.lockEnabled &&
+        controller.config.lockDelaySeconds == newConfig.lockDelaySeconds &&
+        controller.config.privacyBlurEnabled == newConfig.privacyBlurEnabled) {
+      return; // No change, skip update
+    }
+    
+    debugPrint('🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground');
+    controller.updateConfig(newConfig);
   }
 }

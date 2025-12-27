@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/widgets.dart';
 import '../models/note.dart';
@@ -16,11 +17,18 @@ class NotesProvider extends ChangeNotifier {
   List<Note> _allNotes = [];
   List<Note> _lockedNotes = []; // SECURITY: Separate session for locked notes
   bool _isInitialDataLoaded = false; // ✅ تتبع جاهزية البيانات الأولية
+  bool _isLoading = false; // CRITICAL: Loading lock to prevent redundant calls
 
   // VAULT SESSION: Temporary unlock session
   bool _isVaultUnlocked = false;
   DateTime? _vaultUnlockedAt;
   static const _sessionDuration = Duration(minutes: 5);
+
+  // ✅ Constructor: DO NOT load data here
+  NotesProvider() {
+    debugPrint('⏱️ NotesProvider created - waiting for UI to settle');
+    // Data will be loaded by SplashScreen AFTER authentication
+  }
 
   bool get isInitialDataLoaded => _isInitialDataLoaded;
 
@@ -47,10 +55,12 @@ class NotesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // SMART GETTERS: الفلترة في الذاكرة
-  List<Note> get activeNotes => _allNotes
-      .where((n) => !n.isLocked && !n.isTrashed && !n.isArchived)
-      .toList();
+  // SMART GETTERS: الفلترة في الذاكرة (NO SORTING - stability for MasonryGrid)
+  List<Note> get activeNotes {
+    return _allNotes
+        .where((n) => !n.isLocked && !n.isTrashed && !n.isArchived)
+        .toList();
+  }
 
   List<Note> get notes => activeNotes; // للتوافق مع الكود القديم
 
@@ -71,20 +81,72 @@ class NotesProvider extends ChangeNotifier {
 
   List<Note> get lockedNotes => _lockedNotes; // SECURITY: Isolated access
 
+  // WRITE-TIME SORTING: Sort _allNotes when data changes (not on read)
+  // OPTIMIZATION: Debounced to prevent multiple sorts in quick succession
+  Timer? _sortDebounce;
+  void _sortNotes({bool immediate = false}) {
+    if (immediate) {
+      _performSort();
+      return;
+    }
+    
+    // Debounce: Only sort once after multiple rapid changes
+    _sortDebounce?.cancel();
+    _sortDebounce = Timer(const Duration(milliseconds: 50), _performSort);
+  }
+  
+  void _performSort() {
+    _allNotes.sort((a, b) {
+      // 1. Pinned notes first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      // 2. Newest first (by updatedAt)
+      return b.updatedAt.compareTo(a.updatedAt);
+    });
+  }
+
   // تحميل جميع الملاحظات مرة واحدة
   Future<void> refreshAllNotes() async {
+    // CRITICAL: Prevent redundant simultaneous calls
+    if (_isLoading) {
+      debugPrint('⚠️ Load skipped: Already loading');
+      return;
+    }
+    
+    _isLoading = true;
+    final stopwatch = Stopwatch()..start();
+    debugPrint('⏱️ START loading notes');
+    
     try {
+      // Database query
       _allNotes = await _dbService.getAllNotes();
+      debugPrint('⏱️ Database query complete: ${stopwatch.elapsedMilliseconds}ms');
+      
+      // Sorting
+      _sortNotes(immediate: true); // Sort immediately after initial load
+      debugPrint('⏱️ Sorting complete: ${stopwatch.elapsedMilliseconds}ms');
+      
       _isInitialDataLoaded = true; // ✅ تعيين العلم بعد اكتمال التحميل
-      notifyListeners();
+      
+      debugPrint('⏱️ END loading notes: ${stopwatch.elapsedMilliseconds}ms (${_allNotes.length} notes)');
+      stopwatch.stop();
     } catch (e) {
       debugPrint('❌ Failed to refresh notes: $e');
+      stopwatch.stop();
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   // للتوافق مع الكود القديم
   Future<void> loadNotes() async {
+    // CRITICAL: Prevent redundant calls during startup
+    if (_isLoading || _isInitialDataLoaded) {
+      debugPrint('⚠️ loadNotes() skipped: isLoading=$_isLoading, isLoaded=$_isInitialDataLoaded');
+      return;
+    }
     await refreshAllNotes();
   }
 
@@ -204,6 +266,7 @@ class NotesProvider extends ChangeNotifier {
         _lockedNotes.insert(0, newNote); // إدراج في المقدمة
       } else {
         _allNotes.insert(0, newNote); // إدراج في المقدمة
+        _sortNotes(); // Sort after adding
       }
 
       // Side Effect: جدولة التذكير
@@ -262,16 +325,16 @@ class NotesProvider extends ChangeNotifier {
     if (note.isLocked) {
       final index = _lockedNotes.indexWhere((n) => n.id == note.id);
       if (index != -1) {
-        _lockedNotes.removeAt(index);
-        _lockedNotes.insert(0, note); // نقل للمقدمة
+        _lockedNotes[index] = note; // تعديل في نفس المكان
       }
     } else {
       final index = _allNotes.indexWhere((n) => n.id == note.id);
       if (index != -1) {
-        _allNotes.removeAt(index);
-        _allNotes.insert(0, note); // نقل للمقدمة
+        _allNotes[index] = note; // تعديل في نفس المكان
+        _sortNotes(); // Sort after update (handles pin changes)
       } else {
-        _allNotes.insert(0, note); // إضافة في المقدمة
+        _allNotes.add(note); // إضافة في النهاية
+        _sortNotes(); // Sort after adding
       }
     }
 
@@ -425,9 +488,11 @@ class NotesProvider extends ChangeNotifier {
     if (freshNote != null) {
       final index = _allNotes.indexWhere((n) => n.id == id);
       if (index != -1) {
-        _allNotes.removeAt(index);
+        _allNotes[index] = freshNote; // تعديل في نفس المكان
+      } else {
+        _allNotes.add(freshNote); // إضافة في النهاية
       }
-      _allNotes.insert(0, freshNote);
+      _sortNotes(); // Sort after restore
 
       // Side Effect: إعادة جدولة التذكير عند الاستعادة
       await _handleReminderSideEffect(freshNote);
@@ -501,10 +566,11 @@ class NotesProvider extends ChangeNotifier {
     // Update in-memory lists
     if (lockStatus) {
       _allNotes.removeWhere((n) => n.id == id);
-      _lockedNotes.insert(0, updatedNote); // إدراج في المقدمة
+      _lockedNotes.add(updatedNote); // إضافة في النهاية
     } else {
       _lockedNotes.removeWhere((n) => n.id == id);
-      _allNotes.insert(0, updatedNote); // إدراج في المقدمة
+      _allNotes.add(updatedNote); // إضافة في النهاية
+      _sortNotes(); // Sort after unlocking
     }
 
     notifyListeners();
@@ -584,5 +650,11 @@ class NotesProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('⚠️ Widget update error: $e');
     }
+  }
+  
+  @override
+  void dispose() {
+    _sortDebounce?.cancel();
+    super.dispose();
   }
 }

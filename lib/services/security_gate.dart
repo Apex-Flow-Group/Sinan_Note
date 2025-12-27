@@ -31,6 +31,8 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     privacyBlurEnabled: false,
   );
 
+  SecurityConfig get config => _config; // Expose for deduplication check
+
   bool _isLocked = false;
   bool _isAuthenticating = false;
   bool _ignoreLifecycle = false; // 🔇 Silencing flag

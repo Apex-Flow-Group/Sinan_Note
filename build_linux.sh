@@ -1,30 +1,39 @@
 #!/bin/bash
 
-FLUTTER_PATH="/home/jawal/flutter/bin/flutter"
+set -e
 
-if [ ! -f "$FLUTTER_PATH" ]; then
-    FLUTTER_PATH=$(which flutter 2>/dev/null)
-fi
+echo "🚀 Building Sinan Note for Linux..."
+echo ""
 
-if [ -z "$FLUTTER_PATH" ]; then
-    echo "❌ Flutter غير مثبت!"
+# Auto-detect Flutter
+if ! command -v flutter &> /dev/null; then
+    echo "⚠️  Flutter not found in PATH!"
     exit 1
 fi
 
-echo "🚀 بناء تطبيق Apex Note للينكس..."
+echo "✅ Flutter: $(flutter --version | head -n 1)"
+echo ""
 
-if [ -d "build/linux" ]; then
-    echo "🗑️ حذف البناء القديم..."
-    rm -rf build/linux
+# Clean
+echo "🧹 Cleaning..."
+flutter clean
+
+# Get packages
+echo "📦 Getting packages..."
+flutter pub get
+
+# Build
+echo "🔨 Building Linux release..."
+flutter build linux --release
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Build Complete!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📍 Location: build/linux/x64/release/bundle/"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+else
+    echo ""
+    echo "❌ Build failed!"
+    exit 1
 fi
-
-if [ ! -d "linux" ]; then
-    echo "⚙️ إضافة دعم Linux..."
-    $FLUTTER_PATH create --platforms=linux .
-fi
-
-$FLUTTER_PATH pub get
-$FLUTTER_PATH build linux --release
-
-echo "✅ تم البناء بنجاح!"
-echo "📦 الملف الناتج: build/linux/x64/release/bundle/"

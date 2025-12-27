@@ -357,220 +357,223 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   border: Border.all(
                     color: widget.isSelected
                         ? Theme.of(context).colorScheme.secondary
-                        : _getDarkerColor(baseColor),
-                    width: widget.isSelected ? 3.0 : 1.0,
+                        : _getDarkerColor(baseColor).withValues(alpha: 0.4),
+                    width: 3.0,
                   ),
-                  boxShadow: [
+                  // OPTIMIZATION: Single lightweight shadow for old GPUs (Adreno 630)
+                  boxShadow: const [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+                      color: Color(0x0F000000), // alpha: 0.06
+                      blurRadius: 2.0, // Reduced from 4/8/16
+                      offset: Offset(0, 1),
                     ),
                   ],
                 ),
                 child: PremiumCardEffect(
                   baseColor: baseColor,
                   enableMotion: settings.cardMotionEnabled,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (widget.selectionMode)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: Icon(
-                                  widget.isSelected
-                                      ? Icons.check_circle
-                                      : Icons.circle_outlined,
-                                  color: widget.isSelected
-                                      ? Theme.of(context).primaryColor
-                                      : titleColor.withValues(alpha: 0.5),
-                                  size: 24,
-                                ),
-                              ),
-                            Expanded(
-                              child: widget.viewType == ViewType.listCompact
-                                  ? Text(
-                                      _getDisplayTitle(widget.note),
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: titleColor),
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  : Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: widget.viewType == ViewType.listCompact
+                                      ? Text(
                                           _getDisplayTitle(widget.note),
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
                                               color: titleColor),
-                                          maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        // SECURITY: Never render body content for locked notes
-                                        widget.note.isLocked
-                                            ? Text(
-                                                l10n.protectedContent,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: contentColor
-                                                      .withValues(alpha: 0.6),
-                                                  fontStyle: FontStyle.italic,
-                                                ),
-                                              )
-                                            : ChecklistFormatter
-                                                    .isValidChecklist(
-                                                        widget.note.content)
-                                                ? _buildChecklistPreview(
-                                                    widget.note.content,
-                                                    titleColor)
-                                                : Text(
-                                                    fixNoteContent(
-                                                        widget.note.content),
-                                                    maxLines: 4,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                        )
+                                      : Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _getDisplayTitle(widget.note),
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: titleColor),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            // SECURITY: Never render body content for locked notes
+                                            widget.note.isLocked
+                                                ? Text(
+                                                    l10n.protectedContent,
                                                     style: TextStyle(
                                                       fontSize: 14,
-                                                      color: contentColor,
+                                                      color: contentColor
+                                                          .withValues(alpha: 0.6),
+                                                      fontStyle: FontStyle.italic,
                                                     ),
-                                                  ),
-                                      ],
-                                    ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.note.isPinned)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 4),
-                                    child: Icon(Icons.push_pin,
-                                        size: 18,
-                                        color:
-                                            titleColor.withValues(alpha: 0.7)),
-                                  ),
-                                if (widget.note.isLocked)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 4),
-                                    child: Icon(Icons.lock,
-                                        size: 20, color: titleColor),
-                                  ),
-                                if (widget.note.isLocked && !widget.selectionMode)
-                                  _buildLockedNoteMenu(context, titleColor),
+                                                  )
+                                                : ChecklistFormatter
+                                                        .isValidChecklist(
+                                                            widget.note.content)
+                                                    ? _buildChecklistPreview(
+                                                        widget.note.content,
+                                                        titleColor)
+                                                    : Text(
+                                                        fixNoteContent(
+                                                            widget.note.content),
+                                                        maxLines: 4,
+                                                        overflow:
+                                                            TextOverflow.ellipsis,
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          color: contentColor,
+                                                        ),
+                                                      ),
+                                          ],
+                                        ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (widget.note.isPinned)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Icon(Icons.push_pin,
+                                            size: 18,
+                                            color:
+                                                titleColor.withValues(alpha: 0.7)),
+                                      ),
+                                    if (widget.note.isLocked)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Icon(Icons.lock,
+                                            size: 20, color: titleColor),
+                                      ),
+                                    if (widget.note.isLocked && !widget.selectionMode)
+                                      _buildLockedNoteMenu(context, titleColor),
+                                  ],
+                                ),
                               ],
                             ),
-                          ],
-                        ),
-                        if (widget.note.reminderDateTime != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.alarm,
-                                      size: 14, color: Colors.orange),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: titleColor,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                                  if (widget.note.recurrenceRule != null) ...[
+                          if (widget.note.reminderDateTime != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.alarm,
+                                        size: 14, color: Colors.orange),
                                     const SizedBox(width: 4),
-                                    const Icon(Icons.repeat,
-                                        size: 12, color: Colors.orange),
-                                  ]
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (_shouldShowExtension(widget.note.noteType))
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: widget.note.noteType == 'markdown'
-                                        ? Colors.orange.withValues(alpha: 0.15)
-                                        : Colors.blue.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.code,
-                                        size: 12,
-                                        color:
-                                            widget.note.noteType == 'markdown'
-                                                ? Colors.orange.shade700
-                                                : Colors.blue.shade700,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        _getFileExtension(widget.note.content,
-                                            widget.note.noteType),
+                                    Expanded(
+                                      child: Text(
+                                        '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
                                         style: TextStyle(
                                           fontSize: 11,
+                                          color: titleColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                    if (widget.note.recurrenceRule != null) ...[
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.repeat,
+                                          size: 12, color: Colors.orange),
+                                    ]
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (_shouldShowExtension(widget.note.noteType))
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: widget.note.noteType == 'markdown'
+                                          ? Colors.orange.withValues(alpha: 0.15)
+                                          : Colors.blue.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.code,
+                                          size: 12,
                                           color:
                                               widget.note.noteType == 'markdown'
                                                   ? Colors.orange.shade700
                                                   : Colors.blue.shade700,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: 'monospace',
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _getFileExtension(widget.note.content,
+                                              widget.note.noteType),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color:
+                                                widget.note.noteType == 'markdown'
+                                                    ? Colors.orange.shade700
+                                                    : Colors.blue.shade700,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: 'monospace',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    if (widget.selectionMode)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: baseColor,
+                            shape: BoxShape.circle,
+                            // OPTIMIZATION: Removed shadow for selection indicator
+                          ),
+                          child: Icon(
+                            widget.isSelected
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            color: widget.isSelected
+                                ? Theme.of(context).primaryColor
+                                : titleColor.withValues(alpha: 0.5),
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
       ),
+    ),
     );
   }
 

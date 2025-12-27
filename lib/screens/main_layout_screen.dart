@@ -31,11 +31,38 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   bool _isScrollHidden = false;
   bool _isDrawerOpen = false;
   final _securityController = SecurityController();
+  
+  // ✅ Cache screens to prevent rebuilds
+  late final List<Widget> _cachedScreens;
 
   @override
   void initState() {
     super.initState();
     _securityController.addListener(_onSecurityChanged);
+    
+    // ❌ REMOVED: loadNotes() - should be called ONLY in NotesProvider constructor
+    
+    // ✅ Create screens ONCE and cache them
+    _cachedScreens = [
+      NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          if (!_isDrawerOpen) {
+            if (notification.direction == ScrollDirection.reverse) {
+              _handleScrollNotification(true);
+            } else if (notification.direction == ScrollDirection.forward) {
+              _handleScrollNotification(false);
+            }
+          }
+          return false;
+        },
+        child: HomeScreen(
+          sharedText: widget.sharedText,
+          onDrawerChanged: _onDrawerChanged,
+        ),
+      ),
+      const ReminderDashboard(),
+      const ProfessionalTab(),
+    ];
   }
 
   @override
@@ -85,27 +112,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final isRTL = Directionality.of(context) == TextDirection.rtl;
     final isLargeScreen = MediaQuery.of(context).size.width >= 600;
 
-    final screens = [
-      NotificationListener<UserScrollNotification>(
-        onNotification: (notification) {
-          if (!_isDrawerOpen) {
-            if (notification.direction == ScrollDirection.reverse) {
-              _handleScrollNotification(true);
-            } else if (notification.direction == ScrollDirection.forward) {
-              _handleScrollNotification(false);
-            }
-          }
-          return false;
-        },
-        child: HomeScreen(
-          sharedText: widget.sharedText,
-          onDrawerChanged: _onDrawerChanged,
-        ),
-      ),
-      const ReminderDashboard(),
-      const ProfessionalTab(),
-    ];
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       onDrawerChanged: _onDrawerChanged,
@@ -120,7 +126,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                 children: [
                   IndexedStack(
                     index: _currentIndex,
-                    children: screens,
+                    children: _cachedScreens, // ✅ Use cached screens
                   ),
                   if (showBottomBar && !isLargeScreen)
                     Positioned(

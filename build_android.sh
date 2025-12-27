@@ -63,7 +63,7 @@ build_flavor() {
     
     echo ""
     echo "🔨 Building $FLAVOR_NAME APK..."
-    flutter build apk --flavor $FLAVOR --release -t lib/main.dart --dart-define=$DART_DEFINE
+    flutter build apk --flavor $FLAVOR --release --dart-define=$DART_DEFINE
     
     if [ $? -eq 0 ]; then
         echo ""

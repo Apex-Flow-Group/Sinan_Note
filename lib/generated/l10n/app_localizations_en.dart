@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -211,7 +213,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlockNote => 'Unlock Note';
 
   @override
-  String get unlockNoteConfirmation => 'Do you want to unlock this note and move it to regular notes?';
+  String get unlockNoteConfirmation =>
+      'Do you want to unlock this note and move it to regular notes?';
 
   @override
   String get enterPasswordHint => 'Enter password (4+ characters)';
@@ -250,7 +253,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseColor => 'Choose Color';
 
   @override
-  String get encryptedContent => '🔒 Encrypted content';
+  String get encryptedContent => 'Encrypted content';
 
   @override
   String get startWriting => 'Start writing...';
@@ -316,7 +319,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get warning => 'Warning!';
 
   @override
-  String get replaceAllNotes => 'All current notes will be replaced. Are you sure?';
+  String get replaceAllNotes =>
+      'All current notes will be replaced. Are you sure?';
 
   @override
   String get replace => 'Replace';
@@ -340,10 +344,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permanentDelete => 'Permanent Delete';
 
   @override
-  String get confirmPermanentDelete => 'Do you want to permanently delete this note? This action cannot be undone.';
+  String get confirmPermanentDelete =>
+      'Do you want to permanently delete this note? This action cannot be undone.';
 
   @override
-  String get confirmPermanentDeleteMultiple => 'Do you want to permanently delete';
+  String get confirmPermanentDeleteMultiple =>
+      'Do you want to permanently delete';
 
   @override
   String get notesQuestion => 'notes?';
@@ -353,6 +359,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesDeleted => 'Notes permanently deleted';
+  @override
+  String get notesPinned => 'Notes pinned';
+
+  @override
+  String get notesArchived => 'Notes archived';
 
   @override
   String get confirmDeleteAll => 'Do you want to permanently delete all notes?';
@@ -550,7 +561,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formattingHint => 'Formatting Hint';
 
   @override
-  String get formattingHintMessage => 'Styles like Bold and Italic are shown as symbols here. They will be rendered beautifully when you save and view the note.';
+  String get formattingHintMessage =>
+      'Styles like Bold and Italic are shown as symbols here. They will be rendered beautifully when you save and view the note.';
 
   @override
   String get dontShowAgain => 'Don\'t show this again';
@@ -717,16 +729,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get next => 'Next';
 
   @override
-  String get noLockButtonsOutside => 'No lock buttons outside. Enter the vault and drag the notes you want to protect.';
+  String get noLockButtonsOutside =>
+      'No lock buttons outside. Enter the vault and drag the notes you want to protect.';
 
   @override
-  String get dataEncryptedOnExit => 'Once you exit, data is encrypted and memory is cleared immediately.';
+  String get dataEncryptedOnExit =>
+      'Once you exit, data is encrypted and memory is cleared immediately.';
 
   @override
-  String get precisePermissionRequired => 'Failed! Precise permission required. 💡';
+  String get vaultFullyEncrypted =>
+      'A fully encrypted space accessible only with your biometric.';
 
   @override
-  String get fileContainsErrors => 'The file you want to save may contain errors or is incorrect. It\'s better to save it as markdown.';
+  String get precisePermissionRequired =>
+      'Failed! Precise permission required. 💡';
+
+  @override
+  String get fileContainsErrors =>
+      'The file you want to save may contain errors or is incorrect. It\'s better to save it as markdown.';
 
   @override
   String get savedAsMarkdownSuccess => 'Saved as Markdown';
@@ -741,25 +761,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get encryptionUsed => 'Encryption Used';
 
   @override
-  String get cannotReadWithoutKey => 'Cannot be read without your device\'s encryption key.';
+  String get cannotReadWithoutKey =>
+      'Cannot be read without your device\'s encryption key.';
 
   @override
-  String get uninstallWarning => 'If you uninstall the app, the encryption key will be lost permanently.';
+  String get uninstallWarning =>
+      'If you uninstall the app, the encryption key will be lost permanently.';
 
   @override
-  String get clearDataWarning => 'If you clear app data, the encryption key will be lost permanently.';
+  String get clearDataWarning =>
+      'If you clear app data, the encryption key will be lost permanently.';
 
   @override
-  String get backupUnencryptedAdvice => 'Keep a backup of your important notes in unencrypted format (unlock first).';
+  String get backupUnencryptedAdvice =>
+      'Keep a backup of your important notes in unencrypted format (unlock first).';
 
   @override
-  String get encryptionRiskWarning => 'Encryption provides security but increases the risk of data loss if the key is lost.';
+  String get encryptionRiskWarning =>
+      'Encryption provides security but increases the risk of data loss if the key is lost.';
 
   @override
   String get biometricError => 'Biometric check error';
 
   @override
-  String get authenticateWithBiometric => 'Authenticate using biometric or device password';
+  String get authenticateWithBiometric =>
+      'Authenticate using biometric or device password';
 
   @override
   String get pleaseAuthenticateToOpen => 'Please authenticate to open the note';
@@ -789,7 +815,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applyBlurEffect => 'Apply blur effect in app list';
 
   @override
-  String get restoreFromBackup => 'Restore from backup';
+  String get restoreFromBackup => 'Restore from Backup';
 
   @override
   String get saveAsJsonFile => 'Save as JSON file';
@@ -801,7 +827,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveToFolder => 'Save to Folder';
 
   @override
-  String get importantBackupWarning => 'Important Warning - Encrypted Notes Backup';
+  String get importantBackupWarning =>
+      'Important Warning - Encrypted Notes Backup';
 
   @override
   String lockedNotesCount(int count) {
@@ -956,7 +983,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unsavedChanges => 'Unsaved Changes';
 
   @override
-  String get unsavedChangesMessage => 'You have unsaved changes. What would you like to do?';
+  String get unsavedChangesMessage =>
+      'You have unsaved changes. What would you like to do?';
 
   @override
   String get saveAndExit => 'Save & Exit';
@@ -983,7 +1011,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourPage3Title => 'Smart Dates';
 
   @override
-  String get tourPage3Desc => 'Type date keywords and they convert automatically';
+  String get tourPage3Desc =>
+      'Type date keywords and they convert automatically';
 
   @override
   String get tourPage4Title => 'Secure Vault';
@@ -1019,16 +1048,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yesRestoreNow => 'Yes, Restore Now';
 
   @override
-  String get simpleNoteMenu => 'Simple Note';
+  String get email => 'Email';
 
   @override
-  String get richNoteMenu => 'Rich Note';
+  String get other => 'Other';
 
   @override
-  String get codeEditorMenu => 'Code Editor';
+  String get preparingTransfer => 'Preparing transfer...';
 
   @override
-  String get checklistMenu => 'Checklist';
+  String get serverError => 'Server Error';
+
+  @override
+  String get ipAddress => 'IP Address';
+
+  @override
+  String get keepScreenOpen => 'Keep this screen open until transfer completes';
+
+  @override
+  String get youHave => 'You have';
+
+  @override
+  String get lockedNotes => 'locked note(s)';
+
+  @override
+  String get willNotBeTransferred => 'They won\'t be transferred for security';
+
+  @override
+  String get onlyRegularNotes => 'Only regular notes will be transferred';
 
   @override
   String get attachDeviceInfo => 'Attach Device Information';
@@ -1037,13 +1084,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpsDiagnose => 'Helps us diagnose the issue';
 
   @override
-  String get canRemoveFromEmail => 'You can remove it from the email before sending';
+  String get canRemoveFromEmail =>
+      'You can remove it from the email before sending';
+
+  @override
+  String get optional => '(Optional)';
 
   @override
   String get privacyAndData => 'Privacy and Data';
 
   @override
-  String get privacyDescription => 'We respect your privacy. Your data will only be used to improve technical support.';
+  String get privacyDescription =>
+      'We respect your privacy. Your data will only be used to improve technical support.';
 
   @override
   String get readPrivacyPolicy => 'Read Privacy Policy';
@@ -1133,7 +1185,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmDownload => 'Confirm Download';
 
   @override
-  String get confirmDownloadMessage => 'All current notes will be replaced with notes from Google Drive. Are you sure?';
+  String get confirmDownloadMessage =>
+      'All current notes will be replaced with notes from Google Drive. Are you sure?';
 
   @override
   String get download => 'Download';
@@ -1178,19 +1231,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportTerms => 'Terms';
 
   @override
-  String get supportTermsDesc => 'By sending this message, you agree to:\n• Share your device information automatically\n• Use your data to improve technical support\n• Comply with our privacy policy';
+  String get supportTermsDesc =>
+      'By sending this message, you agree to:\n• Share only the information you enter\n• Use your message to improve technical support\n• Comply with our privacy policy';
 
   @override
   String get supportSharedData => 'Shared Data';
 
   @override
-  String get supportSharedDataDesc => 'Will be sent:\n• Your name\n• Issue category\n• Your message\n• Device information (automatically):\n  - Device model\n  - OS version\n  - Build number';
+  String get supportSharedDataDesc =>
+      'Only the following will be sent:\n• Your name\n• Issue category\n• Your message\n\nNo device information will be collected automatically.';
 
   @override
   String get supportReason => 'Reason';
 
   @override
-  String get supportReasonDesc => 'We use this data to:\n• Diagnose technical issues\n• Improve app quality\n• Provide better support';
+  String get supportReasonDesc =>
+      'We use your message to:\n• Respond to your inquiries\n• Improve app quality\n• Provide better support';
 
   @override
   String get privacyUsagePolicy => 'Privacy & Usage Policy';
@@ -1223,7 +1279,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checklist => 'Checklist';
 
   @override
-  String get vaultFullyEncrypted => 'A fully encrypted space accessible only with your biometric.';
+  String get checklistMenu => 'Checklist';
+
+  @override
+  String get codeEditorMenu => 'Code Editor';
+
+  @override
+  String get richNoteMenu => 'Formatted Note';
+
+  @override
+  String get simpleNoteMenu => 'Simple Note';
 
   @override
   String get restoredToArchive => 'Note restored to Archive';
@@ -1265,19 +1330,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyright => 'Copyright';
 
   @override
-  String get copyrightText => '© 2025 Apex Flow Group. All rights reserved.\nPersonal use permitted. Commercial use requires permission.';
+  String get copyrightText =>
+      '© 2025 Apex Flow Group. All rights reserved.\nPersonal use permitted. Commercial use requires permission.';
 
   @override
   String get disclaimerTitle => 'Disclaimer';
 
   @override
-  String get disclaimerText => 'This app is provided "as is" without any warranties. Apex Flow Group is not responsible for any losses or damages resulting from the use of the app.';
+  String get disclaimerText =>
+      'This app is provided \"as is\" without any warranties. Apex Flow Group is not responsible for any losses or damages resulting from the use of the app.';
 
   @override
   String get officialVersionTitle => 'Official Version';
 
   @override
-  String get officialVersionText => 'This is the official certified version of Sinan Note available on Google Play Store. Beware of fake or unofficial copies.';
+  String get officialVersionText =>
+      'This is the official certified version of Sinan Note available on Google Play Store. Beware of fake or unofficial copies.';
 
   @override
   String get librariesUsed => 'Libraries Used';
@@ -1295,10 +1363,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sqfliteDatabase => 'Local Database';
 
   @override
-  String get officialGooglePlay => 'Official certified version from Google Play Store\nAutomatic updates and guaranteed security';
+  String get officialGooglePlay =>
+      'Official certified version from Google Play Store\nAutomatic updates and guaranteed security';
 
   @override
-  String get fdroidVersion => 'F-Droid Version - Open Source\nWiFi sharing feature available';
+  String get fdroidVersion =>
+      'F-Droid Version - Open Source\nWiFi sharing feature available';
 
   @override
   String get madeWithLove => 'Made with';
@@ -1311,4 +1381,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agreeToTerms => 'I agree to the Terms of Service';
+
+  @override
+  String get widgetPinned => 'Widget pinned:';
+
+  @override
+  String get note => 'Note';
 }

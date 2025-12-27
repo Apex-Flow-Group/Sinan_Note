@@ -40,9 +40,7 @@ class _ReminderDashboardState extends State<ReminderDashboard>
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotesProvider>(context, listen: false).loadNotes();
-    });
+    // ❌ REMOVED: loadNotes() - data is already loaded by MainLayoutScreen
   }
 
   void _loadViewType() async {

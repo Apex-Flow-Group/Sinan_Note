@@ -96,12 +96,12 @@ void main() async {
       }
     }
 
-    // تهيئة الويدجت (Android فقط)
+    // تهيئة الويدجت (Android فقط) - بدون تحميل بيانات
     if (Platform.isAndroid) {
       try {
         await WidgetService().initialize();
-        await WidgetService().updateWidgetData();
-        await WidgetService().updateChecklistWidget(0, '', '', 0);
+        // ❌ REMOVED: updateWidgetData() - will be called later by NotesProvider
+        // ❌ REMOVED: updateChecklistWidget() - not needed at startup
       } catch (e) {
         // تجاهل أخطاء الويدجت
       }

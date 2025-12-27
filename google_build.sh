@@ -8,16 +8,20 @@ set -e
 echo "🚀 Starting Google Play Build..."
 echo ""
 
-# Clean cache (important after SDK changes)
+# Clean cache
 echo "🧹 Cleaning cache..."
 flutter clean
+
+# Get packages
+echo "📦 Getting packages..."
+flutter pub get
 
 # Create output directory
 mkdir -p build/google
 
 # Build appbundle
 echo "📦 Building appbundle for Google Play..."
-flutter build appbundle --release --flavor googlePlay
+flutter build appbundle --release --flavor googlePlay --dart-define=FLAVOR=googlePlay
 
 # Generate timestamp for filename
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')

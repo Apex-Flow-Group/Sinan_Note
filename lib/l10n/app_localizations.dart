@@ -2585,7 +2585,7 @@ abstract class AppLocalizations {
   /// No description provided for @richNoteMenu.
   ///
   /// In en, this message translates to:
-  /// **'Formatted Note'**
+  /// **'Rich Note'**
   String get richNoteMenu;
 
   /// No description provided for @simpleNoteMenu.
@@ -2767,6 +2767,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I agree to the Terms of Service'**
   String get agreeToTerms;
+
+  /// No description provided for @widgetPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget pinned:'**
+  String get widgetPinned;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
 }
 
 class _AppLocalizationsDelegate

@@ -242,9 +242,13 @@ class WidgetService {
         await HomeWidget.saveWidgetData<int>('checklist_total', totalItems);
         await HomeWidget.saveWidgetData<int>('checklist_completed', completedItems);
         
-        // حفظ في SharedPreferences أيضاً للتأكد
+        // حفظ في SharedPreferences أيضاً للتأكد (مثل NoteWidget)
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('flutter.checklist_note_id', noteId);
+        await prefs.setString('flutter.checklist_title', title);
+        await prefs.setString('flutter.checklist_preview', textSnapshot);
+        await prefs.setInt('flutter.checklist_total', totalItems);
+        await prefs.setInt('flutter.checklist_completed', completedItems);
       }
 
       await HomeWidget.updateWidget(androidName: 'ChecklistWidgetProvider');
@@ -277,6 +281,8 @@ class WidgetService {
       // حفظ في SharedPreferences أيضاً للتأكد
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('flutter.note_id', note.id ?? 0);
+      await prefs.setString('flutter.title', title);
+      await prefs.setString('flutter.content', content);
 
       await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
     } catch (e) {
@@ -329,14 +335,20 @@ class WidgetService {
   static Future<void> checkAndUpdateIfPinned(Note note) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
+    // 🛑 CRITICAL FIX: Skip if note ID is invalid
+    if (note.id == null || note.id == 0) {
+      if (kDebugMode) {
+        print('⚠️ Skipping widget update: Invalid note ID (${note.id})');
+      }
+      return;
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final pinnedNoteId = prefs.getInt('flutter.note_id') ?? 0;
       final pinnedChecklistId = prefs.getInt('flutter.checklist_note_id') ?? 0;
 
       final service = WidgetService();
-      
-      // 🔥 تحقق من noteType أيضاً لضمان التعرف الصحيح
       final isChecklistNote = note.isChecklist || note.noteType == 'checklist';
 
       if (note.id == pinnedNoteId && !isChecklistNote) {
@@ -345,7 +357,7 @@ class WidgetService {
         final title = note.title.isEmpty ? 'Checklist' : note.title;
         final stats = service._parseChecklistStats(note.content);
         await service.updateChecklistWidget(
-          note.id ?? 0,
+          note.id!,
           title,
           note.content,
           note.colorIndex,

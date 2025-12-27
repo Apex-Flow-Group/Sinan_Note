@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -55,7 +57,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home => 'الرئيسية';
 
   @override
-  String get archive => 'أرشيف';
+  String get archive => 'الأرشيف';
 
   @override
   String get trash => 'المحذوفات';
@@ -211,7 +213,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unlockNote => 'فك قفل الملاحظة';
 
   @override
-  String get unlockNoteConfirmation => 'هل تريد فك قفل هذه الملاحظة ونقلها إلى الملاحظات العادية؟';
+  String get unlockNoteConfirmation =>
+      'هل تريد فك قفل هذه الملاحظة ونقلها إلى الملاحظات العادية؟';
 
   @override
   String get enterPasswordHint => 'أدخل كلمة مرور (4+ أحرف)';
@@ -250,7 +253,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chooseColor => 'اختر اللون';
 
   @override
-  String get encryptedContent => '🔒 محتوى مشفر';
+  String get encryptedContent => 'محتوى مشفر';
 
   @override
   String get startWriting => 'ابدأ الكتابة...';
@@ -316,10 +319,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get warning => 'تحذير!';
 
   @override
-  String get replaceAllNotes => 'سيتم استبدال جميع الملاحظات الحالية. هل أنت متأكد؟';
+  String get replaceAllNotes =>
+      'سيتم استبدال جميع الملاحظات الحالية. هل أنت متأكد؟';
 
   @override
-  String get replace => 'استبدال';
+  String get replace => 'استبدل';
 
   @override
   String get restoredSuccessfully => 'تمت الاستعادة بنجاح';
@@ -340,7 +344,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permanentDelete => 'حذف نهائي';
 
   @override
-  String get confirmPermanentDelete => 'هل تريد حذف هذه الملاحظة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.';
+  String get confirmPermanentDelete =>
+      'هل تريد حذف هذه الملاحظة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.';
 
   @override
   String get confirmPermanentDeleteMultiple => 'هل تريد حذف';
@@ -353,6 +358,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notesDeleted => 'تم حذف الملاحظات نهائياً';
+
+  @override
+  String get notesPinned => 'تم تثبيت الملاحظات';
+
+  @override
+  String get notesArchived => 'تم أرشفة الملاحظات';
 
   @override
   String get confirmDeleteAll => 'هل تريد حذف جميع الملاحظات نهائياً؟';
@@ -550,7 +561,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get formattingHint => 'تلميح التنسيق';
 
   @override
-  String get formattingHintMessage => 'الأنماط مثل الغامق والمائل يتم عرضها كرموز هنا. سيتم تصييرها بشكل جميل عند الحفظ.';
+  String get formattingHintMessage =>
+      'الأنماط مثل الغامق والمائل يتم عرضها كرموز هنا. سيتم تصييرها بشكل جميل عند الحفظ.';
 
   @override
   String get dontShowAgain => 'لا تظهر هذا مرة أخرى';
@@ -717,16 +729,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get next => 'التالي';
 
   @override
-  String get noLockButtonsOutside => 'لا توجد أزرار قفل في الخارج. ادخل الخزنة واسحب الملاحظات التي تريد حمايتها.';
+  String get noLockButtonsOutside =>
+      'لا توجد أزرار قفل في الخارج. ادخل الخزنة واسحب الملاحظات التي تريد حمايتها.';
 
   @override
-  String get dataEncryptedOnExit => 'بمجرد خروجك، يتم تشفير البيانات ومسح الذاكرة فوراً.';
+  String get dataEncryptedOnExit =>
+      'بمجرد خروجك، يتم تشفير البيانات ومسح الذاكرة فوراً.';
+
+  @override
+  String get vaultFullyEncrypted =>
+      'مساحة مشفرة بالكامل لا يمكن الوصول إليها إلا ببصمتك.';
 
   @override
   String get precisePermissionRequired => 'فشل! الإذن الدقيق مطلوب. 💡';
 
   @override
-  String get fileContainsErrors => 'الملف الذي تود حفظه قد يحتوي على أخطاء أو غير صحيح. يفضل حفظه كماركت داون.';
+  String get fileContainsErrors =>
+      'الملف الذي تود حفظه قد يحتوي على أخطاء أو غير صحيح. يفضل حفظه كماركت داون.';
 
   @override
   String get savedAsMarkdownSuccess => 'تم الحفظ كـ Markdown';
@@ -741,25 +760,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get encryptionUsed => 'التشفير المستخدم';
 
   @override
-  String get cannotReadWithoutKey => 'لا يمكن قراءتها بدون مفتاح التشفير الخاص بجهازك.';
+  String get cannotReadWithoutKey =>
+      'لا يمكن قراءتها بدون مفتاح التشفير الخاص بجهازك.';
 
   @override
-  String get uninstallWarning => 'إذا قمت بإلغاء تثبيت التطبيق، سيتم فقدان مفتاح التشفير نهائياً.';
+  String get uninstallWarning =>
+      'إذا قمت بإلغاء تثبيت التطبيق، سيتم فقدان مفتاح التشفير نهائياً.';
 
   @override
-  String get clearDataWarning => 'إذا قمت بمسح بيانات التطبيق، سيتم فقدان مفتاح التشفير نهائياً.';
+  String get clearDataWarning =>
+      'إذا قمت بمسح بيانات التطبيق، سيتم فقدان مفتاح التشفير نهائياً.';
 
   @override
-  String get backupUnencryptedAdvice => 'احتفظ بنسخة احتياطية من ملاحظاتك المهمة بصيغة غير مشفرة (فك القفل أولاً).';
+  String get backupUnencryptedAdvice =>
+      'احتفظ بنسخة احتياطية من ملاحظاتك المهمة بصيغة غير مشفرة (فك القفل أولاً).';
 
   @override
-  String get encryptionRiskWarning => 'التشفير يوفر الأمان لكنه يزيد من خطر فقدان البيانات في حالة فقدان المفتاح.';
+  String get encryptionRiskWarning =>
+      'التشفير يوفر الأمان لكنه يزيد من خطر فقدان البيانات في حالة فقدان المفتاح.';
 
   @override
   String get biometricError => 'خطأ في فحص البصمة';
 
   @override
-  String get authenticateWithBiometric => 'المصادقة باستخدام البصمة أو كلمة مرور الجهاز';
+  String get authenticateWithBiometric =>
+      'المصادقة باستخدام البصمة أو كلمة مرور الجهاز';
 
   @override
   String get pleaseAuthenticateToOpen => 'يرجى المصادقة لفتح الملاحظة';
@@ -801,7 +826,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get saveToFolder => 'حفظ في مجلد';
 
   @override
-  String get importantBackupWarning => 'تحذير هام - النسخ الاحتياطي للملاحظات المشفرة';
+  String get importantBackupWarning =>
+      'تحذير هام - النسخ الاحتياطي للملاحظات المشفرة';
 
   @override
   String lockedNotesCount(int count) {
@@ -956,7 +982,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unsavedChanges => 'تغييرات غير محفوظة';
 
   @override
-  String get unsavedChangesMessage => 'لديك تغييرات غير محفوظة. ماذا تريد أن تفعل؟';
+  String get unsavedChangesMessage =>
+      'لديك تغييرات غير محفوظة. ماذا تريد أن تفعل؟';
 
   @override
   String get saveAndExit => 'حفظ والخروج';
@@ -1019,16 +1046,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yesRestoreNow => 'نعم، استعد الآن';
 
   @override
-  String get simpleNoteMenu => 'ملاحظة نصية';
+  String get email => 'البريد الإلكتروني';
 
   @override
-  String get richNoteMenu => 'ملاحظة منسقة';
+  String get other => 'أخرى';
 
   @override
-  String get codeEditorMenu => 'محرر كود';
+  String get preparingTransfer => 'جاري تحضير النقل...';
 
   @override
-  String get checklistMenu => 'قائمة مهام';
+  String get serverError => 'خطأ في السيرفر';
+
+  @override
+  String get ipAddress => 'عنوان IP';
+
+  @override
+  String get keepScreenOpen => 'احتفظ بهذه الشاشة مفتوحة حتى يكتمل النقل';
+
+  @override
+  String get youHave => 'لديك';
+
+  @override
+  String get lockedNotes => 'ملاحظة مقفلة';
+
+  @override
+  String get willNotBeTransferred => 'لن يتم نقلها للحفاظ على الأمان';
+
+  @override
+  String get onlyRegularNotes => 'سيتم نقل الملاحظات العادية فقط';
 
   @override
   String get attachDeviceInfo => 'إرفاق معلومات الجهاز';
@@ -1040,10 +1085,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get canRemoveFromEmail => 'يمكنك حذفها من الإيميل قبل الإرسال';
 
   @override
+  String get optional => '(اختياري)';
+
+  @override
   String get privacyAndData => 'الخصوصية والبيانات';
 
   @override
-  String get privacyDescription => 'نحن نحترم خصوصيتك. سيتم استخدام بياناتك فقط لتحسين الدعم الفني.';
+  String get privacyDescription =>
+      'نحن نحترم خصوصيتك. سيتم استخدام بياناتك فقط لتحسين الدعم الفني.';
 
   @override
   String get readPrivacyPolicy => 'اقرأ سياسة الاستخدام';
@@ -1133,7 +1182,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmDownload => 'تأكيد التنزيل';
 
   @override
-  String get confirmDownloadMessage => 'سيتم استبدال جميع الملاحظات الحالية بالملاحظات من Google Drive. هل أنت متأكد؟';
+  String get confirmDownloadMessage =>
+      'سيتم استبدال جميع الملاحظات الحالية بالملاحظات من Google Drive. هل أنت متأكد؟';
 
   @override
   String get download => 'تنزيل';
@@ -1178,19 +1228,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get supportTerms => 'الشروط';
 
   @override
-  String get supportTermsDesc => 'بإرسالك هذه الرسالة، أنت توافق على:\n• مشاركة معلومات جهازك تلقائياً\n• استخدام بياناتك لتحسين الدعم الفني\n• الامتثال لسياسة الخصوصية الخاصة بنا';
+  String get supportTermsDesc =>
+      'بإرسالك هذه الرسالة، أنت توافق على:\n• مشاركة المعلومات التي تدخلها فقط\n• استخدام رسالتك لتحسين الدعم الفني\n• الامتثال لسياسة الخصوصية الخاصة بنا';
 
   @override
   String get supportSharedData => 'البيانات المشاركة';
 
   @override
-  String get supportSharedDataDesc => 'سيتم إرسال:\n• اسمك\n• فئة المشكلة\n• نص رسالتك\n• معلومات الجهاز (تلقائياً):\n  - نموذج الجهاز\n  - إصدار نظام التشغيل\n  - رقم البناء';
+  String get supportSharedDataDesc =>
+      'سيتم إرسال فقط:\n• اسمك\n• فئة المشكلة\n• نص رسالتك\n\nلن يتم جمع أي معلومات عن جهازك تلقائياً.';
 
   @override
   String get supportReason => 'السبب';
 
   @override
-  String get supportReasonDesc => 'نستخدم هذه البيانات لـ:\n• تشخيص المشاكل التقنية\n• تحسين جودة التطبيق\n• تقديم دعم أفضل لك';
+  String get supportReasonDesc =>
+      'نستخدم رسالتك لـ:\n• الرد على استفساراتك\n• تحسين جودة التطبيق\n• تقديم دعم أفضل لك';
 
   @override
   String get privacyUsagePolicy => 'سياسة الاستخدام والخصوصية';
@@ -1223,7 +1276,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checklist => 'قائمة مهام';
 
   @override
-  String get vaultFullyEncrypted => 'مساحة مشفرة بالكامل لا يمكن الوصول إليها إلا ببصمتك.';
+  String get checklistMenu => 'قائمة مهام';
+
+  @override
+  String get codeEditorMenu => 'محرر كود';
+
+  @override
+  String get richNoteMenu => 'ملاحظة منسقة';
+
+  @override
+  String get simpleNoteMenu => 'ملاحظة نصية';
 
   @override
   String get restoredToArchive => 'تمت استعادة الملاحظة إلى الأرشيف';
@@ -1265,19 +1327,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get copyright => 'حقوق النشر';
 
   @override
-  String get copyrightText => '© 2025 Apex Flow Group. جميع الحقوق محفوظة.\nالاستخدام الشخصي مسموح. الاستخدام التجاري يتطلب إذناً.';
+  String get copyrightText =>
+      '© 2025 Apex Flow Group. جميع الحقوق محفوظة.\nالاستخدام الشخصي مسموح. الاستخدام التجاري يتطلب إذناً.';
 
   @override
   String get disclaimerTitle => 'إخلاء المسؤولية';
 
   @override
-  String get disclaimerText => 'هذا التطبيق يُقدم "كما هو" بدون أي ضمانات. Apex Flow Group غير مسؤولة عن أي خسائر أو أضرار ناجمة عن استخدام التطبيق.';
+  String get disclaimerText =>
+      'هذا التطبيق يُقدم \"كما هو\" بدون أي ضمانات. Apex Flow Group غير مسؤولة عن أي خسائر أو أضرار ناجمة عن استخدام التطبيق.';
 
   @override
   String get officialVersionTitle => 'النسخة الرسمية';
 
   @override
-  String get officialVersionText => 'هذه النسخة الرسمية المعتمدة من Sinan Note المتوفرة على متجر Google Play. احذر من النسخ المقلدة أو غير الرسمية.';
+  String get officialVersionText =>
+      'هذه النسخة الرسمية المعتمدة من Sinan Note المتوفرة على متجر Google Play. احذر من النسخ المقلدة أو غير الرسمية.';
 
   @override
   String get librariesUsed => 'المكتبات المستخدمة';
@@ -1295,10 +1360,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sqfliteDatabase => 'قاعدة البيانات المحلية';
 
   @override
-  String get officialGooglePlay => 'نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون';
+  String get officialGooglePlay =>
+      'نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون';
 
   @override
-  String get fdroidVersion => 'نسخة F-Droid - مفتوحة المصدر\nميزة المشاركة عبر WiFi متاحة';
+  String get fdroidVersion =>
+      'نسخة F-Droid - مفتوحة المصدر\nميزة المشاركة عبر WiFi متاحة';
 
   @override
   String get madeWithLove => 'صُنع بـ';
@@ -1311,4 +1378,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agreeToTerms => 'أوافق على شروط الخدمة';
+
+  @override
+  String get widgetPinned => 'تم تثبيت الويدجت:';
+
+  @override
+  String get note => 'ملاحظة';
 }

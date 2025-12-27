@@ -64,19 +64,13 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
     final borderRadius = BorderRadius.circular(16);
 
     if (!widget.enableMotion) {
+      // ✅ OPTIMIZED: Remove redundant shadow, use hardwareAcceleration
       return Container(
         decoration: BoxDecoration(
           color: widget.baseColor,
           borderRadius: borderRadius,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: Clip.hardEdge, // ✅ Faster than antiAlias
         child: widget.child,
       );
     }

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/settings_provider.dart';
+import '../services/notes_provider.dart';
 import '../services/biometric_service.dart';
 import 'main_layout_screen.dart';
 
@@ -34,6 +35,14 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
     }
+
+    if (!mounted) return;
+
+    // ✅ THE BOUNCER: Load data AFTER authentication, BEFORE navigation
+    debugPrint('⏱️ BOUNCER: UI settled, loading data now...');
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    await notesProvider.loadNotes();
+    debugPrint('⏱️ BOUNCER: Data ready, navigating to home...');
 
     if (!mounted) return;
 

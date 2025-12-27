@@ -261,12 +261,23 @@ class DatabaseService {
 
   Future<List<Note>> getAllNotes() async {
     return await ApexErrorManager.monitorDB(() async {
+      final stopwatch = Stopwatch()..start();
+      debugPrint('  ⏱️ DB: START getAllNotes');
+      
       final db = await database;
+      debugPrint('  ⏱️ DB: Database connection ready: ${stopwatch.elapsedMilliseconds}ms');
+      
       final List<Map<String, dynamic>> maps = await db.query(
         'notes',
         orderBy: 'isPinned DESC, updatedAt DESC',
       );
-      return List.generate(maps.length, (i) => Note.fromMap(maps[i]));
+      debugPrint('  ⏱️ DB: Query complete: ${stopwatch.elapsedMilliseconds}ms (${maps.length} rows)');
+      
+      final notes = List.generate(maps.length, (i) => Note.fromMap(maps[i]));
+      debugPrint('  ⏱️ DB: Object mapping complete: ${stopwatch.elapsedMilliseconds}ms');
+      
+      stopwatch.stop();
+      return notes;
     }, name: 'GetAll');
   }
 

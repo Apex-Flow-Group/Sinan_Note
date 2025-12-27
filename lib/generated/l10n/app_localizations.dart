@@ -18,7 +18,7 @@ import 'app_localizations_en.dart';
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
-/// import 'gen_l10n/app_localizations.dart';
+/// import 'l10n/app_localizations.dart';
 ///
 /// return MaterialApp(
 ///   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -62,7 +62,8 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,7 +84,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -584,7 +587,7 @@ abstract class AppLocalizations {
   /// No description provided for @encryptedContent.
   ///
   /// In en, this message translates to:
-  /// **'🔒 Encrypted content'**
+  /// **'Encrypted content'**
   String get encryptedContent;
 
   /// No description provided for @startWriting.
@@ -790,6 +793,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notes permanently deleted'**
   String get notesDeleted;
+
+  /// No description provided for @notesPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes pinned'**
+  String get notesPinned;
+
+  /// No description provided for @notesArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes archived'**
+  String get notesArchived;
 
   /// No description provided for @confirmDeleteAll.
   ///
@@ -1523,6 +1538,12 @@ abstract class AppLocalizations {
   /// **'Once you exit, data is encrypted and memory is cleared immediately.'**
   String get dataEncryptedOnExit;
 
+  /// No description provided for @vaultFullyEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'A fully encrypted space accessible only with your biometric.'**
+  String get vaultFullyEncrypted;
+
   /// No description provided for @precisePermissionRequired.
   ///
   /// In en, this message translates to:
@@ -1658,7 +1679,7 @@ abstract class AppLocalizations {
   /// No description provided for @restoreFromBackup.
   ///
   /// In en, this message translates to:
-  /// **'Restore from backup'**
+  /// **'Restore from Backup'**
   String get restoreFromBackup;
 
   /// No description provided for @saveAsJsonFile.
@@ -2111,29 +2132,65 @@ abstract class AppLocalizations {
   /// **'Yes, Restore Now'**
   String get yesRestoreNow;
 
-  /// No description provided for @simpleNoteMenu.
+  /// No description provided for @email.
   ///
   /// In en, this message translates to:
-  /// **'Simple Note'**
-  String get simpleNoteMenu;
+  /// **'Email'**
+  String get email;
 
-  /// No description provided for @richNoteMenu.
+  /// No description provided for @other.
   ///
   /// In en, this message translates to:
-  /// **'Rich Note'**
-  String get richNoteMenu;
+  /// **'Other'**
+  String get other;
 
-  /// No description provided for @codeEditorMenu.
+  /// No description provided for @preparingTransfer.
   ///
   /// In en, this message translates to:
-  /// **'Code Editor'**
-  String get codeEditorMenu;
+  /// **'Preparing transfer...'**
+  String get preparingTransfer;
 
-  /// No description provided for @checklistMenu.
+  /// No description provided for @serverError.
   ///
   /// In en, this message translates to:
-  /// **'Checklist'**
-  String get checklistMenu;
+  /// **'Server Error'**
+  String get serverError;
+
+  /// No description provided for @ipAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'IP Address'**
+  String get ipAddress;
+
+  /// No description provided for @keepScreenOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this screen open until transfer completes'**
+  String get keepScreenOpen;
+
+  /// No description provided for @youHave.
+  ///
+  /// In en, this message translates to:
+  /// **'You have'**
+  String get youHave;
+
+  /// No description provided for @lockedNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'locked note(s)'**
+  String get lockedNotes;
+
+  /// No description provided for @willNotBeTransferred.
+  ///
+  /// In en, this message translates to:
+  /// **'They won\'t be transferred for security'**
+  String get willNotBeTransferred;
+
+  /// No description provided for @onlyRegularNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Only regular notes will be transferred'**
+  String get onlyRegularNotes;
 
   /// No description provided for @attachDeviceInfo.
   ///
@@ -2152,6 +2209,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can remove it from the email before sending'**
   String get canRemoveFromEmail;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'(Optional)'**
+  String get optional;
 
   /// No description provided for @privacyAndData.
   ///
@@ -2176,6 +2239,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I agree to the privacy policy'**
   String get agreeToPolicy;
+
+  /// No description provided for @googleDriveSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive Sync'**
+  String get googleDriveSync;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @notSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get notSignedIn;
+
+  /// No description provided for @signedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as'**
+  String get signedInAs;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// No description provided for @syncStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Status'**
+  String get syncStatus;
+
+  /// No description provided for @lastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Sync'**
+  String get lastSync;
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
+
+  /// No description provided for @syncActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Actions'**
+  String get syncActions;
+
+  /// No description provided for @uploadDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Database'**
+  String get uploadDatabase;
+
+  /// No description provided for @uploadDatabaseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload all notes to Google Drive'**
+  String get uploadDatabaseDesc;
+
+  /// No description provided for @downloadDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Database'**
+  String get downloadDatabase;
+
+  /// No description provided for @downloadDatabaseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore notes from Google Drive'**
+  String get downloadDatabaseDesc;
+
+  /// No description provided for @autoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Sync'**
+  String get autoSync;
+
+  /// No description provided for @autoSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically sync when app opens'**
+  String get autoSyncDesc;
+
+  /// No description provided for @syncHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync History'**
+  String get syncHistory;
+
+  /// No description provided for @noSyncHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No sync history'**
+  String get noSyncHistory;
+
+  /// No description provided for @uploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded'**
+  String get uploaded;
+
+  /// No description provided for @downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get downloaded;
+
+  /// No description provided for @failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed;
+
+  /// No description provided for @uploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Database uploaded successfully'**
+  String get uploadSuccess;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload database'**
+  String get uploadFailed;
+
+  /// No description provided for @downloadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Database downloaded successfully'**
+  String get downloadSuccess;
+
+  /// No description provided for @downloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download database'**
+  String get downloadFailed;
+
+  /// No description provided for @signOutSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out successfully'**
+  String get signOutSuccess;
+
+  /// No description provided for @signOutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to sign out'**
+  String get signOutFailed;
+
+  /// No description provided for @confirmDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Download'**
+  String get confirmDownload;
+
+  /// No description provided for @confirmDownloadMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All current notes will be replaced with notes from Google Drive. Are you sure?'**
+  String get confirmDownloadMessage;
+
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// No description provided for @upload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get upload;
+
+  /// No description provided for @syncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing'**
+  String get syncing;
+
+  /// No description provided for @pleaseSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in first'**
+  String get pleaseSignIn;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @lockDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Delay'**
+  String get lockDelay;
+
+  /// No description provided for @lockDelayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Delay app lock after going to background'**
+  String get lockDelayDesc;
+
+  /// No description provided for @selectLockDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Lock Delay'**
+  String get selectLockDelay;
+
+  /// No description provided for @seconds30.
+  ///
+  /// In en, this message translates to:
+  /// **'30 seconds'**
+  String get seconds30;
+
+  /// No description provided for @minutes2.
+  ///
+  /// In en, this message translates to:
+  /// **'2 minutes'**
+  String get minutes2;
+
+  /// No description provided for @minutes3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 minutes'**
+  String get minutes3;
+
+  /// No description provided for @minutes5.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes'**
+  String get minutes5;
+
+  /// No description provided for @immediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate'**
+  String get immediate;
+
+  /// No description provided for @supportTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get supportTerms;
+
+  /// No description provided for @supportTermsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'By sending this message, you agree to:\n• Share only the information you enter\n• Use your message to improve technical support\n• Comply with our privacy policy'**
+  String get supportTermsDesc;
+
+  /// No description provided for @supportSharedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Data'**
+  String get supportSharedData;
+
+  /// No description provided for @supportSharedDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the following will be sent:\n• Your name\n• Issue category\n• Your message\n\nNo device information will be collected automatically.'**
+  String get supportSharedDataDesc;
+
+  /// No description provided for @supportReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get supportReason;
+
+  /// No description provided for @supportReasonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We use your message to:\n• Respond to your inquiries\n• Improve app quality\n• Provide better support'**
+  String get supportReasonDesc;
+
+  /// No description provided for @privacyUsagePolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Usage Policy'**
+  String get privacyUsagePolicy;
+
+  /// No description provided for @supportMessageSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Message sent successfully'**
+  String get supportMessageSent;
+
+  /// No description provided for @supportMessageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send message'**
+  String get supportMessageFailed;
+
+  /// No description provided for @supportCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get supportCategory;
+
+  /// No description provided for @supportSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get supportSubject;
+
+  /// No description provided for @supportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get supportMessage;
+
+  /// No description provided for @checklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist Title'**
+  String get checklistTitle;
+
+  /// No description provided for @checklistItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mission...'**
+  String get checklistItemHint;
+
+  /// No description provided for @sort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sort;
+
+  /// No description provided for @checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get checklist;
+
+  /// No description provided for @checklistMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get checklistMenu;
+
+  /// No description provided for @codeEditorMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Editor'**
+  String get codeEditorMenu;
+
+  /// No description provided for @richNoteMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatted Note'**
+  String get richNoteMenu;
+
+  /// No description provided for @simpleNoteMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple Note'**
+  String get simpleNoteMenu;
+
+  /// No description provided for @restoredToArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Note restored to Archive'**
+  String get restoredToArchive;
+
+  /// No description provided for @restoredToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Note restored to Home'**
+  String get restoredToHome;
+
+  /// No description provided for @notesRestoredMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes restored'**
+  String get notesRestoredMixed;
 
   /// No description provided for @appTagline.
   ///
@@ -2252,7 +2699,7 @@ abstract class AppLocalizations {
   /// No description provided for @disclaimerText.
   ///
   /// In en, this message translates to:
-  /// **'This app is provided "as is" without any warranties. Apex Flow Group is not responsible for any losses or damages resulting from the use of the app.'**
+  /// **'This app is provided \"as is\" without any warranties. Apex Flow Group is not responsible for any losses or damages resulting from the use of the app.'**
   String get disclaimerText;
 
   /// No description provided for @officialVersionTitle.
@@ -2327,71 +2774,27 @@ abstract class AppLocalizations {
   /// **'contact.apex.flow@gmail.com'**
   String get contactEmail;
 
-  String get googleDriveSync;
-  String get account;
-  String get notSignedIn;
-  String get signedInAs;
-  String get signOut;
-  String get syncStatus;
-  String get lastSync;
-  String get never;
-  String get syncActions;
-  String get uploadDatabase;
-  String get uploadDatabaseDesc;
-  String get downloadDatabase;
-  String get downloadDatabaseDesc;
-  String get autoSync;
-  String get autoSyncDesc;
-  String get syncHistory;
-  String get noSyncHistory;
-  String get uploaded;
-  String get downloaded;
-  String get failed;
-  String get uploadSuccess;
-  String get uploadFailed;
-  String get downloadSuccess;
-  String get downloadFailed;
-  String get signOutSuccess;
-  String get signOutFailed;
-  String get confirmDownload;
-  String get confirmDownloadMessage;
-  String get download;
-  String get upload;
-  String get syncing;
-  String get pleaseSignIn;
-  String get justNow;
-  String get lockDelay;
-  String get lockDelayDesc;
-  String get selectLockDelay;
-  String get seconds30;
-  String get minutes2;
-  String get minutes3;
-  String get minutes5;
-  String get immediate;
-  String get supportTerms;
-  String get supportTermsDesc;
-  String get supportSharedData;
-  String get supportSharedDataDesc;
-  String get supportReason;
-  String get supportReasonDesc;
-  String get privacyUsagePolicy;
-  String get supportMessageSent;
-  String get supportMessageFailed;
-  String get supportCategory;
-  String get supportSubject;
-  String get supportMessage;
-  String get checklistTitle;
-  String get checklistItemHint;
-  String get sort;
-  String get checklist;
-  String get vaultFullyEncrypted;
-  String get restoredToArchive;
-  String get restoredToHome;
-  String get notesRestoredMixed;
+  /// No description provided for @agreeToTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the Terms of Service'**
   String get agreeToTerms;
+
+  /// No description provided for @widgetPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget pinned:'**
+  String get widgetPinned;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -2400,25 +2803,25 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return AppLocalizationsAr();
-    case 'en': return AppLocalizationsEn();
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

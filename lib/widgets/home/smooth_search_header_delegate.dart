@@ -42,6 +42,8 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
                 height: expandedHeight,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeInOut,
+                  switchOutCurve: Curves.easeInOut,
                   transitionBuilder: (child, animation) {
                     return FadeTransition(
                       opacity: animation,
@@ -51,8 +53,15 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
                       ),
                     );
                   },
-                  child:
-                      selectionMode && selectionBar != null ? selectionBar! : child,
+                  child: selectionMode && selectionBar != null
+                      ? Container(
+                          key: const ValueKey('selection'),
+                          child: selectionBar!,
+                        )
+                      : Container(
+                          key: const ValueKey('search'),
+                          child: child,
+                        ),
                 ),
               ),
             ),
