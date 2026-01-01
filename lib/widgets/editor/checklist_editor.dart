@@ -423,16 +423,43 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: _progress,
-                  backgroundColor: textColor.withValues(alpha: 0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    _progress == 1.0 ? Colors.green : Colors.blue,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${(_progress * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: textColor.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      Text(
+                        '${_items.where((e) => e.isDone).length} / ${_items.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: textColor.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
                   ),
-                  minHeight: 6,
-                ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _progress,
+                      backgroundColor: textColor.withValues(alpha: 0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _progress == 1.0 ? Colors.green : Colors.blue,
+                      ),
+                      minHeight: 6,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

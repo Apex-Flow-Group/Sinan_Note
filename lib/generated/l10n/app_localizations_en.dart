@@ -1285,7 +1285,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get codeEditorMenu => 'Code Editor';
 
   @override
-  String get richNoteMenu => 'Formatted Note';
+  String get richNoteMenu => 'Rich Note';
 
   @override
   String get simpleNoteMenu => 'Simple Note';

@@ -127,6 +127,21 @@ class NotificationService {
     return permission ?? false;
   }
 
+  /// فحص شامل لجميع الأذونات المطلوبة للتذكيرات
+  Future<Map<String, bool>> checkAllPermissions() async {
+    if (!Platform.isAndroid) {
+      return {'notifications': true, 'exactAlarm': true};
+    }
+
+    final hasNotifications = await checkNotificationPermission();
+    final hasExactAlarm = await checkExactAlarmPermission();
+
+    return {
+      'notifications': hasNotifications,
+      'exactAlarm': hasExactAlarm,
+    };
+  }
+
   Future<void> scheduleNotification({
     required int id,
     required String title,

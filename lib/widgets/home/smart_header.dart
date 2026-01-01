@@ -237,6 +237,8 @@ class _SmartHeaderState extends State<SmartHeader> {
                           ),
                           onPressed: widget.onMenuTap,
                           splashRadius: 24,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
                         ),
                       ),
                       const SizedBox(width: 8),

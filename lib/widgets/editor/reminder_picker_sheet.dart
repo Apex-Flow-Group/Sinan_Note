@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../services/notification_service.dart';
 
 class ReminderPickerSheet extends StatefulWidget {
   final DateTime? initialDateTime;
@@ -20,7 +21,55 @@ class ReminderPickerSheet extends StatefulWidget {
     DateTime? initialDateTime,
     String? initialRecurrence,
     Color backgroundColor,
-  ) {
+  ) async {
+    // Check permissions before showing picker
+    final notificationService = NotificationService();
+    final permissions = await notificationService.checkAllPermissions();
+    
+    if (!permissions['notifications']! || !permissions['exactAlarm']!) {
+      final shouldRequest = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Permissions Required'),
+          content: const Text(
+            'To use reminders, this app needs permission to:\n'
+            '• Send notifications\n'
+            '• Schedule exact alarms\n\n'
+            'These permissions ensure your reminders work reliably.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Grant Permissions'),
+            ),
+          ],
+        ),
+      );
+      
+      if (shouldRequest == true) {
+        await notificationService.requestNotificationPermissions();
+        // Recheck after request
+        final newPermissions = await notificationService.checkAllPermissions();
+        if (!newPermissions['notifications']! || !newPermissions['exactAlarm']!) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Permissions denied. Reminders may not work.'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+    
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
