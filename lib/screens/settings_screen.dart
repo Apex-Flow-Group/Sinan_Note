@@ -567,7 +567,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ApexSnackBar.show(context, 'Database error', type: SnackBarType.error);
+        ApexSnackBar.show(context, l10n.databaseError, type: SnackBarType.error);
       }
       return;
     }
@@ -788,7 +788,7 @@ By continuing, you acknowledge that:
       }
     } catch (e) {
       if (context.mounted) {
-        ApexSnackBar.show(context, 'Database error', type: SnackBarType.error);
+        ApexSnackBar.show(context, l10n.databaseError, type: SnackBarType.error);
       }
       return;
     }
@@ -901,7 +901,7 @@ By continuing, you acknowledge that:
       }
     } catch (e) {
       if (context.mounted) {
-        ApexSnackBar.show(context, 'Database error', type: SnackBarType.error);
+        ApexSnackBar.show(context, l10n.databaseError, type: SnackBarType.error);
       }
       return;
     }

@@ -20,6 +20,7 @@ class SmartHeader extends StatefulWidget {
   final ValueNotifier<String> viewTypeNotifier;
   final VoidCallback onViewToggle;
   final VoidCallback onMenuTap;
+  final VoidCallback? onFilterTap;
   final bool isSearchActive;
 
   const SmartHeader({
@@ -31,6 +32,7 @@ class SmartHeader extends StatefulWidget {
     required this.onViewToggle,
     required this.onMenuTap,
     required this.isSearchActive,
+    this.onFilterTap,
   });
 
   @override
@@ -42,6 +44,12 @@ class _SmartHeaderState extends State<SmartHeader> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Debug: Print colors
+    debugPrint('🎨 isDark: $isDark');
+    debugPrint('🎨 surfaceBright: ${Theme.of(context).colorScheme.surfaceBright}');
+    debugPrint('🎨 surfaceContainer: ${Theme.of(context).colorScheme.surfaceContainer}');
+    debugPrint('🎨 surface: ${Theme.of(context).colorScheme.surface}');
 
     return ValueListenableBuilder<Set<int>>(
       valueListenable: widget.selectedNoteIdsNotifier,
@@ -220,7 +228,9 @@ class _SmartHeaderState extends State<SmartHeader> {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: isDark ? Theme.of(context).colorScheme.surfaceBright : Theme.of(context).colorScheme.surfaceContainer,
+                          color: isDark 
+                            ? const Color(0xFF1A1B20) // ثابت
+                            : Theme.of(context).colorScheme.surfaceContainer,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -238,7 +248,6 @@ class _SmartHeaderState extends State<SmartHeader> {
                           onPressed: widget.onMenuTap,
                           splashRadius: 24,
                           focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -249,7 +258,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                           hintText: l10n.searchNotes,
                           viewTypeNotifier: widget.viewTypeNotifier,
                           onViewToggle: widget.onViewToggle,
-                          onFilterTap: () {},
+                          onFilterTap: widget.onFilterTap,
                         ),
                       ),
                     ],

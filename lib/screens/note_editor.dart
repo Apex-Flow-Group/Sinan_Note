@@ -192,13 +192,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _originalReminderDateTime = widget.note?.reminderDateTime;
     _originalRecurrenceRule = widget.note?.recurrenceRule;
 
-    if (widget.mode == NoteMode.checklist) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _updateChecklistUndoRedo();
-      });
-    } else {
-      _updateUndoRedoState();
-    }
+    _updateUndoRedoState();
 
     if (widget.mode == NoteMode.reminder && widget.note == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -329,10 +323,24 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       if (widget.mode == NoteMode.checklist || widget.note?.noteType == 'checklist') {
         contentToSave = _contentController.text;
         
-        // ✅ VALIDATION: Check if checklist is truly empty
-        if (contentToSave.trim().isEmpty) {
-          _isSaving = false;
-          return; // Don't save empty checklist
+        // ✅ FIX: If checklist has no items, add default item
+        try {
+          final decoded = jsonDecode(contentToSave);
+          if (decoded is Map) {
+            final items = decoded['items'] as List? ?? [];
+            if (items.isEmpty) {
+              final l10n = _l10nRef ?? AppLocalizations.of(context);
+              final defaultTask = l10n?.checklistItemHint ?? 'Task 1';
+              contentToSave = jsonEncode({
+                'title': decoded['title'] ?? '',
+                'items': [
+                  {'id': DateTime.now().millisecondsSinceEpoch.toString(), 'text': defaultTask, 'isDone': false}
+                ]
+              });
+            }
+          }
+        } catch (e) {
+          // Invalid JSON, continue with original content
         }
         
         try {
@@ -372,13 +380,29 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       }
 
       String noteType;
-      if (_isLanguageManuallySelected && _detectedLanguage != null) {
+      bool isChecklistNote;
+      
+      // Priority 1: Current editor mode (checklist conversion fix)
+      if (widget.mode == NoteMode.checklist) {
+        noteType = 'checklist';
+        isChecklistNote = true;
+      } 
+      // Priority 2: Manual language selection for code
+      else if (_isLanguageManuallySelected && _detectedLanguage != null) {
         noteType = _smartController.mapLanguageToNoteType(_detectedLanguage);
-      } else if (widget.note?.noteType != null &&
-          widget.note!.noteType.isNotEmpty) {
+        isChecklistNote = false;
+      } 
+      // Priority 3: Preserve existing type if compatible with current mode
+      else if (widget.note?.noteType != null &&
+          widget.note!.noteType.isNotEmpty &&
+          widget.mode == NoteMode.code) {
         noteType = widget.note!.noteType;
-      } else {
+        isChecklistNote = false;
+      } 
+      // Priority 4: Default to current mode
+      else {
         noteType = widget.mode.name;
+        isChecklistNote = false;
       }
 
       // CRITICAL: Use frozen snapshot - ignore runtime state changes
@@ -404,8 +428,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         isProfessional:
             widget.note?.isProfessional ?? (widget.mode == NoteMode.code),
         isPinned: widget.note?.isPinned ?? false,
-        isChecklist:
-            widget.note?.isChecklist ?? (widget.mode == NoteMode.checklist),
+        isChecklist: isChecklistNote,
       );
 
       // Save using the provider's unified method
@@ -505,7 +528,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           _isDirty = true;
         });
         await _saveNoteToDatabase(isManualSave: true);
-        ApexSnackBar.show(context, 'Reminder removed', type: SnackBarType.info);
+        ApexSnackBar.show(context, l10n.reminderRemoved, type: SnackBarType.info);
         return;
       }
 
@@ -883,11 +906,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   void _updateChecklistUndoRedo() {
-    if (_checklistUndoRedo != null) {
-      setState(() {
-        _canUndo = _checklistUndoRedo!.canUndo;
-        _canRedo = _checklistUndoRedo!.canRedo;
-      });
+    if (_checklistUndoRedo != null && mounted) {
+      _canUndo = _checklistUndoRedo!.canUndo;
+      _canRedo = _checklistUndoRedo!.canRedo;
     }
   }
 
@@ -1163,22 +1184,21 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 if (_reminderDateTime != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: InkWell(
-                      onTap: _showReminderDialog,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange, width: 2),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.alarm,
-                                color: Colors.orange, size: 24),
-                            const SizedBox(width: 12),
-                            Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange, width: 2),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.alarm,
+                              color: Colors.orange, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _showReminderDialog,
                               child: Text(
                                 _smartController
                                     .getTimeRemaining(_reminderDateTime),
@@ -1188,10 +1208,46 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
-                            const Icon(Icons.edit,
-                                color: Colors.orange, size: 20),
-                          ],
-                        ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 20),
+                            color: Colors.orange,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () async {
+                              debugPrint('🔴 CLOSE BUTTON PRESSED!');
+                              HapticFeedback.lightImpact();
+                              setState(() {
+                                _reminderDateTime = null;
+                                _recurrenceRule = null;
+                                _isDirty = true;
+                              });
+                              debugPrint('🔴 Reminder removed: _reminderDateTime=$_reminderDateTime');
+                              if (_savedNoteId != null || widget.note?.id != null) {
+                                await NotificationService().cancelNotification(_savedNoteId ?? widget.note!.id!);
+                              }
+                              await _saveNoteToDatabase(isManualSave: true);
+                              if (mounted) {
+                                ApexSnackBar.show(
+                                  context,
+                                  l10n.reminderRemoved,
+                                  type: SnackBarType.info,
+                                );
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 20),
+                            color: Colors.orange,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () {
+                              debugPrint('✏️ EDIT BUTTON PRESSED!');
+                              _showReminderDialog();
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -1501,7 +1557,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                           if (ext != null) {
                             await _showSmartSaveDialog(ext);
                           } else {
-                            ApexSnackBar.show(context, 'Unable to detect language',
+                            ApexSnackBar.show(context, l10n.unableToDetectLanguage,
                                 type: SnackBarType.warning);
                           }
                         }

@@ -28,21 +28,19 @@ class ApexSnackBar {
 
     switch (type) {
       case SnackBarType.success:
-        backgroundColor =
-            isDark ? Colors.green.shade700 : Colors.green.shade600;
+        backgroundColor = isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);
         icon = Icons.check_circle_rounded;
         break;
       case SnackBarType.error:
-        backgroundColor = isDark ? Colors.red.shade700 : Colors.red.shade600;
+        backgroundColor = isDark ? const Color(0xFFC62828) : const Color(0xFFE53935);
         icon = Icons.error_rounded;
         break;
       case SnackBarType.warning:
-        backgroundColor =
-            isDark ? Colors.orange.shade700 : Colors.orange.shade600;
+        backgroundColor = isDark ? const Color(0xFFEF6C00) : const Color(0xFFFB8C00);
         icon = Icons.warning_rounded;
         break;
       case SnackBarType.info:
-        backgroundColor = isDark ? Colors.blue.shade700 : Colors.blue.shade600;
+        backgroundColor = isDark ? const Color(0xFF1565C0) : const Color(0xFF1E88E5);
         icon = Icons.info_rounded;
         break;
     }

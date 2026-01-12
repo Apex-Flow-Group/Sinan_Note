@@ -366,6 +366,7 @@ class DatabaseService {
       // تحديث updatedAt لضمان ظهور النوت في المقدمة
       final noteMap = note.toMap();
       noteMap['updatedAt'] = DateTime.now().toIso8601String();
+      
       return await db
           .update('notes', noteMap, where: 'id = ?', whereArgs: [note.id]);
     }, name: 'Update_${note.id}');

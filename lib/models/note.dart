@@ -56,10 +56,10 @@ class Note {
     int? colorIndex,
     bool? isArchived,
     bool? isTrashed,
-    DateTime? reminderDateTime,
+    Object? reminderDateTime = _undefined,
     bool? isLocked,
     String? noteType,
-    String? recurrenceRule,
+    Object? recurrenceRule = _undefined,
     bool? isCompleted,
     bool? isProfessional,
     bool? isPinned,
@@ -74,16 +74,17 @@ class Note {
       colorIndex: colorIndex ?? this.colorIndex,
       isArchived: isArchived ?? this.isArchived,
       isTrashed: isTrashed ?? this.isTrashed,
-      reminderDateTime: reminderDateTime ?? this.reminderDateTime,
+      reminderDateTime: reminderDateTime == _undefined ? this.reminderDateTime : reminderDateTime as DateTime?,
       isLocked: isLocked ?? this.isLocked,
       noteType: noteType ?? this.noteType,
-      recurrenceRule: recurrenceRule ?? this.recurrenceRule,
+      recurrenceRule: recurrenceRule == _undefined ? this.recurrenceRule : recurrenceRule as String?,
       isCompleted: isCompleted ?? this.isCompleted,
       isProfessional: isProfessional ?? this.isProfessional,
       isPinned: isPinned ?? this.isPinned,
       isChecklist: isChecklist ?? this.isChecklist,
     );
   }
+
 
   Map<String, dynamic> toMap() {
     return {
@@ -150,3 +151,5 @@ class Note {
     return 0;
   }
 }
+
+const _undefined = Object();

@@ -10,6 +10,7 @@ import '../../models/note.dart';
 import '../../services/notes_provider.dart';
 import '../../services/settings_provider.dart';
 import '../../services/language_detector.dart';
+import '../../services/notification_service.dart';
 import '../../utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../screens/note_view_screen.dart';
@@ -492,7 +493,32 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                       const SizedBox(width: 4),
                                       const Icon(Icons.repeat,
                                           size: 12, color: Colors.orange),
-                                    ]
+                                    ],
+                                    const SizedBox(width: 4),
+                                    InkWell(
+                                      onTap: () async {
+                                        debugPrint('🔴 CARD: Close button pressed!');
+                                        HapticFeedback.lightImpact();
+                                        final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+                                        await NotificationService().cancelNotification(widget.note.id!);
+                                        final updatedNote = widget.note.copyWith(
+                                          reminderDateTime: null,
+                                          recurrenceRule: null,
+                                        );
+                                        debugPrint('🔴 CARD: Updating note with null reminder');
+                                        await notesProvider.updateNote(updatedNote);
+                                        widget.onNoteChanged();
+                                        if (context.mounted) {
+                                          ToastService().showToast(
+                                            context: context,
+                                            message: l10n.reminderRemoved,
+                                            type: ToastType.info,
+                                          );
+                                        }
+                                      },
+                                      child: Icon(Icons.close,
+                                          size: 14, color: titleColor.withValues(alpha: 0.7)),
+                                    ),
                                   ],
                                 ),
                               ),

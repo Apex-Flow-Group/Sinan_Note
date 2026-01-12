@@ -794,18 +794,6 @@ abstract class AppLocalizations {
   /// **'Notes permanently deleted'**
   String get notesDeleted;
 
-  /// No description provided for @notesPinned.
-  ///
-  /// In en, this message translates to:
-  /// **'Notes pinned'**
-  String get notesPinned;
-
-  /// No description provided for @notesArchived.
-  ///
-  /// In en, this message translates to:
-  /// **'Notes archived'**
-  String get notesArchived;
-
   /// No description provided for @confirmDeleteAll.
   ///
   /// In en, this message translates to:
@@ -1247,7 +1235,7 @@ abstract class AppLocalizations {
   /// No description provided for @date.
   ///
   /// In en, this message translates to:
-  /// **'Date: '**
+  /// **'Date'**
   String get date;
 
   /// No description provided for @protectedNote.
@@ -2597,7 +2585,7 @@ abstract class AppLocalizations {
   /// No description provided for @richNoteMenu.
   ///
   /// In en, this message translates to:
-  /// **'Formatted Note'**
+  /// **'Rich Note'**
   String get richNoteMenu;
 
   /// No description provided for @simpleNoteMenu.
@@ -2791,6 +2779,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note'**
   String get note;
+
+  /// No description provided for @permissionsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions Required'**
+  String get permissionsRequired;
+
+  /// No description provided for @reminderPermissionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'To use reminders, this app needs permission to:\n• Send notifications\n• Schedule exact alarms\n\nThese permissions ensure your reminders work reliably.'**
+  String get reminderPermissionsDesc;
+
+  /// No description provided for @grantPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Permissions'**
+  String get grantPermissions;
+
+  /// No description provided for @permissionsDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions denied. Reminders may not work.'**
+  String get permissionsDenied;
+
+  /// No description provided for @removeReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Reminder'**
+  String get removeReminder;
+
+  /// No description provided for @reminderRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder removed'**
+  String get reminderRemoved;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @repeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get repeat;
+
+  /// No description provided for @doesNotRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Does not repeat'**
+  String get doesNotRepeat;
+
+  /// No description provided for @daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
+  /// No description provided for @yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearly;
+
+  /// No description provided for @tomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get tomorrow;
+
+  /// No description provided for @nextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Week'**
+  String get nextWeek;
+
+  /// No description provided for @notesPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'note(s) pinned'**
+  String get notesPinned;
+
+  /// No description provided for @notesArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'note(s) archived'**
+  String get notesArchived;
+
+  /// No description provided for @unableToDetectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to detect language'**
+  String get unableToDetectLanguage;
+
+  /// No description provided for @executingCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Executing code...'**
+  String get executingCode;
+
+  /// No description provided for @databaseError.
+  ///
+  /// In en, this message translates to:
+  /// **'Database error'**
+  String get databaseError;
 }
 
 class _AppLocalizationsDelegate

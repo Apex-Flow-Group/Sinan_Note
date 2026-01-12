@@ -223,17 +223,18 @@ class EditorSmartController {
     String code,
     String? detectedLanguage,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (detectedLanguage == null) {
-      ApexSnackBar.show(context, 'Unable to detect language',
+      ApexSnackBar.show(context, l10n.unableToDetectLanguage,
           type: SnackBarType.warning);
       return;
     }
 
-    ApexSnackBar.show(context, 'Executing $detectedLanguage code...',
+    ApexSnackBar.show(context, '${l10n.executingCode} ($detectedLanguage)',
         type: SnackBarType.info, duration: const Duration(seconds: 1));
 
     final output = await executeCode(code, detectedLanguage);
-    final l10n = AppLocalizations.of(context)!;
 
     if (!context.mounted) return;
 

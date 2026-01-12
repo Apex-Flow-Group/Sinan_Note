@@ -137,7 +137,12 @@ class _NotesGridViewState extends State<NotesGridView> {
         note: note,
         viewType: widget.viewType,
         closeAllSlidables: _closeAllSlidables,
-        onNoteChanged: () => setState(() {}),
+        onNoteChanged: () async {
+          // 🔄 CRITICAL: Reload from DB to get fresh data
+          final provider = Provider.of<NotesProvider>(context, listen: false);
+          await provider.refreshAllNotes();
+          if (mounted) setState(() {});
+        },
         isSelected: selectedIds.contains(note.id),
         selectionMode: selectedIds.isNotEmpty,
         source: source,

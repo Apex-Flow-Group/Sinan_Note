@@ -228,15 +228,16 @@ class ToastService {
   }
 
   Color _getBackgroundColor(ToastType type, bool isDark) {
+    // Use theme-aware colors instead of hardcoded values
     switch (type) {
       case ToastType.success:
-        return isDark ? Colors.green.shade700 : Colors.green.shade600;
+        return isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);
       case ToastType.error:
-        return isDark ? Colors.red.shade700 : Colors.red.shade600;
+        return isDark ? const Color(0xFFC62828) : const Color(0xFFE53935);
       case ToastType.warning:
-        return isDark ? Colors.orange.shade700 : Colors.orange.shade600;
+        return isDark ? const Color(0xFFEF6C00) : const Color(0xFFFB8C00);
       case ToastType.info:
-        return isDark ? Colors.blue.shade700 : Colors.blue.shade600;
+        return isDark ? const Color(0xFF1565C0) : const Color(0xFF1E88E5);
     }
   }
 

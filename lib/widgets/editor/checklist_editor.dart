@@ -59,17 +59,6 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     super.initState();
     _parseContent();
     _titleController.addListener(_notifyParent);
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onUndoRedoControllerCreated?.call(
-        ChecklistUndoRedoController(
-          undo: undo,
-          redo: redo,
-          canUndo: canUndo,
-          canRedo: canRedo,
-        ),
-      );
-    });
   }
 
   void _parseContent() {
@@ -271,8 +260,14 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     }
 
     widget.onChanged(jsonData);
-    _updateUndoRedoController();
-    widget.onUndoRedoChanged?.call();
+    
+    // 🔧 FIX: Defer state updates to avoid build-phase conflicts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateUndoRedoController();
+        widget.onUndoRedoChanged?.call();
+      }
+    });
   }
 
   void _updateUndoRedoController() {

@@ -360,12 +360,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesDeleted => 'تم حذف الملاحظات نهائياً';
 
   @override
-  String get notesPinned => 'تم تثبيت الملاحظات';
-
-  @override
-  String get notesArchived => 'تم أرشفة الملاحظات';
-
-  @override
   String get confirmDeleteAll => 'هل تريد حذف جميع الملاحظات نهائياً؟';
 
   @override
@@ -586,7 +580,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get detected => 'تم الكشف:';
 
   @override
-  String get date => 'التاريخ:';
+  String get date => 'التاريخ';
 
   @override
   String get protectedNote => 'ملاحظة محمية';
@@ -1384,4 +1378,65 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get note => 'ملاحظة';
+
+  @override
+  String get permissionsRequired => 'الأذونات مطلوبة';
+
+  @override
+  String get reminderPermissionsDesc =>
+      'لاستخدام التذكيرات، يحتاج هذا التطبيق إلى إذن لـ:\n• إرسال الإشعارات\n• جدولة المنبهات الدقيقة\n\nهذه الأذونات تضمن عمل تذكيراتك بشكل موثوق.';
+
+  @override
+  String get grantPermissions => 'منح الأذونات';
+
+  @override
+  String get permissionsDenied => 'تم رفض الأذونات. قد لا تعمل التذكيرات.';
+
+  @override
+  String get removeReminder => 'إزالة التذكير';
+
+  @override
+  String get reminderRemoved => 'تم إزالة التذكير';
+
+  @override
+  String get time => 'الوقت';
+
+  @override
+  String get repeat => 'التكرار';
+
+  @override
+  String get doesNotRepeat => 'لا يتكرر';
+
+  @override
+  String get daily => 'يومياً';
+
+  @override
+  String get weekly => 'أسبوعياً';
+
+  @override
+  String get monthly => 'شهرياً';
+
+  @override
+  String get yearly => 'سنوياً';
+
+  @override
+  String get tomorrow => 'غداً';
+
+  @override
+  String get nextWeek => 'الأسبوع القادم';
+
+  @override
+  String get notesPinned => 'ملاحظة مثبتة';
+
+  @override
+  String get notesArchived => 'ملاحظة مؤرشفة';
+
+  @override
+  String get unableToDetectLanguage => 'تعذر اكتشاف اللغة';
+
+  @override
+  String get executingCode => 'جاري تنفيذ الكود...';
+
+  @override
+  String get databaseError => 'خطأ في قاعدة البيانات';
 }

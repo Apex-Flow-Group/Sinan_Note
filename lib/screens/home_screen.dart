@@ -120,6 +120,102 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showFilterDialog(BuildContext context) {
+    final l10n = context.l10n;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.filter_list_rounded, size: 22),
+            const SizedBox(width: 8),
+            Text(l10n.filter),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  l10n.noteType,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.note, color: Colors.blue),
+                title: Text(l10n.simpleNotes),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchController.text = 'type:simple';
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.code, color: Colors.purple),
+                title: Text(l10n.professionalNotes),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchController.text = 'type:pro';
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.alarm, color: Colors.orange),
+                title: Text(l10n.reminderNotes),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchController.text = 'type:reminder';
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.checklist, color: Colors.green),
+                title: Text(l10n.checklists),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchController.text = 'type:checklist';
+                },
+              ),
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  l10n.noteStatus,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.push_pin, color: Colors.red),
+                title: Text(l10n.pinnedOnly),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchController.text = 'pinned:true';
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.clear_all, color: Colors.red),
+                title: Text(l10n.clearFilter),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchController.clear();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 
 
   void _navigateToEditor(NoteMode mode) async {
@@ -233,6 +329,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               return;
                             }
                             _scaffoldKey.currentState?.openDrawer();
+                          },
+                          onFilterTap: () {
+                            FocusScope.of(context).unfocus();
+                            _showFilterDialog(context);
                           },
                           isSearchActive: _isSearchActive,
                         ),

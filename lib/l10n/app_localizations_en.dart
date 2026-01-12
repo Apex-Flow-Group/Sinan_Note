@@ -581,7 +581,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detected => 'Detected: ';
 
   @override
-  String get date => 'Date: ';
+  String get date => 'Date';
 
   @override
   String get protectedNote => 'Protected Note';
@@ -1382,4 +1382,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get note => 'Note';
+
+  @override
+  String get permissionsRequired => 'Permissions Required';
+
+  @override
+  String get reminderPermissionsDesc =>
+      'To use reminders, this app needs permission to:\n• Send notifications\n• Schedule exact alarms\n\nThese permissions ensure your reminders work reliably.';
+
+  @override
+  String get grantPermissions => 'Grant Permissions';
+
+  @override
+  String get permissionsDenied => 'Permissions denied. Reminders may not work.';
+
+  @override
+  String get removeReminder => 'Remove Reminder';
+
+  @override
+  String get reminderRemoved => 'Reminder removed';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get repeat => 'Repeat';
+
+  @override
+  String get doesNotRepeat => 'Does not repeat';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get yearly => 'Yearly';
+
+  @override
+  String get tomorrow => 'Tomorrow';
+
+  @override
+  String get nextWeek => 'Next Week';
+
+  @override
+  String get notesPinned => 'note(s) pinned';
+
+  @override
+  String get notesArchived => 'note(s) archived';
+
+  @override
+  String get unableToDetectLanguage => 'Unable to detect language';
+
+  @override
+  String get executingCode => 'Executing code...';
+
+  @override
+  String get databaseError => 'Database error';
 }

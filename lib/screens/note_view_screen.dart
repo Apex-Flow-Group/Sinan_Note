@@ -11,6 +11,7 @@ import '../models/note_mode.dart';
 import '../services/notes_provider.dart';
 import '../services/biometric_service.dart';
 import '../services/widget_service.dart';
+import '../services/notification_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../widgets/apex_snackbar.dart';
 import '../utils/checklist_formatter.dart';
@@ -82,6 +83,9 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         .firstWhere((n) => n?.id == _currentNote.id, orElse: () => null);
     if (updatedNote != null && mounted) {
       setState(() => _currentNote = updatedNote);
+    } else {
+      // Note not found in active notes, close view
+      if (mounted) Navigator.pop(context, true);
     }
   }
 
@@ -334,13 +338,39 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                       children: [
                         const Icon(Icons.alarm, size: 14, color: Colors.orange),
                         const SizedBox(width: 6),
-                        Text(
-                          _formatReminderDate(_currentNote.reminderDateTime!),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
+                        Expanded(
+                          child: Text(
+                            _formatReminderDate(_currentNote.reminderDateTime!),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
+                        ),
+                        const SizedBox(width: 4),
+                        InkWell(
+                          onTap: () async {
+                            debugPrint('🔴 VIEW: Close button pressed!');
+                            HapticFeedback.lightImpact();
+                            final provider = Provider.of<NotesProvider>(context, listen: false);
+                            await NotificationService().cancelNotification(_currentNote.id!);
+                            final updatedNote = _currentNote.copyWith(
+                              reminderDateTime: null,
+                              recurrenceRule: null,
+                            );
+                            debugPrint('🔴 VIEW: Updating note with null reminder');
+                            await provider.updateNote(updatedNote);
+                            await _refreshNote();
+                            if (mounted) {
+                              ApexSnackBar.show(
+                                context,
+                                l10n.reminderRemoved,
+                                type: SnackBarType.info,
+                              );
+                            }
+                          },
+                          child: Icon(Icons.close, size: 16, color: textColor.withValues(alpha: 0.7)),
                         ),
                       ],
                     ),
@@ -461,40 +491,45 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
   Future<void> _editNote(BuildContext context) async {
     if (_currentNote.isTrashed) return;
     
-    // Map noteType to NoteMode
-    final codeTypes = [
-      'python',
-      'javascript',
-      'java',
-      'dart',
-      'html',
-      'css',
-      'sql',
-      'cpp',
-      'c',
-      'csharp',
-      'swift',
-      'kotlin',
-      'go',
-      'rust',
-      'php',
-      'ruby',
-      'bash',
-      'json',
-      'xml',
-      'code',
-      'pro',
-      'professional'
-    ];
-
+    // CRITICAL: Check isChecklist flag first
     NoteMode mode;
-    if (codeTypes.contains(_currentNote.noteType)) {
-      mode = NoteMode.code;
+    if (_currentNote.isChecklist) {
+      mode = NoteMode.checklist;
     } else {
-      mode = NoteMode.values.firstWhere(
-        (m) => m.name == _currentNote.noteType,
-        orElse: () => NoteMode.simple,
-      );
+      // Map noteType to NoteMode
+      final codeTypes = [
+        'python',
+        'javascript',
+        'java',
+        'dart',
+        'html',
+        'css',
+        'sql',
+        'cpp',
+        'c',
+        'csharp',
+        'swift',
+        'kotlin',
+        'go',
+        'rust',
+        'php',
+        'ruby',
+        'bash',
+        'json',
+        'xml',
+        'code',
+        'pro',
+        'professional'
+      ];
+
+      if (codeTypes.contains(_currentNote.noteType)) {
+        mode = NoteMode.code;
+      } else {
+        mode = NoteMode.values.firstWhere(
+          (m) => m.name == _currentNote.noteType,
+          orElse: () => NoteMode.simple,
+        );
+      }
     }
 
     await Navigator.push(
@@ -505,6 +540,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       ),
     );
 
+    // 🔄 CRITICAL: Refresh note data after editing
     await _refreshNote();
   }
 
@@ -541,6 +577,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
   }
 
   String _formatReminderDate(DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final reminderDay = DateTime(date.year, date.month, date.day);
@@ -548,11 +585,11 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
 
     String dateStr;
     if (diff == 0) {
-      dateStr = 'Today';
+      dateStr = l10n.today;
     } else if (diff == 1) {
-      dateStr = 'Tomorrow';
+      dateStr = l10n.tomorrow;
     } else if (diff < 7) {
-      dateStr = 'in $diff days';
+      dateStr = '$diff ${l10n.thisWeek.toLowerCase()}';
     } else {
       dateStr = '${date.month}/${date.day}';
     }

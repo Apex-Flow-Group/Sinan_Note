@@ -303,7 +303,13 @@ class NotesProvider extends ChangeNotifier {
     } else {
       final index = _allNotes.indexWhere((n) => n.id == note.id);
       if (index != -1) {
-        _allNotes[index] = note;
+        // 🔄 CRITICAL: Update with FRESH data from DB, not stale note object
+        final freshNote = await _dbService.getNoteById(note.id!);
+        if (freshNote != null) {
+          _allNotes[index] = freshNote;
+        } else {
+          _allNotes[index] = note;
+        }
         _performSort(); // CRITICAL: Sort immediately for pin changes
         _allNotes = List.from(_allNotes); // CRITICAL: New reference for Selector
       } else {

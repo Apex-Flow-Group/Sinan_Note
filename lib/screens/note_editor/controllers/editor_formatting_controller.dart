@@ -97,6 +97,7 @@ class EditorFormattingController {
     VoidCallback onApply,
   ) async {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final prefs = await SharedPreferences.getInstance();
     final hideHint = prefs.getBool('hide_formatting_hint') ?? false;
 
@@ -113,9 +114,9 @@ class EditorFormattingController {
           backgroundColor: backgroundColor,
           title: Row(
             children: [
-              const Icon(Icons.info_outline, color: Colors.blue),
+              Icon(Icons.info_outline, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text(l10n.formattingHint, style: TextStyle(color: textColor)),
+              Text(l10n.formattingHint, style: TextStyle(color: theme.colorScheme.onSurface)),
             ],
           ),
           content: Column(
@@ -124,7 +125,7 @@ class EditorFormattingController {
             children: [
               Text(
                 l10n.formattingHintMessage,
-                style: TextStyle(color: textColor),
+                style: TextStyle(color: theme.colorScheme.onSurface),
               ),
               const SizedBox(height: 16),
               Row(
@@ -137,7 +138,7 @@ class EditorFormattingController {
                   Expanded(
                     child: Text(
                       l10n.dontShowAgain,
-                      style: TextStyle(color: textColor),
+                      style: TextStyle(color: theme.colorScheme.onSurface),
                     ),
                   ),
                 ],

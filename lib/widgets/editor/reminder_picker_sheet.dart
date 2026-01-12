@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/notification_service.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 class ReminderPickerSheet extends StatefulWidget {
   final DateTime? initialDateTime;
@@ -22,6 +23,9 @@ class ReminderPickerSheet extends StatefulWidget {
     String? initialRecurrence,
     Color backgroundColor,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    
     // Check permissions before showing picker
     final notificationService = NotificationService();
     final permissions = await notificationService.checkAllPermissions();
@@ -30,21 +34,17 @@ class ReminderPickerSheet extends StatefulWidget {
       final shouldRequest = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Permissions Required'),
-          content: const Text(
-            'To use reminders, this app needs permission to:\n'
-            '• Send notifications\n'
-            '• Schedule exact alarms\n\n'
-            'These permissions ensure your reminders work reliably.',
-          ),
+          backgroundColor: theme.colorScheme.surface,
+          title: Text(l10n.permissionsRequired),
+          content: Text(l10n.reminderPermissionsDesc),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Grant Permissions'),
+              child: Text(l10n.grantPermissions),
             ),
           ],
         ),
@@ -57,9 +57,9 @@ class ReminderPickerSheet extends StatefulWidget {
         if (!newPermissions['notifications']! || !newPermissions['exactAlarm']!) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Permissions denied. Reminders may not work.'),
-                duration: Duration(seconds: 3),
+              SnackBar(
+                content: Text(l10n.permissionsDenied),
+                duration: const Duration(seconds: 3),
               ),
             );
           }
@@ -102,6 +102,7 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bgColor = isDark ? Colors.grey[900]! : theme.colorScheme.surface;
@@ -133,17 +134,17 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                   IconButton(
                     icon: const Icon(Icons.close_rounded),
                     onPressed: () => Navigator.pop(context),
-                    tooltip: 'Cancel',
+                    tooltip: l10n.cancel,
                   ),
                   if (widget.initialDateTime != null)
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () => Navigator.pop(context, {'remove': true}),
-                      tooltip: 'Remove',
+                      tooltip: l10n.removeReminder,
                     ),
                   const Spacer(),
                   Text(
-                    'Reminder',
+                    l10n.reminder,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -166,7 +167,7 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                       };
                       Navigator.pop(context, result);
                     },
-                    tooltip: 'Save',
+                    tooltip: l10n.save,
                   ),
                 ],
               ),
@@ -178,7 +179,7 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Date',
+                    l10n.date,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -188,15 +189,15 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _buildQuickDateChip('Today', DateTime.now(), textColor),
+                      _buildQuickDateChip(l10n.today, DateTime.now(), textColor),
                       const SizedBox(width: 8),
                       _buildQuickDateChip(
-                          'Tomorrow',
+                          l10n.tomorrow,
                           DateTime.now().add(const Duration(days: 1)),
                           textColor),
                       const SizedBox(width: 8),
                       _buildQuickDateChip(
-                          'Next Week',
+                          l10n.nextWeek,
                           DateTime.now().add(const Duration(days: 7)),
                           textColor),
                     ],
@@ -246,7 +247,7 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Time',
+                    l10n.time,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -295,7 +296,7 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Repeat',
+                    l10n.repeat,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -308,11 +309,11 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                     runSpacing: 8,
                     children: [
                       _buildRecurrenceChip(
-                          'Does not repeat', 'none', textColor),
-                      _buildRecurrenceChip('Daily', 'DAILY', textColor),
-                      _buildRecurrenceChip('Weekly', 'WEEKLY', textColor),
-                      _buildRecurrenceChip('Monthly', 'MONTHLY', textColor),
-                      _buildRecurrenceChip('Yearly', 'YEARLY', textColor),
+                          l10n.doesNotRepeat, 'none', textColor),
+                      _buildRecurrenceChip(l10n.daily, 'DAILY', textColor),
+                      _buildRecurrenceChip(l10n.weekly, 'WEEKLY', textColor),
+                      _buildRecurrenceChip(l10n.monthly, 'MONTHLY', textColor),
+                      _buildRecurrenceChip(l10n.yearly, 'YEARLY', textColor),
                     ],
                   ),
                 ],

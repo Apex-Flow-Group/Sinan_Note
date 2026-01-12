@@ -3,10 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../models/note.dart';
 import '../../models/note_mode.dart';
 import '../../services/notes_provider.dart';
 import '../../services/settings_provider.dart';
+import '../../services/notification_service.dart';
 
 import '../../l10n/l10n_migration_helper.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
@@ -31,6 +34,9 @@ class _ReminderDashboardState extends State<ReminderDashboard>
   String _searchQuery = '';
   ViewType _viewType = ViewType.listExpanded;
   String _sortBy = 'date'; // date, title
+  bool _showPermissionBanner = false;
+  bool _isCheckingPermissions = true;
+  bool _bannerExpanded = false;
 
   @override
   void initState() {
@@ -40,7 +46,25 @@ class _ReminderDashboardState extends State<ReminderDashboard>
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
     });
-    // ❌ REMOVED: loadNotes() - data is already loaded by MainLayoutScreen
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dismissed = prefs.getBool('reminder_permission_dismissed') ?? false;
+    
+    if (!dismissed) {
+      await NotificationService().checkAllPermissions();
+      // Always show banner to remind about battery optimization
+      if (mounted) {
+        setState(() {
+          _showPermissionBanner = true; // Always show for battery tip
+          _isCheckingPermissions = false;
+        });
+      }
+    } else {
+      setState(() => _isCheckingPermissions = false);
+    }
   }
 
   void _loadViewType() async {
@@ -217,16 +241,24 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                     ),
                   ),
                 ],
-                body: TabBarView(
-                  controller: _tabController,
-                  physics: const NeverScrollableScrollPhysics(),
+                body: Column(
                   children: [
-                    _buildReminderList(
-                        _filterNotes(upcomingReminders), 'upcoming', strings),
-                    _buildReminderList(
-                        _filterNotes(scheduledReminders), 'scheduled', strings),
-                    _buildReminderList(
-                        _filterNotes(expiredReminders), 'expired', strings),
+                    if (_showPermissionBanner && !_isCheckingPermissions)
+                      _buildPermissionBanner(strings),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildReminderList(
+                              _filterNotes(upcomingReminders), 'upcoming', strings),
+                          _buildReminderList(
+                              _filterNotes(scheduledReminders), 'scheduled', strings),
+                          _buildReminderList(
+                              _filterNotes(expiredReminders), 'expired', strings),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -261,6 +293,78 @@ class _ReminderDashboardState extends State<ReminderDashboard>
           ],
         );
       },
+    );
+  }
+
+  Widget _buildPermissionBanner(AppLocalizations strings) {
+    return GestureDetector(
+      onTap: () => setState(() => _bannerExpanded = !_bannerExpanded),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+        ),
+        child: _bannerExpanded
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.battery_alert, color: Colors.orange, size: 24),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Battery Optimization',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('reminder_permission_dismissed', true);
+                          setState(() => _showPermissionBanner = false);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Disable battery optimization to ensure reminders work reliably in the background',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      await openAppSettings();
+                    },
+                    icon: const Icon(Icons.settings, size: 18),
+                    label: const Text('Open Settings'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              )
+            : const Row(
+                children: [
+                  Icon(Icons.battery_alert, color: Colors.orange, size: 24),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Battery Optimization',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                  Icon(Icons.expand_more, size: 20),
+                ],
+              ),
+      ),
     );
   }
 
