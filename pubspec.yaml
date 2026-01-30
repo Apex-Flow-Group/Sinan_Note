@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 2.1.9+3290
+version: 2.2.0+3291
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -58,6 +58,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0
   device_preview: ^1.2.0
+  faker: ^2.1.0
 
 flutter:
   uses-material-design: true

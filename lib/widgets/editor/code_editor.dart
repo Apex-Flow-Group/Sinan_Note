@@ -5,14 +5,14 @@ import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 
-class ProfessionalCodeEditor extends StatefulWidget {
+class CodeEditor extends StatefulWidget {
   final CodeController controller;
   final UndoHistoryController undoController;
   final String? detectedLanguage;
   final Color backgroundColor;
   final FocusNode? focusNode;
 
-  const ProfessionalCodeEditor({
+  const CodeEditor({
     super.key,
     required this.controller,
     required this.undoController,
@@ -22,10 +22,10 @@ class ProfessionalCodeEditor extends StatefulWidget {
   });
 
   @override
-  State<ProfessionalCodeEditor> createState() => _ProfessionalCodeEditorState();
+  State<CodeEditor> createState() => _CodeEditorState();
 }
 
-class _ProfessionalCodeEditorState extends State<ProfessionalCodeEditor> {
+class _CodeEditorState extends State<CodeEditor> {
   @override
   Widget build(BuildContext context) {
     final isDark = widget.backgroundColor.computeLuminance() < 0.5;

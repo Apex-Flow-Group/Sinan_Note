@@ -226,6 +226,11 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Set native FLAG_SECURE
   Future<void> _setSecureFlag(bool secure) async {
+    // Skip on non-Android platforms
+    if (!_isAndroid()) {
+      return;
+    }
+    
     debugPrint('🔴 GATE: Sending Native Command: secure=$secure');
     try {
       final result = await _platform.invokeMethod('secureScreen', {'secure': secure});
@@ -234,6 +239,14 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
       debugPrint('🔴 GATE: ❌ Native call FAILED: ${e.code} - ${e.message}');
     } catch (e) {
       debugPrint('🔴 GATE: ❌ Unexpected error: $e');
+    }
+  }
+  
+  bool _isAndroid() {
+    try {
+      return Theme.of(WidgetsBinding.instance.rootElement!).platform == TargetPlatform.android;
+    } catch (e) {
+      return false;
     }
   }
 }

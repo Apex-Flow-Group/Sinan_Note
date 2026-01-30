@@ -15,14 +15,14 @@ import '../../widgets/home/add_menu_widget.dart';
 import '../../screens/home_screen.dart' show ViewType;
 import '../note_editor.dart';
 
-class ProfessionalTab extends StatefulWidget {
-  const ProfessionalTab({super.key});
+class CodeTab extends StatefulWidget {
+  const CodeTab({super.key});
 
   @override
-  State<ProfessionalTab> createState() => _ProfessionalTabState();
+  State<CodeTab> createState() => _CodeTabState();
 }
 
-class _ProfessionalTabState extends State<ProfessionalTab> {
+class _CodeTabState extends State<CodeTab> {
   bool _showAddMenu = false;
   final TextEditingController _searchController = TextEditingController();
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
