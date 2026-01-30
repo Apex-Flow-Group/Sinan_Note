@@ -15,8 +15,6 @@ import '../services/database_service.dart';
 import '../services/apex_diagnostics_engine.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../widgets/apex_snackbar.dart';
-import 'transfer_screen.dart';
-import 'transfer_screen_helper.dart';
 import 'support_form_screen.dart';
 import 'about_screen.dart';
 import '../widgets/custom_share_sheet.dart';
@@ -198,30 +196,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // DATA SECTION
               _buildSectionHeader(l10n.data),
-              if (FlavorConfig.hasTransferFeature)
-                ListTile(
-                  leading: const Icon(Icons.sync_alt, color: Colors.blue),
-                  title: Text(l10n.transferTitle),
-                  subtitle: Text(l10n.localNetworkTransfer),
-                  onTap: () async {
-                    final dbService = DatabaseService();
-                    final db = await dbService.database;
-                    final lockedCount = Sqflite.firstIntValue(await db.rawQuery(
-                            'SELECT COUNT(*) FROM notes WHERE isLocked = 1')) ??
-                        0;
-
-                    if (lockedCount > 0) {
-                      final agreed = await TransferAgreementDialog.show(
-                          context, currentLang == 'ar', lockedCount);
-                      if (agreed != true) return;
-                    }
-
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const TransferScreen()));
-                  },
-                ),
               ListTile(
                 leading: const Icon(Icons.cloud_upload_outlined,
                     color: Colors.green),
