@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../models/note.dart';
-import '../../services/database_service.dart';
+import '../../services/storage/isar_database_service.dart';
 import '../../screens/note_editor.dart';
 import '../../services/toast_service.dart';
-import '../custom_share_sheet.dart';
+import '../common/custom_share_sheet.dart';
 
 class NoteOptionsSheet {
   static void show(
@@ -17,7 +17,7 @@ class NoteOptionsSheet {
     VoidCallback onNoteChanged,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final dbService = DatabaseService();
+    final dbService = IsarDatabaseService();
 
     showModalBottomSheet(
       context: context,

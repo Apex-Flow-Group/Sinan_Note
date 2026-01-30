@@ -7,9 +7,9 @@ import 'package:provider/provider.dart';
 
 import '../../../models/note.dart';
 import '../../../models/note_mode.dart';
-import '../../../services/notes_provider.dart';
+import '../../../controllers/notes/notes_provider.dart';
 import '../../../services/language_detector.dart';
-import '../../../utils/apex_smart_controller.dart';
+import '../../../core/utils/apex_smart_controller.dart';
 import '../../../controllers/editor/editor_state_manager.dart';
 import '../../../controllers/editor/text_direction_controller.dart';
 import '../../../widgets/editor/checklist_editor.dart';

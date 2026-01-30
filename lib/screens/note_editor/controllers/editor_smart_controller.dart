@@ -5,7 +5,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../../services/smart_analyzer.dart';
 import '../../../services/language_detector.dart';
 import '../../../services/code_executor.dart';
-import '../../../widgets/apex_snackbar.dart';
+import '../../../widgets/common/apex_snackbar.dart';
 
 /// Handles smart features (calculations, code execution, date analysis)
 class EditorSmartController {

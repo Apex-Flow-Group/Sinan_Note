@@ -90,7 +90,7 @@ class EditorStateManager {
   /// This enables smart dirty checking to prevent unnecessary saves.
   /// 
   /// **Comparison:**
-  /// - Content vs originalContent
+  /// - isDirty flag (set when content changes)
   /// - Title vs originalTitle
   /// - Color vs originalColorIndex
   /// - Reminder vs originalReminderDateTime
@@ -98,7 +98,7 @@ class EditorStateManager {
   /// 
   /// **Returns:** true if any field has changed
   bool hasChanges() {
-    return content != originalContent ||
+    return isDirty ||
            (customTitle ?? checklistTitle ?? '') != originalTitle ||
            colorIndex != originalColorIndex ||
            reminderDateTime != originalReminderDateTime ||

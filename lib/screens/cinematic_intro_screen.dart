@@ -3,7 +3,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/settings_provider.dart';
+import '../controllers/settings/settings_provider.dart';
 import 'tour_screen.dart';
 
 // ignore: use_key_in_widget_constructors

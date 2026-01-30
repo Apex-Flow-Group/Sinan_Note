@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../models/note.dart';
-import '../../services/notes_provider.dart';
+import '../../controllers/notes/notes_provider.dart';
 import '../../screens/home_screen.dart';
 import '../home/note_card_widget.dart';
 

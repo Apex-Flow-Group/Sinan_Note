@@ -3,11 +3,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import '../../../core/utils/logger.dart';
 import '../../../models/note.dart';
 import '../../../models/note_mode.dart';
-import '../../../services/notes_provider.dart';
+import '../../../controllers/notes/notes_provider.dart';
 import '../../../services/version_control_service.dart';
-import '../../../widgets/apex_snackbar.dart';
+import '../../../widgets/common/apex_snackbar.dart';
 import '../controllers/editor_smart_controller.dart';
 
 class EditorSaveManager {
@@ -99,6 +100,7 @@ class EditorSaveManager {
     required NoteMode mode,
     bool silent = false,
   }) async {
+    AppLogger.info('saveNote called - title: $title, noteType: $noteType', 'SaveManager');
     final noteToSave = Note(
       id: savedNoteId ?? existingNote?.id,
       title: title,
@@ -119,6 +121,7 @@ class EditorSaveManager {
     );
 
     final newId = await provider.addOrUpdateNote(noteToSave, silent: silent);
+    AppLogger.success('Note saved with ID: $newId', 'SaveManager');
     
     // Log version for history
     try {

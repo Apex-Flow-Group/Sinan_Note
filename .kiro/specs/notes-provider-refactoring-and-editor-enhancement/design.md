@@ -390,7 +390,7 @@ class NoteSideEffectService {
     try {
       await NotificationService().cancelNotification(noteId);
     } catch (e) {
-      debugPrint('⚠️ Cancel reminder error: $e');
+      AppLogger.warning('Cancel reminder error', 'SideEffect', e);
     }
   }
   

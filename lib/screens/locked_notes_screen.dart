@@ -3,9 +3,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/notes_provider.dart';
+import '../core/utils/logger.dart';
+import '../controllers/notes/notes_provider.dart';
 import '../models/note.dart';
-import '../l10n/l10n_migration_helper.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../widgets/home/home_drawer_widget.dart';
 import '../widgets/home/note_card_widget.dart';
 import '../screens/home_screen.dart' show ViewType;
@@ -75,12 +76,12 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     setState(() => _isLoading = true);
     final provider = Provider.of<NotesProvider>(context, listen: false);
     _decryptedNotes = await provider.fetchAndDecryptLockedNotes();
-    debugPrint('🔒 Loaded ${_decryptedNotes.length} locked notes');
+    AppLogger.info('Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
     if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _createLockedNote(NoteMode mode) async {
-    debugPrint('🔒 Creating new locked ${mode.name} note...');
+    AppLogger.info('Creating new locked ${mode.name} note', 'LockedNotes');
     
     String noteType;
     bool isChecklist = false;
@@ -124,18 +125,16 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       ),
     );
     
-    debugPrint('🔒 Editor closed, reloading...');
+    AppLogger.info('Editor closed, reloading', 'LockedNotes');
     if (mounted) {
-      await _providerRef?.loadNotes();
-      debugPrint('🔒 Notes loaded');
       await _loadLockedNotes();
-      debugPrint('🔒 Locked notes: ${_decryptedNotes.length}');
+      AppLogger.info('Locked notes: ${_decryptedNotes.length}', 'LockedNotes');
     }
   }
 
   Future<void> _showImportSheet() async {
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
     final allNotes = await provider.getNotes();
     final unlocked = allNotes
         .where((n) => !n.isLocked && !n.isArchived && !n.isTrashed)
@@ -154,7 +153,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       isScrollControlled: true,
       builder: (modalContext) => StatefulBuilder(
         builder: (context, setModalState) {
-          final l10n = context.l10n;
+          final l10n = AppLocalizations.of(context)!;
           return Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -246,7 +245,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
       canPop: _selectedNoteIds.isEmpty,

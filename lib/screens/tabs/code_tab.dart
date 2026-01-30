@@ -6,10 +6,9 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../models/note.dart';
 import '../../models/note_mode.dart';
-import '../../services/notes_provider.dart';
-import '../../services/settings_provider.dart';
-
-import '../../l10n/l10n_migration_helper.dart';
+import '../../controllers/notes/notes_provider.dart';
+import '../../controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../widgets/home/note_card_widget.dart';
 import '../../widgets/home/add_menu_widget.dart';
 import '../../screens/home_screen.dart' show ViewType;
@@ -82,16 +81,14 @@ class _CodeTabState extends State<CodeTab> {
 
   @override
   Widget build(BuildContext context) {
-    final strings = L10nHelper.of(context);
+    final strings = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Consumer<NotesProvider>(
       builder: (context, notesProvider, _) {
         final professionalNotes = _filterNotes(notesProvider.notes
             .where((note) =>
-                (note.noteType == 'pro' ||
-                    note.noteType == 'code' ||
-                    note.noteType == 'professional') &&
+                note.isProfessional &&
                 !note.isArchived &&
                 !note.isTrashed)
             .toList());

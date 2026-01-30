@@ -97,7 +97,7 @@ final currentTitle = _currentTitle;  // ✅ يقرأ من getter
 final hasTitleChanged = currentTitle != _originalTitle;  // ✅ يقارن
 
 if (!hasContentChanged && !hasTitleChanged && ...) {
-  debugPrint('✋ Save skipped: No real changes detected');
+  AppLogger.debug('✋ Save skipped: No real changes detected');
   return;
 }
 ```

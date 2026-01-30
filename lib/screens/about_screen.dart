@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../config/flavor_config.dart';
+
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -126,11 +126,10 @@ class _AboutScreenState extends State<AboutScreen> {
 
             // Links Section
             _buildSection(l10n.importantLinks, [
-              if (FlavorConfig.isGooglePlay)
-                _buildLink(
-                  l10n.appPageGooglePlay,
-                  'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note',
-                ),
+              _buildLink(
+                l10n.appPageGooglePlay,
+                'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note',
+              ),
               _buildLink(
                 l10n.privacyPolicy,
                 isArabic 
@@ -173,57 +172,30 @@ class _AboutScreenState extends State<AboutScreen> {
             ]),
             const SizedBox(height: 24),
 
-            // Store Info - Dynamic based on flavor
-            if (FlavorConfig.isGooglePlay)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.verified, color: Colors.green, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.officialGooglePlay,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.green[700],
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info, color: Colors.blue, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.fdroidVersion,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[700],
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(8),
               ),
+              child: Row(
+                children: [
+                  const Icon(Icons.verified, color: Colors.green, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.officialGooglePlay,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green[700],
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
 
             // Footer

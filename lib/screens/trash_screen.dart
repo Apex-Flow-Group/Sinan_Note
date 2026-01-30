@@ -3,15 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
-import '../services/notes_provider.dart';
-import '../utils/adaptive_color.dart';
-
-import '../l10n/l10n_migration_helper.dart';
-
+import '../controllers/notes/notes_provider.dart';
+import '../core/utils/adaptive_color.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../services/toast_service.dart';
 import '../widgets/home/home_drawer_widget.dart';
 import 'note_view_screen.dart';
-import '../utils/checklist_formatter.dart';
+import '../core/utils/checklist_formatter.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -116,7 +114,7 @@ class _TrashScreenState extends State<TrashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
 
     return Consumer<NotesProvider>(
       builder: (context, notesProvider, _) {

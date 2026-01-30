@@ -6,8 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
 import '../models/note_mode.dart';
-import '../services/settings_provider.dart';
-import '../l10n/l10n_migration_helper.dart';
+import '../controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../widgets/home/add_menu_widget.dart' show AddMenuWidget, isMenuOpenNotifier;
 import '../widgets/home/home_drawer_widget.dart';
 import '../widgets/home/smart_header.dart';
@@ -64,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.sharedText != null) {
+        final l10n = AppLocalizations.of(context)!;
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -72,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return NoteEditorImmersive(
                 mode: NoteMode.code,
                 note: Note(
-                  title: context.l10n.importedFile,
+                  title: l10n.importedFile,
                   content: widget.sharedText!,
                   createdAt: DateTime.now(),
                   updatedAt: DateTime.now(),
@@ -121,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showFilterDialog(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -262,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ValueListenableBuilder<Set<int>>(

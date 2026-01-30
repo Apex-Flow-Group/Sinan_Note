@@ -1,11 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import '../../core/utils/logger.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import '../../models/note.dart';
 import '../notification_service.dart';
 import '../widget_service.dart';
-import '../../utils/checklist_formatter.dart';
+import '../../core/utils/checklist_formatter.dart';
 
 /// Service responsible for handling side effects of note operations.
 /// 
@@ -64,7 +64,7 @@ class NoteSideEffectService {
         // Check exact alarm permission (Android 12+)
         final hasPermission = await notificationService.checkExactAlarmPermission();
         if (!hasPermission) {
-          debugPrint('⚠️ Exact Alarm permission denied');
+          AppLogger.debug('⚠️ Exact Alarm permission denied');
           return false;
         }
         
@@ -96,7 +96,7 @@ class NoteSideEffectService {
       
       return true;
     } catch (e) {
-      debugPrint('⚠️ Reminder side effect error: $e');
+      AppLogger.debug('⚠️ Reminder side effect error: $e');
       return false;
     }
   }
@@ -118,7 +118,7 @@ class NoteSideEffectService {
     try {
       await NotificationService().cancelNotification(noteId);
     } catch (e) {
-      debugPrint('⚠️ Cancel reminder error: $e');
+      AppLogger.debug('⚠️ Cancel reminder error: $e');
     }
   }
   
@@ -141,9 +141,9 @@ class NoteSideEffectService {
     try {
       // Skip widget update during batch operations
       // Widget will update on next app launch or manual pin
-      debugPrint('⏭️ Skipping widget update (batch operation)');
+      AppLogger.debug('⏭️ Skipping widget update (batch operation)');
     } catch (e) {
-      debugPrint('⚠️ Widget update error: $e');
+      AppLogger.debug('⚠️ Widget update error: $e');
     }
   }
   
@@ -161,7 +161,7 @@ class NoteSideEffectService {
     try {
       await WidgetService.checkAndUpdateIfPinned(note);
     } catch (e) {
-      debugPrint('⚠️ Widget check and update error: $e');
+      AppLogger.debug('⚠️ Widget check and update error: $e');
     }
   }
   
@@ -179,7 +179,7 @@ class NoteSideEffectService {
     try {
       await WidgetService.checkAndResetIfPinned(noteId);
     } catch (e) {
-      debugPrint('⚠️ Widget reset error: $e');
+      AppLogger.debug('⚠️ Widget reset error: $e');
     }
   }
 }

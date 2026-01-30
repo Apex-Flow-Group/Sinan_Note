@@ -2,11 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/utils/logger.dart';
 import '../../../models/note.dart';
 import '../../../models/note_mode.dart';
-import '../../../services/encryption_service.dart';
-import '../../../services/biometric_service.dart';
-import '../../../services/notes_provider.dart';
+import '../../../services/security/encryption_service.dart';
+import '../../../services/security/biometric_service.dart';
+import '../../../controllers/notes/notes_provider.dart';
 import '../../../services/version_control_service.dart';
 
 /// Handles all storage operations (save, load, encryption)
@@ -41,7 +42,7 @@ class EditorStorageController {
       await prefs.setDouble('last_font_size', fontSize);
       await prefs.setInt('last_note_color', _colorToInt(backgroundColor));
     } catch (e) {
-      debugPrint('❌ Failed to save sticky settings: $e');
+      AppLogger.error('Failed to save sticky settings', 'EditorStorage', e);
     }
   }
 
@@ -72,7 +73,7 @@ class EditorStorageController {
         'content': decryptedContent,
       };
     } catch (e) {
-      debugPrint('❌ Decryption failed: $e');
+      AppLogger.error('Decryption failed', 'EditorStorage', e);
       return null;
     }
   }

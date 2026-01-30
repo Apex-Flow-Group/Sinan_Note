@@ -279,7 +279,7 @@ try {
   final decoded = jsonDecode(jsonContent);
   // ...
 } catch (e) {
-  debugPrint('❌ Invalid checklist JSON: $e');
+  AppLogger.error('Invalid checklist JSON', 'Checklist', e);
   // عرض رسالة خطأ للمستخدم
 }
 ```

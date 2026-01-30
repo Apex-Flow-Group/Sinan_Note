@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/database_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import '../../test_setup.dart';
 
-class MockDatabaseService implements DatabaseService {
+class MockDatabaseService extends IsarDatabaseService {
   final Map<int, Note> _notes = {};
 
   @override
@@ -30,9 +30,6 @@ class MockDatabaseService implements DatabaseService {
   void addNote(Note note) {
     _notes[note.id!] = note;
   }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

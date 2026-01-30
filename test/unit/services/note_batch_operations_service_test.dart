@@ -5,10 +5,10 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_batch_operations_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
-import 'package:apex_note/services/database_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import '../../test_setup.dart';
 
-class MockDatabaseService implements DatabaseService {
+class MockDatabaseService extends IsarDatabaseService {
   final Map<int, Note> _notes = {};
 
   @override
@@ -21,9 +21,9 @@ class MockDatabaseService implements DatabaseService {
   }
 
   @override
-  Future<int> deleteNote(int id) async {
-    if (_notes.remove(id) != null) return 1;
-    return 0;
+  Future<bool> deleteNote(int id) async {
+    if (_notes.remove(id) != null) return true;
+    return false;
   }
 
   @override
@@ -72,9 +72,6 @@ class MockDatabaseService implements DatabaseService {
   void addNote(Note note) {
     _notes[note.id!] = note;
   }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -129,7 +126,7 @@ void main() {
         }
         stateService.updateAllNotes(notes);
 
-        await service.trashNotes([1, 2]);
+        await service.batchTrashNotes([1, 2]);
 
         // Check memory update (optimistic)
         expect(stateService.trashedNotes.length, 2);
@@ -160,7 +157,7 @@ void main() {
         }
         stateService.updateAllNotes(notes);
 
-        await service.trashNotes([1, 2]);
+        await service.batchTrashNotes([1, 2]);
 
         // Wait for async operations
         await Future.delayed(const Duration(milliseconds: 100));
@@ -183,19 +180,19 @@ void main() {
         dbService.addNote(note);
         stateService.updateAllNotes([note]);
 
-        await service.trashNotes([1]);
+        await service.batchTrashNotes([1]);
 
         // Should not throw
         expect(stateService.trashedNotes.length, 1);
       });
 
       test('handles empty list', () async {
-        await service.trashNotes([]);
+        await service.batchTrashNotes([]);
         // Should not throw
       });
 
       test('handles non-existent notes', () async {
-        await service.trashNotes([999]);
+        await service.batchTrashNotes([999]);
         // Should not throw
       });
     });
@@ -226,7 +223,7 @@ void main() {
         }
         stateService.updateAllNotes(notes);
 
-        await service.restoreNotes([1, 2]);
+        await service.batchRestoreNotes([1, 2]);
 
         // Wait for async operations
         await Future.delayed(const Duration(milliseconds: 100));
@@ -260,7 +257,7 @@ void main() {
         }
         stateService.updateAllNotes(notes);
 
-        await service.restoreNotes([1, 2]);
+        await service.batchRestoreNotes([1, 2]);
 
         // Wait for async operations
         await Future.delayed(const Duration(milliseconds: 100));
@@ -270,7 +267,7 @@ void main() {
       });
 
       test('handles empty list', () async {
-        await service.restoreNotes([]);
+        await service.batchRestoreNotes([]);
         // Should not throw
       });
     });
@@ -299,7 +296,7 @@ void main() {
         }
         stateService.updateAllNotes(notes);
 
-        await service.archiveNotes([1, 2]);
+        await service.batchArchiveNotes([1, 2]);
 
         // Wait for async operations
         await Future.delayed(const Duration(milliseconds: 100));
@@ -322,7 +319,7 @@ void main() {
         dbService.addNote(note);
         stateService.updateAllNotes([note]);
 
-        await service.archiveNotes([1]);
+        await service.batchArchiveNotes([1]);
 
         // Wait for async operations
         await Future.delayed(const Duration(milliseconds: 100));
@@ -331,7 +328,7 @@ void main() {
       });
 
       test('handles empty list', () async {
-        await service.archiveNotes([]);
+        await service.batchArchiveNotes([]);
         // Should not throw
       });
     });
@@ -362,7 +359,7 @@ void main() {
         }
         stateService.updateAllNotes(notes);
 
-        await service.unarchiveNotes([1, 2]);
+        await service.batchUnarchiveNotes([1, 2]);
 
         // Wait for async operations
         await Future.delayed(const Duration(milliseconds: 100));
@@ -372,7 +369,7 @@ void main() {
       });
 
       test('handles empty list', () async {
-        await service.unarchiveNotes([]);
+        await service.batchUnarchiveNotes([]);
         // Should not throw
       });
     });
@@ -390,7 +387,7 @@ void main() {
         dbService.addNote(note);
         stateService.updateAllNotes([note]);
 
-        await service.trashNotes([1]);
+        await service.batchTrashNotes([1]);
 
         // Note should be in trashed state in memory
         expect(stateService.trashedNotes.length, 1);
@@ -411,7 +408,7 @@ void main() {
         stateService.updateAllNotes([note]);
 
         // Call should return immediately (optimistic)
-        await service.trashNotes([1]);
+        await service.batchTrashNotes([1]);
 
         // Memory should be updated immediately
         expect(stateService.trashedNotes.length, 1);
@@ -434,7 +431,7 @@ void main() {
         dbService.addNote(note);
         stateService.updateAllNotes([note]);
 
-        await service.trashNotes([1, 999]);
+        await service.batchTrashNotes([1, 999]);
 
         expect(stateService.trashedNotes.length, 1);
       });
@@ -451,7 +448,7 @@ void main() {
         dbService.addNote(note);
         stateService.updateAllNotes([note]);
 
-        await service.trashNotes([1, 1, 1]);
+        await service.batchTrashNotes([1, 1, 1]);
 
         expect(stateService.trashedNotes.length, 1);
       });
@@ -474,7 +471,7 @@ void main() {
         stateService.updateAllNotes(notes);
 
         final ids = List.generate(100, (i) => i);
-        await service.trashNotes(ids);
+        await service.batchTrashNotes(ids);
 
         expect(stateService.trashedNotes.length, 100);
       });

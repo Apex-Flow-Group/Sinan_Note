@@ -145,7 +145,7 @@ flutter run
 
 ### 🔄 Backup & Sync
 - Local JSON export/import
-- P2P transfer via WiFi
+- Database backup/restore
 - Google Drive (coming soon)
 
 **See [README_EN.md](README_EN.md) for complete feature list.**
@@ -177,7 +177,7 @@ flutter run
 
 ### 🔄 النسخ الاحتياطي والمزامنة
 - تصدير/استيراد JSON محلي
-- نقل P2P عبر WiFi
+- نسخ احتياطي/استعادة قاعدة البيانات
 - Google Drive (قريباً)
 
 **راجع [README_AR.md](README_AR.md) للقائمة الكاملة.**

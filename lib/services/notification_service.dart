@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'database_service.dart';
+import '../core/utils/logger.dart';
+import 'storage/isar_database_service.dart';
 import '../screens/note_view_screen.dart';
 import '../main.dart';
 
@@ -27,13 +27,9 @@ class NotificationService {
     try {
       final String timeZoneName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timeZoneName));
-      if (kDebugMode) {
-        print('✅ Timezone set to: $timeZoneName');
-      }
+      AppLogger.success('Timezone set to: $timeZoneName', 'Notification');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Failed to set local timezone, using UTC fallback');
-      }
+      AppLogger.warning('Failed to set local timezone, using UTC fallback', 'Notification');
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
 
@@ -156,9 +152,7 @@ class NotificationService {
       final hasExactAlarmPerm = await checkExactAlarmPermission();
 
       if (!hasNotificationPerm || !hasExactAlarmPerm) {
-        if (kDebugMode) {
-          print('Missing permissions: Notification=$hasNotificationPerm, ExactAlarm=$hasExactAlarmPerm');
-        }
+        AppLogger.warning('Missing permissions: Notification=$hasNotificationPerm, ExactAlarm=$hasExactAlarmPerm', 'Notification');
         // Request permissions if missing
         await requestNotificationPermissions();
         
@@ -241,13 +235,9 @@ class NotificationService {
         }
       }
       
-      if (kDebugMode) {
-        print('Notification scheduled: ID=$id, Time=$scheduledTime');
-      }
+      AppLogger.success('Notification scheduled: ID=$id, Time=$scheduledTime', 'Notification');
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to schedule notification: $e');
-      }
+      AppLogger.error('Failed to schedule notification', 'Notification', e);
       rethrow;
     }
   }
@@ -257,9 +247,7 @@ class NotificationService {
       await _notifications.cancel(id);
     } catch (e) {
       // Ignore errors when canceling non-existent notifications
-      if (kDebugMode) {
-        print('Warning: Could not cancel notification $id: $e');
-      }
+      AppLogger.debug('Could not cancel notification $id', 'Notification');
     }
   }
 
@@ -279,7 +267,7 @@ class NotificationService {
 
   static Future<void> _openNoteById(int noteId) async {
     try {
-      final dbService = DatabaseService();
+      final dbService = IsarDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null && navigatorKey.currentState != null) {
         navigatorKey.currentState!.push(
@@ -289,9 +277,7 @@ class NotificationService {
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error opening note: $e');
-      }
+      AppLogger.error('Error opening note', 'Notification', e);
     }
   }
 }

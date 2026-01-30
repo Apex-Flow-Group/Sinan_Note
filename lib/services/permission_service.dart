@@ -5,25 +5,6 @@ import 'package:permission_handler/permission_handler.dart';
 
 class PermissionService {
 
-  static Future<bool> requestCameraPermission() async {
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      return true;
-    }
-    var status = await Permission.camera.status;
-    if (status.isGranted) return true;
-    if (status.isPermanentlyDenied) return false;
-    status = await Permission.camera.request();
-    return status.isGranted;
-  }
-
-  static Future<bool> isCameraPermissionPermanentlyDenied() async {
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      return false;
-    }
-    var status = await Permission.camera.status;
-    return status.isPermanentlyDenied;
-  }
-
   static Future<void> openSettings() async {
     await openAppSettings();
   }
@@ -80,16 +61,5 @@ class PermissionService {
     }
     var status = await permission.status;
     return status.isPermanentlyDenied;
-  }
-
-  static Future<bool> requestNetworkPermissions() async {
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      return true;
-    }
-    var status = await Permission.nearbyWifiDevices.status;
-    if (status.isGranted || status.isLimited) return true;
-    if (status.isPermanentlyDenied) return false;
-    status = await Permission.nearbyWifiDevices.request();
-    return status.isGranted || status.isLimited;
   }
 }

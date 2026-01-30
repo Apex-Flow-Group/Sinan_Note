@@ -41,7 +41,7 @@ class EditorToolbarFactory {
         return CodeEditorToolbar(
           backgroundColor: Colors.transparent,
           textColor: textColor,
-          onInsertSymbol: onInsertSymbol!,
+          onInsertSymbol: onInsertSymbol ?? (_) {},
           onUndo: onUndo,
           onRedo: onRedo,
           onRunCode: onRunCode,

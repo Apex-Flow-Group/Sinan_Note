@@ -2,19 +2,19 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'database_service.dart';
-import '../models/note.dart';
-import 'settings_provider.dart';
+import '../core/utils/logger.dart';
+import 'storage/isar_database_service.dart';
+import '../../models/note.dart';
+import '../../controllers/settings/settings_provider.dart';
 
 class WidgetService {
   static final WidgetService _instance = WidgetService._internal();
   factory WidgetService() => _instance;
   WidgetService._internal();
 
-  final DatabaseService _dbService = DatabaseService();
+  final IsarDatabaseService _dbService = IsarDatabaseService();
 
   Future<void> updateWidgetData() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
@@ -33,9 +33,7 @@ class WidgetService {
             !specificNote.isChecklist &&
             specificNote.noteType != 'checklist') {
           await updateNoteWidget(specificNote);
-          if (kDebugMode) {
-            print('✅ Note widget updated with pinned note ID: $savedNoteId');
-          }
+          AppLogger.success('Note widget updated with pinned note ID: $savedNoteId', 'Widget');
           return; // ✅ استخدام النوت المثبتة
         }
       }
@@ -75,13 +73,9 @@ class WidgetService {
 
       await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
       
-      if (kDebugMode) {
-        print('✅ Note widget updated with general sync');
-      }
+      AppLogger.success('Note widget updated with general sync', 'Widget');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Note widget update failed: $e');
-      }
+      AppLogger.error('Note widget update failed', 'Widget', e);
     }
   }
 
@@ -111,9 +105,7 @@ class WidgetService {
             totalItems: stats['total'] ?? 0,
             completedItems: stats['completed'] ?? 0,
           );
-          if (kDebugMode) {
-            print('✅ Checklist widget updated with pinned list ID: $savedChecklistId');
-          }
+          AppLogger.success('Checklist widget updated with pinned list ID: $savedChecklistId', 'Widget');
           return; // ✅ استخدام القائمة المثبتة
         }
       }
@@ -153,13 +145,9 @@ class WidgetService {
         await _resetChecklistWidget();
       }
       
-      if (kDebugMode) {
-        print('✅ Checklist widget updated with general sync');
-      }
+      AppLogger.success('Checklist widget updated with general sync', 'Widget');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Checklist widget update failed: $e');
-      }
+      AppLogger.error('Checklist widget update failed', 'Widget', e);
     }
   }
 
@@ -253,9 +241,7 @@ class WidgetService {
 
       await HomeWidget.updateWidget(androidName: 'ChecklistWidgetProvider');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Checklist widget update failed: $e');
-      }
+      AppLogger.error('Checklist widget update failed', 'Widget', e);
     }
   }
 
@@ -286,9 +272,7 @@ class WidgetService {
 
       await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Note widget update failed: $e');
-      }
+      AppLogger.error('Note widget update failed', 'Widget', e);
     }
   }
 
@@ -337,9 +321,7 @@ class WidgetService {
 
     // 🛑 CRITICAL FIX: Skip if note ID is invalid
     if (note.id == null || note.id == 0) {
-      if (kDebugMode) {
-        print('⚠️ Skipping widget update: Invalid note ID (${note.id})');
-      }
+      AppLogger.warning('Skipping widget update: Invalid note ID (${note.id})', 'Widget');
       return;
     }
 
@@ -366,9 +348,7 @@ class WidgetService {
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Widget update on note change failed: $e');
-      }
+      AppLogger.error('Widget update on note change failed', 'Widget', e);
     }
   }
 
@@ -408,7 +388,7 @@ void _widgetBackgroundCallback(Uri? uri) async {
   if (uri?.host == 'deleteNote') {
     final noteId = int.tryParse(uri?.queryParameters['id'] ?? '');
     if (noteId != null) {
-      final dbService = DatabaseService();
+      final dbService = IsarDatabaseService();
       await dbService.deleteNote(noteId);
       await WidgetService().updateWidgetData();
     }

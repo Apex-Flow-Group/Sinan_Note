@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/settings_provider.dart';
+import '../controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'main_layout_screen.dart';
-import 'transfer_screen.dart';
+
 import 'terms_screen.dart';
-import '../config/flavor_config.dart';
+
 
 class TourScreen extends StatefulWidget {
   const TourScreen({super.key});
@@ -138,7 +138,6 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage5Title,
       description: l10n.tourPage5Desc,
       features: [
-        if (FlavorConfig.hasTransferFeature) _FeatureItem(icon: Icons.phone_android, text: l10n.localNetworkTransfer),
         _FeatureItem(icon: Icons.upload_file, text: l10n.exportJson),
         _FeatureItem(icon: Icons.download, text: l10n.importJson),
         _FeatureItem(icon: Icons.restore, text: l10n.restoreFromBackup),
@@ -217,22 +216,7 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
-  void _navigateToTransfer() async {
-    if (!_isAgreed) return;
-    await Provider.of<SettingsProvider>(context, listen: false).completeSetup();
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const TransferScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
-  }
-
-  void _navigateToHome() async {
+void _navigateToHome() async {
     if (!_isAgreed) return;
     await Provider.of<SettingsProvider>(context, listen: false).completeSetup();
     if (!mounted) return;
@@ -324,22 +308,6 @@ class _TourScreenState extends State<TourScreen> {
             ],
           ),
           const SizedBox(height: 32),
-          if (FlavorConfig.hasTransferFeature)
-            ElevatedButton(
-              onPressed: _isAgreed ? _navigateToTransfer : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFD700),
-                foregroundColor: const Color(0xFF0A1929),
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-              ),
-              child: Text(
-                l10n.yesRestoreNow,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          if (FlavorConfig.hasTransferFeature)
-            const SizedBox(height: 16),
           OutlinedButton(
             onPressed: _isAgreed ? _navigateToHome : null,
             style: OutlinedButton.styleFrom(

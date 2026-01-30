@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 
-class EditorDialogs {
+class WidgetEditorDialogs {
   static Future<String?> showPasswordDialog(
     BuildContext context,
     String title,

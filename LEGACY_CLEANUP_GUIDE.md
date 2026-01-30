@@ -174,7 +174,7 @@ await DatabaseService().runLegacyHistoryCleanup();
 
 // تحقق من النتيجة
 final versions = await db.getNoteHistory(1);
-print(versions.length); // النتيجة المتوقعة: 20 ✅
+AppLogger.info(versions.length); // النتيجة المتوقعة: 20 ✅
 ```
 
 ---
@@ -197,7 +197,7 @@ final stopwatch = Stopwatch()..start();
 await DatabaseService().runLegacyHistoryCleanup();
 
 stopwatch.stop();
-print('⏱️ وقت التنظيف: ${stopwatch.elapsedMilliseconds}ms');
+AppLogger.info('⏱️ وقت التنظيف: ${stopwatch.elapsedMilliseconds}ms');
 // النتيجة المتوقعة: < 1000ms لـ 1000 نسخة ✅
 ```
 

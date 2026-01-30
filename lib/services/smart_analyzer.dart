@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:math_expressions/math_expressions.dart';
 import 'package:intl/intl.dart';
 
 class SmartAnalyzer {
@@ -38,28 +37,35 @@ class SmartAnalyzer {
   String? evaluateExpression(String line) {
     try {
       final normalized = normalizeNumbers(line);
-
-      // Extract math expression: numbers and operators only
-      final mathPattern = RegExp(r'[\d\.\+\-\*\/\(\)\s]+');
+      final mathPattern = RegExp(r'([\d\.]+)\s*([+\-*/])\s*([\d\.]+)');
       final match = mathPattern.firstMatch(normalized);
-
+      
       if (match == null) return null;
-
-      final expression = match.group(0)!.trim();
-
-      // Must contain at least one operator
-      if (!RegExp(r'[\+\-\*\/]').hasMatch(expression)) return null;
-
-      Parser p = Parser();
-      Expression exp = p.parse(expression);
-      ContextModel cm = ContextModel();
-      double result = exp.evaluate(EvaluationType.REAL, cm);
-
-      // Format result
-      if (result == result.toInt()) {
-        return result.toInt().toString();
+      
+      final num1 = double.parse(match.group(1)!);
+      final operator = match.group(2)!;
+      final num2 = double.parse(match.group(3)!);
+      
+      double result;
+      switch (operator) {
+        case '+':
+          result = num1 + num2;
+          break;
+        case '-':
+          result = num1 - num2;
+          break;
+        case '*':
+          result = num1 * num2;
+          break;
+        case '/':
+          if (num2 == 0) return null;
+          result = num1 / num2;
+          break;
+        default:
+          return null;
       }
-      return result.toStringAsFixed(2);
+      
+      return result == result.toInt() ? result.toInt().toString() : result.toStringAsFixed(2);
     } catch (e) {
       return null;
     }

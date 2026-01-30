@@ -32,7 +32,7 @@ class CodeEditorWidget extends StatelessWidget {
           focusNode.requestFocus();
         }
       },
-      child: SingleChildScrollView(
+      child: Padding(
         padding: EdgeInsets.only(top: 80, bottom: totalBottomSpace),
         child: CodeEditor(
           controller: codeController,

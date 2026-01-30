@@ -1,0 +1,265 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import '../../core/utils/logger.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/security/security_gate.dart';
+
+class SettingsProvider with ChangeNotifier {
+
+  ThemeMode _themeMode = ThemeMode.system;
+  double _textScaleFactor = 1.0;
+  String _languageCode = 'system';
+  String _swipeRightAction = 'delete';
+  String _swipeLeftAction = 'archive';
+  bool _swipeEnabled = true;
+  bool _cardMotionEnabled = false;
+  String _viewType = 'listCompact';
+  bool _isAppLockEnabled = false;
+  bool _hideContentInBackground = false;
+  bool _lockDelayEnabled = false;
+  int _lockDelaySeconds = 30;
+  bool _hasSeenLockedIntro = false;
+  bool _isFirstLaunch = true;
+  static const int _defaultBlueIndex = 8;
+  static const int _defaultYellowIndex = 4;
+  static const int _defaultPurpleIndex = 9;
+  
+  final Map<String, int> _defaultColorIndices = {
+    'simple': _defaultBlueIndex,
+    'reminder': _defaultYellowIndex,
+    'professional': _defaultPurpleIndex,
+  };
+
+  ThemeMode get themeMode => _themeMode;
+  double get textScaleFactor => _textScaleFactor;
+  String get languageCode => _languageCode;
+  String get swipeRightAction => _swipeRightAction;
+  String get swipeLeftAction => _swipeLeftAction;
+  bool get swipeEnabled => _swipeEnabled;
+  bool get cardMotionEnabled => _cardMotionEnabled;
+  String get viewType => _viewType;
+  bool get isAppLockEnabled => _isAppLockEnabled;
+  bool get hideContentInBackground => _hideContentInBackground;
+  bool get lockDelayEnabled => _lockDelayEnabled;
+  int get lockDelaySeconds => _lockDelaySeconds;
+  bool get hasSeenLockedIntro => _hasSeenLockedIntro;
+  bool get isFirstLaunch => _isFirstLaunch;
+  bool get isSetupCompleted => !_isFirstLaunch;
+
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
+  bool get isLoaded => _isInitialized;
+
+  SettingsProvider() {
+    _loadSettings().catchError((e) {
+      AppLogger.debug('Error loading settings: $e');
+      _isInitialized = true;
+      notifyListeners();
+    });
+  }
+
+  Future<void> ensureInitialized() async {
+    if (_isInitialized) return;
+    await _loadSettings();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('themeMode', mode.index);
+  }
+
+  Future<void> setTextScaleFactor(double scale) async {
+    _textScaleFactor = scale;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('textScale', scale);
+  }
+
+  Future<void> setLanguage(String code) async {
+    _languageCode = code;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language', code);
+  }
+
+  Future<void> setSwipeRightAction(String action) async {
+    _swipeRightAction = action;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('swipeRight', action);
+  }
+
+  Future<void> setSwipeLeftAction(String action) async {
+    _swipeLeftAction = action;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('swipeLeft', action);
+  }
+
+  Future<void> setSwipeEnabled(bool enabled) async {
+    _swipeEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('swipeEnabled', enabled);
+  }
+
+  Future<void> setCardMotionEnabled(bool enabled) async {
+    _cardMotionEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('cardMotionEnabled', enabled);
+  }
+
+  Future<void> setViewType(String key, String type) async {
+    if (key == 'home') {
+      _viewType = type;
+    }
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('viewType_$key', type);
+  }
+
+  Future<String> getViewType(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('viewType_$key') ?? 'listCompact';
+  }
+
+  Future<void> setAppLockEnabled(bool enabled) async {
+    _isAppLockEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('appLockEnabled', enabled);
+    
+    // CRITICAL: Direct update to SecurityController
+    _updateSecurityController();
+  }
+
+  Future<void> setHideContentInBackground(bool enabled) async {
+    _hideContentInBackground = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hideContentInBackground', enabled);
+    
+    // Update SecurityController with new privacy setting
+    _updateSecurityController();
+  }
+
+  Future<void> setLockDelayEnabled(bool enabled) async {
+    _lockDelayEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('lockDelayEnabled', enabled);
+    
+    // Update SecurityController with new delay setting
+    _updateSecurityController();
+  }
+
+  Future<void> setLockDelaySeconds(int seconds) async {
+    _lockDelaySeconds = seconds;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('lockDelaySeconds', seconds);
+    
+    // Update SecurityController with new delay value
+    _updateSecurityController();
+  }
+
+  Future<void> setLockedIntroSeen(bool value) async {
+    _hasSeenLockedIntro = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seen_locked_intro', value);
+  }
+
+  Future<void> completeSetup() async {
+    _isFirstLaunch = false;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('first_launch', false);
+  }
+
+  Future<void> resetSetup() async {
+    _isFirstLaunch = true;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('first_launch');
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int? themeIndex = prefs.getInt('themeMode');
+      if (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length) {
+        _themeMode = ThemeMode.values[themeIndex];
+      } else {
+        _themeMode = ThemeMode.system;
+      }
+      _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
+      _languageCode = prefs.getString('language') ?? 'system';
+      _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
+      _swipeLeftAction = prefs.getString('swipeLeft') ?? 'archive';
+      _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
+      _cardMotionEnabled = prefs.getBool('cardMotionEnabled') ?? false;
+      _viewType = prefs.getString('viewType') ?? 'listCompact';
+      _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
+      _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? false;
+      _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
+      _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
+      _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;
+      _isFirstLaunch = prefs.getBool('first_launch') ?? true;
+      _defaultColorIndices['simple'] = prefs.getInt('colorIndex_simple') ?? _defaultBlueIndex;
+      _defaultColorIndices['reminder'] = prefs.getInt('colorIndex_reminder') ?? _defaultYellowIndex;
+      _defaultColorIndices['professional'] = prefs.getInt('colorIndex_professional') ?? _defaultPurpleIndex;
+      
+      _isInitialized = true;
+      notifyListeners();
+      
+      // CRITICAL: Update SecurityController after loading settings
+      _updateSecurityController();
+    } catch (e) {
+      AppLogger.debug('Error loading settings: $e');
+      _isInitialized = true;
+      notifyListeners();
+    }
+  }
+
+  Locale? get locale {
+    if (_languageCode == 'system') return null;
+    return Locale(_languageCode);
+  }
+
+  int getDefaultColorIndex(String mode) {
+    return _defaultColorIndices[mode] ?? _defaultBlueIndex;
+  }
+
+  Future<void> setDefaultColorIndex(String mode, int index) async {
+    _defaultColorIndices[mode] = index;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('colorIndex_$mode', index);
+  }
+
+  void _updateSecurityController() {
+    final effectiveDelaySeconds = _lockDelayEnabled ? _lockDelaySeconds : 0;
+    
+    final newConfig = SecurityConfig(
+      lockEnabled: _isAppLockEnabled,
+      lockDelaySeconds: effectiveDelaySeconds,
+      privacyBlurEnabled: _hideContentInBackground,
+    );
+    
+    // Skip update if config hasn't changed
+    final controller = SecurityController();
+    if (controller.config.lockEnabled == newConfig.lockEnabled &&
+        controller.config.lockDelaySeconds == newConfig.lockDelaySeconds &&
+        controller.config.privacyBlurEnabled == newConfig.privacyBlurEnabled) {
+      return; // No change, skip update
+    }
+    
+    AppLogger.debug('🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground');
+    controller.updateConfig(newConfig);
+  }
+}

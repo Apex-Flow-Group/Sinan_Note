@@ -3,10 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
-import '../services/notes_provider.dart';
-
-import '../l10n/l10n_migration_helper.dart';
-
+import '../controllers/notes/notes_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../widgets/home/home_drawer_widget.dart';
 import '../widgets/home/note_card_widget.dart';
 import '../screens/home_screen.dart' show ViewType;
@@ -107,7 +105,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
 
     return Consumer<NotesProvider>(
       builder: (context, notesProvider, _) {

@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../services/notes_provider.dart';
+import '../../../controllers/notes/notes_provider.dart';
 
 /// Dialog helpers for NoteEditor
-class EditorDialogs {
+class NoteEditorDialogs {
   /// Show delete confirmation dialog
   static Future<void> showDeleteDialog({
     required BuildContext context,

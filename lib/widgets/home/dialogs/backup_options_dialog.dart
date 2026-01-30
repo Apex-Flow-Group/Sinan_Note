@@ -1,15 +1,15 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import '../../../services/database_service.dart';
+import '../../../services/storage/isar_database_service.dart';
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../apex_snackbar.dart';
-import '../../custom_share_sheet.dart';
+import '../../common/apex_snackbar.dart';
+import '../../common/custom_share_sheet.dart';
 
 class BackupOptionsDialog {
   static void show(BuildContext context, Map<String, String> strings) {
-    final dbService = DatabaseService();
+    final dbService = IsarDatabaseService();
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(

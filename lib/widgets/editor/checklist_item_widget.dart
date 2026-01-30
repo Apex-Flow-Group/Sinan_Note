@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:intl/intl.dart' show Bidi;
-import '../../utils/checklist_formatter.dart';
+import '../../core/utils/checklist_formatter.dart';
 
 /// Standalone widget for rendering a single checklist item
 /// Can be reused in different contexts (editor, preview, widget, etc.)

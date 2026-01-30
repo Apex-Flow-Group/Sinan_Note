@@ -7,7 +7,7 @@ import '../../../services/language_detector.dart';
 import '../utils/note_editor_utils.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 
-class EditorLifecycleManager {
+class EditorStateLifecycleManager {
   /// Initialize controllers and state
   static Future<Map<String, dynamic>> initialize({
     required Note? note,

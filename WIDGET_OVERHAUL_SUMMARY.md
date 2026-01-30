@@ -114,8 +114,8 @@ await WidgetService.checkAndResetIfPinned(id);
 ### 4. Debug Logging
 ```dart
 if (kDebugMode) {
-  print('✅ Note widget updated');
-  print('✅ Checklist widget updated');
+  AppLogger.success('Note widget updated', 'Widget');
+  AppLogger.success('Checklist widget updated', 'Widget');
 }
 ```
 

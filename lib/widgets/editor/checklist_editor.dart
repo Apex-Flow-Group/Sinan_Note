@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../utils/checklist_formatter.dart';
+import '../../core/utils/checklist_formatter.dart';
 import 'package:intl/intl.dart' show Bidi;
 import 'checklist_item_widget.dart';
 

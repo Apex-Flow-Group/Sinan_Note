@@ -5,18 +5,20 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../models/note.dart';
-import '../utils/adaptive_color.dart';
+import '../core/utils/adaptive_color.dart';
 import '../models/note_mode.dart';
-// DatabaseService removed - use Provider instead
-import '../services/notes_provider.dart';
-import '../services/biometric_service.dart';
+import '../controllers/notes/notes_provider.dart';
+import '../services/security/biometric_service.dart';
 import '../services/widget_service.dart';
 import '../services/notification_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../widgets/apex_snackbar.dart';
-import '../utils/checklist_formatter.dart';
-import '../widgets/custom_share_sheet.dart';
+import '../widgets/common/apex_snackbar.dart';
+import '../core/utils/checklist_formatter.dart';
+import '../widgets/common/custom_share_sheet.dart';
 import 'note_editor.dart' show NoteEditorImmersive;
+import 'note_view/note_view_helpers.dart';
+import 'note_view/note_view_widgets.dart';
+import 'note_view/note_view_bars.dart';
 
 /// Interactive read-only note viewer with markdown rendering
 class NoteViewScreen extends StatefulWidget {
@@ -89,68 +91,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     }
   }
 
-  TextDirection _getDirection(String text) {
-    final hasArabic = RegExp(r'[؀-ۿ]').hasMatch(text);
-    return hasArabic ? TextDirection.rtl : TextDirection.ltr;
-  }
 
-  Map<String, int> _parseChecklistStats(String content) {
-    try {
-      final items = ChecklistFormatter.parseJson(content);
-      final total = items.length;
-      final completed = items.where((item) => item.isDone).length;
-      return {'total': total, 'completed': completed};
-    } catch (e) {
-      return {'total': 0, 'completed': 0};
-    }
-  }
-
-  Widget _buildChecklistView(String content, Color textColor) {
-    final items = ChecklistFormatter.parseJson(content);
-    if (items.isEmpty) {
-      return Text(
-        content,
-        style: TextStyle(fontSize: 16, height: 1.5, color: textColor),
-        maxLines: null,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: items.map((item) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                item.isDone ? Icons.check_box : Icons.check_box_outline_blank,
-                size: 24,
-                color: item.isDone
-                    ? Colors.green
-                    : textColor.withValues(alpha: 0.7),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  item.text.isEmpty ? 'Mission...' : item.text,
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.5,
-                    color: item.isDone
-                        ? textColor.withValues(alpha: 0.6)
-                        : textColor,
-                    decoration: item.isDone ? TextDecoration.lineThrough : null,
-                  ),
-                  maxLines: null,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +144,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
               
               if (isChecklistNote) {
                 // Parse checklist stats for widget
-                final stats = _parseChecklistStats(_currentNote.content);
+                final stats = NoteViewHelpers.parseChecklistStats(_currentNote.content);
                 await WidgetService().updateChecklistWidget(
                   _currentNote.id!,
                   _currentNote.title.isEmpty ? 'Checklist' : _currentNote.title,
@@ -266,48 +207,22 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ChecklistFormatter.isValidChecklist(_currentNote.content)
-                    ? _buildChecklistView(_currentNote.content, textColor)
+                    ? NoteViewWidgets.buildChecklistView(_currentNote.content, textColor)
                     : Directionality(
-                        textDirection: _getDirection(_currentNote.content),
+                        textDirection: NoteViewHelpers.getDirection(_currentNote.content)
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
                         child: MarkdownBody(
                           data: _currentNote.content.replaceAll('\n', '  \n'),
                           checkboxBuilder: (bool checked) => Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: Icon(
-                              checked
-                                  ? Icons.check_box
-                                  : Icons.check_box_outline_blank,
+                              checked ? Icons.check_box : Icons.check_box_outline_blank,
                               size: 20,
                               color: textColor,
                             ),
                           ),
-                          styleSheet: MarkdownStyleSheet(
-                            p: TextStyle(
-                                fontSize: 16, height: 1.5, color: textColor),
-                            h1: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: textColor),
-                            h2: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: textColor),
-                            h3: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: textColor),
-                            strong: TextStyle(
-                                fontWeight: FontWeight.bold, color: textColor),
-                            em: TextStyle(
-                                fontStyle: FontStyle.italic, color: textColor),
-                            listBullet: TextStyle(color: textColor),
-                            checkbox: TextStyle(color: textColor),
-                            code: TextStyle(
-                              backgroundColor: textColor.withValues(alpha: 0.1),
-                              fontFamily: 'monospace',
-                              color: textColor,
-                            ),
-                          ),
+                          styleSheet: NoteViewWidgets.buildMarkdownStyle(textColor),
                         ),
                       ),
                 const SizedBox(height: 24),
@@ -316,7 +231,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                     const Icon(Icons.access_time, size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
                     Text(
-                      '${l10n.created}: ${_formatDate(_currentNote.createdAt)}',
+                      '${l10n.created}: ${NoteViewHelpers.formatDate(_currentNote.createdAt)}',
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
@@ -351,7 +266,6 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                         const SizedBox(width: 4),
                         InkWell(
                           onTap: () async {
-                            debugPrint('🔴 VIEW: Close button pressed!');
                             HapticFeedback.lightImpact();
                             final provider = Provider.of<NotesProvider>(context, listen: false);
                             await NotificationService().cancelNotification(_currentNote.id!);
@@ -359,7 +273,6 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                               reminderDateTime: null,
                               recurrenceRule: null,
                             );
-                            debugPrint('🔴 VIEW: Updating note with null reminder');
                             await provider.updateNote(updatedNote);
                             await _refreshNote();
                             if (mounted) {
@@ -382,111 +295,19 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         ),
       ),
       bottomNavigationBar: _currentNote.isTrashed
-          ? _buildRestoreBar(context, l10n)
-          : _buildActionBar(context, l10n),
+          ? NoteViewBars.buildRestoreBar(context, l10n, _currentNote, 
+              () => _restore(context, l10n),
+              () => _confirmPermanentDelete(context, l10n))
+          : NoteViewBars.buildActionBar(context, l10n, _currentNote,
+              _onShareTap,
+              () => _toggleArchive(context, l10n),
+              () => _confirmDelete(context, l10n),
+              () => _editNote(context)),
 
     );
   }
 
-  Widget _buildActionBar(BuildContext context, AppLocalizations l10n) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).bottomAppBarTheme.color ??
-            Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.share_outlined),
-                tooltip: l10n.share,
-                onPressed: _onShareTap,
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: Icon(
-                    _currentNote.isArchived ? Icons.unarchive_outlined : Icons.archive_outlined),
-                tooltip: _currentNote.isArchived ? l10n.unarchive : l10n.archive,
-                onPressed: () => _toggleArchive(context, l10n),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                tooltip: l10n.delete,
-                onPressed: () => _confirmDelete(context, l10n),
-              ),
-              const Spacer(),
-              SizedBox(
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: () => _editNote(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    elevation: 2,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  icon: const Icon(Icons.edit, size: 20),
-                  label: Text(
-                    l10n.edit,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildRestoreBar(BuildContext context, AppLocalizations l10n) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.1),
-        border: const Border(top: BorderSide(color: Colors.green, width: 2)),
-      ),
-      child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.restore),
-              label: Text(l10n.restore),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: () => _restore(context, l10n),
-            ),
-            if (_currentNote.isTrashed)
-              OutlinedButton.icon(
-                icon: const Icon(Icons.delete_forever, color: Colors.red),
-                label: Text(l10n.permanentDelete),
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                onPressed: () => _confirmPermanentDelete(context, l10n),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Future<void> _editNote(BuildContext context) async {
     if (_currentNote.isTrashed) return;
@@ -557,9 +378,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
+
 
   void _onShareTap() {
     String textToShare;

@@ -33,7 +33,7 @@ final currentHash = md5(title + content);
 final lastHash = md5(lastVersion.title + lastVersion.content);
 
 if (currentHash == lastHash) {
-  print("🛑 تجاهل النسخة: المحتوى مطابق تماماً");
+  AppLogger.info("🛑 تجاهل النسخة: المحتوى مطابق تماماً");
   return; // لا تحفظ
 }
 ```
@@ -55,7 +55,7 @@ if (!isManualAction) { // فقط للحفظ التلقائي
   final contentDiff = abs(content.length - lastVersion.content.length);
   
   if (timeDiff < 300 && contentDiff < 15) {
-    print("⏳ تجاهل النسخة: تغيير طفيف ($contentDiff حرف)");
+    AppLogger.info("⏳ تجاهل النسخة: تغيير طفيف ($contentDiff حرف)");
     return; // لا تحفظ
   }
 }
@@ -193,7 +193,7 @@ for (int i = 0; i < 25; i++) {
 }
 // تحقق من عدد النسخ
 final versions = await db.getNoteHistory(1);
-print(versions.length); // النتيجة المتوقعة: 20 ✅
+AppLogger.info(versions.length); // النتيجة المتوقعة: 20 ✅
 ```
 
 ---

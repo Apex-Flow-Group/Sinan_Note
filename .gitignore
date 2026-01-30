@@ -48,7 +48,16 @@ app.*.map.json
 *.jks
 *.keystore
 key.properties
+android/key.properties
 android/local.properties
+
+# Google OAuth secrets
+client_secret*.json
+*client_secret*.json
+
+# Certificates
+*.pem
+upload_certificate.pem
 
 # Gradle build cache
 android/.gradle/

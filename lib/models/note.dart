@@ -1,24 +1,49 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:isar/isar.dart';
 import 'exceptions.dart';
 
+part 'note.g.dart';
+
+@collection
 class Note {
-  final int? id;
-  final String title;
-  final String content;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final int colorIndex;
-  final bool isArchived;
-  final bool isTrashed;
-  final DateTime? reminderDateTime;
-  final bool isLocked;
-  final String noteType;
-  final String? recurrenceRule;
-  final bool isCompleted;
-  final bool isProfessional;
-  final bool isPinned;
-  final bool isChecklist;
+  Id? id = Isar.autoIncrement;
+  
+  @Index(type: IndexType.value)
+  late String title;
+  
+  @Index(type: IndexType.value)
+  late String content;
+  
+  late DateTime createdAt;
+  late DateTime updatedAt;
+  
+  @Index()
+  late int colorIndex;
+  
+  @Index()
+  late bool isArchived;
+  
+  @Index()
+  late bool isTrashed;
+  
+  @Index()
+  DateTime? reminderDateTime;
+  
+  @Index()
+  late bool isLocked;
+  
+  @Index()
+  late String noteType;
+  
+  String? recurrenceRule;
+  late bool isCompleted;
+  late bool isProfessional;
+  
+  @Index()
+  late bool isPinned;
+  
+  late bool isChecklist;
 
   Note({
     this.id,
@@ -48,7 +73,7 @@ class Note {
 
   /// Immutable copy with updated fields
   Note copyWith({
-    int? id,
+    Id? id,
     String? title,
     String? content,
     DateTime? createdAt,
@@ -85,7 +110,7 @@ class Note {
     );
   }
 
-
+  // Backward compatibility with SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -109,7 +134,6 @@ class Note {
 
   factory Note.fromMap(Map<String, dynamic> map) {
     try {
-      // Backward compatibility: map old 'pro'/'professional' to 'code'
       String noteType = map['noteType'] ?? 'simple';
       if (noteType == 'pro' || noteType == 'professional') {
         noteType = 'code';
@@ -143,9 +167,7 @@ class Note {
 
   static int _parseColorIndex(dynamic value) {
     if (value is int) {
-      // If value is large (old colorValue), default to 0
       if (value > 100) return 0;
-      // If valid index (0-11), use it
       if (value >= 0 && value < 12) return value;
     }
     return 0;

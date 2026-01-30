@@ -61,10 +61,8 @@ class _CodeEditorState extends State<CodeEditor> {
             width: 60,
           ),
           background: Colors.transparent,
-          expands: false,
+          expands: true,
           wrap: false,
-          maxLines: null,
-          minLines: 1,
         ),
       ),
     );

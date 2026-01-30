@@ -2,33 +2,32 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+
 import 'dart:async';
+import 'core/utils/logger.dart';
 import 'screens/cinematic_intro_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/trash_screen.dart';
 import 'screens/archive_screen.dart';
 import 'screens/locked_notes_screen.dart';
-import 'config/flavor_config.dart';
-import 'config/transfer_routes.dart';
-import 'services/settings_provider.dart';
-import 'services/notes_provider.dart';
+
+import 'controllers/settings/settings_provider.dart';
+import 'controllers/notes/notes_provider.dart';
 import 'services/notification_service.dart';
 import 'services/widget_service.dart';
 import 'package:home_widget/home_widget.dart';
-import 'services/apex_diagnostics_engine.dart';
-import 'services/apex_error_manager.dart';
-import 'services/database_service.dart';
-import 'services/security_gate.dart';
+import 'services/diagnostics/apex_diagnostics_engine.dart';
+import 'services/diagnostics/apex_error_manager.dart';
+import 'services/storage/isar_database_service.dart';
+import 'services/storage/sqlite_to_isar_migration.dart';
+import 'services/security/security_gate.dart';
 import 'screens/note_view_screen.dart';
 import 'screens/widget_selection_screen.dart';
 
@@ -38,74 +37,34 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🔒 Initialize SecurityController IMMEDIATELY with default safe config
-  // This registers the lifecycle observer BEFORE any events can occur
+  // 🔒 Initialize SecurityController IMMEDIATELY
   SecurityController().initialize(const SecurityConfig(
     lockEnabled: false,
     lockDelaySeconds: 0,
     privacyBlurEnabled: false,
   ));
 
-  // 🕵️ الكشف الذكي عن النسخة بناءً على اسم الحزمة
-  final packageInfo = await PackageInfo.fromPlatform();
-  if (packageInfo.packageName == 'com.apexflow.app.sinan') {
-    FlavorConfig.overrideFlavor(Flavor.googlePlay);
-  }
-
-  // تهيئة محرك التشخيص الأعمى مرة واحدة فقط
+  // ⚡ تهيئة خفيفة فقط - تأجيل العمليات الثقيلة
   final appDir = await getApplicationDocumentsDirectory();
   ApexDiagnosticsEngine().init(appDir.path);
-
-  // Initialize error manager with navigator key
   ApexErrorManager.setNavigatorKey(navigatorKey);
 
-  // 🧹 One-time legacy cleanup (runs in background)
-  DatabaseService().runLegacyHistoryCleanup();
+  // 🔄 Migrate from SQLite to Isar
+  await SqliteToIsarMigration.migrateIfNeeded();
 
-  if (Platform.isLinux || Platform.isWindows) {
-    try {
-      // Set library path for Fedora/RHEL systems
-      if (Platform.isLinux) {
-        sqfliteFfiInit();
-      } else {
-        sqfliteFfiInit();
-      }
-      databaseFactory = databaseFactoryFfi;
-    } catch (e) {
-      if (kDebugMode) {
-        print('SQLite FFI initialization failed: $e');
-        print('This is expected on Linux desktop - app works on Android/iOS');
-      }
-    }
-  }
-
+  // ⚡ تأجيل تهيئة الإشعارات والويدجت لما بعد أول إطار
   if (Platform.isAndroid || Platform.isIOS) {
-    try {
-      await NotificationService().initialize();
-
-      // طلب الأذونات في وقت التشغيل (Android 13+)
-      if (Platform.isAndroid) {
-        final permGranted = await NotificationService().requestNotificationPermissions();
-        if (kDebugMode) {
-          print('Notification permissions granted: $permGranted');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Notification initialization error: $e');
-      }
-    }
-
-    // تهيئة الويدجت (Android فقط) - بدون تحميل بيانات
-    if (Platform.isAndroid) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        await WidgetService().initialize();
-        // ❌ REMOVED: updateWidgetData() - will be called later by NotesProvider
-        // ❌ REMOVED: updateChecklistWidget() - not needed at startup
+        await NotificationService().initialize();
+        if (Platform.isAndroid) {
+          await NotificationService().requestNotificationPermissions();
+          await WidgetService().initialize();
+        }
       } catch (e) {
-        // تجاهل أخطاء الويدجت
+        AppLogger.error('Background init error', 'Main', e);
       }
-    }
+    });
   }
 
   runApp(
@@ -190,7 +149,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
 
   void _openNoteById(int noteId) async {
     try {
-      final dbService = DatabaseService();
+      final dbService = IsarDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null) {
         navigatorKey.currentState?.push(
@@ -212,9 +171,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     super.dispose();
   }
 
-  static Map<String, WidgetBuilder> _buildTransferRoutes() {
-    return buildTransferRoutes();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +253,6 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                 '/archive': (context) => const ArchiveScreen(),
                 '/locked': (context) => const LockedNotesScreen(),
                 '/widget_selection': (context) => const WidgetSelectionScreen(),
-                if (FlavorConfig.hasTransferFeature) ..._buildTransferRoutes(),
               },
               debugShowCheckedModeBanner: false,
             );

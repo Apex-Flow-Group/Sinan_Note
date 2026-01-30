@@ -12,7 +12,7 @@ import '../controllers/editor_smart_controller.dart';
 import '../../../widgets/editor/checklist_editor.dart';
 
 /// Manages editor lifecycle events and content changes
-class EditorLifecycleManager {
+class EditorHandlerLifecycleManager {
   /// Handle content change with autosave
   static void onContentChanged({
     required BuildContext context,

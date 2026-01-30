@@ -3,10 +3,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import '../core/utils/logger.dart';
 
 import '../models/note.dart';
 import '../models/note_mode.dart';
-import '../widgets/apex_snackbar.dart';
+import '../widgets/common/apex_snackbar.dart';
 
 // Import Core Components
 import 'note_editor/core/editor_coordinator.dart';
@@ -166,18 +167,25 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   // ==================== SAVE METHODS ====================
   
   Future<void> _saveNoteToDatabase({bool forceUpdate = false, bool isManualSave = false}) async {
-    if (_coordinator.stateManager.isSaving) return;
+    AppLogger.info('_saveNoteToDatabase called - forceUpdate: $forceUpdate, isManualSave: $isManualSave', 'Editor');
+    
+    if (_coordinator.stateManager.isSaving) {
+      AppLogger.warning('Already saving, skipping', 'Editor');
+      return;
+    }
 
-    final isNewLockedNote = widget.note?.isLocked == true &&
+    final isNewLockedNote = (_coordinator.initialLockState || widget.note?.isLocked == true) &&
         widget.note?.id == null &&
         _coordinator.savedNoteId == null;
 
     if (!forceUpdate && !isNewLockedNote && (_coordinator.savedNoteId != null || widget.note != null)) {
       if (!_coordinator.stateManager.hasChanges()) {
+        AppLogger.info('No changes detected, skipping save', 'Editor');
         return;
       }
     }
 
+    AppLogger.info('Proceeding with save...', 'Editor');
     _coordinator.stateManager.isSaving = true;
 
     try {
@@ -233,9 +241,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         silent: !isManualSave,
       );
 
-      if (isManualSave) {
-        await _coordinator.notesProviderRef!.loadNotes();
-      }
+      // REMOVED: Unnecessary loadNotes() that causes race condition
+      // The provider already updates state via notifyListeners()
 
       if (_coordinator.savedNoteId == null) {
         if (mounted) setState(() => _coordinator.savedNoteId = newId);
@@ -255,8 +262,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _coordinator.autosaveTimer?.cancel();
     await _saveNoteToDatabase(isManualSave: true);
     
+    // REMOVED: Unnecessary loadNotes() that causes race condition
     if (mounted) {
-      await _coordinator.notesProviderRef!.loadNotes();
       final l10n = AppLocalizations.of(context);
       ApexSnackBar.show(context, l10n?.noteSaved ?? 'Saved',
           type: SnackBarType.success, duration: const Duration(seconds: 1));

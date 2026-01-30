@@ -7,11 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../models/note.dart';
 import '../../models/note_mode.dart';
-import '../../services/notes_provider.dart';
-import '../../services/settings_provider.dart';
+import '../../controllers/notes/notes_provider.dart';
+import '../../controllers/settings/settings_provider.dart';
 import '../../services/notification_service.dart';
-
-import '../../l10n/l10n_migration_helper.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../widgets/home/note_card_widget.dart';
 import '../../widgets/home/add_menu_widget.dart';
@@ -110,7 +108,7 @@ class _ReminderDashboardState extends State<ReminderDashboard>
 
   @override
   Widget build(BuildContext context) {
-    final strings = L10nHelper.of(context);
+    final strings = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Consumer<NotesProvider>(

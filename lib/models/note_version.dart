@@ -1,48 +1,28 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'exceptions.dart';
+import 'package:isar/isar.dart';
 
+part 'note_version.g.dart';
+
+@collection
 class NoteVersion {
-  final int? id;
-  final int noteId;
-  final String title;
-  final String content;
-  final DateTime timestamp;
-  final String action;
+  Id id = Isar.autoIncrement;
 
-  NoteVersion({
-    this.id,
+  @Index()
+  late int noteId;
+  
+  late String title;
+  late String content;
+  late DateTime timestamp;
+  late String action; // 'created', 'updated', 'archived', 'restored'
+
+  NoteVersion();
+
+  NoteVersion.create({
     required this.noteId,
     required this.title,
     required this.content,
     required this.timestamp,
     this.action = 'update',
   });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'note_id': noteId,
-      'title': title,
-      'content': content,
-      'timestamp': timestamp.toIso8601String(),
-      'action': action,
-    };
-  }
-
-  factory NoteVersion.fromMap(Map<String, dynamic> map) {
-    try {
-      return NoteVersion(
-        id: map['id'],
-        noteId: map['note_id'],
-        title: map['title'],
-        content: map['content'],
-        timestamp: DateTime.parse(map['timestamp']),
-        action: map['action'] ?? 'update',
-      );
-    } catch (e) {
-      if (e is ValidationException) rethrow;
-      throw ValidationException('Invalid note version data', e);
-    }
-  }
 }

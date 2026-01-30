@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../services/settings_provider.dart';
-import '../services/biometric_service.dart';
+import '../controllers/settings/settings_provider.dart';
+import '../services/security/biometric_service.dart';
 import 'locked_notes_screen.dart';
 
 class LockedNotesIntroScreen extends StatefulWidget {

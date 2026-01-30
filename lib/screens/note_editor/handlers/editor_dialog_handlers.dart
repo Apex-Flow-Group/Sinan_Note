@@ -8,12 +8,12 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../../models/note.dart';
 import '../../../models/note_mode.dart';
 import '../../../services/notification_service.dart';
-import '../../../services/settings_provider.dart';
-import '../../../utils/adaptive_color.dart';
-import '../../../widgets/apex_snackbar.dart';
+import '../../../controllers/settings/settings_provider.dart';
+import '../../../core/utils/adaptive_color.dart';
+import '../../../widgets/common/apex_snackbar.dart';
 import '../../../widgets/editor/reminder_picker_sheet.dart';
 import '../../../widgets/editor/note_history_sheet.dart';
-import '../../../widgets/rename_dialog.dart';
+import '../../../widgets/common/rename_dialog.dart';
 import '../../../controllers/editor/editor_state_manager.dart';
 import '../controllers/editor_smart_controller.dart';
 

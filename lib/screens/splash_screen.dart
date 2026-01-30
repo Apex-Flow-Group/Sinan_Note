@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../services/settings_provider.dart';
-import '../services/notes_provider.dart';
-import '../services/biometric_service.dart';
+import '../controllers/settings/settings_provider.dart';
+import '../controllers/notes/notes_provider.dart';
+import '../services/security/biometric_service.dart';
 import 'main_layout_screen.dart';
 
 class SplashScreen extends StatefulWidget {

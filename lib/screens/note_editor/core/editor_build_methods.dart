@@ -8,11 +8,11 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 import '../../../models/note.dart';
 import '../../../models/note_mode.dart';
-import '../../../services/notes_provider.dart';
+import '../../../controllers/notes/notes_provider.dart';
 import '../../../services/notification_service.dart';
-import '../../../utils/checklist_formatter.dart';
-import '../../../widgets/apex_snackbar.dart';
-import '../../../widgets/custom_share_sheet.dart';
+import '../../../core/utils/checklist_formatter.dart';
+import '../../../widgets/common/apex_snackbar.dart';
+import '../../../widgets/common/custom_share_sheet.dart';
 import '../../../widgets/editor/apex_editor_header.dart';
 import '../../../widgets/editor/toolbars/editor_toolbar_factory.dart';
 import '../../../widgets/editor/checklist_editor.dart';
@@ -84,7 +84,6 @@ class EditorBuildMethods {
         reminderDateTime: coordinator.stateManager.reminderDateTime,
         onReminderTap: onReminderTap,
         onReminderRemove: () async {
-          debugPrint('🔴 CLOSE BUTTON PRESSED!');
           HapticFeedback.lightImpact();
           coordinator.stateManager.reminderDateTime = null;
           coordinator.stateManager.recurrenceRule = null;
@@ -284,7 +283,7 @@ class EditorBuildMethods {
                       type: SnackBarType.warning);
                 }
               },
-              onDeleteTap: () => EditorDialogs.showDeleteDialog(
+              onDeleteTap: () => NoteEditorDialogs.showDeleteDialog(
                 context: context,
                 backgroundColor: coordinator.getBackgroundColor(context),
                 textColor: finalTextColor,

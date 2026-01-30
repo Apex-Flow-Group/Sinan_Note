@@ -4,15 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:faker/faker.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/note_services/note_crud_service.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
-import 'package:apex_note/services/database_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/controllers/editor/text_direction_controller.dart';
 import 'package:apex_note/controllers/editor/editor_state_manager.dart';
 import 'package:flutter/material.dart';
 
 // Mock Database Service for testing
-class MockDatabaseService implements DatabaseService {
+class MockDatabaseService extends IsarDatabaseService {
   final Map<int, Note> _notes = {};
   int _nextId = 1;
 
@@ -33,9 +32,9 @@ class MockDatabaseService implements DatabaseService {
   }
 
   @override
-  Future<int> deleteNote(int id) async {
-    if (_notes.remove(id) != null) return 1;
-    return 0;
+  Future<bool> deleteNote(int id) async {
+    if (_notes.remove(id) != null) return true;
+    return false;
   }
 
   @override
@@ -47,9 +46,6 @@ class MockDatabaseService implements DatabaseService {
   @override
   Future<List<Note>> getLockedNotes() async =>
       _notes.values.where((n) => n.isLocked).toList();
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -117,7 +113,6 @@ void main() {
       test('For any note, adding then retrieving returns equivalent note', () async {
         final dbService = MockDatabaseService();
         final stateService = NoteStateService();
-        final crudService = NoteCRUDService(dbService, stateService);
         final now = DateTime.now();
 
         for (int i = 0; i < 30; i++) {
@@ -131,10 +126,10 @@ void main() {
           );
 
           // Add note
-          final id = await crudService.addNote(originalNote);
+          final id = await dbService.insertNote(originalNote);
 
           // Retrieve note
-          final retrievedNote = await crudService.getNoteById(id);
+          final retrievedNote = await dbService.getNoteById(id);
 
           // Property: Retrieved note should match original (except ID)
           expect(retrievedNote, isNotNull);

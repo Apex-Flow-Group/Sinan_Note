@@ -2,9 +2,9 @@
 
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
-import 'database_service.dart';
-import '../models/note_version.dart';
+import '../core/utils/logger.dart';
+import 'storage/isar_database_service.dart';
+import '../../models/note_version.dart';
 
 /// Smart Version Control Service
 /// Implements 3 intelligence gates to prevent data obesity
@@ -14,7 +14,7 @@ class VersionControlService {
   static const int _minTimeSeconds = 300; // 5 minutes between auto-saves
   static const int _maxVersionsPerNote = 20; // Maximum versions to keep
 
-  final DatabaseService _db = DatabaseService();
+  final IsarDatabaseService _db = IsarDatabaseService();
 
   /// Main function to replace direct logNoteVersion calls
   /// Applies 3 intelligence gates before saving
@@ -34,7 +34,7 @@ class VersionControlService {
       // Gate A: Duplication check - Is content identical?
       final String lastHash = _generateHash(lastVersion.title + lastVersion.content);
       if (currentHash == lastHash) {
-        if (kDebugMode) print("🛑 Version skipped: Content identical");
+        AppLogger.debug('Version skipped: Content identical', 'VersionControl');
         return;
       }
 
@@ -45,14 +45,14 @@ class VersionControlService {
 
         // Skip if change is too small and time is too short
         if (timeDiff < _minTimeSeconds && contentDiff < _minCharsChange) {
-          if (kDebugMode) print("⏳ Version skipped: Minor change ($contentDiff chars) in short time");
+          AppLogger.debug('Version skipped: Minor change ($contentDiff chars) in short time', 'VersionControl');
           return;
         }
       }
     }
 
     // ✅ Passed all gates: Create new version
-    final newVersion = NoteVersion(
+    final newVersion = NoteVersion.create(
       noteId: noteId,
       title: title,
       content: content,
@@ -61,7 +61,7 @@ class VersionControlService {
     );
 
     await _db.logNoteVersion(newVersion);
-    if (kDebugMode) print("✅ Smart version saved (${isManualAction ? 'manual' : 'auto'})");
+    AppLogger.success('Smart version saved (${isManualAction ? 'manual' : 'auto'})', 'VersionControl');
 
     // 3. Auto-cleanup: Remove old versions
     await _pruneOldVersions(noteId);

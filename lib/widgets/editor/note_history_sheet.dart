@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/note_version.dart';
-import '../../services/database_service.dart';
+import '../../services/storage/isar_database_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../apex_snackbar.dart';
-import '../../utils/checklist_formatter.dart';
+import '../common/apex_snackbar.dart';
+import '../../core/utils/checklist_formatter.dart';
 
 class NoteHistorySheet extends StatelessWidget {
   final int noteId;
@@ -62,7 +62,7 @@ class NoteHistorySheet extends StatelessWidget {
               const Divider(height: 1),
               Expanded(
                 child: FutureBuilder<List<NoteVersion>>(
-                  future: DatabaseService().getNoteHistory(noteId),
+                  future: IsarDatabaseService().getNoteHistory(noteId),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());

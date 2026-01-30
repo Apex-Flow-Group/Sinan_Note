@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../services/widget_service.dart';
-import '../services/database_service.dart';
+import '../services/storage/isar_database_service.dart';
 import '../models/note.dart';
-import '../utils/checklist_formatter.dart';
+import '../core/utils/checklist_formatter.dart';
 
 class WidgetSelectionScreen extends StatefulWidget {
   final String widgetType; // 'note' or 'checklist'
@@ -28,19 +28,19 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
   }
 
   Future<void> _loadNotes() async {
-    final dbService = DatabaseService();
+    final dbService = IsarDatabaseService();
     final allNotes = await dbService.getAllNotes();
     setState(() {
       if (widget.widgetType == 'checklist') {
         notes = allNotes
             .where((n) =>
-                !n.isLocked && !n.isTrashed && !n.isArchived && 
+                n.isLocked == false && n.isTrashed == false && n.isArchived == false && 
                 (n.isChecklist == true || n.noteType == 'checklist'))
             .toList();
       } else {
         notes = allNotes
             .where((n) =>
-                !n.isLocked && !n.isTrashed && !n.isArchived && 
+                n.isLocked == false && n.isTrashed == false && n.isArchived == false && 
                 n.isChecklist != true && n.noteType != 'checklist')
             .toList();
       }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../models/note.dart';
-import '../../services/notes_provider.dart';
+import '../../controllers/notes/notes_provider.dart';
 import '../../screens/home_screen.dart';
 import '../home/note_card_widget.dart';
 
@@ -75,10 +75,9 @@ class _NotesGridViewState extends State<NotesGridView> {
         return ListenableBuilder(
           listenable: widget.searchController,
           builder: (context, _) {
-            return Selector<NotesProvider, List<Note>>(
-              selector: (_, provider) => _filterNotes(provider.notes),
-              shouldRebuild: (previous, next) => true,
-              builder: (context, filteredNotes, _) {
+            return Consumer<NotesProvider>(
+              builder: (context, provider, _) {
+                final filteredNotes = _filterNotes(provider.notes);
                 if (filteredNotes.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -155,15 +154,12 @@ class _NotesGridViewState extends State<NotesGridView> {
         onTap: () {
           // 🔥 FIX: Read LIVE value from notifier, not stale snapshot
           final currentSelection = widget.selectedNoteIdsNotifier.value;
-          debugPrint('📱 onTap: note.id=${note.id}, selectionMode=${currentSelection.isNotEmpty}, currentSelection=$currentSelection');
           if (currentSelection.isNotEmpty) {
             final newSet = Set<int>.from(currentSelection);
             if (newSet.contains(note.id)) {
               newSet.remove(note.id);
-              debugPrint('➖ Removed ${note.id}, newSet=$newSet');
             } else {
               newSet.add(note.id!);
-              debugPrint('➕ Added ${note.id}, newSet=$newSet');
             }
             // 💉 FORCE NOTIFICATION: Create completely new Set instance
             widget.selectedNoteIdsNotifier.value = Set<int>.of(newSet);

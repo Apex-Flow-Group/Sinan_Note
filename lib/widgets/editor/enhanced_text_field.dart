@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import '../../utils/apex_smart_controller.dart';
+import '../../core/utils/apex_smart_controller.dart';
 
 /// Enhanced TextField with better cursor visibility and selection handling
 class EnhancedTextField extends StatelessWidget {

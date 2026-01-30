@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import '../services/settings_provider.dart';
-import '../services/notes_provider.dart';
-import '../services/security_gate.dart';
+import '../controllers/settings/settings_provider.dart';
+import '../controllers/notes/notes_provider.dart';
+import '../services/security/security_gate.dart';
 import 'home_screen.dart';
 import 'tabs/reminder_dashboard.dart';
 import 'tabs/code_tab.dart';

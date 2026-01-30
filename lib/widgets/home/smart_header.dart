@@ -2,14 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/notes_provider.dart';
+import '../../controllers/notes/notes_provider.dart';
 import '../../services/toast_service.dart';
 import '../../models/note.dart';
 import '../../models/note_mode.dart';  // ✏️ Import NoteMode
-import '../../l10n/l10n_migration_helper.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../screens/note_editor.dart';  // ✏️ Import Editor
-import '../breathing_search_field.dart';
-import '../custom_share_sheet.dart';  // 📤 Import share widget
+import '../common/breathing_search_field.dart';
+import '../common/custom_share_sheet.dart';  // 📤 Import share widget
 import 'selection_action_bar.dart';
 import 'smooth_search_header_delegate.dart';
 
@@ -42,14 +42,8 @@ class SmartHeader extends StatefulWidget {
 class _SmartHeaderState extends State<SmartHeader> {
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    // Debug: Print colors
-    debugPrint('🎨 isDark: $isDark');
-    debugPrint('🎨 surfaceBright: ${Theme.of(context).colorScheme.surfaceBright}');
-    debugPrint('🎨 surfaceContainer: ${Theme.of(context).colorScheme.surfaceContainer}');
-    debugPrint('🎨 surface: ${Theme.of(context).colorScheme.surface}');
 
     return ValueListenableBuilder<Set<int>>(
       valueListenable: widget.selectedNoteIdsNotifier,
@@ -139,7 +133,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                       if (context.mounted) {
                         ToastService().showUndoToast(
                           context: context,
-                          message: '$count ${context.l10n.notesPinned}',
+                          message: '$count ${AppLocalizations.of(context)!.notesPinned}',
                           actionKey: 'bulk_pin',
                           type: ToastType.success,
                           onExecute: () {}, // Empty - action already executed
@@ -148,7 +142,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                               await provider.updateNote(note);
                             }
                           },
-                          undoLabel: context.l10n.undo,
+                          undoLabel: AppLocalizations.of(context)!.undo,
                         );
                       }
                     },
@@ -164,14 +158,14 @@ class _SmartHeaderState extends State<SmartHeader> {
                       if (context.mounted) {
                         ToastService().showUndoToast(
                           context: context,
-                          message: '$count ${context.l10n.notesArchived}',
+                          message: '$count ${AppLocalizations.of(context)!.notesArchived}',
                           actionKey: 'bulk_archive',
                           type: ToastType.success,
                           onExecute: () {},
                           onUndo: () async {
                             await provider.unarchiveNotes(ids);
                           },
-                          undoLabel: context.l10n.undo,
+                          undoLabel: AppLocalizations.of(context)!.undo,
                         );
                       }
                     },
@@ -180,8 +174,6 @@ class _SmartHeaderState extends State<SmartHeader> {
                       final ids = List<int>.from(selectedIds);
                       final count = ids.length;
                       
-                      debugPrint('🎯 onDelete: selectedIds=$selectedIds, count=$count');
-                      
                       // IMMEDIATE: Execute batch action
                       await provider.trashNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
@@ -189,14 +181,14 @@ class _SmartHeaderState extends State<SmartHeader> {
                       if (context.mounted) {
                         ToastService().showUndoToast(
                           context: context,
-                          message: '$count ${context.l10n.notesDeleted}',
+                          message: '$count ${AppLocalizations.of(context)!.notesDeleted}',
                           actionKey: 'bulk_delete',
                           type: ToastType.info,
                           onExecute: () {},
                           onUndo: () async {
                             await provider.restoreNotes(ids);
                           },
-                          undoLabel: context.l10n.undo,
+                          undoLabel: AppLocalizations.of(context)!.undo,
                         );
                       }
                     },
@@ -243,7 +235,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                         child: IconButton(
                           icon: Icon(
                             widget.isSearchActive ? Icons.arrow_back : Icons.menu,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: isDark ? Colors.white : Colors.black87,
                           ),
                           onPressed: widget.onMenuTap,
                           splashRadius: 24,

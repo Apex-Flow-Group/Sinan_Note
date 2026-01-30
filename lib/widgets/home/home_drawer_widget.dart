@@ -2,16 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
-import '../../services/biometric_service.dart';
-import '../../services/settings_provider.dart';
-import '../../services/database_service.dart';
+import '../../services/security/biometric_service.dart';
+import '../../controllers/settings/settings_provider.dart';
 import '../../screens/locked_notes_intro_screen.dart';
 import '../../screens/locked_notes_screen.dart';
-import '../../screens/transfer_screen_helper.dart';
 import '../../screens/google_drive_screen.dart';
-import '../../l10n/l10n_migration_helper.dart';
-import '../../config/flavor_config.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+
 
 class HomeDrawerWidget extends StatelessWidget {
   final VoidCallback onBackupTap;
@@ -25,8 +22,8 @@ class HomeDrawerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final isArabic = context.isArabic;
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Drawer(
       child: Column(
@@ -104,21 +101,7 @@ class HomeDrawerWidget extends StatelessWidget {
                     onNotesChanged();
                   },
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Divider(height: 1),
-                ),
-                if (FlavorConfig.hasTransferFeature)
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.sync_alt_rounded,
-                    title: l10n.transferTitle,
-                    subtitle: isArabic
-                        ? 'نقل البيانات عبر الشبكة'
-                        : 'Transfer via network',
-                    iconColor: const Color(0xFF7E57C2),
-                    onTap: () => _openTransfer(context),
-                  ),
+
               ],
             ),
           ),
@@ -139,30 +122,7 @@ class HomeDrawerWidget extends StatelessWidget {
     );
   }
 
-  Future<void> _openTransfer(BuildContext context) async {
-    final dbService = DatabaseService();
-    final db = await dbService.database;
-    final lockedCount = Sqflite.firstIntValue(await db
-            .rawQuery('SELECT COUNT(*) FROM notes WHERE isLocked = 1')) ??
-        0;
-
-    if (lockedCount > 0) {
-      final agreed = await TransferAgreementDialog.show(
-          context, context.isArabic, lockedCount);
-      if (agreed != true) {
-        if (context.mounted) Navigator.pop(context);
-        return;
-      }
-    }
-
-    if (context.mounted) {
-      Navigator.pop(context);
-      Navigator.popUntil(context, (route) => route.isFirst);
-      Navigator.pushNamed(context, '/transfer');
-    }
-  }
-
-  Future<void> _openLockedNotes(BuildContext context) async {
+Future<void> _openLockedNotes(BuildContext context) async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
     if (!settings.hasSeenLockedIntro) {
@@ -193,7 +153,7 @@ class HomeDrawerWidget extends StatelessWidget {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.authenticationFailed),
+            content: Text(AppLocalizations.of(context)!.authenticationFailed),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),

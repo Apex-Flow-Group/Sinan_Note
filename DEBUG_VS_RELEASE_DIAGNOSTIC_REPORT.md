@@ -34,15 +34,15 @@ void initState() {
 **Location:** `notes_grid_view.dart:135-145`
 ```dart
 onTap: () {
-  debugPrint('📱 onTap: note.id=${note.id}, selectionMode=${selectedIds.isNotEmpty}, currentSelection=$selectedIds');
+  AppLogger.debug('onTap: note.id=${note.id}, selectionMode=${selectedIds.isNotEmpty}, currentSelection=$selectedIds', 'Selection');
   if (selectedIds.isNotEmpty) {
     final newSet = Set<int>.from(selectedIds);  // ⚠️ SUSPECT #2
     if (newSet.contains(note.id)) {
       newSet.remove(note.id);
-      debugPrint('➖ Removed ${note.id}, newSet=$newSet');
+      AppLogger.debug('Removed ${note.id}, newSet=$newSet', 'Selection');
     } else {
       newSet.add(note.id!);
-      debugPrint('➕ Added ${note.id}, newSet=$newSet');
+      AppLogger.debug('Added ${note.id}, newSet=$newSet', 'Selection');
     }
     widget.selectedNoteIdsNotifier.value = newSet;  // ⚠️ SUSPECT #3
   }
@@ -58,22 +58,22 @@ onTap: () {
 
 ---
 
-### **2. debugPrint Dependency (MEDIUM SUSPICION)**
+### **2. AppLogger Dependency (MEDIUM SUSPICION)**
 
 **Location:** `notes_grid_view.dart:136, 140, 143`
 ```dart
-debugPrint('📱 onTap: note.id=${note.id}, selectionMode=${selectedIds.isNotEmpty}, currentSelection=$selectedIds');
+AppLogger.debug('onTap: note.id=${note.id}, selectionMode=${selectedIds.isNotEmpty}, currentSelection=$selectedIds', 'Selection');
 // ...
-debugPrint('➖ Removed ${note.id}, newSet=$newSet');
+AppLogger.debug('Removed ${note.id}, newSet=$newSet', 'Selection');
 // ...
-debugPrint('➕ Added ${note.id}, newSet=$newSet');
+AppLogger.debug('Added ${note.id}, newSet=$newSet', 'Selection');
 ```
 
-**ISSUE:** `debugPrint` is a no-op in Release mode. If there's any timing dependency (e.g., async microtask scheduling), removing these calls could alter execution order.
+**ISSUE:** `AppLogger.debug` is wrapped in `kDebugMode` check. If there's any timing dependency (e.g., async microtask scheduling), removing these calls could alter execution order.
 
 **Evidence:**
-- Debug mode: Prints execute, potentially adding microsecond delays
-- Release mode: Prints stripped, execution is faster
+- Debug mode: Logs execute, potentially adding microsecond delays
+- Release mode: Logs stripped, execution is faster
 - Could expose race condition in ValueNotifier update propagation
 
 ---
@@ -136,7 +136,7 @@ Widget _buildNoteCard(Note note, Set<int> selectedIds, String source) {
 
 **Why Debug Works:**
 - Debug mode is slower, allowing rebuilds to complete between taps
-- `debugPrint` adds microsecond delays
+- AppLogger adds microsecond delays
 
 **Why Release Fails:**
 - Release mode is faster, taps happen before rebuild
@@ -174,12 +174,12 @@ The `onTap` callback captures `selectedIds` from the `_buildNoteCard` parameter.
 
 **Why Debug Works:**
 - Slower execution allows rebuilds between taps
-- `debugPrint` adds delays
+- AppLogger adds delays
 - Assertions add overhead
 
 **Why Release Fails:**
 - Optimized code executes faster
-- No `debugPrint` delays
+- No AppLogger delays
 - Rebuilds batched/deferred
 - User can tap faster than rebuild cycle
 
@@ -226,7 +226,7 @@ onClear: () {
 | Aspect | Debug Mode | Release Mode |
 |--------|-----------|--------------|
 | **Execution Speed** | Slow (assertions, checks) | Fast (optimized) |
-| **debugPrint** | Executes (adds delays) | Stripped (no delays) |
+| **AppLogger** | Executes (adds delays) | Stripped (no delays) |
 | **Rebuilds** | Immediate | Batched/deferred |
 | **Closure Timing** | Slow enough for rebuilds | Faster than rebuilds |
 | **RepaintBoundary** | Less aggressive caching | More aggressive caching |

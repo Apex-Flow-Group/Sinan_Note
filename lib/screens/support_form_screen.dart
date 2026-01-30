@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../l10n/l10n_migration_helper.dart';
-import '../widgets/apex_snackbar.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import '../widgets/common/apex_snackbar.dart';
 
 class SupportFormScreen extends StatefulWidget {
   const SupportFormScreen({super.key});
@@ -70,7 +70,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
     if (!_formKey.currentState!.validate() || !_privacyAccepted) return;
 
     setState(() => _isLoading = true);
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final name = _nameController.text;
@@ -119,7 +119,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
   }
 
   void _showPrivacyDialog() {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -168,7 +168,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final categories = [
       l10n.feedback,

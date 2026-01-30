@@ -7,7 +7,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 import '../../../models/note_mode.dart';
 import '../../../services/notification_service.dart';
-import '../../../widgets/apex_snackbar.dart';
+import '../../../widgets/common/apex_snackbar.dart';
 import '../../../controllers/editor/text_direction_controller.dart';
 import '../../../controllers/editor/editor_state_manager.dart';
 import '../widgets/text_editor_widget.dart';
@@ -112,13 +112,11 @@ class EditorContentAreaWidget extends StatelessWidget {
         reminderDateTime: stateManager.reminderDateTime,
         onReminderTap: onReminderTap,
         onReminderRemove: () async {
-          debugPrint('🔴 CLOSE BUTTON PRESSED!');
           HapticFeedback.lightImpact();
           stateManager.reminderDateTime = null;
           stateManager.recurrenceRule = null;
           stateManager.markDirty();
           
-          debugPrint('🔴 Reminder removed: _reminderDateTime=${stateManager.reminderDateTime}');
           if (savedNoteId != null || noteId != null) {
             await NotificationService().cancelNotification(savedNoteId ?? noteId!);
           }
@@ -132,7 +130,6 @@ class EditorContentAreaWidget extends StatelessWidget {
           }
         },
         onReminderEdit: () {
-          debugPrint('✏️ EDIT BUTTON PRESSED!');
           onReminderTap();
         },
         autoFocus: autoFocus,
