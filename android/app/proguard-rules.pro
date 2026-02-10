@@ -37,6 +37,10 @@
 # Home Widget
 -keep class es.antonborri.home_widget.** { *; }
 
+# Play Core (للمكونات المؤجلة)
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+
 # Preserve line numbers for debugging
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
