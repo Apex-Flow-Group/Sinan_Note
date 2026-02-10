@@ -37,7 +37,6 @@ dependencies:
   encrypt: ^5.0.3
   flutter_slidable: ^4.0.3
   dynamic_color: 1.6.8
-  dio: ^5.4.0
   permission_handler: ^11.0.0
   package_info_plus: ^8.0.0
   flutter_file_dialog: ^3.0.3
