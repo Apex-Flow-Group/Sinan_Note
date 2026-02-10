@@ -1443,4 +1443,241 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get databaseError => 'Database error';
+
+  @override
+  String get confirmRestore => 'Confirm Restore';
+
+  @override
+  String get restoreWarning =>
+      'Current version will be saved automatically before restore. Continue?';
+
+  @override
+  String get setupVault => 'Setup Vault';
+
+  @override
+  String get createPassword => 'Create Password';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get passwordMismatch => 'Passwords do not match';
+
+  @override
+  String get passwordMinLength => 'Password must be at least 6 characters';
+
+  @override
+  String get recoveryCode => 'Recovery Code';
+
+  @override
+  String get recoveryCodeWarning =>
+      'This is your ONLY way to recover access if you forget your password.';
+
+  @override
+  String get recoveryCodeOwnership =>
+      '⚠️ Important: This code is YOUR personal property. We do NOT have access to it and CANNOT recover it for you.';
+
+  @override
+  String get recoveryCodeLoss =>
+      'If you lose this code AND forget your password, your locked notes will be permanently inaccessible.';
+
+  @override
+  String get copyCode => 'Copy Code';
+
+  @override
+  String get saveAsPDF => 'Save as PDF';
+
+  @override
+  String get saveToGoogleDrive => 'Save to Google Drive';
+
+  @override
+  String get iHaveSavedCode => 'I have saved the recovery code in a safe place';
+
+  @override
+  String get enableBiometric => 'Enable Biometric Quick Access';
+
+  @override
+  String get biometricOptional =>
+      'Use fingerprint/face to unlock vault quickly (optional)';
+
+  @override
+  String get enableBiometricAccess => 'Enable Biometric Access';
+
+  @override
+  String get skipBiometric => 'Skip for Now';
+
+  @override
+  String get vaultSetupComplete => 'Vault Setup Complete';
+
+  @override
+  String get codeCopied => 'Recovery code copied to clipboard';
+
+  @override
+  String get mustSaveCode => 'Please confirm you have saved the recovery code';
+
+  @override
+  String get enterVaultPassword => 'Enter Vault Password';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get recoverVault => 'Recover Vault';
+
+  @override
+  String get enterRecoveryCode => 'Enter Recovery Code';
+
+  @override
+  String get invalidRecoveryCode => 'Invalid recovery code';
+
+  @override
+  String get vaultRecovered => 'Vault recovered successfully';
+
+  @override
+  String get setNewPassword => 'Set New Password';
+
+  @override
+  String get googleDriveSyncTerms => 'Google Drive Sync Terms';
+
+  @override
+  String get syncTermsTitle => 'Google Drive Sync Agreement';
+
+  @override
+  String get syncTermsRegularNotes =>
+      'Regular Notes: Synced without encryption for easy access across devices';
+
+  @override
+  String get syncTermsVaultNotes =>
+      'Vault Notes: Remain fully encrypted with device-specific keys';
+
+  @override
+  String get syncTermsGoogleAccess => 'Privacy Notice';
+
+  @override
+  String get syncTermsRecommendation =>
+      'Regular notes are stored on Google Drive and may be accessible to Google as per their privacy policy. For sensitive information, we recommend using the Vault feature.';
+
+  @override
+  String get syncTermsGoogleTOS =>
+      'By enabling sync, you agree to Google Drive\'s Terms of Service and Privacy Policy.';
+
+  @override
+  String get readPrivacyPolicyLink => 'Read Privacy Policy';
+
+  @override
+  String get agreeAndEnable => 'Agree & Enable';
+
+  @override
+  String get compressionEnabled => 'ZIP compression enabled to save space';
+
+  @override
+  String get vaultUpgrade => 'Vault Upgrade';
+
+  @override
+  String get vaultUpgradeInfo =>
+      'Your vault needs to be upgraded to the new secure system with recovery code support.';
+
+  @override
+  String get oldPassword => 'Old Password';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get migrating => 'Migrating...';
+
+  @override
+  String get upgrade => 'Upgrade';
+
+  @override
+  String get incorrectPassword => 'Incorrect password';
+
+  @override
+  String get syncWarningTitle => '⚠️ Important Sync Warning';
+
+  @override
+  String get syncWarningMessage =>
+      'Locked notes cannot be opened after restoring from Google Drive on another device!\n\nReason: Encryption keys are not uploaded to the cloud (to protect your privacy)\n\nSolution: Save this code or unlock notes before syncing';
+
+  @override
+  String get importantWarning => '⚠️ Important Warning';
+
+  @override
+  String get recoveryCodeWarningFull =>
+      '• This code is YOUR personal property. We do NOT have access to it.\n• If you forget your password, use this code to recover access.\n• IMPORTANT: If you restore from Google Drive on another device, locked notes CANNOT be opened even with this code (encryption keys stay on your device only for privacy).\n• Solution: Unlock notes before syncing, or keep them on the same device.';
+
+  @override
+  String get vaultFoundInDrive => '☁️ Vault found in Google Drive';
+
+  @override
+  String get restoreVaultFromDrive => 'Restore Vault from Drive';
+
+  @override
+  String get importantInfo => 'Important Information';
+
+  @override
+  String get recoveryCodeInfo =>
+      '• Save this code securely - it\'s your backup key if you forget your password.\n\n• This code works only on this device. If you switch devices or restore from cloud backup, you\'ll need to unlock notes first.\n\n• Why? Encryption keys stay on your device for maximum privacy and security.\n\n• Tip: Before syncing to another device, unlock your notes or keep them on this device only.';
+
+  @override
+  String get uploadOptions => 'Upload Options';
+
+  @override
+  String get uploadOptionsDesc => 'Choose what to upload to Google Drive:';
+
+  @override
+  String get uploadMasterKey => 'Upload Master Encryption Key';
+
+  @override
+  String get uploadMasterKeyDesc =>
+      'Allows opening locked notes on other devices. Less secure but more convenient.';
+
+  @override
+  String get uploadVault => 'Upload Vault (Locked Notes)';
+
+  @override
+  String get uploadVaultDesc =>
+      'Upload encrypted vault data. Only works if master key is also uploaded.';
+
+  @override
+  String get uploadWarning =>
+      'Without master key: Locked notes cannot be opened on other devices even with recovery code.';
+
+  @override
+  String get syncConflictTitle => 'Sync Conflict Detected';
+
+  @override
+  String get syncConflictDesc =>
+      'Different versions found. Choose how to proceed:';
+
+  @override
+  String get onDevice => 'On Device';
+
+  @override
+  String get onDrive => 'On Drive';
+
+  @override
+  String notesCount(int count) {
+    return '$count notes';
+  }
+
+  @override
+  String get chooseAction => 'Choose Action';
+
+  @override
+  String get useDrive => 'Use Drive Version';
+
+  @override
+  String get useDevice => 'Use Device Version';
+
+  @override
+  String get smartMerge => 'Smart Merge';
+
+  @override
+  String get smartMergeDesc =>
+      'Combines both versions, keeping the most recent changes for each note';
+
+  @override
+  String get googleDriveVaultWarning =>
+      '⚠️ The developer and Google are not responsible for your security key (Recovery Code).\n\n🔑 You must keep the key in a safe place.\n\n📥 When restoring from Google Drive, you will need to enter the key to unlock encrypted notes.';
 }

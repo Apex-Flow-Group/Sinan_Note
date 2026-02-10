@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../controllers/settings/settings_provider.dart';
+import '../widgets/home/home_drawer_widget.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'settings/settings_dialogs.dart';
 import 'settings/settings_backup_handlers.dart';
@@ -46,12 +47,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final systemLocale = View.of(context).platformDispatcher.locale.languageCode;
     final currentLang = settings.languageCode == 'system' ? systemLocale : settings.languageCode;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
-          child: ListView(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(l10n.settings)),
+        drawer: HomeDrawerWidget(
+          onBackupTap: () {},
+          onNotesChanged: () {},
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: ListView(
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
             children: [
               // GENERAL SECTION
@@ -165,22 +177,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => SettingsBackupHandlers.showBackupDialog(context, currentLang, l10n),
               ),
               ListTile(
-                leading: const Icon(Icons.cloud_download_outlined, color: Colors.orange),
-                title: Text(l10n.restore),
-                subtitle: Text(l10n.restoreFromBackup),
-                onTap: () => SettingsBackupHandlers.handleSmartRestore(context, currentLang, l10n),
-              ),
-              ListTile(
                 leading: const Icon(Icons.upload_file, color: Colors.blue),
                 title: Text(l10n.exportJson),
                 subtitle: Text(l10n.saveAsJsonFile),
                 onTap: () => SettingsBackupHandlers.showExportDialog(context, currentLang, l10n),
               ),
               ListTile(
-                leading: const Icon(Icons.download_for_offline, color: Colors.green),
-                title: Text(l10n.importJson),
-                subtitle: Text(l10n.restoreFromJson),
-                onTap: () => SettingsBackupHandlers.handleImportJSON(context, l10n),
+                leading: const Icon(Icons.cloud_download_outlined, color: Colors.orange),
+                title: Text(l10n.restore),
+                subtitle: Text(currentLang == 'ar' ? 'استيراد من JSON أو Database' : 'Import from JSON or Database'),
+                onTap: () => SettingsBackupHandlers.handleSmartImport(context, currentLang, l10n),
               ),
 
               // ABOUT SECTION
@@ -244,6 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

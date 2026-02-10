@@ -32,6 +32,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+build/
+app.dill
 
 # Symbolication related
 app.*.symbols
@@ -59,8 +61,35 @@ client_secret*.json
 *.pem
 upload_certificate.pem
 
+# Secrets folder
+.secrets/
+.secrets/*
+
 # Gradle build cache
 android/.gradle/
 
 # Linux ephemeral files
 linux/flutter/ephemeral/
+
+# Archives and compressed files
+*.tar.gz
+*.tar
+*.zip
+*.rar
+*.7z
+سنان.tar.gz
+
+# APK and AAB files (build outputs)
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Native libraries
+*.so
+*.so.*
+
+# Large build artifacts
+android/.gradle/
+android/app/build/
+android/build/

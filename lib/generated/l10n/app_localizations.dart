@@ -2899,6 +2899,438 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Database error'**
   String get databaseError;
+
+  /// No description provided for @confirmRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Restore'**
+  String get confirmRestore;
+
+  /// No description provided for @restoreWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version will be saved automatically before restore. Continue?'**
+  String get restoreWarning;
+
+  /// No description provided for @setupVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup Vault'**
+  String get setupVault;
+
+  /// No description provided for @createPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Password'**
+  String get createPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordMismatch;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get passwordMinLength;
+
+  /// No description provided for @recoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Code'**
+  String get recoveryCode;
+
+  /// No description provided for @recoveryCodeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your ONLY way to recover access if you forget your password.'**
+  String get recoveryCodeWarning;
+
+  /// No description provided for @recoveryCodeOwnership.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Important: This code is YOUR personal property. We do NOT have access to it and CANNOT recover it for you.'**
+  String get recoveryCodeOwnership;
+
+  /// No description provided for @recoveryCodeLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'If you lose this code AND forget your password, your locked notes will be permanently inaccessible.'**
+  String get recoveryCodeLoss;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Code'**
+  String get copyCode;
+
+  /// No description provided for @saveAsPDF.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as PDF'**
+  String get saveAsPDF;
+
+  /// No description provided for @saveToGoogleDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Google Drive'**
+  String get saveToGoogleDrive;
+
+  /// No description provided for @iHaveSavedCode.
+  ///
+  /// In en, this message translates to:
+  /// **'I have saved the recovery code in a safe place'**
+  String get iHaveSavedCode;
+
+  /// No description provided for @enableBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Biometric Quick Access'**
+  String get enableBiometric;
+
+  /// No description provided for @biometricOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint/face to unlock vault quickly (optional)'**
+  String get biometricOptional;
+
+  /// No description provided for @enableBiometricAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Biometric Access'**
+  String get enableBiometricAccess;
+
+  /// No description provided for @skipBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for Now'**
+  String get skipBiometric;
+
+  /// No description provided for @vaultSetupComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault Setup Complete'**
+  String get vaultSetupComplete;
+
+  /// No description provided for @codeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code copied to clipboard'**
+  String get codeCopied;
+
+  /// No description provided for @mustSaveCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm you have saved the recovery code'**
+  String get mustSaveCode;
+
+  /// No description provided for @enterVaultPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Vault Password'**
+  String get enterVaultPassword;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get forgotPassword;
+
+  /// No description provided for @recoverVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover Vault'**
+  String get recoverVault;
+
+  /// No description provided for @enterRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Recovery Code'**
+  String get enterRecoveryCode;
+
+  /// No description provided for @invalidRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid recovery code'**
+  String get invalidRecoveryCode;
+
+  /// No description provided for @vaultRecovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault recovered successfully'**
+  String get vaultRecovered;
+
+  /// No description provided for @setNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Set New Password'**
+  String get setNewPassword;
+
+  /// No description provided for @googleDriveSyncTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive Sync Terms'**
+  String get googleDriveSyncTerms;
+
+  /// No description provided for @syncTermsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive Sync Agreement'**
+  String get syncTermsTitle;
+
+  /// No description provided for @syncTermsRegularNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular Notes: Synced without encryption for easy access across devices'**
+  String get syncTermsRegularNotes;
+
+  /// No description provided for @syncTermsVaultNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault Notes: Remain fully encrypted with device-specific keys'**
+  String get syncTermsVaultNotes;
+
+  /// No description provided for @syncTermsGoogleAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Notice'**
+  String get syncTermsGoogleAccess;
+
+  /// No description provided for @syncTermsRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular notes are stored on Google Drive and may be accessible to Google as per their privacy policy. For sensitive information, we recommend using the Vault feature.'**
+  String get syncTermsRecommendation;
+
+  /// No description provided for @syncTermsGoogleTOS.
+  ///
+  /// In en, this message translates to:
+  /// **'By enabling sync, you agree to Google Drive\'s Terms of Service and Privacy Policy.'**
+  String get syncTermsGoogleTOS;
+
+  /// No description provided for @readPrivacyPolicyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Read Privacy Policy'**
+  String get readPrivacyPolicyLink;
+
+  /// No description provided for @agreeAndEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Agree & Enable'**
+  String get agreeAndEnable;
+
+  /// No description provided for @compressionEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'ZIP compression enabled to save space'**
+  String get compressionEnabled;
+
+  /// No description provided for @vaultUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault Upgrade'**
+  String get vaultUpgrade;
+
+  /// No description provided for @vaultUpgradeInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your vault needs to be upgraded to the new secure system with recovery code support.'**
+  String get vaultUpgradeInfo;
+
+  /// No description provided for @oldPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Old Password'**
+  String get oldPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPassword;
+
+  /// No description provided for @migrating.
+  ///
+  /// In en, this message translates to:
+  /// **'Migrating...'**
+  String get migrating;
+
+  /// No description provided for @upgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get upgrade;
+
+  /// No description provided for @incorrectPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password'**
+  String get incorrectPassword;
+
+  /// No description provided for @syncWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Important Sync Warning'**
+  String get syncWarningTitle;
+
+  /// No description provided for @syncWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked notes cannot be opened after restoring from Google Drive on another device!\n\nReason: Encryption keys are not uploaded to the cloud (to protect your privacy)\n\nSolution: Save this code or unlock notes before syncing'**
+  String get syncWarningMessage;
+
+  /// No description provided for @importantWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Important Warning'**
+  String get importantWarning;
+
+  /// No description provided for @recoveryCodeWarningFull.
+  ///
+  /// In en, this message translates to:
+  /// **'• This code is YOUR personal property. We do NOT have access to it.\n• If you forget your password, use this code to recover access.\n• IMPORTANT: If you restore from Google Drive on another device, locked notes CANNOT be opened even with this code (encryption keys stay on your device only for privacy).\n• Solution: Unlock notes before syncing, or keep them on the same device.'**
+  String get recoveryCodeWarningFull;
+
+  /// No description provided for @vaultFoundInDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'☁️ Vault found in Google Drive'**
+  String get vaultFoundInDrive;
+
+  /// No description provided for @restoreVaultFromDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Vault from Drive'**
+  String get restoreVaultFromDrive;
+
+  /// No description provided for @importantInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Important Information'**
+  String get importantInfo;
+
+  /// No description provided for @recoveryCodeInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'• Save this code securely - it\'s your backup key if you forget your password.\n\n• This code works only on this device. If you switch devices or restore from cloud backup, you\'ll need to unlock notes first.\n\n• Why? Encryption keys stay on your device for maximum privacy and security.\n\n• Tip: Before syncing to another device, unlock your notes or keep them on this device only.'**
+  String get recoveryCodeInfo;
+
+  /// No description provided for @uploadOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Options'**
+  String get uploadOptions;
+
+  /// No description provided for @uploadOptionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what to upload to Google Drive:'**
+  String get uploadOptionsDesc;
+
+  /// No description provided for @uploadMasterKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Master Encryption Key'**
+  String get uploadMasterKey;
+
+  /// No description provided for @uploadMasterKeyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Allows opening locked notes on other devices. Less secure but more convenient.'**
+  String get uploadMasterKeyDesc;
+
+  /// No description provided for @uploadVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Vault (Locked Notes)'**
+  String get uploadVault;
+
+  /// No description provided for @uploadVaultDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload encrypted vault data. Only works if master key is also uploaded.'**
+  String get uploadVaultDesc;
+
+  /// No description provided for @uploadWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Without master key: Locked notes cannot be opened on other devices even with recovery code.'**
+  String get uploadWarning;
+
+  /// No description provided for @syncConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Conflict Detected'**
+  String get syncConflictTitle;
+
+  /// No description provided for @syncConflictDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Different versions found. Choose how to proceed:'**
+  String get syncConflictDesc;
+
+  /// No description provided for @onDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'On Device'**
+  String get onDevice;
+
+  /// No description provided for @onDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'On Drive'**
+  String get onDrive;
+
+  /// No description provided for @notesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes'**
+  String notesCount(int count);
+
+  /// No description provided for @chooseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Action'**
+  String get chooseAction;
+
+  /// No description provided for @useDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Drive Version'**
+  String get useDrive;
+
+  /// No description provided for @useDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Device Version'**
+  String get useDevice;
+
+  /// No description provided for @smartMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Merge'**
+  String get smartMerge;
+
+  /// No description provided for @smartMergeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Combines both versions, keeping the most recent changes for each note'**
+  String get smartMergeDesc;
+
+  /// No description provided for @googleDriveVaultWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ The developer and Google are not responsible for your security key (Recovery Code).\n\n🔑 You must keep the key in a safe place.\n\n📥 When restoring from Google Drive, you will need to enter the key to unlock encrypted notes.'**
+  String get googleDriveVaultWarning;
 }
 
 class _AppLocalizationsDelegate

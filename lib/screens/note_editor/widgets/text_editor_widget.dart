@@ -67,65 +67,13 @@ class TextEditorWidget extends StatelessWidget {
             maxWidth: 800,
             minHeight: MediaQuery.of(context).size.height - 180,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (reminderDateTime != null) _buildReminderBanner(context, l10n),
-              _buildTextField(context, l10n),
-            ],
-          ),
+          child: _buildTextField(context, l10n),
         ),
       ),
     );
   }
 
-  Widget _buildReminderBanner(BuildContext context, AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange, width: 2),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.alarm, color: Colors.orange, size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: GestureDetector(
-                onTap: onReminderTap,
-                child: Text(
-                  _getTimeRemaining(reminderDateTime!),
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              color: Colors.orange,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: onReminderRemove,
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20),
-              color: Colors.orange,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: onReminderEdit,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildTextField(BuildContext context, AppLocalizations l10n) {
     return ValueListenableBuilder<TextEditingValue>(
@@ -173,20 +121,5 @@ class TextEditorWidget extends StatelessWidget {
     );
   }
 
-  String _getTimeRemaining(DateTime reminderTime) {
-    final now = DateTime.now();
-    final difference = reminderTime.difference(now);
-    
-    if (difference.isNegative) {
-      return 'Overdue';
-    }
-    
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ${difference.inHours % 24}h';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ${difference.inMinutes % 60}m';
-    } else {
-      return '${difference.inMinutes}m';
-    }
-  }
+
 }

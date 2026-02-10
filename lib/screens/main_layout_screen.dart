@@ -3,9 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../controllers/settings/settings_provider.dart';
 import '../controllers/notes/notes_provider.dart';
 import '../services/security/security_gate.dart';
+import '../services/cloud/google_drive_service.dart';
 import 'home_screen.dart';
 import 'tabs/reminder_dashboard.dart';
 import 'tabs/code_tab.dart';
@@ -39,6 +41,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   void initState() {
     super.initState();
     _securityController.addListener(_onSecurityChanged);
+    _autoSyncOnStartup();
     
     // ✅ Cache screens to prevent unnecessary rebuilds
     // Each screen is created once and reused
@@ -62,6 +65,16 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       const ReminderDashboard(),
       const CodeTab(),
     ];
+  }
+
+  /// 🔄 Auto-sync on app startup
+  Future<void> _autoSyncOnStartup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
+    
+    if (autoSync && GoogleDriveService.isSignedIn) {
+      await GoogleDriveService.uploadDatabase(context);
+    }
   }
 
   @override

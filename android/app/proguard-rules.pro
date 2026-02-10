@@ -13,6 +13,13 @@
 -keep class io.isar.** { *; }
 -dontwarn io.isar.**
 
+# SQLite (للترحيل)
+-keep class com.tekartik.sqflite.** { *; }
+-keep class org.sqlite.** { *; }
+-keep class org.sqlite.database.** { *; }
+-dontwarn com.tekartik.sqflite.**
+-dontwarn org.sqlite.**
+
 # Google Sign In
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.android.gms.**

@@ -50,6 +50,11 @@ class NoteCardWidget extends StatefulWidget {
 
 class _NoteCardWidgetState extends State<NoteCardWidget> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
@@ -66,7 +71,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Slidable(
         key: Key(widget.note.id.toString()),
-        groupTag: '0',
+        groupTag: 'notes_group',
         closeOnScroll: true,
         enabled: enableSwipe,
         startActionPane: enableSwipe
@@ -103,12 +108,17 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
             : null,
         child: SlidableAutoCloser(
           closerNotifier: widget.closeAllSlidables,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () async {
-              if (widget.selectionMode && widget.onTap != null) {
-                widget.onTap!();
-              } else if (!widget.selectionMode) {
+          child: Listener(
+            onPointerDown: (event) {
+              // Increment to trigger close on ALL other cards
+              widget.closeAllSlidables.value++;
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () async {
+                if (widget.selectionMode && widget.onTap != null) {
+                  widget.onTap!();
+                } else if (!widget.selectionMode) {
                 if (widget.note.isLocked && widget.source == 'locked') {
                   final mode = NoteCardUtils.getNoteMode(widget.note);
                   final decryptedNote = Note(
@@ -392,14 +402,15 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           ),
                         ),
                     ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+                  ),  // Stack
+                ),  // PremiumCardEffect
+              ),  // Container
+            ),  // Hero
+          ),  // GestureDetector
+        ),  // Listener
+      ),  // SlidableAutoCloser
+    ),  // Slidable
+  );  // Padding
   }
 }
 

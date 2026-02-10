@@ -1,8 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
 import '../../models/note.dart';
 import '../storage/isar_database_service.dart';
-import '../security/encryption_service.dart';
+import '../security/vault_service.dart';
 import 'note_state_service.dart';
 
 class NoteSecurityService {
@@ -37,10 +38,20 @@ class NoteSecurityService {
     
     for (final note in encryptedNotes) {
       try {
-        final decryptedTitle = note.isChecklist ? note.title : await EncryptionService.decrypt(note.title);
-        final decryptedContent = note.isChecklist ? note.content : await EncryptionService.decrypt(note.content);
-        decryptedNotes.add(note.copyWith(title: decryptedTitle, content: decryptedContent));
+        final decryptedTitle = await VaultService.decryptWithMasterKey(note.title);
+        String decryptedContent = await VaultService.decryptWithMasterKey(note.content);
+        
+        // ✅ Clean checklist JSON after decryption
+        if (note.isChecklist || note.noteType == 'checklist') {
+          decryptedContent = _cleanChecklistAfterDecryption(decryptedContent);
+        }
+        
+        decryptedNotes.add(note.copyWith(
+          title: decryptedTitle, 
+          content: decryptedContent
+        ));
       } catch (e) {
+        // If decryption fails, add note as-is
         decryptedNotes.add(note);
       }
     }
@@ -54,12 +65,30 @@ class NoteSecurityService {
     String finalTitle = note.title;
     String finalContent = note.content;
     
-    if (lockStatus && !note.isChecklist) {
-      if (note.title.isNotEmpty) finalTitle = await EncryptionService.encrypt(note.title);
-      if (note.content.isNotEmpty) finalContent = await EncryptionService.encrypt(note.content);
-    } else if (!lockStatus && !note.isChecklist) {
-      finalTitle = await EncryptionService.decrypt(note.title);
-      finalContent = await EncryptionService.decrypt(note.content);
+    if (lockStatus) {
+      // 🔒 Encrypting
+      if (note.title.isNotEmpty) {
+        finalTitle = await VaultService.encryptWithMasterKey(note.title);
+      }
+      if (note.content.isNotEmpty) {
+        // ✅ For checklist: validate JSON before encryption
+        if (note.isChecklist || note.noteType == 'checklist') {
+          finalContent = _prepareChecklistForEncryption(note.content);
+        }
+        finalContent = await VaultService.encryptWithMasterKey(finalContent);
+      }
+    } else {
+      // 🔓 Decrypting
+      if (note.title.isNotEmpty) {
+        finalTitle = await VaultService.decryptWithMasterKey(note.title);
+      }
+      if (note.content.isNotEmpty) {
+        finalContent = await VaultService.decryptWithMasterKey(note.content);
+        // ✅ For checklist: validate JSON after decryption
+        if (note.isChecklist || note.noteType == 'checklist') {
+          finalContent = _cleanChecklistAfterDecryption(finalContent);
+        }
+      }
     }
     
     final updatedNote = note.copyWith(
@@ -74,5 +103,31 @@ class NoteSecurityService {
   
   void clearLockedSession(NoteStateService stateService) {
     stateService.clearLockedNotes();
+  }
+  
+  /// Prepare checklist JSON for encryption (validate and clean)
+  String _prepareChecklistForEncryption(String content) {
+    try {
+      final decoded = jsonDecode(content);
+      // Re-encode to ensure clean JSON
+      return jsonEncode(decoded);
+    } catch (e) {
+      // If invalid JSON, return as-is
+      return content;
+    }
+  }
+  
+  /// Clean checklist JSON after decryption (validate and fix)
+  String _cleanChecklistAfterDecryption(String content) {
+    try {
+      // Remove any potential whitespace or encoding issues
+      final trimmed = content.trim();
+      final decoded = jsonDecode(trimmed);
+      // Re-encode to ensure clean JSON
+      return jsonEncode(decoded);
+    } catch (e) {
+      // If invalid JSON, return as-is
+      return content;
+    }
   }
 }

@@ -2,3 +2,7 @@ arb-dir: lib/l10n
 template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
 output-dir: lib/generated/l10n
+# تقليل حجم الملفات المولدة
+synthetic-package: false
+header-file: false
+use-deferred-loading: false

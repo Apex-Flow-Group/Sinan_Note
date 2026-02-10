@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import '../../models/note.dart';
+import '../security/vault_service.dart';
 import 'isar_database_service.dart';
 
 class StorageService {
@@ -20,8 +21,19 @@ class StorageService {
       final validNotes = notes.where((n) => !n.isTrashed).toList();
       if (validNotes.isEmpty) throw Exception("لا توجد ملاحظات صالحة للتصدير");
 
-      final notesMapList = validNotes.map((n) => n.toMap()).toList();
-      String jsonString = jsonEncode(notesMapList);
+      // Create export data structure
+      Map<String, dynamic> exportData = {
+        'version': '2.0',
+        'notes': validNotes.map((n) => n.toMap()).toList(),
+      };
+      
+      // Add vault data if vault exists
+      final vaultData = await VaultService.getVaultDataForBackup();
+      if (vaultData != null) {
+        exportData['vault_data'] = vaultData;
+      }
+      
+      String jsonString = jsonEncode(exportData);
 
       final fileName = 'sinan_notes_${DateTime.now().millisecondsSinceEpoch}.json';
       final tempDir = await getTemporaryDirectory();
@@ -55,8 +67,19 @@ class StorageService {
       final validNotes = notes.where((n) => !n.isTrashed).toList();
       if (validNotes.isEmpty) throw Exception("لا توجد ملاحظات صالحة للتصدير");
 
-      final notesMapList = validNotes.map((n) => n.toMap()).toList();
-      String jsonString = jsonEncode(notesMapList);
+      // Create export data structure
+      Map<String, dynamic> exportData = {
+        'version': '2.0',
+        'notes': validNotes.map((n) => n.toMap()).toList(),
+      };
+      
+      // Add vault data if vault exists
+      final vaultData = await VaultService.getVaultDataForBackup();
+      if (vaultData != null) {
+        exportData['vault_data'] = vaultData;
+      }
+      
+      String jsonString = jsonEncode(exportData);
 
       final fileName = 'sinan_notes_${DateTime.now().millisecondsSinceEpoch}.json';
       final outputPath = join(directoryPath, fileName);
@@ -79,8 +102,19 @@ class StorageService {
     final validNotes = notes.where((n) => n.content.isNotEmpty).toList();
     if (validNotes.isEmpty) throw Exception("جميع الملاحظات فارغة");
 
-    final notesMapList = validNotes.map((n) => n.toMap()).toList();
-    String jsonString = jsonEncode(notesMapList);
+    // Create export data structure
+    Map<String, dynamic> exportData = {
+      'version': '2.0',
+      'notes': validNotes.map((n) => n.toMap()).toList(),
+    };
+    
+    // Add vault data if vault exists
+    final vaultData = await VaultService.getVaultDataForBackup();
+    if (vaultData != null) {
+      exportData['vault_data'] = vaultData;
+    }
+    
+    String jsonString = jsonEncode(exportData);
 
     final directory = await getTemporaryDirectory();
     final fileName = 'apex_notes_backup_${DateTime.now().millisecondsSinceEpoch}.json';
@@ -111,10 +145,28 @@ class StorageService {
 
       if (jsonString.isEmpty) throw Exception("الملف فارغ");
 
-      List<dynamic> jsonList = jsonDecode(jsonString);
-      if (jsonList.isEmpty) throw Exception("لا توجد ملاحظات في الملف");
+      final dynamic jsonData = jsonDecode(jsonString);
+      
+      List<dynamic> notesList;
+      Map<String, dynamic>? vaultData;
+      
+      // Check if new format (with version and vault_data)
+      if (jsonData is Map<String, dynamic>) {
+        notesList = jsonData['notes'] ?? [];
+        vaultData = jsonData['vault_data'];
+        
+        // Restore vault data if exists
+        if (vaultData != null) {
+          await VaultService.restoreVaultDataFromBackup(vaultData);
+        }
+      } else {
+        // Old format (array of notes)
+        notesList = jsonData;
+      }
+      
+      if (notesList.isEmpty) throw Exception("لا توجد ملاحظات في الملف");
 
-      List<Note> notes = jsonList.map((json) => Note.fromMap(json)).toList();
+      List<Note> notes = notesList.map((json) => Note.fromMap(json)).toList();
 
       int importedCount = 0;
       for (var note in notes) {

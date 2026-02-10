@@ -239,6 +239,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         recurrenceRule: _coordinator.stateManager.recurrenceRule,
         mode: widget.mode,
         silent: !isManualSave,
+        isAutoSave: !isManualSave,  // FIXED: Pass auto-save flag
       );
 
       // REMOVED: Unnecessary loadNotes() that causes race condition

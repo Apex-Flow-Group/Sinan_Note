@@ -559,7 +559,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'الأنماط مثل الغامق والمائل يتم عرضها كرموز هنا. سيتم تصييرها بشكل جميل عند الحفظ.';
 
   @override
-  String get dontShowAgain => 'لا تظهر هذا مرة أخرى';
+  String get dontShowAgain => 'لا تذكرني مرة أخرى';
 
   @override
   String get gotIt => 'فهمت';
@@ -1439,4 +1439,241 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get databaseError => 'خطأ في قاعدة البيانات';
+
+  @override
+  String get confirmRestore => 'تأكيد الاستعادة';
+
+  @override
+  String get restoreWarning =>
+      'سيتم حفظ النسخة الحالية تلقائياً قبل الاستعادة. هل تريد المتابعة؟';
+
+  @override
+  String get setupVault => 'إعداد الخزنة';
+
+  @override
+  String get createPassword => 'إنشاء كلمة المرور';
+
+  @override
+  String get confirmPassword => 'تأكيد كلمة المرور';
+
+  @override
+  String get passwordMismatch => 'كلمات المرور غير متطابقة';
+
+  @override
+  String get passwordMinLength => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+
+  @override
+  String get recoveryCode => 'كود الاستعادة';
+
+  @override
+  String get recoveryCodeWarning =>
+      'هذا هو الطريقة الوحيدة لاستعادة الوصول إذا نسيت كلمة المرور.';
+
+  @override
+  String get recoveryCodeOwnership =>
+      '⚠️ مهم: هذا الكود ملكك الشخصي. نحن لا نملك حق الوصول إليه ولا يمكننا استعادته لك.';
+
+  @override
+  String get recoveryCodeLoss =>
+      'إذا فقدت هذا الكود ونسيت كلمة المرور، ستفقد الوصول إلى ملاحظاتك المقفلة نهائياً.';
+
+  @override
+  String get copyCode => 'نسخ الكود';
+
+  @override
+  String get saveAsPDF => 'حفظ كـ PDF';
+
+  @override
+  String get saveToGoogleDrive => 'حفظ في Google Drive';
+
+  @override
+  String get iHaveSavedCode => 'لقد حفظت كود الاستعادة في مكان آمن';
+
+  @override
+  String get enableBiometric => 'تفعيل الدخول السريع بالبصمة';
+
+  @override
+  String get biometricOptional =>
+      'استخدم البصمة/الوجه لفتح الخزنة بسرعة (اختياري)';
+
+  @override
+  String get enableBiometricAccess => 'تفعيل الدخول بالبصمة';
+
+  @override
+  String get skipBiometric => 'تخطي الآن';
+
+  @override
+  String get vaultSetupComplete => 'اكتمل إعداد الخزنة';
+
+  @override
+  String get codeCopied => 'تم نسخ كود الاستعادة';
+
+  @override
+  String get mustSaveCode => 'يرجى تأكيد حفظ كود الاستعادة';
+
+  @override
+  String get enterVaultPassword => 'أدخل كلمة مرور الخزنة';
+
+  @override
+  String get forgotPassword => 'نسيت كلمة المرور؟';
+
+  @override
+  String get recoverVault => 'استعادة الخزنة';
+
+  @override
+  String get enterRecoveryCode => 'أدخل كود الاستعادة';
+
+  @override
+  String get invalidRecoveryCode => 'كود استعادة غير صحيح';
+
+  @override
+  String get vaultRecovered => 'تم استعادة الخزنة بنجاح';
+
+  @override
+  String get setNewPassword => 'تعيين كلمة مرور جديدة';
+
+  @override
+  String get googleDriveSyncTerms => 'شروط مزامنة Google Drive';
+
+  @override
+  String get syncTermsTitle => 'اتفاقية مزامنة Google Drive';
+
+  @override
+  String get syncTermsRegularNotes =>
+      'الملاحظات العادية: تُزامن بدون تشفير لسهولة الوصول عبر الأجهزة';
+
+  @override
+  String get syncTermsVaultNotes =>
+      'ملاحظات الخزنة: تبقى مشفرة بالكامل بمفاتيح خاصة بالجهاز';
+
+  @override
+  String get syncTermsGoogleAccess => 'إشعار الخصوصية';
+
+  @override
+  String get syncTermsRecommendation =>
+      'الملاحظات العادية تُحفظ على Google Drive وقد تكون متاحة لـ Google وفقاً لسياسة الخصوصية الخاصة بهم. للمعلومات الحساسة، نوصي باستخدام ميزة الخزنة.';
+
+  @override
+  String get syncTermsGoogleTOS =>
+      'بتفعيل المزامنة، أنت توافق على شروط خدمة وسياسة الخصوصية لـ Google Drive.';
+
+  @override
+  String get readPrivacyPolicyLink => 'قراءة سياسة الخصوصية';
+
+  @override
+  String get agreeAndEnable => 'موافق وتفعيل';
+
+  @override
+  String get compressionEnabled => 'تم تفعيل ضغط ZIP لتوفير المساحة';
+
+  @override
+  String get vaultUpgrade => 'ترقية الخزنة';
+
+  @override
+  String get vaultUpgradeInfo =>
+      'خزنتك تحتاج للترقية إلى النظام الآمن الجديد مع دعم كود الاستعادة.';
+
+  @override
+  String get oldPassword => 'كلمة المرور القديمة';
+
+  @override
+  String get newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get migrating => 'جاري الترقية...';
+
+  @override
+  String get upgrade => 'ترقية';
+
+  @override
+  String get incorrectPassword => 'كلمة مرور خاطئة';
+
+  @override
+  String get syncWarningTitle => '⚠️ تنبيه مهم للمزامنة';
+
+  @override
+  String get syncWarningMessage =>
+      'الملاحظات المقفلة لن يمكن فتحها بعد الاستعادة من Google Drive على جهاز آخر!\n\nالسبب: مفاتيح التشفير لا تُرفع للسحابة (لحماية خصوصيتك)\n\nالحل: احفظ هذا الكود أو فك قفل الملاحظات قبل المزامنة';
+
+  @override
+  String get importantWarning => '⚠️ تحذير مهم';
+
+  @override
+  String get recoveryCodeWarningFull =>
+      '• هذا الكود ملكك الشخصي. نحن لا نملك حق الوصول إليه.\n• إذا نسيت كلمة المرور، استخدم هذا الكود لاستعادة الوصول.\n• مهم: إذا استعدت من Google Drive على جهاز آخر، الملاحظات المقفلة لن تُفتح حتى بهذا الكود (مفاتيح التشفير تبقى على جهازك فقط للخصوصية).\n• الحل: فك قفل الملاحظات قبل المزامنة، أو احتفظ بها على نفس الجهاز.';
+
+  @override
+  String get vaultFoundInDrive => '☁️ خزنة موجودة في Google Drive';
+
+  @override
+  String get restoreVaultFromDrive => 'استعادة الخزنة من Drive';
+
+  @override
+  String get importantInfo => 'معلومات مهمة';
+
+  @override
+  String get recoveryCodeInfo =>
+      '• احفظ هذا الكود بأمان - إنه مفتاحك الاحتياطي إذا نسيت كلمة المرور.\n\n• هذا الكود يعمل فقط على هذا الجهاز. إذا غيّرت الجهاز أو استعدت من السحابة، ستحتاج لفك قفل الملاحظات أولاً.\n\n• لماذا؟ مفاتيح التشفير تبقى على جهازك لأقصى خصوصية وأمان.\n\n• نصيحة: قبل المزامنة لجهاز آخر، فك قفل ملاحظاتك أو احتفظ بها على هذا الجهاز فقط.';
+
+  @override
+  String get uploadOptions => 'خيارات الرفع';
+
+  @override
+  String get uploadOptionsDesc => 'اختر ما تريد رفعه إلى Google Drive:';
+
+  @override
+  String get uploadMasterKey => 'رفع مفتاح التشفير الرئيسي';
+
+  @override
+  String get uploadMasterKeyDesc =>
+      'يسمح بفتح الملاحظات المقفلة على أجهزة أخرى. أقل أماناً لكن أكثر سهولة.';
+
+  @override
+  String get uploadVault => 'رفع الخزنة (الملاحظات المقفلة)';
+
+  @override
+  String get uploadVaultDesc =>
+      'رفع بيانات الخزنة المشفرة. يعمل فقط إذا تم رفع المفتاح الرئيسي أيضاً.';
+
+  @override
+  String get uploadWarning =>
+      'بدون المفتاح الرئيسي: لن يمكن فتح الملاحظات المقفلة على أجهزة أخرى حتى بكود الاستعادة.';
+
+  @override
+  String get syncConflictTitle => 'تعارض في المزامنة';
+
+  @override
+  String get syncConflictDesc =>
+      'تم اكتشاف نسخ مختلفة. اختر كيف تريد المتابعة:';
+
+  @override
+  String get onDevice => 'على الجهاز';
+
+  @override
+  String get onDrive => 'على Drive';
+
+  @override
+  String notesCount(int count) {
+    return '$count ملاحظة';
+  }
+
+  @override
+  String get chooseAction => 'اختر الإجراء';
+
+  @override
+  String get useDrive => 'استخدم نسخة Drive';
+
+  @override
+  String get useDevice => 'استخدم نسخة الجهاز';
+
+  @override
+  String get smartMerge => 'دمج ذكي';
+
+  @override
+  String get smartMergeDesc =>
+      'يجمع النسختين، مع الاحتفاظ بأحدث التغييرات لكل ملاحظة';
+
+  @override
+  String get googleDriveVaultWarning =>
+      '⚠️ المطور وGoogle ليسوا مسؤولين عن مفتاح الأمان (Recovery Code) الخاص بك.\n\n🔑 يجب عليك الاحتفاظ بالمفتاح في مكان آمن.\n\n📥 عند الاستعادة من Google Drive، ستحتاج إلى إدخال المفتاح لفتح الملاحظات المشفرة.';
 }

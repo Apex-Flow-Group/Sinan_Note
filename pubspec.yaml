@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 2.2.0+3291
+version: 2.2.0+3295
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -17,12 +17,13 @@ dependencies:
   googleapis: ^13.2.0
   extension_google_sign_in_as_googleapis_auth: ^2.0.12
   
-  # Database: Isar (replacing SQLite)
+  # Database: Isar
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   
-  # Temporary: For migration from SQLite
-  sqflite: ^2.3.0
+  # Temporary: For migration from SQLite  
+  sqflite: 2.3.3+2
+  sqflite_common_ffi: ^2.3.0
   
   path_provider: ^2.1.5
   path: ^1.8.3
@@ -49,6 +50,7 @@ dependencies:
   flutter_markdown: ^0.7.4+1
   flutter_secure_storage: ^9.0.0
   url_launcher: ^6.2.0
+  archive: ^3.4.0
 
 dev_dependencies:
   flutter_test:

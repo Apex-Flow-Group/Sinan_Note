@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import '../diagnostics/apex_error_manager.dart';
+import '../security/vault_service.dart';
 import 'isar_database_service.dart';
 import '../../models/note.dart';
 
@@ -18,7 +19,19 @@ class BackupService {
       final dbService = IsarDatabaseService();
       final notes = await dbService.getAllNotes();
       
-      final json = jsonEncode(notes.map((n) => n.toMap()).toList());
+      // Create backup data structure
+      Map<String, dynamic> backupData = {
+        'version': '2.0',
+        'notes': notes.map((n) => n.toMap()).toList(),
+      };
+      
+      // Add vault data if vault exists
+      final vaultData = await VaultService.getVaultDataForBackup();
+      if (vaultData != null) {
+        backupData['vault_data'] = vaultData;
+      }
+      
+      final json = jsonEncode(backupData);
       
       final now = DateTime.now();
       final fileName = 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.json';
@@ -42,7 +55,19 @@ class BackupService {
       final dbService = IsarDatabaseService();
       final notes = await dbService.getAllNotes();
       
-      final json = jsonEncode(notes.map((n) => n.toMap()).toList());
+      // Create backup data structure
+      Map<String, dynamic> backupData = {
+        'version': '2.0',
+        'notes': notes.map((n) => n.toMap()).toList(),
+      };
+      
+      // Add vault data if vault exists
+      final vaultData = await VaultService.getVaultDataForBackup();
+      if (vaultData != null) {
+        backupData['vault_data'] = vaultData;
+      }
+      
+      final json = jsonEncode(backupData);
       
       final now = DateTime.now();
       final fileName = 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.json';
@@ -58,7 +83,19 @@ class BackupService {
       final dbService = IsarDatabaseService();
       final notes = await dbService.getAllNotes();
       
-      final json = jsonEncode(notes.map((n) => n.toMap()).toList());
+      // Create backup data structure
+      Map<String, dynamic> backupData = {
+        'version': '2.0',
+        'notes': notes.map((n) => n.toMap()).toList(),
+      };
+      
+      // Add vault data if vault exists
+      final vaultData = await VaultService.getVaultDataForBackup();
+      if (vaultData != null) {
+        backupData['vault_data'] = vaultData;
+      }
+      
+      final json = jsonEncode(backupData);
       
       final now = DateTime.now();
       final fileName = 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.json';
@@ -105,22 +142,40 @@ class BackupService {
       if (!await sourceFile.exists()) throw Exception('الملف غير موجود');
       
       final json = await sourceFile.readAsString();
-      final List<dynamic> data = jsonDecode(json);
+      final dynamic jsonData = jsonDecode(json);
+      
+      List<dynamic> notesData;
+      Map<String, dynamic>? vaultData;
+      
+      // Check if new format (with version and vault_data)
+      if (jsonData is Map<String, dynamic>) {
+        notesData = jsonData['notes'] ?? [];
+        vaultData = jsonData['vault_data'];
+        
+        // Restore vault data if exists
+        if (vaultData != null) {
+          await VaultService.restoreVaultDataFromBackup(vaultData);
+          AppLogger.debug('✓ Vault data restored from backup');
+        }
+      } else {
+        // Old format (array of notes)
+        notesData = jsonData;
+      }
       
       final dbService = IsarDatabaseService();
       final isar = await dbService.database;
       
-      // Clear and insert without version logging
+      // Clear and insert notes
       await isar.writeTxn(() async {
         await isar.notes.clear();
-        for (var noteMap in data) {
+        for (var noteMap in notesData) {
           final note = Note.fromMap(noteMap);
           note.updatedAt = DateTime.now();
           await isar.notes.put(note);
         }
       });
       
-      AppLogger.debug('✓ Database replaced with ${data.length} notes');
+      AppLogger.debug('✓ Database replaced with ${notesData.length} notes');
     }, 'Backup_Replace');
   }
 
@@ -130,14 +185,32 @@ class BackupService {
       if (!await sourceFile.exists()) throw Exception('الملف غير موجود');
       
       final json = await sourceFile.readAsString();
-      final List<dynamic> data = jsonDecode(json);
+      final dynamic jsonData = jsonDecode(json);
+      
+      List<dynamic> notesData;
+      Map<String, dynamic>? vaultData;
+      
+      // Check if new format (with version and vault_data)
+      if (jsonData is Map<String, dynamic>) {
+        notesData = jsonData['notes'] ?? [];
+        vaultData = jsonData['vault_data'];
+        
+        // Restore vault data if exists
+        if (vaultData != null) {
+          await VaultService.restoreVaultDataFromBackup(vaultData);
+          AppLogger.debug('✓ Vault data restored from backup');
+        }
+      } else {
+        // Old format (array of notes)
+        notesData = jsonData;
+      }
       
       final dbService = IsarDatabaseService();
       final isar = await dbService.database;
       
       int merged = 0;
       await isar.writeTxn(() async {
-        for (var noteMap in data) {
+        for (var noteMap in notesData) {
           final note = Note.fromMap(noteMap);
           note.updatedAt = DateTime.now();
           await isar.notes.put(note);

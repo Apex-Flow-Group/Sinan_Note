@@ -6,65 +6,172 @@ import '../core/utils/logger.dart';
 import 'storage/isar_database_service.dart';
 import '../../models/note_version.dart';
 
-/// Smart Version Control Service
-/// Implements 3 intelligence gates to prevent data obesity
+/// Ultra-Smart Version Control Service
+/// Philosophy: ONE meaningful version per editing session
 class VersionControlService {
-  // Intelligence settings
-  static const int _minCharsChange = 15; // Minimum change threshold
-  static const int _minTimeSeconds = 300; // 5 minutes between auto-saves
-  static const int _maxVersionsPerNote = 20; // Maximum versions to keep
+  // Ultra-strict settings
+  static const int _minSignificantChange = 100; // 100 chars minimum
+  static const double _minChangePercentage = 0.10; // 10% change minimum
+  static const int _maxVersionsPerNote = 5; // Keep only 5 versions max
+  
+  // Session tracking (in-memory)
+  static final Map<int, String> _sessionSnapshots = {};
+  static final Map<int, DateTime> _sessionStartTimes = {};
 
   final IsarDatabaseService _db = IsarDatabaseService();
 
-  /// Main function to replace direct logNoteVersion calls
-  /// Applies 3 intelligence gates before saving
-  Future<void> smartLogVersion({
+  /// Start editing session - Take snapshot
+  void startEditingSession(int noteId, String title, String content) {
+    _sessionSnapshots[noteId] = _generateHash(title + content);
+    _sessionStartTimes[noteId] = DateTime.now();
+    AppLogger.debug('Session started for note $noteId', 'VersionControl');
+  }
+
+  /// End editing session - Save ONLY if significant change
+  Future<void> endEditingSession({
     required int noteId,
     required String title,
     required String content,
-    required bool isManualAction,
+    bool isLocked = false,
   }) async {
-    // 1. Generate content hash (fingerprint)
-    final String currentHash = _generateHash(title + content);
+    // 🔒 SECURITY: Never save locked notes
+    if (isLocked) {
+      _cleanupSession(noteId);
+      AppLogger.debug('Session ended: Note is locked (no version saved)', 'VersionControl');
+      return;
+    }
 
-    // 2. Get last version to check if save is needed
+    final currentHash = _generateHash(title + content);
+    final sessionHash = _sessionSnapshots[noteId];
+
+    // No session? Skip
+    if (sessionHash == null) {
+      AppLogger.debug('No session found for note $noteId', 'VersionControl');
+      return;
+    }
+
+    // No change? Skip
+    if (currentHash == sessionHash) {
+      _cleanupSession(noteId);
+      AppLogger.debug('Session ended: No changes detected', 'VersionControl');
+      return;
+    }
+
+    // Get last version to compare
     final lastVersion = await _db.getLastNoteVersion(noteId);
-
+    
     if (lastVersion != null) {
-      // Gate A: Duplication check - Is content identical?
-      final String lastHash = _generateHash(lastVersion.title + lastVersion.content);
-      if (currentHash == lastHash) {
-        AppLogger.debug('Version skipped: Content identical', 'VersionControl');
+      // Calculate semantic difference
+      final significance = _calculateSignificance(
+        oldTitle: lastVersion.title,
+        oldContent: lastVersion.content,
+        newTitle: title,
+        newContent: content,
+      );
+
+      // Not significant? Skip
+      if (!significance.isSignificant) {
+        _cleanupSession(noteId);
+        AppLogger.debug(
+          'Session ended: Change not significant (${significance.reason})',
+          'VersionControl',
+        );
         return;
       }
 
-      // Gate B: Importance filter (auto-save only)
-      if (!isManualAction) {
-        final timeDiff = DateTime.now().difference(lastVersion.timestamp).inSeconds;
-        final contentDiff = (content.length - lastVersion.content.length).abs();
-
-        // Skip if change is too small and time is too short
-        if (timeDiff < _minTimeSeconds && contentDiff < _minCharsChange) {
-          AppLogger.debug('Version skipped: Minor change ($contentDiff chars) in short time', 'VersionControl');
-          return;
-        }
-      }
+      AppLogger.info(
+        'Significant change detected: ${significance.reason}',
+        'VersionControl',
+      );
     }
 
-    // ✅ Passed all gates: Create new version
+    // ✅ Save ONE version for this session
     final newVersion = NoteVersion.create(
       noteId: noteId,
       title: title,
       content: content,
       timestamp: DateTime.now(),
-      action: isManualAction ? 'manual_save' : 'auto_save',
+      action: 'session_end',
     );
 
     await _db.logNoteVersion(newVersion);
-    AppLogger.success('Smart version saved (${isManualAction ? 'manual' : 'auto'})', 'VersionControl');
-
-    // 3. Auto-cleanup: Remove old versions
     await _pruneOldVersions(noteId);
+    
+    _cleanupSession(noteId);
+    AppLogger.success('Session version saved', 'VersionControl');
+  }
+
+  /// Calculate if change is significant (ULTRA SMART)
+  _ChangeSignificance _calculateSignificance({
+    required String oldTitle,
+    required String oldContent,
+    required String newTitle,
+    required String newContent,
+  }) {
+    // 1. Character-level change
+    final oldLength = (oldTitle + oldContent).length;
+    final newLength = (newTitle + newContent).length;
+    final lengthDiff = (newLength - oldLength).abs();
+
+    // Too small change?
+    if (lengthDiff < _minSignificantChange) {
+      return _ChangeSignificance(
+        isSignificant: false,
+        reason: 'Only $lengthDiff chars changed (min: $_minSignificantChange)',
+      );
+    }
+
+    // 2. Percentage change
+    final changePercentage = oldLength > 0 ? lengthDiff / oldLength : 1.0;
+    if (changePercentage < _minChangePercentage) {
+      return _ChangeSignificance(
+        isSignificant: false,
+        reason: '${(changePercentage * 100).toStringAsFixed(1)}% changed (min: ${(_minChangePercentage * 100).toStringAsFixed(0)}%)',
+      );
+    }
+
+    // 3. Word-level change (semantic)
+    final oldWords = _extractWords(oldContent);
+    final newWords = _extractWords(newContent);
+    final addedWords = newWords.difference(oldWords).length;
+    final removedWords = oldWords.difference(newWords).length;
+    final totalWordChange = addedWords + removedWords;
+
+    // Significant word change?
+    if (totalWordChange > 10) {
+      return _ChangeSignificance(
+        isSignificant: true,
+        reason: '$totalWordChange words changed (+$addedWords, -$removedWords)',
+      );
+    }
+
+    // 4. Line-level change
+    final oldLines = oldContent.split('\n').where((l) => l.trim().isNotEmpty).length;
+    final newLines = newContent.split('\n').where((l) => l.trim().isNotEmpty).length;
+    final lineDiff = (newLines - oldLines).abs();
+
+    if (lineDiff > 3) {
+      return _ChangeSignificance(
+        isSignificant: true,
+        reason: '$lineDiff lines changed',
+      );
+    }
+
+    // Default: Significant if passed char/percentage checks
+    return _ChangeSignificance(
+      isSignificant: true,
+      reason: '$lengthDiff chars, ${(changePercentage * 100).toStringAsFixed(1)}% changed',
+    );
+  }
+
+  /// Extract unique words for semantic comparison
+  Set<String> _extractWords(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length > 2) // Ignore short words
+        .toSet();
   }
 
   /// Generate MD5 hash for content comparison
@@ -72,8 +179,71 @@ class VersionControlService {
     return md5.convert(utf8.encode(input)).toString();
   }
 
+  /// Cleanup session data
+  void _cleanupSession(int noteId) {
+    _sessionSnapshots.remove(noteId);
+    _sessionStartTimes.remove(noteId);
+  }
+
   /// Prune old versions (keep only newest X versions)
   Future<void> _pruneOldVersions(int noteId) async {
     await _db.keepMaxVersions(noteId, _maxVersionsPerNote);
   }
+
+  /// Legacy support: Smart log version (for manual saves)
+  Future<void> smartLogVersion({
+    required int noteId,
+    required String title,
+    required String content,
+    required bool isManualAction,
+    bool isLocked = false,
+  }) async {
+    // 🔒 SECURITY: Skip locked notes
+    if (isLocked) {
+      AppLogger.debug('Version skipped: Note is locked', 'VersionControl');
+      return;
+    }
+
+    // Only save manual actions (user explicitly saved)
+    if (!isManualAction) {
+      AppLogger.debug('Version skipped: Auto-save (use session-based)', 'VersionControl');
+      return;
+    }
+
+    // Check if different from last version
+    final lastVersion = await _db.getLastNoteVersion(noteId);
+    if (lastVersion != null) {
+      final currentHash = _generateHash(title + content);
+      final lastHash = _generateHash(lastVersion.title + lastVersion.content);
+      
+      if (currentHash == lastHash) {
+        AppLogger.debug('Version skipped: Content identical', 'VersionControl');
+        return;
+      }
+    }
+
+    // ✅ Save manual version
+    final newVersion = NoteVersion.create(
+      noteId: noteId,
+      title: title,
+      content: content,
+      timestamp: DateTime.now(),
+      action: 'manual_save',
+    );
+
+    await _db.logNoteVersion(newVersion);
+    await _pruneOldVersions(noteId);
+    AppLogger.success('Manual version saved', 'VersionControl');
+  }
+}
+
+/// Change significance result
+class _ChangeSignificance {
+  final bool isSignificant;
+  final String reason;
+
+  _ChangeSignificance({
+    required this.isSignificant,
+    required this.reason,
+  });
 }

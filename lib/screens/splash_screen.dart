@@ -76,49 +76,165 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _showWhatsNewDialog() {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.new_releases, color: Colors.blue),
-            SizedBox(width: 8),
-            Text('What\'s New'),
+            const Icon(Icons.celebration, color: Colors.blue),
+            const SizedBox(width: 8),
+            Text(isArabic ? 'ما الجديد؟' : 'What\'s New?'),
           ],
         ),
-        content: const SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Version 2.1.1',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              SizedBox(height: 12),
-              Text('🔔 Improved Reminders'),
-              SizedBox(height: 4),
-              Text(
-                'Reminders now work reliably in the background. '
-                'The app will request necessary permissions to ensure '
-                'your reminders trigger on time.',
-                style: TextStyle(fontSize: 14),
-              ),
-              SizedBox(height: 12),
-              Text('✨ Bug Fixes & Performance'),
-              SizedBox(height: 4),
-              Text(
-                'Various improvements for a smoother experience.',
-                style: TextStyle(fontSize: 14),
-              ),
-            ],
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Version Header
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.rocket_launch, color: Colors.blue, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        isArabic ? 'الإصدار 2.2.0' : 'Version 2.2.0',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Feature 1: Google Drive
+                _buildFeature(
+                  icon: Icons.cloud_done,
+                  color: Colors.blue,
+                  title: isArabic ? '☁️ مزامنة Google Drive' : '☁️ Google Drive Sync',
+                  description: isArabic
+                      ? 'تم تفعيل المزامنة مع Google Drive! احفظ ملاحظاتك في السحابة واستعدها على أي جهاز.'
+                      : 'Google Drive sync is now active! Save your notes to the cloud and restore them on any device.',
+                ),
+                
+                // Feature 2: Version History
+                _buildFeature(
+                  icon: Icons.history,
+                  color: Colors.orange,
+                  title: isArabic ? '📜 سجل التغييرات المحسّن' : '📜 Improved Version History',
+                  description: isArabic
+                      ? 'نظام سجل التغييرات أصبح أكثر استقراراً وذكاءً. يحفظ فقط التغييرات المهمة ويتجاهل التعديلات الطفيفة.'
+                      : 'Version history system is now more stable and smart. Saves only important changes and ignores minor edits.',
+                ),
+                
+                // Feature 3: Better UI
+                _buildFeature(
+                  icon: Icons.auto_awesome,
+                  color: Colors.purple,
+                  title: isArabic ? '✨ واجهة محسّنة' : '✨ Enhanced Interface',
+                  description: isArabic
+                      ? 'تحسينات إضافية على الواجهة والأداء لتجربة أفضل وأسرع.'
+                      : 'Additional improvements to interface and performance for better and faster experience.',
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Footer
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.favorite, color: Colors.red, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          isArabic
+                              ? 'شكراً لاستخدامك سنان نوت! نحن نعمل باستمرار لتحسين تجربتك.'
+                              : 'Thank you for using Sinan Note! We\'re constantly working to improve your experience.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[700],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Got it'),
+            child: Text(isArabic ? 'حسناً' : 'Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildFeature({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String description,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

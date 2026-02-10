@@ -5,14 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/utils/logger.dart';
 import '../../../models/note.dart';
 import '../../../models/note_mode.dart';
-import '../../../services/security/encryption_service.dart';
+import '../../../services/security/vault_service.dart';
 import '../../../services/security/biometric_service.dart';
 import '../../../controllers/notes/notes_provider.dart';
-import '../../../services/version_control_service.dart';
 
 /// Handles all storage operations (save, load, encryption)
 class EditorStorageController {
-  final VersionControlService _versionControl = VersionControlService();
 
   /// Convert Color to int (ARGB) - avoids deprecated .value
   int _colorToInt(Color color) {
@@ -52,8 +50,8 @@ class EditorStorageController {
     if (!authenticated) return null;
 
     // CRITICAL: Checklists are plain JSON, skip decryption
-    final decryptedTitle = note.isChecklist ? note.title : await EncryptionService.decrypt(note.title);
-    final decryptedContent = note.isChecklist ? note.content : await EncryptionService.decrypt(note.content);
+    final decryptedTitle = note.isChecklist ? note.title : await VaultService.decryptWithMasterKey(note.title);
+    final decryptedContent = note.isChecklist ? note.content : await VaultService.decryptWithMasterKey(note.content);
 
     return {
       'title': decryptedTitle,
@@ -65,8 +63,8 @@ class EditorStorageController {
   Future<Map<String, String>?> decryptNoteWithoutAuth(Note note) async {
     try {
       // CRITICAL: Checklists are plain JSON, skip decryption
-      final decryptedTitle = note.isChecklist ? note.title : await EncryptionService.decrypt(note.title);
-      final decryptedContent = note.isChecklist ? note.content : await EncryptionService.decrypt(note.content);
+      final decryptedTitle = note.isChecklist ? note.title : await VaultService.decryptWithMasterKey(note.title);
+      final decryptedContent = note.isChecklist ? note.content : await VaultService.decryptWithMasterKey(note.content);
 
       return {
         'title': decryptedTitle,
@@ -98,10 +96,10 @@ class EditorStorageController {
 
     if (isLocked) {
       if (title.isNotEmpty) {
-        finalTitle = await EncryptionService.encrypt(title);
+        finalTitle = await VaultService.encryptWithMasterKey(title);
       }
       if (content.isNotEmpty) {
-        finalContent = await EncryptionService.encrypt(content);
+        finalContent = await VaultService.encryptWithMasterKey(content);
       }
     }
 
@@ -126,24 +124,10 @@ class EditorStorageController {
 
     if (existingNoteId != null || existingNote != null) {
       final noteId = existingNoteId ?? existingNote!.id!;
-      // Smart version control (manual save)
-      await _versionControl.smartLogVersion(
-        noteId: noteId,
-        title: title,
-        content: content,
-        isManualAction: true,
-      );
       await provider.updateNote(note);
       return noteId;
     } else {
       final newId = await provider.addNote(note);
-      // Smart version control (create)
-      await _versionControl.smartLogVersion(
-        noteId: newId,
-        title: title,
-        content: content,
-        isManualAction: true,
-      );
       return newId;
     }
   }

@@ -1,0 +1,410 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'package:flutter/material.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import '../services/security/vault_service.dart';
+import '../services/security/biometric_service.dart';
+import 'locked_notes_screen.dart';
+
+class VaultUnlockScreen extends StatefulWidget {
+  final bool biometricFailed;
+  
+  const VaultUnlockScreen({
+    super.key,
+    this.biometricFailed = false,
+  });
+
+  @override
+  State<VaultUnlockScreen> createState() => _VaultUnlockScreenState();
+}
+
+class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
+  final _passwordController = TextEditingController();
+  final _recoveryController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  
+  bool _obscurePassword = true;
+  bool _showRecoveryMode = false;
+  bool _showNewPasswordMode = false;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.biometricFailed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.authenticationFailed),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _recoveryController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handlePasswordUnlock() async {
+    final password = _passwordController.text;
+    final l10n = AppLocalizations.of(context)!;
+
+    if (password.isEmpty) {
+      setState(() => _errorText = l10n.enterPassword);
+      return;
+    }
+
+    final success = await VaultService.unlockWithPassword(password);
+    
+    if (success) {
+      _navigateToVault();
+    } else {
+      setState(() => _errorText = l10n.wrongPassword);
+    }
+  }
+
+  Future<void> _handleBiometricUnlock() async {
+    final authenticated = await BiometricService.authenticate();
+    
+    if (authenticated) {
+      _navigateToVault();
+    } else {
+      final l10n = AppLocalizations.of(context)!;
+      setState(() => _errorText = l10n.authenticationFailed);
+    }
+  }
+
+  Future<void> _handleRecoveryRestore() async {
+    final recoveryCode = _recoveryController.text.trim();
+    final l10n = AppLocalizations.of(context)!;
+
+    if (recoveryCode.isEmpty) {
+      setState(() => _errorText = l10n.enterRecoveryCode);
+      return;
+    }
+
+    final success = await VaultService.recoverWithCode(recoveryCode);
+    
+    if (success) {
+      setState(() {
+        _showRecoveryMode = false;
+        _showNewPasswordMode = true;
+        _errorText = null;
+      });
+    } else {
+      setState(() => _errorText = l10n.invalidRecoveryCode);
+    }
+  }
+
+  Future<void> _handleSetNewPassword() async {
+    final newPassword = _newPasswordController.text;
+    final confirm = _confirmPasswordController.text;
+    final l10n = AppLocalizations.of(context)!;
+
+    if (newPassword.length < 6) {
+      setState(() => _errorText = l10n.passwordMinLength);
+      return;
+    }
+
+    if (newPassword != confirm) {
+      setState(() => _errorText = l10n.passwordMismatch);
+      return;
+    }
+
+    // Note: Master Key already unlocked by recovery code
+    // Just need to set new password
+    const oldPassword = ''; // Not needed, already unlocked
+    final success = await VaultService.changePassword(oldPassword, newPassword);
+    
+    if (success) {
+      _navigateToVault();
+    } else {
+      setState(() => _errorText = 'Failed to set new password');
+    }
+  }
+
+  void _navigateToVault() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LockedNotesScreen(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(l10n.locked),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
+              
+              // Icon
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_outline,
+                  size: 50,
+                  color: Colors.orange,
+                ),
+              ),
+              
+              const SizedBox(height: 32),
+              
+              // Content based on mode
+              if (!_showRecoveryMode && !_showNewPasswordMode)
+                _buildPasswordMode(l10n)
+              else if (_showRecoveryMode)
+                _buildRecoveryMode(l10n)
+              else
+                _buildNewPasswordMode(l10n),
+              
+              if (_errorText != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _errorText!,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordMode(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.enterVaultPassword,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        
+        TextField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: l10n.enterPassword,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.lock),
+            suffixIcon: IconButton(
+              icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+          ),
+          onChanged: (_) => setState(() => _errorText = null),
+          onSubmitted: (_) => _handlePasswordUnlock(),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        SizedBox(
+          height: 56,
+          child: ElevatedButton.icon(
+            onPressed: _handlePasswordUnlock,
+            icon: const Icon(Icons.lock_open),
+            label: Text(
+              l10n.unlock,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // Biometric button (if available)
+        FutureBuilder<bool>(
+          future: BiometricService.hasBiometrics(),
+          builder: (context, snapshot) {
+            if (snapshot.data == true) {
+              return OutlinedButton.icon(
+                onPressed: _handleBiometricUnlock,
+                icon: const Icon(Icons.fingerprint),
+                label: Text(l10n.authenticateWithBiometric),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        
+        const SizedBox(height: 16),
+        
+        TextButton(
+          onPressed: () => setState(() {
+            _showRecoveryMode = true;
+            _errorText = null;
+          }),
+          child: Text(l10n.forgotPassword),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecoveryMode(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.recoverVault,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.enterRecoveryCode,
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        
+        TextField(
+          controller: _recoveryController,
+          decoration: InputDecoration(
+            labelText: l10n.recoveryCode,
+            hintText: 'SN-XXXX-XXXX-XXXX',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.vpn_key),
+          ),
+          onChanged: (_) => setState(() => _errorText = null),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        SizedBox(
+          height: 56,
+          child: ElevatedButton.icon(
+            onPressed: _handleRecoveryRestore,
+            icon: const Icon(Icons.restore),
+            label: Text(
+              l10n.restore,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        TextButton(
+          onPressed: () => setState(() {
+            _showRecoveryMode = false;
+            _errorText = null;
+          }),
+          child: Text(l10n.cancel),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewPasswordMode(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Icon(Icons.check_circle, size: 60, color: Colors.green),
+        const SizedBox(height: 16),
+        
+        Text(
+          l10n.vaultRecovered,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.setNewPassword,
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        
+        TextField(
+          controller: _newPasswordController,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: l10n.enterPassword,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.lock),
+          ),
+          onChanged: (_) => setState(() => _errorText = null),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        TextField(
+          controller: _confirmPasswordController,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: l10n.confirmPassword,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.lock_outline),
+          ),
+          onChanged: (_) => setState(() => _errorText = null),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        SizedBox(
+          height: 56,
+          child: ElevatedButton.icon(
+            onPressed: _handleSetNewPassword,
+            icon: const Icon(Icons.check),
+            label: Text(
+              l10n.save,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

@@ -141,7 +141,11 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
         ),
       );
     } else if (noteId == 0 && action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE') {
-      navigatorKey.currentState?.pushNamed('/widget_selection');
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (context) => WidgetSelectionScreen(widgetType: widgetType),
+        ),
+      );
     } else if (action == 'com.apexflow.app.sinan.ACTION_VIEW_NOTE' && noteId > 0) {
       _openNoteById(noteId);
     }

@@ -31,7 +31,7 @@
 - 🌍 **Bilingual** (Arabic & English)
 
 #### Documentation:
-- 📖 **[Full Documentation (English)](README_EN.md)** - Complete guide
+- 📖 **[Full Documentation (English)](docs/README_EN.md)** - Complete guide
 - 📚 **[User Manual (Arabic)](USER_MANUAL.md)** - Detailed usage guide
 - 🏗️ **[Architecture](ARCHITECTURE.md)** - Technical documentation
 - 🤝 **[Contributing](CONTRIBUTING.md)** - How to contribute
@@ -60,11 +60,11 @@
 - 🌍 **ثنائي اللغة** (عربي وإنجليزي)
 
 #### التوثيق:
-- 📖 **[التوثيق الكامل (عربي)](README_AR.md)** - دليل شامل
+- 📖 **[التوثيق الكامل (عربي)](docs/README_AR.md)** - دليل شامل
 - 📚 **[دليل المستخدم](USER_MANUAL.md)** - شرح مفصل للاستخدام
 - 🏗️ **[الهيكلية التقنية](ARCHITECTURE.md)** - توثيق تقني
 - 🤝 **[المساهمة](CONTRIBUTING.md)** - كيفية المساهمة
-- 📋 **[فهرس التوثيق](DOCS_INDEX.md)** - دليل سريع لجميع الملفات
+- 📋 **[فهرس التوثيق](docs/README.md)** - دليل سريع لجميع الملفات
 
 #### روابط سريعة:
 - [التثبيت](#التثبيت)
@@ -148,7 +148,7 @@ flutter run
 - Database backup/restore
 - Google Drive (coming soon)
 
-**See [README_EN.md](README_EN.md) for complete feature list.**
+**See [README_EN.md](docs/README_EN.md) for complete feature list.**
 
 ---
 
@@ -180,7 +180,7 @@ flutter run
 - نسخ احتياطي/استعادة قاعدة البيانات
 - Google Drive (قريباً)
 
-**راجع [README_AR.md](README_AR.md) للقائمة الكاملة.**
+**راجع [README_AR.md](docs/README_AR.md) للقائمة الكاملة.**
 
 </div>
 
@@ -362,9 +362,9 @@ Personal use permitted. Commercial use requires permission.
 
 ### 📚 Documentation Index
 
-**[DOCS_INDEX.md](DOCS_INDEX.md)** - Complete documentation guide
+**[Documentation Index](docs/README.md)** - Complete documentation guide
 
-**[فهرس التوثيق](DOCS_INDEX.md)** - دليل التوثيق الكامل
+**[فهرس التوثيق](docs/README.md)** - دليل التوثيق الكامل
 
 ---
 

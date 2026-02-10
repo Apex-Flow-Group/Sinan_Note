@@ -3,10 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/security/biometric_service.dart';
+import '../../services/security/vault_service.dart';
 import '../../controllers/settings/settings_provider.dart';
 import '../../screens/locked_notes_intro_screen.dart';
 import '../../screens/locked_notes_screen.dart';
+import '../../screens/vault_entry_screen.dart';
 import '../../screens/google_drive_screen.dart';
+import '../../screens/version_history_screen.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 
@@ -92,6 +95,22 @@ class HomeDrawerWidget extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context,
+                  icon: Icons.history_rounded,
+                  title: l10n.noteHistory,
+                  subtitle: isArabic ? 'سجل التعديلات' : 'Version history',
+                  iconColor: Colors.orange,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const VersionHistoryScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context,
                   icon: Icons.settings_rounded,
                   title: l10n.settings,
                   onTap: () async {
@@ -137,27 +156,45 @@ Future<void> _openLockedNotes(BuildContext context) async {
         onNotesChanged();
       }
     } else {
-      final authenticated = await BiometricService.authenticate();
+      // Check if biometric is enabled
+      final biometricEnabled = await VaultService.isBiometricEnabled();
+      
+      if (biometricEnabled) {
+        // Biometric enabled -> authenticate
+        final authenticated = await BiometricService.authenticate();
 
-      if (!context.mounted) return;
+        if (!context.mounted) return;
 
-      Navigator.pop(context);
-      Navigator.popUntil(context, (route) => route.isFirst);
+        Navigator.pop(context);
+        Navigator.popUntil(context, (route) => route.isFirst);
 
-      if (authenticated) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
-        );
-        onNotesChanged();
+        if (authenticated) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
+          );
+          onNotesChanged();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.authenticationFailed),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.authenticationFailed),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        // Biometric disabled -> go to VaultEntryScreen
+        Navigator.pop(context);
+        Navigator.popUntil(context, (route) => route.isFirst);
+        
+        if (context.mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const VaultEntryScreen()),
+          );
+          onNotesChanged();
+        }
       }
     }
   }

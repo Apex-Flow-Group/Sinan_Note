@@ -61,6 +61,11 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin home_widget, es.antonborri.home_widget.HomeWidgetPlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new dev.flutter.plugins.integration_test.IntegrationTestPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin integration_test, dev.flutter.plugins.integration_test.IntegrationTestPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new dev.isar.isar_flutter_libs.IsarFlutterLibsPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin isar_flutter_libs, dev.isar.isar_flutter_libs.IsarFlutterLibsPlugin", e);
@@ -98,7 +103,7 @@ public final class GeneratedPluginRegistrant {
     try {
       flutterEngine.getPlugins().add(new com.tekartik.sqflite.SqflitePlugin());
     } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin sqflite_android, com.tekartik.sqflite.SqflitePlugin", e);
+      Log.e(TAG, "Error registering plugin sqflite, com.tekartik.sqflite.SqflitePlugin", e);
     }
     try {
       flutterEngine.getPlugins().add(new io.flutter.plugins.urllauncher.UrlLauncherPlugin());

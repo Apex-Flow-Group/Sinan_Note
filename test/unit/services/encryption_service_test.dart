@@ -8,9 +8,9 @@ void main() {
     initializeTestEnvironment();
   });
 
-  group('EncryptionService', () {
-    test('encryption service exists', () {
-      // EncryptionService requires flutter_secure_storage which needs platform
+  group('VaultService', () {
+    test('vault service exists', () {
+      // VaultService requires flutter_secure_storage which needs platform
       // These tests should be run as integration tests on real device
       expect(true, true);
     });

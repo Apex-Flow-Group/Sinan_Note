@@ -1,7 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/note.dart';
+import '../cloud/google_drive_service.dart';
 
 class NoteStateService {
   List<Note> _allNotes = [];
@@ -54,6 +56,7 @@ class NoteStateService {
       _allNotes.add(note);
       _allNotes = List.from(_allNotes);
     }
+    _silentSync();
   }
   
   void addNote(Note note) {
@@ -64,6 +67,7 @@ class NoteStateService {
       sortNotes(immediate: true);
       _allNotes = List.from(_allNotes);
     }
+    _silentSync();
   }
   
   void removeNote(int id) {
@@ -120,5 +124,17 @@ class NoteStateService {
   
   void dispose() {
     _sortDebounce?.cancel();
+  }
+  
+  /// 🔄 Silent background sync
+  void _silentSync() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
+      
+      if (autoSync && GoogleDriveService.isSignedIn) {
+        GoogleDriveService.uploadDatabase(null);
+      }
+    } catch (_) {}
   }
 }

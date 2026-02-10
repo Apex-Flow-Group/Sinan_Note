@@ -99,6 +99,7 @@ class EditorSaveManager {
     required String? recurrenceRule,
     required NoteMode mode,
     bool silent = false,
+    bool isAutoSave = false,  // NEW: distinguish auto-save from manual
   }) async {
     AppLogger.info('saveNote called - title: $title, noteType: $noteType', 'SaveManager');
     final noteToSave = Note(
@@ -129,7 +130,7 @@ class EditorSaveManager {
         noteId: newId,
         title: title,
         content: content,
-        isManualAction: !silent,
+        isManualAction: !isAutoSave,  // FIXED: respect auto-save flag
       );
     } catch (e) {
       // History logging failed, but note was saved

@@ -3,6 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../services/cloud/google_drive_service.dart';
+import '../../services/storage/isar_database_service.dart';
+import 'google_drive_vault_warning_dialog.dart';
+import '../settings/recovery_code_dialog.dart';
 
 class GoogleDriveHandlers {
   static Future<void> handleSignOut(BuildContext context) async {
@@ -31,7 +34,7 @@ class GoogleDriveHandlers {
     }
 
     try {
-      final success = await GoogleDriveService.syncDatabase(context);
+      final success = await GoogleDriveService.uploadDatabase(context);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -49,7 +52,7 @@ class GoogleDriveHandlers {
     }
   }
 
-  static Future<void> handleUpload(BuildContext context) async {
+  static Future<void> handleUpload(BuildContext context, {bool uploadMasterKey = false, bool uploadVault = false}) async {
     if (!GoogleDriveService.isSignedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSignIn), backgroundColor: Colors.orange),
@@ -57,8 +60,31 @@ class GoogleDriveHandlers {
       return;
     }
 
+    // Check if there are locked notes
     try {
-      final success = await GoogleDriveService.uploadDatabase(context);
+      final dbService = IsarDatabaseService();
+      final lockedNotes = await dbService.getLockedNotes();
+      
+      if (lockedNotes.isNotEmpty) {
+        // Show vault warning if needed
+        final shouldShowWarning = await GoogleDriveVaultWarningDialog.shouldShow();
+        
+        if (shouldShowWarning && context.mounted) {
+          final agreed = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => const GoogleDriveVaultWarningDialog(),
+          );
+          
+          if (agreed != true) return;
+        }
+      }
+    } catch (e) {
+      // Continue even if check fails
+    }
+
+    try {
+      final success = await GoogleDriveService.uploadDatabase(context, uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -99,6 +125,31 @@ class GoogleDriveHandlers {
     if (confirmed != true) return;
 
     try {
+      // Check if downloaded backup contains vault_data
+      final hasVaultData = await GoogleDriveService.checkForVaultData();
+      
+      if (hasVaultData && context.mounted) {
+        // Show recovery code dialog
+        final recovered = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => const RecoveryCodeDialog(),
+        );
+        
+        if (recovered != true) {
+          if (context.mounted) {
+            final lang = Localizations.localeOf(context).languageCode;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(lang == 'ar' ? 'تم إلغاء التنزيل' : 'Download cancelled'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+      }
+      
       final success = await GoogleDriveService.downloadDatabase(context);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +167,7 @@ class GoogleDriveHandlers {
       }
     }
   }
-
+  
   static String formatDateTime(BuildContext context, DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);

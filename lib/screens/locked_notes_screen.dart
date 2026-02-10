@@ -14,6 +14,7 @@ import 'note_editor.dart';
 import 'main_layout_screen.dart';
 import '../models/note_mode.dart';
 import '../widgets/home/add_menu_widget.dart';
+import '../services/security/vault_service.dart';
 
 class LockedNotesScreen extends StatefulWidget {
   const LockedNotesScreen({super.key});
@@ -47,7 +48,6 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
 
   @override
   void dispose() {
-    _providerRef?.clearLockedSession(notify: false);
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     _closeAllSlidables.dispose();
@@ -61,6 +61,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       if (_showAddMenu) {
         setState(() => _showAddMenu = false);
       }
+      
+      // Clear session and navigate away when app goes to background
+      _providerRef?.clearLockedSession(notify: false);
       
       if (mounted) {
         Navigator.pushAndRemoveUntil(
@@ -243,6 +246,178 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     );
   }
 
+  void _showVaultSettings() {
+    final l10n = AppLocalizations.of(context)!;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.settings, size: 24),
+            const SizedBox(width: 12),
+            Text(l10n.settings),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.vpn_key),
+              title: Text(l10n.createPassword),
+              subtitle: const Text('Change vault password'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showChangePasswordDialog();
+              },
+            ),
+            FutureBuilder<bool>(
+              future: VaultService.isBiometricEnabled(),
+              builder: (context, snapshot) {
+                final isEnabled = snapshot.data ?? false;
+                return SwitchListTile(
+                  secondary: const Icon(Icons.fingerprint),
+                  title: Text(l10n.enableBiometric),
+                  subtitle: Text(l10n.biometricOptional),
+                  value: isEnabled,
+                  onChanged: (val) async {
+                    await VaultService.setBiometricEnabled(val);
+                    if (context.mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(val ? 'Biometric enabled ✅' : 'Biometric disabled ❌'),
+                        ),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmController = TextEditingController();
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+    String? errorText;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.createPassword),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: oldPasswordController,
+                  obscureText: obscureOld,
+                  decoration: InputDecoration(
+                    labelText: l10n.oldPassword,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureOld ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () => setDialogState(() => obscureOld = !obscureOld),
+                    ),
+                  ),
+                  onChanged: (_) => setDialogState(() => errorText = null),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: newPasswordController,
+                  obscureText: obscureNew,
+                  decoration: InputDecoration(
+                    labelText: l10n.newPassword,
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureNew ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                    ),
+                  ),
+                  onChanged: (_) => setDialogState(() => errorText = null),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: confirmController,
+                  obscureText: obscureConfirm,
+                  decoration: InputDecoration(
+                    labelText: l10n.confirmPassword,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureConfirm ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                    ),
+                  ),
+                  onChanged: (_) => setDialogState(() => errorText = null),
+                ),
+                if (errorText != null) ...[
+                  const SizedBox(height: 12),
+                  Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 14)),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                final oldPassword = oldPasswordController.text;
+                final newPassword = newPasswordController.text;
+                final confirm = confirmController.text;
+                
+                if (oldPassword.isEmpty || newPassword.isEmpty || confirm.isEmpty) {
+                  setDialogState(() => errorText = l10n.fillAllFields);
+                  return;
+                }
+                
+                if (newPassword.length < 6) {
+                  setDialogState(() => errorText = l10n.passwordMinLength);
+                  return;
+                }
+                
+                if (newPassword != confirm) {
+                  setDialogState(() => errorText = l10n.passwordMismatch);
+                  return;
+                }
+                
+                final success = await VaultService.changePassword(oldPassword, newPassword);
+                
+                if (success && context.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Password changed successfully')),
+                  );
+                } else {
+                  setDialogState(() => errorText = l10n.incorrectPassword);
+                }
+              },
+              child: Text(l10n.save),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -251,7 +426,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       canPop: _selectedNoteIds.isEmpty,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
+          // Clear session and kill observer when user manually exits vault
           _providerRef?.clearLockedSession(notify: false);
+          _providerRef?.lockVault();
+          WidgetsBinding.instance.removeObserver(this);
           return;
         }
         if (_selectedNoteIds.isNotEmpty) {
@@ -371,6 +549,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                   ),
         actions: _selectedNoteIds.isEmpty
             ? [
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  tooltip: l10n.settings,
+                  onPressed: _showVaultSettings,
+                ),
                 IconButton(
                   icon: const Icon(Icons.file_download),
                   tooltip: l10n.import,

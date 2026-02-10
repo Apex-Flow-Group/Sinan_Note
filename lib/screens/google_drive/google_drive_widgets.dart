@@ -11,6 +11,7 @@ class GoogleDriveWidgets {
     bool isSignedIn,
     String? userEmail,
     VoidCallback? onSignOut,
+    VoidCallback? onSignIn,
   ) {
     return Card(
       elevation: 0,
@@ -61,30 +62,7 @@ class GoogleDriveWidgets {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(onPressed: null, icon: const Icon(Icons.login), label: Text(l10n.signIn)),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.orange[700]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        Localizations.localeOf(context).languageCode == 'ar'
-                            ? 'ميزة المزامنة قيد التطوير وسيتم إعلامكم حين اكتمالها'
-                            : 'Sync feature is under development. You will be notified when completed',
-                        style: TextStyle(fontSize: 12, color: Colors.orange[700]),
-                      ),
-                    ),
-                  ],
-                ),
+                child: FilledButton.icon(onPressed: onSignIn, icon: const Icon(Icons.login), label: Text(l10n.signIn)),
               ),
             ],
           ],

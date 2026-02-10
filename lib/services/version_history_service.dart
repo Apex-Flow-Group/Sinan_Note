@@ -1,0 +1,66 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import '../models/note.dart';
+import '../models/note_version.dart';
+import 'storage/isar_database_service.dart';
+import 'version_control_service.dart';
+
+/// Version History Service - UI layer for smart version control
+/// Uses VersionControlService settings for consistency
+class VersionHistoryService {
+  final _dbService = IsarDatabaseService();
+  final _versionControl = VersionControlService();
+
+  // Use same max versions as smart control
+  static const int maxVersionsToShow = 20;
+
+  Future<List<Note>> getNotesWithHistory() async {
+    final allNotes = await _dbService.getAllNotes();
+    
+    final notesWithHistory = <Note>[];
+    for (var note in allNotes) {
+      final versions = await _dbService.getNoteHistory(note.id!);
+      
+      if (versions.isNotEmpty) {
+        notesWithHistory.add(note);
+      }
+    }
+    
+    return notesWithHistory;
+  }
+
+  Future<List<NoteVersion>> getNoteVersions(int noteId) async {
+    final versions = await _dbService.getNoteHistory(noteId);
+    return versions.take(maxVersionsToShow).toList();
+  }
+
+  Future<void> restoreVersion(int noteId, NoteVersion version) async {
+    final isar = await _dbService.database;
+    
+    await isar.writeTxn(() async {
+      final note = await isar.notes.get(noteId);
+      if (note != null) {
+        // Save current state before restore
+        await _versionControl.smartLogVersion(
+          noteId: noteId,
+          title: note.title,
+          content: note.content,
+          isManualAction: true,
+        );
+        
+        // Restore version
+        final restored = note.copyWith(
+          title: version.title,
+          content: version.content,
+          updatedAt: DateTime.now(),
+        );
+        await isar.notes.put(restored);
+      }
+    });
+  }
+
+  Future<int> getVersionCount(int noteId) async {
+    final versions = await _dbService.getNoteHistory(noteId);
+    return versions.length;
+  }
+}

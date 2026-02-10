@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../../core/utils/logger.dart';
 import '../../models/note.dart';
 import '../../services/storage/isar_database_service.dart';
-import '../../services/security/encryption_service.dart';
+import '../../services/security/vault_service.dart';
 import '../../services/note_services/note_state_service.dart';
 import '../../services/note_services/note_security_service.dart';
 import '../../services/note_services/note_side_effect_service.dart';
@@ -78,9 +78,9 @@ class NotesProvider extends ChangeNotifier {
   Future<int> addNote(Note note) async {
     AppLogger.info('addNote called - title: ${note.title}', 'Provider');
     Note noteToInsert = note;
-    if (note.isLocked && note.content.isNotEmpty && !note.isChecklist) {
-      final encryptedTitle = note.title.isNotEmpty ? await EncryptionService.encrypt(note.title) : '';
-      final encryptedContent = await EncryptionService.encrypt(note.content);
+    if (note.isLocked && note.content.isNotEmpty) {
+      final encryptedTitle = note.title.isNotEmpty ? await VaultService.encryptWithMasterKey(note.title) : '';
+      final encryptedContent = await VaultService.encryptWithMasterKey(note.content);
       noteToInsert = note.copyWith(title: encryptedTitle, content: encryptedContent);
     }
     
@@ -97,10 +97,10 @@ class NotesProvider extends ChangeNotifier {
   Future<int> updateNote(Note note, {bool silent = false}) async {
     AppLogger.info('updateNote called - ID: ${note.id}, title: ${note.title}', 'Provider');
     Note noteToUpdate = note;
-    if (note.isLocked && note.content.isNotEmpty && !note.isChecklist) {
-      if (!EncryptionService.isEncrypted(note.content)) {
-        final encryptedTitle = note.title.isNotEmpty ? await EncryptionService.encrypt(note.title) : '';
-        final encryptedContent = await EncryptionService.encrypt(note.content);
+    if (note.isLocked && note.content.isNotEmpty) {
+      if (!VaultService.isEncrypted(note.content)) {
+        final encryptedTitle = note.title.isNotEmpty ? await VaultService.encryptWithMasterKey(note.title) : '';
+        final encryptedContent = await VaultService.encryptWithMasterKey(note.content);
         noteToUpdate = note.copyWith(title: encryptedTitle, content: encryptedContent);
       }
     }

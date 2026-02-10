@@ -31,17 +31,6 @@ class IsarDatabaseService {
       return await isar.notes.put(note);
     });
     AppLogger.success('Note inserted with ID: $id', 'DB');
-    
-    // Log creation
-    await logNoteVersion(NoteVersion.create(
-      noteId: id,
-      title: note.title,
-      content: note.content,
-      timestamp: DateTime.now(),
-      action: 'created',
-    ));
-    AppLogger.info('Version logged for note ID: $id', 'DB');
-    
     return id;
   }
 
@@ -119,19 +108,6 @@ class IsarDatabaseService {
       return await isar.notes.put(note);
     });
     AppLogger.success('Note updated with ID: $id', 'DB');
-    
-    // Log update
-    if (note.id != null) {
-      await logNoteVersion(NoteVersion.create(
-        noteId: note.id!,
-        title: note.title,
-        content: note.content,
-        timestamp: DateTime.now(),
-        action: 'updated',
-      ));
-      AppLogger.info('Version logged for note ID: ${note.id}', 'DB');
-    }
-    
     return id;
   }
 
@@ -150,17 +126,7 @@ class IsarDatabaseService {
     
     note.isArchived = true;
     note.updatedAt = DateTime.now();
-    final result = await isar.writeTxn(() => isar.notes.put(note));
-    
-    await logNoteVersion(NoteVersion.create(
-      noteId: id,
-      title: note.title,
-      content: note.content,
-      timestamp: DateTime.now(),
-      action: 'archived',
-    ));
-    
-    return result;
+    return await isar.writeTxn(() => isar.notes.put(note));
   }
 
   Future<int> unarchiveNote(int id) async {
@@ -191,17 +157,7 @@ class IsarDatabaseService {
     note.isTrashed = false;
     note.isArchived = false;
     note.updatedAt = DateTime.now();
-    final result = await isar.writeTxn(() => isar.notes.put(note));
-    
-    await logNoteVersion(NoteVersion.create(
-      noteId: id,
-      title: note.title,
-      content: note.content,
-      timestamp: DateTime.now(),
-      action: 'restored',
-    ));
-    
-    return result;
+    return await isar.writeTxn(() => isar.notes.put(note));
   }
 
   // Search with full-text support

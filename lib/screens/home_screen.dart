@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
   bool _showAddMenu = false;
   Timer? _debounce;
-  bool _isReady = false; // ✅ Deferred rendering flag
+  final bool _isReady = true;
 
   @override
   void initState() {
@@ -47,11 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _viewTypeNotifier = ValueNotifier(_viewType.name);
     _selectedNoteIdsNotifier = ValueNotifier({});
     _loadViewType();
-    
-    // CRITICAL: 300ms delay prevents GPU memory crash
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) setState(() => _isReady = true);
-    });
     
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(() {
