@@ -204,6 +204,10 @@ class SettingsProvider with ChangeNotifier {
       _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
       _cardMotionEnabled = prefs.getBool('cardMotionEnabled') ?? false;
       _viewType = prefs.getString('viewType') ?? 'listCompact';
+      final homeViewType = prefs.getString('viewType_home');
+      if (homeViewType != null) {
+        _viewType = homeViewType;
+      }
       _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
       _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? false;
       _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;

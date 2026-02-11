@@ -64,7 +64,7 @@ class NoteSideEffectService {
         // Check exact alarm permission (Android 12+)
         final hasPermission = await notificationService.checkExactAlarmPermission();
         if (!hasPermission) {
-          AppLogger.debug('⚠️ Exact Alarm permission denied');
+          AppLogger.debug('[Permission] Exact Alarm permission denied');
           return false;
         }
         
@@ -96,7 +96,7 @@ class NoteSideEffectService {
       
       return true;
     } catch (e) {
-      AppLogger.debug('⚠️ Reminder side effect error: $e');
+      AppLogger.debug('[Error] Reminder side effect: $e');
       return false;
     }
   }
@@ -118,7 +118,7 @@ class NoteSideEffectService {
     try {
       await NotificationService().cancelNotification(noteId);
     } catch (e) {
-      AppLogger.debug('⚠️ Cancel reminder error: $e');
+      AppLogger.debug('[Error] Cancel reminder: $e');
     }
   }
   
@@ -139,11 +139,9 @@ class NoteSideEffectService {
     if (!Platform.isAndroid) return;
     
     try {
-      // Skip widget update during batch operations
-      // Widget will update on next app launch or manual pin
-      AppLogger.debug('⏭️ Skipping widget update (batch operation)');
+      AppLogger.debug('[Skip] Widget update (batch operation)');
     } catch (e) {
-      AppLogger.debug('⚠️ Widget update error: $e');
+      AppLogger.debug('[Error] Widget update: $e');
     }
   }
   
@@ -161,7 +159,7 @@ class NoteSideEffectService {
     try {
       await WidgetService.checkAndUpdateIfPinned(note);
     } catch (e) {
-      AppLogger.debug('⚠️ Widget check and update error: $e');
+      AppLogger.debug('[Error] Widget check and update: $e');
     }
   }
   
@@ -179,7 +177,7 @@ class NoteSideEffectService {
     try {
       await WidgetService.checkAndResetIfPinned(noteId);
     } catch (e) {
-      AppLogger.debug('⚠️ Widget reset error: $e');
+      AppLogger.debug('[Error] Widget reset: $e');
     }
   }
 }

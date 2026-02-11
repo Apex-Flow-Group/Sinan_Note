@@ -35,23 +35,15 @@ class NoteWidgetProvider : HomeWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT
                 }
 
-                if (noteId > 0) {
-                    val viewIntent = Intent(context, MainActivity::class.java).apply {
-                        action = "com.apexflow.app.sinan.ACTION_VIEW_NOTE"
-                        putExtra("note_id", noteId)
-                        setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    }
-                    val pendingIntent = PendingIntent.getActivity(context, noteId, viewIntent, flags)
-                    setOnClickPendingIntent(R.id.widget_card, pendingIntent)
-                } else {
-                    val selectIntent = Intent(context, MainActivity::class.java).apply {
-                        action = "com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET"
-                        putExtra("widget_type", "note")
-                        setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    }
-                    val pendingIntent = PendingIntent.getActivity(context, 0, selectIntent, flags)
-                    setOnClickPendingIntent(R.id.widget_card, pendingIntent)
+                // Always open selection screen with filter
+                val selectIntent = Intent(context, MainActivity::class.java).apply {
+                    action = "com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET"
+                    putExtra("widget_type", "note")
+                    putExtra("current_note_id", noteId)
+                    setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }
+                val pendingIntent = PendingIntent.getActivity(context, widgetId, selectIntent, flags)
+                setOnClickPendingIntent(R.id.widget_card, pendingIntent)
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)

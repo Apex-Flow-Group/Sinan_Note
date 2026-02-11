@@ -69,6 +69,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   /// 🔄 Auto-sync on app startup
   Future<void> _autoSyncOnStartup() async {
+    await GoogleDriveService.initializeSignIn();
+    
     final prefs = await SharedPreferences.getInstance();
     final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
     

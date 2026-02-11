@@ -1,17 +1,15 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-// ============================================================================
-// 🎯 Toast Service - Professional Notification System
-// ============================================================================
+// Toast Service - Professional Notification System
 // Version: 3.0.0
 // Added: Advanced Optimistic UI with Delayed Execution
 // 
 // Features:
-// - ✅ Circular countdown timer around undo button
-// - ✅ Optimistic UI: Hide items immediately, delete after timer
-// - ✅ Smart undo: Restore items before database execution
-// - ✅ Auto-cleanup: Execute pending actions on timer expiry
-// - ✅ Memory efficient: Single timer per action type
+// - Circular countdown timer around undo button
+// - Optimistic UI: Hide items immediately, delete after timer
+// - Smart undo: Restore items before database execution
+// - Auto-cleanup: Execute pending actions on timer expiry
+// - Memory efficient: Single timer per action type
 // 
 // Architecture:
 // 1. User triggers action (delete/archive)
@@ -19,7 +17,6 @@
 // 3. Timer starts (3 seconds)
 // 4. If user presses undo: Item restored, timer cancelled
 // 5. If timer expires: Database operation executed
-// ============================================================================
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -228,7 +225,6 @@ class ToastService {
   }
 
   Color _getBackgroundColor(ToastType type, bool isDark) {
-    // Use theme-aware colors instead of hardcoded values
     switch (type) {
       case ToastType.success:
         return isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);

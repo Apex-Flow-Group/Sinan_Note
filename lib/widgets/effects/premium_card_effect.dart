@@ -21,18 +21,20 @@ class PremiumCardEffect extends StatefulWidget {
 class _PremiumCardEffectState extends State<PremiumCardEffect>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _opacityAnimation;
+  late Animation<double> _glowAnimation;
 
   @override
   void initState() {
     super.initState();
+    // حركة هادئة جداً للنبض (3 ثواني)
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
     );
 
-    _opacityAnimation = Tween<double>(begin: 0.0, end: 0.3).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    // حركة من 0 إلى 1 لدمج الألوان بنعومة
+    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
     );
 
     if (widget.enableMotion && mounted) {
@@ -50,6 +52,11 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         _controller.stop();
         _controller.reset();
       }
+    } else if (widget.baseColor != oldWidget.baseColor && mounted) {
+      // Hot reload: حافظ على الأنيميشن بدون إعادة تشغيل
+      if (widget.enableMotion && !_controller.isAnimating) {
+        _controller.repeat(reverse: true);
+      }
     }
   }
 
@@ -61,72 +68,58 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final borderRadius = BorderRadius.circular(16);
 
+    // الحسبة الذكية للون الحافة الأساسي (أغمق أو أفتح حسب الوضع)
+    final Color baseBorderColor = brightness == Brightness.light
+        ? Color.lerp(widget.baseColor, Colors.black, 0.15)!
+        : Color.lerp(widget.baseColor, Colors.white, 0.25)!;
+
+    // لون الإضاءة الذي سيندمج مع الحافة أثناء الحركة
+    final Color glowColor = brightness == Brightness.light
+        ? Colors.white.withValues(alpha: 0.9)
+        : Colors.white.withValues(alpha: 0.5);
+
     if (!widget.enableMotion) {
-      // ✅ OPTIMIZED: Remove redundant shadow, use hardwareAcceleration
+      // الحالة الثابتة (سريعة جداً بدون أنيميشن)
       return Container(
         decoration: BoxDecoration(
           color: widget.baseColor,
           borderRadius: borderRadius,
+          border: Border.all(color: baseBorderColor, width: 0.8), // الحافة الرفيعة
         ),
-        clipBehavior: Clip.hardEdge, // ✅ Faster than antiAlias
+        clipBehavior: Clip.hardEdge,
         child: widget.child,
       );
     }
 
     return RepaintBoundary(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Layer 1: Animated Gradient Border (Bottom)
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _opacityAnimation,
-                builder: (context, child) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: borderRadius,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white
-                              .withValues(alpha: _opacityAnimation.value),
-                          Colors.transparent,
-                          Colors.white
-                              .withValues(alpha: _opacityAnimation.value * 0.5),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+      child: AnimatedBuilder(
+        animation: _glowAnimation,
+        builder: (context, child) {
+          return Container(
+            decoration: BoxDecoration(
+              color: widget.baseColor,
+              borderRadius: borderRadius,
+              // السحر هنا: دمج لون الحافة الأساسي مع لون مضيء بنسبة متغيرة
+              border: Border.all(
+                color: Color.lerp(baseBorderColor, glowColor, _glowAnimation.value * 0.4)!,
+                width: 0.8, // نحافظ على السماكة الرفيعة والأنيقة
               ),
-            ),
-            // Layer 2: Content Container (Top)
-            Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: widget.baseColor,
-                  borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                // ظل خفيف جداً يظهر ويختفي مع نبض الحافة
+                BoxShadow(
+                  color: glowColor.withValues(alpha: _glowAnimation.value * 0.15),
+                  blurRadius: 6 * _glowAnimation.value,
+                  spreadRadius: 0,
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: widget.child,
-              ),
+              ],
             ),
-          ],
-        ),
+            clipBehavior: Clip.hardEdge,
+            child: widget.child, // المحتوى بدون أي Padding يكسر التصميم
+          );
+        },
       ),
     );
   }

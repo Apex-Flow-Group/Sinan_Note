@@ -31,11 +31,13 @@ class MainActivity: FlutterFragmentActivity() {
                 "getStartIntent" -> {
                     val action = startIntent?.action
                     val noteId = startIntent?.getIntExtra("note_id", 0) ?: 0
+                    val currentNoteId = startIntent?.getIntExtra("current_note_id", 0) ?: 0
                     val widgetType = startIntent?.getStringExtra("widget_type")
                     
                     val data = mapOf(
                         "action" to action,
                         "note_id" to noteId,
+                        "current_note_id" to currentNoteId,
                         "widget_type" to widgetType
                     )
                     result.success(data)

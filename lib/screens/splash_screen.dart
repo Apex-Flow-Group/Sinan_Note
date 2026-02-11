@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../controllers/settings/settings_provider.dart';
 import '../controllers/notes/notes_provider.dart';
 import '../services/security/biometric_service.dart';
+import '../services/cloud/google_drive_service.dart';
 import 'main_layout_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -26,6 +27,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _initApp() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     await settings.ensureInitialized();
+
+    // Initialize Google Sign-In silently
+    await GoogleDriveService.initializeSignIn();
 
     if (!mounted) return;
 

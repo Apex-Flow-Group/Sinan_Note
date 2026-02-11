@@ -132,18 +132,25 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
   void _processIntent(Map data) async {
     final action = data['action'];
     final noteId = data['note_id'] ?? 0;
+    final currentNoteId = data['current_note_id'] ?? 0;
     final widgetType = data['widget_type'] ?? 'note';
 
     if (action == 'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
-          builder: (context) => WidgetSelectionScreen(widgetType: widgetType),
+          builder: (context) => WidgetSelectionScreen(
+            widgetType: widgetType,
+            currentNoteId: currentNoteId,
+          ),
         ),
       );
     } else if (noteId == 0 && action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE') {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
-          builder: (context) => WidgetSelectionScreen(widgetType: widgetType),
+          builder: (context) => WidgetSelectionScreen(
+            widgetType: widgetType,
+            currentNoteId: currentNoteId,
+          ),
         ),
       );
     } else if (action == 'com.apexflow.app.sinan.ACTION_VIEW_NOTE' && noteId > 0) {

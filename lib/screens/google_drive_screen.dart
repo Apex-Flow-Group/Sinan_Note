@@ -29,6 +29,12 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   void initState() {
     super.initState();
     _loadAutoSyncSetting();
+    _restoreSignInState();
+  }
+
+  Future<void> _restoreSignInState() async {
+    await GoogleDriveService.initializeSignIn();
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadAutoSyncSetting() async {

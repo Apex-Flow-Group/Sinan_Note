@@ -155,7 +155,7 @@ class BackupService {
         // Restore vault data if exists
         if (vaultData != null) {
           await VaultService.restoreVaultDataFromBackup(vaultData);
-          AppLogger.debug('✓ Vault data restored from backup');
+          AppLogger.debug('[Restore] Vault data restored from backup');
         }
       } else {
         // Old format (array of notes)
@@ -175,7 +175,7 @@ class BackupService {
         }
       });
       
-      AppLogger.debug('✓ Database replaced with ${notesData.length} notes');
+      AppLogger.debug('[Replace] Database replaced with ${notesData.length} notes');
     }, 'Backup_Replace');
   }
 
@@ -198,7 +198,7 @@ class BackupService {
         // Restore vault data if exists
         if (vaultData != null) {
           await VaultService.restoreVaultDataFromBackup(vaultData);
-          AppLogger.debug('✓ Vault data restored from backup');
+          AppLogger.debug('[Restore] Vault data restored from backup');
         }
       } else {
         // Old format (array of notes)
@@ -218,7 +218,7 @@ class BackupService {
         }
       });
       
-      AppLogger.debug('✓ Merged $merged notes');
+      AppLogger.debug('[Merge] Merged $merged notes');
       return merged;
     }, 'Backup_Merge');
   }
@@ -237,7 +237,7 @@ class BackupService {
       final tempPath = join(tempDir.path, 'notes_transfer_temp.json');
       await File(tempPath).writeAsString(json);
       
-      AppLogger.debug('✓ Sanitized backup prepared: $lockedCount locked notes excluded');
+      AppLogger.debug('[Sanitize] Backup prepared: $lockedCount locked notes excluded');
       return (tempPath, lockedCount);
     }, 'Backup_Sanitize');
   }
@@ -249,10 +249,10 @@ class BackupService {
       final tempFile = File(tempPath);
       if (await tempFile.exists()) {
         await tempFile.delete();
-        AppLogger.debug('✓ Temp sanitized backup cleaned up');
+        AppLogger.debug('[Cleanup] Temp sanitized backup cleaned up');
       }
     } catch (e) {
-      AppLogger.debug('⚠ Failed to cleanup temp backup: $e');
+      AppLogger.debug('[Error] Failed to cleanup temp backup: $e');
     }
   }
 }

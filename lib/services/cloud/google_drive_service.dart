@@ -31,6 +31,21 @@ class GoogleDriveService {
   static String? get currentUserEmail => _currentUser?.email;
   static DateTime? get lastSyncTime => _lastSyncTime;
 
+  static Future<void> initializeSignIn() async {
+    try {
+      _currentUser = await _googleSignIn.signInSilently();
+      if (_currentUser != null) {
+        final authClient = await _googleSignIn.authenticatedClient();
+        if (authClient != null) {
+          _driveApi = drive.DriveApi(authClient);
+          AppLogger.success('Restored session: ${_currentUser!.email}', 'GoogleDrive');
+        }
+      }
+    } catch (e) {
+      AppLogger.warning('Silent sign-in failed', 'GoogleDrive');
+    }
+  }
+
   static Future<bool> signIn() async {
     try {
       _currentUser = await _googleSignIn.signIn();

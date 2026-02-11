@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchActive = false;
-  ViewType _viewType = ViewType.listExpanded;
+  ViewType _viewType = ViewType.listCompact; // قيمة افتراضية سريعة
   late final ValueNotifier<String> _viewTypeNotifier;
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
   bool _showAddMenu = false;
@@ -44,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    _viewType = _parseViewType(settings.viewType);
     _viewTypeNotifier = ValueNotifier(_viewType.name);
     _selectedNoteIdsNotifier = ValueNotifier({});
     _loadViewType();
@@ -83,17 +85,35 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  ViewType _parseViewType(String type) {
+    switch (type) {
+      case 'grid':
+        return ViewType.grid;
+      case 'listExpanded':
+        return ViewType.listExpanded;
+      default:
+        return ViewType.listCompact;
+    }
+  }
+
   Future<void> _loadViewType() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final savedType = await settings.getViewType('home');
-    if (savedType == 'grid') {
-      _viewType = ViewType.grid;
-    } else if (savedType == 'listExpanded') {
-      _viewType = ViewType.listExpanded;
-    } else {
-      _viewType = ViewType.listCompact;
+    if (mounted) {
+      ViewType loadedType;
+      if (savedType == 'grid') {
+        loadedType = ViewType.grid;
+      } else if (savedType == 'listExpanded') {
+        loadedType = ViewType.listExpanded;
+      } else {
+        loadedType = ViewType.listCompact;
+      }
+      if (_viewType != loadedType) {
+        _viewType = loadedType;
+        _viewTypeNotifier.value = loadedType.name;
+        if (mounted) setState(() {});
+      }
     }
-    _viewTypeNotifier.value = _viewType.name;
   }
 
   void _onSearchChanged() {

@@ -3,8 +3,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-enum AnimationType { pulse, wave, glow, shimmer, breathe }
-
 class BreathingSearchField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
@@ -30,118 +28,39 @@ class BreathingSearchField extends StatefulWidget {
 }
 
 class _BreathingSearchFieldState extends State<BreathingSearchField>
-    with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late AnimationController _focusController;
-  late Animation<Color?> _colorAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _glowAnimation;
-  late AnimationType _animationType;
-  bool _hasTriggered = false;
+    with SingleTickerProviderStateMixin { // استخدمنا Ticker واحد فقط للبساطة
+  late AnimationController _waveController;
   late FocusNode _focusNode;
+
   @override
   void initState() {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
-    _animationType =
-        AnimationType.values[Random().nextInt(AnimationType.values.length)];
 
-    final duration = _getRandomDuration();
-    _controller = AnimationController(
-      duration: duration,
+    // حركة بطيئة ومريحة جداً (4 ثوانٍ للدورة الكاملة)
+    _waveController = AnimationController(
+      duration: const Duration(seconds: 4),
       vsync: this,
     );
 
-    _focusController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
-      CurvedAnimation(parent: _focusController, curve: Curves.easeOut),
-    );
-
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _focusController, curve: Curves.easeOut),
-    );
-
-    _colorAnimation = ColorTween(
-      begin: Colors.transparent,
-      end: Colors.white.withValues(alpha: 0.1),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: _getRandomCurve(),
-    ));
-
-    (widget.focusNode ?? _focusNode).addListener(() {
+    // تشغيل التموج فقط عندما يبدأ المستخدم بالكتابة
+    _focusNode.addListener(() {
       if (!mounted) return;
-      if ((widget.focusNode ?? _focusNode).hasFocus) {
-        if (mounted) _focusController.forward();
+      setState(() {});
+      
+      if (_focusNode.hasFocus) {
+        _waveController.repeat();
       } else {
-        if (mounted) _focusController.reverse();
+        _waveController.stop();
+        // إعادته للصفر ببطء عند الخروج
+        _waveController.animateTo(0, duration: const Duration(milliseconds: 500));
       }
     });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(Duration(seconds: Random().nextInt(3) + 1), () {
-        if (mounted && !_hasTriggered) {
-          _triggerAnimation();
-        }
-      });
-    });
   }
-
-  Duration _getRandomDuration() {
-    switch (_animationType) {
-      case AnimationType.pulse:
-        return const Duration(milliseconds: 800);
-      case AnimationType.wave:
-        return const Duration(milliseconds: 2000);
-      case AnimationType.glow:
-        return const Duration(milliseconds: 1200);
-      case AnimationType.shimmer:
-        return const Duration(milliseconds: 1500);
-      case AnimationType.breathe:
-        return const Duration(milliseconds: 2500);
-    }
-  }
-
-  Curve _getRandomCurve() {
-    final curves = [
-      Curves.easeInOut,
-      Curves.easeInOutCubic,
-      Curves.easeInOutSine,
-      Curves.elasticInOut,
-      Curves.bounceInOut,
-    ];
-    return curves[Random().nextInt(curves.length)];
-  }
-
-  void _triggerAnimation() async {
-    if (!mounted) return;
-    _hasTriggered = true;
-
-    for (int i = 0; i < 3; i++) {
-      if (!mounted) return;
-      await _controller.forward();
-      if (!mounted) return;
-      await _controller.reverse();
-      if (!mounted) return;
-      await Future.delayed(const Duration(milliseconds: 200));
-    }
-
-    if (mounted) {
-      _controller.stop();
-      _controller.value = 0;
-    }
-  }
-
-
 
   @override
   void dispose() {
-    _controller.dispose();
-    _focusController.dispose();
+    _waveController.dispose();
     if (widget.focusNode == null) {
       _focusNode.dispose();
     }
@@ -156,112 +75,125 @@ class _BreathingSearchFieldState extends State<BreathingSearchField>
         ? colorScheme.surfaceContainer
         : colorScheme.surfaceBright;
     final Color contentColor = colorScheme.onSurface;
-    final Color primaryColor = colorScheme.primary;
 
     return AnimatedBuilder(
-      animation:
-          Listenable.merge([_colorAnimation, _scaleAnimation, _glowAnimation]),
+      animation: _waveController,
       builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Container(
-            height: 46,
-            decoration: BoxDecoration(
-              color: searchBarColor,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-                if (_controller.value > 0)
-                  BoxShadow(
-                    color: primaryColor.withValues(
-                        alpha: (0.3 * _controller.value).clamp(0.0, 1.0)),
-                    blurRadius: 30 * _controller.value,
-                    spreadRadius: 2 * _controller.value,
+        // نستخدم Container كخلفية متدرجة لتعمل كـ "إطار مضيء"
+        return Container(
+          // سماكة الإطار المضيء تظهر فقط عند التركيز
+          padding: EdgeInsets.all(_focusNode.hasFocus ? 1.5 : 0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: _focusNode.hasFocus
+                ? LinearGradient(
+                    // ألوان هادئة ومريحة للعين (سماوي وبنفسجي مع شفافية)
+                    colors: [
+                      searchBarColor, // لون مخفي للدمج
+                      const Color(0xFF00D4FF).withValues(alpha: 0.5), // إضاءة هادئة
+                      const Color(0xFF7B2FFF).withValues(alpha: 0.5), // إضاءة هادئة
+                      searchBarColor, // لون مخفي للدمج
+                    ],
+                    stops: const [0.0, 0.4, 0.6, 1.0],
+                    // هنا يحدث سحر الحركة (التموج حول العنصر)
+                    transform: GradientRotation(_waveController.value * 2 * pi),
+                  )
+                : null,
+            // ظل طبيعي ثابت وبسيط لا يسبب الهلوسة
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: child, // شريط البحث الأساسي
+        );
+      },
+      // شريط البحث محتفظ بلونه الثابت بالداخل
+      child: Container(
+        height: 46,
+        decoration: BoxDecoration(
+          color: searchBarColor,
+          borderRadius: BorderRadius.circular(28.5), // أصغر قليلاً من الإطار الخارجي
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.search,
+                    color: contentColor.withValues(alpha: 0.6), size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: widget.controller,
+                    focusNode: _focusNode,
+                    textAlignVertical: TextAlignVertical.center,
+                    style: TextStyle(color: contentColor, fontSize: 14),
+                    cursorColor: const Color(0xFF00D4FF), // مؤشر كتابة متناسق
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      hintStyle: TextStyle(
+                          color: contentColor.withValues(alpha: 0.5),
+                          fontSize: 14),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                    ),
                   ),
-                if (_glowAnimation.value > 0)
-                  BoxShadow(
-                    color: primaryColor.withValues(
-                        alpha: (0.15 * _glowAnimation.value).clamp(0.0, 1.0)),
-                    blurRadius: 20 * _glowAnimation.value,
-                    spreadRadius: -2,
-                  ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Icon(Icons.search,
-                        color: contentColor.withValues(alpha: 0.6),
-                        size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: widget.controller,
-                        focusNode: widget.focusNode ?? _focusNode,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: TextStyle(color: contentColor, fontSize: 14),
-                        cursorColor: contentColor,
-                        enableInteractiveSelection: true,
-                        decoration: InputDecoration(
-                          hintText: widget.hintText,
-                          hintStyle: TextStyle(
-                              color: contentColor.withValues(alpha: 0.5),
-                              fontSize: 14),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          isDense: true,
+                ),
+                if (widget.onViewToggle != null || widget.onFilterTap != null)
+                  ClipRect(
+                    child: AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubic,
+                      child: SizedBox(
+                        width: _focusNode.hasFocus ? 0 : null,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.onViewToggle != null)
+                                ValueListenableBuilder<String>(
+                                  valueListenable: widget.viewTypeNotifier,
+                                  builder: (context, viewType, child) {
+                                    return IconButton(
+                                      icon: Icon(
+                                        viewType == 'listExpanded'
+                                            ? Icons.view_headline
+                                            : viewType == 'listCompact'
+                                                ? Icons.grid_view
+                                                : Icons.view_day,
+                                        color: contentColor.withValues(alpha: 0.7),
+                                      ),
+                                      onPressed: widget.onViewToggle,
+                                      splashRadius: 24,
+                                    );
+                                  },
+                                ),
+                              if (widget.onFilterTap != null)
+                                IconButton(
+                                  icon: Icon(Icons.filter_list_rounded,
+                                      color: contentColor.withValues(alpha: 0.7)),
+                                  onPressed: widget.onFilterTap,
+                                  splashRadius: 24,
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    if (widget.onViewToggle != null)
-                      ValueListenableBuilder<String>(
-                        valueListenable: widget.viewTypeNotifier,
-                        builder: (context, viewType, child) {
-                          return IconButton(
-                            icon: Icon(
-                              viewType == 'listExpanded'
-                                  ? Icons.view_compact
-                                  : viewType == 'listCompact'
-                                      ? Icons.grid_view
-                                      : Icons.view_agenda,
-                              color: contentColor.withValues(alpha: 0.7),
-                            ),
-                            onPressed: widget.onViewToggle,
-                            splashRadius: 24,
-                          );
-                        },
-                      ),
-                    if (widget.onFilterTap != null)
-                      IconButton(
-                        icon: Icon(Icons.filter_list_rounded,
-                            color: contentColor.withValues(alpha: 0.7)),
-                        onPressed: widget.onFilterTap,
-                        splashRadius: 24,
-                      ),
-                  ],
-                ),
-              ),
+                  ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

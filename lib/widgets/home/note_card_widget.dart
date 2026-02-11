@@ -61,6 +61,12 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
 
     final brightness = Theme.of(context).brightness;
     final baseColor = AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
+    
+    // حساب لون الحافة بذكاء
+    final Color borderColor = brightness == Brightness.light
+        ? Color.lerp(baseColor, Colors.black, 0.15)!
+        : Color.lerp(baseColor, Colors.white, 0.25)!;
+    
     final bool isLightColor = baseColor.computeLuminance() > 0.5;
     final Color titleColor = isLightColor ? Colors.black87 : Colors.white;
     final Color contentColor = isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
@@ -192,8 +198,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   border: Border.all(
                     color: widget.isSelected
                         ? Theme.of(context).colorScheme.secondary
-                        : NoteCardUtils.getDarkerColor(baseColor).withValues(alpha: 0.4),
-                    width: 3.0,
+                        : borderColor,
+                    width: 0.8,
                   ),
                   boxShadow: const [
                     BoxShadow(
