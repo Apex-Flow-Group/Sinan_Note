@@ -1676,4 +1676,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get googleDriveVaultWarning =>
       '⚠️ المطور وGoogle ليسوا مسؤولين عن مفتاح الأمان (Recovery Code) الخاص بك.\n\n🔑 يجب عليك الاحتفاظ بالمفتاح في مكان آمن.\n\n📥 عند الاستعادة من Google Drive، ستحتاج إلى إدخال المفتاح لفتح الملاحظات المشفرة.';
+
+  @override
+  String get makeCopy => 'عمل نسخة';
+
+  @override
+  String get saveAs => 'حفظ باسم';
+
+  @override
+  String get noteCopied => 'تم نسخ الملاحظة';
 }

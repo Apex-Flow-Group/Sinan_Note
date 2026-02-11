@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../controllers/settings/settings_provider.dart';
+import '../diagnostics/apex_error_manager.dart';
 
 class BiometricService {
   static final LocalAuthentication _auth = LocalAuthentication();
@@ -25,21 +26,23 @@ class BiometricService {
 
   /// المصادقة باستخدام البصمة أو كلمة مرور الجهاز
   static Future<bool> authenticate() async {
-    if (Platform.isLinux || Platform.isWindows) return true;
+    return await ApexErrorManager.monitorCritical(() async {
+      if (Platform.isLinux || Platform.isWindows) return true;
 
-    try {
-      return await _auth.authenticate(
-        localizedReason: await _getAuthenticationMessage(),
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false,
-          useErrorDialogs: true,
-        ),
-      );
-    } on PlatformException catch (e) {
-      AppLogger.debug("Authentication error: $e");
-      return false;
-    }
+      try {
+        return await _auth.authenticate(
+          localizedReason: await _getAuthenticationMessage(),
+          options: const AuthenticationOptions(
+            stickyAuth: true,
+            biometricOnly: false,
+            useErrorDialogs: true,
+          ),
+        );
+      } on PlatformException catch (e) {
+        AppLogger.debug("Authentication error: $e");
+        return false;
+      }
+    }, 'BiometricAuth');
   }
 
   static Future<String> _getAuthenticationMessage() async {

@@ -64,7 +64,6 @@ class TextEditorWidget extends StatelessWidget {
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: 800,
             minHeight: MediaQuery.of(context).size.height - 180,
           ),
           child: _buildTextField(context, l10n),

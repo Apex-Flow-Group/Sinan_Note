@@ -218,29 +218,11 @@ class _SmartHeaderState extends State<SmartHeader> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
                   child: Row(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: isDark 
-                            ? const Color(0xFF1A1B20) // ثابت
-                            : Theme.of(context).colorScheme.surfaceContainer,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                      IconButton(
+                        icon: Icon(
+                          widget.isSearchActive ? Icons.arrow_back : Icons.menu,
                         ),
-                        child: IconButton(
-                          icon: Icon(
-                            widget.isSearchActive ? Icons.arrow_back : Icons.menu,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          onPressed: widget.onMenuTap,
-                          splashRadius: 24,
-                          focusColor: Colors.transparent,
-                        ),
+                        onPressed: widget.onMenuTap,
                       ),
                       const SizedBox(width: 8),
                       Expanded(

@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import '../../models/note.dart';
 import 'apex_snackbar.dart';
 
 class CustomShareSheet {
-  static void show(BuildContext context, String text, {String? subject}) {
+  static void show(BuildContext context, String text, {String? subject, Note? note, VoidCallback? onNoteCopied}) {
     final strings = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final isArabic = Directionality.of(context) == TextDirection.rtl;
@@ -85,6 +86,15 @@ class CustomShareSheet {
                     }
                   },
                 ),
+                if (note != null)
+                  _ShareOption(
+                    icon: Icons.copy_all,
+                    label: isArabic ? 'نسخة' : 'Duplicate',
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (onNoteCopied != null) onNoteCopied();
+                    },
+                  ),
               ],
             ),
             const SizedBox(height: 12),

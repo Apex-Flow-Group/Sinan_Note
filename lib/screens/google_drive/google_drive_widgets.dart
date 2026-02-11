@@ -15,7 +15,7 @@ class GoogleDriveWidgets {
   ) {
     return Card(
       elevation: 0,
-      color: isDark ? Colors.grey[850] : Colors.grey[100],
+      
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -81,7 +81,7 @@ class GoogleDriveWidgets {
   ) {
     return Card(
       elevation: 0,
-      color: isDark ? Colors.grey[850] : Colors.grey[100],
+      
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -123,7 +123,7 @@ class GoogleDriveWidgets {
   ) {
     return Card(
       elevation: 0,
-      color: isDark ? Colors.grey[850] : Colors.grey[100],
+      
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -178,7 +178,7 @@ class GoogleDriveWidgets {
   ) {
     return Card(
       elevation: 0,
-      color: isDark ? Colors.grey[850] : Colors.grey[100],
+      
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

@@ -199,14 +199,39 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                       ),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.sort),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         onSelected: (value) {
                           setState(() => _sortBy = value);
                         },
                         itemBuilder: (context) => [
                           PopupMenuItem(
-                              value: 'date', child: Text(strings.sortByDate)),
+                            value: 'date',
+                            child: Row(
+                              children: [
+                                Icon(Icons.access_time, size: 20, color: _sortBy == 'date' ? Theme.of(context).colorScheme.primary : null),
+                                const SizedBox(width: 12),
+                                Text(strings.sortByDate),
+                                if (_sortBy == 'date') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
+                                ],
+                              ],
+                            ),
+                          ),
                           PopupMenuItem(
-                              value: 'title', child: Text(strings.sortByTitle)),
+                            value: 'title',
+                            child: Row(
+                              children: [
+                                Icon(Icons.sort_by_alpha, size: 20, color: _sortBy == 'title' ? Theme.of(context).colorScheme.primary : null),
+                                const SizedBox(width: 12),
+                                Text(strings.sortByTitle),
+                                if (_sortBy == 'title') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
+                                ],
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ],

@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/utils/logger.dart';
 import '../../models/note.dart';
 import '../../models/note_version.dart';
+import '../diagnostics/apex_error_manager.dart';
 
 class IsarDatabaseService {
   static Isar? _isar;
@@ -24,14 +25,16 @@ class IsarDatabaseService {
 
   // CRUD Operations
   Future<int> insertNote(Note note) async {
-    AppLogger.info('insertNote called - title: ${note.title}', 'DB');
-    final isar = await database;
-    final id = await isar.writeTxn(() async {
-      note.updatedAt = DateTime.now();
-      return await isar.notes.put(note);
-    });
-    AppLogger.success('Note inserted with ID: $id', 'DB');
-    return id;
+    return await ApexErrorManager.monitorDB(() async {
+      AppLogger.info('insertNote called - title: ${note.title}', 'DB');
+      final isar = await database;
+      final id = await isar.writeTxn(() async {
+        note.updatedAt = DateTime.now();
+        return await isar.notes.put(note);
+      });
+      AppLogger.success('Note inserted with ID: $id', 'DB');
+      return id;
+    }, name: 'InsertNote');
   }
 
   Future<Note?> getNoteById(int id) async {
@@ -40,33 +43,37 @@ class IsarDatabaseService {
   }
 
   Future<List<Note>> getNotes({int? limit, int? offset}) async {
-    final isar = await database;
-    var query = isar.notes
-        .filter()
-        .isArchivedEqualTo(false)
-        .isTrashedEqualTo(false)
-        .isLockedEqualTo(false)
-        .sortByIsPinnedDesc()
-        .thenByUpdatedAtDesc();
-    
-    if (offset != null && limit != null) {
-      return await query.offset(offset).limit(limit).findAll();
-    } else if (offset != null) {
-      return await query.offset(offset).findAll();
-    } else if (limit != null) {
-      return await query.limit(limit).findAll();
-    }
-    
-    return await query.findAll();
+    return await ApexErrorManager.monitorDB(() async {
+      final isar = await database;
+      var query = isar.notes
+          .filter()
+          .isArchivedEqualTo(false)
+          .isTrashedEqualTo(false)
+          .isLockedEqualTo(false)
+          .sortByIsPinnedDesc()
+          .thenByUpdatedAtDesc();
+      
+      if (offset != null && limit != null) {
+        return await query.offset(offset).limit(limit).findAll();
+      } else if (offset != null) {
+        return await query.offset(offset).findAll();
+      } else if (limit != null) {
+        return await query.limit(limit).findAll();
+      }
+      
+      return await query.findAll();
+    }, name: 'GetNotes');
   }
 
   Future<List<Note>> getAllNotes() async {
-    final isar = await database;
-    return await isar.notes
-        .where()
-        .sortByIsPinnedDesc()
-        .thenByUpdatedAtDesc()
-        .findAll();
+    return await ApexErrorManager.monitorDB(() async {
+      final isar = await database;
+      return await isar.notes
+          .where()
+          .sortByIsPinnedDesc()
+          .thenByUpdatedAtDesc()
+          .findAll();
+    }, name: 'GetAll');
   }
 
   Future<List<Note>> getArchivedNotes() async {
@@ -101,22 +108,26 @@ class IsarDatabaseService {
   }
 
   Future<int> updateNote(Note note) async {
-    AppLogger.info('updateNote called - ID: ${note.id}, title: ${note.title}', 'DB');
-    final isar = await database;
-    final id = await isar.writeTxn(() async {
-      note.updatedAt = DateTime.now();
-      return await isar.notes.put(note);
-    });
-    AppLogger.success('Note updated with ID: $id', 'DB');
-    return id;
+    return await ApexErrorManager.monitorDB(() async {
+      AppLogger.info('updateNote called - ID: ${note.id}, title: ${note.title}', 'DB');
+      final isar = await database;
+      final id = await isar.writeTxn(() async {
+        note.updatedAt = DateTime.now();
+        return await isar.notes.put(note);
+      });
+      AppLogger.success('Note updated with ID: $id', 'DB');
+      return id;
+    }, name: 'UpdateNote');
   }
 
   Future<bool> deleteNote(int id) async {
-    await deleteNoteVersions(id);
-    final isar = await database;
-    return await isar.writeTxn(() async {
-      return await isar.notes.delete(id);
-    });
+    return await ApexErrorManager.monitorDB(() async {
+      await deleteNoteVersions(id);
+      final isar = await database;
+      return await isar.writeTxn(() async {
+        return await isar.notes.delete(id);
+      });
+    }, name: 'DeleteNote');
   }
 
   Future<int> archiveNote(int id) async {

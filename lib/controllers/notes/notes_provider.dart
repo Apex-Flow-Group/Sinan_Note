@@ -170,6 +170,31 @@ class NotesProvider extends ChangeNotifier {
     }
   }
   
+  Future<int> duplicateNote(int id) async {
+    AppLogger.info('duplicateNote called - ID: $id', 'Provider');
+    final note = await _dbService.getNoteById(id);
+    if (note == null) {
+      AppLogger.error('Note not found for duplication', 'Provider');
+      return -1;
+    }
+    
+    // Create completely new note without ID
+    final copy = Note(
+      title: note.title.isEmpty ? 'Copy' : '${note.title} - Copy',
+      content: note.content,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: note.colorIndex,
+      noteType: note.noteType,
+      isChecklist: note.isChecklist,
+      isLocked: note.isLocked,
+    );
+    
+    final newId = await addNote(copy);
+    AppLogger.success('duplicateNote completed - Original: $id, New: $newId', 'Provider');
+    return newId;
+  }
+  
   Future<void> trashNotes(List<int> ids) async {
     await _batchService.batchTrashNotes(ids);
     notifyListeners();

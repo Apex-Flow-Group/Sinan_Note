@@ -1680,4 +1680,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get googleDriveVaultWarning =>
       '⚠️ The developer and Google are not responsible for your security key (Recovery Code).\n\n🔑 You must keep the key in a safe place.\n\n📥 When restoring from Google Drive, you will need to enter the key to unlock encrypted notes.';
+
+  @override
+  String get makeCopy => 'Make a Copy';
+
+  @override
+  String get saveAs => 'Save As';
+
+  @override
+  String get noteCopied => 'Note copied';
 }

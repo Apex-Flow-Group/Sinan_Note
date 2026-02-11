@@ -19,8 +19,8 @@ class VersionHistoryService {
     
     final notesWithHistory = <Note>[];
     for (var note in allNotes) {
+      if (note.isLocked) continue;
       final versions = await _dbService.getNoteHistory(note.id!);
-      
       if (versions.isNotEmpty) {
         notesWithHistory.add(note);
       }
@@ -62,5 +62,9 @@ class VersionHistoryService {
   Future<int> getVersionCount(int noteId) async {
     final versions = await _dbService.getNoteHistory(noteId);
     return versions.length;
+  }
+
+  Future<List<Note>> getAllNotesDebug() async {
+    return await _dbService.getAllNotes();
   }
 }

@@ -379,7 +379,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final isDarkBg = _coordinator.getBackgroundColor(context).computeLuminance() < 0.5;
     final finalTextColor = isDarkBg ? Colors.white : Colors.black87;
     final finalHintColor = isDarkBg ? Colors.white54 : Colors.black45;
-    final sidePadding = MediaQuery.of(context).size.width * 0.05;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final sidePadding = screenWidth > 600 ? 16.0 : screenWidth * 0.05;
 
     return PopScope(
       canPop: !_coordinator.stateManager.hasChanges(),

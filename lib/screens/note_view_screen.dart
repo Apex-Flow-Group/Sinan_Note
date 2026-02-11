@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../models/note.dart';
 import '../core/utils/adaptive_color.dart';
 import '../models/note_mode.dart';
@@ -14,7 +17,6 @@ import '../services/notification_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../widgets/common/apex_snackbar.dart';
 import '../core/utils/checklist_formatter.dart';
-import '../widgets/common/custom_share_sheet.dart';
 import 'note_editor.dart' show NoteEditorImmersive;
 import 'note_view/note_view_helpers.dart';
 import 'note_view/note_view_widgets.dart';
@@ -127,63 +129,41 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
               icon: const Icon(Icons.widgets_outlined),
               tooltip: 'Pin to Widget',
               onPressed: () async {
-              
-              // Check if note ID exists
-              if (_currentNote.id == null) {
+                if (_currentNote.id == null) {
+                  ApexSnackBar.show(
+                    context,
+                    'Cannot pin unsaved note',
+                    type: SnackBarType.error,
+                  );
+                  return;
+                }
+                
+                final isChecklistNote = (_currentNote.isChecklist == true) || 
+                    (_currentNote.noteType == 'checklist');
+                
+                if (isChecklistNote) {
+                  final stats = NoteViewHelpers.parseChecklistStats(_currentNote.content);
+                  await WidgetService().updateChecklistWidget(
+                    _currentNote.id!,
+                    _currentNote.title.isEmpty ? 'Checklist' : _currentNote.title,
+                    _currentNote.content,
+                    _currentNote.colorIndex,
+                    totalItems: stats['total'] ?? 0,
+                    completedItems: stats['completed'] ?? 0,
+                  );
+                } else {
+                  await WidgetService().updateNoteWidget(_currentNote);
+                }
+                
+                final widgetName = isChecklistNote ? l10n.checklists : l10n.note;
                 ApexSnackBar.show(
                   context,
-                  'Cannot pin unsaved note',
-                  type: SnackBarType.error,
+                  '${l10n.widgetPinned} $widgetName',
+                  type: SnackBarType.success,
+                  duration: const Duration(seconds: 2),
                 );
-                return;
-              }
-              
-              // Check if it's a checklist (same logic as WidgetService)
-              final isChecklistNote = (_currentNote.isChecklist == true) || 
-                  (_currentNote.noteType == 'checklist');
-              
-              if (isChecklistNote) {
-                // Parse checklist stats for widget
-                final stats = NoteViewHelpers.parseChecklistStats(_currentNote.content);
-                await WidgetService().updateChecklistWidget(
-                  _currentNote.id!,
-                  _currentNote.title.isEmpty ? 'Checklist' : _currentNote.title,
-                  _currentNote.content,
-                  _currentNote.colorIndex,
-                  totalItems: stats['total'] ?? 0,
-                  completedItems: stats['completed'] ?? 0,
-                );
-              } else {
-                await WidgetService().updateNoteWidget(_currentNote);
-              }
-              
-              final widgetName = isChecklistNote ? 'ويدجت القوائم' : 'ويدجت الملاحظات';
-              ApexSnackBar.show(
-                context,
-                'تم التثبيت في $widgetName',
-                type: SnackBarType.success,
-                duration: const Duration(seconds: 2),
-              );
               },
             ),
-          IconButton(
-            icon: const Icon(Icons.copy),
-            tooltip: l10n.copy,
-            onPressed: () {
-              String textToCopy;
-              if (_currentNote.isChecklist) {
-                textToCopy = ChecklistFormatter.formatForSharing(
-                  _currentNote.title,
-                  _currentNote.content,
-                );
-              } else {
-                textToCopy = '${_currentNote.title}\n\n${_currentNote.content}';
-              }
-              Clipboard.setData(ClipboardData(text: textToCopy));
-              ApexSnackBar.show(context, l10n.copied,
-                  type: SnackBarType.success);
-            },
-          ),
         ],
       ),
       body: GestureDetector(
@@ -380,7 +360,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
 
 
 
-  void _onShareTap() {
+  void _onShareTap() async {
     String textToShare;
 
     if (_currentNote.isChecklist) {
@@ -392,7 +372,22 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       textToShare = '${_currentNote.title}\n\n${_currentNote.content}';
     }
 
-    CustomShareSheet.show(context, textToShare, subject: _currentNote.title);
+    // Use native Android share with file option
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final fileName = _currentNote.title.isEmpty ? 'note.txt' : '${_currentNote.title}.txt';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsString(textToShare);
+      
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: _currentNote.title,
+        text: textToShare,
+      );
+    } catch (e) {
+      // Fallback to text share
+      Share.share(textToShare, subject: _currentNote.title);
+    }
   }
 
   String _formatReminderDate(DateTime date) {
@@ -509,6 +504,8 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       }
     }
   }
+  
+  
 }
 
 

@@ -101,6 +101,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   /// 📜 Auto-hide navigation on scroll (home screen only)
   void _handleScrollNotification(bool isScrollingDown) {
     if (_currentIndex != 0 || _isDrawerOpen) return;
+    
+    final isLargeScreen = MediaQuery.of(context).size.width >= 600;
+    if (isLargeScreen) return; // Don't hide on tablets/desktop
+    
     if (isScrollingDown && !_isScrollHidden) {
       setState(() => _isScrollHidden = true);
     } else if (!isScrollingDown && _isScrollHidden) {
@@ -177,7 +181,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                     if (index != 0) _isScrollHidden = false;
                   });
                 },
-                isScrollHidden: _isScrollHidden,
+                isScrollHidden: false,
                 isDrawerOpen: _isDrawerOpen,
                 isRTL: isRTL,
               ),

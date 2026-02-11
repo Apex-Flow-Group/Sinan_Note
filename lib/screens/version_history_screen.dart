@@ -22,11 +22,46 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   final _versionService = VersionHistoryService();
   List<Note> _notesWithHistory = [];
   bool _isLoading = true;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearching = false;
+  String _sortBy = 'date';
 
   @override
   void initState() {
     super.initState();
     _loadNotesWithHistory();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
+  
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Note> _filterAndSortNotes() {
+    var notes = _notesWithHistory;
+    
+    if (_searchQuery.trim().isNotEmpty) {
+      final query = _searchQuery.trim();
+      notes = notes.where((note) {
+        return note.title.toLowerCase().contains(query) ||
+            note.content.toLowerCase().contains(query);
+      }).toList();
+    }
+    
+    if (_sortBy == 'title') {
+      notes.sort((a, b) => a.title.compareTo(b.title));
+    } else {
+      notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    }
+    
+    return notes;
   }
 
   /// Format checklist JSON to readable text
@@ -40,7 +75,6 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   Future<void> _loadNotesWithHistory() async {
     setState(() => _isLoading = true);
     final notes = await _versionService.getNotesWithHistory();
-    // 🔒 SECURITY: Filter out locked notes from history
     final unlockedNotes = notes.where((note) => !note.isLocked).toList();
     setState(() {
       _notesWithHistory = unlockedNotes;
@@ -115,6 +149,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     final isDark = settingsProvider.themeMode == ThemeMode.dark ||
         (settingsProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
+    
+    final filteredNotes = _filterAndSortNotes();
 
     return PopScope(
       canPop: false,
@@ -125,8 +161,69 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.noteHistory),
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchNotes,
+                    border: InputBorder.none,
+                  ),
+                )
+              : Text(l10n.noteHistory),
           centerTitle: true,
+          actions: [
+            IconButton(
+              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              onPressed: () {
+                setState(() {
+                  if (_isSearching) {
+                    _isSearching = false;
+                    _searchController.clear();
+                  } else {
+                    _isSearching = true;
+                  }
+                });
+              },
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.sort),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              onSelected: (value) {
+                setState(() => _sortBy = value);
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'date',
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time, size: 20, color: _sortBy == 'date' ? Theme.of(context).colorScheme.primary : null),
+                      const SizedBox(width: 12),
+                      Text(l10n.sortByDate),
+                      if (_sortBy == 'date') ...[
+                        const Spacer(),
+                        Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
+                      ],
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'title',
+                  child: Row(
+                    children: [
+                      Icon(Icons.sort_by_alpha, size: 20, color: _sortBy == 'title' ? Theme.of(context).colorScheme.primary : null),
+                      const SizedBox(width: 12),
+                      Text(l10n.sortByTitle),
+                      if (_sortBy == 'title') ...[
+                        const Spacer(),
+                        Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         drawer: HomeDrawerWidget(
           onBackupTap: () {},
@@ -134,10 +231,10 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _notesWithHistory.isEmpty
+          : filteredNotes.isEmpty
               ? Center(
                   child: Text(
-                    l10n.noHistoryYet,
+                    _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 )
@@ -148,9 +245,9 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                     top: 16,
                     bottom: MediaQuery.of(context).padding.bottom + 80,
                   ),
-                  itemCount: _notesWithHistory.length,
+                  itemCount: filteredNotes.length,
                   itemBuilder: (context, index) {
-                    final note = _notesWithHistory[index];
+                    final note = filteredNotes[index];
                     // ✅ Format checklist content for display
                     final displayContent = (note.isChecklist || note.noteType == 'checklist')
                         ? _formatChecklistForDisplay(note.content)

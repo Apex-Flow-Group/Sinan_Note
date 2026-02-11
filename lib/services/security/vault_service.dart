@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../diagnostics/apex_error_manager.dart';
 
 class VaultService {
   static const _storage = FlutterSecureStorage(
@@ -36,30 +37,20 @@ class VaultService {
 
   /// Setup vault with password and recovery code
   static Future<String> setupVault(String password) async {
-    // Generate master key
-    final masterKey = Key.fromSecureRandom(32);
-    
-    // Generate recovery code
-    final recoveryCode = generateRecoveryCode();
-    
-    // Encrypt master key with password
-    final encryptedWithPassword = await _encryptMasterKey(masterKey, password);
-    
-    // Encrypt master key with recovery code
-    final encryptedWithRecovery = await _encryptMasterKey(masterKey, recoveryCode);
-    
-    // Save encrypted versions
-    await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithPassword);
-    await _storage.write(key: '${_masterKeyName}_recovery', value: encryptedWithRecovery);
-    
-    // Save hashes for verification
-    await _storage.write(key: _passwordHashName, value: _hash(password));
-    await _storage.write(key: _recoveryHashName, value: _hash(recoveryCode));
-    
-    // Set current master key
-    await _storage.write(key: _masterKeyName, value: masterKey.base64);
-    
-    return recoveryCode;
+    return await ApexErrorManager.monitorCritical(() async {
+      final masterKey = Key.fromSecureRandom(32);
+      final recoveryCode = generateRecoveryCode();
+      final encryptedWithPassword = await _encryptMasterKey(masterKey, password);
+      final encryptedWithRecovery = await _encryptMasterKey(masterKey, recoveryCode);
+      
+      await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithPassword);
+      await _storage.write(key: '${_masterKeyName}_recovery', value: encryptedWithRecovery);
+      await _storage.write(key: _passwordHashName, value: _hash(password));
+      await _storage.write(key: _recoveryHashName, value: _hash(recoveryCode));
+      await _storage.write(key: _masterKeyName, value: masterKey.base64);
+      
+      return recoveryCode;
+    }, 'VaultSetup');
   }
 
   /// Verify password
@@ -78,18 +69,20 @@ class VaultService {
 
   /// Unlock vault with password
   static Future<bool> unlockWithPassword(String password) async {
-    if (!await verifyPassword(password)) return false;
-    
-    final encrypted = await _storage.read(key: '${_masterKeyName}_password');
-    if (encrypted == null) return false;
-    
-    try {
-      final masterKey = await _decryptMasterKey(encrypted, password);
-      await _storage.write(key: _masterKeyName, value: masterKey.base64);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return await ApexErrorManager.monitorCritical(() async {
+      if (!await verifyPassword(password)) return false;
+      
+      final encrypted = await _storage.read(key: '${_masterKeyName}_password');
+      if (encrypted == null) return false;
+      
+      try {
+        final masterKey = await _decryptMasterKey(encrypted, password);
+        await _storage.write(key: _masterKeyName, value: masterKey.base64);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }, 'VaultUnlock');
   }
 
   /// Recover vault with recovery code
@@ -223,30 +216,34 @@ class VaultService {
   
   /// Encrypt data with master key
   static Future<String> encryptWithMasterKey(String plainText) async {
-    if (plainText.isEmpty) return '';
-    
-    final masterKey = await getMasterKey();
-    final iv = IV.fromSecureRandom(16);
-    final encrypter = Encrypter(AES(masterKey));
-    final encrypted = encrypter.encrypt(plainText, iv: iv);
-    return '${iv.base64}:${encrypted.base64}';
+    return await ApexErrorManager.monitorCritical(() async {
+      if (plainText.isEmpty) return '';
+      
+      final masterKey = await getMasterKey();
+      final iv = IV.fromSecureRandom(16);
+      final encrypter = Encrypter(AES(masterKey));
+      final encrypted = encrypter.encrypt(plainText, iv: iv);
+      return '${iv.base64}:${encrypted.base64}';
+    }, 'VaultEncrypt');
   }
   
   /// Decrypt data with master key
   static Future<String> decryptWithMasterKey(String encryptedText) async {
-    if (encryptedText.isEmpty) return '';
-    
-    final parts = encryptedText.split(':');
-    if (parts.length != 2) return encryptedText; // Not encrypted
-    
-    try {
-      final masterKey = await getMasterKey();
-      final iv = IV.fromBase64(parts[0]);
-      final encrypter = Encrypter(AES(masterKey));
-      return encrypter.decrypt64(parts[1], iv: iv);
-    } catch (e) {
-      return encryptedText; // Decryption failed, return as-is
-    }
+    return await ApexErrorManager.monitorCritical(() async {
+      if (encryptedText.isEmpty) return '';
+      
+      final parts = encryptedText.split(':');
+      if (parts.length != 2) return encryptedText;
+      
+      try {
+        final masterKey = await getMasterKey();
+        final iv = IV.fromBase64(parts[0]);
+        final encrypter = Encrypter(AES(masterKey));
+        return encrypter.decrypt64(parts[1], iv: iv);
+      } catch (e) {
+        return encryptedText;
+      }
+    }, 'VaultDecrypt');
   }
   
   /// Check if text is encrypted (matches iv:ciphertext pattern)

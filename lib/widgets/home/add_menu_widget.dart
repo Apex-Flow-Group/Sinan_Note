@@ -67,8 +67,12 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
 
     return Stack(
       children: [
-        // Background Blur - Covers ENTIRE screen including bottom bar
-        Positioned.fill(
+        // Background Blur - Excludes bottom navigation bar
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           child: IgnorePointer(
             ignoring: !isVisible,
             child: GestureDetector(

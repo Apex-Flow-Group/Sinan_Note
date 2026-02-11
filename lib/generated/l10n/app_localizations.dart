@@ -3331,6 +3331,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'⚠️ The developer and Google are not responsible for your security key (Recovery Code).\n\n🔑 You must keep the key in a safe place.\n\n📥 When restoring from Google Drive, you will need to enter the key to unlock encrypted notes.'**
   String get googleDriveVaultWarning;
+
+  /// No description provided for @makeCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a Copy'**
+  String get makeCopy;
+
+  /// No description provided for @saveAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Save As'**
+  String get saveAs;
+
+  /// No description provided for @noteCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Note copied'**
+  String get noteCopied;
 }
 
 class _AppLocalizationsDelegate

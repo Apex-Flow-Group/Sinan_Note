@@ -191,7 +191,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
               widget.onLongPress();
             },
             child: Hero(
-              tag: '${widget.source}_note_${widget.note.id}',
+              tag: '${widget.source}_note_${widget.note.id}_${widget.note.createdAt.millisecondsSinceEpoch}',
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
