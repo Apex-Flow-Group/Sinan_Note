@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Widget يعرض Master Panel و Details Panel جنباً إلى جنب مع إمكانية تغيير الحجم
 /// 
@@ -32,7 +33,22 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
   @override
   void initState() {
     super.initState();
-    _masterWidthRatio = widget.initialMasterWidthRatio;
+    _loadSavedRatio();
+  }
+
+  Future<void> _loadSavedRatio() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getDouble('master_panel_ratio');
+    if (mounted) {
+      setState(() {
+        _masterWidthRatio = saved ?? widget.initialMasterWidthRatio;
+      });
+    }
+  }
+
+  Future<void> _saveRatio() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('master_panel_ratio', _masterWidthRatio);
   }
 
   @override
@@ -79,11 +95,12 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
                   setState(() {
                     _isDragging = true;
                     final delta = details.delta.dx / constraints.maxWidth;
-                    _masterWidthRatio = (_masterWidthRatio + delta).clamp(0.25, 0.5);
+                    _masterWidthRatio = (_masterWidthRatio + delta).clamp(0.2, 0.6);
                   });
                 },
                 onHorizontalDragEnd: (_) {
                   setState(() => _isDragging = false);
+                  _saveRatio();
                 },
                 child: MouseRegion(
                   cursor: SystemMouseCursors.resizeColumn,
