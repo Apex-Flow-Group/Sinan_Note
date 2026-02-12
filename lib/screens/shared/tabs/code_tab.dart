@@ -227,18 +227,26 @@ class _CodeTabState extends State<CodeTab> {
                                 childCount: professionalNotes.length,
                                 itemBuilder: (context, index) {
                                   final note = professionalNotes[index];
-                                  final isDesktop = MediaQuery.of(context).size.width >= 600;
-                                  return NoteCardWidget(
-                                    note: note,
-                                    viewType: _viewType,
-                                    closeAllSlidables: _closeAllSlidables,
-                                    onNoteChanged: () => setState(() {}),
-                                    onLongPress: () {},
-                                    source: 'professional',
-                                    onTap: isDesktop ? () {
-                                      final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
-                                      selectedNoteProvider.selectNote(note);
-                                    } : null,
+                                  return Consumer<SelectedNoteProvider>(
+                                    builder: (context, selectedNoteProvider, _) {
+                                      final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
+                                      return AnimatedPadding(
+                                        duration: const Duration(milliseconds: 200),
+                                        curve: Curves.easeOut,
+                                        padding: isCurrentlyOpen 
+                                            ? const EdgeInsets.only(left: 12, right: 0)
+                                            : EdgeInsets.zero,
+                                        child: NoteCardWidget(
+                                          note: note,
+                                          viewType: _viewType,
+                                          closeAllSlidables: _closeAllSlidables,
+                                          onNoteChanged: () => setState(() {}),
+                                          onLongPress: () {},
+                                          source: 'professional',
+                                          isCurrentlyOpen: isCurrentlyOpen,
+                                        ),
+                                      );
+                                    },
                                   );
                                 },
                               ),
@@ -249,18 +257,26 @@ class _CodeTabState extends State<CodeTab> {
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                     final note = professionalNotes[index];
-                                    final isDesktop = MediaQuery.of(context).size.width >= 600;
-                                    return NoteCardWidget(
-                                      note: note,
-                                      viewType: _viewType,
-                                      closeAllSlidables: _closeAllSlidables,
-                                      onNoteChanged: () => setState(() {}),
-                                      onLongPress: () {},
-                                      source: 'professional',
-                                      onTap: isDesktop ? () {
-                                        final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
-                                        selectedNoteProvider.selectNote(note);
-                                      } : null,
+                                    return Consumer<SelectedNoteProvider>(
+                                      builder: (context, selectedNoteProvider, _) {
+                                        final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
+                                        return AnimatedPadding(
+                                          duration: const Duration(milliseconds: 200),
+                                          curve: Curves.easeOut,
+                                          padding: isCurrentlyOpen 
+                                              ? const EdgeInsets.only(left: 12, right: 0)
+                                              : EdgeInsets.zero,
+                                          child: NoteCardWidget(
+                                            note: note,
+                                            viewType: _viewType,
+                                            closeAllSlidables: _closeAllSlidables,
+                                            onNoteChanged: () => setState(() {}),
+                                            onLongPress: () {},
+                                            source: 'professional',
+                                            isCurrentlyOpen: isCurrentlyOpen,
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                   childCount: professionalNotes.length,

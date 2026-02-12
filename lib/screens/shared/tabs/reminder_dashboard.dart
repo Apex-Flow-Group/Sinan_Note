@@ -14,6 +14,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../../widgets/home/note_card_widget.dart';
 import '../../../widgets/home/add_menu_widget.dart';
 import '../../mobile/home_screen.dart' show ViewType;
+import '../../../providers/selected_note_provider.dart';
 import '../note_editor.dart';
 
 class ReminderDashboard extends StatefulWidget {
@@ -437,16 +438,29 @@ class _ReminderDashboardState extends State<ReminderDashboard>
         itemCount: reminders.length,
         itemBuilder: (context, index) {
           final note = reminders[index];
-          return Opacity(
-            opacity: type == 'expired' ? 0.6 : 1.0,
-            child: NoteCardWidget(
-              note: note,
-              viewType: _viewType,
-              closeAllSlidables: _closeAllSlidables,
-              onNoteChanged: () => setState(() {}),
-              onLongPress: () {},
-              source: 'reminder_$type',
-            ),
+          return Consumer<SelectedNoteProvider>(
+            builder: (context, selectedNoteProvider, _) {
+              final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
+              return Opacity(
+                opacity: type == 'expired' ? 0.6 : 1.0,
+                child: AnimatedPadding(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  padding: isCurrentlyOpen 
+                      ? const EdgeInsets.only(left: 12, right: 0)
+                      : EdgeInsets.zero,
+                  child: NoteCardWidget(
+                    note: note,
+                    viewType: _viewType,
+                    closeAllSlidables: _closeAllSlidables,
+                    onNoteChanged: () => setState(() {}),
+                    onLongPress: () {},
+                    source: 'reminder_$type',
+                    isCurrentlyOpen: isCurrentlyOpen,
+                  ),
+                ),
+              );
+            },
           );
         },
       );
@@ -457,16 +471,29 @@ class _ReminderDashboardState extends State<ReminderDashboard>
       itemCount: reminders.length,
       itemBuilder: (context, index) {
         final note = reminders[index];
-        return Opacity(
-          opacity: type == 'expired' ? 0.6 : 1.0,
-          child: NoteCardWidget(
-            note: note,
-            viewType: _viewType,
-            closeAllSlidables: _closeAllSlidables,
-            onNoteChanged: () => setState(() {}),
-            onLongPress: () {},
-            source: 'reminder_$type',
-          ),
+        return Consumer<SelectedNoteProvider>(
+          builder: (context, selectedNoteProvider, _) {
+            final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
+            return Opacity(
+              opacity: type == 'expired' ? 0.6 : 1.0,
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                padding: isCurrentlyOpen 
+                    ? const EdgeInsets.only(left: 12, right: 0)
+                    : EdgeInsets.zero,
+                child: NoteCardWidget(
+                  note: note,
+                  viewType: _viewType,
+                  closeAllSlidables: _closeAllSlidables,
+                  onNoteChanged: () => setState(() {}),
+                  onLongPress: () {},
+                  source: 'reminder_$type',
+                  isCurrentlyOpen: isCurrentlyOpen,
+                ),
+              ),
+            );
+          },
         );
       },
     );
