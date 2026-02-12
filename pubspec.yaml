@@ -13,41 +13,51 @@ dependencies:
   provider: ^6.0.5
   flutter_staggered_grid_view: ^0.7.0
   intl: any
+  
+  # Google Services
   google_sign_in: ^6.2.1
   googleapis: ^13.2.0
   extension_google_sign_in_as_googleapis_auth: ^2.0.12
   
-  # Database: Isar
+  # Database
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
-  
-  # Temporary: For migration from SQLite  
   sqflite: 2.3.3+2
   sqflite_common_ffi: ^2.3.0
   
+  # Storage & Files
   path_provider: ^2.1.5
   path: ^1.8.3
   shared_preferences: ^2.2.2
   share_plus: ^7.2.1
   file_picker: ^8.0.0
-  flutter_local_notifications: ^17.0.0
-  timezone: ^0.9.0
+  flutter_file_dialog: ^3.0.3
+  
+  # Notifications (UPDATED)
+  flutter_local_notifications: ^20.1.0
+  timezone: ^0.10.1
   flutter_timezone: ^3.0.1
+  
+  # Security (UPDATED)
+  permission_handler: ^12.0.1
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.0.0
   crypto: ^3.0.3
   encrypt: ^5.0.3
+  
+  # UI
   flutter_slidable: ^4.0.3
   dynamic_color: 1.6.8
-  permission_handler: ^11.0.0
   package_info_plus: ^8.0.0
-  flutter_file_dialog: ^3.0.3
-
+  
+  # Code Editor
   flutter_code_editor: ^0.3.3
   highlight: ^0.7.0
   flutter_highlight: ^0.7.0
+  
+  # Other
   home_widget: ^0.6.0
-  local_auth: ^2.3.0
   flutter_markdown: ^0.7.4+1
-  flutter_secure_storage: ^9.0.0
   url_launcher: ^6.2.0
   archive: ^3.4.0
 

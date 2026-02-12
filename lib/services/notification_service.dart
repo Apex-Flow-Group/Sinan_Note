@@ -38,7 +38,7 @@ class NotificationService {
     const initSettings = InitializationSettings(android: androidSettings);
 
     await _notifications.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
@@ -191,14 +191,12 @@ class NotificationService {
       if (recurrenceRule == null || recurrenceRule == 'none') {
         // One-time notification
         await _notifications.zonedSchedule(
-          id,
-          title,
-          body,
-          tzScheduledTime,
-          notificationDetails,
+          id: id,
+          title: title,
+          body: body,
+          scheduledDate: tzScheduledTime,
+          notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: payload,
         );
       } else {
@@ -221,14 +219,12 @@ class NotificationService {
 
         if (matchDateTimeComponents != null) {
           await _notifications.zonedSchedule(
-            id,
-            title,
-            body,
-            tzScheduledTime,
-            notificationDetails,
+            id: id,
+            title: title,
+            body: body,
+            scheduledDate: tzScheduledTime,
+            notificationDetails: notificationDetails,
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
             matchDateTimeComponents: matchDateTimeComponents,
             payload: payload,
           );
@@ -244,7 +240,7 @@ class NotificationService {
 
   Future<void> cancelNotification(int id) async {
     try {
-      await _notifications.cancel(id);
+      await _notifications.cancel(id: id);
     } catch (e) {
       // Ignore errors when canceling non-existent notifications
       AppLogger.debug('Could not cancel notification $id', 'Notification');
