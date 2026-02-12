@@ -17,6 +17,7 @@ import '../../widgets/home/dialogs/backup_options_dialog.dart';
 import '../../widgets/home/notes_grid_view.dart';
 import '../../widgets/home/add_menu_widget.dart';
 import '../mobile/home_screen.dart';
+import '../../core/shortcuts/app_shortcuts.dart';
 
 /// نسخة Responsive من HomeScreen تدعم نمط Master-Details
 /// 
@@ -220,6 +221,49 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   Widget _buildMasterDetailsLayout(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
+    return Shortcuts(
+      shortcuts: <ShortcutActivator, Intent>{
+        AppShortcuts.newNote: const NewNoteIntent(),
+        AppShortcuts.search: const SearchIntent(),
+        AppShortcuts.codeNote: const CodeNoteIntent(),
+        AppShortcuts.checklist: const ChecklistIntent(),
+        AppShortcuts.reminder: const ReminderIntent(),
+        AppShortcuts.refresh: const RefreshIntent(),
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          NewNoteIntent: CallbackAction<NewNoteIntent>(
+            onInvoke: (_) => _navigateToNewNote(NoteMode.simple),
+          ),
+          SearchIntent: CallbackAction<SearchIntent>(
+            onInvoke: (_) {
+              FocusScope.of(context).requestFocus(FocusNode());
+              return null;
+            },
+          ),
+          CodeNoteIntent: CallbackAction<CodeNoteIntent>(
+            onInvoke: (_) => _navigateToNewNote(NoteMode.code),
+          ),
+          ChecklistIntent: CallbackAction<ChecklistIntent>(
+            onInvoke: (_) => _navigateToNewNote(NoteMode.checklist),
+          ),
+          ReminderIntent: CallbackAction<ReminderIntent>(
+            onInvoke: (_) => _navigateToNewNote(NoteMode.reminder),
+          ),
+          RefreshIntent: CallbackAction<RefreshIntent>(
+            onInvoke: (_) {
+              Provider.of<NotesProvider>(context, listen: false).loadNotes(force: true);
+              return null;
+            },
+          ),
+        },
+        child: _buildMasterDetailsScaffold(context, l10n),
+      ),
+    );
+  }
+
+  Widget _buildMasterDetailsScaffold(BuildContext context, AppLocalizations l10n) {
     
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
