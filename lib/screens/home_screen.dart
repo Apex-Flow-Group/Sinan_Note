@@ -123,17 +123,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _exitSearchMode() async {
-
-    _isSearchActive = false;
-
+  void _exitSearchMode() {
     _searchController.clear();
     _searchFocusNode.unfocus();
-
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    if (mounted) {
-    }
+    setState(() {
+      _isSearchActive = false;
+    });
   }
 
   void _showFilterDialog(BuildContext context) {
@@ -243,6 +238,10 @@ class _HomeScreenState extends State<HomeScreen> {
       colorMode = 'reminder';
     } else if (mode == NoteMode.code) {
       colorMode = 'professional';
+    } else if (mode == NoteMode.checklist) {
+      colorMode = 'checklist';
+    } else if (mode == NoteMode.rich) {
+      colorMode = 'rich';
     }
     
     await Navigator.push(

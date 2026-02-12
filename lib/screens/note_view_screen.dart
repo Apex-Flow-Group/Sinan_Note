@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import '../models/note.dart';
 import '../core/utils/adaptive_color.dart';
 import '../models/note_mode.dart';
@@ -17,6 +14,7 @@ import '../services/notification_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../widgets/common/apex_snackbar.dart';
 import '../core/utils/checklist_formatter.dart';
+import '../widgets/common/custom_share_sheet.dart';
 import 'note_editor.dart' show NoteEditorImmersive;
 import 'note_view/note_view_helpers.dart';
 import 'note_view/note_view_widgets.dart';
@@ -372,22 +370,36 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       textToShare = '${_currentNote.title}\n\n${_currentNote.content}';
     }
 
-    // Use native Android share with file option
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final fileName = _currentNote.title.isEmpty ? 'note.txt' : '${_currentNote.title}.txt';
-      final file = File('${tempDir.path}/$fileName');
-      await file.writeAsString(textToShare);
-      
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: _currentNote.title,
-        text: textToShare,
-      );
-    } catch (e) {
-      // Fallback to text share
-      Share.share(textToShare, subject: _currentNote.title);
-    }
+    if (!mounted) return;
+    
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    CustomShareSheet.show(
+      context,
+      textToShare,
+      subject: _currentNote.title,
+      note: _currentNote,
+      onNoteCopied: () async {
+        final duplicate = Note(
+          title: '${_currentNote.title} - Copy',
+          content: _currentNote.content,
+          colorIndex: _currentNote.colorIndex,
+          noteType: _currentNote.noteType,
+          isChecklist: _currentNote.isChecklist,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        final newId = await provider.addNote(duplicate);
+        await _refreshNote();
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ApexSnackBar.show(
+            context,
+            l10n.noteCopied,
+            type: SnackBarType.success,
+          );
+        }
+      },
+    );
   }
 
   String _formatReminderDate(DateTime date) {

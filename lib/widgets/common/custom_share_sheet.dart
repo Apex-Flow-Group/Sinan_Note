@@ -6,6 +6,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../models/note.dart';
 import 'apex_snackbar.dart';
+import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 
 class CustomShareSheet {
   static void show(BuildContext context, String text, {String? subject, Note? note, VoidCallback? onNoteCopied}) {
@@ -57,10 +59,53 @@ class CustomShareSheet {
             ),
             const SizedBox(height: 24),
             
-            // Share options grid
+            // Share options - horizontal row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                _ShareOption(
+                  icon: Icons.file_download_outlined,
+                  label: isArabic ? 'حفظ كملف' : 'Save File',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    try {
+                      final extension = note != null ? _getFileExtension(note) : 'txt';
+                      final fileName = subject?.isEmpty ?? true 
+                          ? 'note.$extension' 
+                          : '${subject!.replaceAll(RegExp(r'[<>:"/\|?*]'), '_')}.$extension';
+                      
+                      final bytes = Uint8List.fromList(utf8.encode(text));
+                      final result = await FilePicker.platform.saveFile(
+                        dialogTitle: isArabic ? 'حفظ الملف' : 'Save File',
+                        fileName: fileName,
+                        type: FileType.any,
+                        bytes: bytes,
+                      );
+                      
+                      
+                      if (result != null) {
+                        if (context.mounted) {
+                          final toastMsg = isArabic ? 'تم حفظ الملف بنجاح' : 'File saved successfully';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(toastMsg),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ApexSnackBar.show(
+                          context,
+                          isArabic ? 'فشل حفظ الملف' : 'Failed to save file',
+                          type: SnackBarType.error,
+                        );
+                      }
+                    }
+                  },
+                ),
                 _ShareOption(
                   icon: Icons.share_outlined,
                   label: isArabic ? 'مشاركة' : 'Share',
@@ -102,6 +147,32 @@ class CustomShareSheet {
         ),
       ),
     );
+  }
+
+  static String _getFileExtension(Note note) {
+    final type = note.noteType.toLowerCase();
+    
+    if (type == 'python' || type == 'py') return 'py';
+    if (type == 'javascript' || type == 'js') return 'js';
+    if (type == 'dart') return 'dart';
+    if (type == 'java') return 'java';
+    if (type == 'html') return 'html';
+    if (type == 'css') return 'css';
+    if (type == 'sql') return 'sql';
+    if (type == 'cpp' || type == 'c++') return 'cpp';
+    if (type == 'c') return 'c';
+    if (type == 'csharp' || type == 'c#') return 'cs';
+    if (type == 'php') return 'php';
+    if (type == 'ruby' || type == 'rb') return 'rb';
+    if (type == 'go') return 'go';
+    if (type == 'rust' || type == 'rs') return 'rs';
+    if (type == 'swift') return 'swift';
+    if (type == 'kotlin' || type == 'kt') return 'kt';
+    if (type == 'bash' || type == 'sh') return 'sh';
+    if (type == 'json') return 'json';
+    if (type == 'xml') return 'xml';
+    
+    return 'txt';
   }
 }
 

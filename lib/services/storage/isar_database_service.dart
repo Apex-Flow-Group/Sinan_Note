@@ -2,6 +2,7 @@
 
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:async';
 import '../../core/utils/logger.dart';
 import '../../models/note.dart';
 import '../../models/note_version.dart';
@@ -9,18 +10,59 @@ import '../diagnostics/apex_error_manager.dart';
 
 class IsarDatabaseService {
   static Isar? _isar;
+  static bool _isInitializing = false;
+  static IsarDatabaseService? _instance;
+  static Completer<Isar>? _initCompleter;
+  
+  // Singleton
+  factory IsarDatabaseService() {
+    _instance ??= IsarDatabaseService._();
+    return _instance!;
+  }
+  
+  IsarDatabaseService._();
+
+  static Future<void> initialize() async {
+    if (_isar != null && _isar!.isOpen) return;
+    
+    // If initialization is in progress, wait for it
+    if (_isInitializing && _initCompleter != null) {
+      await _initCompleter!.future;
+      return;
+    }
+    
+    _isInitializing = true;
+    _initCompleter = Completer<Isar>();
+    
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final existing = Isar.getInstance('sinan_notes');
+      
+      if (existing != null && existing.isOpen) {
+        _isar = existing;
+      } else {
+        _isar = await Isar.open(
+          [NoteSchema, NoteVersionSchema],
+          directory: dir.path,
+          name: 'sinan_notes',
+        );
+      }
+      
+      _initCompleter!.complete(_isar!);
+    } catch (e) {
+      _initCompleter!.completeError(e);
+      rethrow;
+    } finally {
+      _isInitializing = false;
+    }
+  }
 
   Future<Isar> get database async {
+    // Return existing instance immediately - no initialization
     if (_isar != null && _isar!.isOpen) return _isar!;
     
-    final dir = await getApplicationDocumentsDirectory();
-    _isar = await Isar.open(
-      [NoteSchema, NoteVersionSchema],
-      directory: dir.path,
-      name: 'sinan_notes',
-    );
-    
-    return _isar!;
+    // If not initialized, throw error - must call initialize() first
+    throw StateError('IsarDatabaseService not initialized. Call IsarDatabaseService.initialize() first.');
   }
 
   // CRUD Operations

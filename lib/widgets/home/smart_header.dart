@@ -220,7 +220,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                     children: [
                       IconButton(
                         icon: Icon(
-                          widget.isSearchActive ? Icons.arrow_back : Icons.menu,
+                          widget.isSearchActive ? Icons.close : Icons.menu,
                         ),
                         onPressed: widget.onMenuTap,
                       ),

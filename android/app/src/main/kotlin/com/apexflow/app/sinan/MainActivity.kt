@@ -34,11 +34,20 @@ class MainActivity: FlutterFragmentActivity() {
                     val currentNoteId = startIntent?.getIntExtra("current_note_id", 0) ?: 0
                     val widgetType = startIntent?.getStringExtra("widget_type")
                     
+                    val sharedText = when (action) {
+                        Intent.ACTION_SEND -> startIntent?.getStringExtra(Intent.EXTRA_TEXT)
+                        Intent.ACTION_VIEW, Intent.ACTION_EDIT -> startIntent?.data?.let { uri ->
+                            contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                        }
+                        else -> null
+                    }
+                    
                     val data = mapOf(
                         "action" to action,
                         "note_id" to noteId,
                         "current_note_id" to currentNoteId,
-                        "widget_type" to widgetType
+                        "widget_type" to widgetType,
+                        "shared_text" to sharedText
                     )
                     result.success(data)
                     startIntent = null
@@ -65,10 +74,19 @@ class MainActivity: FlutterFragmentActivity() {
 
     private fun handleIntent(intent: Intent) {
         flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+            val sharedText = when (intent.action) {
+                Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
+                Intent.ACTION_VIEW, Intent.ACTION_EDIT -> intent.data?.let { uri ->
+                    contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                }
+                else -> null
+            }
+            
             MethodChannel(messenger, CHANNEL).invokeMethod("onIntent", mapOf(
                 "action" to intent.action,
                 "note_id" to intent.getIntExtra("note_id", 0),
-                "widget_type" to intent.getStringExtra("widget_type")
+                "widget_type" to intent.getStringExtra("widget_type"),
+                "shared_text" to sharedText
             ))
         }
     }

@@ -8,6 +8,8 @@ import '../controllers/settings/settings_provider.dart';
 import '../controllers/notes/notes_provider.dart';
 import '../services/security/biometric_service.dart';
 import '../services/cloud/google_drive_service.dart';
+import '../services/diagnostics/apex_error_manager.dart';
+import '../main.dart' show navigatorKey;
 import 'main_layout_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,36 +23,42 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Set navigator key immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ApexErrorManager.setNavigatorKey(navigatorKey);
+    });
     _initApp();
   }
 
   Future<void> _initApp() async {
+    // Wait for settings to initialize
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    await settings.ensureInitialized();
+    while (!settings.isInitialized) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
 
-    // Initialize Google Sign-In silently
-    await GoogleDriveService.initializeSignIn();
+    // Initialize Google Sign-In silently in background
+    GoogleDriveService.initializeSignIn();
 
     if (!mounted) return;
 
     // If lock is enabled, request biometric authentication
     if (settings.isAppLockEnabled) {
       final authenticated = await BiometricService.authenticate();
-      if (!authenticated) {
-        // User cancelled or failed - exit app
-        return;
-      }
+      if (!authenticated) return;
     }
 
     if (!mounted) return;
 
-    // Load data AFTER authentication, BEFORE navigation
+    // Load notes in background
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    await notesProvider.loadNotes();
+    notesProvider.loadNotes();
 
+    // Wait for next frame before navigation
+    await Future.delayed(const Duration(milliseconds: 100));
     if (!mounted) return;
 
-    // Navigate to MainLayoutScreen
+    // Navigate
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => const MainLayoutScreen(),
@@ -59,10 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
 
-    // Show "What's New" dialog after navigation
-    if (mounted) {
-      _checkAndShowWhatsNew();
-    }
+    if (mounted) _checkAndShowWhatsNew();
   }
 
   Future<void> _checkAndShowWhatsNew() async {

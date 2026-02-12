@@ -24,11 +24,15 @@ class SettingsProvider with ChangeNotifier {
   static const int _defaultBlueIndex = 8;
   static const int _defaultYellowIndex = 4;
   static const int _defaultPurpleIndex = 9;
+  static const int _defaultGreenIndex = 5;
+  static const int _defaultOrangeIndex = 3;
   
   final Map<String, int> _defaultColorIndices = {
     'simple': _defaultBlueIndex,
     'reminder': _defaultYellowIndex,
     'professional': _defaultPurpleIndex,
+    'checklist': _defaultGreenIndex,
+    'rich': _defaultOrangeIndex,
   };
 
   ThemeMode get themeMode => _themeMode;
@@ -52,11 +56,11 @@ class SettingsProvider with ChangeNotifier {
   bool get isLoaded => _isInitialized;
 
   SettingsProvider() {
-    _loadSettings().catchError((e) {
+    Future.microtask(() => _loadSettings().catchError((e) {
       AppLogger.debug('Error loading settings: $e');
       _isInitialized = true;
       notifyListeners();
-    });
+    }));
   }
 
   Future<void> ensureInitialized() async {
@@ -217,6 +221,8 @@ class SettingsProvider with ChangeNotifier {
       _defaultColorIndices['simple'] = prefs.getInt('colorIndex_simple') ?? _defaultBlueIndex;
       _defaultColorIndices['reminder'] = prefs.getInt('colorIndex_reminder') ?? _defaultYellowIndex;
       _defaultColorIndices['professional'] = prefs.getInt('colorIndex_professional') ?? _defaultPurpleIndex;
+      _defaultColorIndices['checklist'] = prefs.getInt('colorIndex_checklist') ?? _defaultGreenIndex;
+      _defaultColorIndices['rich'] = prefs.getInt('colorIndex_rich') ?? _defaultOrangeIndex;
       
       _isInitialized = true;
       notifyListeners();

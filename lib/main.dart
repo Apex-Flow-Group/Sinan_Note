@@ -17,6 +17,9 @@ import 'screens/settings_screen.dart';
 import 'screens/trash_screen.dart';
 import 'screens/archive_screen.dart';
 import 'screens/locked_notes_screen.dart';
+import 'models/note.dart';
+import 'models/note_mode.dart';
+import 'screens/note_editor.dart';
 
 import 'controllers/settings/settings_provider.dart';
 import 'controllers/notes/notes_provider.dart';
@@ -24,7 +27,6 @@ import 'services/notification_service.dart';
 import 'services/widget_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'services/diagnostics/apex_diagnostics_engine.dart';
-import 'services/diagnostics/apex_error_manager.dart';
 import 'services/storage/isar_database_service.dart';
 import 'services/storage/sqlite_to_isar_migration.dart';
 import 'services/security/security_gate.dart';
@@ -44,17 +46,16 @@ void main() async {
     privacyBlurEnabled: false,
   ));
 
-  // ⚡ تهيئة خفيفة فقط - تأجيل العمليات الثقيلة
-  final appDir = await getApplicationDocumentsDirectory();
-  ApexDiagnosticsEngine().init(appDir.path);
-  ApexErrorManager.setNavigatorKey(navigatorKey);
+  // ⚡ Initialize Isar ONCE before anything else
+  await IsarDatabaseService.initialize();
 
-  // 🔄 Migrate from SQLite to Isar
-  await SqliteToIsarMigration.migrateIfNeeded();
-
-  // ⚡ تأجيل تهيئة الإشعارات والويدجت لما بعد أول إطار
-  if (Platform.isAndroid || Platform.isIOS) {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+  // ⚡ All other heavy operations in background
+  Future.microtask(() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    ApexDiagnosticsEngine().init(appDir.path);
+    SqliteToIsarMigration.migrateIfNeeded();
+    
+    if (Platform.isAndroid || Platform.isIOS) {
       try {
         await NotificationService().initialize();
         if (Platform.isAndroid) {
@@ -64,8 +65,8 @@ void main() async {
       } catch (e) {
         AppLogger.error('Background init error', 'Main', e);
       }
-    });
-  }
+    }
+  });
 
   runApp(
     MultiProvider(
@@ -134,8 +135,11 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     final noteId = data['note_id'] ?? 0;
     final currentNoteId = data['current_note_id'] ?? 0;
     final widgetType = data['widget_type'] ?? 'note';
+    final sharedText = data['shared_text'];
 
-    if (action == 'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
+    if (sharedText != null && sharedText.isNotEmpty) {
+      _openEditorWithSharedText(sharedText);
+    } else if (action == 'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
           builder: (context) => WidgetSelectionScreen(
@@ -155,6 +159,92 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
       );
     } else if (action == 'com.apexflow.app.sinan.ACTION_VIEW_NOTE' && noteId > 0) {
       _openNoteById(noteId);
+    }
+  }
+
+  void _openEditorWithSharedText(String text) async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    
+    // Show loading screen immediately
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 24),
+                Text(
+                  Localizations.localeOf(context).languageCode == 'ar'
+                      ? 'جاري التحضير...'
+                      : 'Preparing...',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    // Process in background
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    final isUrl = Uri.tryParse(text)?.hasScheme ?? false;
+    final content = isUrl ? text : (text.length > 10000 ? text.substring(0, 10000) : text);
+    
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final mode = isUrl ? NoteMode.simple : _detectNoteMode(content);
+    
+    // Replace loading with editor
+    navigatorKey.currentState?.pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => NoteEditorImmersive(
+          mode: mode,
+          note: Note(
+            title: isUrl ? 'Shared Link' : '',
+            content: content,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            colorIndex: settings.getDefaultColorIndex(_getModeString(mode)),
+            noteType: mode.name,
+            isProfessional: mode == NoteMode.code,
+          ),
+        ),
+      ),
+    );
+  }
+
+  NoteMode _detectNoteMode(String text) {
+    final codePatterns = [
+      RegExp(r'(function|const|let|var|class|import|export)\s'),
+      RegExp(r'(def|class|import|from|if __name__)\s'),
+      RegExp(r'(public|private|void|int|String)\s'),
+      RegExp(r'[{};]\s*$', multiLine: true),
+    ];
+    
+    for (final pattern in codePatterns) {
+      if (pattern.hasMatch(text)) {
+        return NoteMode.code;
+      }
+    }
+    
+    return NoteMode.simple;
+  }
+
+  String _getModeString(NoteMode mode) {
+    switch (mode) {
+      case NoteMode.code:
+        return 'professional';
+      case NoteMode.reminder:
+        return 'reminder';
+      case NoteMode.checklist:
+        return 'checklist';
+      default:
+        return 'simple';
     }
   }
 

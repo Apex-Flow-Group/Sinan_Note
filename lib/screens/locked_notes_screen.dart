@@ -630,7 +630,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                           note: note,
                           viewType: _viewType,
                           closeAllSlidables: _closeAllSlidables,
-                          onNoteChanged: _loadLockedNotes,
+                          onNoteChanged: () {}, // No reload needed - note already decrypted
                           onLongPress: () => setState(() => _selectedNoteIds.add(note.id!)),
                           source: 'locked',
                           selectionMode: _selectedNoteIds.isNotEmpty,

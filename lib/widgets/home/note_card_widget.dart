@@ -64,8 +64,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     
     // حساب لون الحافة بذكاء
     final Color borderColor = brightness == Brightness.light
-        ? Color.lerp(baseColor, Colors.black, 0.15)!
-        : Color.lerp(baseColor, Colors.white, 0.25)!;
+        ? baseColor.withValues(alpha: 0.4)
+        : Color.lerp(baseColor, Colors.black, 0.3)!;
     
     final bool isLightColor = baseColor.computeLuminance() > 0.5;
     final Color titleColor = isLightColor ? Colors.black87 : Colors.white;

@@ -124,6 +124,10 @@ class EditorDialogHandlers {
                     colorMode = 'reminder';
                   } else if (mode == NoteMode.code) {
                     colorMode = 'professional';
+                  } else if (mode == NoteMode.checklist) {
+                    colorMode = 'checklist';
+                  } else if (mode == NoteMode.rich) {
+                    colorMode = 'rich';
                   }
                   await settings.setDefaultColorIndex(colorMode, index);
                 }
