@@ -7,10 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'dart:async';
-import 'core/utils/logger.dart';
 import 'screens/cinematic_intro_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/settings_screen.dart';
@@ -23,12 +21,9 @@ import 'screens/note_editor.dart';
 
 import 'controllers/settings/settings_provider.dart';
 import 'controllers/notes/notes_provider.dart';
-import 'services/notification_service.dart';
 import 'services/widget_service.dart';
 import 'package:home_widget/home_widget.dart';
-import 'services/diagnostics/apex_diagnostics_engine.dart';
 import 'services/storage/isar_database_service.dart';
-import 'services/storage/sqlite_to_isar_migration.dart';
 import 'services/security/security_gate.dart';
 import 'screens/note_view_screen.dart';
 import 'screens/widget_selection_screen.dart';
@@ -39,35 +34,14 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🔒 Initialize SecurityController IMMEDIATELY
+  // 🔒 Initialize SecurityController IMMEDIATELY (lightweight)
   SecurityController().initialize(const SecurityConfig(
     lockEnabled: false,
     lockDelaySeconds: 0,
     privacyBlurEnabled: false,
   ));
 
-  // ⚡ Initialize Isar ONCE before anything else
-  await IsarDatabaseService.initialize();
-
-  // ⚡ All other heavy operations in background
-  Future.microtask(() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    ApexDiagnosticsEngine().init(appDir.path);
-    SqliteToIsarMigration.migrateIfNeeded();
-    
-    if (Platform.isAndroid || Platform.isIOS) {
-      try {
-        await NotificationService().initialize();
-        if (Platform.isAndroid) {
-          await NotificationService().requestNotificationPermissions();
-          await WidgetService().initialize();
-        }
-      } catch (e) {
-        AppLogger.error('Background init error', 'Main', e);
-      }
-    }
-  });
-
+  // ⚡ Start app immediately - Isar will initialize in SplashScreen
   runApp(
     MultiProvider(
       providers: [
@@ -179,8 +153,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                 const SizedBox(height: 24),
                 Text(
                   Localizations.localeOf(context).languageCode == 'ar'
-                      ? 'جاري التحضير...'
-                      : 'Preparing...',
+                      ? 'جاري الحفظ...'
+                      : 'Saving...',
                   style: const TextStyle(fontSize: 16),
                 ),
               ],
@@ -197,22 +171,41 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     final content = isUrl ? text : (text.length > 10000 ? text.substring(0, 10000) : text);
     
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final mode = isUrl ? NoteMode.simple : _detectNoteMode(content);
     
-    // Replace loading with editor
+    // Create and save note to database FIRST
+    final newNote = Note(
+      title: isUrl ? 'Shared Link' : '',
+      content: content,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: settings.getDefaultColorIndex(_getModeString(mode)),
+      noteType: mode.name,
+      isProfessional: mode == NoteMode.code,
+    );
+    
+    // Save to database and get the ID
+    final savedNoteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
+    
+    // Get the saved note from database
+    final dbService = IsarDatabaseService();
+    final savedNote = await dbService.getNoteById(savedNoteId);
+    
+    if (savedNote == null) {
+      // Failed to save, close loading screen
+      if (navigatorKey.currentState?.canPop() ?? false) {
+        navigatorKey.currentState?.pop();
+      }
+      return;
+    }
+    
+    // Replace loading with editor, passing the SAVED note with ID
     navigatorKey.currentState?.pushReplacement(
       MaterialPageRoute(
         builder: (context) => NoteEditorImmersive(
           mode: mode,
-          note: Note(
-            title: isUrl ? 'Shared Link' : '',
-            content: content,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            colorIndex: settings.getDefaultColorIndex(_getModeString(mode)),
-            noteType: mode.name,
-            isProfessional: mode == NoteMode.code,
-          ),
+          note: savedNote,
         ),
       ),
     );

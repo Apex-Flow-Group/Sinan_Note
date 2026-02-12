@@ -5,13 +5,14 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_batch_operations_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
 import '../../test_setup.dart';
 
-class MockDatabaseService extends IsarDatabaseService {
+// Mock Database Service for testing
+// Note: We can't extend IsarDatabaseService because it uses a factory constructor
+// Instead, we create a standalone mock that implements the same interface
+class MockDatabaseService {
   final Map<int, Note> _notes = {};
 
-  @override
   Future<int> updateNote(Note note) async {
     if (_notes.containsKey(note.id)) {
       _notes[note.id!] = note;
@@ -20,13 +21,11 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<bool> deleteNote(int id) async {
     if (_notes.remove(id) != null) return true;
     return false;
   }
 
-  @override
   Future<int> trashNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -36,7 +35,6 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<int> restoreNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -46,7 +44,6 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<int> archiveNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -56,7 +53,6 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<int> unarchiveNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -66,7 +62,6 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<Note?> getNoteById(int id) async => _notes[id];
 
   void addNote(Note note) {
@@ -90,8 +85,9 @@ void main() {
       dbService = MockDatabaseService();
       stateService = NoteStateService();
       sideEffectService = NoteSideEffectService();
+      // Use dynamic to bypass type checking for mock
       service = NoteBatchOperationsService(
-        dbService,
+        dbService as dynamic,
         stateService,
         sideEffectService,
       );

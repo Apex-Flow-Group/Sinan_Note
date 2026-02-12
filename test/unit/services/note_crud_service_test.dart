@@ -3,20 +3,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
 
-class MockDatabaseService extends IsarDatabaseService {
+// Mock Database Service for testing
+// Note: We can't extend IsarDatabaseService because it uses a factory constructor
+// Instead, we create a standalone mock that implements the same interface
+class MockDatabaseService {
   final Map<int, Note> _notes = {};
   int _nextId = 1;
 
-  @override
   Future<int> insertNote(Note note) async {
     final id = _nextId++;
     _notes[id] = note.copyWith(id: id);
     return id;
   }
 
-  @override
   Future<int> updateNote(Note note) async {
     if (_notes.containsKey(note.id)) {
       _notes[note.id!] = note;
@@ -25,19 +25,15 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<bool> deleteNote(int id) async {
     if (_notes.remove(id) != null) return true;
     return false;
   }
 
-  @override
   Future<Note?> getNoteById(int id) async => _notes[id];
 
-  @override
   Future<List<Note>> getAllNotes() async => _notes.values.toList();
 
-  @override
   Future<int> archiveNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -47,7 +43,6 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<int> unarchiveNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -57,7 +52,6 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<int> trashNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -67,7 +61,6 @@ class MockDatabaseService extends IsarDatabaseService {
     return 0;
   }
 
-  @override
   Future<int> restoreNote(int id) async {
     final note = _notes[id];
     if (note != null) {
@@ -76,8 +69,6 @@ class MockDatabaseService extends IsarDatabaseService {
     }
     return 0;
   }
-
-  @override
   Future<List<Note>> getLockedNotes() async => [];
 }
 

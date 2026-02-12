@@ -4,21 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
 import '../../test_setup.dart';
 
-class MockDatabaseService extends IsarDatabaseService {
+// Mock Database Service for testing
+// Note: We can't extend IsarDatabaseService because it uses a factory constructor
+// Instead, we create a standalone mock that implements the same interface
+class MockDatabaseService {
   final Map<int, Note> _notes = {};
 
-  @override
   Future<List<Note>> getLockedNotes() async {
     return _notes.values.where((n) => n.isLocked).toList();
   }
 
-  @override
   Future<Note?> getNoteById(int id) async => _notes[id];
 
-  @override
   Future<int> updateNote(Note note) async {
     if (_notes.containsKey(note.id)) {
       _notes[note.id!] = note;
@@ -95,7 +94,7 @@ void main() {
 
     group('fetchAndDecryptLockedNotes', () {
       test('returns empty list when no locked notes', () async {
-        final notes = await service.fetchAndDecryptLockedNotes(dbService);
+        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes, isEmpty);
       });
 
@@ -111,7 +110,7 @@ void main() {
 
         dbService.addNote(lockedNote);
 
-        final notes = await service.fetchAndDecryptLockedNotes(dbService);
+        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes.length, 1);
       });
 
@@ -128,7 +127,7 @@ void main() {
 
         dbService.addNote(checklistNote);
 
-        final notes = await service.fetchAndDecryptLockedNotes(dbService);
+        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes.first.title, 'Checklist');
         expect(notes.first.content, '[]Item 1');
       });
@@ -145,7 +144,7 @@ void main() {
 
         dbService.addNote(note);
 
-        final notes = await service.fetchAndDecryptLockedNotes(dbService);
+        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes.length, 1);
         // Should return original note on decryption failure
       });
@@ -164,7 +163,7 @@ void main() {
 
         dbService.addNote(note);
 
-        await service.toggleLockStatus(1, true, dbService);
+        await service.toggleLockStatus(1, true, dbService as dynamic);
 
         final updatedNote = await dbService.getNoteById(1);
         expect(updatedNote?.isLocked, true);
@@ -182,7 +181,7 @@ void main() {
 
         dbService.addNote(note);
 
-        await service.toggleLockStatus(1, false, dbService);
+        await service.toggleLockStatus(1, false, dbService as dynamic);
 
         final updatedNote = await dbService.getNoteById(1);
         expect(updatedNote?.isLocked, false);
@@ -201,7 +200,7 @@ void main() {
 
         dbService.addNote(note);
 
-        await service.toggleLockStatus(1, true, dbService);
+        await service.toggleLockStatus(1, true, dbService as dynamic);
 
         final updatedNote = await dbService.getNoteById(1);
         expect(updatedNote?.title, 'Checklist');
@@ -220,7 +219,7 @@ void main() {
 
         dbService.addNote(note);
 
-        await service.toggleLockStatus(1, true, dbService);
+        await service.toggleLockStatus(1, true, dbService as dynamic);
 
         final updatedNote = await dbService.getNoteById(1);
         expect(updatedNote?.title, '');
@@ -228,7 +227,7 @@ void main() {
       });
 
       test('handles non-existent note gracefully', () async {
-        await service.toggleLockStatus(999, true, dbService);
+        await service.toggleLockStatus(999, true, dbService as dynamic);
         // Should not throw
       });
     });
