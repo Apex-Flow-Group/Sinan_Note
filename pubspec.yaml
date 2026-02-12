@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 2.2.1+3300
+version: 2.2.1+3301
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -19,11 +19,11 @@ dependencies:
   googleapis: ^13.2.0
   extension_google_sign_in_as_googleapis_auth: ^2.0.13
   
-  # Database (UPDATED)
+  # Database (Stable versions)
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
-  sqflite: ^2.4.0
-  sqflite_common_ffi: ^2.4.0
+  sqflite: 2.3.3+2
+  sqflite_common_ffi: ^2.3.0
   
   # Storage & Files (UPDATED)
   path_provider: ^2.1.5
