@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import '../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../models/note.dart';
 import '../../controllers/notes/notes_provider.dart';
-import '../../services/toast_service.dart';
 import '../common/custom_share_sheet.dart';
 
 class NoteCardActions {
@@ -40,10 +40,10 @@ class NoteCardActions {
           if (confirmed == true) {
             await notesProvider.toggleLockStatus(note.id!, false);
             onNoteChanged();
-            ToastService().showToast(
+            UnifiedNotificationService().show(
               context: context,
               message: l10n.noteUnlocked,
-              type: ToastType.success,
+              type: NotificationType.success,
             );
           }
         } else if (value == 'delete') {
@@ -70,10 +70,10 @@ class NoteCardActions {
             final noteId = note.id!;
             await notesProvider.trashNote(noteId);
             onNoteChanged();
-            ToastService().showToast(
+            UnifiedNotificationService().show(
               context: context,
               message: l10n.noteDeleted,
-              type: ToastType.info,
+              type: NotificationType.info,
             );
           }
         }
@@ -132,11 +132,11 @@ class NoteCardActions {
           
           if (!context.mounted) return;
           
-          ToastService().showUndoToast(
+          UnifiedNotificationService().showWithUndo(
             context: context,
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toTrash}',
             actionKey: 'swipe_delete_$noteId',
-            type: ToastType.info,
+            type: NotificationType.info,
             onExecute: () {},
             onUndo: () async {
               await notesProvider.restoreNote(noteId);
@@ -160,11 +160,11 @@ class NoteCardActions {
           
           if (!context.mounted) return;
           
-          ToastService().showUndoToast(
+          UnifiedNotificationService().showWithUndo(
             context: context,
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toArchive}',
             actionKey: 'swipe_archive_$noteId',
-            type: ToastType.success,
+            type: NotificationType.success,
             onExecute: () {},
             onUndo: () async {
               await notesProvider.unarchiveNote(noteId);

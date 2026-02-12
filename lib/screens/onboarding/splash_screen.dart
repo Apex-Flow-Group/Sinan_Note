@@ -1,0 +1,383 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../controllers/settings/settings_provider.dart';
+import '../../controllers/notes/notes_provider.dart';
+import '../../services/security/biometric_service.dart';
+import '../../services/cloud/google_drive_service.dart';
+import '../../services/diagnostics/apex_error_manager.dart';
+import '../../services/diagnostics/apex_diagnostics_engine.dart';
+import '../../services/storage/isar_database_service.dart';
+import '../../services/storage/sqlite_to_isar_migration.dart';
+import '../../services/notification_service.dart';
+import '../../services/widget_service.dart';
+import '../../core/utils/logger.dart';
+import '../../main.dart' show navigatorKey;
+import '../shared/main_layout_screen.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  String _statusMessage = '';
+  double _progress = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set navigator key immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ApexErrorManager.setNavigatorKey(navigatorKey);
+      _initApp();
+    });
+  }
+
+  void _updateStatus(String message, double progress) {
+    if (mounted) {
+      setState(() {
+        _statusMessage = message;
+        _progress = progress;
+      });
+    }
+  }
+
+  Future<void> _initApp() async {
+    if (!mounted) return;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    
+    try {
+      // Step 1: Initialize Isar Database (30%)
+      _updateStatus(isArabic ? 'تهيئة قاعدة البيانات...' : 'Initializing database...', 0.3);
+      await IsarDatabaseService.initialize();
+      
+      // Step 2: Background services (60%)
+      _updateStatus(isArabic ? 'تحميل الخدمات...' : 'Loading services...', 0.6);
+      await _initBackgroundServices();
+      
+      // Step 3: Wait for settings (80%)
+      _updateStatus(isArabic ? 'تحميل الإعدادات...' : 'Loading settings...', 0.8);
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      while (!settings.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+
+      // Initialize Google Sign-In silently in background
+      GoogleDriveService.initializeSignIn();
+
+      if (!mounted) return;
+
+      // Step 4: Authentication check (90%)
+      _updateStatus(isArabic ? 'التحقق من الأمان...' : 'Security check...', 0.9);
+      if (settings.isAppLockEnabled) {
+        final authenticated = await BiometricService.authenticate();
+        if (!authenticated) return;
+      }
+
+      if (!mounted) return;
+
+      // Step 5: Load notes (100%)
+      _updateStatus(isArabic ? 'تحميل الملاحظات...' : 'Loading notes...', 1.0);
+      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+      notesProvider.loadNotes();
+
+      // Wait for smooth transition
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+
+      // Navigate
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const MainLayoutScreen(),
+          transitionDuration: const Duration(milliseconds: 300),
+          reverseTransitionDuration: Duration.zero,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
+      );
+
+      if (mounted) _checkAndShowWhatsNew();
+    } catch (e) {
+      AppLogger.error('Splash initialization error', 'SplashScreen', e);
+      _updateStatus(isArabic ? 'حدث خطأ...' : 'Error occurred...', 0.0);
+    }
+  }
+
+  Future<void> _initBackgroundServices() async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      ApexDiagnosticsEngine().init(appDir.path);
+      SqliteToIsarMigration.migrateIfNeeded();
+      
+      if (Platform.isAndroid || Platform.isIOS) {
+        await NotificationService().initialize();
+        if (Platform.isAndroid) {
+          await NotificationService().requestNotificationPermissions();
+          await WidgetService().initialize();
+        }
+      }
+    } catch (e) {
+      AppLogger.error('Background services init error', 'SplashScreen', e);
+    }
+  }
+
+  Future<void> _checkAndShowWhatsNew() async {
+    final prefs = await SharedPreferences.getInstance();
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentVersion = int.tryParse(packageInfo.buildNumber) ?? 0;
+    final lastSeenVersion = prefs.getInt('last_seen_version') ?? 0;
+
+    if (currentVersion > lastSeenVersion) {
+      await prefs.setInt('last_seen_version', currentVersion);
+      if (mounted) {
+        _showWhatsNewDialog();
+      }
+    }
+  }
+
+  void _showWhatsNewDialog() {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.celebration, color: Colors.blue),
+            const SizedBox(width: 8),
+            Text(isArabic ? 'ما الجديد؟' : 'What\'s New?'),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Version Header
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.rocket_launch, color: Colors.blue, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        isArabic ? 'الإصدار 2.2.1' : 'Version 2.2.1',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Main Feature
+                _buildFeature(
+                  icon: Icons.devices,
+                  color: Colors.blue,
+                  title: isArabic ? '🚗 في كل مكان معك' : '🚗 Everywhere With You',
+                  description: isArabic
+                      ? 'الآن سنان نوت متوفر على سيارتك، ساعتك، وتلفازك. منظومة ملاحظات كاملة بحجم 11 ميجابايت فقط.'
+                      : 'Now Sinan Note is available on your car, watch, and TV. A complete notes system in just 11 MB.',
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Footer
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.favorite, color: Colors.red, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          isArabic
+                              ? 'شكراً لاستخدامك سنان نوت! نحن نعمل باستمرار لتحسين تجربتك.'
+                              : 'Thank you for using Sinan Note! We\'re constantly working to improve your experience.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[700],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(isArabic ? 'حسناً' : 'Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildFeature({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String description,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // App Icon with animation
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.note_alt_outlined,
+                      size: 60,
+                      color: Colors.blue,
+                    ),
+                  ),
+                );
+              },
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // App Name
+            const Text(
+              'Sinan Note',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            
+            const SizedBox(height: 48),
+            
+            // Progress Bar
+            SizedBox(
+              width: 200,
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: _progress,
+                      minHeight: 6,
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Status Message
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      _statusMessage.isEmpty 
+                          ? (isArabic ? 'جاري التحميل...' : 'Loading...')
+                          : _statusMessage,
+                      key: ValueKey(_statusMessage),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

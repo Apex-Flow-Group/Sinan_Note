@@ -5,12 +5,12 @@ import 'package:provider/provider.dart';
 import '../../services/security/biometric_service.dart';
 import '../../services/security/vault_service.dart';
 import '../../controllers/settings/settings_provider.dart';
-import '../../screens/locked_notes_intro_screen.dart';
-import '../../screens/locked_notes_screen.dart';
-import '../../screens/vault_entry_screen.dart';
-import '../../screens/google_drive_screen_responsive.dart';
-import '../../screens/version_history_screen.dart';
-import '../../screens/settings_screen_responsive.dart';
+import '../../screens/auth/locked_notes_intro_screen.dart';
+import '../../screens/mobile/locked_notes_screen.dart';
+import '../../screens/auth/vault_entry_screen.dart';
+import '../../screens/sync/google_drive_screen_responsive.dart';
+import '../../screens/other/version_history_screen.dart';
+import '../../screens/shared/settings_screen_responsive.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 

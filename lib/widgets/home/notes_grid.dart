@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../models/note.dart';
 import '../../core/utils/checklist_formatter.dart';
-import '../../screens/note_editor.dart';
+import '../../screens/shared/note_editor.dart';
 import '../../controllers/settings/settings_provider.dart';
 import '../effects/premium_card_effect.dart';
 

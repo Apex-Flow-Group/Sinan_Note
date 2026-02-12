@@ -9,15 +9,15 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 
 import 'dart:async';
-import 'screens/cinematic_intro_screen.dart';
-import 'screens/splash_screen.dart';
-import 'screens/settings_screen_responsive.dart';
-import 'screens/trash_screen_responsive.dart';
-import 'screens/archive_screen_responsive.dart';
-import 'screens/locked_notes_screen_responsive.dart';
+import 'screens/onboarding/cinematic_intro_screen.dart';
+import 'screens/onboarding/splash_screen.dart';
+import 'screens/shared/settings_screen_responsive.dart';
+import 'screens/desktop/trash_screen_responsive.dart';
+import 'screens/desktop/archive_screen_responsive.dart';
+import 'screens/desktop/locked_notes_screen_responsive.dart';
 import 'models/note.dart';
 import 'models/note_mode.dart';
-import 'screens/note_editor.dart';
+import 'screens/shared/note_editor.dart';
 
 import 'controllers/settings/settings_provider.dart';
 import 'controllers/notes/notes_provider.dart';
@@ -26,8 +26,8 @@ import 'services/widget_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'services/storage/isar_database_service.dart';
 import 'services/security/security_gate.dart';
-import 'screens/note_view_screen.dart';
-import 'screens/widget_selection_screen.dart';
+import 'screens/shared/note_view_screen.dart';
+import 'screens/other/widget_selection_screen.dart';
 
 // Global navigator key for error feedback
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

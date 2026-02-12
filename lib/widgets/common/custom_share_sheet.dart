@@ -1,11 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import '../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../models/note.dart';
-import 'apex_snackbar.dart';
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 
@@ -97,10 +97,10 @@ class CustomShareSheet {
                       }
                     } catch (e) {
                       if (context.mounted) {
-                        ApexSnackBar.show(
-                          context,
-                          isArabic ? 'فشل حفظ الملف' : 'Failed to save file',
-                          type: SnackBarType.error,
+                        UnifiedNotificationService().show(
+                          context: context,
+                          message: isArabic ? 'فشل حفظ الملف' : 'Failed to save file',
+                          type: NotificationType.error,
                         );
                       }
                     }
@@ -122,10 +122,10 @@ class CustomShareSheet {
                     await Clipboard.setData(ClipboardData(text: text));
                     HapticFeedback.lightImpact();
                     if (context.mounted) {
-                      ApexSnackBar.show(
-                        context,
-                        isArabic ? 'تم النسخ إلى الحافظة' : strings.textCopiedToClipboard,
-                        type: SnackBarType.success,
+                      UnifiedNotificationService().show(
+                        context: context,
+                        message: isArabic ? 'تم النسخ إلى الحافظة' : strings.textCopiedToClipboard,
+                        type: NotificationType.success,
                         duration: const Duration(seconds: 2),
                       );
                     }

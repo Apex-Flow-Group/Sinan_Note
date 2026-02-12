@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import '../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
@@ -8,15 +9,16 @@ import 'package:intl/intl.dart';
 import '../../models/note.dart';
 import '../../controllers/notes/notes_provider.dart';
 import '../../controllers/settings/settings_provider.dart';
+import '../../providers/selected_note_provider.dart';
 import '../../services/notification_service.dart';
 import '../../core/utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../screens/note_view_screen.dart';
-import '../../screens/note_editor.dart';
-import '../../screens/home_screen.dart' show ViewType;
+import '../../screens/shared/note_view_screen.dart';
+import '../../screens/shared/note_editor.dart';
+import '../../screens/mobile/home_screen.dart' show ViewType;
 import '../../core/utils/checklist_formatter.dart';
-import '../../services/toast_service.dart';
 import '../effects/premium_card_effect.dart';
+import '../desktop/note_context_menu.dart';
 import 'note_card_utils.dart';
 import 'note_card_actions.dart';
 
@@ -29,6 +31,7 @@ class NoteCardWidget extends StatefulWidget {
   final VoidCallback? onTap;
   final bool isSelected;
   final bool selectionMode;
+  final bool isCurrentlyOpen; // 🔥 NEW
   final String source;
 
   const NoteCardWidget({
@@ -42,6 +45,7 @@ class NoteCardWidget extends StatefulWidget {
     this.onTap,
     this.isSelected = false,
     this.selectionMode = false,
+    this.isCurrentlyOpen = false, // 🔥 NEW
   });
 
   @override
@@ -53,6 +57,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   void initState() {
     super.initState();
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -121,71 +127,88 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
             },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
+              onSecondaryTapDown: (details) {
+                // 🔥 ضغط يمين على سطح المكتب
+                final isDesktop = MediaQuery.of(context).size.width >= 600;
+                if (isDesktop && !widget.selectionMode) {
+                  NoteContextMenu.show(context, widget.note, widget.onNoteChanged);
+                }
+              },
               onTap: () async {
                 if (widget.selectionMode && widget.onTap != null) {
                   widget.onTap!();
                 } else if (!widget.selectionMode) {
-                if (widget.note.isLocked && widget.source == 'locked') {
-                  final mode = NoteCardUtils.getNoteMode(widget.note);
-                  final decryptedNote = Note(
-                    id: widget.note.id,
-                    title: widget.note.title,
-                    content: widget.note.content,
-                    createdAt: widget.note.createdAt,
-                    updatedAt: widget.note.updatedAt,
-                    colorIndex: widget.note.colorIndex,
-                    isArchived: widget.note.isArchived,
-                    isTrashed: widget.note.isTrashed,
-                    reminderDateTime: widget.note.reminderDateTime,
-                    isLocked: false,
-                    noteType: widget.note.noteType,
-                    recurrenceRule: widget.note.recurrenceRule,
-                    isCompleted: widget.note.isCompleted,
-                    isProfessional: widget.note.isProfessional,
-                    isPinned: widget.note.isPinned,
-                    isChecklist: widget.note.isChecklist,
-                  );
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NoteEditorImmersive(
-                        note: decryptedNote,
-                        mode: mode,
-                        skipAuthentication: true,
-                        originallyLocked: true,
-                      ),
-                    ),
-                  );
-                  if (result == true || result == null) {
-                    widget.onNoteChanged();
-                  }
-                } else if (widget.source == 'archive') {
-                  final mode = NoteCardUtils.getNoteMode(widget.note);
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NoteEditorImmersive(
-                        note: widget.note,
-                        mode: mode,
-                      ),
-                    ),
-                  );
-                  if (result == true || result == null) {
-                    widget.onNoteChanged();
-                  }
-                } else {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NoteViewScreen(note: widget.note, showRestore: false),
-                    ),
-                  );
-                  if (result == true || result == null) {
-                    widget.onNoteChanged();
+                  // 🔥 FIX: استخدام SelectedNoteProvider على سطح المكتب
+                  final isDesktop = MediaQuery.of(context).size.width >= 600;
+                  
+                  if (isDesktop) {
+                    // سطح المكتب: تحديث SelectedNoteProvider
+                    final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
+                    selectedNoteProvider.selectNote(widget.note);
+                  } else {
+                    // موبايل: فتح شاشة كاملة
+                    if (widget.note.isLocked && widget.source == 'locked') {
+                      final mode = NoteCardUtils.getNoteMode(widget.note);
+                      final decryptedNote = Note(
+                        id: widget.note.id,
+                        title: widget.note.title,
+                        content: widget.note.content,
+                        createdAt: widget.note.createdAt,
+                        updatedAt: widget.note.updatedAt,
+                        colorIndex: widget.note.colorIndex,
+                        isArchived: widget.note.isArchived,
+                        isTrashed: widget.note.isTrashed,
+                        reminderDateTime: widget.note.reminderDateTime,
+                        isLocked: false,
+                        noteType: widget.note.noteType,
+                        recurrenceRule: widget.note.recurrenceRule,
+                        isCompleted: widget.note.isCompleted,
+                        isProfessional: widget.note.isProfessional,
+                        isPinned: widget.note.isPinned,
+                        isChecklist: widget.note.isChecklist,
+                      );
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoteEditorImmersive(
+                            note: decryptedNote,
+                            mode: mode,
+                            skipAuthentication: true,
+                            originallyLocked: true,
+                          ),
+                        ),
+                      );
+                      if (result == true || result == null) {
+                        widget.onNoteChanged();
+                      }
+                    } else if (widget.source == 'archive') {
+                      final mode = NoteCardUtils.getNoteMode(widget.note);
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoteEditorImmersive(
+                            note: widget.note,
+                            mode: mode,
+                          ),
+                        ),
+                      );
+                      if (result == true || result == null) {
+                        widget.onNoteChanged();
+                      }
+                    } else {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoteViewScreen(note: widget.note, showRestore: false),
+                        ),
+                      );
+                      if (result == true || result == null) {
+                        widget.onNoteChanged();
+                      }
+                    }
                   }
                 }
-              }
-            },
+              },
             onLongPress: () {
               HapticFeedback.mediumImpact();
               widget.onLongPress();
@@ -332,10 +355,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                           await notesProvider.updateNote(updatedNote);
                                           widget.onNoteChanged();
                                           if (context.mounted) {
-                                            ToastService().showToast(
+                                            UnifiedNotificationService().show(
                                               context: context,
                                               message: l10n.reminderRemoved,
-                                              type: ToastType.info,
+                                              type: NotificationType.info,
                                             );
                                           }
                                         },

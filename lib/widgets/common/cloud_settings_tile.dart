@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../services/cloud/google_drive_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../screens/google_drive_screen.dart';
+import '../../screens/sync/google_drive_screen.dart';
 
 class CloudSettingsTile extends StatelessWidget {
   const CloudSettingsTile({super.key});

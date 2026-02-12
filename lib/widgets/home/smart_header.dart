@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import '../../services/unified_notification_service.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/notes/notes_provider.dart';
-import '../../services/toast_service.dart';
 import '../../models/note.dart';
 import '../../models/note_mode.dart';  // ✏️ Import NoteMode
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../screens/note_editor.dart';  // ✏️ Import Editor
+import '../../screens/shared/note_editor.dart';  // ✏️ Import Editor
 import '../common/breathing_search_field.dart';
 import '../common/custom_share_sheet.dart';  // 📤 Import share widget
 import 'selection_action_bar.dart';
@@ -131,11 +131,11 @@ class _SmartHeaderState extends State<SmartHeader> {
                       widget.selectedNoteIdsNotifier.value = {};
                       
                       if (context.mounted) {
-                        ToastService().showUndoToast(
+                        UnifiedNotificationService().showWithUndo(
                           context: context,
                           message: '$count ${AppLocalizations.of(context)!.notesPinned}',
                           actionKey: 'bulk_pin',
-                          type: ToastType.success,
+                          type: NotificationType.success,
                           onExecute: () {}, // Empty - action already executed
                           onUndo: () async {
                             for (final note in notesToRestore) {
@@ -156,11 +156,11 @@ class _SmartHeaderState extends State<SmartHeader> {
                       widget.selectedNoteIdsNotifier.value = {};
                       
                       if (context.mounted) {
-                        ToastService().showUndoToast(
+                        UnifiedNotificationService().showWithUndo(
                           context: context,
                           message: '$count ${AppLocalizations.of(context)!.notesArchived}',
                           actionKey: 'bulk_archive',
-                          type: ToastType.success,
+                          type: NotificationType.success,
                           onExecute: () {},
                           onUndo: () async {
                             await provider.unarchiveNotes(ids);
@@ -179,11 +179,11 @@ class _SmartHeaderState extends State<SmartHeader> {
                       widget.selectedNoteIdsNotifier.value = {};
                       
                       if (context.mounted) {
-                        ToastService().showUndoToast(
+                        UnifiedNotificationService().showWithUndo(
                           context: context,
                           message: '$count ${AppLocalizations.of(context)!.notesDeleted}',
                           actionKey: 'bulk_delete',
-                          type: ToastType.info,
+                          type: NotificationType.info,
                           onExecute: () {},
                           onUndo: () async {
                             await provider.restoreNotes(ids);

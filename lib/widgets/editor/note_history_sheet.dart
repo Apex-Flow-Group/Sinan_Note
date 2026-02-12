@@ -1,11 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import '../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import '../../models/note_version.dart';
 import '../../services/storage/isar_database_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../common/apex_snackbar.dart';
 import '../../core/utils/checklist_formatter.dart';
 
 class NoteHistorySheet extends StatelessWidget {
@@ -134,10 +134,10 @@ class NoteHistorySheet extends StatelessWidget {
                               }
                               Clipboard.setData(ClipboardData(text: textToCopy));
                               Navigator.pop(context);
-                              ApexSnackBar.show(
-                                context,
-                                AppLocalizations.of(context)!.copiedOldVersion,
-                                type: SnackBarType.success,
+                              UnifiedNotificationService().show(
+                                context: context,
+                                message: AppLocalizations.of(context)!.copiedOldVersion,
+                                type: NotificationType.success,
                               );
                             },
                           ),

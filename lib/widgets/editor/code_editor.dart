@@ -58,7 +58,8 @@ class _CodeEditorState extends State<CodeEditor> {
             ),
             background: Colors.transparent,
             margin: 8,
-            width: 60,
+            // 🔥 FIX: مساحة مرنة حسب عدد الأسطر
+            width: _calculateGutterWidth(widget.controller.text),
           ),
           background: Colors.transparent,
           expands: true,
@@ -77,5 +78,14 @@ class _CodeEditorState extends State<CodeEditor> {
       color: isDark ? Colors.white : Colors.black87,
     );
     return baseTheme;
+  }
+
+  /// حساب عرض منطقة الأرقام حسب عدد الأسطر
+  double _calculateGutterWidth(String text) {
+    final lineCount = text.split('\n').length;
+    if (lineCount < 10) return 50;        // 1-9: 50px
+    if (lineCount < 100) return 60;       // 10-99: 60px
+    if (lineCount < 1000) return 70;      // 100-999: 70px
+    return 80;                             // 1000+: 80px
   }
 }

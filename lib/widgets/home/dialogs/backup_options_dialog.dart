@@ -1,10 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import '../../../services/unified_notification_service.dart';
 import '../../../services/storage/isar_database_service.dart';
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../common/apex_snackbar.dart';
 import '../../common/custom_share_sheet.dart';
 
 class BackupOptionsDialog {
@@ -86,10 +86,10 @@ class BackupOptionsDialog {
                   CustomShareSheet.show(context, backup,
                       subject: 'Sinan Note Backup - ${allNotes.length} ملاحظة');
                 } catch (e) {
-                  ApexSnackBar.show(
-                    context,
-                    '${l10n.shareFailed}: $e',
-                    type: SnackBarType.error,
+                  UnifiedNotificationService().show(
+                    context: context,
+                    message: '${l10n.shareFailed}: $e',
+                    type: NotificationType.error,
                   );
                 }
               },

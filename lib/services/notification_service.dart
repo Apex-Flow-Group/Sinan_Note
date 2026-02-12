@@ -8,7 +8,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import '../core/utils/logger.dart';
 import 'storage/isar_database_service.dart';
-import '../screens/note_view_screen.dart';
+import '../screens/shared/note_view_screen.dart';
 import '../main.dart';
 
 class NotificationService {

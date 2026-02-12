@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 
@@ -31,6 +32,11 @@ class CodeEditorToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if we're on desktop
+    final isDesktop = Theme.of(context).platform == TargetPlatform.linux ||
+        Theme.of(context).platform == TargetPlatform.macOS ||
+        Theme.of(context).platform == TargetPlatform.windows;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
@@ -100,34 +106,103 @@ class CodeEditorToolbar extends StatelessWidget {
                 ],
               ),
             ),
-            // Symbol row 1
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildIconBtn(Icons.undo, onUndo, textColor),
-                  _buildIconBtn(Icons.redo, onRedo, textColor),
-                  const SizedBox(width: 8),
-                  _buildSymbolBtn('{ }', () => onInsertSymbol('{}')),
-                  _buildSymbolBtn('[ ]', () => onInsertSymbol('[]')),
-                  _buildSymbolBtn('( )', () => onInsertSymbol('()')),
-                  _buildSymbolBtn('< >', () => onInsertSymbol('<>')),
-                  _buildSymbolBtn('" "', () => onInsertSymbol('""')),
-                  _buildSymbolBtn("' '", () => onInsertSymbol("''")),
-                  _buildSymbolBtn(';', () => onInsertSymbol(';')),
-                  _buildSymbolBtn(':', () => onInsertSymbol(':')),
-                  _buildSymbolBtn('=', () => onInsertSymbol('=')),
-                  _buildSymbolBtn('->', () => onInsertSymbol('->')),
-                  _buildSymbolBtn('=>', () => onInsertSymbol('=>')),
-                  _buildSymbolBtn('//', () => onInsertSymbol('//')),
-                  _buildSymbolBtn('/*', () => onInsertSymbol('/**/')),
-                ],
-              ),
-            ),
+            // Symbol row with scroll support
+            isDesktop
+                ? _buildDesktopSymbolRow()
+                : _buildMobileSymbolRow(),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMobileSymbolRow() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _buildSymbolButtons(),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSymbolRow() {
+    final scrollController = ScrollController();
+    
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Row(
+          children: [
+            // Left scroll button
+            IconButton(
+              icon: Icon(Icons.chevron_left, color: textColor),
+              iconSize: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              onPressed: () {
+                scrollController.animateTo(
+                  scrollController.offset - 200,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
+            ),
+            // Scrollable content with mouse drag support
+            Expanded(
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                  },
+                ),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _buildSymbolButtons(),
+                  ),
+                ),
+              ),
+            ),
+            // Right scroll button
+            IconButton(
+              icon: Icon(Icons.chevron_right, color: textColor),
+              iconSize: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              onPressed: () {
+                scrollController.animateTo(
+                  scrollController.offset + 200,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildSymbolButtons() {
+    return [
+      _buildIconBtn(Icons.undo, onUndo, textColor),
+      _buildIconBtn(Icons.redo, onRedo, textColor),
+      const SizedBox(width: 8),
+      _buildSymbolBtn('{ }', () => onInsertSymbol('{}')),
+      _buildSymbolBtn('[ ]', () => onInsertSymbol('[]')),
+      _buildSymbolBtn('( )', () => onInsertSymbol('()')),
+      _buildSymbolBtn('< >', () => onInsertSymbol('<>')),
+      _buildSymbolBtn('" "', () => onInsertSymbol('""')),
+      _buildSymbolBtn("' '", () => onInsertSymbol("''")),
+      _buildSymbolBtn(';', () => onInsertSymbol(';')),
+      _buildSymbolBtn(':', () => onInsertSymbol(':')),
+      _buildSymbolBtn('=', () => onInsertSymbol('=')),
+      _buildSymbolBtn('->', () => onInsertSymbol('->')),
+      _buildSymbolBtn('=>', () => onInsertSymbol('=>')),
+      _buildSymbolBtn('//', () => onInsertSymbol('//')),
+      _buildSymbolBtn('/*', () => onInsertSymbol('/**/')),
+    ];
   }
 
   void _showLanguageSelector(BuildContext context) {

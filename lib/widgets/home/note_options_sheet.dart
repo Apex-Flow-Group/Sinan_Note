@@ -2,12 +2,12 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../services/unified_notification_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import '../../models/note.dart';
 import '../../services/storage/isar_database_service.dart';
-import '../../screens/note_editor.dart';
-import '../../services/toast_service.dart';
+import '../../screens/shared/note_editor.dart';
 import '../common/custom_share_sheet.dart';
 
 class NoteOptionsSheet {
@@ -59,11 +59,11 @@ class NoteOptionsSheet {
                 onNoteChanged();
                 
                 if (context.mounted) {
-                  ToastService().showUndoToast(
+                  UnifiedNotificationService().showWithUndo(
                     context: context,
                     message: l10n.copyCreated,
                     actionKey: 'copy_note_$newId',
-                    type: ToastType.success,
+                    type: NotificationType.success,
                     onExecute: () {},
                     onUndo: () async {
                       await dbService.deleteNote(newId);
@@ -95,19 +95,19 @@ class NoteOptionsSheet {
                     await file
                         .writeAsString('${note.title}\n\n${note.content}');
                     if (context.mounted) {
-                      ToastService().showToast(
+                      UnifiedNotificationService().show(
                         context: context,
                         message: l10n.savedSuccessfully,
-                        type: ToastType.success,
+                        type: NotificationType.success,
                       );
                     }
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ToastService().showToast(
+                    UnifiedNotificationService().show(
                       context: context,
                       message: l10n.saveFailed,
-                      type: ToastType.error,
+                      type: NotificationType.error,
                     );
                   }
                 }
@@ -124,11 +124,11 @@ class NoteOptionsSheet {
                 onNoteChanged();
                 
                 if (context.mounted) {
-                  ToastService().showUndoToast(
+                  UnifiedNotificationService().showWithUndo(
                     context: context,
                     message: l10n.movedToArchive,
                     actionKey: 'archive_note_${note.id}',
-                    type: ToastType.success,
+                    type: NotificationType.success,
                     onExecute: () {},
                     onUndo: () async {
                       await dbService.unarchiveNote(note.id!);
@@ -188,11 +188,11 @@ class NoteOptionsSheet {
                   onNoteChanged();
                   
                   if (context.mounted) {
-                    ToastService().showUndoToast(
+                    UnifiedNotificationService().showWithUndo(
                       context: context,
                       message: l10n.movedToTrash,
                       actionKey: 'delete_note_${note.id}',
-                      type: ToastType.info,
+                      type: NotificationType.info,
                       onExecute: () {},
                       onUndo: () async {
                         await dbService.restoreNote(note.id!);
@@ -203,10 +203,10 @@ class NoteOptionsSheet {
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ToastService().showToast(
+                    UnifiedNotificationService().show(
                       context: context,
                       message: l10n.deleteFailed,
-                      type: ToastType.error,
+                      type: NotificationType.error,
                     );
                   }
                 }
