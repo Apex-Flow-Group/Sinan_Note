@@ -94,9 +94,8 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <meta-data
-            android:name="io.flutter.embedding.android.EnableImpeller"
-            android:value="true" />
+        <!-- Impeller: Auto-detect (let Flutter decide based on device) -->
+        <!-- Set to false only if you face rendering issues on custom ROMs -->
 
         <!-- Reminders Widget -->
         <receiver
