@@ -200,7 +200,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
         elevation: 0,
         leading: const SizedBox.shrink(),
         actions: [
-          if (!note.isArchived && !note.isTrashed) ...[
+          if (!note.isTrashed) ...[
             IconButton(
               icon: const Icon(Icons.edit_rounded),
               tooltip: l10n.edit,
@@ -288,7 +288,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onDoubleTap: () {
-          if (!note.isArchived && !note.isTrashed) {
+          if (!note.isTrashed) {
             setState(() {
               _isEditMode = true;
             });
