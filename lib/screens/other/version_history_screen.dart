@@ -87,14 +87,22 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     final versionCount = await _versionService.getVersionCount(note.id!);
     if (!mounted) return;
 
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      constraints: isDesktop
+          ? BoxConstraints(
+              maxWidth: 600,
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            )
+          : null,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
+        initialChildSize: isDesktop ? 0.8 : 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,

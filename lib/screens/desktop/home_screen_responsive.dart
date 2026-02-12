@@ -223,13 +223,13 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     final l10n = AppLocalizations.of(context)!;
     
     return Shortcuts(
-      shortcuts: <ShortcutActivator, Intent>{
-        AppShortcuts.newNote: const NewNoteIntent(),
-        AppShortcuts.search: const SearchIntent(),
-        AppShortcuts.codeNote: const CodeNoteIntent(),
-        AppShortcuts.checklist: const ChecklistIntent(),
-        AppShortcuts.reminder: const ReminderIntent(),
-        AppShortcuts.refresh: const RefreshIntent(),
+      shortcuts: const <ShortcutActivator, Intent>{
+        AppShortcuts.newNote: NewNoteIntent(),
+        AppShortcuts.search: SearchIntent(),
+        AppShortcuts.codeNote: CodeNoteIntent(),
+        AppShortcuts.checklist: ChecklistIntent(),
+        AppShortcuts.reminder: ReminderIntent(),
+        AppShortcuts.refresh: RefreshIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
