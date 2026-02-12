@@ -9,8 +9,8 @@ import '../../controllers/notes/notes_provider.dart';
 import '../../services/security/security_gate.dart';
 import '../../services/cloud/google_drive_service.dart';
 import '../desktop/home_screen_responsive.dart';
-import 'tabs/reminder_dashboard.dart';
-import 'tabs/code_tab.dart';
+import '../desktop/reminder_dashboard_responsive.dart';
+import '../desktop/code_tab_responsive.dart';
 import '../onboarding/splash_screen.dart';
 import '../../widgets/home/add_menu_widget.dart' show isMenuOpenNotifier;
 import '../../widgets/navigation/bottom_nav_bar.dart';
@@ -62,8 +62,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           onDrawerChanged: _onDrawerChanged,
         ),
       ),
-      const ReminderDashboard(),
-      const CodeTab(),
+      const ReminderDashboardResponsive(),
+      const CodeTabResponsive(),
     ];
   }
 
