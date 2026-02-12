@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         applicationId = "com.apexflow.app.sinan"
-        minSdkVersion = flutter.minSdkVersion
+        minSdkVersion = 21
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
