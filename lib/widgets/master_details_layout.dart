@@ -27,12 +27,13 @@ class MasterDetailsLayout extends StatefulWidget {
 }
 
 class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
-  late double _masterWidthRatio;
+  double _masterWidthRatio = 0.35;
   bool _isDragging = false;
 
   @override
   void initState() {
     super.initState();
+    _masterWidthRatio = widget.initialMasterWidthRatio;
     _loadSavedRatio();
   }
 
