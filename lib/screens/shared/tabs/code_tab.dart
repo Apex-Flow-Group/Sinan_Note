@@ -13,6 +13,7 @@ import '../../../widgets/home/note_card_widget.dart';
 import '../../../widgets/home/add_menu_widget.dart';
 import '../../mobile/home_screen.dart' show ViewType;
 import '../note_editor.dart';
+import '../../../providers/selected_note_provider.dart';
 
 class CodeTab extends StatefulWidget {
   const CodeTab({super.key});
@@ -226,6 +227,7 @@ class _CodeTabState extends State<CodeTab> {
                                 childCount: professionalNotes.length,
                                 itemBuilder: (context, index) {
                                   final note = professionalNotes[index];
+                                  final isDesktop = MediaQuery.of(context).size.width >= 600;
                                   return NoteCardWidget(
                                     note: note,
                                     viewType: _viewType,
@@ -233,6 +235,10 @@ class _CodeTabState extends State<CodeTab> {
                                     onNoteChanged: () => setState(() {}),
                                     onLongPress: () {},
                                     source: 'professional',
+                                    onTap: isDesktop ? () {
+                                      final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
+                                      selectedNoteProvider.selectNote(note);
+                                    } : null,
                                   );
                                 },
                               ),
@@ -243,6 +249,7 @@ class _CodeTabState extends State<CodeTab> {
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                     final note = professionalNotes[index];
+                                    final isDesktop = MediaQuery.of(context).size.width >= 600;
                                     return NoteCardWidget(
                                       note: note,
                                       viewType: _viewType,
@@ -250,6 +257,10 @@ class _CodeTabState extends State<CodeTab> {
                                       onNoteChanged: () => setState(() {}),
                                       onLongPress: () {},
                                       source: 'professional',
+                                      onTap: isDesktop ? () {
+                                        final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
+                                        selectedNoteProvider.selectNote(note);
+                                      } : null,
                                     );
                                   },
                                   childCount: professionalNotes.length,
