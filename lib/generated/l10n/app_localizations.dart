@@ -440,6 +440,30 @@ abstract class AppLocalizations {
   /// **'Quick text without formatting'**
   String get simpleNoteDesc;
 
+  /// No description provided for @checklistNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get checklistNote;
+
+  /// No description provided for @checklistNoteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkable task list'**
+  String get checklistNoteDesc;
+
+  /// No description provided for @codeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Editor'**
+  String get codeNote;
+
+  /// No description provided for @codeNoteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Code with syntax highlighting'**
+  String get codeNoteDesc;
+
   /// No description provided for @reminder.
   ///
   /// In en, this message translates to:
@@ -3349,6 +3373,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note copied'**
   String get noteCopied;
+
+  /// No description provided for @searchInArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in Archive'**
+  String get searchInArchive;
+
+  /// No description provided for @searchInTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in Trash'**
+  String get searchInTrash;
+
+  /// No description provided for @searchInVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in Vault'**
+  String get searchInVault;
+
+  /// No description provided for @errorOpeningNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Error opening note'**
+  String get errorOpeningNote;
 }
 
 class _AppLocalizationsDelegate

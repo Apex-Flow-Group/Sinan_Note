@@ -15,7 +15,9 @@ import 'google_drive/google_drive_handlers.dart';
 import 'google_drive/google_drive_vault_warning_dialog.dart';
 
 class GoogleDriveScreen extends StatefulWidget {
-  const GoogleDriveScreen({super.key});
+  final bool isDesktopLayout;
+  
+  const GoogleDriveScreen({super.key, this.isDesktopLayout = false});
 
   @override
   State<GoogleDriveScreen> createState() => _GoogleDriveScreenState();
@@ -227,18 +229,59 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                 ],
               ),
             )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-              children: [
-                GoogleDriveWidgets.buildAccountSection(context, l10n, isDark, isSignedIn, userEmail, _handleSignOut, _handleSignIn),
-                const SizedBox(height: 24),
-                GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
-                const SizedBox(height: 24),
-                GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
-                const SizedBox(height: 24),
-                GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
-              ],
-            ),
+          : widget.isDesktopLayout
+              ? _buildDesktopLayout(context, l10n, isDark, isSignedIn, userEmail, lastSyncTimeStr)
+              : _buildMobileLayout(context, l10n, isDark, isSignedIn, userEmail, lastSyncTimeStr),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isDark,
+    bool isSignedIn,
+    String? userEmail,
+    String lastSyncTimeStr,
+  ) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+      children: [
+        GoogleDriveWidgets.buildAccountSection(context, l10n, isDark, isSignedIn, userEmail, _handleSignOut, _handleSignIn),
+        const SizedBox(height: 24),
+        GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
+        const SizedBox(height: 24),
+        GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
+        const SizedBox(height: 24),
+        GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isDark,
+    bool isSignedIn,
+    String? userEmail,
+    String lastSyncTimeStr,
+  ) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: GridView.count(
+          crossAxisCount: 2,
+          padding: const EdgeInsets.all(24),
+          mainAxisSpacing: 24,
+          crossAxisSpacing: 24,
+          childAspectRatio: 1.5,
+          children: [
+            GoogleDriveWidgets.buildAccountSection(context, l10n, isDark, isSignedIn, userEmail, _handleSignOut, _handleSignIn),
+            GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
+            GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
+            GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
+          ],
+        ),
       ),
     );
   }

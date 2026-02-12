@@ -180,6 +180,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get simpleNoteDesc => 'Quick text without formatting';
 
   @override
+  String get checklistNote => 'Checklist';
+
+  @override
+  String get checklistNoteDesc => 'Checkable task list';
+
+  @override
+  String get codeNote => 'Code Editor';
+
+  @override
+  String get codeNoteDesc => 'Code with syntax highlighting';
+
+  @override
   String get reminder => 'Reminder';
 
   @override
@@ -1689,4 +1701,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteCopied => 'Note copied';
+
+  @override
+  String get searchInArchive => 'Search in Archive';
+
+  @override
+  String get searchInTrash => 'Search in Trash';
+
+  @override
+  String get searchInVault => 'Search in Vault';
+
+  @override
+  String get errorOpeningNote => 'Error opening note';
 }

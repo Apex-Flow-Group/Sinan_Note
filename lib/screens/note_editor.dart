@@ -25,6 +25,7 @@ class NoteEditorImmersive extends StatefulWidget {
   final NoteMode mode;
   final bool skipAuthentication;
   final bool originallyLocked;
+  final VoidCallback? onClose;
 
   const NoteEditorImmersive({
     super.key,
@@ -32,6 +33,7 @@ class NoteEditorImmersive extends StatefulWidget {
     this.mode = NoteMode.simple,
     this.skipAuthentication = false,
     this.originallyLocked = false,
+    this.onClose,
   });
 
   @override
@@ -383,12 +385,16 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final sidePadding = screenWidth > 600 ? 16.0 : screenWidth * 0.05;
 
     return PopScope(
-      canPop: !_coordinator.stateManager.hasChanges(),
+      canPop: widget.onClose == null && !_coordinator.stateManager.hasChanges(),
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop && _coordinator.stateManager.hasChanges()) {
           await _saveNote();
           if (mounted) {
-            Navigator.of(context).pop(_coordinator.savedNoteId != null || widget.note != null);
+            if (widget.onClose != null) {
+              widget.onClose!();
+            } else {
+              Navigator.of(context).pop(_coordinator.savedNoteId != null || widget.note != null);
+            }
           }
         }
       },
@@ -436,6 +442,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               onReminderTap: _showReminderDialog,
               onHistoryTap: _showHistorySheet,
               onTitleTap: _showRenameTitleDialog,
+              onBackTap: widget.onClose,
               onSaveTap: () async {
                 if (widget.mode == NoteMode.code && _coordinator.detectedLanguage != null) {
                   final ext = _coordinator.smartController.getExtensionForLanguage(_coordinator.detectedLanguage!);
@@ -444,7 +451,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   await _saveNote();
                 }
                 if (mounted) {
-                  Navigator.pop(context, _coordinator.savedNoteId != null || widget.note != null);
+                  if (widget.onClose != null) {
+                    widget.onClose!();
+                  } else {
+                    Navigator.pop(context, _coordinator.savedNoteId != null || widget.note != null);
+                  }
                 }
               },
             ),

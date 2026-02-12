@@ -57,6 +57,10 @@
   "deleteNoteMessage": "هل تريد حذف",
   "simpleNote": "ملاحظة بسيطة",
   "simpleNoteDesc": "نص سريع بدون تنسيق",
+  "checklistNote": "قائمة مهام",
+  "checklistNoteDesc": "قائمة مهام قابلة للتحديد",
+  "codeNote": "محرر كود",
+  "codeNoteDesc": "كود برمجي مع تلوين",
   "reminder": "تذكير",
   "reminderDesc": "مهمة مع تنبيه",
   "proEditor": "محرر محترف",
@@ -566,5 +570,10 @@
   "dontShowAgain": "لا تذكرني مرة أخرى",
   "makeCopy": "عمل نسخة",
   "saveAs": "حفظ باسم",
-  "noteCopied": "تم نسخ الملاحظة"
+  "noteCopied": "تم نسخ الملاحظة",
+  "searchInArchive": "بحث في الأرشيف",
+  "searchInTrash": "بحث في سلة المحذوفات",
+  "searchInVault": "بحث في الملاحظات المقفلة",
+  "errorOpeningNote": "خطأ في فتح الملاحظة",
+  "noteType": "نوع الملاحظة"
 }

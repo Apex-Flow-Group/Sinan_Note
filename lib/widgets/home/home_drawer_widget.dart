@@ -8,8 +8,9 @@ import '../../controllers/settings/settings_provider.dart';
 import '../../screens/locked_notes_intro_screen.dart';
 import '../../screens/locked_notes_screen.dart';
 import '../../screens/vault_entry_screen.dart';
-import '../../screens/google_drive_screen.dart';
+import '../../screens/google_drive_screen_responsive.dart';
 import '../../screens/version_history_screen.dart';
+import '../../screens/settings_screen_responsive.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 
@@ -88,7 +89,7 @@ class HomeDrawerWidget extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const GoogleDriveScreen(),
+                        builder: (context) => const GoogleDriveScreenResponsive(),
                       ),
                     );
                   },
@@ -116,7 +117,10 @@ class HomeDrawerWidget extends StatelessWidget {
                   onTap: () async {
                     Navigator.pop(context);
                     Navigator.popUntil(context, (route) => route.isFirst);
-                    await Navigator.pushNamed(context, '/settings');
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreenResponsive()),
+                    );
                     onNotesChanged();
                   },
                 ),

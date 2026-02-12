@@ -11,16 +11,17 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'dart:async';
 import 'screens/cinematic_intro_screen.dart';
 import 'screens/splash_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/trash_screen.dart';
-import 'screens/archive_screen.dart';
-import 'screens/locked_notes_screen.dart';
+import 'screens/settings_screen_responsive.dart';
+import 'screens/trash_screen_responsive.dart';
+import 'screens/archive_screen_responsive.dart';
+import 'screens/locked_notes_screen_responsive.dart';
 import 'models/note.dart';
 import 'models/note_mode.dart';
 import 'screens/note_editor.dart';
 
 import 'controllers/settings/settings_provider.dart';
 import 'controllers/notes/notes_provider.dart';
+import 'providers/selected_note_provider.dart';
 import 'services/widget_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'services/storage/isar_database_service.dart';
@@ -47,6 +48,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => NotesProvider()),
+        ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
       ],
       child: const ApexNoteApp(),
     ),
@@ -324,34 +326,51 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                   },
                 ),
               ),
-              home: Consumer<SettingsProvider>(
-                builder: (context, settingsInner, child) {
-                  if (!settingsInner.isInitialized) {
-                    return const Scaffold(
-                      body: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-
-                  if (settingsInner.isFirstLaunch) {
-                    return CinematicIntroScreen();
-                  } else {
-                    return const SplashScreen();
-                  }
-                },
-              ),
+              home: const _AppHome(),
+              builder: (context, child) {
+                return child ?? const SizedBox.shrink();
+              },
               routes: {
-                '/settings': (context) => const SettingsScreen(),
-                '/trash': (context) => const TrashScreen(),
-                '/archive': (context) => const ArchiveScreen(),
-                '/locked': (context) => const LockedNotesScreen(),
+                '/settings': (context) => const SettingsScreenResponsive(),
+                '/trash': (context) => const TrashScreenResponsive(),
+                '/archive': (context) => const ArchiveScreenResponsive(),
+                '/locked': (context) => const LockedNotesScreenResponsive(),
                 '/widget_selection': (context) => const WidgetSelectionScreen(),
               },
               debugShowCheckedModeBanner: false,
             );
           },
         );
+      },
+    );
+  }
+}
+
+class _AppHome extends StatefulWidget {
+  const _AppHome();
+
+  @override
+  State<_AppHome> createState() => _AppHomeState();
+}
+
+class _AppHomeState extends State<_AppHome> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        if (!settings.isInitialized) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (settings.isFirstLaunch) {
+          return CinematicIntroScreen();
+        }
+        
+        return const SplashScreen();
       },
     );
   }

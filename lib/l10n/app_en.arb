@@ -57,6 +57,10 @@
   "deleteNoteMessage": "Do you want to delete",
   "simpleNote": "Simple Note",
   "simpleNoteDesc": "Quick text without formatting",
+  "checklistNote": "Checklist",
+  "checklistNoteDesc": "Checkable task list",
+  "codeNote": "Code Editor",
+  "codeNoteDesc": "Code with syntax highlighting",
   "reminder": "Reminder",
   "reminderDesc": "Task with notification",
   "proEditor": "Pro Editor",
@@ -566,5 +570,10 @@
   "dontShowAgain": "Don't show this again",
   "makeCopy": "Make a Copy",
   "saveAs": "Save As",
-  "noteCopied": "Note copied"
+  "noteCopied": "Note copied",
+  "searchInArchive": "Search in Archive",
+  "searchInTrash": "Search in Trash",
+  "searchInVault": "Search in Vault",
+  "errorOpeningNote": "Error opening note",
+  "noteType": "Note Type"
 }

@@ -8,7 +8,7 @@ import '../controllers/settings/settings_provider.dart';
 import '../controllers/notes/notes_provider.dart';
 import '../services/security/security_gate.dart';
 import '../services/cloud/google_drive_service.dart';
-import 'home_screen.dart';
+import 'home_screen_responsive.dart';
 import 'tabs/reminder_dashboard.dart';
 import 'tabs/code_tab.dart';
 import 'splash_screen.dart';
@@ -57,7 +57,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           }
           return false;
         },
-        child: HomeScreen(
+        child: HomeScreenResponsive(
           sharedText: widget.sharedText,
           onDrawerChanged: _onDrawerChanged,
         ),

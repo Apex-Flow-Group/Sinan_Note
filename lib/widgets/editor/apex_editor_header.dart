@@ -10,6 +10,7 @@ class ApexEditorHeader extends StatelessWidget {
   final bool hasHistory;
   final VoidCallback onHistoryTap;
   final VoidCallback onSaveTap;
+  final VoidCallback? onBackTap;
   final bool hasReminder;
   final VoidCallback? onReminderTap;
   final VoidCallback? onTitleTap;
@@ -26,6 +27,7 @@ class ApexEditorHeader extends StatelessWidget {
     this.hasReminder = false,
     this.onReminderTap,
     this.onTitleTap,
+    this.onBackTap,
   });
 
   @override
@@ -43,7 +45,7 @@ class ApexEditorHeader extends StatelessWidget {
           children: [
             IconButton(
               icon: Icon(Icons.arrow_back_rounded, color: textColor, size: 24),
-              onPressed: () => Navigator.pop(context),
+              onPressed: onBackTap ?? () => Navigator.pop(context),
               splashRadius: 24,
             ),
             Expanded(

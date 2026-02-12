@@ -180,6 +180,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get simpleNoteDesc => 'نص سريع بدون تنسيق';
 
   @override
+  String get checklistNote => 'قائمة مهام';
+
+  @override
+  String get checklistNoteDesc => 'قائمة مهام قابلة للتحديد';
+
+  @override
+  String get codeNote => 'محرر كود';
+
+  @override
+  String get codeNoteDesc => 'كود برمجي مع تلوين';
+
+  @override
   String get reminder => 'تذكير';
 
   @override
@@ -1685,4 +1697,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noteCopied => 'تم نسخ الملاحظة';
+
+  @override
+  String get searchInArchive => 'بحث في الأرشيف';
+
+  @override
+  String get searchInTrash => 'بحث في سلة المحذوفات';
+
+  @override
+  String get searchInVault => 'بحث في الملاحظات المقفلة';
+
+  @override
+  String get errorOpeningNote => 'خطأ في فتح الملاحظة';
 }

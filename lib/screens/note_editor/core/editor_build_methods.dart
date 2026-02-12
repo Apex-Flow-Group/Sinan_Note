@@ -119,6 +119,7 @@ class EditorBuildMethods {
     required VoidCallback onHistoryTap,
     required VoidCallback onTitleTap,
     required VoidCallback onSaveTap,
+    VoidCallback? onBackTap,
   }) {
     return Positioned(
       top: 0,
@@ -159,6 +160,7 @@ class EditorBuildMethods {
                   HapticFeedback.mediumImpact();
                   onSaveTap();
                 },
+                onBackTap: onBackTap,
               ),
             ),
           ),
