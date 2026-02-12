@@ -294,8 +294,9 @@ class _DetailsPanelState extends State<DetailsPanel> {
             });
           }
         },
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
             constraints: BoxConstraints(
               minHeight: MediaQuery.of(context).size.height - 
                          MediaQuery.of(context).padding.top - 
@@ -330,6 +331,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
                           ),
                         ),
                 ],
+              ),
               ),
             ),
           ),
