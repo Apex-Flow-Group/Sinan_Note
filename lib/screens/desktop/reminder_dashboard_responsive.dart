@@ -30,9 +30,9 @@ class _ReminderDashboardResponsiveState extends State<ReminderDashboardResponsiv
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveLayoutWrapper(
-      mobileLayout: const ReminderDashboard(),
-      masterDetailsLayout: const MasterDetailsLayout(
+    return const ResponsiveLayoutWrapper(
+      mobileLayout: ReminderDashboard(),
+      masterDetailsLayout: MasterDetailsLayout(
         masterPanel: ReminderDashboard(),
         detailsPanel: DetailsPanel(),
       ),

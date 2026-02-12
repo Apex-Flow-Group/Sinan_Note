@@ -30,9 +30,9 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveLayoutWrapper(
-      mobileLayout: const CodeTab(),
-      masterDetailsLayout: const MasterDetailsLayout(
+    return const ResponsiveLayoutWrapper(
+      mobileLayout: CodeTab(),
+      masterDetailsLayout: MasterDetailsLayout(
         masterPanel: CodeTab(),
         detailsPanel: DetailsPanel(),
       ),

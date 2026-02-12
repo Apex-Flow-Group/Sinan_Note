@@ -200,6 +200,17 @@ class _DetailsPanelState extends State<DetailsPanel> {
         elevation: 0,
         leading: const SizedBox.shrink(),
         actions: [
+          if (!note.isArchived && !note.isTrashed) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_rounded),
+              tooltip: l10n.edit,
+              onPressed: () {
+                setState(() {
+                  _isEditMode = true;
+                });
+              },
+            ),
+          ],
           if (note.isArchived) ...[
             IconButton(
               icon: const Icon(Icons.unarchive_rounded),
@@ -274,55 +285,74 @@ class _DetailsPanelState extends State<DetailsPanel> {
           ],
         ],
       ),
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onDoubleTap: () {
-          if (!note.isArchived && !note.isTrashed) {
-            setState(() {
-              _isEditMode = true;
-            });
-          }
-        },
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - 
-                         MediaQuery.of(context).padding.top - 
-                         kToolbarHeight,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (note.title.isNotEmpty) ...[
-                    Text(
-                      note.title,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Divider(color: textColor.withValues(alpha: 0.3)),
-                    const SizedBox(height: 16),
-                  ],
-                  note.isChecklist
-                      ? _buildChecklistView(note.content, textColor)
-                      : SelectableText(
-                          note.content.isEmpty ? l10n.noNotes : note.content,
+      body: Stack(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onDoubleTap: () {
+              if (!note.isArchived && !note.isTrashed) {
+                setState(() {
+                  _isEditMode = true;
+                });
+              }
+            },
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 
+                             MediaQuery.of(context).padding.top - 
+                             kToolbarHeight,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (note.title.isNotEmpty) ...[
+                        Text(
+                          note.title,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                             color: textColor,
-                            height: 1.5,
                           ),
                         ),
-                ],
+                        const SizedBox(height: 16),
+                        Divider(color: textColor.withValues(alpha: 0.3)),
+                        const SizedBox(height: 16),
+                      ],
+                      note.isChecklist
+                          ? _buildChecklistView(note.content, textColor)
+                          : SelectableText(
+                              note.content.isEmpty ? l10n.noNotes : note.content,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: textColor,
+                                height: 1.5,
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          if (!note.isTrashed)
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: FloatingActionButton(
+                onPressed: () {
+                  setState(() {
+                    _isEditMode = true;
+                  });
+                },
+                backgroundColor: textColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white,
+                foregroundColor: textColor.computeLuminance() > 0.5 ? Colors.white : Colors.black87,
+                child: const Icon(Icons.edit_rounded),
+              ),
+            ),
+        ],
       ),
     );
   }
