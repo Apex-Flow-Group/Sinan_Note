@@ -1,7 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
 import 'dart:math';
+
+import 'package:flutter/material.dart';
 
 class BreathingSearchField extends StatefulWidget {
   final TextEditingController controller;

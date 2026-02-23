@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/utils/logger.dart';
-import '../../../../models/note.dart';
-import '../../../../models/note_mode.dart';
-import '../../../../services/security/vault_service.dart';
-import '../../../../services/security/biometric_service.dart';
-import '../../../../controllers/notes/notes_provider.dart';
 
 /// Handles all storage operations (save, load, encryption)
 class EditorStorageController {

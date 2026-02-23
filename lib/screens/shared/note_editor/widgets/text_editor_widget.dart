@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
+import 'package:apex_note/controllers/editor/editor_state_manager.dart';
+import 'package:apex_note/controllers/editor/text_direction_controller.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../../controllers/editor/text_direction_controller.dart';
-import '../../../../controllers/editor/editor_state_manager.dart';
+import 'package:flutter/material.dart';
 
 /// Simple text editor widget with bidirectional text support
 class TextEditorWidget extends StatelessWidget {

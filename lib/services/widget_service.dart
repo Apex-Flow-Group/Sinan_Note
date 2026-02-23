@@ -2,12 +2,13 @@
 
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/utils/logger.dart';
-import 'storage/isar_database_service.dart';
-import '../../models/note.dart';
-import '../../controllers/settings/settings_provider.dart';
 
 class WidgetService {
   static final WidgetService _instance = WidgetService._internal();

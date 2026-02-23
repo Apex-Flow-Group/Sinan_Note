@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/controllers/editor/text_direction_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('TextDirectionController', () {
@@ -56,9 +56,9 @@ void main() {
 
       test('detects LTR for mixed text with English majority', () {
         final mixedTexts = [
-          'Hello World مرحبا',  // Starts with English
-          'English text with some عربي',  // Starts with English
-          'The quick brown fox مرحبا',  // Starts with English
+          'Hello World مرحبا', // Starts with English
+          'English text with some عربي', // Starts with English
+          'The quick brown fox مرحبا', // Starts with English
         ];
 
         for (final text in mixedTexts) {
@@ -74,15 +74,21 @@ void main() {
       });
 
       test('handles numbers and special characters', () {
-        expect(controller.detectParagraphDirection('123456'), TextDirection.ltr);
-        expect(controller.detectParagraphDirection('!@#\$%^&*()'), TextDirection.ltr);
-        expect(controller.detectParagraphDirection('123 مرحبا'), TextDirection.rtl);
+        expect(
+            controller.detectParagraphDirection('123456'), TextDirection.ltr);
+        expect(controller.detectParagraphDirection('!@#\$%^&*()'),
+            TextDirection.ltr);
+        expect(controller.detectParagraphDirection('123 مرحبا'),
+            TextDirection.rtl);
       });
 
       test('handles emojis', () {
-        expect(controller.detectParagraphDirection('😀😁😂'), TextDirection.ltr);
-        expect(controller.detectParagraphDirection('مرحبا 😀'), TextDirection.rtl);
-        expect(controller.detectParagraphDirection('Hello 😀'), TextDirection.ltr);
+        expect(
+            controller.detectParagraphDirection('😀😁😂'), TextDirection.ltr);
+        expect(
+            controller.detectParagraphDirection('مرحبا 😀'), TextDirection.rtl);
+        expect(
+            controller.detectParagraphDirection('Hello 😀'), TextDirection.ltr);
       });
     });
 
@@ -228,7 +234,8 @@ This is English
 
       test('handles text with only whitespace', () {
         expect(controller.detectParagraphDirection('     '), TextDirection.ltr);
-        expect(controller.detectParagraphDirection('\t\t\t'), TextDirection.ltr);
+        expect(
+            controller.detectParagraphDirection('\t\t\t'), TextDirection.ltr);
       });
 
       test('handles text with only newlines', () {
@@ -248,14 +255,17 @@ This is English
 
       test('handles Unicode characters', () {
         expect(controller.detectParagraphDirection('你好'), TextDirection.ltr);
-        expect(controller.detectParagraphDirection('مرحبا 你好'), TextDirection.rtl);
+        expect(
+            controller.detectParagraphDirection('مرحبا 你好'), TextDirection.rtl);
       });
 
       test('handles RTL marks and LTR marks', () {
         // Right-to-Left Mark (U+200F)
-        expect(controller.detectParagraphDirection('\u200Fمرحبا'), TextDirection.rtl);
+        expect(controller.detectParagraphDirection('\u200Fمرحبا'),
+            TextDirection.rtl);
         // Left-to-Right Mark (U+200E)
-        expect(controller.detectParagraphDirection('\u200EHello'), TextDirection.ltr);
+        expect(controller.detectParagraphDirection('\u200EHello'),
+            TextDirection.ltr);
       });
     });
 

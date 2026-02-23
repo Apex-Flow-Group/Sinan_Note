@@ -2,10 +2,11 @@
 
 import 'dart:convert';
 import 'dart:math';
+
+import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../diagnostics/apex_error_manager.dart';
 
 class VaultService {
   static const _storage = FlutterSecureStorage(

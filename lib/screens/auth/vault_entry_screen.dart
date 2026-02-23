@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../services/security/vault_service.dart';
-import '../../services/security/biometric_service.dart';
-import '../../services/storage/isar_database_service.dart';
-import 'locked_notes_intro_screen.dart';
-import 'vault_unlock_screen.dart';
-import '../mobile/locked_notes_screen.dart';
+import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
+import 'package:apex_note/screens/auth/vault_unlock_screen.dart';
+import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:flutter/material.dart';
 
 /// نقطة الدخول الرئيسية للخزنة
 /// تتحقق من الحالة وتوجه للشاشة المناسبة
@@ -19,7 +19,6 @@ class VaultEntryScreen extends StatefulWidget {
 }
 
 class _VaultEntryScreenState extends State<VaultEntryScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -30,10 +29,10 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     // التحقق من وجود ملاحظات مقفلة
     final dbService = IsarDatabaseService();
     final lockedNotes = await dbService.getLockedNotes();
-    
+
     // التحقق من وجود خزنة جديدة
     final hasNewVault = await VaultService.isVaultSetup();
-    
+
     // إذا كانت هناك ملاحظات مقفلة ولا توجد خزنة → إنشاء خزنة جديدة
     if (lockedNotes.isNotEmpty && !hasNewVault) {
       if (mounted) {
@@ -46,7 +45,7 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
       }
       return;
     }
-    
+
     if (!hasNewVault) {
       // الحالة 1: لا توجد خزنة → Wizard إنشاء جديدة
       if (mounted) {

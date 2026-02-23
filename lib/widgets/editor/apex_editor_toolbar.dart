@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/models/note_mode.dart';
 import 'package:flutter/material.dart';
-import '../../models/note_mode.dart';
 
 class ApexEditorToolbar extends StatelessWidget {
   final Color backgroundColor;

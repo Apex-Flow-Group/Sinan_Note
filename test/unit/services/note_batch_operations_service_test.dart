@@ -1,10 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_batch_operations_service.dart';
-import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
+import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+
 import '../../test_setup.dart';
 
 // Mock Database Service for testing
@@ -73,7 +74,7 @@ void main() {
   setUpAll(() {
     initializeTestEnvironment();
   });
-  
+
   group('NoteBatchOperationsService', () {
     late NoteBatchOperationsService service;
     late MockDatabaseService dbService;

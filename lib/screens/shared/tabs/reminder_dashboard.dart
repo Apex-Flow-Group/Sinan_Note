@@ -1,21 +1,21 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:permission_handler/permission_handler.dart';
-import '../../../models/note.dart';
-import '../../../models/note_mode.dart';
-import '../../../controllers/notes/notes_provider.dart';
-import '../../../controllers/settings/settings_provider.dart';
-import '../../../services/notification_service.dart';
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../widgets/home/note_card_widget.dart';
-import '../../../widgets/home/add_menu_widget.dart';
-import '../../mobile/home_screen.dart' show ViewType;
-import '../../../providers/selected_note_provider.dart';
-import '../note_editor.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/widgets/home/add_menu_widget.dart';
+import 'package:apex_note/widgets/home/note_card_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReminderDashboard extends StatefulWidget {
   const ReminderDashboard({super.key});

@@ -1,28 +1,29 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui';
+
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
+import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:apex_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
+import 'package:apex_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
+import 'package:apex_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
+import 'package:apex_note/screens/shared/note_editor/widgets/text_editor_widget.dart';
+import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/editor/apex_editor_header.dart';
+import 'package:apex_note/widgets/editor/checklist_editor.dart';
+import 'package:apex_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../../models/note.dart';
-import '../../../../models/note_mode.dart';
-import '../../../../controllers/notes/notes_provider.dart';
-import '../../../../services/notification_service.dart';
-import '../../../../services/unified_notification_service.dart';
-import '../../../../core/utils/checklist_formatter.dart';
-import '../../../../widgets/common/custom_share_sheet.dart';
-import '../../../../widgets/editor/apex_editor_header.dart';
-import '../../../../widgets/editor/toolbars/editor_toolbar_factory.dart';
-import '../../../../widgets/editor/checklist_editor.dart';
-import '../controllers/editor_smart_controller.dart';
-import '../controllers/editor_formatting_controller.dart';
-import '../dialogs/editor_dialogs.dart';
-import '../widgets/text_editor_widget.dart';
-import '../widgets/code_editor_widget.dart';
-import '../widgets/checklist_editor_widget.dart';
-import './editor_coordinator.dart';
+import 'package:provider/provider.dart';
 
 /// All build methods extracted from main editor
 class EditorBuildMethods {
@@ -50,8 +51,8 @@ class EditorBuildMethods {
     if (mode == NoteMode.code) {
       // Ensure codeController is initialized
       coordinator.codeController ??= CodeController(
-          text: coordinator.contentController.text,
-        );
+        text: coordinator.contentController.text,
+      );
       return CodeEditorWidget(
         codeController: coordinator.codeController!,
         undoController: coordinator.codeUndoController,
@@ -92,9 +93,10 @@ class EditorBuildMethods {
           coordinator.stateManager.reminderDateTime = null;
           coordinator.stateManager.recurrenceRule = null;
           coordinator.stateManager.markDirty();
-          
+
           if (savedNoteId != null || note?.id != null) {
-            await NotificationService().cancelNotification(savedNoteId ?? note!.id!);
+            await NotificationService()
+                .cancelNotification(savedNoteId ?? note!.id!);
           }
           await saveCallback(isManualSave: true);
           if (context.mounted) {
@@ -145,7 +147,9 @@ class EditorBuildMethods {
                 ],
               ),
               child: ApexEditorHeader(
-                backgroundColor: coordinator.getBackgroundColor(context).withValues(alpha: 0.7),
+                backgroundColor: coordinator
+                    .getBackgroundColor(context)
+                    .withValues(alpha: 0.7),
                 textColor: finalTextColor,
                 title: currentTitle,
                 isLocked: note?.isLocked == true || notePassword != null,
@@ -189,7 +193,7 @@ class EditorBuildMethods {
     required Future<void> Function() saveNote,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 100),
       curve: Curves.easeOut,
@@ -267,26 +271,28 @@ class EditorBuildMethods {
                   text = coordinator.codeController!.text;
                 } else if (mode == NoteMode.checklist) {
                   text = ChecklistFormatter.formatForSharing(
-                      coordinator.getCurrentTitle(l10n.newNoteTitle), 
+                      coordinator.getCurrentTitle(l10n.newNoteTitle),
                       coordinator.contentController.text);
                 } else {
-                  text = '${coordinator.getCurrentTitle(l10n.newNoteTitle)}\n\n${coordinator.contentController.text}';
+                  text =
+                      '${coordinator.getCurrentTitle(l10n.newNoteTitle)}\n\n${coordinator.contentController.text}';
                 }
-                CustomShareSheet.show(context, text, subject: coordinator.getCurrentTitle(l10n.newNoteTitle));
+                CustomShareSheet.show(context, text,
+                    subject: coordinator.getCurrentTitle(l10n.newNoteTitle));
               },
               onArchiveTap: () async {
                 HapticFeedback.mediumImpact();
                 if (note?.id != null) {
-                  final provider = Provider.of<NotesProvider>(context, listen: false);
+                  final provider =
+                      Provider.of<NotesProvider>(context, listen: false);
                   await provider.archiveNote(note!.id!);
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    UnifiedNotificationService().show(
-                      context: context,
-                      message: l10n.movedToArchive,
-                      type: NotificationType.success,
-                    );
-                  }
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                  UnifiedNotificationService().show(
+                    context: context,
+                    message: l10n.movedToArchive,
+                    type: NotificationType.success,
+                  );
                 } else {
                   UnifiedNotificationService().show(
                     context: context,
@@ -307,28 +313,34 @@ class EditorBuildMethods {
                   context,
                   coordinator.getBackgroundColor(context),
                   coordinator.textColor,
-                  () => formattingController.wrapText(coordinator.contentController, '**'),
+                  () => formattingController.wrapText(
+                      coordinator.contentController, '**'),
                 );
               },
               onItalic: () {
                 HapticFeedback.lightImpact();
-                formattingController.wrapText(coordinator.contentController, '*');
+                formattingController.wrapText(
+                    coordinator.contentController, '*');
               },
               onH1: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(coordinator.contentController, '# ');
+                formattingController.insertText(
+                    coordinator.contentController, '# ');
               },
               onH2: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(coordinator.contentController, '## ');
+                formattingController.insertText(
+                    coordinator.contentController, '## ');
               },
               onList: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(coordinator.contentController, '• ');
+                formattingController.insertText(
+                    coordinator.contentController, '• ');
               },
               onChecklist: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(coordinator.contentController, '☐ ');
+                formattingController.insertText(
+                    coordinator.contentController, '☐ ');
               },
               onColorTap: () {
                 HapticFeedback.mediumImpact();

@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/widgets/editor/code_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import '../../../../widgets/editor/code_editor.dart';
 
 /// Professional code editor widget with syntax highlighting
 class CodeEditorWidget extends StatelessWidget {

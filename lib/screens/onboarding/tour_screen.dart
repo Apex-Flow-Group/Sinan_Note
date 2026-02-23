@@ -1,13 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/screens/onboarding/terms_screen.dart';
+import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../shared/main_layout_screen.dart';
-
-import 'terms_screen.dart';
-
 
 class TourScreen extends StatefulWidget {
   const TourScreen({super.key});
@@ -37,8 +35,11 @@ class _TourScreenState extends State<TourScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final systemLocale = View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system' ? systemLocale : settings.languageCode;
+    final systemLocale =
+        View.of(context).platformDispatcher.locale.languageCode;
+    final currentLang = settings.languageCode == 'system'
+        ? systemLocale
+        : settings.languageCode;
     final isArabic = currentLang == 'ar';
 
     return Directionality(
@@ -51,7 +52,8 @@ class _TourScreenState extends State<TourScreen> {
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  onPageChanged: (index) => setState(() => _currentPage = index),
+                  onPageChanged: (index) =>
+                      setState(() => _currentPage = index),
                   children: [
                     _buildPage1(context),
                     _buildPage2(context),
@@ -78,9 +80,13 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage1Title,
       description: l10n.tourPage1Desc,
       features: [
-        _FeatureItem(icon: Icons.note_outlined, text: '${l10n.simpleNote}: ${l10n.simpleNoteDesc}'),
-        _FeatureItem(icon: Icons.code, text: '${l10n.proEditor}: ${l10n.proEditorDesc}'),
-        _FeatureItem(icon: Icons.alarm, text: '${l10n.reminder}: ${l10n.reminderDesc}'),
+        _FeatureItem(
+            icon: Icons.note_outlined,
+            text: '${l10n.simpleNote}: ${l10n.simpleNoteDesc}'),
+        _FeatureItem(
+            icon: Icons.code, text: '${l10n.proEditor}: ${l10n.proEditorDesc}'),
+        _FeatureItem(
+            icon: Icons.alarm, text: '${l10n.reminder}: ${l10n.reminderDesc}'),
         _FeatureItem(icon: Icons.check_box, text: l10n.checklists),
       ],
     );
@@ -123,8 +129,10 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage4Title,
       description: l10n.tourPage4Desc,
       features: [
-        _FeatureItem(icon: Icons.enhanced_encryption, text: l10n.encryptionUsed),
-        _FeatureItem(icon: Icons.fingerprint, text: l10n.authenticateWithBiometric),
+        _FeatureItem(
+            icon: Icons.enhanced_encryption, text: l10n.encryptionUsed),
+        _FeatureItem(
+            icon: Icons.fingerprint, text: l10n.authenticateWithBiometric),
         _FeatureItem(icon: Icons.lock_clock, text: l10n.sessionProtection),
         _FeatureItem(icon: Icons.security, text: l10n.dataEncryptedOnExit),
       ],
@@ -198,7 +206,8 @@ class _TourScreenState extends State<TourScreen> {
               ),
               child: Text(
                 l10n.next,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           if (_currentPage < 6)
@@ -216,13 +225,14 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
-void _navigateToHome() async {
+  void _navigateToHome() async {
     if (!_isAgreed) return;
     await Provider.of<SettingsProvider>(context, listen: false).completeSetup();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const MainLayoutScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainLayoutScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -245,8 +255,11 @@ void _navigateToHome() async {
   Widget _buildPage7(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final systemLocale = View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system' ? systemLocale : settings.languageCode;
+    final systemLocale =
+        View.of(context).platformDispatcher.locale.languageCode;
+    final currentLang = settings.languageCode == 'system'
+        ? systemLocale
+        : settings.languageCode;
     final isArabic = currentLang == 'ar';
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -314,7 +327,8 @@ void _navigateToHome() async {
               foregroundColor: Colors.white,
               side: const BorderSide(color: Colors.white30),
               minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28)),
             ),
             child: Text(
               l10n.noStartFresh,
@@ -393,14 +407,16 @@ class _TourPage extends StatelessWidget {
                 children: [
                   Text(
                     description,
-                    style: const TextStyle(fontSize: 16, color: Colors.white70, height: 1.5),
+                    style: const TextStyle(
+                        fontSize: 16, color: Colors.white70, height: 1.5),
                   ),
                   const SizedBox(height: 24),
                   ...features.map((feature) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Row(
                           children: [
-                            Icon(feature.icon, size: 20, color: const Color(0xFFFFD700)),
+                            Icon(feature.icon,
+                                size: 20, color: const Color(0xFFFFD700)),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -424,8 +440,6 @@ class _TourPage extends StatelessWidget {
     );
   }
 }
-
-
 
 class _FeatureItem {
   final IconData icon;

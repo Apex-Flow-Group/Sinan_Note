@@ -1,19 +1,18 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/editor/editor_state_manager.dart';
+import 'package:apex_note/controllers/editor/text_direction_controller.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
+import 'package:apex_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
+import 'package:apex_note/screens/shared/note_editor/widgets/text_editor_widget.dart';
+import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/editor/checklist_editor.dart';
 import 'package:flutter/material.dart';
-import '../../../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-
-import '../../../../models/note_mode.dart';
-import '../../../../services/notification_service.dart';
-import '../../../../controllers/editor/text_direction_controller.dart';
-import '../../../../controllers/editor/editor_state_manager.dart';
-import './text_editor_widget.dart';
-import './code_editor_widget.dart';
-import './checklist_editor_widget.dart';
-import '../../../../widgets/editor/checklist_editor.dart';
 
 /// Extracted content area widget for note editor
 class EditorContentAreaWidget extends StatelessWidget {
@@ -116,18 +115,18 @@ class EditorContentAreaWidget extends StatelessWidget {
           stateManager.reminderDateTime = null;
           stateManager.recurrenceRule = null;
           stateManager.markDirty();
-          
+
           if (savedNoteId != null || noteId != null) {
-            await NotificationService().cancelNotification(savedNoteId ?? noteId!);
+            await NotificationService()
+                .cancelNotification(savedNoteId ?? noteId!);
           }
           await saveCallback(isManualSave: true);
-          if (context.mounted) {
-            UnifiedNotificationService().show(
-              context: context,
-              message: l10n.reminderRemoved,
-              type: NotificationType.info,
-            );
-          }
+          if (!context.mounted) return;
+          UnifiedNotificationService().show(
+            context: context,
+            message: l10n.reminderRemoved,
+            type: NotificationType.info,
+          );
         },
         onReminderEdit: () {
           onReminderTap();

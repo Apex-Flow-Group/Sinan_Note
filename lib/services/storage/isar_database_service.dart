@@ -1,12 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
+
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_version.dart';
+import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:async';
-import '../../core/utils/logger.dart';
-import '../../models/note.dart';
-import '../../models/note_version.dart';
-import '../diagnostics/apex_error_manager.dart';
 
 class IsarDatabaseService {
   static Isar? _isar;

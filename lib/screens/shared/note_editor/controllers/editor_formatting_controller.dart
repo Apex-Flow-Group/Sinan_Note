@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 /// Handles text formatting operations
 class EditorFormattingController {
@@ -107,6 +107,8 @@ class EditorFormattingController {
     }
 
     bool dontShowAgain = false;
+    if (!context.mounted) return false;
+    
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(

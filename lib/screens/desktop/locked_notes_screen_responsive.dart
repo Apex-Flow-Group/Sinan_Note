@@ -1,26 +1,28 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/widgets/details_panel.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/master_details_layout.dart';
+import 'package:apex_note/widgets/master_panel.dart';
+import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../providers/selected_note_provider.dart';
-import '../../widgets/responsive_layout_wrapper.dart';
-import '../../widgets/master_details_layout.dart';
-import '../../widgets/master_panel.dart';
-import '../../widgets/details_panel.dart';
-import '../../widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../mobile/locked_notes_screen.dart';
 
 /// نسخة Responsive من LockedNotesScreen تدعم نمط Master-Details
 class LockedNotesScreenResponsive extends StatefulWidget {
   const LockedNotesScreenResponsive({super.key});
 
   @override
-  State<LockedNotesScreenResponsive> createState() => _LockedNotesScreenResponsiveState();
+  State<LockedNotesScreenResponsive> createState() =>
+      _LockedNotesScreenResponsiveState();
 }
 
-class _LockedNotesScreenResponsiveState extends State<LockedNotesScreenResponsive> {
+class _LockedNotesScreenResponsiveState
+    extends State<LockedNotesScreenResponsive> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -47,7 +49,7 @@ class _LockedNotesScreenResponsiveState extends State<LockedNotesScreenResponsiv
     return ResponsiveLayoutWrapper(
       // Mobile Layout - الشاشة التقليدية
       mobileLayout: const LockedNotesScreen(),
-      
+
       // Master-Details Layout - للشاشات الكبيرة
       masterDetailsLayout: _buildMasterDetailsLayout(context),
     );
@@ -55,7 +57,7 @@ class _LockedNotesScreenResponsiveState extends State<LockedNotesScreenResponsiv
 
   Widget _buildMasterDetailsLayout(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       drawer: HomeDrawerWidget(
         onBackupTap: () {},
@@ -89,7 +91,8 @@ class _LockedNotesScreenResponsiveState extends State<LockedNotesScreenResponsiv
         ),
         actions: [
           IconButton(
-            icon: Icon(_searchController.text.isEmpty ? Icons.search : Icons.close),
+            icon: Icon(
+                _searchController.text.isEmpty ? Icons.search : Icons.close),
             onPressed: () {
               setState(() {
                 if (_searchController.text.isEmpty) {
@@ -136,7 +139,7 @@ class _LockedNotesScreenResponsiveState extends State<LockedNotesScreenResponsiv
             );
           },
         ),
-        
+
         // Details Panel - محتوى الملاحظة المختارة
         detailsPanel: const DetailsPanel(),
       ),

@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/widgets.dart';
+
 import 'package:intl/intl.dart' show Bidi;
 
 /// Model class representing text direction information for a paragraph

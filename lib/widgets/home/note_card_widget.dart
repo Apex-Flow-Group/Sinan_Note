@@ -1,26 +1,26 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/adaptive_color.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/screens/shared/note_view_screen.dart';
+import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/desktop/note_context_menu.dart';
+import 'package:apex_note/widgets/effects/premium_card_effect.dart';
+import 'package:apex_note/widgets/home/note_card_actions.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
-import '../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../models/note.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../providers/selected_note_provider.dart';
-import '../../services/notification_service.dart';
-import '../../core/utils/adaptive_color.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../screens/shared/note_view_screen.dart';
-import '../../screens/shared/note_editor.dart';
-import '../../screens/mobile/home_screen.dart' show ViewType;
-import '../../core/utils/checklist_formatter.dart';
-import '../effects/premium_card_effect.dart';
-import '../desktop/note_context_menu.dart';
-import 'note_card_utils.dart';
-import 'note_card_actions.dart';
+import 'package:provider/provider.dart';
 
 class NoteCardWidget extends StatefulWidget {
   final Note note;
@@ -178,7 +178,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           ),
                         ),
                       );
-                      if (result == true || result == null) {
+                      if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
                       }
                     } else if (widget.source == 'archive') {
@@ -192,7 +192,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           ),
                         ),
                       );
-                      if (result == true || result == null) {
+                      if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
                       }
                     } else {
@@ -202,7 +202,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           builder: (context) => NoteViewScreen(note: widget.note, showRestore: false),
                         ),
                       );
-                      if (result == true || result == null) {
+                      if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
                       }
                     }

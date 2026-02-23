@@ -278,7 +278,7 @@ class NoteListTile extends StatelessWidget {
       subtitle: Text(note.formattedDate),
       leading: Icon(_getNoteIcon(note.type)),
       selected: isSelected,
-      selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
       onTap: onTap,
     );
   }

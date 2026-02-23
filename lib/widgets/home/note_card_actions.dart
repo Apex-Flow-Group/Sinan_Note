@@ -1,17 +1,18 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:flutter/material.dart';
-import '../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../models/note.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../common/custom_share_sheet.dart';
 
 class NoteCardActions {
-  static Widget buildLockedNoteMenu(BuildContext context, Note note, Color titleColor, VoidCallback onNoteChanged) {
+  static Widget buildLockedNoteMenu(BuildContext context, Note note,
+      Color titleColor, VoidCallback onNoteChanged) {
     final l10n = AppLocalizations.of(context)!;
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
@@ -37,9 +38,10 @@ class NoteCardActions {
             ),
           );
 
-          if (confirmed == true) {
+          if (confirmed == true && context.mounted) {
             await notesProvider.toggleLockStatus(note.id!, false);
             onNoteChanged();
+            if (!context.mounted) return;
             UnifiedNotificationService().show(
               context: context,
               message: l10n.noteUnlocked,
@@ -65,11 +67,12 @@ class NoteCardActions {
             ),
           );
 
-          if (confirmed == true) {
+          if (confirmed == true && context.mounted) {
             HapticFeedback.mediumImpact();
             final noteId = note.id!;
             await notesProvider.trashNote(noteId);
             onNoteChanged();
+            if (!context.mounted) return;
             UnifiedNotificationService().show(
               context: context,
               message: l10n.noteDeleted,
@@ -126,12 +129,12 @@ class NoteCardActions {
           Slidable.of(context)?.close();
           final noteId = note.id!;
           final noteTitle = note.title;
-          
+
           await notesProvider.trashNote(noteId);
           onNoteChanged();
-          
+
           if (!context.mounted) return;
-          
+
           UnifiedNotificationService().showWithUndo(
             context: context,
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toTrash}',
@@ -154,12 +157,12 @@ class NoteCardActions {
           Slidable.of(context)?.close();
           final noteId = note.id!;
           final noteTitle = note.title;
-          
+
           await notesProvider.archiveNote(noteId);
           onNoteChanged();
-          
+
           if (!context.mounted) return;
-          
+
           UnifiedNotificationService().showWithUndo(
             context: context,
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toArchive}',

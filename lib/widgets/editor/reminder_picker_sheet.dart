@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../services/notification_service.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 class ReminderPickerSheet extends StatefulWidget {
   final DateTime? initialDateTime;
@@ -25,11 +25,13 @@ class ReminderPickerSheet extends StatefulWidget {
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    
+
     // Check permissions before showing picker
     final notificationService = NotificationService();
     final permissions = await notificationService.checkAllPermissions();
-    
+
+    if (!context.mounted) return null;
+
     if (!permissions['notifications']! || !permissions['exactAlarm']!) {
       final shouldRequest = await showDialog<bool>(
         context: context,
@@ -49,27 +51,34 @@ class ReminderPickerSheet extends StatefulWidget {
           ],
         ),
       );
-      
+
+      if (!context.mounted) return null;
+
       if (shouldRequest == true) {
         await notificationService.requestNotificationPermissions();
+        if (!context.mounted) return null;
+
         // Recheck after request
         final newPermissions = await notificationService.checkAllPermissions();
-        if (!newPermissions['notifications']! || !newPermissions['exactAlarm']!) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.permissionsDenied),
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
+        if (!context.mounted) return null;
+
+        if (!newPermissions['notifications']! ||
+            !newPermissions['exactAlarm']!) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.permissionsDenied),
+              duration: const Duration(seconds: 3),
+            ),
+          );
           return null;
         }
       } else {
         return null;
       }
     }
-    
+
+    if (!context.mounted) return null;
+
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
@@ -189,7 +198,8 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _buildQuickDateChip(l10n.today, DateTime.now(), textColor),
+                      _buildQuickDateChip(
+                          l10n.today, DateTime.now(), textColor),
                       const SizedBox(width: 8),
                       _buildQuickDateChip(
                           l10n.tomorrow,

@@ -1,19 +1,19 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/screens/other/about_screen.dart';
+import 'package:apex_note/screens/other/support_form_screen.dart';
+import 'package:apex_note/screens/shared/settings/settings_backup_handlers.dart';
+import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
+import 'package:apex_note/screens/shared/settings/settings_utils.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'settings/settings_dialogs.dart';
-import 'settings/settings_backup_handlers.dart';
-import 'settings/settings_utils.dart';
-import '../other/support_form_screen.dart';
-import '../other/about_screen.dart';
-import '../../widgets/common/custom_share_sheet.dart';
-import '../../services/security/biometric_service.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool isDesktopLayout;

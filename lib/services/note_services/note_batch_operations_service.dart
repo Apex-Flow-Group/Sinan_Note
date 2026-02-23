@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import '../../core/utils/logger.dart';
-import '../storage/isar_database_service.dart';
-import 'note_state_service.dart';
-import 'note_side_effect_service.dart';
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/services/note_services/note_side_effect_service.dart';
+import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 
 class NoteBatchOperationsService {
   final IsarDatabaseService _dbService;

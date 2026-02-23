@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('NoteStateService', () {
@@ -523,7 +523,8 @@ void main() {
 
         service.updateAllNotes(notes);
 
-        service.batchUpdateNotes([1, 3], (note) => note.copyWith(isTrashed: true));
+        service
+            .batchUpdateNotes([1, 3], (note) => note.copyWith(isTrashed: true));
 
         expect(service.trashedNotes.length, 2);
         expect(service.activeNotes.length, 1);
@@ -550,7 +551,8 @@ void main() {
 
         service.updateAllNotes(notes);
 
-        service.batchUpdateNotes([1], (note) => note.copyWith(title: 'Updated'));
+        service
+            .batchUpdateNotes([1], (note) => note.copyWith(title: 'Updated'));
 
         expect(service.activeNotes[0].title, 'Updated');
         expect(service.activeNotes[1].title, 'Note 2');

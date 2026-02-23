@@ -7,10 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Initialize all test dependencies
 void initializeTestEnvironment() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize SharedPreferences mock
   SharedPreferences.setMockInitialValues({});
-  
+
   // Setup method channel mocks for platform-specific features
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(

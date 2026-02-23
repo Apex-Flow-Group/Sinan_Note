@@ -1,15 +1,16 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:apex_note/models/note.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:flutter_test/flutter_test.dart';
+
 import '../test_setup.dart';
 
 void main() {
   setUpAll(() {
     initializeTestEnvironment();
   });
-  
+
   group('NotesProvider Integration', () {
     late NotesProvider provider;
     late DateTime now;

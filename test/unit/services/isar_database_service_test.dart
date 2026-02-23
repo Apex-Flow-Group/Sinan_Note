@@ -1,8 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+
 import '../../test_setup.dart';
 
 void main() {
@@ -60,7 +61,7 @@ void main() {
 
         final id = await db.insertNote(note);
         final updated = note.copyWith(id: id, title: 'Updated');
-        
+
         await db.updateNote(updated);
         final retrieved = await db.getNoteById(id);
 
@@ -203,7 +204,7 @@ void main() {
     group('Reminders', () {
       test('gets upcoming reminders', () async {
         final future = DateTime.now().add(const Duration(hours: 1));
-        
+
         await db.insertNote(Note(
           title: 'Reminder',
           content: 'Content',
@@ -218,7 +219,7 @@ void main() {
 
       test('excludes past reminders from upcoming', () async {
         final past = DateTime.now().subtract(const Duration(hours: 1));
-        
+
         await db.insertNote(Note(
           title: 'Past',
           content: 'Content',
@@ -233,7 +234,7 @@ void main() {
 
       test('gets expired reminders', () async {
         final past = DateTime.now().subtract(const Duration(hours: 1));
-        
+
         await db.insertNote(Note(
           title: 'Expired',
           content: 'Content',
@@ -273,7 +274,7 @@ void main() {
 
         final id = await db.insertNote(note);
         await db.updateNote(note.copyWith(id: id, title: 'Updated'));
-        
+
         final history = await db.getNoteHistory(id);
         expect(history.length, 2);
         expect(history.first.action, 'updated');
@@ -288,7 +289,7 @@ void main() {
         );
 
         final id = await db.insertNote(note);
-        
+
         // Create 60 versions
         for (int i = 0; i < 60; i++) {
           await db.updateNote(note.copyWith(id: id, title: 'Update $i'));
@@ -310,7 +311,7 @@ void main() {
 
         final id = await db.insertNote(note);
         await db.archiveNote(id);
-        
+
         var retrieved = await db.getNoteById(id);
         expect(retrieved!.isArchived, true);
 
@@ -329,7 +330,7 @@ void main() {
 
         final id = await db.insertNote(note);
         await db.trashNote(id);
-        
+
         var retrieved = await db.getNoteById(id);
         expect(retrieved!.isTrashed, true);
 

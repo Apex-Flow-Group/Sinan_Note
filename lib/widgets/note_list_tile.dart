@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../models/note.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Widget لعرض عنصر واحد في قائمة الملاحظات (Master Panel)

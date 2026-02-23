@@ -1,9 +1,10 @@
 // Stress Test for Sinan Note
+import 'package:apex_note/main.dart' as app;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:apex_note/main.dart' as app;
 
+// Stress Test for Sinan Note
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 

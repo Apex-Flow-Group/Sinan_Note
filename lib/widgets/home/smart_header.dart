@@ -1,17 +1,17 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../../services/unified_notification_service.dart';
-import 'package:provider/provider.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../models/note.dart';
-import '../../models/note_mode.dart';  // ✏️ Import NoteMode
+import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../screens/shared/note_editor.dart';  // ✏️ Import Editor
-import '../common/breathing_search_field.dart';
-import '../common/custom_share_sheet.dart';  // 📤 Import share widget
-import 'selection_action_bar.dart';
-import 'smooth_search_header_delegate.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';  // ✏️ Import NoteMode
+import 'package:apex_note/screens/shared/note_editor.dart';  // ✏️ Import Editor
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/breathing_search_field.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';  // 📤 Import share widget
+import 'package:apex_note/widgets/home/selection_action_bar.dart';
+import 'package:apex_note/widgets/home/smooth_search_header_delegate.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class SmartHeader extends StatefulWidget {
   final ValueNotifier<Set<int>> selectedNoteIdsNotifier;
@@ -133,7 +133,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                       if (context.mounted) {
                         UnifiedNotificationService().showWithUndo(
                           context: context,
-                          message: '$count ${AppLocalizations.of(context)!.notesPinned}',
+                          message: '$count ${l10n.notesPinned}',
                           actionKey: 'bulk_pin',
                           type: NotificationType.success,
                           onExecute: () {}, // Empty - action already executed
@@ -142,7 +142,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                               await provider.updateNote(note);
                             }
                           },
-                          undoLabel: AppLocalizations.of(context)!.undo,
+                          undoLabel: l10n.undo,
                         );
                       }
                     },
@@ -158,14 +158,14 @@ class _SmartHeaderState extends State<SmartHeader> {
                       if (context.mounted) {
                         UnifiedNotificationService().showWithUndo(
                           context: context,
-                          message: '$count ${AppLocalizations.of(context)!.notesArchived}',
+                          message: '$count ${l10n.notesArchived}',
                           actionKey: 'bulk_archive',
                           type: NotificationType.success,
                           onExecute: () {},
                           onUndo: () async {
                             await provider.unarchiveNotes(ids);
                           },
-                          undoLabel: AppLocalizations.of(context)!.undo,
+                          undoLabel: l10n.undo,
                         );
                       }
                     },
@@ -181,14 +181,14 @@ class _SmartHeaderState extends State<SmartHeader> {
                       if (context.mounted) {
                         UnifiedNotificationService().showWithUndo(
                           context: context,
-                          message: '$count ${AppLocalizations.of(context)!.notesDeleted}',
+                          message: '$count ${l10n.notesDeleted}',
                           actionKey: 'bulk_delete',
                           type: NotificationType.info,
                           onExecute: () {},
                           onUndo: () async {
                             await provider.restoreNotes(ids);
                           },
-                          undoLabel: AppLocalizations.of(context)!.undo,
+                          undoLabel: l10n.undo,
                         );
                       }
                     },

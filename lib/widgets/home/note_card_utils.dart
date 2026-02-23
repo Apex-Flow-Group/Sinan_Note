@@ -1,11 +1,12 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+
+import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/services/language_detector.dart';
 import 'package:flutter/material.dart';
-import '../../models/note.dart';
-import '../../models/note_mode.dart';
-import '../../services/language_detector.dart';
-import '../../core/utils/checklist_formatter.dart';
 
 class NoteCardUtils {
   static NoteMode getNoteMode(Note note) {

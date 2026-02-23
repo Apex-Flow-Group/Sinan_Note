@@ -1,20 +1,21 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/home/add_menu_widget.dart' show AddMenuWidget, isMenuOpenNotifier;
+import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/notes_grid_view.dart';
+import 'package:apex_note/widgets/home/smart_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../models/note.dart';
-import '../../models/note_mode.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../services/unified_notification_service.dart';
-import '../../widgets/home/add_menu_widget.dart' show AddMenuWidget, isMenuOpenNotifier;
-import '../../widgets/home/home_drawer_widget.dart';
-import '../../widgets/home/smart_header.dart';
-import '../../widgets/home/notes_grid_view.dart';
-import '../../widgets/home/dialogs/backup_options_dialog.dart';
-import '../shared/note_editor.dart';
 
 enum ViewType { grid, listExpanded, listCompact }
 

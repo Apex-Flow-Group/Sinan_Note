@@ -1,10 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor/utils/note_editor_utils.dart';
+import 'package:apex_note/services/language_detector.dart';
 import 'package:flutter/material.dart';
-import '../../../../models/note.dart';
-import '../../../../models/note_mode.dart';
-import '../../../../services/language_detector.dart';
-import '../utils/note_editor_utils.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 
 class EditorStateLifecycleManager {

@@ -1,8 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+
+import 'package:apex_note/widgets/editor/checklist_editor.dart';
 import 'package:flutter/material.dart';
-import '../../../../widgets/editor/checklist_editor.dart';
 
 /// Checklist editor widget with JSON-based task management
 class ChecklistEditorWidget extends StatelessWidget {

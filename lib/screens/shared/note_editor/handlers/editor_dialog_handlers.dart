@@ -1,21 +1,20 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../../../../services/unified_notification_service.dart';
-import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:apex_note/controllers/editor/editor_state_manager.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-
-import '../../../../models/note.dart';
-import '../../../../models/note_mode.dart';
-import '../../../../services/notification_service.dart';
-import '../../../../controllers/settings/settings_provider.dart';
-import '../../../../core/utils/adaptive_color.dart';
-import '../../../../widgets/editor/reminder_picker_sheet.dart';
-import '../../../../widgets/editor/note_history_sheet.dart';
-import '../../../../widgets/common/rename_dialog.dart';
-import '../../../../controllers/editor/editor_state_manager.dart';
-import '../controllers/editor_smart_controller.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/rename_dialog.dart';
+import 'package:apex_note/widgets/editor/note_history_sheet.dart';
+import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 /// Handles all dialog interactions for the note editor
 class EditorDialogHandlers {
@@ -44,15 +43,14 @@ class EditorDialogHandlers {
         stateManager.reminderDateTime = null;
         stateManager.recurrenceRule = null;
         stateManager.markDirty();
-        
+
         await saveCallback(isManualSave: true);
-        if (context.mounted) {
-          UnifiedNotificationService().show(
-            context: context,
-            message: l10n.reminderRemoved,
-            type: NotificationType.info,
-          );
-        }
+        if (!context.mounted) return;
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.reminderRemoved,
+          type: NotificationType.info,
+        );
         return;
       }
 
@@ -64,16 +62,15 @@ class EditorDialogHandlers {
             await NotificationService().checkExactAlarmPermission();
 
         if (!hasExactAlarmPermission) {
-          if (context.mounted) {
-            UnifiedNotificationService().showWithAction(
-              context: context,
-              message: l10n.precisePermissionRequired,
-              actionLabel: l10n.openSettings,
-              type: NotificationType.error,
-              duration: const Duration(seconds: 5),
-              onAction: () => openAppSettings(),
-            );
-          }
+          if (!context.mounted) return;
+          UnifiedNotificationService().showWithAction(
+            context: context,
+            message: l10n.precisePermissionRequired,
+            actionLabel: l10n.openSettings,
+            type: NotificationType.error,
+            duration: const Duration(seconds: 5),
+            onAction: () => openAppSettings(),
+          );
           return;
         }
 
@@ -82,13 +79,12 @@ class EditorDialogHandlers {
         stateManager.markDirty();
 
         await saveCallback(isManualSave: true);
-        if (context.mounted) {
-          UnifiedNotificationService().show(
-            context: context,
-            message: l10n.reminderAdded,
-            type: NotificationType.success,
-          );
-        }
+        if (!context.mounted) return;
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.reminderAdded,
+          type: NotificationType.success,
+        );
       }
     }
   }
@@ -101,7 +97,7 @@ class EditorDialogHandlers {
     required Function(int colorIndex, Color textColor) onColorSelected,
   }) async {
     final brightness = Theme.of(context).brightness;
-    
+
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -112,20 +108,21 @@ class EditorDialogHandlers {
           children: List.generate(AppColorPalette.palette.length, (index) {
             final adaptiveColor = AppColorPalette.palette[index];
             final color = adaptiveColor.getColor(brightness);
-            
+
             return GestureDetector(
               key: ValueKey('color_$index'),
               onTap: () async {
                 final isDarkBg = color.computeLuminance() < 0.5;
                 final textColor = isDarkBg ? Colors.white : Colors.black87;
-                
+
                 stateManager.colorIndex = index;
                 stateManager.markDirty();
                 onColorSelected(index, textColor);
-                
+
                 // Save last used color for this note type
                 if (context.mounted) {
-                  final settings = Provider.of<SettingsProvider>(context, listen: false);
+                  final settings =
+                      Provider.of<SettingsProvider>(context, listen: false);
                   String colorMode = 'simple';
                   if (mode == NoteMode.reminder) {
                     colorMode = 'reminder';
@@ -138,7 +135,7 @@ class EditorDialogHandlers {
                   }
                   await settings.setDefaultColorIndex(colorMode, index);
                 }
-                
+
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                 }
@@ -240,8 +237,10 @@ class EditorDialogHandlers {
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final dialogBg = theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface;
-    final dialogText = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+    final dialogBg =
+        theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface;
+    final dialogText =
+        theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
 
     return await showDialog<String>(
       context: context,

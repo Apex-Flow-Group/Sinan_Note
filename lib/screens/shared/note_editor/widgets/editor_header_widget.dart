@@ -1,9 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui';
+
+import 'package:apex_note/widgets/editor/apex_editor_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../widgets/editor/apex_editor_header.dart';
 
 /// Extracted header widget for note editor
 class EditorHeaderWidget extends StatelessWidget {

@@ -1,14 +1,15 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
-import 'package:flutter/material.dart';
-import '../../services/unified_notification_service.dart';
-import 'package:file_picker/file_picker.dart';
+
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../models/note.dart';
-import '../../services/storage/isar_database_service.dart';
-import '../../screens/shared/note_editor.dart';
-import '../common/custom_share_sheet.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 
 class NoteOptionsSheet {
   static void show(
@@ -39,7 +40,9 @@ class NoteOptionsSheet {
                     builder: (context) => NoteEditorImmersive(note: note),
                   ),
                 );
-                onNoteChanged();
+                if (context.mounted) {
+                  onNoteChanged();
+                }
               },
             ),
             ListTile(
@@ -56,22 +59,22 @@ class NoteOptionsSheet {
                 );
 
                 final newId = await dbService.insertNote(newNote);
+                if (!context.mounted) return;
                 onNoteChanged();
-                
-                if (context.mounted) {
-                  UnifiedNotificationService().showWithUndo(
-                    context: context,
-                    message: l10n.copyCreated,
-                    actionKey: 'copy_note_$newId',
-                    type: NotificationType.success,
-                    onExecute: () {},
-                    onUndo: () async {
-                      await dbService.deleteNote(newId);
-                      onNoteChanged();
-                    },
-                    undoLabel: l10n.undo,
-                  );
-                }
+
+                UnifiedNotificationService().showWithUndo(
+                  context: context,
+                  message: l10n.copyCreated,
+                  actionKey: 'copy_note_$newId',
+                  type: NotificationType.success,
+                  onExecute: () {},
+                  onUndo: () async {
+                    await dbService.deleteNote(newId);
+                    if (!context.mounted) return;
+                    onNoteChanged();
+                  },
+                  undoLabel: l10n.undo,
+                );
               },
             ),
             ListTile(
@@ -79,7 +82,8 @@ class NoteOptionsSheet {
               title: Text(l10n.share),
               onTap: () {
                 Navigator.pop(ctx);
-                CustomShareSheet.show(context, '${note.title}\n\n${note.content}',
+                CustomShareSheet.show(
+                    context, '${note.title}\n\n${note.content}',
                     subject: note.title);
               },
             ),
@@ -118,25 +122,25 @@ class NoteOptionsSheet {
               title: Text(l10n.archive),
               onTap: () async {
                 Navigator.pop(ctx);
-                
+
                 // IMMEDIATE: Execute action first (Google Keep style)
                 await dbService.archiveNote(note.id!);
+                if (!context.mounted) return;
                 onNoteChanged();
-                
-                if (context.mounted) {
-                  UnifiedNotificationService().showWithUndo(
-                    context: context,
-                    message: l10n.movedToArchive,
-                    actionKey: 'archive_note_${note.id}',
-                    type: NotificationType.success,
-                    onExecute: () {},
-                    onUndo: () async {
-                      await dbService.unarchiveNote(note.id!);
-                      onNoteChanged();
-                    },
-                    undoLabel: l10n.undo,
-                  );
-                }
+
+                UnifiedNotificationService().showWithUndo(
+                  context: context,
+                  message: l10n.movedToArchive,
+                  actionKey: 'archive_note_${note.id}',
+                  type: NotificationType.success,
+                  onExecute: () {},
+                  onUndo: () async {
+                    await dbService.unarchiveNote(note.id!);
+                    if (!context.mounted) return;
+                    onNoteChanged();
+                  },
+                  undoLabel: l10n.undo,
+                );
               },
             ),
             ListTile(
@@ -145,6 +149,7 @@ class NoteOptionsSheet {
               onTap: () async {
                 Navigator.pop(ctx);
                 final history = await dbService.getNoteHistory(note.id!);
+                if (!context.mounted) return;
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -185,8 +190,10 @@ class NoteOptionsSheet {
                 try {
                   // IMMEDIATE: Execute action first (Google Keep style)
                   await dbService.trashNote(note.id!);
-                  onNoteChanged();
-                  
+                  if (context.mounted) {
+                    onNoteChanged();
+                  }
+
                   if (context.mounted) {
                     UnifiedNotificationService().showWithUndo(
                       context: context,
@@ -196,7 +203,9 @@ class NoteOptionsSheet {
                       onExecute: () {},
                       onUndo: () async {
                         await dbService.restoreNote(note.id!);
-                        onNoteChanged();
+                        if (context.mounted) {
+                          onNoteChanged();
+                        }
                       },
                       undoLabel: l10n.undo,
                     );

@@ -1,12 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import '../../core/utils/logger.dart';
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/services/security/security_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../services/security/security_gate.dart';
 
 class SettingsProvider with ChangeNotifier {
-
   ThemeMode _themeMode = ThemeMode.system;
   double _textScaleFactor = 1.0;
   String _languageCode = 'system';
@@ -26,7 +25,7 @@ class SettingsProvider with ChangeNotifier {
   static const int _defaultPurpleIndex = 9;
   static const int _defaultGreenIndex = 5;
   static const int _defaultOrangeIndex = 3;
-  
+
   final Map<String, int> _defaultColorIndices = {
     'simple': _defaultBlueIndex,
     'reminder': _defaultYellowIndex,
@@ -57,10 +56,10 @@ class SettingsProvider with ChangeNotifier {
 
   SettingsProvider() {
     Future.microtask(() => _loadSettings().catchError((e) {
-      AppLogger.debug('Error loading settings: $e');
-      _isInitialized = true;
-      notifyListeners();
-    }));
+          AppLogger.debug('Error loading settings: $e');
+          _isInitialized = true;
+          notifyListeners();
+        }));
   }
 
   Future<void> ensureInitialized() async {
@@ -136,7 +135,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('appLockEnabled', enabled);
-    
+
     // CRITICAL: Direct update to SecurityController
     _updateSecurityController();
   }
@@ -146,7 +145,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hideContentInBackground', enabled);
-    
+
     // Update SecurityController with new privacy setting
     _updateSecurityController();
   }
@@ -156,7 +155,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('lockDelayEnabled', enabled);
-    
+
     // Update SecurityController with new delay setting
     _updateSecurityController();
   }
@@ -166,7 +165,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('lockDelaySeconds', seconds);
-    
+
     // Update SecurityController with new delay value
     _updateSecurityController();
   }
@@ -196,7 +195,9 @@ class SettingsProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       int? themeIndex = prefs.getInt('themeMode');
-      if (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length) {
+      if (themeIndex != null &&
+          themeIndex >= 0 &&
+          themeIndex < ThemeMode.values.length) {
         _themeMode = ThemeMode.values[themeIndex];
       } else {
         _themeMode = ThemeMode.system;
@@ -213,20 +214,26 @@ class SettingsProvider with ChangeNotifier {
         _viewType = homeViewType;
       }
       _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
-      _hideContentInBackground = prefs.getBool('hideContentInBackground') ?? false;
+      _hideContentInBackground =
+          prefs.getBool('hideContentInBackground') ?? false;
       _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
       _lockDelaySeconds = prefs.getInt('lockDelaySeconds') ?? 30;
       _hasSeenLockedIntro = prefs.getBool('seen_locked_intro') ?? false;
       _isFirstLaunch = prefs.getBool('first_launch') ?? true;
-      _defaultColorIndices['simple'] = prefs.getInt('colorIndex_simple') ?? _defaultBlueIndex;
-      _defaultColorIndices['reminder'] = prefs.getInt('colorIndex_reminder') ?? _defaultYellowIndex;
-      _defaultColorIndices['professional'] = prefs.getInt('colorIndex_professional') ?? _defaultPurpleIndex;
-      _defaultColorIndices['checklist'] = prefs.getInt('colorIndex_checklist') ?? _defaultGreenIndex;
-      _defaultColorIndices['rich'] = prefs.getInt('colorIndex_rich') ?? _defaultOrangeIndex;
-      
+      _defaultColorIndices['simple'] =
+          prefs.getInt('colorIndex_simple') ?? _defaultBlueIndex;
+      _defaultColorIndices['reminder'] =
+          prefs.getInt('colorIndex_reminder') ?? _defaultYellowIndex;
+      _defaultColorIndices['professional'] =
+          prefs.getInt('colorIndex_professional') ?? _defaultPurpleIndex;
+      _defaultColorIndices['checklist'] =
+          prefs.getInt('colorIndex_checklist') ?? _defaultGreenIndex;
+      _defaultColorIndices['rich'] =
+          prefs.getInt('colorIndex_rich') ?? _defaultOrangeIndex;
+
       _isInitialized = true;
       notifyListeners();
-      
+
       // CRITICAL: Update SecurityController after loading settings
       _updateSecurityController();
     } catch (e) {
@@ -254,13 +261,13 @@ class SettingsProvider with ChangeNotifier {
 
   void _updateSecurityController() {
     final effectiveDelaySeconds = _lockDelayEnabled ? _lockDelaySeconds : 0;
-    
+
     final newConfig = SecurityConfig(
       lockEnabled: _isAppLockEnabled,
       lockDelaySeconds: effectiveDelaySeconds,
       privacyBlurEnabled: _hideContentInBackground,
     );
-    
+
     // Skip update if config hasn't changed
     final controller = SecurityController();
     if (controller.config.lockEnabled == newConfig.lockEnabled &&
@@ -268,8 +275,9 @@ class SettingsProvider with ChangeNotifier {
         controller.config.privacyBlurEnabled == newConfig.privacyBlurEnabled) {
       return; // No change, skip update
     }
-    
-    AppLogger.debug('🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground');
+
+    AppLogger.debug(
+        '🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground');
     controller.updateConfig(newConfig);
   }
 }

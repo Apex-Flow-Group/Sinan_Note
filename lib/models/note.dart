@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/models/exceptions.dart';
 import 'package:isar/isar.dart';
-import 'exceptions.dart';
 
 part 'note.g.dart';
 

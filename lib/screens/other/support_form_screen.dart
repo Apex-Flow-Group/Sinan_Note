@@ -1,10 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../services/unified_notification_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SupportFormScreen extends StatefulWidget {
   const SupportFormScreen({super.key});

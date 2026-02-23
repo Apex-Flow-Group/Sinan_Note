@@ -1,20 +1,21 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/screens/desktop/code_tab_responsive.dart';
+import 'package:apex_note/screens/desktop/home_screen_responsive.dart';
+import 'package:apex_note/screens/desktop/reminder_dashboard_responsive.dart';
+import 'package:apex_note/screens/onboarding/splash_screen.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/security/security_gate.dart';
+import 'package:apex_note/widgets/home/add_menu_widget.dart'
+    show isMenuOpenNotifier;
+import 'package:apex_note/widgets/navigation/bottom_nav_bar.dart';
+import 'package:apex_note/widgets/navigation/side_nav_rail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../services/security/security_gate.dart';
-import '../../services/cloud/google_drive_service.dart';
-import '../desktop/home_screen_responsive.dart';
-import '../desktop/reminder_dashboard_responsive.dart';
-import '../desktop/code_tab_responsive.dart';
-import '../onboarding/splash_screen.dart';
-import '../../widgets/home/add_menu_widget.dart' show isMenuOpenNotifier;
-import '../../widgets/navigation/bottom_nav_bar.dart';
-import '../../widgets/navigation/side_nav_rail.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   final String? sharedText;
@@ -33,7 +34,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   bool _isScrollHidden = false;
   bool _isDrawerOpen = false;
   final _securityController = SecurityController();
-  
+
   // ✅ Cache screens to prevent rebuilds
   late final List<Widget> _cachedScreens;
 
@@ -42,7 +43,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     super.initState();
     _securityController.addListener(_onSecurityChanged);
     _autoSyncOnStartup();
-    
+
     // ✅ Cache screens to prevent unnecessary rebuilds
     // Each screen is created once and reused
     _cachedScreens = [
@@ -70,11 +71,12 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   /// 🔄 Auto-sync on app startup
   Future<void> _autoSyncOnStartup() async {
     await GoogleDriveService.initializeSignIn();
-    
+
     final prefs = await SharedPreferences.getInstance();
     final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
-    
+
     if (autoSync && GoogleDriveService.isSignedIn) {
+      if (!mounted) return;
       await GoogleDriveService.uploadDatabase(context);
     }
   }
@@ -90,7 +92,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     if (_securityController.isLocked && mounted) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const SplashScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const SplashScreen(),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),
@@ -101,10 +104,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   /// 📜 Auto-hide navigation on scroll (home screen only)
   void _handleScrollNotification(bool isScrollingDown) {
     if (_currentIndex != 0 || _isDrawerOpen) return;
-    
+
     final isLargeScreen = MediaQuery.of(context).size.width >= 600;
     if (isLargeScreen) return; // Don't hide on tablets/desktop
-    
+
     if (isScrollingDown && !_isScrollHidden) {
       setState(() => _isScrollHidden = true);
     } else if (!isScrollingDown && _isScrollHidden) {

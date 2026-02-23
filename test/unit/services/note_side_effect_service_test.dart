@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('NoteSideEffectService', () {

@@ -1,6 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import '../../../core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
 
 class NoteViewHelpers {
   static bool getDirection(String text) {

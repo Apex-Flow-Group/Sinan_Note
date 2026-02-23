@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 // Mock Database Service for testing
 // Note: We can't extend IsarDatabaseService because it uses a factory constructor
@@ -69,6 +69,7 @@ class MockDatabaseService {
     }
     return 0;
   }
+
   Future<List<Note>> getLockedNotes() async => [];
 }
 
@@ -98,7 +99,7 @@ void main() {
 
       final id = await dbService.insertNote(note);
       expect(id, greaterThan(0));
-      
+
       final dbNote = await dbService.getNoteById(id);
       expect(dbNote, isNotNull);
       expect(dbNote!.title, 'Test');

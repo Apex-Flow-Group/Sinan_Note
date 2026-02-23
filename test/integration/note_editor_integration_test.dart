@@ -1,14 +1,15 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+
 import '../test_setup.dart';
 
 void main() {
@@ -119,14 +120,16 @@ void main() {
       testWidgets('loads checklist note content', (tester) async {
         final note = Note(
           title: 'Checklist',
-          content: '{"title":"Tasks","items":[{"id":"1","text":"Task 1","isDone":false}]}',
+          content:
+              '{"title":"Tasks","items":[{"id":"1","text":"Task 1","isDone":false}]}',
           noteType: 'checklist',
           isChecklist: true,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
 
-        await tester.pumpWidget(buildEditor(note: note, mode: NoteMode.checklist));
+        await tester
+            .pumpWidget(buildEditor(note: note, mode: NoteMode.checklist));
         await tester.pumpAndSettle();
 
         expect(find.text('Task 1'), findsOneWidget);
@@ -151,7 +154,8 @@ void main() {
           updatedAt: DateTime.now(),
         );
 
-        await tester.pumpWidget(buildEditor(note: note, mode: NoteMode.reminder));
+        await tester
+            .pumpWidget(buildEditor(note: note, mode: NoteMode.reminder));
         await tester.pumpAndSettle();
 
         expect(find.text('Remember this'), findsOneWidget);
@@ -289,7 +293,8 @@ void main() {
     });
 
     group('Widget Builder Separation', () {
-      testWidgets('simple editor widget is used for simple mode', (tester) async {
+      testWidgets('simple editor widget is used for simple mode',
+          (tester) async {
         await tester.pumpWidget(buildEditor(mode: NoteMode.simple));
         await tester.pumpAndSettle();
 
@@ -303,7 +308,8 @@ void main() {
         expect(find.byType(NoteEditorImmersive), findsOneWidget);
       });
 
-      testWidgets('checklist editor widget is used for checklist mode', (tester) async {
+      testWidgets('checklist editor widget is used for checklist mode',
+          (tester) async {
         await tester.pumpWidget(buildEditor(mode: NoteMode.checklist));
         await tester.pumpAndSettle();
 
@@ -330,14 +336,15 @@ void main() {
 
         // Wait for autosave timer to complete
         await tester.pump(const Duration(milliseconds: 600));
-        
+
         await tester.pumpWidget(Container());
         await tester.pumpAndSettle();
       });
     });
 
     group('Locked Notes', () {
-      testWidgets('handles locked notes with skipAuthentication', (tester) async {
+      testWidgets('handles locked notes with skipAuthentication',
+          (tester) async {
         final note = Note(
           title: 'Locked Note',
           content: 'Secret content',

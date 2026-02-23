@@ -1,15 +1,15 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../services/security/vault_service.dart';
-import '../../services/security/biometric_service.dart';
-import '../mobile/locked_notes_screen.dart';
-import '../../services/unified_notification_service.dart';
+import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:flutter/material.dart';
 
 class VaultUnlockScreen extends StatefulWidget {
   final bool biometricFailed;
-  
+
   const VaultUnlockScreen({
     super.key,
     this.biometricFailed = false,
@@ -24,7 +24,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   final _recoveryController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   bool _showRecoveryMode = false;
   bool _showNewPasswordMode = false;
@@ -57,6 +57,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   }
 
   Future<void> _handlePasswordUnlock() async {
+    if (!mounted) return;
     final password = _passwordController.text;
     final l10n = AppLocalizations.of(context)!;
 
@@ -66,7 +67,8 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     }
 
     final success = await VaultService.unlockWithPassword(password);
-    
+    if (!mounted) return;
+
     if (success) {
       _navigateToVault();
     } else {
@@ -75,17 +77,20 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   }
 
   Future<void> _handleBiometricUnlock() async {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     final authenticated = await BiometricService.authenticate();
-    
+    if (!mounted) return;
+
     if (authenticated) {
       _navigateToVault();
     } else {
-      final l10n = AppLocalizations.of(context)!;
       setState(() => _errorText = l10n.authenticationFailed);
     }
   }
 
   Future<void> _handleRecoveryRestore() async {
+    if (!mounted) return;
     final recoveryCode = _recoveryController.text.trim();
     final l10n = AppLocalizations.of(context)!;
 
@@ -95,7 +100,8 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     }
 
     final success = await VaultService.recoverWithCode(recoveryCode);
-    
+    if (!mounted) return;
+
     if (success) {
       setState(() {
         _showRecoveryMode = false;
@@ -108,6 +114,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   }
 
   Future<void> _handleSetNewPassword() async {
+    if (!mounted) return;
     final newPassword = _newPasswordController.text;
     final confirm = _confirmPasswordController.text;
     final l10n = AppLocalizations.of(context)!;
@@ -122,11 +129,10 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       return;
     }
 
-    // Note: Master Key already unlocked by recovery code
-    // Just need to set new password
-    const oldPassword = ''; // Not needed, already unlocked
+    const oldPassword = '';
     final success = await VaultService.changePassword(oldPassword, newPassword);
-    
+    if (!mounted) return;
+
     if (success) {
       _navigateToVault();
     } else {
@@ -162,7 +168,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
-              
+
               // Icon
               Container(
                 width: 100,
@@ -177,9 +183,9 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                   color: Colors.orange,
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Content based on mode
               if (!_showRecoveryMode && !_showNewPasswordMode)
                 _buildPasswordMode(l10n)
@@ -187,7 +193,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                 _buildRecoveryMode(l10n)
               else
                 _buildNewPasswordMode(l10n),
-              
+
               if (_errorText != null) ...[
                 const SizedBox(height: 12),
                 Text(
@@ -213,7 +219,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-        
+
         TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
@@ -222,16 +228,18 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             prefixIcon: const Icon(Icons.lock),
             suffixIcon: IconButton(
-              icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
           onChanged: (_) => setState(() => _errorText = null),
           onSubmitted: (_) => _handlePasswordUnlock(),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         SizedBox(
           height: 56,
           child: ElevatedButton.icon(
@@ -244,13 +252,14 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Biometric button (if available)
         FutureBuilder<bool>(
           future: BiometricService.hasBiometrics(),
@@ -268,9 +277,9 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
             return const SizedBox.shrink();
           },
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         TextButton(
           onPressed: () => setState(() {
             _showRecoveryMode = true;
@@ -298,7 +307,6 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-        
         TextField(
           controller: _recoveryController,
           decoration: InputDecoration(
@@ -309,9 +317,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           ),
           onChanged: (_) => setState(() => _errorText = null),
         ),
-        
         const SizedBox(height: 16),
-        
         SizedBox(
           height: 56,
           child: ElevatedButton.icon(
@@ -324,13 +330,12 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
           ),
         ),
-        
         const SizedBox(height: 16),
-        
         TextButton(
           onPressed: () => setState(() {
             _showRecoveryMode = false;
@@ -348,7 +353,6 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       children: [
         const Icon(Icons.check_circle, size: 60, color: Colors.green),
         const SizedBox(height: 16),
-        
         Text(
           l10n.vaultRecovered,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -361,7 +365,6 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-        
         TextField(
           controller: _newPasswordController,
           obscureText: true,
@@ -372,9 +375,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           ),
           onChanged: (_) => setState(() => _errorText = null),
         ),
-        
         const SizedBox(height: 16),
-        
         TextField(
           controller: _confirmPasswordController,
           obscureText: true,
@@ -385,9 +386,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           ),
           onChanged: (_) => setState(() => _errorText = null),
         ),
-        
         const SizedBox(height: 16),
-        
         SizedBox(
           height: 56,
           child: ElevatedButton.icon(
@@ -400,7 +399,8 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
           ),
         ),

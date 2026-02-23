@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../controllers/settings/settings_provider.dart';
+import 'package:flutter/material.dart';
 
 class SettingsDialogs {
   static void showLanguageDialog(
@@ -20,7 +20,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  settings.languageCode == 'system' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  settings.languageCode == 'system'
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -36,7 +38,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  settings.languageCode == 'ar' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  settings.languageCode == 'ar'
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -52,7 +56,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  settings.languageCode == 'en' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  settings.languageCode == 'en'
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -81,7 +87,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  settings.themeMode == ThemeMode.system ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  settings.themeMode == ThemeMode.system
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -97,7 +105,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  settings.themeMode == ThemeMode.light ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  settings.themeMode == ThemeMode.light
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -113,7 +123,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  settings.themeMode == ThemeMode.dark ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  settings.themeMode == ThemeMode.dark
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -126,11 +138,12 @@ class SettingsDialogs {
     );
   }
 
-  static void showSwipeActionDialog(BuildContext context, SettingsProvider settings,
-      bool isRight, String lang) {
+  static void showSwipeActionDialog(BuildContext context,
+      SettingsProvider settings, bool isRight, String lang) {
     final l10n = AppLocalizations.of(context)!;
-    final currentValue = isRight ? settings.swipeRightAction : settings.swipeLeftAction;
-    
+    final currentValue =
+        isRight ? settings.swipeRightAction : settings.swipeLeftAction;
+
     showDialog(
       context: context,
       builder: (ctx) => SimpleDialog(
@@ -148,7 +161,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  currentValue == 'delete' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  currentValue == 'delete'
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -168,7 +183,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  currentValue == 'archive' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  currentValue == 'archive'
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -188,7 +205,9 @@ class SettingsDialogs {
             child: Row(
               children: [
                 Icon(
-                  currentValue == 'share' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  currentValue == 'share'
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),
@@ -201,8 +220,8 @@ class SettingsDialogs {
     );
   }
 
-  static Future<void> showLockDelayDialog(
-      BuildContext context, SettingsProvider settings, AppLocalizations l10n) async {
+  static Future<void> showLockDelayDialog(BuildContext context,
+      SettingsProvider settings, AppLocalizations l10n) async {
     final delays = [
       {'seconds': 30, 'label': l10n.seconds30},
       {'seconds': 120, 'label': l10n.minutes2},
@@ -219,12 +238,15 @@ class SettingsDialogs {
             onPressed: () async {
               await settings.setLockDelaySeconds(delay['seconds'] as int);
               await settings.setLockDelayEnabled(true);
+              if (!context.mounted) return;
               Navigator.pop(ctx);
             },
             child: Row(
               children: [
                 Icon(
-                  settings.lockDelaySeconds == delay['seconds'] ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  settings.lockDelaySeconds == delay['seconds']
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   size: 20,
                 ),
                 const SizedBox(width: 16),

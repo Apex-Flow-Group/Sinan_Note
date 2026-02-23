@@ -1,11 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/widgets/editor/code_editor_toolbar.dart';
+import 'package:apex_note/widgets/editor/smart_editor_toolbar.dart';
+import 'package:apex_note/widgets/editor/toolbars/checklist_bottom_bar.dart';
+import 'package:apex_note/widgets/editor/toolbars/editor_options_menu.dart';
 import 'package:flutter/material.dart';
-import '../../../models/note_mode.dart';
-import '../smart_editor_toolbar.dart';
-import '../code_editor_toolbar.dart';
-import 'checklist_bottom_bar.dart';
-import 'editor_options_menu.dart';
 
 class EditorToolbarFactory {
   static Widget build({

@@ -1,18 +1,19 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../core/utils/logger.dart';
-import '../storage/isar_database_service.dart';
-import '../security/vault_service.dart';
-import '../../models/note.dart';
-import '../../generated/l10n/app_localizations.dart';
 
 class GoogleDriveService {
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -489,6 +490,44 @@ class GoogleDriveService {
     } catch (e) {
       AppLogger.error('Check vault data error', 'GoogleDrive', e);
       return false;
+    }
+  }
+  
+  /// Get notes count from Drive backup
+  static Future<int> getDriveNotesCount() async {
+    if (_driveApi == null) return 0;
+    
+    try {
+      const fileName = 'sinan_backup.json';
+      final file = await _findFile(fileName);
+      
+      if (file == null) return 0;
+      
+      // Download and parse
+      final response = await _driveApi!.files.get(
+        file.id!,
+        downloadOptions: drive.DownloadOptions.fullMedia,
+      ) as drive.Media;
+      
+      final List<int> dataStore = [];
+      await for (var chunk in response.stream) {
+        dataStore.addAll(chunk);
+      }
+      
+      final jsonString = utf8.decode(dataStore);
+      final dynamic jsonData = jsonDecode(jsonString);
+      
+      if (jsonData is Map<String, dynamic>) {
+        final notesList = jsonData['notes'] as List?;
+        return notesList?.length ?? 0;
+      } else if (jsonData is List) {
+        return jsonData.length;
+      }
+      
+      return 0;
+    } catch (e) {
+      AppLogger.error('Get Drive notes count error', 'GoogleDrive', e);
+      return 0;
     }
   }
 }

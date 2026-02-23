@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 class CodeEditorToolbar extends StatelessWidget {
   final Color backgroundColor;

@@ -1,9 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+
 import '../../test_setup.dart';
 
 // Mock Database Service for testing
@@ -35,7 +36,7 @@ void main() {
   setUpAll(() {
     initializeTestEnvironment();
   });
-  
+
   group('NoteSecurityService', () {
     late NoteSecurityService service;
     late MockDatabaseService dbService;
@@ -78,7 +79,7 @@ void main() {
         // Simulate 5 minutes passing by manipulating internal state
         // In real scenario, we'd wait or use fake timers
         await Future.delayed(const Duration(milliseconds: 100));
-        
+
         // For now, just verify the getter logic works
         expect(service.isVaultUnlocked, true);
       });
@@ -94,7 +95,8 @@ void main() {
 
     group('fetchAndDecryptLockedNotes', () {
       test('returns empty list when no locked notes', () async {
-        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
+        final notes =
+            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes, isEmpty);
       });
 
@@ -110,7 +112,8 @@ void main() {
 
         dbService.addNote(lockedNote);
 
-        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
+        final notes =
+            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes.length, 1);
       });
 
@@ -127,7 +130,8 @@ void main() {
 
         dbService.addNote(checklistNote);
 
-        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
+        final notes =
+            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes.first.title, 'Checklist');
         expect(notes.first.content, '[]Item 1');
       });
@@ -144,7 +148,8 @@ void main() {
 
         dbService.addNote(note);
 
-        final notes = await service.fetchAndDecryptLockedNotes(dbService as dynamic);
+        final notes =
+            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
         expect(notes.length, 1);
         // Should return original note on decryption failure
       });

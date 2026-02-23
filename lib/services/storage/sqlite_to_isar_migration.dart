@@ -1,13 +1,14 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
+
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import '../storage/isar_database_service.dart';
-import '../security/vault_service.dart';
-import '../../models/note.dart';
 
 class SqliteToIsarMigration {
   static Future<void> migrateIfNeeded() async {

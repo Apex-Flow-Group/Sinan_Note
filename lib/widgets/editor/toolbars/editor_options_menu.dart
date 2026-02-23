@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
 
 class EditorOptionsMenu {
   static Future<String?> show({

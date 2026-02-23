@@ -1,12 +1,12 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/note.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../providers/selected_note_provider.dart';
-import '../../widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 
 class NoteContextMenu {
   static void show(

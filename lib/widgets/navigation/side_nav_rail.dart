@@ -1,8 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui';
-import 'package:flutter/material.dart';
+
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
 
 class SideNavRail extends StatelessWidget {
   final int currentIndex;

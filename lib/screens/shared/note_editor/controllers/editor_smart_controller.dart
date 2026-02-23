@@ -1,11 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../../../../services/unified_notification_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../../services/smart_analyzer.dart';
-import '../../../../services/language_detector.dart';
-import '../../../../services/code_executor.dart';
+import 'package:apex_note/services/code_executor.dart';
+import 'package:apex_note/services/language_detector.dart';
+import 'package:apex_note/services/smart_analyzer.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:flutter/material.dart';
 
 /// Handles smart features (calculations, code execution, date analysis)
 class EditorSmartController {

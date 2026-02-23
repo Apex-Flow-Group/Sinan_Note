@@ -1,19 +1,19 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/adaptive_color.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/widgets/empty_details_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/note.dart';
-import '../models/note_mode.dart';
-import '../providers/selected_note_provider.dart';
-import '../controllers/notes/notes_provider.dart';
-import '../core/utils/adaptive_color.dart';
-import '../core/utils/checklist_formatter.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../screens/shared/note_editor.dart';
-import 'empty_details_view.dart';
 
 /// Widget يعرض محتوى الملاحظة المختارة في Details Panel
-/// 
+///
 /// المسؤوليات:
 /// - عرض محرر الملاحظة المناسب حسب النوع (نص/checklist/كود)
 /// - عرض EmptyDetailsView عند عدم وجود ملاحظة مختارة
@@ -21,7 +21,7 @@ import 'empty_details_view.dart';
 /// - مسح الاختيار عند حذف/نقل الملاحظة
 class DetailsPanel extends StatefulWidget {
   final bool forceEditMode; // 🔥 فرض وضع التعديل
-  
+
   const DetailsPanel({
     super.key,
     this.forceEditMode = false,
@@ -66,7 +66,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
   /// التحقق من حالة الملاحظة المختارة ومسح الاختيار إذا تم حذفها/نقلها
   void _checkSelectedNoteStatus() {
     if (!mounted) return;
-    
+
     final selectedNoteProvider = Provider.of<SelectedNoteProvider>(
       context,
       listen: false,
@@ -75,15 +75,18 @@ class _DetailsPanelState extends State<DetailsPanel> {
 
     if (selectedNote != null && _notesProvider != null) {
       // البحث عن الملاحظة في القائمة الحالية
-      final noteExists = _notesProvider!.notes.any((note) => note.id == selectedNote.id);
-      
+      final noteExists =
+          _notesProvider!.notes.any((note) => note.id == selectedNote.id);
+
       if (noteExists) {
         final currentNote = _notesProvider!.notes.firstWhere(
           (note) => note.id == selectedNote.id,
         );
-        
+
         // مسح الاختيار إذا تم حذف/أرشفة/قفل الملاحظة
-        if (currentNote.isTrashed || currentNote.isArchived || currentNote.isLocked) {
+        if (currentNote.isTrashed ||
+            currentNote.isArchived ||
+            currentNote.isLocked) {
           selectedNoteProvider.clearSelection();
         }
       } else {
@@ -110,7 +113,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
         }
 
         final isDesktop = MediaQuery.of(context).size.width >= 600;
-        
+
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: (isDesktop && !widget.forceEditMode && !_isEditMode)
@@ -121,10 +124,11 @@ class _DetailsPanelState extends State<DetailsPanel> {
     );
   }
 
-  Widget _buildEditorView(BuildContext context, Note selectedNote, SelectedNoteProvider selectedNoteProvider) {
+  Widget _buildEditorView(BuildContext context, Note selectedNote,
+      SelectedNoteProvider selectedNoteProvider) {
     // تحديد نوع المحرر حسب نوع الملاحظة
     NoteMode mode;
-    
+
     if (selectedNote.isProfessional == true) {
       mode = NoteMode.code;
     } else if (selectedNote.isChecklist == true) {
@@ -145,7 +149,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
     } catch (e) {
       debugPrint('DetailsPanel Error: $e');
       final l10n = AppLocalizations.of(context)!;
-      
+
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -185,13 +189,16 @@ class _DetailsPanelState extends State<DetailsPanel> {
   }
 
   /// وضع العرض لسطح المكتب - بنفس خلفية النوت
-  Widget _buildReadOnlyView(BuildContext context, Note note, SelectedNoteProvider provider) {
+  Widget _buildReadOnlyView(
+      BuildContext context, Note note, SelectedNoteProvider provider) {
     final l10n = AppLocalizations.of(context)!;
     final brightness = Theme.of(context).brightness;
-    
-    final baseColor = AppColorPalette.palette[note.colorIndex].getColor(brightness);
-    final textColor = baseColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
-    
+
+    final baseColor =
+        AppColorPalette.palette[note.colorIndex].getColor(brightness);
+    final textColor =
+        baseColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+
     return Scaffold(
       key: const ValueKey('readonly_view'),
       backgroundColor: baseColor,
@@ -216,9 +223,11 @@ class _DetailsPanelState extends State<DetailsPanel> {
               icon: const Icon(Icons.unarchive_rounded),
               tooltip: l10n.unarchive,
               onPressed: () async {
-                final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+                final notesProvider =
+                    Provider.of<NotesProvider>(context, listen: false);
                 if (note.id != null) {
                   await notesProvider.unarchiveNote(note.id!);
+                  if (!mounted) return;
                   provider.clearSelection();
                 }
               },
@@ -228,6 +237,8 @@ class _DetailsPanelState extends State<DetailsPanel> {
               icon: const Icon(Icons.restore_rounded, color: Colors.green),
               tooltip: l10n.restore,
               onPressed: () async {
+                final notesProvider =
+                    Provider.of<NotesProvider>(context, listen: false);
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -240,15 +251,18 @@ class _DetailsPanelState extends State<DetailsPanel> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        style: TextButton.styleFrom(foregroundColor: Colors.green),
+                        style:
+                            TextButton.styleFrom(foregroundColor: Colors.green),
                         child: Text(l10n.restore),
                       ),
                     ],
                   ),
                 );
                 if (confirmed == true && note.id != null) {
-                  final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-                  await notesProvider.restoreNote(note.id!);
+                  if (!mounted) return;
+                  final noteId = note.id!;
+                  await notesProvider.restoreNote(noteId);
+                  if (!mounted) return;
                   provider.clearSelection();
                 }
               },
@@ -257,6 +271,8 @@ class _DetailsPanelState extends State<DetailsPanel> {
               icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
               tooltip: l10n.permanentDelete,
               onPressed: () async {
+                final notesProvider =
+                    Provider.of<NotesProvider>(context, listen: false);
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -269,15 +285,18 @@ class _DetailsPanelState extends State<DetailsPanel> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style:
+                            TextButton.styleFrom(foregroundColor: Colors.red),
                         child: Text(l10n.delete),
                       ),
                     ],
                   ),
                 );
                 if (confirmed == true && note.id != null) {
-                  final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-                  await notesProvider.deleteNote(note.id!);
+                  if (!mounted) return;
+                  final noteId = note.id!;
+                  await notesProvider.deleteNote(noteId);
+                  if (!mounted) return;
                   provider.clearSelection();
                 }
               },
@@ -297,41 +316,41 @@ class _DetailsPanelState extends State<DetailsPanel> {
         child: Scrollbar(
           child: SingleChildScrollView(
             child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - 
-                         MediaQuery.of(context).padding.top - 
-                         kToolbarHeight,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (note.title.isNotEmpty) ...[
-                    Text(
-                      note.title,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Divider(color: textColor.withValues(alpha: 0.3)),
-                    const SizedBox(height: 16),
-                  ],
-                  note.isChecklist
-                      ? _buildChecklistView(note.content, textColor)
-                      : SelectableText(
-                          note.content.isEmpty ? l10n.noNotes : note.content,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: textColor,
-                            height: 1.5,
-                          ),
-                        ),
-                ],
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    kToolbarHeight,
               ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (note.title.isNotEmpty) ...[
+                      Text(
+                        note.title,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(color: textColor.withValues(alpha: 0.3)),
+                      const SizedBox(height: 16),
+                    ],
+                    note.isChecklist
+                        ? _buildChecklistView(note.content, textColor)
+                        : SelectableText(
+                            note.content.isEmpty ? l10n.noNotes : note.content,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: textColor,
+                              height: 1.5,
+                            ),
+                          ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -343,14 +362,14 @@ class _DetailsPanelState extends State<DetailsPanel> {
   /// عرض Checklist منسق - نفس تنسيق الموبايل
   Widget _buildChecklistView(String content, Color textColor) {
     final items = ChecklistFormatter.parseJson(content);
-    
+
     if (items.isEmpty) {
       return Text(
         'Empty checklist',
         style: TextStyle(color: textColor.withValues(alpha: 0.6)),
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items.map<Widget>((item) {
@@ -388,10 +407,10 @@ class _DetailsPanelState extends State<DetailsPanel> {
   /// تحويل نوع الملاحظة (String) إلى NoteMode
   NoteMode _getNoteMode(String noteType) {
     debugPrint('_getNoteMode: noteType = $noteType');
-    
+
     // تطبيع النوع
     final normalizedType = noteType.toLowerCase().trim();
-    
+
     switch (normalizedType) {
       case 'code':
       case 'professional':

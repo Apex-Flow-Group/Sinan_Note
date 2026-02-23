@@ -1,8 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 // Notification Test Utility - For debugging reminders
 
-import 'logger.dart';
-import '../../services/notification_service.dart';
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/services/notification_service.dart';
+
+
 
 class NotificationTest {
   static Future<void> testNotificationIn1Minute() async {

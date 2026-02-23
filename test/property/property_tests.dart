@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:faker/faker.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/note_services/note_security_service.dart';
-import 'package:apex_note/controllers/editor/text_direction_controller.dart';
 import 'package:apex_note/controllers/editor/editor_state_manager.dart';
+import 'package:apex_note/controllers/editor/text_direction_controller.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/note_services/note_security_service.dart';
+import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 // Mock Database Service for testing
 // Note: We can't extend IsarDatabaseService because it uses a factory constructor
@@ -105,7 +105,8 @@ void main() {
     });
 
     group('Property 2: CRUD Consistency', () {
-      test('For any note, adding then retrieving returns equivalent note', () async {
+      test('For any note, adding then retrieving returns equivalent note',
+          () async {
         final dbService = MockDatabaseService();
         final stateService = NoteStateService();
         final now = DateTime.now();
@@ -144,7 +145,8 @@ void main() {
 
         // Test Arabic text
         for (int i = 0; i < 20; i++) {
-          final arabicText = 'مرحبا بك في التطبيق ${faker.randomGenerator.integer(100)}';
+          final arabicText =
+              'مرحبا بك في التطبيق ${faker.randomGenerator.integer(100)}';
           final direction = controller.detectParagraphDirection(arabicText);
           expect(direction, TextDirection.rtl);
         }
@@ -191,7 +193,6 @@ void main() {
       test('For any state change, hasChanges detects modifications correctly',
           () {
         final manager = EditorStateManager();
-        final now = DateTime.now();
 
         for (int i = 0; i < 30; i++) {
           final originalContent = faker.lorem.words(15).join(' ');

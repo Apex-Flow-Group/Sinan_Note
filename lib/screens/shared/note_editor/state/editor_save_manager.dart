@@ -1,15 +1,16 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
-import 'package:flutter/material.dart';
-import '../../../../services/unified_notification_service.dart';
+
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../../core/utils/logger.dart';
-import '../../../../models/note.dart';
-import '../../../../models/note_mode.dart';
-import '../../../../controllers/notes/notes_provider.dart';
-import '../../../../services/version_control_service.dart';
-import '../controllers/editor_smart_controller.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/services/version_control_service.dart';
+import 'package:flutter/material.dart';
 
 class EditorSaveManager {
   /// Validate if note content is empty
@@ -20,8 +21,9 @@ class EditorSaveManager {
         if (decoded is Map) {
           final title = (decoded['title'] ?? '').toString().trim();
           final items = decoded['items'] as List? ?? [];
-          return title.isEmpty && 
-              !items.any((item) => (item['text'] ?? '').toString().trim().isNotEmpty);
+          return title.isEmpty &&
+              !items.any(
+                  (item) => (item['text'] ?? '').toString().trim().isNotEmpty);
         }
       } catch (e) {
         return true;
@@ -67,19 +69,19 @@ class EditorSaveManager {
     if (mode == NoteMode.checklist) {
       return 'checklist';
     }
-    
+
     // Priority 2: Manual language selection
     if (isLanguageManuallySelected && detectedLanguage != null) {
       return smartController.mapLanguageToNoteType(detectedLanguage);
     }
-    
+
     // Priority 3: Preserve existing type if compatible
-    if (existingNoteType != null && 
-        existingNoteType.isNotEmpty && 
+    if (existingNoteType != null &&
+        existingNoteType.isNotEmpty &&
         mode == NoteMode.code) {
       return existingNoteType;
     }
-    
+
     // Priority 4: Default to mode name
     return mode.name;
   }
@@ -99,9 +101,10 @@ class EditorSaveManager {
     required String? recurrenceRule,
     required NoteMode mode,
     bool silent = false,
-    bool isAutoSave = false,  // NEW: distinguish auto-save from manual
+    bool isAutoSave = false, // NEW: distinguish auto-save from manual
   }) async {
-    AppLogger.info('saveNote called - title: $title, noteType: $noteType', 'SaveManager');
+    AppLogger.info(
+        'saveNote called - title: $title, noteType: $noteType', 'SaveManager');
     final noteToSave = Note(
       id: savedNoteId ?? existingNote?.id,
       title: title,
@@ -123,14 +126,14 @@ class EditorSaveManager {
 
     final newId = await provider.addOrUpdateNote(noteToSave, silent: silent);
     AppLogger.success('Note saved with ID: $newId', 'SaveManager');
-    
+
     // Log version for history
     try {
       await VersionControlService().smartLogVersion(
         noteId: newId,
         title: title,
         content: content,
-        isManualAction: !isAutoSave,  // FIXED: respect auto-save flag
+        isManualAction: !isAutoSave, // FIXED: respect auto-save flag
       );
     } catch (e) {
       // History logging failed, but note was saved
@@ -176,14 +179,13 @@ class EditorSaveManager {
 
     await provider.addOrUpdateNote(noteToSave);
 
-    if (context.mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.savedAsMarkdownSuccess,
-        type: NotificationType.success,
-      );
-    }
+    if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    UnifiedNotificationService().show(
+      context: context,
+      message: l10n.savedAsMarkdownSuccess,
+      type: NotificationType.success,
+    );
   }
 
   /// Save with specific extension/language
@@ -203,7 +205,7 @@ class EditorSaveManager {
     required EditorSmartController smartController,
   }) async {
     String noteType = mode.name;
-    
+
     if (detectedLanguage != null) {
       noteType = smartController.mapLanguageToNoteType(detectedLanguage);
     }
@@ -229,13 +231,12 @@ class EditorSaveManager {
 
     await provider.addOrUpdateNote(noteToSave);
 
-    if (context.mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.savedSuccessfully,
-        type: NotificationType.success,
-      );
-    }
+    if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    UnifiedNotificationService().show(
+      context: context,
+      message: l10n.savedSuccessfully,
+      type: NotificationType.success,
+    );
   }
 }

@@ -1,12 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
-import 'package:flutter/material.dart';
+
+import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../services/widget_service.dart';
-import '../../services/storage/isar_database_service.dart';
-import '../../models/note.dart';
-import '../../core/utils/checklist_formatter.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/widget_service.dart';
+import 'package:flutter/material.dart';
 
 class WidgetSelectionScreen extends StatefulWidget {
   final String widgetType; // 'note' or 'checklist'

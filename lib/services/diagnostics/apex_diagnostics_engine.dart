@@ -1,7 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import '../../core/utils/logger.dart';
 import 'dart:io';
+
+import 'package:apex_note/core/utils/logger.dart';
 
 /// محرك التشخيص المركزي - أعمى 100% ومستقل تماماً
 /// لا يعتمد على Flutter أو أي مكتبة خارجية

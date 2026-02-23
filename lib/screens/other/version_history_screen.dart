@@ -1,15 +1,15 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/adaptive_color.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_version.dart';
+import 'package:apex_note/services/version_history_service.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../widgets/home/home_drawer_widget.dart';
-import '../../services/version_history_service.dart';
-import '../../models/note.dart';
-import '../../models/note_version.dart';
-import '../../core/utils/checklist_formatter.dart';
-import '../../core/utils/adaptive_color.dart';
 
 class VersionHistoryScreen extends StatefulWidget {
   const VersionHistoryScreen({super.key});
@@ -37,7 +37,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       });
     });
   }
-  
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -46,7 +46,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
 
   List<Note> _filterAndSortNotes() {
     var notes = _notesWithHistory;
-    
+
     if (_searchQuery.trim().isNotEmpty) {
       final query = _searchQuery.trim();
       notes = notes.where((note) {
@@ -54,13 +54,13 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
             note.content.toLowerCase().contains(query);
       }).toList();
     }
-    
+
     if (_sortBy == 'title') {
       notes.sort((a, b) => a.title.compareTo(b.title));
     } else {
       notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     }
-    
+
     return notes;
   }
 
@@ -80,6 +80,42 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       _notesWithHistory = unlockedNotes;
       _isLoading = false;
     });
+  }
+
+  Future<void> _onRestoreVersion(NoteVersion version, Note note) async {
+    final l10n = AppLocalizations.of(context)!;
+    // Show confirmation
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.confirmRestore),
+        content: Text(l10n.restoreWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.restore),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    await _versionService.restoreVersion(note.id!, version);
+    if (!mounted) return;
+
+    Navigator.pop(context); // Pop the bottom sheet
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.noteRestored),
+        backgroundColor: Colors.green,
+      ),
+    );
+    _loadNotesWithHistory();
   }
 
   Future<void> _showVersionsDialog(Note note) async {
@@ -111,40 +147,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           versions: versions,
           totalVersions: versionCount,
           scrollController: scrollController,
-          onRestore: (version) async {
-            // Show confirmation
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: Text(AppLocalizations.of(context)!.confirmRestore),
-                content: Text(AppLocalizations.of(context)!.restoreWarning),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(AppLocalizations.of(context)!.cancel),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: Text(AppLocalizations.of(context)!.restore),
-                  ),
-                ],
-              ),
-            );
-
-            if (confirmed == true) {
-              await _versionService.restoreVersion(note.id!, version);
-              if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppLocalizations.of(context)!.noteRestored),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                _loadNotesWithHistory();
-              }
-            }
-          },
+          onRestore: (version) => _onRestoreVersion(version, note),
         ),
       ),
     );
@@ -153,11 +156,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    final isDark = settingsProvider.themeMode == ThemeMode.dark ||
-        (settingsProvider.themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
-    
+    Provider.of<SettingsProvider>(context);
+
     final filteredNotes = _filterAndSortNotes();
 
     return PopScope(
@@ -196,7 +196,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
             ),
             PopupMenuButton<String>(
               icon: const Icon(Icons.sort),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               onSelected: (value) {
                 setState(() => _sortBy = value);
               },
@@ -205,12 +206,18 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                   value: 'date',
                   child: Row(
                     children: [
-                      Icon(Icons.access_time, size: 20, color: _sortBy == 'date' ? Theme.of(context).colorScheme.primary : null),
+                      Icon(Icons.access_time,
+                          size: 20,
+                          color: _sortBy == 'date'
+                              ? Theme.of(context).colorScheme.primary
+                              : null),
                       const SizedBox(width: 12),
                       Text(l10n.sortByDate),
                       if (_sortBy == 'date') ...[
                         const Spacer(),
-                        Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.check,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary),
                       ],
                     ],
                   ),
@@ -219,12 +226,18 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                   value: 'title',
                   child: Row(
                     children: [
-                      Icon(Icons.sort_by_alpha, size: 20, color: _sortBy == 'title' ? Theme.of(context).colorScheme.primary : null),
+                      Icon(Icons.sort_by_alpha,
+                          size: 20,
+                          color: _sortBy == 'title'
+                              ? Theme.of(context).colorScheme.primary
+                              : null),
                       const SizedBox(width: 12),
                       Text(l10n.sortByTitle),
                       if (_sortBy == 'title') ...[
                         const Spacer(),
-                        Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.check,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary),
                       ],
                     ],
                   ),
@@ -237,104 +250,110 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           onBackupTap: () {},
           onNotesChanged: () {},
         ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : filteredNotes.isEmpty
-              ? Center(
-                  child: Text(
-                    _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 16,
-                    bottom: MediaQuery.of(context).padding.bottom + 80,
-                  ),
-                  itemCount: filteredNotes.length,
-                  itemBuilder: (context, index) {
-                    final note = filteredNotes[index];
-                    // ✅ Format checklist content for display
-                    final displayContent = (note.isChecklist || note.noteType == 'checklist')
-                        ? _formatChecklistForDisplay(note.content)
-                        : note.content;
-                    final preview = displayContent.length > 100
-                        ? '${displayContent.substring(0, 100)}...'
-                        : displayContent;
-                    
-                    // ✅ Use note's color (same as note cards)
-                    final brightness = Theme.of(context).brightness;
-                    final baseColor = AppColorPalette.palette[note.colorIndex].getColor(brightness);
-                    final isLightColor = baseColor.computeLuminance() > 0.5;
-                    final titleColor = isLightColor ? Colors.black87 : Colors.white;
-                    final contentColor = isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : filteredNotes.isEmpty
+                ? Center(
+                    child: Text(
+                      _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  )
+                : ListView.builder(
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 16,
+                      bottom: MediaQuery.of(context).padding.bottom + 80,
+                    ),
+                    itemCount: filteredNotes.length,
+                    itemBuilder: (context, index) {
+                      final note = filteredNotes[index];
+                      // ✅ Format checklist content for display
+                      final displayContent =
+                          (note.isChecklist || note.noteType == 'checklist')
+                              ? _formatChecklistForDisplay(note.content)
+                              : note.content;
+                      final preview = displayContent.length > 100
+                          ? '${displayContent.substring(0, 100)}...'
+                          : displayContent;
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      elevation: 0,
-                      color: baseColor,
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        title: Text(
-                          note.title.isEmpty ? l10n.untitled : note.title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: titleColor,
+                      // ✅ Use note's color (same as note cards)
+                      final brightness = Theme.of(context).brightness;
+                      final baseColor = AppColorPalette.palette[note.colorIndex]
+                          .getColor(brightness);
+                      final isLightColor = baseColor.computeLuminance() > 0.5;
+                      final titleColor =
+                          isLightColor ? Colors.black87 : Colors.white;
+                      final contentColor =
+                          isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 0,
+                        color: baseColor,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          title: Text(
+                            note.title.isEmpty ? l10n.untitled : note.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: titleColor,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              Text(
+                                preview,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: contentColor),
+                              ),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              FutureBuilder<int>(
+                                future:
+                                    _versionService.getVersionCount(note.id!),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Colors.blue.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '${snapshot.data}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.history),
+                                onPressed: () => _showVersionsDialog(note),
+                              ),
+                            ],
                           ),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            Text(
-                              preview,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: contentColor),
-                            ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FutureBuilder<int>(
-                              future: _versionService.getVersionCount(note.id!),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      '${snapshot.data}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.history),
-                              onPressed: () => _showVersionsDialog(note),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
       ),
     );
   }
@@ -381,11 +400,13 @@ class _VersionsBottomSheet extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.noteHistory,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -439,13 +460,16 @@ class _VersionsBottomSheet extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
-                        subtitle: Text(timeAgo, style: const TextStyle(fontSize: 12)),
+                        subtitle:
+                            Text(timeAgo, style: const TextStyle(fontSize: 12)),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.visibility_outlined, size: 20),
-                              onPressed: () => _showVersionPreview(context, version, l10n),
+                              icon: const Icon(Icons.visibility_outlined,
+                                  size: 20),
+                              onPressed: () =>
+                                  _showVersionPreview(context, version, l10n),
                             ),
                             IconButton(
                               icon: const Icon(Icons.restore, size: 20),
@@ -496,13 +520,14 @@ class _VersionsBottomSheet extends StatelessWidget {
     }
   }
 
-  void _showVersionPreview(BuildContext context, NoteVersion version, AppLocalizations l10n) {
+  void _showVersionPreview(
+      BuildContext context, NoteVersion version, AppLocalizations l10n) {
     // ✅ Format checklist content for preview
     final isChecklist = ChecklistFormatter.isValidChecklist(version.content);
     final displayContent = isChecklist
         ? ChecklistFormatter.toDisplayText(version.content)
         : version.content;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

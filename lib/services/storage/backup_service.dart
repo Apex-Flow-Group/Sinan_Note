@@ -1,17 +1,18 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import '../../core/utils/logger.dart';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import '../diagnostics/apex_error_manager.dart';
-import '../security/vault_service.dart';
-import 'isar_database_service.dart';
-import '../../models/note.dart';
 
 class BackupService {
   Future<void> exportDatabase() async {

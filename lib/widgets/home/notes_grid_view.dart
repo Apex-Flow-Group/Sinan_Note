@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/mobile/home_screen.dart';
+import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import '../../models/note.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../providers/selected_note_provider.dart';
-import '../../screens/mobile/home_screen.dart';
-import '../home/note_card_widget.dart';
+import 'package:provider/provider.dart';
 
 class NotesGridView extends StatefulWidget {
   final ViewType viewType;

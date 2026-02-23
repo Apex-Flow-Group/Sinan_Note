@@ -1,24 +1,25 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../../services/unified_notification_service.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import '../../models/note.dart';
-import '../../core/utils/adaptive_color.dart';
-import '../../models/note_mode.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../services/security/biometric_service.dart';
-import '../../services/widget_service.dart';
-import '../../services/notification_service.dart';
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/adaptive_color.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../core/utils/checklist_formatter.dart';
-import '../../widgets/common/custom_share_sheet.dart';
-import 'note_editor.dart' show NoteEditorImmersive;
-import 'note_view/note_view_helpers.dart';
-import 'note_view/note_view_widgets.dart';
-import 'note_view/note_view_bars.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/shared/note_editor.dart'
+    show NoteEditorImmersive;
+import 'package:apex_note/screens/shared/note_view/note_view_bars.dart';
+import 'package:apex_note/screens/shared/note_view/note_view_helpers.dart';
+import 'package:apex_note/screens/shared/note_view/note_view_widgets.dart';
+import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/services/widget_service.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:provider/provider.dart';
 
 /// Interactive read-only note viewer with markdown rendering
 class NoteViewScreen extends StatefulWidget {
@@ -64,14 +65,10 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     // 2. طلب البصمة إذا لم تكن مفتوحة
     final bool success = await BiometricService.authenticate();
 
-    if (success) {
-      provider.unlockVault(); // تفعيل الجلسة
-    }
-
     if (mounted) {
+      provider.unlockVault(); // تفعيل الجلسة
       setState(() => _isAuthenticated = success);
-
-      if (!success) {
+      if (!success && mounted) {
         Navigator.of(context).pop();
       }
     }
@@ -80,18 +77,18 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
   Future<void> _refreshNote() async {
     final provider = Provider.of<NotesProvider>(context, listen: false);
     await provider.refreshAllNotes();
+    if (!mounted) return;
+
     final updatedNote = provider.activeNotes
         .cast<Note?>()
         .firstWhere((n) => n?.id == _currentNote.id, orElse: () => null);
-    if (updatedNote != null && mounted) {
+    if (updatedNote != null) {
       setState(() => _currentNote = updatedNote);
-    } else {
+    } else if (mounted) {
       // Note not found in active notes, close view
-      if (mounted) Navigator.pop(context, true);
+      Navigator.pop(context, true);
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +110,8 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       );
     }
     final l10n = AppLocalizations.of(context)!;
-    final bgColor = AppColorPalette.palette[_currentNote.colorIndex].getColor(Theme.of(context).brightness);
+    final bgColor = AppColorPalette.palette[_currentNote.colorIndex]
+        .getColor(Theme.of(context).brightness);
     final textColor =
         bgColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
 
@@ -127,36 +125,49 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
               icon: const Icon(Icons.widgets_outlined),
               tooltip: 'Pin to Widget',
               onPressed: () async {
+                final nav = Navigator.of(context);
+                final messenger = UnifiedNotificationService();
+                final l10nSnap = AppLocalizations.of(context)!;
                 if (_currentNote.id == null) {
-                  UnifiedNotificationService().show(
+                  messenger.show(
                     context: context,
                     message: 'Cannot pin unsaved note',
                     type: NotificationType.error,
                   );
                   return;
                 }
-                
-                final isChecklistNote = (_currentNote.isChecklist == true) || 
+
+                final noteId = _currentNote.id!;
+                final noteTitle = _currentNote.title.isEmpty
+                    ? 'Checklist'
+                    : _currentNote.title;
+                final noteContent = _currentNote.content;
+                final noteColorIndex = _currentNote.colorIndex;
+                final isChecklistNote = (_currentNote.isChecklist == true) ||
                     (_currentNote.noteType == 'checklist');
-                
+                final currentNote = _currentNote;
+
                 if (isChecklistNote) {
-                  final stats = NoteViewHelpers.parseChecklistStats(_currentNote.content);
+                  final stats =
+                      NoteViewHelpers.parseChecklistStats(noteContent);
                   await WidgetService().updateChecklistWidget(
-                    _currentNote.id!,
-                    _currentNote.title.isEmpty ? 'Checklist' : _currentNote.title,
-                    _currentNote.content,
-                    _currentNote.colorIndex,
+                    noteId,
+                    noteTitle,
+                    noteContent,
+                    noteColorIndex,
                     totalItems: stats['total'] ?? 0,
                     completedItems: stats['completed'] ?? 0,
                   );
                 } else {
-                  await WidgetService().updateNoteWidget(_currentNote);
+                  await WidgetService().updateNoteWidget(currentNote);
                 }
-                
-                final widgetName = isChecklistNote ? l10n.checklists : l10n.note;
-                UnifiedNotificationService().show(
-                  context: context,
-                  message: '${l10n.widgetPinned} $widgetName',
+
+                if (!mounted) return;
+                final widgetName =
+                    isChecklistNote ? l10nSnap.checklists : l10nSnap.note;
+                messenger.show(
+                  context: nav.context,
+                  message: '${l10nSnap.widgetPinned} $widgetName',
                   type: NotificationType.success,
                   duration: const Duration(seconds: 2),
                 );
@@ -165,7 +176,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         ],
       ),
       body: GestureDetector(
-        onDoubleTap: () => _editNote(context),
+        onDoubleTap: _editNote,
         child: SingleChildScrollView(
           child: Container(
             margin: const EdgeInsets.all(16),
@@ -185,22 +196,27 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ChecklistFormatter.isValidChecklist(_currentNote.content)
-                    ? NoteViewWidgets.buildChecklistView(_currentNote.content, textColor)
+                    ? NoteViewWidgets.buildChecklistView(
+                        _currentNote.content, textColor)
                     : Directionality(
-                        textDirection: NoteViewHelpers.getDirection(_currentNote.content)
-                            ? TextDirection.rtl
-                            : TextDirection.ltr,
+                        textDirection:
+                            NoteViewHelpers.getDirection(_currentNote.content)
+                                ? TextDirection.rtl
+                                : TextDirection.ltr,
                         child: MarkdownBody(
                           data: _currentNote.content.replaceAll('\n', '  \n'),
                           checkboxBuilder: (bool checked) => Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: Icon(
-                              checked ? Icons.check_box : Icons.check_box_outline_blank,
+                              checked
+                                  ? Icons.check_box
+                                  : Icons.check_box_outline_blank,
                               size: 20,
                               color: textColor,
                             ),
                           ),
-                          styleSheet: NoteViewWidgets.buildMarkdownStyle(textColor),
+                          styleSheet:
+                              NoteViewWidgets.buildMarkdownStyle(textColor),
                         ),
                       ),
                 const SizedBox(height: 24),
@@ -246,22 +262,27 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                           onTap: () async {
                             HapticFeedback.lightImpact();
                             final provider = Provider.of<NotesProvider>(context, listen: false);
-                            await NotificationService().cancelNotification(_currentNote.id!);
+                            final messenger = UnifiedNotificationService();
+                            final nav = Navigator.of(context);
+                            final reminderRemovedMsg = AppLocalizations.of(context)!.reminderRemoved;
+                            final noteId = _currentNote.id!;
+                            await NotificationService().cancelNotification(noteId);
                             final updatedNote = _currentNote.copyWith(
                               reminderDateTime: null,
                               recurrenceRule: null,
                             );
                             await provider.updateNote(updatedNote);
                             await _refreshNote();
-                            if (mounted) {
-                              UnifiedNotificationService().show(
-                                context: context,
-                                message: l10n.reminderRemoved,
-                                type: NotificationType.info,
-                              );
-                            }
+                            if (!mounted) return;
+                            messenger.show(
+                              context: nav.context,
+                              message: reminderRemovedMsg,
+                              type: NotificationType.info,
+                            );
                           },
-                          child: Icon(Icons.close, size: 16, color: textColor.withValues(alpha: 0.7)),
+                          child: Icon(Icons.close,
+                              size: 16,
+                              color: textColor.withValues(alpha: 0.7)),
                         ),
                       ],
                     ),
@@ -273,23 +294,16 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         ),
       ),
       bottomNavigationBar: _currentNote.isTrashed
-          ? NoteViewBars.buildRestoreBar(context, l10n, _currentNote, 
-              () => _restore(context, l10n),
-              () => _confirmPermanentDelete(context, l10n))
+          ? NoteViewBars.buildRestoreBar(
+              context, l10n, _currentNote, _restore, _confirmPermanentDelete)
           : NoteViewBars.buildActionBar(context, l10n, _currentNote,
-              _onShareTap,
-              () => _toggleArchive(context, l10n),
-              () => _confirmDelete(context, l10n),
-              () => _editNote(context)),
-
+              _onShareTap, _toggleArchive, _confirmDelete, _editNote),
     );
   }
 
-
-
-  Future<void> _editNote(BuildContext context) async {
+  Future<void> _editNote() async {
     if (_currentNote.isTrashed) return;
-    
+
     // CRITICAL: Check isChecklist flag first
     NoteMode mode;
     if (_currentNote.isChecklist) {
@@ -331,6 +345,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       }
     }
 
+    if (!mounted) return;
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -339,24 +354,22 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       ),
     );
 
+    if (!mounted) return;
+
     // 🔄 CRITICAL: Refresh note data after editing
     await _refreshNote();
   }
 
-  Future<void> _toggleArchive(
-      BuildContext context, AppLocalizations l10n) async {
+  Future<void> _toggleArchive() async {
     final provider = Provider.of<NotesProvider>(context, listen: false);
     if (_currentNote.isArchived) {
       await provider.unarchiveNote(_currentNote.id!);
     } else {
       await provider.archiveNote(_currentNote.id!);
     }
-    if (mounted) {
-      Navigator.pop(context, true);
-    }
+    if (!mounted) return;
+    Navigator.pop(context, true);
   }
-
-
 
   void _onShareTap() async {
     String textToShare;
@@ -371,8 +384,11 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     }
 
     if (!mounted) return;
-    
+    final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
+    final noteCopiedMsg = l10n.noteCopied;
+    final nav = Navigator.of(context);
+    final messenger = UnifiedNotificationService();
     CustomShareSheet.show(
       context,
       textToShare,
@@ -388,16 +404,14 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        final newId = await provider.addNote(duplicate);
+        await provider.addNote(duplicate);
         await _refreshNote();
-        if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          UnifiedNotificationService().show(
-            context: context,
-            message: l10n.noteCopied,
-            type: NotificationType.success,
-          );
-        }
+        if (!mounted) return;
+        messenger.show(
+          context: nav.context,
+          message: noteCopiedMsg,
+          type: NotificationType.success,
+        );
       },
     );
   }
@@ -425,100 +439,114 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     return '$dateStr • $timeStr';
   }
 
-  Future<void> _restore(BuildContext context, AppLocalizations l10n) async {
+  Future<void> _restore() async {
     final provider = Provider.of<NotesProvider>(context, listen: false);
     if (widget.note.isTrashed) {
       await provider.restoreNote(widget.note.id!);
     } else if (widget.note.isArchived) {
       await provider.unarchiveNote(widget.note.id!);
     }
-    if (mounted) {
-      Navigator.pop(context, true);
-    }
+    if (!mounted) return;
+    Navigator.pop(context, true);
   }
 
-  Future<void> _confirmDelete(
-      BuildContext context, AppLocalizations l10n) async {
+  Future<void> _confirmDelete() async {
+    if (!mounted) return;
+    final currentContext = context;
+    final l10n = AppLocalizations.of(currentContext)!;
+    final provider = Provider.of<NotesProvider>(currentContext, listen: false);
+    final deleteFailed = l10n.deleteFailed;
+    final deleteNote = l10n.deleteNote;
+    final deleteConfirm = l10n.deleteConfirm;
+    final cancel = l10n.cancel;
+    final delete = l10n.delete;
+    
+    if (!mounted) return;
     final confirm = await showDialog<bool>(
-      context: context,
+      context: currentContext,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteNote),
-        content: Text(l10n.deleteConfirm),
+        title: Text(deleteNote),
+        content: Text(deleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
+            child: Text(cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+            child: Text(delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
     if (confirm == true && mounted) {
+      final nav = Navigator.of(context);
+      final messenger = UnifiedNotificationService();
       try {
-        final provider = Provider.of<NotesProvider>(context, listen: false);
-        await provider.trashNote(_currentNote.id!);
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.pop(context, true);
-        }
+        final noteId = _currentNote.id!;
+        await provider.trashNote(noteId);
+        if (!mounted) return;
+        nav.pop(true);
       } catch (e) {
-        if (mounted) {
-          UnifiedNotificationService().show(
-            context: context,
-            message: '${l10n.deleteFailed}: $e',
-            type: NotificationType.error,
-          );
-        }
+        if (!mounted) return;
+        messenger.show(
+          context: nav.context,
+          message: '$deleteFailed: $e',
+          type: NotificationType.error,
+        );
       }
-    }
+    }  
   }
 
-  Future<void> _confirmPermanentDelete(
-      BuildContext context, AppLocalizations l10n) async {
+  Future<void> _confirmPermanentDelete() async {
+    if (!mounted) return;
+    final currentContext = context;
+    final l10n = AppLocalizations.of(currentContext)!;
+    final provider = Provider.of<NotesProvider>(currentContext, listen: false);
+    final deleteFailed = l10n.deleteFailed;
+    final permanentDelete = l10n.permanentDelete;
+    final confirmPermanentDelete = l10n.confirmPermanentDelete;
+    final cancel = l10n.cancel;
+    final delete = l10n.delete;
+    
+    if (!mounted) return;
     final confirm = await showDialog<bool>(
-      context: context,
+      context: currentContext,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.permanentDelete),
-        content: Text(l10n.confirmPermanentDelete),
+        title: Text(permanentDelete),
+        content: Text(confirmPermanentDelete),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
+            child: Text(cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+            child: Text(delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
     if (confirm == true && mounted) {
+      final nav = Navigator.of(context);
+      final messenger = UnifiedNotificationService();
       try {
-        final provider = Provider.of<NotesProvider>(context, listen: false);
-        await provider.deleteNote(_currentNote.id!);
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.pop(context, true);
-        }
+        final noteId = _currentNote.id!;
+        await provider.deleteNote(noteId);
+        if (!mounted) return;
+        nav.pop(true);
       } catch (e) {
-        if (mounted) {
-          UnifiedNotificationService().show(
-            context: context,
-            message: '${l10n.deleteFailed}: $e',
-            type: NotificationType.error,
-          );
-        }
+        if (!mounted) return;
+        messenger.show(
+          context: nav.context,
+          message: '$deleteFailed: $e',
+          type: NotificationType.error,
+        );
       }
     }
   }
-  
-  
 }
-
-
-

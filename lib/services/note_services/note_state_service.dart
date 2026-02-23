@@ -1,9 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/note.dart';
-import '../cloud/google_drive_service.dart';
 
 class NoteStateService {
   List<Note> _allNotes = [];

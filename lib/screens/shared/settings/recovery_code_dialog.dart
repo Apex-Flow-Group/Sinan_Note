@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../services/security/vault_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:flutter/material.dart';
 
 class RecoveryCodeDialog extends StatefulWidget {
   const RecoveryCodeDialog({super.key});
@@ -39,10 +39,11 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
     try {
       // Verify and unlock with recovery code
       final success = await VaultService.recoverWithCode(recoveryCode);
-      
+
       if (success && mounted) {
         // ✅ Mark vault as unlocked in session
         await VaultService.markVaultUnlocked();
+        if (!mounted) return;
         Navigator.pop(context, true); // Success
       } else {
         setState(() {
@@ -132,7 +133,8 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -180,7 +182,8 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 )
               : const Icon(Icons.lock_open),
           label: Text(

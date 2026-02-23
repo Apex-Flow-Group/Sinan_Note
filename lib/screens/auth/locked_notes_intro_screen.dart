@@ -1,15 +1,16 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/feature_info.dart';
+import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../services/security/vault_service.dart';
-import '../../services/security/biometric_service.dart';
-import '../../services/cloud/google_drive_service.dart';
-import '../mobile/locked_notes_screen.dart';
-import '../../services/unified_notification_service.dart';
 
 class LockedNotesIntroScreen extends StatefulWidget {
   const LockedNotesIntroScreen({super.key});
@@ -57,20 +58,20 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
 
   int get _totalPages => 4;
 
-  List<_FeatureInfo> _getFeatures(AppLocalizations l10n) => [
-        _FeatureInfo(
+  List<FeatureInfo> _getFeatures(AppLocalizations l10n) => [
+        FeatureInfo(
           icon: Icons.lock_outline,
           title: l10n.secureVault,
           description: l10n.vaultFullyEncrypted,
           color: Colors.orange,
         ),
-        _FeatureInfo(
+        FeatureInfo(
           icon: Icons.file_download_outlined,
           title: l10n.importFromInside,
           description: l10n.noLockButtonsOutside,
           color: Colors.blue,
         ),
-        _FeatureInfo(
+        FeatureInfo(
           icon: Icons.security,
           title: l10n.sessionProtection,
           description: l10n.dataEncryptedOnExit,
@@ -88,50 +89,52 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
 
   Future<void> _handleNext() async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Password page (index 1)
     if (_currentPage == 1) {
       final password = _passwordController.text;
       final confirm = _confirmController.text;
-      
+
       if (password.length < 6) {
         setState(() => _errorText = l10n.passwordMinLength);
         return;
       }
-      
+
       if (password != confirm) {
         setState(() => _errorText = l10n.passwordMismatch);
         return;
       }
-      
+
       // Show loading
       if (!mounted) return;
-      
+
       // Hide keyboard first
       FocusScope.of(context).unfocus();
-      
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
-      
+
       // Setup vault
       try {
         final code = await VaultService.setupVault(password);
-        if (mounted) Navigator.pop(context); // Close loading
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading
         setState(() {
           _recoveryCode = code;
           _errorText = null;
         });
         _nextPage();
       } catch (e) {
-        if (mounted) Navigator.pop(context); // Close loading
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading
         setState(() => _errorText = 'Setup failed');
       }
       return;
     }
-    
+
     // Recovery code page (index 2)
     if (_currentPage == 2) {
       if (!_codeSaved) {
@@ -146,30 +149,32 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
       _nextPage();
       return;
     }
-    
+
     // Biometric page (index 3 - last)
     if (_currentPage == _totalPages - 1) {
       await _finishSetup(enableBiometric: true);
       return;
     }
-    
+
     _nextPage();
   }
-  
+
   Future<void> _finishSetup({bool enableBiometric = false}) async {
     // Always save biometric preference (true or false)
     await VaultService.setBiometricEnabled(enableBiometric);
-    
+
+    if (!mounted) return;
+
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     await settings.setLockedIntroSeen(true);
-    
-    if (mounted) {
-      Navigator.pop(context);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
-      );
-    }
+
+    if (!mounted) return;
+
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
+    );
   }
 
   void _nextPage() {
@@ -185,7 +190,8 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     if (mounted) {
       UnifiedNotificationService().show(
         context: context,
-        message: '⚠️ استعادة الخزنة من Drive قريباً...\nحالياً: استخدم Recovery Code',
+        message:
+            '⚠️ استعادة الخزنة من Drive قريباً...\nحالياً: استخدم Recovery Code',
         type: NotificationType.info,
         duration: const Duration(seconds: 3),
       );
@@ -195,7 +201,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -245,22 +250,22 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   Widget _buildFeaturesPage(bool isDark) {
     final l10n = AppLocalizations.of(context)!;
     final features = _getFeatures(l10n);
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
           const SizedBox(height: 20),
           ...features.map((feature) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _buildFeatureCard(
-              icon: feature.icon,
-              title: feature.title,
-              description: feature.description,
-              color: feature.color,
-              isDark: isDark,
-            ),
-          )),
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildFeatureCard(
+                  icon: feature.icon,
+                  title: feature.title,
+                  description: feature.description,
+                  color: feature.color,
+                  isDark: isDark,
+                ),
+              )),
           const SizedBox(height: 100),
         ],
       ),
@@ -347,16 +352,16 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final totalPages = _hasBiometrics ? _totalPages : _totalPages - 1;
     final isLastPage = _currentPage == totalPages - 1;
     final l10n = AppLocalizations.of(context)!;
-    
+
     // تحديد حالة الزر
     bool isButtonEnabled = true;
-    
+
     // صفحة كلمة المرور (1)
     if (_currentPage == 1) {
-      isButtonEnabled = _passwordController.text.length >= 6 && 
-                       _confirmController.text.length >= 6;
+      isButtonEnabled = _passwordController.text.length >= 6 &&
+          _confirmController.text.length >= 6;
     }
-    
+
     // صفحة كود الاستعادة (2)
     if (_currentPage == 2) {
       isButtonEnabled = _codeSaved && _recoveryCode != null;
@@ -372,21 +377,28 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             TextButton(
               onPressed: () async {
                 await VaultService.setBiometricEnabled(false);
-                final check = await VaultService.isBiometricEnabled();
+                await VaultService.isBiometricEnabled();
                 if (mounted) await _finishSetup(enableBiometric: false);
               },
               child: Text(l10n.skipBiometric),
             ),
-          
+
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton.icon(
-              onPressed: isButtonEnabled ? (isLastPage ? () => _finishSetup(enableBiometric: true) : _handleNext) : null,
+              onPressed: isButtonEnabled
+                  ? (isLastPage
+                      ? () => _finishSetup(enableBiometric: true)
+                      : _handleNext)
+                  : null,
               icon: Icon(isLastPage ? Icons.fingerprint : Icons.arrow_forward),
               label: Text(
-                isLastPage ? l10n.enableBiometricAccess : (_currentPage == 2 ? l10n.continueAction : l10n.next),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                isLastPage
+                    ? l10n.enableBiometricAccess
+                    : (_currentPage == 2 ? l10n.continueAction : l10n.next),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
@@ -402,10 +414,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
       ),
     );
   }
-  
+
   Widget _buildPasswordPage(bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(40.0),
       child: Column(
@@ -437,11 +449,14 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: l10n.enterPassword,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               prefixIcon: const Icon(Icons.lock),
               suffixIcon: IconButton(
-                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
               ),
             ),
             onChanged: (_) => setState(() => _errorText = null),
@@ -452,28 +467,32 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             obscureText: _obscureConfirm,
             decoration: InputDecoration(
               labelText: l10n.confirmPassword,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(_obscureConfirm ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                icon: Icon(
+                    _obscureConfirm ? Icons.visibility : Icons.visibility_off),
+                onPressed: () =>
+                    setState(() => _obscureConfirm = !_obscureConfirm),
               ),
             ),
             onChanged: (_) => setState(() => _errorText = null),
           ),
           if (_errorText != null) ...[
             const SizedBox(height: 12),
-            Text(_errorText!, style: const TextStyle(color: Colors.red, fontSize: 14)),
+            Text(_errorText!,
+                style: const TextStyle(color: Colors.red, fontSize: 14)),
           ],
           const SizedBox(height: 100),
         ],
       ),
     );
   }
-  
+
   Widget _buildRecoveryPage(bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -558,12 +577,14 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.cloud_download, color: Colors.blue, size: 24),
+                      const Icon(Icons.cloud_download,
+                          color: Colors.blue, size: 24),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           l10n.vaultFoundInDrive,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -591,19 +612,28 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             child: ExpansionTile(
               tilePadding: const EdgeInsets.symmetric(horizontal: 16),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              collapsedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               backgroundColor: Colors.blue.withValues(alpha: 0.05),
               collapsedBackgroundColor: Colors.blue.withValues(alpha: 0.05),
-              leading: const Icon(Icons.info_outline, color: Colors.blue, size: 24),
+              leading:
+                  const Icon(Icons.info_outline, color: Colors.blue, size: 24),
               title: Text(
                 l10n.importantInfo,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.blue),
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue),
               ),
               children: [
                 Text(
                   l10n.recoveryCodeInfo,
-                  style: TextStyle(fontSize: 13, color: isDark ? Colors.grey[400] : Colors.grey[700], height: 1.6),
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.grey[400] : Colors.grey[700],
+                      height: 1.6),
                   textAlign: TextAlign.start,
                 ),
               ],
@@ -617,15 +647,16 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             controlAffinity: ListTileControlAffinity.leading,
           ),
           if (_errorText != null)
-            Text(_errorText!, style: const TextStyle(color: Colors.red, fontSize: 14)),
+            Text(_errorText!,
+                style: const TextStyle(color: Colors.red, fontSize: 14)),
         ],
       ),
     );
   }
-  
+
   Widget _buildBiometricPage(bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Padding(
       padding: const EdgeInsets.all(40.0),
       child: Column(
@@ -664,18 +695,4 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
       ),
     );
   }
-}
-
-class _FeatureInfo {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color color;
-
-  _FeatureInfo({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.color,
-  });
 }

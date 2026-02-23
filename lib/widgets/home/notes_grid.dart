@@ -1,17 +1,18 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/widgets/effects/premium_card_effect.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../models/note.dart';
-import '../../core/utils/checklist_formatter.dart';
-import '../../screens/shared/note_editor.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../effects/premium_card_effect.dart';
 
-class NotesGrid extends StatelessWidget {
+class NotesGrid extends StatefulWidget {
   final List<Note> notes;
   final Function() onRefresh;
   final Function(Note) onDelete;
@@ -27,6 +28,11 @@ class NotesGrid extends StatelessWidget {
     this.showRestoreOption = false,
   });
 
+  @override
+  State<NotesGrid> createState() => _NotesGridState();
+}
+
+class _NotesGridState extends State<NotesGrid> {
   Widget _buildChecklistPreview(Note note, Color textColor) {
     try {
       final items = (jsonDecode(note.content) as List)
@@ -45,13 +51,13 @@ class NotesGrid extends StatelessWidget {
                               ? Icons.check_box
                               : Icons.check_box_outline_blank,
                           size: 16,
-                          color: textColor.withValues(alpha: 0.6)),
+                          color: textColor.withAlpha(0.6.toInt())),
                       const SizedBox(width: 6),
                       Expanded(
                           child: Text(item.text,
                               style: TextStyle(
                                   fontSize: 13,
-                                  color: textColor.withValues(alpha: 0.8),
+                                  color: textColor.withAlpha(0.8.toInt()),
                                   decoration: item.isDone
                                       ? TextDecoration.lineThrough
                                       : null),
@@ -75,7 +81,7 @@ class NotesGrid extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final settings = Provider.of<SettingsProvider>(context);
 
-    if (notes.isEmpty) {
+    if (widget.notes.isEmpty) {
       return Center(child: Text(l10n.noNotes));
     }
 
@@ -84,9 +90,9 @@ class NotesGrid extends StatelessWidget {
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       padding: const EdgeInsets.all(8),
-      itemCount: notes.length,
+      itemCount: widget.notes.length,
       itemBuilder: (context, index) {
-        final note = notes[index];
+        final note = widget.notes[index];
         final bool isLightColor =
             Color(note.colorIndex).computeLuminance() > 0.5;
         final Color textColor = isLightColor ? Colors.black87 : Colors.white;
@@ -101,7 +107,9 @@ class NotesGrid extends StatelessWidget {
                 builder: (context) => NoteEditorImmersive(note: note),
               ),
             );
-            onRefresh();
+            if (mounted) {
+              widget.onRefresh();
+            }
           },
           child: PremiumCardEffect(
             baseColor: Color(note.colorIndex),
@@ -133,7 +141,7 @@ class NotesGrid extends StatelessWidget {
                           'Protected Content',
                           style: TextStyle(
                             fontSize: 14,
-                            color: contentColor.withValues(alpha: 0.6),
+                            color: contentColor.withAlpha(0.6.toInt()),
                             fontStyle: FontStyle.italic,
                           ),
                         )

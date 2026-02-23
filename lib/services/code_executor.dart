@@ -1,8 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
+
+import 'package:apex_note/services/language_detector.dart';
 import 'package:path_provider/path_provider.dart';
-import 'language_detector.dart';
 
 /// Code execution service for running code in a sandboxed environment
 ///

@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import '../models/note.dart';
-import '../models/note_version.dart';
-import 'storage/isar_database_service.dart';
-import 'version_control_service.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_version.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/version_control_service.dart';
 
 /// Version History Service - UI layer for smart version control
 /// Uses VersionControlService settings for consistency

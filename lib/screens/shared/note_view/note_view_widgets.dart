@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import '../../../core/utils/checklist_formatter.dart';
 
 class NoteViewWidgets {
   static Widget buildChecklistView(String content, Color textColor) {

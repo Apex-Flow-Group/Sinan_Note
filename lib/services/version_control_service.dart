@@ -1,10 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/models/note_version.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:crypto/crypto.dart';
-import '../core/utils/logger.dart';
-import 'storage/isar_database_service.dart';
-import '../../models/note_version.dart';
 
 /// Ultra-Smart Version Control Service
 /// Philosophy: ONE meaningful version per editing session

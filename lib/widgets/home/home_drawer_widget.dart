@@ -1,18 +1,17 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
+import 'package:apex_note/screens/auth/vault_entry_screen.dart';
+import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/screens/other/version_history_screen.dart';
+import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
+import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/security/biometric_service.dart';
-import '../../services/security/vault_service.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../screens/auth/locked_notes_intro_screen.dart';
-import '../../screens/mobile/locked_notes_screen.dart';
-import '../../screens/auth/vault_entry_screen.dart';
-import '../../screens/sync/google_drive_screen_responsive.dart';
-import '../../screens/other/version_history_screen.dart';
-import '../../screens/shared/settings_screen_responsive.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-
 
 class HomeDrawerWidget extends StatelessWidget {
   final VoidCallback onBackupTap;
@@ -52,8 +51,10 @@ class HomeDrawerWidget extends StatelessWidget {
                   title: l10n.archive,
                   onTap: () async {
                     Navigator.pop(context);
+                    if (!context.mounted) return;
                     Navigator.popUntil(context, (route) => route.isFirst);
                     await Navigator.pushNamed(context, '/archive');
+                    if (!context.mounted) return;
                     onNotesChanged();
                   },
                 ),
@@ -63,8 +64,10 @@ class HomeDrawerWidget extends StatelessWidget {
                   title: l10n.trash,
                   onTap: () async {
                     Navigator.pop(context);
+                    if (!context.mounted) return;
                     Navigator.popUntil(context, (route) => route.isFirst);
                     await Navigator.pushNamed(context, '/trash');
+                    if (!context.mounted) return;
                     onNotesChanged();
                   },
                 ),
@@ -86,6 +89,7 @@ class HomeDrawerWidget extends StatelessWidget {
                   iconColor: const Color(0xFF4285F4),
                   onTap: () {
                     Navigator.pop(context);
+                    if (!context.mounted) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -102,6 +106,7 @@ class HomeDrawerWidget extends StatelessWidget {
                   iconColor: Colors.orange,
                   onTap: () {
                     Navigator.pop(context);
+                    if (!context.mounted) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -116,11 +121,13 @@ class HomeDrawerWidget extends StatelessWidget {
                   title: l10n.settings,
                   onTap: () async {
                     Navigator.pop(context);
+                    if (!context.mounted) return;
                     Navigator.popUntil(context, (route) => route.isFirst);
                     await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const SettingsScreenResponsive()),
                     );
+                    if (!context.mounted) return;
                     onNotesChanged();
                   },
                 ),
@@ -147,21 +154,23 @@ class HomeDrawerWidget extends StatelessWidget {
 
 Future<void> _openLockedNotes(BuildContext context) async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final l10n = AppLocalizations.of(context)!;
 
     if (!settings.hasSeenLockedIntro) {
       Navigator.pop(context);
-      if (context.mounted) {
-        Navigator.popUntil(context, (route) => route.isFirst);
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const LockedNotesIntroScreen()),
-        );
-        onNotesChanged();
-      }
+      if (!context.mounted) return;
+      Navigator.popUntil(context, (route) => route.isFirst);
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => const LockedNotesIntroScreen()),
+      );
+      if (!context.mounted) return;
+      onNotesChanged();
     } else {
       // Check if biometric is enabled
       final biometricEnabled = await VaultService.isBiometricEnabled();
+      if (!context.mounted) return;
       
       if (biometricEnabled) {
         // Biometric enabled -> authenticate
@@ -177,11 +186,12 @@ Future<void> _openLockedNotes(BuildContext context) async {
             context,
             MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
           );
+          if (!context.mounted) return;
           onNotesChanged();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.authenticationFailed),
+              content: Text(l10n.authenticationFailed),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 2),
             ),
@@ -190,15 +200,15 @@ Future<void> _openLockedNotes(BuildContext context) async {
       } else {
         // Biometric disabled -> go to VaultEntryScreen
         Navigator.pop(context);
+        if (!context.mounted) return;
         Navigator.popUntil(context, (route) => route.isFirst);
         
-        if (context.mounted) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const VaultEntryScreen()),
-          );
-          onNotesChanged();
-        }
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VaultEntryScreen()),
+        );
+        if (!context.mounted) return;
+        onNotesChanged();
       }
     }
   }

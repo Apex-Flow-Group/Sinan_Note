@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../../../services/unified_notification_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../services/diagnostics/apex_diagnostics_engine.dart';
+import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:flutter/material.dart';
 
 class SettingsUtils {
   static String getLanguageText(String code, AppLocalizations l10n) {
@@ -75,6 +75,7 @@ class SettingsUtils {
           TextButton(
             onPressed: () async {
               await ApexDiagnosticsEngine().clearLog();
+              if (!context.mounted) return;
               Navigator.pop(ctx);
               UnifiedNotificationService().show(
                 context: context,

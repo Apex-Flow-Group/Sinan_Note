@@ -1,61 +1,68 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../../services/cloud/google_drive_service.dart';
-import '../../../services/storage/isar_database_service.dart';
-import 'google_drive_vault_warning_dialog.dart';
-import '../../shared/settings/recovery_code_dialog.dart';
+import 'package:apex_note/screens/shared/settings/recovery_code_dialog.dart';
+import 'package:apex_note/screens/sync/google_drive/google_drive_vault_warning_dialog.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:flutter/material.dart';
 
 class GoogleDriveHandlers {
   static Future<void> handleSignOut(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await GoogleDriveService.signOut();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.signOutSuccess), backgroundColor: Colors.green),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(l10n.signOutSuccess), backgroundColor: Colors.green),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.signOutFailed} $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('${l10n.signOutFailed} $e'),
+            backgroundColor: Colors.red),
+      );
     }
   }
 
   static Future<void> handleSync(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!GoogleDriveService.isSignedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSignIn), backgroundColor: Colors.orange),
+        SnackBar(
+            content: Text(l10n.pleaseSignIn), backgroundColor: Colors.orange),
       );
       return;
     }
 
     try {
-      final success = await GoogleDriveService.uploadDatabase(context);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? AppLocalizations.of(context)!.syncSuccess : AppLocalizations.of(context)!.syncFailed),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
-        );
-      }
+      final success = await GoogleDriveService.uploadDatabase(null);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? l10n.syncSuccess : l10n.syncFailed),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.syncFailed} $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('${l10n.syncFailed} $e'),
+            backgroundColor: Colors.red),
+      );
     }
   }
 
-  static Future<void> handleUpload(BuildContext context, {bool uploadMasterKey = false, bool uploadVault = false}) async {
+  static Future<void> handleUpload(BuildContext context,
+      {bool uploadMasterKey = false, bool uploadVault = false}) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!GoogleDriveService.isSignedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSignIn), backgroundColor: Colors.orange),
+        SnackBar(
+            content: Text(l10n.pleaseSignIn), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -64,18 +71,19 @@ class GoogleDriveHandlers {
     try {
       final dbService = IsarDatabaseService();
       final lockedNotes = await dbService.getLockedNotes();
-      
+
       if (lockedNotes.isNotEmpty) {
         // Show vault warning if needed
-        final shouldShowWarning = await GoogleDriveVaultWarningDialog.shouldShow();
-        
+        final shouldShowWarning =
+            await GoogleDriveVaultWarningDialog.shouldShow();
+
         if (shouldShowWarning && context.mounted) {
           final agreed = await showDialog<bool>(
             context: context,
             barrierDismissible: false,
             builder: (ctx) => const GoogleDriveVaultWarningDialog(),
           );
-          
+
           if (agreed != true) return;
         }
       }
@@ -84,28 +92,31 @@ class GoogleDriveHandlers {
     }
 
     try {
-      final success = await GoogleDriveService.uploadDatabase(context, uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? AppLocalizations.of(context)!.uploadSuccess : AppLocalizations.of(context)!.uploadFailed),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
-        );
-      }
+      final success = await GoogleDriveService.uploadDatabase(null,
+          uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? l10n.uploadSuccess : l10n.uploadFailed),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.uploadFailed} $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('${l10n.uploadFailed} $e'),
+            backgroundColor: Colors.red),
+      );
     }
   }
 
   static Future<void> handleDownload(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!GoogleDriveService.isSignedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSignIn), backgroundColor: Colors.orange),
+        SnackBar(
+            content: Text(l10n.pleaseSignIn), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -113,11 +124,15 @@ class GoogleDriveHandlers {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.confirmDownload),
-        content: Text(AppLocalizations.of(context)!.confirmDownloadMessage),
+        title: Text(l10n.confirmDownload),
+        content: Text(l10n.confirmDownloadMessage),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(AppLocalizations.of(context)!.download)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel)),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.download)),
         ],
       ),
     );
@@ -127,7 +142,7 @@ class GoogleDriveHandlers {
     try {
       // Check if downloaded backup contains vault_data
       final hasVaultData = await GoogleDriveService.checkForVaultData();
-      
+
       if (hasVaultData && context.mounted) {
         // Show recovery code dialog
         final recovered = await showDialog<bool>(
@@ -135,39 +150,39 @@ class GoogleDriveHandlers {
           barrierDismissible: false,
           builder: (ctx) => const RecoveryCodeDialog(),
         );
-        
+
         if (recovered != true) {
-          if (context.mounted) {
-            final lang = Localizations.localeOf(context).languageCode;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(lang == 'ar' ? 'تم إلغاء التنزيل' : 'Download cancelled'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
+          if (!context.mounted) return;
+          final lang = Localizations.localeOf(context).languageCode;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  lang == 'ar' ? 'تم إلغاء التنزيل' : 'Download cancelled'),
+              backgroundColor: Colors.orange,
+            ),
+          );
           return;
         }
       }
-      
-      final success = await GoogleDriveService.downloadDatabase(context);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? AppLocalizations.of(context)!.downloadSuccess : AppLocalizations.of(context)!.downloadFailed),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
-        );
-      }
+
+      final success = await GoogleDriveService.downloadDatabase(null);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? l10n.downloadSuccess : l10n.downloadFailed),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.downloadFailed} $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('${l10n.downloadFailed} $e'),
+            backgroundColor: Colors.red),
+      );
     }
   }
-  
+
   static String formatDateTime(BuildContext context, DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);

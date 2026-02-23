@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../../services/cloud/google_drive_service.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../screens/sync/google_drive_screen.dart';
+import 'package:apex_note/screens/sync/google_drive_screen.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:flutter/material.dart';
 
 class CloudSettingsTile extends StatelessWidget {
   const CloudSettingsTile({super.key});

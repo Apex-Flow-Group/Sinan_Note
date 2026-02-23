@@ -1,11 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/material.dart';
-import '../../../services/unified_notification_service.dart';
-import '../../../services/storage/isar_database_service.dart';
-
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../common/custom_share_sheet.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:flutter/material.dart';
 
 class BackupOptionsDialog {
   static void show(BuildContext context, Map<String, String> strings) {
@@ -80,12 +79,14 @@ class BackupOptionsDialog {
                 Navigator.pop(ctx);
                 try {
                   final allNotes = await dbService.getNotes();
+                  if (!context.mounted) return;
                   final backup = allNotes
                       .map((n) => '${n.title}\n${n.content}\n---')
                       .join('\n\n');
                   CustomShareSheet.show(context, backup,
                       subject: 'Sinan Note Backup - ${allNotes.length} ملاحظة');
                 } catch (e) {
+                  if (!context.mounted) return;
                   UnifiedNotificationService().show(
                     context: context,
                     message: '${l10n.shareFailed}: $e',

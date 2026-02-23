@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:archive/archive.dart';
 
 /// Service for compressing and decompressing data for Google Drive sync

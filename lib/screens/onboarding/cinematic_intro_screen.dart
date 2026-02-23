@@ -1,10 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:math';
+
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/screens/onboarding/tour_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../controllers/settings/settings_provider.dart';
-import 'tour_screen.dart';
 
 // ignore: use_key_in_widget_constructors
 class CinematicIntroScreen extends StatefulWidget {
@@ -213,6 +214,9 @@ class _BackgroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // ✅ حماية من size صفر
+    if (size.width <= 0 || size.height <= 0) return;
+    
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
 
     final gradient = LinearGradient(
@@ -393,6 +397,9 @@ class _ButtonPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // ✅ حماية من size صفر
+    if (size.width <= 0 || size.height <= 0) return;
+    
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.width, size.height),
       const Radius.circular(28),

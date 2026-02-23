@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'biometric_service.dart';
 
 /// Immutable security configuration
 class SecurityConfig {

@@ -1,13 +1,14 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
+
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import '../../services/unified_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../models/note.dart';
-import 'dart:convert';
-import 'package:file_picker/file_picker.dart';
 
 class CustomShareSheet {
   static void show(BuildContext context, String text, {String? subject, Note? note, VoidCallback? onNoteCopied}) {

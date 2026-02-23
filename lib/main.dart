@@ -1,33 +1,32 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
+import 'dart:io';
+
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/desktop/archive_screen_responsive.dart';
+import 'package:apex_note/screens/desktop/locked_notes_screen_responsive.dart';
+import 'package:apex_note/screens/desktop/trash_screen_responsive.dart';
+import 'package:apex_note/screens/onboarding/cinematic_intro_screen.dart';
+import 'package:apex_note/screens/onboarding/splash_screen.dart';
+import 'package:apex_note/screens/other/widget_selection_screen.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/screens/shared/note_view_screen.dart';
+import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
+import 'package:apex_note/services/security/security_gate.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/widget_service.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
-import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:dynamic_color/dynamic_color.dart';
-
-import 'dart:async';
-import 'screens/onboarding/cinematic_intro_screen.dart';
-import 'screens/onboarding/splash_screen.dart';
-import 'screens/shared/settings_screen_responsive.dart';
-import 'screens/desktop/trash_screen_responsive.dart';
-import 'screens/desktop/archive_screen_responsive.dart';
-import 'screens/desktop/locked_notes_screen_responsive.dart';
-import 'models/note.dart';
-import 'models/note_mode.dart';
-import 'screens/shared/note_editor.dart';
-
-import 'controllers/settings/settings_provider.dart';
-import 'controllers/notes/notes_provider.dart';
-import 'providers/selected_note_provider.dart';
-import 'services/widget_service.dart';
 import 'package:home_widget/home_widget.dart';
-import 'services/storage/isar_database_service.dart';
-import 'services/security/security_gate.dart';
-import 'screens/shared/note_view_screen.dart';
-import 'screens/other/widget_selection_screen.dart';
+import 'package:provider/provider.dart';
 
 // Global navigator key for error feedback
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -115,7 +114,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
 
     if (sharedText != null && sharedText.isNotEmpty) {
       _openEditorWithSharedText(sharedText);
-    } else if (action == 'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
+    } else if (action ==
+        'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
           builder: (context) => WidgetSelectionScreen(
@@ -124,7 +124,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
           ),
         ),
       );
-    } else if (noteId == 0 && action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE') {
+    } else if (noteId == 0 &&
+        action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE') {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
           builder: (context) => WidgetSelectionScreen(
@@ -133,7 +134,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
           ),
         ),
       );
-    } else if (action == 'com.apexflow.app.sinan.ACTION_VIEW_NOTE' && noteId > 0) {
+    } else if (action == 'com.apexflow.app.sinan.ACTION_VIEW_NOTE' &&
+        noteId > 0) {
       _openNoteById(noteId);
     }
   }
@@ -141,7 +143,10 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
   void _openEditorWithSharedText(String text) async {
     final context = navigatorKey.currentContext;
     if (context == null) return;
-    
+
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+
     // Show loading screen immediately
     navigatorKey.currentState?.push(
       MaterialPageRoute(
@@ -165,17 +170,17 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
         ),
       ),
     );
-    
+
     // Process in background
     await Future.delayed(const Duration(milliseconds: 100));
-    
+    if (!mounted) return;
+
     final isUrl = Uri.tryParse(text)?.hasScheme ?? false;
-    final content = isUrl ? text : (text.length > 10000 ? text.substring(0, 10000) : text);
-    
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final content =
+        isUrl ? text : (text.length > 10000 ? text.substring(0, 10000) : text);
+
     final mode = isUrl ? NoteMode.simple : _detectNoteMode(content);
-    
+
     // Create and save note to database FIRST
     final newNote = Note(
       title: isUrl ? 'Shared Link' : '',
@@ -186,14 +191,16 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
       noteType: mode.name,
       isProfessional: mode == NoteMode.code,
     );
-    
+
     // Save to database and get the ID
-    final savedNoteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
-    
+    final savedNoteId =
+        await notesProvider.addOrUpdateNote(newNote, silent: true);
+
     // Get the saved note from database
     final dbService = IsarDatabaseService();
     final savedNote = await dbService.getNoteById(savedNoteId);
-    
+    if (!mounted) return;
+
     if (savedNote == null) {
       // Failed to save, close loading screen
       if (navigatorKey.currentState?.canPop() ?? false) {
@@ -201,7 +208,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
       }
       return;
     }
-    
+
     // Replace loading with editor, passing the SAVED note with ID
     navigatorKey.currentState?.pushReplacement(
       MaterialPageRoute(
@@ -220,13 +227,13 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
       RegExp(r'(public|private|void|int|String)\s'),
       RegExp(r'[{};]\s*$', multiLine: true),
     ];
-    
+
     for (final pattern in codePatterns) {
       if (pattern.hasMatch(text)) {
         return NoteMode.code;
       }
     }
-    
+
     return NoteMode.simple;
   }
 
@@ -267,8 +274,6 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
@@ -294,11 +299,12 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
               ],
               themeMode: settings.themeMode,
               theme: ThemeData(
-                colorScheme:
-                    lightDynamic ?? ColorScheme.fromSeed(seedColor: Colors.blue),
+                colorScheme: lightDynamic ??
+                    ColorScheme.fromSeed(seedColor: Colors.blue),
                 useMaterial3: true,
                 textTheme: TextTheme(
-                  bodyMedium: TextStyle(fontSize: 16.0 * settings.textScaleFactor),
+                  bodyMedium:
+                      TextStyle(fontSize: 16.0 * settings.textScaleFactor),
                 ),
                 pageTransitionsTheme: const PageTransitionsTheme(
                   builders: {
@@ -315,7 +321,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                         seedColor: Colors.teal, brightness: Brightness.dark),
                 useMaterial3: true,
                 textTheme: TextTheme(
-                  bodyMedium: TextStyle(fontSize: 16.0 * settings.textScaleFactor),
+                  bodyMedium:
+                      TextStyle(fontSize: 16.0 * settings.textScaleFactor),
                 ),
                 pageTransitionsTheme: const PageTransitionsTheme(
                   builders: {
@@ -369,7 +376,7 @@ class _AppHomeState extends State<_AppHome> {
         if (settings.isFirstLaunch) {
           return CinematicIntroScreen();
         }
-        
+
         return const SplashScreen();
       },
     );

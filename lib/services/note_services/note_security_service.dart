@@ -1,10 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
-import '../../models/note.dart';
-import '../storage/isar_database_service.dart';
-import '../security/vault_service.dart';
-import 'note_state_service.dart';
+
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 
 class NoteSecurityService {
   bool _isVaultUnlocked = false;

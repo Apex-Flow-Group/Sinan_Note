@@ -1,21 +1,22 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:apex_note/screens/shared/main_layout_screen.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/home/add_menu_widget.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/utils/logger.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../models/note.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../widgets/home/home_drawer_widget.dart';
-import '../../widgets/home/note_card_widget.dart';
-import 'home_screen.dart' show ViewType;
-import '../shared/note_editor.dart';
-import '../shared/main_layout_screen.dart';
-import '../../models/note_mode.dart';
-import '../../widgets/home/add_menu_widget.dart';
-import '../../services/security/vault_service.dart';
-import '../../services/unified_notification_service.dart';
 
 class LockedNotesScreen extends StatefulWidget {
   const LockedNotesScreen({super.key});
@@ -62,10 +63,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       if (_showAddMenu) {
         setState(() => _showAddMenu = false);
       }
-      
+
       // Clear session and navigate away when app goes to background
       _providerRef?.clearLockedSession(notify: false);
-      
+
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -80,18 +81,19 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     setState(() => _isLoading = true);
     final provider = Provider.of<NotesProvider>(context, listen: false);
     _decryptedNotes = await provider.fetchAndDecryptLockedNotes();
-    AppLogger.info('Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
+    AppLogger.info(
+        'Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
     if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _createLockedNote(NoteMode mode) async {
     AppLogger.info('Creating new locked ${mode.name} note', 'LockedNotes');
-    
+
     String noteType;
     bool isChecklist = false;
     bool isProfessional = false;
     String initialContent = '';
-    
+
     switch (mode) {
       case NoteMode.checklist:
         noteType = 'checklist';
@@ -107,7 +109,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         noteType = 'simple';
         initialContent = '';
     }
-    
+
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -128,7 +130,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         ),
       ),
     );
-    
+
     AppLogger.info('Editor closed, reloading', 'LockedNotes');
     if (mounted) {
       await _loadLockedNotes();
@@ -140,6 +142,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final provider = Provider.of<NotesProvider>(context, listen: false);
     final l10n = AppLocalizations.of(context)!;
     final allNotes = await provider.getNotes();
+    if (!mounted) return;
+
     final unlocked = allNotes
         .where((n) => !n.isLocked && !n.isArchived && !n.isTrashed)
         .toList();
@@ -154,6 +158,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     }
 
     final selected = <int>{};
+    if (!mounted) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -188,24 +194,29 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                       itemBuilder: (context, i) {
                         final note = unlocked[i];
                         final isSelected = selected.contains(note.id);
-                        
-                        String displayTitle = note.title.isEmpty ? l10n.untitled : note.title;
+
+                        String displayTitle =
+                            note.title.isEmpty ? l10n.untitled : note.title;
                         String displayContent = note.content;
-                        
+
                         if (note.isChecklist) {
                           try {
                             final decoded = jsonDecode(note.content);
                             if (decoded is Map) {
-                              displayTitle = (decoded['title'] ?? '').toString().trim();
-                              if (displayTitle.isEmpty) displayTitle = 'Checklist';
+                              displayTitle =
+                                  (decoded['title'] ?? '').toString().trim();
+                              if (displayTitle.isEmpty) {
+                                displayTitle = 'Checklist';
+                              }
                               final items = decoded['items'] as List? ?? [];
-                              displayContent = '${items.length} ${items.length == 1 ? 'item' : 'items'}';
+                              displayContent =
+                                  '${items.length} ${items.length == 1 ? 'item' : 'items'}';
                             }
                           } catch (e) {
                             displayContent = 'Checklist';
                           }
                         }
-                        
+
                         return CheckboxListTile(
                           value: isSelected,
                           onChanged: (val) => setModalState(() {
@@ -231,6 +242,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                               for (final id in selected) {
                                 await provider.toggleLockStatus(id, true);
                               }
+                              if (!context.mounted) return;
                               Navigator.pop(context);
                               await _loadLockedNotes();
                             },
@@ -251,7 +263,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
 
   void _showVaultSettings() {
     final l10n = AppLocalizations.of(context)!;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -285,14 +297,14 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                   value: isEnabled,
                   onChanged: (val) async {
                     await VaultService.setBiometricEnabled(val);
-                    if (context.mounted) {
-                      Navigator.pop(ctx);
-                      UnifiedNotificationService().show(
-                        context: context,
-                        message: val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
-                        type: NotificationType.success,
-                      );
-                    }
+                    if (!context.mounted) return;
+                    Navigator.pop(ctx);
+                    UnifiedNotificationService().show(
+                      context: context,
+                      message:
+                          val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
+                      type: NotificationType.success,
+                    );
                   },
                 );
               },
@@ -318,7 +330,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     bool obscureNew = true;
     bool obscureConfirm = true;
     String? errorText;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -335,8 +347,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                     labelText: l10n.oldPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(obscureOld ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setDialogState(() => obscureOld = !obscureOld),
+                      icon: Icon(
+                          obscureOld ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () =>
+                          setDialogState(() => obscureOld = !obscureOld),
                     ),
                   ),
                   onChanged: (_) => setDialogState(() => errorText = null),
@@ -349,8 +363,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                     labelText: l10n.newPassword,
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(obscureNew ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                      icon: Icon(
+                          obscureNew ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () =>
+                          setDialogState(() => obscureNew = !obscureNew),
                     ),
                   ),
                   onChanged: (_) => setDialogState(() => errorText = null),
@@ -363,15 +379,19 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                     labelText: l10n.confirmPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(obscureConfirm ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                      icon: Icon(obscureConfirm
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      onPressed: () => setDialogState(
+                          () => obscureConfirm = !obscureConfirm),
                     ),
                   ),
                   onChanged: (_) => setDialogState(() => errorText = null),
                 ),
                 if (errorText != null) ...[
                   const SizedBox(height: 12),
-                  Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 14)),
+                  Text(errorText!,
+                      style: const TextStyle(color: Colors.red, fontSize: 14)),
                 ],
               ],
             ),
@@ -386,24 +406,27 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                 final oldPassword = oldPasswordController.text;
                 final newPassword = newPasswordController.text;
                 final confirm = confirmController.text;
-                
-                if (oldPassword.isEmpty || newPassword.isEmpty || confirm.isEmpty) {
+
+                if (oldPassword.isEmpty ||
+                    newPassword.isEmpty ||
+                    confirm.isEmpty) {
                   setDialogState(() => errorText = l10n.fillAllFields);
                   return;
                 }
-                
+
                 if (newPassword.length < 6) {
                   setDialogState(() => errorText = l10n.passwordMinLength);
                   return;
                 }
-                
+
                 if (newPassword != confirm) {
                   setDialogState(() => errorText = l10n.passwordMismatch);
                   return;
                 }
-                
-                final success = await VaultService.changePassword(oldPassword, newPassword);
-                
+
+                final success =
+                    await VaultService.changePassword(oldPassword, newPassword);
+
                 if (success && context.mounted) {
                   Navigator.pop(ctx);
                   UnifiedNotificationService().show(
@@ -442,227 +465,232 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         }
       },
       child: Scaffold(
-      drawer: HomeDrawerWidget(
-        onBackupTap: () {},
-        onNotesChanged: _loadLockedNotes,
-      ),
-      appBar: AppBar(
-        leading: _selectedNoteIds.isEmpty
-            ? Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
+        drawer: HomeDrawerWidget(
+          onBackupTap: () {},
+          onNotesChanged: _loadLockedNotes,
+        ),
+        appBar: AppBar(
+          leading: _selectedNoteIds.isEmpty
+              ? Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => setState(() => _selectedNoteIds.clear()),
                 ),
-              )
-            : IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => setState(() => _selectedNoteIds.clear()),
-              ),
-        title: _selectedNoteIds.isNotEmpty
-            ? Row(
-                children: [
-                  Text('${_selectedNoteIds.length} ${l10n.selected}'),
-                  const Spacer(),
+          title: _selectedNoteIds.isNotEmpty
+              ? Row(
+                  children: [
+                    Text('${_selectedNoteIds.length} ${l10n.selected}'),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.select_all, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          for (final note in _decryptedNotes) {
+                            if (!note.isArchived && !note.isTrashed) {
+                              _selectedNoteIds.add(note.id!);
+                            }
+                          }
+                        });
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.lock_open, size: 20),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(l10n.unlockNote),
+                            content: Text(l10n.unlockNoteConfirmation),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text(l10n.cancel),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  Navigator.pop(ctx);
+                                  for (final id in _selectedNoteIds) {
+                                    await _providerRef?.toggleLockStatus(
+                                        id, false);
+                                  }
+                                  setState(() => _selectedNoteIds.clear());
+                                  await _loadLockedNotes();
+                                },
+                                child: Text(l10n.unlock),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, size: 20),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(l10n.permanentDelete),
+                            content: Text(l10n.confirmPermanentDelete),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text(l10n.cancel),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  Navigator.pop(ctx);
+                                  for (final id in _selectedNoteIds) {
+                                    await _providerRef?.trashNote(id);
+                                  }
+                                  setState(() => _selectedNoteIds.clear());
+                                  await _loadLockedNotes();
+                                },
+                                child: Text(l10n.delete),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                )
+              : _searchController.text.isEmpty
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.lock, size: 22),
+                        const SizedBox(width: 8),
+                        Text(l10n.locked),
+                      ],
+                    )
+                  : TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: l10n.searchNotes,
+                        border: InputBorder.none,
+                      ),
+                    ),
+          actions: _selectedNoteIds.isEmpty
+              ? [
                   IconButton(
-                    icon: const Icon(Icons.select_all, size: 20),
+                    icon: const Icon(Icons.settings),
+                    tooltip: l10n.settings,
+                    onPressed: _showVaultSettings,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.file_download),
+                    tooltip: l10n.import,
+                    onPressed: _showImportSheet,
+                  ),
+                  IconButton(
+                    icon: Icon(_searchController.text.isEmpty
+                        ? Icons.search
+                        : Icons.close),
                     onPressed: () {
                       setState(() {
-                        for (final note in _decryptedNotes) {
-                          if (!note.isArchived && !note.isTrashed) {
-                            _selectedNoteIds.add(note.id!);
-                          }
+                        if (_searchController.text.isEmpty) {
+                          _searchController.text = ' ';
+                        } else {
+                          _searchController.clear();
                         }
                       });
                     },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.lock_open, size: 20),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: Text(l10n.unlockNote),
-                          content: Text(l10n.unlockNoteConfirmation),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: Text(l10n.cancel),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                Navigator.pop(ctx);
-                                for (final id in _selectedNoteIds) {
-                                  await _providerRef?.toggleLockStatus(id, false);
-                                }
-                                setState(() => _selectedNoteIds.clear());
-                                await _loadLockedNotes();
-                              },
-                              child: Text(l10n.unlock),
-                            ),
-                          ],
+                ]
+              : [],
+        ),
+        body: Stack(
+          children: [
+            _isLoading
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.decryptingVault,
+                          style:
+                              const TextStyle(fontSize: 16, color: Colors.grey),
                         ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, size: 20),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: Text(l10n.permanentDelete),
-                          content: Text(l10n.confirmPermanentDelete),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: Text(l10n.cancel),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                Navigator.pop(ctx);
-                                for (final id in _selectedNoteIds) {
-                                  await _providerRef?.trashNote(id);
-                                }
-                                setState(() => _selectedNoteIds.clear());
-                                await _loadLockedNotes();
-                              },
-                              child: Text(l10n.delete),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              )
-            : _searchController.text.isEmpty
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.lock, size: 22),
-                      const SizedBox(width: 8),
-                      Text(l10n.locked),
-                    ],
-                  )
-                : TextField(
-                    controller: _searchController,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: l10n.searchNotes,
-                      border: InputBorder.none,
+                      ],
                     ),
-                  ),
-        actions: _selectedNoteIds.isEmpty
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.settings),
-                  tooltip: l10n.settings,
-                  onPressed: _showVaultSettings,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.file_download),
-                  tooltip: l10n.import,
-                  onPressed: _showImportSheet,
-                ),
-                IconButton(
-                  icon: Icon(
-                      _searchController.text.isEmpty ? Icons.search : Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      if (_searchController.text.isEmpty) {
-                        _searchController.text = ' ';
-                      } else {
-                        _searchController.clear();
-                      }
-                    });
-                  },
-                ),
-              ]
-            : [],
-      ),
-      body: Stack(
-        children: [
-          _isLoading
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.decryptingVault,
-                        style: const TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                )
-              : Builder(
-                  builder: (context) {
-                    final query = _searchController.text.toLowerCase();
-                    final filteredNotes = _decryptedNotes
-                        .where((note) => !note.isArchived && !note.isTrashed)
-                        .where((note) {
-                      if (query.isEmpty) return true;
-                      return note.title.toLowerCase().contains(query) ||
-                          note.content.toLowerCase().contains(query);
-                    }).toList();
+                  )
+                : Builder(
+                    builder: (context) {
+                      final query = _searchController.text.toLowerCase();
+                      final filteredNotes = _decryptedNotes
+                          .where((note) => !note.isArchived && !note.isTrashed)
+                          .where((note) {
+                        if (query.isEmpty) return true;
+                        return note.title.toLowerCase().contains(query) ||
+                            note.content.toLowerCase().contains(query);
+                      }).toList();
 
-                    if (filteredNotes.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.lock_open,
-                                size: 80, color: Colors.grey),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.noLockedNotes,
-                              style:
-                                  const TextStyle(fontSize: 18, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: const EdgeInsets.only(
-                          left: 8, right: 8, top: 8, bottom: 100),
-                      itemCount: filteredNotes.length,
-                      itemBuilder: (context, index) {
-                        final note = filteredNotes[index];
-                        return NoteCardWidget(
-                          note: note,
-                          viewType: _viewType,
-                          closeAllSlidables: _closeAllSlidables,
-                          onNoteChanged: () {}, // No reload needed - note already decrypted
-                          onLongPress: () => setState(() => _selectedNoteIds.add(note.id!)),
-                          source: 'locked',
-                          selectionMode: _selectedNoteIds.isNotEmpty,
-                          isSelected: _selectedNoteIds.contains(note.id),
-                          onTap: () {
-                            if (_selectedNoteIds.isNotEmpty) {
-                              setState(() {
-                                if (_selectedNoteIds.contains(note.id)) {
-                                  _selectedNoteIds.remove(note.id);
-                                } else {
-                                  _selectedNoteIds.add(note.id!);
-                                }
-                              });
-                            }
-                          },
+                      if (filteredNotes.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.lock_open,
+                                  size: 80, color: Colors.grey),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.noLockedNotes,
+                                style: const TextStyle(
+                                    fontSize: 18, color: Colors.grey),
+                              ),
+                            ],
+                          ),
                         );
-                      },
-                    );
-                  },
-                ),
-          AddMenuWidget(
-            showMenu: _showAddMenu,
-            onToggle: () => setState(() => _showAddMenu = !_showAddMenu),
-            onModeSelected: _createLockedNote,
-          ),
-        ],
-      ),
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.only(
+                            left: 8, right: 8, top: 8, bottom: 100),
+                        itemCount: filteredNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = filteredNotes[index];
+                          return NoteCardWidget(
+                            note: note,
+                            viewType: _viewType,
+                            closeAllSlidables: _closeAllSlidables,
+                            onNoteChanged:
+                                () {}, // No reload needed - note already decrypted
+                            onLongPress: () =>
+                                setState(() => _selectedNoteIds.add(note.id!)),
+                            source: 'locked',
+                            selectionMode: _selectedNoteIds.isNotEmpty,
+                            isSelected: _selectedNoteIds.contains(note.id),
+                            onTap: () {
+                              if (_selectedNoteIds.isNotEmpty) {
+                                setState(() {
+                                  if (_selectedNoteIds.contains(note.id)) {
+                                    _selectedNoteIds.remove(note.id);
+                                  } else {
+                                    _selectedNoteIds.add(note.id!);
+                                  }
+                                });
+                              }
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+            AddMenuWidget(
+              showMenu: _showAddMenu,
+              onToggle: () => setState(() => _showAddMenu = !_showAddMenu),
+              onModeSelected: _createLockedNote,
+            ),
+          ],
+        ),
       ),
     );
   }

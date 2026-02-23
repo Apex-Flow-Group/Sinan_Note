@@ -1,22 +1,24 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
+
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
+import 'package:apex_note/screens/sync/google_drive/google_drive_vault_warning_dialog.dart';
+import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
+import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../services/cloud/google_drive_service.dart';
-import '../../services/storage/isar_database_service.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../widgets/home/home_drawer_widget.dart';
-import 'google_drive/google_drive_widgets.dart';
-import 'google_drive/google_drive_handlers.dart';
-import 'google_drive/google_drive_vault_warning_dialog.dart';
 
 class GoogleDriveScreen extends StatefulWidget {
   final bool isDesktopLayout;
-  
+
   const GoogleDriveScreen({super.key, this.isDesktopLayout = false});
 
   @override
@@ -41,6 +43,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
 
   Future<void> _loadAutoSyncSetting() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
     });
@@ -49,11 +52,11 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   Future<void> _saveAutoSyncSetting(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('google_drive_auto_sync', value);
+    if (!mounted) return;
     setState(() {
       _autoSync = value;
     });
   }
-
 
   Future<void> _handleSignOut() async {
     setState(() => _isLoading = true);
@@ -66,25 +69,26 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       final success = await GoogleDriveService.signIn();
       if (mounted && success) {
         final l10n = AppLocalizations.of(context)!;
-        
+
         // Check if there are locked notes and show warning BEFORE showing loading
         bool shouldContinue = true;
-        
+
         try {
           final dbService = IsarDatabaseService();
           final lockedNotes = await dbService.getLockedNotes();
-          
+
           if (lockedNotes.isNotEmpty) {
             // Show vault warning if needed
-            final shouldShowWarning = await GoogleDriveVaultWarningDialog.shouldShow();
-            
+            final shouldShowWarning =
+                await GoogleDriveVaultWarningDialog.shouldShow();
+
             if (shouldShowWarning && mounted) {
               final agreed = await showDialog<bool>(
                 context: context,
                 barrierDismissible: false,
                 builder: (ctx) => const GoogleDriveVaultWarningDialog(),
               );
-              
+
               if (agreed != true) {
                 shouldContinue = false;
               }
@@ -93,27 +97,29 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
         } catch (e) {
           // Continue even if check fails
         }
-        
+
         if (!shouldContinue) {
           // User cancelled, sign out
           await GoogleDriveService.signOut();
           return;
         }
-        
+
         // Now show loading and start the sync
         if (mounted) setState(() => _isLoading = true);
-        
+
+        if (!mounted) return;
         await GoogleDriveService.mergeWithDrive(
           context,
           uploadMasterKey: false,
           uploadVault: false,
         );
-        
+
         // Enable auto sync
         await _saveAutoSyncSetting(true);
-        
+
         if (mounted) {
           setState(() => _isLoading = false);
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.signInSuccess),
@@ -123,6 +129,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
         }
       } else if (mounted) {
         final l10n = AppLocalizations.of(context)!;
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.signInFailed),
@@ -132,10 +139,10 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       }
     } on MissingPluginException {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google Sign In is not supported on ${Platform.operatingSystem}. Use Android/iOS/Web.'),
+            content: Text(
+                'Google Sign In is not supported on ${Platform.operatingSystem}. Use Android/iOS/Web.'),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 5),
           ),
@@ -144,8 +151,11 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.signInFailed}: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('${l10n.signInFailed}: $e'),
+              backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -160,17 +170,17 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   }
 
   Future<void> _handleUpload() async {
-    final l10n = AppLocalizations.of(context)!;
-    
+    if (!mounted) return;
     // عرض dialog لاختيار نوع الرفع
     final result = await showDialog<Map<String, bool>>(
       context: context,
       builder: (context) => _UploadOptionsDialog(),
     );
-    
+
     if (result == null) return; // المستخدم ألغى
-    
+
     setState(() => _isLoading = true);
+    if (!mounted) return;
     await GoogleDriveHandlers.handleUpload(
       context,
       uploadMasterKey: result['uploadMasterKey'] ?? false,
@@ -189,9 +199,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settingsProvider = Provider.of<SettingsProvider>(context);
-    final isDark = settingsProvider.themeMode == ThemeMode.dark || 
-        (settingsProvider.themeMode == ThemeMode.system && 
-         MediaQuery.of(context).platformBrightness == Brightness.dark);
+    final isDark = settingsProvider.themeMode == ThemeMode.dark ||
+        (settingsProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     final isSignedIn = GoogleDriveService.isSignedIn;
     final userEmail = GoogleDriveService.currentUserEmail;
     final lastSyncTime = GoogleDriveService.lastSyncTime;
@@ -215,23 +225,25 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           onBackupTap: () {},
           onNotesChanged: () {},
         ),
-      body: _isLoading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.syncing,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ],
-              ),
-            )
-          : widget.isDesktopLayout
-              ? _buildDesktopLayout(context, l10n, isDark, isSignedIn, userEmail, lastSyncTimeStr)
-              : _buildMobileLayout(context, l10n, isDark, isSignedIn, userEmail, lastSyncTimeStr),
+        body: _isLoading
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.syncing,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              )
+            : widget.isDesktopLayout
+                ? _buildDesktopLayout(context, l10n, isDark, isSignedIn,
+                    userEmail, lastSyncTimeStr)
+                : _buildMobileLayout(context, l10n, isDark, isSignedIn,
+                    userEmail, lastSyncTimeStr),
       ),
     );
   }
@@ -247,13 +259,87 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       children: [
-        GoogleDriveWidgets.buildAccountSection(context, l10n, isDark, isSignedIn, userEmail, _handleSignOut, _handleSignIn),
+        // ✨ NEW: زر التجربة الجديدة
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade400, Colors.purple.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                Localizations.localeOf(context).languageCode == 'ar'
+                    ? 'تجربة مزامنة جديدة'
+                    : 'New Sync Experience',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                Localizations.localeOf(context).languageCode == 'ar'
+                    ? 'واجهة مبسطة وسهلة'
+                    : 'Simple & Easy Interface',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
+                  final result = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GoogleDriveSyncPage(),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    setState(() {});
+                    if (!mounted) return;
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.syncSuccess),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.rocket_launch),
+                label: Text(
+                  Localizations.localeOf(context).languageCode == 'ar'
+                      ? 'جرّب الآن'
+                      : 'Try Now',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.blue.shade700,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 24),
-        GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
+        GoogleDriveWidgets.buildAccountSection(context, l10n, isDark,
+            isSignedIn, userEmail, _handleSignOut, _handleSignIn),
         const SizedBox(height: 24),
-        GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
+        GoogleDriveWidgets.buildSyncStatusSection(
+            context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
         const SizedBox(height: 24),
-        GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
+        GoogleDriveWidgets.buildSyncActionsSection(
+            context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
+        const SizedBox(height: 24),
+        GoogleDriveWidgets.buildAutoSyncSection(
+            context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
       ],
     );
   }
@@ -276,17 +362,19 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           crossAxisSpacing: 24,
           childAspectRatio: 1.5,
           children: [
-            GoogleDriveWidgets.buildAccountSection(context, l10n, isDark, isSignedIn, userEmail, _handleSignOut, _handleSignIn),
-            GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
-            GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
-            GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
+            GoogleDriveWidgets.buildAccountSection(context, l10n, isDark,
+                isSignedIn, userEmail, _handleSignOut, _handleSignIn),
+            GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark,
+                lastSyncTimeStr, isSignedIn, _handleSync),
+            GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
+                isSignedIn, _handleUpload, _handleDownload),
+            GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
+                _autoSync, isSignedIn, _saveAutoSyncSetting),
           ],
         ),
       ),
     );
   }
-
-
 }
 
 class _UploadOptionsDialog extends StatefulWidget {
@@ -312,20 +400,25 @@ class _UploadOptionsDialogState extends State<_UploadOptionsDialog> {
           children: [
             Text(
               l10n.uploadOptionsDesc,
-              style: TextStyle(fontSize: 14, color: isDark ? Colors.grey[400] : Colors.grey[700]),
+              style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[700]),
             ),
             const SizedBox(height: 20),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.uploadMasterKey),
-              subtitle: Text(l10n.uploadMasterKeyDesc, style: const TextStyle(fontSize: 12)),
+              subtitle: Text(l10n.uploadMasterKeyDesc,
+                  style: const TextStyle(fontSize: 12)),
               value: _uploadMasterKey,
-              onChanged: (val) => setState(() => _uploadMasterKey = val ?? false),
+              onChanged: (val) =>
+                  setState(() => _uploadMasterKey = val ?? false),
             ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.uploadVault),
-              subtitle: Text(l10n.uploadVaultDesc, style: const TextStyle(fontSize: 12)),
+              subtitle: Text(l10n.uploadVaultDesc,
+                  style: const TextStyle(fontSize: 12)),
               value: _uploadVault,
               onChanged: (val) => setState(() => _uploadVault = val ?? false),
             ),
@@ -339,12 +432,15 @@ class _UploadOptionsDialogState extends State<_UploadOptionsDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                  const Icon(Icons.info_outline,
+                      color: Colors.orange, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.uploadWarning,
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[300] : Colors.grey[800]),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey[300] : Colors.grey[800]),
                     ),
                   ),
                 ],

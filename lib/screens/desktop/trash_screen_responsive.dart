@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/mobile/trash_screen.dart';
+import 'package:apex_note/widgets/details_panel.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/master_details_layout.dart';
+import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/selected_note_provider.dart';
-import '../../widgets/responsive_layout_wrapper.dart';
-import '../../widgets/master_details_layout.dart';
-import '../../widgets/details_panel.dart';
-import '../../widgets/home/home_drawer_widget.dart';
-import '../mobile/trash_screen.dart';
 
 /// نسخة Responsive من TrashScreen تدعم نمط Master-Details
 class TrashScreenResponsive extends StatefulWidget {

@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/screens/shared/settings_screen.dart';
 import 'package:flutter/material.dart';
-import 'settings_screen.dart';
 
 /// نسخة Responsive من SettingsScreen
 /// 

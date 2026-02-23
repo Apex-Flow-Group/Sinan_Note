@@ -1,29 +1,29 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/shortcuts/app_shortcuts.dart';
+import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/mobile/home_screen.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/details_panel.dart';
+import 'package:apex_note/widgets/home/add_menu_widget.dart';
+import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/notes_grid_view.dart';
+import 'package:apex_note/widgets/master_details_layout.dart';
+import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import '../../controllers/notes/notes_provider.dart';
-import '../../controllers/settings/settings_provider.dart';
-import '../../providers/selected_note_provider.dart';
-import '../../models/note.dart';
-import '../../models/note_mode.dart';
-import '../../services/unified_notification_service.dart';
-import '../../widgets/responsive_layout_wrapper.dart';
-import '../../widgets/master_details_layout.dart';
-import '../../widgets/details_panel.dart';
-import '../../widgets/home/home_drawer_widget.dart';
-import '../../widgets/home/dialogs/backup_options_dialog.dart';
-import '../../widgets/home/notes_grid_view.dart';
-import '../../widgets/home/add_menu_widget.dart';
-import '../mobile/home_screen.dart';
-import '../../core/shortcuts/app_shortcuts.dart';
 
 /// نسخة Responsive من HomeScreen تدعم نمط Master-Details
-/// 
+///
 /// على الشاشات الكبيرة (>= 600px):
 /// - يعرض Master-Details Layout (قائمة + محتوى)
-/// 
+///
 /// على الشاشات الصغيرة (< 600px):
 /// - يعرض HomeScreen التقليدي
 class HomeScreenResponsive extends StatefulWidget {
@@ -43,7 +43,8 @@ class HomeScreenResponsive extends StatefulWidget {
 class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   final TextEditingController _searchController = TextEditingController();
   final ValueNotifier<Set<int>> _selectedNoteIdsNotifier = ValueNotifier({});
-  final ValueNotifier<bool> _isEditModeNotifier = ValueNotifier(false); // 🔥 وضع التعديل
+  final ValueNotifier<bool> _isEditModeNotifier =
+      ValueNotifier(false); // 🔥 وضع التعديل
   ViewType _viewType = ViewType.listCompact;
   late final ValueNotifier<String> _viewTypeNotifier;
   bool _showAddMenu = false;
@@ -127,7 +128,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
                   l10n.noteType,
                   style: const TextStyle(
@@ -171,7 +173,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
               ),
               const Divider(),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
                   l10n.noteStatus,
                   style: const TextStyle(
@@ -213,7 +216,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
         sharedText: widget.sharedText,
         onDrawerChanged: widget.onDrawerChanged,
       ),
-      
+
       // Master-Details Layout - للشاشات الكبيرة
       masterDetailsLayout: _buildMasterDetailsLayout(context),
     );
@@ -221,7 +224,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   Widget _buildMasterDetailsLayout(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Shortcuts(
       shortcuts: const <ShortcutActivator, Intent>{
         AppShortcuts.newNote: NewNoteIntent(),
@@ -253,7 +256,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
           ),
           RefreshIntent: CallbackAction<RefreshIntent>(
             onInvoke: (_) {
-              Provider.of<NotesProvider>(context, listen: false).loadNotes(force: true);
+              Provider.of<NotesProvider>(context, listen: false)
+                  .loadNotes(force: true);
               return null;
             },
           ),
@@ -263,13 +267,13 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     );
   }
 
-  Widget _buildMasterDetailsScaffold(BuildContext context, AppLocalizations l10n) {
-    
+  Widget _buildMasterDetailsScaffold(
+      BuildContext context, AppLocalizations l10n) {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
         final bool hasSelection = selectedIds.isNotEmpty;
-        
+
         return Scaffold(
           drawer: HomeDrawerWidget(
             onBackupTap: () {
@@ -284,11 +288,11 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
             },
             onNotesChanged: () {},
           ),
-          
           appBar: AppBar(
             scrolledUnderElevation: 0,
             elevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+            backgroundColor:
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
             leading: hasSelection
                 ? IconButton(
                     icon: const Icon(Icons.close),
@@ -319,7 +323,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                 ? _buildSelectionActions(context, selectedIds)
                 : _buildSearchActions(context),
           ),
-          
           body: MasterDetailsLayout(
             masterPanel: Stack(
               children: [
@@ -365,9 +368,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
         builder: (context, viewType, child) {
           return IconButton(
             icon: Icon(
-              viewType == 'listExpanded'
-                  ? Icons.view_headline
-                  : Icons.view_day,
+              viewType == 'listExpanded' ? Icons.view_headline : Icons.view_day,
             ),
             onPressed: () async {
               FocusScope.of(context).unfocus();
@@ -377,7 +378,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                 _viewType = _desktopViewTypes[nextIndex];
                 _viewTypeNotifier.value = _viewType.name;
               });
-              final settings = Provider.of<SettingsProvider>(context, listen: false);
+              final settings =
+                  Provider.of<SettingsProvider>(context, listen: false);
               await settings.setViewType('home', _viewType.name);
             },
           );
@@ -394,10 +396,11 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     ];
   }
 
-  List<Widget> _buildSelectionActions(BuildContext context, Set<int> selectedIds) {
+  List<Widget> _buildSelectionActions(
+      BuildContext context, Set<int> selectedIds) {
     final l10n = AppLocalizations.of(context)!;
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    
+
     return [
       IconButton(
         icon: const Icon(Icons.push_pin),
@@ -405,7 +408,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
           final ids = List<int>.from(selectedIds);
           final count = ids.length;
           final notesToRestore = <Note>[];
-          
+
           for (final id in ids) {
             final note = notesProvider.notes.firstWhere((n) => n.id == id);
             notesToRestore.add(note);
@@ -429,9 +432,9 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
             );
             await notesProvider.updateNote(updatedNote);
           }
-          
+
           _selectedNoteIdsNotifier.value = {};
-          
+
           if (context.mounted) {
             UnifiedNotificationService().showWithUndo(
               context: context,
@@ -454,10 +457,10 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
         onPressed: () async {
           final ids = List<int>.from(selectedIds);
           final count = ids.length;
-          
+
           await notesProvider.archiveNotes(ids);
           _selectedNoteIdsNotifier.value = {};
-          
+
           if (context.mounted) {
             UnifiedNotificationService().showWithUndo(
               context: context,
@@ -479,10 +482,10 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
         onPressed: () async {
           final ids = List<int>.from(selectedIds);
           final count = ids.length;
-          
+
           await notesProvider.trashNotes(ids);
           _selectedNoteIdsNotifier.value = {};
-          
+
           if (context.mounted) {
             UnifiedNotificationService().showWithUndo(
               context: context,
@@ -505,10 +508,11 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   /// إنشاء ملاحظة جديدة واختيارها تلقائياً
   Future<void> _navigateToNewNote(NoteMode mode) async {
     setState(() => _showAddMenu = false);
-    
+
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
+    final selectedNoteProvider =
+        Provider.of<SelectedNoteProvider>(context, listen: false);
 
     String colorMode = 'simple';
     if (mode == NoteMode.reminder) {
@@ -533,7 +537,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     );
 
     final noteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
-    
+
     final savedNote = notesProvider.notes.firstWhere(
       (note) => note.id == noteId,
       orElse: () => newNote,
@@ -541,6 +545,4 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
     selectedNoteProvider.selectNote(savedNote);
   }
-
-  
 }

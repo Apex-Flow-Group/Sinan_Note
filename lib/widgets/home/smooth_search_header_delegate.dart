@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {

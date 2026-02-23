@@ -1,11 +1,12 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import '../../core/utils/logger.dart';
 import 'dart:io';
-import '../../models/note.dart';
-import '../notification_service.dart';
-import '../widget_service.dart';
-import '../../core/utils/checklist_formatter.dart';
+
+import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/services/widget_service.dart';
 
 /// Service responsible for handling side effects of note operations.
 /// 
