@@ -13,7 +13,7 @@ import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
-import 'package:apex_note/services/storage/sqlite_to_isar_migration.dart';
+
 import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -124,7 +124,6 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       ApexDiagnosticsEngine().init(appDir.path);
-      SqliteToIsarMigration.migrateIfNeeded();
 
       if (Platform.isAndroid || Platform.isIOS) {
         await NotificationService().initialize();

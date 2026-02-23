@@ -1363,7 +1363,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get providerStateManagement => 'إدارة الحالة';
 
   @override
-  String get sqfliteDatabase => 'قاعدة البيانات المحلية';
+  String get isarDatabase => 'قاعدة البيانات المحلية';
 
   @override
   String get officialGooglePlay =>

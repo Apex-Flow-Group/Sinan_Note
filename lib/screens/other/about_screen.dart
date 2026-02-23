@@ -176,7 +176,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   _buildCredit('Flutter', l10n.flutterFramework),
                   _buildCredit('Dart', l10n.dartLanguage),
                   _buildCredit('Provider', l10n.providerStateManagement),
-                  _buildCredit('Sqflite', l10n.sqfliteDatabase),
+                  _buildCredit('Isar', l10n.isarDatabase),
                 ]),
                 const SizedBox(height: 24),
 

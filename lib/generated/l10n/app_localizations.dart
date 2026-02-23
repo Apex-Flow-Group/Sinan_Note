@@ -2750,11 +2750,11 @@ abstract class AppLocalizations {
   /// **'State Management'**
   String get providerStateManagement;
 
-  /// No description provided for @sqfliteDatabase.
+  /// No description provided for @isarDatabase.
   ///
   /// In en, this message translates to:
   /// **'Local Database'**
-  String get sqfliteDatabase;
+  String get isarDatabase;
 
   /// No description provided for @officialGooglePlay.
   ///
