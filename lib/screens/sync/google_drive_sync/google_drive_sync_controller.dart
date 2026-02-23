@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/sync_step.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -91,25 +92,37 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
       // فحص وجود backup في Drive
       final hasBackup = await GoogleDriveService.hasBackupInDrive();
+      AppLogger.info('📊 hasBackup: $hasBackup', 'SyncController');
 
       if (hasBackup) {
         _driveNotesCount = await GoogleDriveService.getDriveNotesCount();
-        _hasConflict = _driveNotesCount != _localNotesCount;
+        AppLogger.info('📊 Drive notes count: $_driveNotesCount', 'SyncController');
+      } else {
+        _driveNotesCount = 0;
+        AppLogger.info('📊 No backup in Drive', 'SyncController');
       }
+
+      AppLogger.info('📊 Local notes count: $_localNotesCount', 'SyncController');
+      _hasConflict = hasBackup && _driveNotesCount != _localNotesCount;
+      AppLogger.info('📊 Has conflict: $_hasConflict', 'SyncController');
 
       // 🎯 المنطق الجديد:
       if (_localNotesCount == 0 && _driveNotesCount > 0) {
         // جهاز فارغ → تنزيل مباشر
+        AppLogger.info('📥 Case: Empty device, downloading from Drive...', 'SyncController');
         await _downloadFromDrive();
       } else if (_localNotesCount > 0 && _driveNotesCount == 0) {
         // Drive فارغ → رفع مباشر
+        AppLogger.info('📤 Case: Empty Drive, uploading...', 'SyncController');
         await _executeSync();
       } else if (_hasConflict) {
         // تعارض → اسأل المستخدم
+        AppLogger.info('⚠️ Case: Conflict detected, asking user...', 'SyncController');
         _currentStep = SyncStep.conflict;
         notifyListeners();
       } else {
         // لا تعارض → مزامنة عادية
+        AppLogger.info('🔄 Case: No conflict, syncing...', 'SyncController');
         await _executeSync();
       }
 

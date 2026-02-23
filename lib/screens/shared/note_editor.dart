@@ -359,7 +359,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     _coordinator.autosaveTimer?.cancel();
     _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 500), () {
-      if (mounted && _coordinator.contentController.text.isNotEmpty) {
+      if (mounted && 
+          _coordinator.contentController.text.isNotEmpty && 
+          !_coordinator.stateManager.isSaving) {
         _saveNoteToDatabase();
       }
     });

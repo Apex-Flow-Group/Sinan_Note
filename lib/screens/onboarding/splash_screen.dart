@@ -94,10 +94,10 @@ class _SplashScreenState extends State<SplashScreen> {
       // Step 5: Load notes (100%)
       _updateStatus(isArabic ? 'تحميل الملاحظات...' : 'Loading notes...', 1.0);
       final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+      // ✅ Load notes in background (non-blocking)
       notesProvider.loadNotes();
 
-      // Wait for smooth transition
-      await Future.delayed(const Duration(milliseconds: 300));
+      // Navigate immediately without waiting
       if (!mounted) return;
 
       // Navigate

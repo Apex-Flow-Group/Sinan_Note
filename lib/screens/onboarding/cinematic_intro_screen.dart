@@ -162,8 +162,8 @@ class _CinematicIntroScreenState extends State<CinematicIntroScreen>
                                 opacity: _subtitleFade.value,
                                 child: _ShinyText(
                                   text: isArabic
-                                      ? 'رفيقك الحاد والموثوق'
-                                      : 'Your sharp and reliable companion',
+                                      ? 'رفيقك الحاد والموثوق للتدوين'
+                                      : 'Your sharp and reliable note-taking companion',
                                   fontSize: 20,
                                   shimmerProgress: _shimmerAnimation.value,
                                 ),

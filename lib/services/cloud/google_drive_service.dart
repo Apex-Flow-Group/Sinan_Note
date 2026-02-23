@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -28,6 +29,15 @@ class GoogleDriveService {
   static GoogleSignInAccount? _currentUser;
   static drive.DriveApi? _driveApi;
   static DateTime? _lastSyncTime;
+  static bool _isUploading = false;
+  static bool _isDownloading = false;
+
+  // Rate limiting
+  static DateTime? _lastUploadTime;
+  static int _uploadCount = 0;
+  static const _minUploadInterval =
+      Duration(seconds: 30); // Min 30s between uploads
+  static const _maxUploadsPerHour = 60; // Max 60 uploads/hour
 
   static bool get isSignedIn => _currentUser != null;
   static String? get currentUserEmail => _currentUser?.email;
@@ -84,7 +94,38 @@ class GoogleDriveService {
       {bool uploadMasterKey = false, bool uploadVault = false}) async {
     if (_driveApi == null) throw Exception('Not signed in');
 
+    // Rate limiting check
+    if (_lastUploadTime != null) {
+      final elapsed = DateTime.now().difference(_lastUploadTime!);
+      if (elapsed < _minUploadInterval) {
+        AppLogger.warning(
+            'Upload rate limited: ${_minUploadInterval.inSeconds - elapsed.inSeconds}s remaining',
+            'GoogleDrive');
+        return false;
+      }
+
+      // Reset counter every hour
+      if (elapsed > const Duration(hours: 1)) {
+        _uploadCount = 0;
+      }
+
+      // Check hourly quota
+      if (_uploadCount >= _maxUploadsPerHour) {
+        AppLogger.warning('Hourly upload quota exceeded', 'GoogleDrive');
+        return false;
+      }
+    }
+
+    // Prevent concurrent uploads
+    if (_isUploading) {
+      AppLogger.warning('Upload already in progress, skipping', 'GoogleDrive');
+      return false;
+    }
+    _isUploading = true;
+
     try {
+      _lastUploadTime = DateTime.now();
+      _uploadCount++;
       final dbService = IsarDatabaseService();
       final notes = await dbService.getAllNotes();
 
@@ -145,6 +186,8 @@ class GoogleDriveService {
     } catch (e) {
       AppLogger.error('Upload failed', 'GoogleDrive', e);
       return false;
+    } finally {
+      _isUploading = false;
     }
   }
 
@@ -165,9 +208,34 @@ class GoogleDriveService {
   static Future<bool> downloadDatabase(dynamic context) async {
     if (_driveApi == null) throw Exception('Not signed in');
 
+    // Prevent concurrent downloads
+    if (_isDownloading) {
+      AppLogger.warning(
+          'Download already in progress, skipping', 'GoogleDrive');
+      return false;
+    }
+    _isDownloading = true;
+
     try {
-      final file = await _findFile('sinan_backup.gz');
+      // Try OLD uncompressed file FIRST (priority)
+      var file = await _findFile('sinan_backup.json');
+      bool isCompressed = false;
+
+      // If not found, try compressed (new format)
+      if (file == null) {
+        AppLogger.info('🔍 Uncompressed file not found, trying compressed...',
+            'GoogleDrive');
+        file = await _findFile('sinan_backup.gz');
+        isCompressed = true;
+      } else {
+        AppLogger.info('✓ Found OLD uncompressed backup file', 'GoogleDrive');
+      }
+
       if (file == null) throw Exception('No backup found in Drive');
+
+      AppLogger.info(
+          '📥 Downloading ${isCompressed ? "compressed" : "uncompressed"} backup...',
+          'GoogleDrive');
 
       final response = await _driveApi!.files.get(
         file.id!,
@@ -189,7 +257,19 @@ class GoogleDriveService {
         throw Exception('Downloaded file is invalid');
       }
 
-      final json = CompressionService.decompress(await tempFile.readAsBytes());
+      AppLogger.info(
+          '📦 File downloaded, size: ${await tempFile.length()} bytes',
+          'GoogleDrive');
+
+      // Decompress only if it's compressed
+      final json = isCompressed
+          ? CompressionService.decompress(await tempFile.readAsBytes())
+          : await tempFile.readAsString();
+
+      AppLogger.info(
+          '✓ ${isCompressed ? "Decompressed" : "Read"} successfully, parsing JSON...',
+          'GoogleDrive');
+
       final dynamic jsonData = jsonDecode(json);
 
       List<dynamic> notesList;
@@ -199,6 +279,9 @@ class GoogleDriveService {
       if (jsonData is Map<String, dynamic>) {
         notesList = jsonData['notes'] ?? [];
         vaultData = jsonData['vault_data'];
+        AppLogger.info(
+            '📋 Format: Map (new format), Notes: ${notesList.length}, Has vault: ${vaultData != null}',
+            'GoogleDrive');
 
         // Restore vault data if exists
         if (vaultData != null) {
@@ -209,7 +292,14 @@ class GoogleDriveService {
       } else {
         // Old format (array of notes)
         notesList = jsonData;
+        AppLogger.info(
+            '📋 Format: Array (old format), Notes: ${notesList.length}',
+            'GoogleDrive');
       }
+
+      AppLogger.info(
+          '💾 Writing ${notesList.length} notes to local database...',
+          'GoogleDrive');
 
       final dbService = IsarDatabaseService();
       final isar = await dbService.database;
@@ -222,6 +312,10 @@ class GoogleDriveService {
         }
       });
 
+      AppLogger.success(
+          '✅ Successfully wrote ${notesList.length} notes to database',
+          'GoogleDrive');
+
       await tempFile.delete();
       _lastSyncTime = DateTime.now();
 
@@ -232,6 +326,8 @@ class GoogleDriveService {
     } catch (e) {
       AppLogger.error('Download failed', 'GoogleDrive', e);
       return false;
+    } finally {
+      _isDownloading = false;
     }
   }
 
@@ -459,8 +555,22 @@ class GoogleDriveService {
   static Future<bool> hasBackupInDrive() async {
     if (_driveApi == null) return false;
     try {
-      final file = await _findFile('sinan_backup.gz');
-      return file != null;
+      // Check for OLD uncompressed file FIRST (priority)
+      var file = await _findFile('sinan_backup.json');
+      if (file != null) {
+        AppLogger.info('✓ Found OLD uncompressed backup', 'GoogleDrive');
+        return true;
+      }
+
+      // Then check for compressed file
+      file = await _findFile('sinan_backup.gz');
+      if (file != null) {
+        AppLogger.info('✓ Found compressed backup', 'GoogleDrive');
+        return true;
+      }
+
+      AppLogger.info('❌ No backup found', 'GoogleDrive');
+      return false;
     } catch (_) {
       return false;
     }
@@ -524,10 +634,28 @@ class GoogleDriveService {
     if (_driveApi == null) return 0;
 
     try {
-      const fileName = 'sinan_backup.gz';
-      final file = await _findFile(fileName);
+      // Try OLD uncompressed file FIRST (priority)
+      var file = await _findFile('sinan_backup.json');
+      bool isCompressed = false;
 
-      if (file == null) return 0;
+      // If not found, try compressed
+      if (file == null) {
+        AppLogger.info('🔍 Uncompressed file not found, trying compressed...',
+            'GoogleDrive');
+        file = await _findFile('sinan_backup.gz');
+        isCompressed = true;
+      } else {
+        AppLogger.info('✓ Found OLD uncompressed file', 'GoogleDrive');
+      }
+
+      if (file == null) {
+        AppLogger.warning('❌ No backup file found', 'GoogleDrive');
+        return 0;
+      }
+
+      AppLogger.info(
+          '📥 Downloading ${isCompressed ? "compressed" : "uncompressed"} file for count...',
+          'GoogleDrive');
 
       // Download and parse
       final response = await _driveApi!.files.get(
@@ -540,16 +668,29 @@ class GoogleDriveService {
         dataStore.addAll(chunk);
       }
 
-      final jsonString = CompressionService.decompress(dataStore);
+      AppLogger.info('📦 Downloaded ${dataStore.length} bytes', 'GoogleDrive');
+
+      final jsonString = isCompressed
+          ? CompressionService.decompress(dataStore)
+          : String.fromCharCodes(dataStore);
+
+      AppLogger.info('✓ ${isCompressed ? "Decompressed" : "Read"}, parsing...',
+          'GoogleDrive');
+
       final dynamic jsonData = jsonDecode(jsonString);
 
       if (jsonData is Map<String, dynamic>) {
         final notesList = jsonData['notes'] as List?;
-        return notesList?.length ?? 0;
+        final count = notesList?.length ?? 0;
+        AppLogger.info('📋 Found $count notes (Map format)', 'GoogleDrive');
+        return count;
       } else if (jsonData is List) {
-        return jsonData.length;
+        final count = jsonData.length;
+        AppLogger.info('📋 Found $count notes (Array format)', 'GoogleDrive');
+        return count;
       }
 
+      AppLogger.warning('⚠️ Unknown JSON format', 'GoogleDrive');
       return 0;
     } catch (e) {
       AppLogger.error('Get Drive notes count error', 'GoogleDrive', e);

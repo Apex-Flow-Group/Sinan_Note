@@ -575,5 +575,8 @@
   "searchInTrash": "بحث في سلة المحذوفات",
   "searchInVault": "بحث في الملاحظات المقفلة",
   "errorOpeningNote": "خطأ في فتح الملاحظة",
-  "noteType": "نوع الملاحظة"
+  "noteType": "نوع الملاحظة",
+  "convertTo": "تحويل إلى",
+  "richText": "نص منسق",
+  "noteConverted": "تم تحويل الملاحظة"
 }

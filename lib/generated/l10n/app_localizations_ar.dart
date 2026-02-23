@@ -1709,4 +1709,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorOpeningNote => 'خطأ في فتح الملاحظة';
+
+  @override
+  String get convertTo => 'تحويل إلى';
+
+  @override
+  String get richText => 'نص منسق';
+
+  @override
+  String get noteConverted => 'تم تحويل الملاحظة';
 }

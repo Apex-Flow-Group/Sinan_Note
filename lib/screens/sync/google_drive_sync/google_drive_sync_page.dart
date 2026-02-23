@@ -32,20 +32,21 @@ class _GoogleDriveSyncPageContent extends StatefulWidget {
 
 class _GoogleDriveSyncPageContentState
     extends State<_GoogleDriveSyncPageContent> {
+  GoogleDriveSyncController? _controller;
+
   @override
   void initState() {
     super.initState();
     // Listen for snackbar messages
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final controller = context.read<GoogleDriveSyncController>();
-      controller.addListener(_handleSnackBar);
+      _controller = context.read<GoogleDriveSyncController>();
+      _controller?.addListener(_handleSnackBar);
     });
   }
 
   @override
   void dispose() {
-    final controller = context.read<GoogleDriveSyncController>();
-    controller.removeListener(_handleSnackBar);
+    _controller?.removeListener(_handleSnackBar);
     super.dispose();
   }
 

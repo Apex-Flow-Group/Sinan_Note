@@ -113,8 +113,17 @@ class VaultService {
     return value == 'true';
   }
   
-  /// Lock vault (clear session)
+  /// Lock vault (clear session + wipe memory)
   static Future<void> lockVault() async {
+    // Read and wipe master key before deleting
+    final masterKeyBase64 = await _storage.read(key: _masterKeyName);
+    if (masterKeyBase64 != null) {
+      try {
+        final key = Key.fromBase64(masterKeyBase64);
+        _wipeKey(key);
+      } catch (_) {}
+    }
+    
     await _storage.delete(key: 'vault_session_unlocked');
     await _storage.delete(key: _masterKeyName);
   }
@@ -191,8 +200,17 @@ class VaultService {
     return digest.toString();
   }
 
-  /// Clear vault (for testing/reset)
+  /// Clear vault (for testing/reset) - secure wipe
   static Future<void> clearVault() async {
+    // Wipe master key before deletion
+    final masterKeyBase64 = await _storage.read(key: _masterKeyName);
+    if (masterKeyBase64 != null) {
+      try {
+        final key = Key.fromBase64(masterKeyBase64);
+        _wipeKey(key);
+      } catch (_) {}
+    }
+    
     await _storage.delete(key: _masterKeyName);
     await _storage.delete(key: '${_masterKeyName}_password');
     await _storage.delete(key: '${_masterKeyName}_recovery');
@@ -215,20 +233,28 @@ class VaultService {
     return Key.fromBase64(masterKeyBase64);
   }
   
-  /// Encrypt data with master key
+  /// Encrypt data with master key (auto-cleanup)
   static Future<String> encryptWithMasterKey(String plainText) async {
     return await ApexErrorManager.monitorCritical(() async {
       if (plainText.isEmpty) return '';
       
-      final masterKey = await getMasterKey();
-      final iv = IV.fromSecureRandom(16);
-      final encrypter = Encrypter(AES(masterKey));
-      final encrypted = encrypter.encrypt(plainText, iv: iv);
-      return '${iv.base64}:${encrypted.base64}';
+      Key? masterKey;
+      try {
+        masterKey = await getMasterKey();
+        final iv = IV.fromSecureRandom(16);
+        final encrypter = Encrypter(AES(masterKey));
+        final encrypted = encrypter.encrypt(plainText, iv: iv);
+        return '${iv.base64}:${encrypted.base64}';
+      } finally {
+        // CRITICAL: Wipe key from memory immediately
+        if (masterKey != null) {
+          _wipeKey(masterKey);
+        }
+      }
     }, 'VaultEncrypt');
   }
   
-  /// Decrypt data with master key
+  /// Decrypt data with master key (auto-cleanup)
   static Future<String> decryptWithMasterKey(String encryptedText) async {
     return await ApexErrorManager.monitorCritical(() async {
       if (encryptedText.isEmpty) return '';
@@ -236,15 +262,34 @@ class VaultService {
       final parts = encryptedText.split(':');
       if (parts.length != 2) return encryptedText;
       
+      Key? masterKey;
       try {
-        final masterKey = await getMasterKey();
+        masterKey = await getMasterKey();
         final iv = IV.fromBase64(parts[0]);
         final encrypter = Encrypter(AES(masterKey));
         return encrypter.decrypt64(parts[1], iv: iv);
       } catch (e) {
         return encryptedText;
+      } finally {
+        // CRITICAL: Wipe key from memory immediately
+        if (masterKey != null) {
+          _wipeKey(masterKey);
+        }
       }
     }, 'VaultDecrypt');
+  }
+  
+  /// Wipe key bytes from memory (security best practice)
+  static void _wipeKey(Key key) {
+    try {
+      // Overwrite key bytes with zeros
+      final bytes = key.bytes;
+      for (int i = 0; i < bytes.length; i++) {
+        bytes[i] = 0;
+      }
+    } catch (_) {
+      // Ignore wipe errors
+    }
   }
   
   /// Check if text is encrypted (matches iv:ciphertext pattern)

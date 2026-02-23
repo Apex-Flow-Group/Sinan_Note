@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
@@ -259,78 +260,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       children: [
-        // ✨ NEW: زر التجربة الجديدة
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade400, Colors.purple.shade400],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
-              const SizedBox(height: 8),
-              Text(
-                Localizations.localeOf(context).languageCode == 'ar'
-                    ? 'تجربة مزامنة جديدة'
-                    : 'New Sync Experience',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                Localizations.localeOf(context).languageCode == 'ar'
-                    ? 'واجهة مبسطة وسهلة'
-                    : 'Simple & Easy Interface',
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final scaffoldMessenger = ScaffoldMessenger.of(context);
-                  final result = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const GoogleDriveSyncPage(),
-                    ),
-                  );
-                  if (result == true && mounted) {
-                    setState(() {});
-                    if (!mounted) return;
-                    scaffoldMessenger.showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.syncSuccess),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.rocket_launch),
-                label: Text(
-                  Localizations.localeOf(context).languageCode == 'ar'
-                      ? 'جرّب الآن'
-                      : 'Try Now',
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.blue.shade700,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        GoogleDriveWidgets.buildAccountSection(context, l10n, isDark,
-            isSignedIn, userEmail, _handleSignOut, _handleSignIn),
+        // Account Section with New Sync Button
+        _buildAccountSectionWithNewSync(context, l10n, isDark, isSignedIn, userEmail),
         const SizedBox(height: 24),
         GoogleDriveWidgets.buildSyncStatusSection(
             context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
@@ -341,6 +272,143 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
         GoogleDriveWidgets.buildAutoSyncSection(
             context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
       ],
+    );
+  }
+
+  Widget _buildAccountSectionWithNewSync(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isDark,
+    bool isSignedIn,
+    String? userEmail,
+  ) {
+    if (isSignedIn) {
+      // Show account info with sign out
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[850] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.account_circle,
+                    size: 24, color: isDark ? Colors.white70 : Colors.black87),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.account,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.signedInAs,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userEmail ?? '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: _handleSignOut,
+                  child: Text(l10n.signOut),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Not signed in - show new sync button
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade400, Colors.purple.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.cloud, color: Colors.white, size: 48),
+          const SizedBox(height: 12),
+          Text(
+            l10n.googleDriveSync,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            Localizations.localeOf(context).languageCode == 'ar'
+                ? 'واجهة مبسطة وسهلة'
+                : 'Simple & Easy Interface',
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+              final result = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GoogleDriveSyncPage(),
+                ),
+              );
+              if (result == true && mounted) {
+                // ✅ Reload notes from database
+                await notesProvider.loadNotes();
+                setState(() {});
+                if (!mounted) return;
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.syncSuccess),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.login),
+            label: Text(l10n.signIn),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.blue.shade700,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

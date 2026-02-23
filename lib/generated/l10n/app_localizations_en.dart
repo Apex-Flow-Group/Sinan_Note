@@ -1713,4 +1713,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorOpeningNote => 'Error opening note';
+
+  @override
+  String get convertTo => 'Convert To';
+
+  @override
+  String get richText => 'Rich Text';
+
+  @override
+  String get noteConverted => 'Note converted successfully';
 }

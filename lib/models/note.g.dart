@@ -7,6 +7,7 @@ part of 'note.dart';
 // **************************************************************************
 
 // coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
 extension GetNoteCollection on Isar {
   IsarCollection<Note> get notes => this.collection();
@@ -71,28 +72,38 @@ const NoteSchema = CollectionSchema(
       name: r'isTrashed',
       type: IsarType.bool,
     ),
-    r'noteType': PropertySchema(
+    r'normalizedContent': PropertySchema(
       id: 11,
+      name: r'normalizedContent',
+      type: IsarType.string,
+    ),
+    r'normalizedTitle': PropertySchema(
+      id: 12,
+      name: r'normalizedTitle',
+      type: IsarType.string,
+    ),
+    r'noteType': PropertySchema(
+      id: 13,
       name: r'noteType',
       type: IsarType.string,
     ),
     r'recurrenceRule': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'recurrenceRule',
       type: IsarType.string,
     ),
     r'reminderDateTime': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'reminderDateTime',
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 15,
+      id: 17,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -124,6 +135,32 @@ const NoteSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'content',
+          type: IndexType.value,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'normalizedTitle': IndexSchema(
+      id: 2184345006665846580,
+      name: r'normalizedTitle',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'normalizedTitle',
+          type: IndexType.value,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'normalizedContent': IndexSchema(
+      id: 4902867898057945673,
+      name: r'normalizedContent',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'normalizedContent',
           type: IndexType.value,
           caseSensitive: true,
         )
@@ -236,6 +273,8 @@ int _noteEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.content.length * 3;
+  bytesCount += 3 + object.normalizedContent.length * 3;
+  bytesCount += 3 + object.normalizedTitle.length * 3;
   bytesCount += 3 + object.noteType.length * 3;
   {
     final value = object.recurrenceRule;
@@ -264,11 +303,13 @@ void _noteSerialize(
   writer.writeBool(offsets[8], object.isPinned);
   writer.writeBool(offsets[9], object.isProfessional);
   writer.writeBool(offsets[10], object.isTrashed);
-  writer.writeString(offsets[11], object.noteType);
-  writer.writeString(offsets[12], object.recurrenceRule);
-  writer.writeDateTime(offsets[13], object.reminderDateTime);
-  writer.writeString(offsets[14], object.title);
-  writer.writeDateTime(offsets[15], object.updatedAt);
+  writer.writeString(offsets[11], object.normalizedContent);
+  writer.writeString(offsets[12], object.normalizedTitle);
+  writer.writeString(offsets[13], object.noteType);
+  writer.writeString(offsets[14], object.recurrenceRule);
+  writer.writeDateTime(offsets[15], object.reminderDateTime);
+  writer.writeString(offsets[16], object.title);
+  writer.writeDateTime(offsets[17], object.updatedAt);
 }
 
 Note _noteDeserialize(
@@ -289,12 +330,14 @@ Note _noteDeserialize(
     isPinned: reader.readBoolOrNull(offsets[8]) ?? false,
     isProfessional: reader.readBoolOrNull(offsets[9]) ?? false,
     isTrashed: reader.readBoolOrNull(offsets[10]) ?? false,
-    noteType: reader.readStringOrNull(offsets[11]) ?? 'simple',
-    recurrenceRule: reader.readStringOrNull(offsets[12]),
-    reminderDateTime: reader.readDateTimeOrNull(offsets[13]),
-    title: reader.readString(offsets[14]),
-    updatedAt: reader.readDateTime(offsets[15]),
+    noteType: reader.readStringOrNull(offsets[13]) ?? 'simple',
+    recurrenceRule: reader.readStringOrNull(offsets[14]),
+    reminderDateTime: reader.readDateTimeOrNull(offsets[15]),
+    title: reader.readString(offsets[16]),
+    updatedAt: reader.readDateTime(offsets[17]),
   );
+  object.normalizedContent = reader.readString(offsets[11]);
+  object.normalizedTitle = reader.readString(offsets[12]);
   return object;
 }
 
@@ -328,14 +371,18 @@ P _noteDeserializeProp<P>(
     case 10:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 11:
-      return (reader.readStringOrNull(offset) ?? 'simple') as P;
-    case 12:
-      return (reader.readStringOrNull(offset)) as P;
-    case 13:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 14:
       return (reader.readString(offset)) as P;
+    case 12:
+      return (reader.readString(offset)) as P;
+    case 13:
+      return (reader.readStringOrNull(offset) ?? 'simple') as P;
+    case 14:
+      return (reader.readStringOrNull(offset)) as P;
     case 15:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 16:
+      return (reader.readString(offset)) as P;
+    case 17:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -373,6 +420,22 @@ extension NoteQueryWhereSort on QueryBuilder<Note, Note, QWhere> {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'content'),
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhere> anyNormalizedTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'normalizedTitle'),
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhere> anyNormalizedContent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'normalizedContent'),
       );
     });
   }
@@ -755,6 +818,278 @@ extension NoteQueryWhere on QueryBuilder<Note, Note, QWhereClause> {
             ))
             .addWhereClause(IndexWhereClause.lessThan(
               indexName: r'content',
+              upper: [''],
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleEqualTo(
+      String normalizedTitle) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'normalizedTitle',
+        value: [normalizedTitle],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleNotEqualTo(
+      String normalizedTitle) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedTitle',
+              lower: [],
+              upper: [normalizedTitle],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedTitle',
+              lower: [normalizedTitle],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedTitle',
+              lower: [normalizedTitle],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedTitle',
+              lower: [],
+              upper: [normalizedTitle],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleGreaterThan(
+    String normalizedTitle, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedTitle',
+        lower: [normalizedTitle],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleLessThan(
+    String normalizedTitle, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedTitle',
+        lower: [],
+        upper: [normalizedTitle],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleBetween(
+    String lowerNormalizedTitle,
+    String upperNormalizedTitle, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedTitle',
+        lower: [lowerNormalizedTitle],
+        includeLower: includeLower,
+        upper: [upperNormalizedTitle],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleStartsWith(
+      String NormalizedTitlePrefix) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedTitle',
+        lower: [NormalizedTitlePrefix],
+        upper: ['$NormalizedTitlePrefix\u{FFFFF}'],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'normalizedTitle',
+        value: [''],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedTitleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.lessThan(
+              indexName: r'normalizedTitle',
+              upper: [''],
+            ))
+            .addWhereClause(IndexWhereClause.greaterThan(
+              indexName: r'normalizedTitle',
+              lower: [''],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.greaterThan(
+              indexName: r'normalizedTitle',
+              lower: [''],
+            ))
+            .addWhereClause(IndexWhereClause.lessThan(
+              indexName: r'normalizedTitle',
+              upper: [''],
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentEqualTo(
+      String normalizedContent) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'normalizedContent',
+        value: [normalizedContent],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentNotEqualTo(
+      String normalizedContent) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedContent',
+              lower: [],
+              upper: [normalizedContent],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedContent',
+              lower: [normalizedContent],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedContent',
+              lower: [normalizedContent],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedContent',
+              lower: [],
+              upper: [normalizedContent],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentGreaterThan(
+    String normalizedContent, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedContent',
+        lower: [normalizedContent],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentLessThan(
+    String normalizedContent, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedContent',
+        lower: [],
+        upper: [normalizedContent],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentBetween(
+    String lowerNormalizedContent,
+    String upperNormalizedContent, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedContent',
+        lower: [lowerNormalizedContent],
+        includeLower: includeLower,
+        upper: [upperNormalizedContent],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentStartsWith(
+      String NormalizedContentPrefix) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'normalizedContent',
+        lower: [NormalizedContentPrefix],
+        upper: ['$NormalizedContentPrefix\u{FFFFF}'],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'normalizedContent',
+        value: [''],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> normalizedContentIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.lessThan(
+              indexName: r'normalizedContent',
+              upper: [''],
+            ))
+            .addWhereClause(IndexWhereClause.greaterThan(
+              indexName: r'normalizedContent',
+              lower: [''],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.greaterThan(
+              indexName: r'normalizedContent',
+              lower: [''],
+            ))
+            .addWhereClause(IndexWhereClause.lessThan(
+              indexName: r'normalizedContent',
               upper: [''],
             ));
       }
@@ -1562,6 +1897,267 @@ extension NoteQueryFilter on QueryBuilder<Note, Note, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedContent',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'normalizedContent',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'normalizedContent',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'normalizedContent',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'normalizedContent',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'normalizedContent',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'normalizedContent',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'normalizedContent',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedContentIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedContent',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition>
+      normalizedContentIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'normalizedContent',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'normalizedTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'normalizedTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'normalizedTitle',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'normalizedTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'normalizedTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'normalizedTitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'normalizedTitle',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedTitle',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> normalizedTitleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'normalizedTitle',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterFilterCondition> noteTypeEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -2225,6 +2821,30 @@ extension NoteQuerySortBy on QueryBuilder<Note, Note, QSortBy> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterSortBy> sortByNormalizedContent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedContent', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> sortByNormalizedContentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedContent', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> sortByNormalizedTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedTitle', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> sortByNormalizedTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedTitle', Sort.desc);
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterSortBy> sortByNoteType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'noteType', Sort.asc);
@@ -2431,6 +3051,30 @@ extension NoteQuerySortThenBy on QueryBuilder<Note, Note, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterSortBy> thenByNormalizedContent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedContent', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> thenByNormalizedContentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedContent', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> thenByNormalizedTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedTitle', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> thenByNormalizedTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedTitle', Sort.desc);
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterSortBy> thenByNoteType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'noteType', Sort.asc);
@@ -2560,6 +3204,22 @@ extension NoteQueryWhereDistinct on QueryBuilder<Note, Note, QDistinct> {
     });
   }
 
+  QueryBuilder<Note, Note, QDistinct> distinctByNormalizedContent(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'normalizedContent',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Note, Note, QDistinct> distinctByNormalizedTitle(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'normalizedTitle',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Note, Note, QDistinct> distinctByNoteType(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2665,6 +3325,18 @@ extension NoteQueryProperty on QueryBuilder<Note, Note, QQueryProperty> {
   QueryBuilder<Note, bool, QQueryOperations> isTrashedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isTrashed');
+    });
+  }
+
+  QueryBuilder<Note, String, QQueryOperations> normalizedContentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'normalizedContent');
+    });
+  }
+
+  QueryBuilder<Note, String, QQueryOperations> normalizedTitleProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'normalizedTitle');
     });
   }
 

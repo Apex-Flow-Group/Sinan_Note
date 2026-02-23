@@ -3397,6 +3397,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error opening note'**
   String get errorOpeningNote;
+
+  /// No description provided for @convertTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert To'**
+  String get convertTo;
+
+  /// No description provided for @richText.
+  ///
+  /// In en, this message translates to:
+  /// **'Rich Text'**
+  String get richText;
+
+  /// No description provided for @noteConverted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note converted successfully'**
+  String get noteConverted;
 }
 
 class _AppLocalizationsDelegate

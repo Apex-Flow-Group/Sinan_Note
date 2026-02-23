@@ -15,6 +15,13 @@ class Note {
   @Index(type: IndexType.value)
   late String content;
   
+  // Normalized fields for smart Arabic search
+  @Index(type: IndexType.value)
+  late String normalizedTitle;
+  
+  @Index(type: IndexType.value)
+  late String normalizedContent;
+  
   late DateTime createdAt;
   late DateTime updatedAt;
   
@@ -62,7 +69,27 @@ class Note {
     this.isProfessional = false,
     this.isPinned = false,
     this.isChecklist = false,
-  });
+  }) {
+    // Auto-normalize on creation
+    normalizedTitle = normalize(title);
+    normalizedContent = normalize(content);
+  }
+  
+  /// Normalize Arabic text for smart search
+  static String normalize(String text) {
+    if (text.isEmpty) return '';
+    
+    return text
+        // Remove diacritics
+        .replaceAll(RegExp(r'[\u064B-\u065F]'), '')
+        // Normalize alef variants
+        .replaceAll(RegExp(r'[أإآ]'), 'ا')
+        // Normalize taa marbuta
+        .replaceAll('ة', 'ه')
+        // Normalize alef maksura
+        .replaceAll('ى', 'ي')
+        .toLowerCase();
+  }
 
   /// Check if content is encrypted (iv:ciphertext pattern)
   bool get isEncrypted {
@@ -90,7 +117,7 @@ class Note {
     bool? isPinned,
     bool? isChecklist,
   }) {
-    return Note(
+    final newNote = Note(
       id: id ?? this.id,
       title: title ?? this.title,
       content: content ?? this.content,
@@ -108,6 +135,10 @@ class Note {
       isPinned: isPinned ?? this.isPinned,
       isChecklist: isChecklist ?? this.isChecklist,
     );
+    // Auto-update normalized fields
+    newNote.normalizedTitle = normalize(newNote.title);
+    newNote.normalizedContent = normalize(newNote.content);
+    return newNote;
   }
 
   // Backward compatibility with SQLite
@@ -116,6 +147,8 @@ class Note {
       'id': id,
       'title': title,
       'content': content,
+      'normalizedTitle': normalizedTitle,
+      'normalizedContent': normalizedContent,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'colorIndex': colorIndex,

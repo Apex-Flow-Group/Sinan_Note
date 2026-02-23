@@ -14,31 +14,31 @@ class IsarDatabaseService {
   static bool _isInitializing = false;
   static IsarDatabaseService? _instance;
   static Completer<Isar>? _initCompleter;
-  
+
   // Singleton
   factory IsarDatabaseService() {
     _instance ??= IsarDatabaseService._();
     return _instance!;
   }
-  
+
   IsarDatabaseService._();
 
   static Future<void> initialize() async {
     if (_isar != null && _isar!.isOpen) return;
-    
+
     // If initialization is in progress, wait for it
     if (_isInitializing && _initCompleter != null) {
       await _initCompleter!.future;
       return;
     }
-    
+
     _isInitializing = true;
     _initCompleter = Completer<Isar>();
-    
+
     try {
       final dir = await getApplicationDocumentsDirectory();
       final existing = Isar.getInstance('sinan_notes');
-      
+
       if (existing != null && existing.isOpen) {
         _isar = existing;
       } else {
@@ -48,7 +48,7 @@ class IsarDatabaseService {
           name: 'sinan_notes',
         );
       }
-      
+
       _initCompleter!.complete(_isar!);
     } catch (e) {
       _initCompleter!.completeError(e);
@@ -61,22 +61,40 @@ class IsarDatabaseService {
   Future<Isar> get database async {
     // Return existing instance immediately - no initialization
     if (_isar != null && _isar!.isOpen) return _isar!;
-    
+
     // If not initialized, throw error - must call initialize() first
-    throw StateError('IsarDatabaseService not initialized. Call IsarDatabaseService.initialize() first.');
+    throw StateError(
+        'IsarDatabaseService not initialized. Call IsarDatabaseService.initialize() first.');
   }
 
   // CRUD Operations
+  final _writeLock = <String, Completer<void>>{};
+
   Future<int> insertNote(Note note) async {
     return await ApexErrorManager.monitorDB(() async {
       AppLogger.info('insertNote called - title: ${note.title}', 'DB');
-      final isar = await database;
-      final id = await isar.writeTxn(() async {
-        note.updatedAt = DateTime.now();
-        return await isar.notes.put(note);
-      });
-      AppLogger.success('Note inserted with ID: $id', 'DB');
-      return id;
+
+      // Auto-update normalized fields
+      note.normalizedTitle = Note.normalize(note.title);
+      note.normalizedContent = Note.normalize(note.content);
+
+      while (_writeLock.containsKey('insert')) {
+        await _writeLock['insert']!.future;
+      }
+      _writeLock['insert'] = Completer<void>();
+
+      try {
+        final isar = await database;
+        final id = await isar.writeTxn(() async {
+          note.updatedAt = DateTime.now();
+          return await isar.notes.put(note);
+        });
+        AppLogger.success('Note inserted with ID: $id', 'DB');
+        return id;
+      } finally {
+        _writeLock['insert']!.complete();
+        _writeLock.remove('insert');
+      }
     }, name: 'InsertNote');
   }
 
@@ -95,7 +113,7 @@ class IsarDatabaseService {
           .isLockedEqualTo(false)
           .sortByIsPinnedDesc()
           .thenByUpdatedAtDesc();
-      
+
       if (offset != null && limit != null) {
         return await query.offset(offset).limit(limit).findAll();
       } else if (offset != null) {
@@ -103,7 +121,7 @@ class IsarDatabaseService {
       } else if (limit != null) {
         return await query.limit(limit).findAll();
       }
-      
+
       return await query.findAll();
     }, name: 'GetNotes');
   }
@@ -152,14 +170,31 @@ class IsarDatabaseService {
 
   Future<int> updateNote(Note note) async {
     return await ApexErrorManager.monitorDB(() async {
-      AppLogger.info('updateNote called - ID: ${note.id}, title: ${note.title}', 'DB');
-      final isar = await database;
-      final id = await isar.writeTxn(() async {
-        note.updatedAt = DateTime.now();
-        return await isar.notes.put(note);
-      });
-      AppLogger.success('Note updated with ID: $id', 'DB');
-      return id;
+      AppLogger.info(
+          'updateNote called - ID: ${note.id}, title: ${note.title}', 'DB');
+
+      // Auto-update normalized fields
+      note.normalizedTitle = Note.normalize(note.title);
+      note.normalizedContent = Note.normalize(note.content);
+
+      final lockKey = 'update_${note.id}';
+      while (_writeLock.containsKey(lockKey)) {
+        await _writeLock[lockKey]!.future;
+      }
+      _writeLock[lockKey] = Completer<void>();
+
+      try {
+        final isar = await database;
+        final id = await isar.writeTxn(() async {
+          note.updatedAt = DateTime.now();
+          return await isar.notes.put(note);
+        });
+        AppLogger.success('Note updated with ID: $id', 'DB');
+        return id;
+      } finally {
+        _writeLock[lockKey]!.complete();
+        _writeLock.remove(lockKey);
+      }
     }, name: 'UpdateNote');
   }
 
@@ -177,7 +212,7 @@ class IsarDatabaseService {
     final isar = await database;
     final note = await getNoteById(id);
     if (note == null) return 0;
-    
+
     note.isArchived = true;
     note.updatedAt = DateTime.now();
     return await isar.writeTxn(() => isar.notes.put(note));
@@ -187,7 +222,7 @@ class IsarDatabaseService {
     final isar = await database;
     final note = await getNoteById(id);
     if (note == null) return 0;
-    
+
     note.isArchived = false;
     note.updatedAt = DateTime.now();
     return await isar.writeTxn(() => isar.notes.put(note));
@@ -197,7 +232,7 @@ class IsarDatabaseService {
     final isar = await database;
     final note = await getNoteById(id);
     if (note == null) return 0;
-    
+
     note.isTrashed = true;
     note.updatedAt = DateTime.now();
     return await isar.writeTxn(() => isar.notes.put(note));
@@ -207,15 +242,15 @@ class IsarDatabaseService {
     final isar = await database;
     final note = await getNoteById(id);
     if (note == null) return 0;
-    
+
     note.isTrashed = false;
     note.isArchived = false;
     note.updatedAt = DateTime.now();
     return await isar.writeTxn(() => isar.notes.put(note));
   }
 
-  // Search with full-text support
-  Future<List<Note>> searchNotes(String query) async {
+  // Search with full-text support and limit
+  Future<List<Note>> searchNotes(String query, {int limit = 100}) async {
     final isar = await database;
     return await isar.notes
         .filter()
@@ -226,6 +261,7 @@ class IsarDatabaseService {
             .or()
             .contentContains(query, caseSensitive: false))
         .sortByUpdatedAtDesc()
+        .limit(limit) // ✅ Limit search results
         .findAll();
   }
 
@@ -284,7 +320,9 @@ class IsarDatabaseService {
 
   // Version control
   Future<void> logNoteVersion(NoteVersion version) async {
-    AppLogger.info('logNoteVersion - noteId: ${version.noteId}, action: ${version.action}', 'DB');
+    AppLogger.info(
+        'logNoteVersion - noteId: ${version.noteId}, action: ${version.action}',
+        'DB');
     final isar = await database;
     await isar.writeTxn(() async {
       await isar.noteVersions.put(version);
@@ -318,7 +356,7 @@ class IsarDatabaseService {
         .noteIdEqualTo(noteId)
         .sortByTimestampDesc()
         .findAll();
-    
+
     if (versions.length > maxLimit) {
       final toDelete = versions.skip(maxLimit).map((v) => v.id).toList();
       await isar.writeTxn(() async {
@@ -329,15 +367,13 @@ class IsarDatabaseService {
 
   Future<int> deleteNoteVersions(int noteId) async {
     final isar = await database;
-    final versions = await isar.noteVersions
-        .filter()
-        .noteIdEqualTo(noteId)
-        .findAll();
-    
+    final versions =
+        await isar.noteVersions.filter().noteIdEqualTo(noteId).findAll();
+
     await isar.writeTxn(() async {
       await isar.noteVersions.deleteAll(versions.map((v) => v.id).toList());
     });
-    
+
     return versions.length;
   }
 

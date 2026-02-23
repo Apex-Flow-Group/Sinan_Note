@@ -12,22 +12,40 @@ class NoteStateService {
   bool _isInitialDataLoaded = false;
   Timer? _sortDebounce;
   
+  // Cache
+  List<Note>? _cachedActiveNotes;
+  List<Note>? _cachedArchivedNotes;
+  List<Note>? _cachedTrashedNotes;
+  bool _cacheInvalidated = true;
+  
   bool get isInitialDataLoaded => _isInitialDataLoaded;
   
   List<Note> get activeNotes {
-    return _allNotes
+    if (_cachedActiveNotes != null && !_cacheInvalidated) {
+      return _cachedActiveNotes!;
+    }
+    _cachedActiveNotes = _allNotes
         .where((n) => !n.isLocked && !n.isTrashed && !n.isArchived)
         .toList();
+    return _cachedActiveNotes!;
   }
   
   List<Note> get archivedNotes {
-    return _allNotes
+    if (_cachedArchivedNotes != null && !_cacheInvalidated) {
+      return _cachedArchivedNotes!;
+    }
+    _cachedArchivedNotes = _allNotes
         .where((n) => n.isArchived && !n.isTrashed && !n.isLocked)
         .toList();
+    return _cachedArchivedNotes!;
   }
   
   List<Note> get trashedNotes {
-    return _allNotes.where((n) => n.isTrashed && !n.isLocked).toList();
+    if (_cachedTrashedNotes != null && !_cacheInvalidated) {
+      return _cachedTrashedNotes!;
+    }
+    _cachedTrashedNotes = _allNotes.where((n) => n.isTrashed && !n.isLocked).toList();
+    return _cachedTrashedNotes!;
   }
   
   List<Note> get reminderNotes {
@@ -45,6 +63,7 @@ class NoteStateService {
   void updateAllNotes(List<Note> notes) {
     _allNotes = notes;
     _isInitialDataLoaded = true;
+    _invalidateCache();
     sortNotes(immediate: true);
   }
   
@@ -57,6 +76,7 @@ class NoteStateService {
       _allNotes.add(note);
       _allNotes = List.from(_allNotes);
     }
+    _invalidateCache();
     _silentSync();
   }
   
@@ -68,12 +88,14 @@ class NoteStateService {
       sortNotes(immediate: true);
       _allNotes = List.from(_allNotes);
     }
+    _invalidateCache();
     _silentSync();
   }
   
   void removeNote(int id) {
     _allNotes.removeWhere((n) => n.id == id);
     _lockedNotes.removeWhere((n) => n.id == id);
+    _invalidateCache();
   }
   
   void updateLockedNotes(List<Note> notes) {
@@ -89,14 +111,16 @@ class NoteStateService {
       return activeNotes;
     }
     
+    // ✅ Use cached notes for search (faster)
     final lowerQuery = query.toLowerCase();
-    return _allNotes
+    final results = activeNotes
         .where((n) =>
-            !n.isLocked &&
-            !n.isTrashed &&
-            (n.title.toLowerCase().contains(lowerQuery) ||
-                n.content.toLowerCase().contains(lowerQuery)))
+            n.title.toLowerCase().contains(lowerQuery) ||
+            n.content.toLowerCase().contains(lowerQuery))
+        .take(100) // ✅ Limit to 100 results
         .toList();
+    
+    return results;
   }
   
   void sortNotes({bool immediate = false}) {
@@ -106,7 +130,9 @@ class NoteStateService {
     }
     
     _sortDebounce?.cancel();
-    _sortDebounce = Timer(const Duration(milliseconds: 50), _performSort);
+    _sortDebounce = Timer(const Duration(milliseconds: 50), () {
+      if (_allNotes.isNotEmpty) _performSort();
+    });
   }
   
   void _performSort() {
@@ -121,21 +147,44 @@ class NoteStateService {
     _allNotes = _allNotes.map((n) => 
         ids.contains(n.id) ? transform(n) : n
     ).toList();
+    _invalidateCache();
   }
   
   void dispose() {
     _sortDebounce?.cancel();
+    _syncDebounce?.cancel();
   }
   
-  /// 🔄 Silent background sync
-  void _silentSync() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
+  /// Invalidate cache
+  void _invalidateCache() {
+    _cacheInvalidated = true;
+    _cachedActiveNotes = null;
+    _cachedArchivedNotes = null;
+    _cachedTrashedNotes = null;
+  }
+  
+  /// 🔄 Silent background sync with debouncing
+  bool _isSyncing = false;
+  Timer? _syncDebounce;
+  
+  void _silentSync() {
+    // Debounce: wait 5 seconds of inactivity before syncing
+    _syncDebounce?.cancel();
+    _syncDebounce = Timer(const Duration(seconds: 5), () async {
+      if (_isSyncing) return;
       
-      if (autoSync && GoogleDriveService.isSignedIn) {
-        GoogleDriveService.uploadDatabase(null);
+      try {
+        _isSyncing = true;
+        final prefs = await SharedPreferences.getInstance();
+        final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
+        
+        if (autoSync && GoogleDriveService.isSignedIn) {
+          await GoogleDriveService.uploadDatabase(null);
+        }
+      } catch (_) {
+      } finally {
+        _isSyncing = false;
       }
-    } catch (_) {}
+    });
   }
 }

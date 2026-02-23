@@ -3,11 +3,10 @@
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';  // ✏️ Import NoteMode
-import 'package:apex_note/screens/shared/note_editor.dart';  // ✏️ Import Editor
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/breathing_search_field.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';  // 📤 Import share widget
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/home/note_conversion_sheet.dart';
 import 'package:apex_note/widgets/home/selection_action_bar.dart';
 import 'package:apex_note/widgets/home/smooth_search_header_delegate.dart';
 import 'package:flutter/material.dart';
@@ -68,34 +67,16 @@ class _SmartHeaderState extends State<SmartHeader> {
                     onClear: () {
                       widget.selectedNoteIdsNotifier.value = {};
                     },
-                    onRename: selectedIds.length == 1 ? () async {
+                    onConvert: selectedIds.length == 1 ? () {
                       final provider = Provider.of<NotesProvider>(context, listen: false);
                       final noteId = selectedIds.first;
                       final note = provider.notes.firstWhere((n) => n.id == noteId);
                       
-                      // Clear selection first
                       widget.selectedNoteIdsNotifier.value = {};
                       
-                      // Determine note mode
-                      NoteMode mode = NoteMode.simple;
-                      if (note.isChecklist) {
-                        mode = NoteMode.checklist;
-                      } else if (note.noteType == 'code' || note.isProfessional) {
-                        mode = NoteMode.code;
-                      } else if (note.reminderDateTime != null) {
-                        mode = NoteMode.reminder;
-                      }
-                      
-                      // Open editor
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => NoteEditorImmersive(
-                            note: note,
-                            mode: mode,
-                          ),
-                        ),
-                      );
+                      NoteConversionSheet.show(context, note, () {
+                        // Refresh will happen automatically via provider
+                      });
                     } : null,
                     onPin: () async {
                       final provider = Provider.of<NotesProvider>(context, listen: false);

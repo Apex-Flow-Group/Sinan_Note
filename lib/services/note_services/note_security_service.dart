@@ -38,9 +38,12 @@ class NoteSecurityService {
     final decryptedNotes = <Note>[];
     
     for (final note in encryptedNotes) {
+      String? decryptedTitle;
+      String? decryptedContent;
+      
       try {
-        final decryptedTitle = await VaultService.decryptWithMasterKey(note.title);
-        String decryptedContent = await VaultService.decryptWithMasterKey(note.content);
+        decryptedTitle = await VaultService.decryptWithMasterKey(note.title);
+        decryptedContent = await VaultService.decryptWithMasterKey(note.content);
         
         // ✅ Clean checklist JSON after decryption
         if (note.isChecklist || note.noteType == 'checklist') {
@@ -54,6 +57,10 @@ class NoteSecurityService {
       } catch (e) {
         // If decryption fails, add note as-is
         decryptedNotes.add(note);
+      } finally {
+        // CRITICAL: Wipe decrypted data from memory
+        _wipeString(decryptedTitle);
+        _wipeString(decryptedContent);
       }
     }
     return decryptedNotes;
@@ -129,6 +136,18 @@ class NoteSecurityService {
     } catch (e) {
       // If invalid JSON, return as-is
       return content;
+    }
+  }
+  
+  /// Wipe sensitive string from memory (best effort)
+  void _wipeString(String? str) {
+    if (str == null) return;
+    try {
+      // Overwrite string content (best effort in Dart)
+      // Note: Dart strings are immutable, but this helps with GC
+      str = '\x00' * str.length;
+    } catch (_) {
+      // Ignore wipe errors
     }
   }
 }

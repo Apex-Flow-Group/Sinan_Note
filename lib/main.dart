@@ -147,31 +147,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
-    // Show loading screen immediately
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 24),
-                Text(
-                  Localizations.localeOf(context).languageCode == 'ar'
-                      ? 'جاري الحفظ...'
-                      : 'Saving...',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-
-    // Process in background
+    // Process in background without showing loading screen
     await Future.delayed(const Duration(milliseconds: 100));
     if (!mounted) return;
 
@@ -190,6 +166,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
       colorIndex: settings.getDefaultColorIndex(_getModeString(mode)),
       noteType: mode.name,
       isProfessional: mode == NoteMode.code,
+      isChecklist: mode == NoteMode.checklist,
     );
 
     // Save to database and get the ID
@@ -202,15 +179,11 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     if (!mounted) return;
 
     if (savedNote == null) {
-      // Failed to save, close loading screen
-      if (navigatorKey.currentState?.canPop() ?? false) {
-        navigatorKey.currentState?.pop();
-      }
       return;
     }
 
-    // Replace loading with editor, passing the SAVED note with ID
-    navigatorKey.currentState?.pushReplacement(
+    // Open editor directly
+    navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (context) => NoteEditorImmersive(
           mode: mode,
@@ -221,6 +194,19 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
   }
 
   NoteMode _detectNoteMode(String text) {
+    // Checklist patterns
+    final checklistPatterns = [
+      RegExp(r'^\s*[-*]\s*\[[ xX]\]', multiLine: true),
+      RegExp(r'^\s*\d+\.\s*\[[ xX]\]', multiLine: true),
+    ];
+    
+    for (final pattern in checklistPatterns) {
+      if (pattern.hasMatch(text)) {
+        return NoteMode.checklist;
+      }
+    }
+
+    // Code patterns
     final codePatterns = [
       RegExp(r'(function|const|let|var|class|import|export)\s'),
       RegExp(r'(def|class|import|from|if __name__)\s'),
@@ -234,6 +220,20 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
       }
     }
 
+    // Rich text patterns (HTML/Markdown)
+    final richPatterns = [
+      RegExp(r'<[^>]+>'),
+      RegExp(r'\*\*[^*]+\*\*'),
+      RegExp(r'__[^_]+__'),
+      RegExp(r'^#{1,6}\s', multiLine: true),
+    ];
+
+    for (final pattern in richPatterns) {
+      if (pattern.hasMatch(text)) {
+        return NoteMode.rich;
+      }
+    }
+
     return NoteMode.simple;
   }
 
@@ -241,6 +241,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     switch (mode) {
       case NoteMode.code:
         return 'professional';
+      case NoteMode.rich:
+        return 'rich';
       case NoteMode.reminder:
         return 'reminder';
       case NoteMode.checklist:

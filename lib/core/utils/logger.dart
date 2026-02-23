@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 /// نظام تسجيل موحد للتطبيق
 class AppLogger {
   static const String _prefix = '🔷 Sinan Note';
-  static const bool _enableLogs = false; // تعطيل جميع السجلات
+  static const bool _enableLogs = true; // تفعيل السجلات للتطوير
 
   /// معلومات عامة
   static void info(String message, [String? tag]) {

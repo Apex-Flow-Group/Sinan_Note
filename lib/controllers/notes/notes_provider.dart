@@ -62,7 +62,13 @@ class NotesProvider extends ChangeNotifier {
   Future<void> loadNotes({bool force = false}) async {
     if (_isLoading) return;
     if (!force && _stateService.isInitialDataLoaded) return;
-    await refreshAllNotes();
+    
+    // ✅ Load in background without blocking UI
+    refreshAllNotes().then((_) {
+      // Silently loaded
+    }).catchError((e) {
+      AppLogger.error('Background load failed', 'Provider', e);
+    });
   }
 
   Future<List<Note>> getNotes() async {

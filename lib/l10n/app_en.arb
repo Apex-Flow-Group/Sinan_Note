@@ -575,5 +575,8 @@
   "searchInTrash": "Search in Trash",
   "searchInVault": "Search in Vault",
   "errorOpeningNote": "Error opening note",
-  "noteType": "Note Type"
+  "noteType": "Note Type",
+  "convertTo": "Convert To",
+  "richText": "Rich Text",
+  "noteConverted": "Note converted successfully"
 }
