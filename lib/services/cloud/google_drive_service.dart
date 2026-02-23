@@ -7,6 +7,7 @@ import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/storage/compression_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,8 @@ class GoogleDriveService {
         final authClient = await _googleSignIn.authenticatedClient();
         if (authClient != null) {
           _driveApi = drive.DriveApi(authClient);
-          AppLogger.success('Restored session: ${_currentUser!.email}', 'GoogleDrive');
+          AppLogger.success(
+              'Restored session: ${_currentUser!.email}', 'GoogleDrive');
         }
       }
     } catch (e) {
@@ -62,7 +64,8 @@ class GoogleDriveService {
       }
 
       _driveApi = drive.DriveApi(authClient);
-      AppLogger.success('Successfully signed in as: ${_currentUser!.email}', 'GoogleDrive');
+      AppLogger.success(
+          'Successfully signed in as: ${_currentUser!.email}', 'GoogleDrive');
       return true;
     } catch (e) {
       AppLogger.error('Sign in error', 'GoogleDrive', e);
@@ -77,39 +80,41 @@ class GoogleDriveService {
     _lastSyncTime = null;
   }
 
-  static Future<bool> uploadDatabase(dynamic context, {bool uploadMasterKey = false, bool uploadVault = false}) async {
+  static Future<bool> uploadDatabase(dynamic context,
+      {bool uploadMasterKey = false, bool uploadVault = false}) async {
     if (_driveApi == null) throw Exception('Not signed in');
 
     try {
       final dbService = IsarDatabaseService();
       final notes = await dbService.getAllNotes();
-      
+
       // Get vault data if exists
       final vaultData = await VaultService.getVaultDataForBackup();
-      
+
       // Create backup in new format
       final Map<String, dynamic> backupData = {
         'version': '2.0',
         'created_at': DateTime.now().toIso8601String(),
         'notes': notes.map((n) => n.toMap()).toList(),
       };
-      
+
       // Add vault_data if exists
       if (vaultData != null) {
         backupData['vault_data'] = vaultData;
         AppLogger.info('✓ Vault data included in backup', 'GoogleDrive');
       }
-      
+
       final json = jsonEncode(backupData);
       final tempDir = await getTemporaryDirectory();
-      final tempPath = join(tempDir.path, 'sinan_backup.json');
-      await File(tempPath).writeAsString(json);
-      
+      final tempPath = join(tempDir.path, 'sinan_backup.gz');
+      await File(tempPath).writeAsBytes(CompressionService.compress(json));
+
       final backupFile = File(tempPath);
-      const fileName = 'sinan_backup.json';
+      const fileName = 'sinan_backup.gz';
       final existingFile = await _findFile(fileName);
 
-      final media = drive.Media(backupFile.openRead(), await backupFile.length());
+      final media =
+          drive.Media(backupFile.openRead(), await backupFile.length());
 
       if (existingFile != null) {
         await _driveApi!.files.update(
@@ -117,19 +122,23 @@ class GoogleDriveService {
           existingFile.id!,
           uploadMedia: media,
         );
-        AppLogger.success('Updated backup in Google Drive (${notes.length} notes)', 'GoogleDrive');
+        AppLogger.success(
+            'Updated backup in Google Drive (${notes.length} notes)',
+            'GoogleDrive');
       } else {
         final driveFile = drive.File()
           ..name = fileName
-          ..mimeType = 'application/json';
+          ..mimeType = 'application/gzip';
 
         await _driveApi!.files.create(
           driveFile,
           uploadMedia: media,
         );
-        AppLogger.success('Created backup in Google Drive (${notes.length} notes)', 'GoogleDrive');
+        AppLogger.success(
+            'Created backup in Google Drive (${notes.length} notes)',
+            'GoogleDrive');
       }
-      
+
       await backupFile.delete();
       _lastSyncTime = DateTime.now();
       return true;
@@ -143,7 +152,7 @@ class GoogleDriveService {
     if (_driveApi == null) throw Exception('Not signed in');
 
     try {
-      final file = await _findFile('sinan_backup.json');
+      final file = await _findFile('sinan_backup.gz');
       if (file == null) return null;
 
       return file.modifiedTime;
@@ -157,7 +166,7 @@ class GoogleDriveService {
     if (_driveApi == null) throw Exception('Not signed in');
 
     try {
-      final file = await _findFile('sinan_backup.json');
+      final file = await _findFile('sinan_backup.gz');
       if (file == null) throw Exception('No backup found in Drive');
 
       final response = await _driveApi!.files.get(
@@ -180,30 +189,31 @@ class GoogleDriveService {
         throw Exception('Downloaded file is invalid');
       }
 
-      final json = await tempFile.readAsString();
+      final json = CompressionService.decompress(await tempFile.readAsBytes());
       final dynamic jsonData = jsonDecode(json);
-      
+
       List<dynamic> notesList;
       Map<String, dynamic>? vaultData;
-      
+
       // Check if new format (with version and vault_data)
       if (jsonData is Map<String, dynamic>) {
         notesList = jsonData['notes'] ?? [];
         vaultData = jsonData['vault_data'];
-        
+
         // Restore vault data if exists
         if (vaultData != null) {
           await VaultService.restoreVaultDataFromBackup(vaultData);
-          AppLogger.info('✓ Vault data restored from Google Drive', 'GoogleDrive');
+          AppLogger.info(
+              '✓ Vault data restored from Google Drive', 'GoogleDrive');
         }
       } else {
         // Old format (array of notes)
         notesList = jsonData;
       }
-      
+
       final dbService = IsarDatabaseService();
       final isar = await dbService.database;
-      
+
       await isar.writeTxn(() async {
         await isar.notes.clear();
         for (var noteMap in notesList) {
@@ -214,8 +224,10 @@ class GoogleDriveService {
 
       await tempFile.delete();
       _lastSyncTime = DateTime.now();
-      
-      AppLogger.success('Downloaded ${notesList.length} notes from Google Drive', 'GoogleDrive');
+
+      AppLogger.success(
+          'Downloaded ${notesList.length} notes from Google Drive',
+          'GoogleDrive');
       return true;
     } catch (e) {
       AppLogger.error('Download failed', 'GoogleDrive', e);
@@ -223,15 +235,17 @@ class GoogleDriveService {
     }
   }
 
-  static Future<bool> mergeWithDrive(dynamic context, {bool uploadMasterKey = false, bool uploadVault = false}) async {
+  static Future<bool> mergeWithDrive(dynamic context,
+      {bool uploadMasterKey = false, bool uploadVault = false}) async {
     if (_driveApi == null) throw Exception('Not signed in');
 
     try {
       // 1. Fetch notes from Drive
-      final file = await _findFile('sinan_backup.json');
+      final file = await _findFile('sinan_backup.gz');
       if (file == null) {
         // No backup, just upload local
-        return await uploadDatabase(context, uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
+        return await uploadDatabase(context,
+            uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
       }
 
       final response = await _driveApi!.files.get(
@@ -247,27 +261,29 @@ class GoogleDriveService {
       await response.stream.forEach((chunk) => sink.add(chunk));
       await sink.close();
 
-      final driveJson = await tempFile.readAsString();
+      final driveJson =
+          CompressionService.decompress(await tempFile.readAsBytes());
       final dynamic jsonData = jsonDecode(driveJson);
-      
+
       List<dynamic> driveNotesList;
       Map<String, dynamic>? vaultData;
-      
+
       // Check if new format (with version and vault_data)
       if (jsonData is Map<String, dynamic>) {
         driveNotesList = jsonData['notes'] ?? [];
         vaultData = jsonData['vault_data'];
-        
+
         // Restore vault data if exists
         if (vaultData != null) {
           await VaultService.restoreVaultDataFromBackup(vaultData);
-          AppLogger.info('✓ Vault data restored from Google Drive', 'GoogleDrive');
+          AppLogger.info(
+              '✓ Vault data restored from Google Drive', 'GoogleDrive');
         }
       } else {
         // Old format (array of notes)
         driveNotesList = jsonData;
       }
-      
+
       final driveNotes = driveNotesList.map((m) => Note.fromMap(m)).toList();
 
       // 2. Fetch local notes
@@ -275,21 +291,24 @@ class GoogleDriveService {
       final localNotes = await dbService.getAllNotes();
 
       // 3. Show dialog to user
-      final action = await _showMergeDialog(context, localNotes.length, driveNotes.length);
-      
+      final action =
+          await _showMergeDialog(context, localNotes.length, driveNotes.length);
+
       if (action == null || action == 'cancel') {
         await tempFile.delete();
         return false;
       }
 
       final isar = await dbService.database;
-      
+
       if (action == 'useLocal') {
         // استخدم المحلي فقط
         await tempFile.delete();
-        await uploadDatabase(context, uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
+        await uploadDatabase(context,
+            uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
         _lastSyncTime = DateTime.now();
-        AppLogger.success('Used local notes (${localNotes.length})', 'GoogleDrive');
+        AppLogger.success(
+            'Used local notes (${localNotes.length})', 'GoogleDrive');
         return true;
       } else if (action == 'useDrive') {
         // استخدم Drive فقط
@@ -301,25 +320,27 @@ class GoogleDriveService {
         });
         await tempFile.delete();
         _lastSyncTime = DateTime.now();
-        AppLogger.success('Used Drive notes (${driveNotes.length})', 'GoogleDrive');
+        AppLogger.success(
+            'Used Drive notes (${driveNotes.length})', 'GoogleDrive');
         return true;
       } else {
         // دمج ذكي
         final Map<int, Note> mergedMap = {};
-        
+
         // أضف المحلية أولاً
         for (var note in localNotes) {
           if (note.id != null) {
             mergedMap[note.id!] = note;
           }
         }
-        
+
         // دمج من Drive (خذ الأحدث)
         for (var driveNote in driveNotes) {
           if (driveNote.id != null) {
             if (mergedMap.containsKey(driveNote.id!)) {
               // موجود، قارن التاريخ
-              if (driveNote.updatedAt.isAfter(mergedMap[driveNote.id!]!.updatedAt)) {
+              if (driveNote.updatedAt
+                  .isAfter(mergedMap[driveNote.id!]!.updatedAt)) {
                 mergedMap[driveNote.id!] = driveNote;
               }
             } else {
@@ -339,8 +360,9 @@ class GoogleDriveService {
 
         // ارفع المدمج لـ Drive
         await tempFile.delete();
-        await uploadDatabase(context, uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
-        
+        await uploadDatabase(context,
+            uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
+
         _lastSyncTime = DateTime.now();
         AppLogger.success('Merged ${mergedMap.length} notes', 'GoogleDrive');
         return true;
@@ -350,8 +372,9 @@ class GoogleDriveService {
       return false;
     }
   }
-  
-  static Future<String?> _showMergeDialog(dynamic context, int localCount, int driveCount) async {
+
+  static Future<String?> _showMergeDialog(
+      dynamic context, int localCount, int driveCount) async {
     final l10n = AppLocalizations.of(context)!;
     return await showDialog<String>(
       context: context,
@@ -380,7 +403,8 @@ class GoogleDriveService {
                 children: [
                   const Icon(Icons.phone_android, size: 20, color: Colors.blue),
                   const SizedBox(width: 8),
-                  Text('${l10n.onDevice}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('${l10n.onDevice}: ',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text(l10n.notesCount(localCount)),
                 ],
               ),
@@ -396,13 +420,15 @@ class GoogleDriveService {
                 children: [
                   const Icon(Icons.cloud, size: 20, color: Colors.green),
                   const SizedBox(width: 8),
-                  Text('${l10n.onDrive}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('${l10n.onDrive}: ',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text(l10n.notesCount(driveCount)),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            Text(l10n.chooseAction, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(l10n.chooseAction,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
         actions: [
@@ -429,11 +455,11 @@ class GoogleDriveService {
       ),
     );
   }
-  
+
   static Future<bool> hasBackupInDrive() async {
     if (_driveApi == null) return false;
     try {
-      final file = await _findFile('sinan_backup.json');
+      final file = await _findFile('sinan_backup.gz');
       return file != null;
     } catch (_) {
       return false;
@@ -457,73 +483,73 @@ class GoogleDriveService {
       return null;
     }
   }
-  
+
   /// Check if backup file contains vault_data
   static Future<bool> checkForVaultData() async {
     if (_driveApi == null) return false;
-    
+
     try {
-      const fileName = 'sinan_backup.json';
+      const fileName = 'sinan_backup.gz';
       final file = await _findFile(fileName);
-      
+
       if (file == null) return false;
-      
+
       // Download and check content
       final response = await _driveApi!.files.get(
         file.id!,
         downloadOptions: drive.DownloadOptions.fullMedia,
       ) as drive.Media;
-      
+
       final List<int> dataStore = [];
       await for (var chunk in response.stream) {
         dataStore.addAll(chunk);
       }
-      
-      final jsonString = utf8.decode(dataStore);
+
+      final jsonString = CompressionService.decompress(dataStore);
       final dynamic jsonData = jsonDecode(jsonString);
-      
+
       if (jsonData is Map<String, dynamic>) {
         return jsonData.containsKey('vault_data');
       }
-      
+
       return false;
     } catch (e) {
       AppLogger.error('Check vault data error', 'GoogleDrive', e);
       return false;
     }
   }
-  
+
   /// Get notes count from Drive backup
   static Future<int> getDriveNotesCount() async {
     if (_driveApi == null) return 0;
-    
+
     try {
-      const fileName = 'sinan_backup.json';
+      const fileName = 'sinan_backup.gz';
       final file = await _findFile(fileName);
-      
+
       if (file == null) return 0;
-      
+
       // Download and parse
       final response = await _driveApi!.files.get(
         file.id!,
         downloadOptions: drive.DownloadOptions.fullMedia,
       ) as drive.Media;
-      
+
       final List<int> dataStore = [];
       await for (var chunk in response.stream) {
         dataStore.addAll(chunk);
       }
-      
-      final jsonString = utf8.decode(dataStore);
+
+      final jsonString = CompressionService.decompress(dataStore);
       final dynamic jsonData = jsonDecode(jsonString);
-      
+
       if (jsonData is Map<String, dynamic>) {
         final notesList = jsonData['notes'] as List?;
         return notesList?.length ?? 0;
       } else if (jsonData is List) {
         return jsonData.length;
       }
-      
+
       return 0;
     } catch (e) {
       AppLogger.error('Get Drive notes count error', 'GoogleDrive', e);
