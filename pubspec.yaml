@@ -52,7 +52,6 @@ dependencies:
   
   # Code Editor
   flutter_code_editor: ^0.3.3
-  highlight: ^0.7.0
   flutter_highlight: ^0.7.0
   
   # Other
