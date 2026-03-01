@@ -15,6 +15,7 @@ import 'package:apex_note/screens/shared/note_editor/widgets/checklist_editor_wi
 import 'package:apex_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/text_editor_widget.dart';
 import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/services/svg_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/editor/apex_editor_header.dart';
@@ -241,11 +242,42 @@ class EditorBuildMethods {
                     }
                   : null,
               onLanguageChanged: (newLang) async {
-                final normalizedLang = newLang == 'Auto' ? null : newLang;
+                String? normalizedLang;
+                if (newLang == 'Auto') {
+                  normalizedLang = null;
+                } else {
+                  normalizedLang = newLang; // includes "custom:ext" as-is
+                }
                 coordinator.detectedLanguage = normalizedLang;
                 coordinator.isLanguageManuallySelected = normalizedLang != null;
                 coordinator.stateManager.markDirty();
               },
+              onRunCode: coordinator.detectedLanguage == 'SVG'
+                  ? () async {
+                      HapticFeedback.mediumImpact();
+                      try {
+                        await SvgService.previewSvgCode(
+                            coordinator.codeController!.text);
+                      } catch (e) {
+                        if (context.mounted) {
+                          UnifiedNotificationService().show(
+                            context: context,
+                            message: 'Could not open browser: $e',
+                            type: NotificationType.error,
+                          );
+                        }
+                      }
+                    }
+                  : null,
+              onExportCode: coordinator.detectedLanguage == 'SVG'
+                  ? () async {
+                      HapticFeedback.mediumImpact();
+                      final title = coordinator.getCurrentTitle(
+                          AppLocalizations.of(context)?.newNoteTitle ?? 'svg');
+                      await SvgService.exportSvgFile(
+                          coordinator.codeController!.text, title);
+                    }
+                  : null,
               onCalculate: () {
                 HapticFeedback.mediumImpact();
                 smartController.showSmartCalculationResult(

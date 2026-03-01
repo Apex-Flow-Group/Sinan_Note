@@ -79,7 +79,15 @@ class EditorCoordinator {
       if (mode == NoteMode.code && note!.noteType.isNotEmpty) {
         String? restoredLanguage = LanguageDetector.getLanguageFromExtension(note!.noteType);
         restoredLanguage ??= NoteEditorUtils.mapNoteTypeToLanguage(note!.noteType);
-        
+
+        // For generic types, detect from content once
+        if (restoredLanguage == null &&
+            (note!.noteType == 'code' ||
+                note!.noteType == 'pro' ||
+                note!.noteType == 'professional')) {
+          restoredLanguage = LanguageDetector.detectLanguage(note!.content);
+        }
+
         if (restoredLanguage != null) {
           detectedLanguage = restoredLanguage;
           isLanguageManuallySelected = true;

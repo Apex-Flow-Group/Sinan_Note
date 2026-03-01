@@ -1001,6 +1001,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectLanguage => 'اختر اللغة';
 
   @override
+  String get otherExtension => 'أخرى (امتداد مخصص)';
+
+  @override
   String get tourPage1Title => 'أنواع الملاحظات';
 
   @override
@@ -1718,4 +1721,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noteConverted => 'تم تحويل الملاحظة';
+
+  @override
+  String get file => 'ملف';
+
+  @override
+  String get view => 'عرض';
+
+  @override
+  String get help => 'مساعدة';
+
+  @override
+  String get refresh => 'تحديث';
+
+  @override
+  String get open => 'فتح';
+
+  @override
+  String get pin => 'تثبيت';
+
+  @override
+  String get unpin => 'إلغاء التثبيت';
+
+  @override
+  String get lock => 'قفل';
 }

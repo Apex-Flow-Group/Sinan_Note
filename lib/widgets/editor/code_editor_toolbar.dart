@@ -77,7 +77,9 @@ class CodeEditorToolbar extends StatelessWidget {
                               size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            detectedLanguage ?? 'Auto',
+                            detectedLanguage != null && detectedLanguage!.startsWith('custom:')
+                                ? '.${detectedLanguage!.substring(7)}'
+                                : (detectedLanguage ?? 'Auto'),
                             style: TextStyle(
                               color: textColor.withValues(alpha: 0.7),
                               fontSize: 12,
@@ -96,8 +98,8 @@ class CodeEditorToolbar extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (onBackgroundColorTap != null)
-                    _buildIconBtn(Icons.color_lens, onBackgroundColorTap,
-                        Colors.purple),
+                    _buildIconBtn(
+                        Icons.color_lens, onBackgroundColorTap, Colors.purple),
                   if (onRunCode != null)
                     _buildIconBtn(Icons.play_arrow, onRunCode, Colors.green),
                   if (onExportCode != null)
@@ -107,9 +109,7 @@ class CodeEditorToolbar extends StatelessWidget {
               ),
             ),
             // Symbol row with scroll support
-            isDesktop
-                ? _buildDesktopSymbolRow()
-                : _buildMobileSymbolRow(),
+            isDesktop ? _buildDesktopSymbolRow() : _buildMobileSymbolRow(),
           ],
         ),
       ),
@@ -127,7 +127,7 @@ class CodeEditorToolbar extends StatelessWidget {
 
   Widget _buildDesktopSymbolRow() {
     final scrollController = ScrollController();
-    
+
     return StatefulBuilder(
       builder: (context, setState) {
         return Row(
@@ -211,10 +211,12 @@ class CodeEditorToolbar extends StatelessWidget {
       'Auto',
       'Python',
       'JavaScript',
+      'TypeScript',
       'Java',
       'Dart',
       'HTML',
       'CSS',
+      'SVG',
       'SQL',
       'C++',
       'C',
@@ -227,8 +229,13 @@ class CodeEditorToolbar extends StatelessWidget {
       'Ruby',
       'Bash',
       'JSON',
+      'YAML',
+      'TOML',
       'Markdown',
       'XML',
+      'Lua',
+      'R',
+      'Dockerfile',
     ];
 
     showModalBottomSheet(
@@ -255,8 +262,8 @@ class CodeEditorToolbar extends StatelessWidget {
                   Text(
                     l10n.selectLanguage,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: textColor,
-                    ),
+                          color: textColor,
+                        ),
                   ),
                 ],
               ),
@@ -265,11 +272,30 @@ class CodeEditorToolbar extends StatelessWidget {
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: languages.length,
+                itemCount: languages.length + 1, // +1 for "Other"
                 itemBuilder: (context, index) {
+                  // Last item = "Other..."
+                  if (index == languages.length) {
+                    return ListTile(
+                      leading: Icon(Icons.edit_outlined,
+                          color: textColor.withValues(alpha: 0.6)),
+                      title: Text(
+                        l10n.otherExtension,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: textColor,
+                            ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _showCustomExtensionDialog(context);
+                      },
+                    );
+                  }
+
                   final lang = languages[index];
-                  final isSelected = (lang == 'Auto' && detectedLanguage == null) ||
-                      (lang == detectedLanguage);
+                  final isSelected =
+                      (lang == 'Auto' && detectedLanguage == null) ||
+                          (lang == detectedLanguage);
                   return ListTile(
                     leading: Icon(
                       lang == 'Auto' ? Icons.auto_awesome : Icons.code,
@@ -280,10 +306,11 @@ class CodeEditorToolbar extends StatelessWidget {
                     title: Text(
                       lang,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: textColor,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
+                            color: textColor,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
                     ),
                     trailing: isSelected
                         ? const Icon(Icons.check, color: Colors.blue)
@@ -302,6 +329,59 @@ class CodeEditorToolbar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showCustomExtensionDialog(BuildContext context) {
+    final controller = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: backgroundColor,
+        title: Text(l10n.otherExtension, style: TextStyle(color: textColor)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: TextStyle(color: textColor, fontFamily: 'monospace'),
+          decoration: InputDecoration(
+            hintText: 'e.g. vue, proto, graphql',
+            hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
+            prefixText: '.',
+            prefixStyle: TextStyle(
+                color: textColor, fontFamily: 'monospace', fontSize: 16),
+            enabledBorder: UnderlineInputBorder(
+                borderSide:
+                    BorderSide(color: textColor.withValues(alpha: 0.3))),
+            focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.blue)),
+          ),
+          onSubmitted: (val) {
+            _applyCustomExtension(ctx, val);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel,
+                style: TextStyle(color: textColor.withValues(alpha: 0.6))),
+          ),
+          ElevatedButton(
+            onPressed: () => _applyCustomExtension(ctx, controller.text),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _applyCustomExtension(BuildContext ctx, String raw) {
+    final ext = raw.trim().replaceAll('.', '').toLowerCase();
+    if (ext.isNotEmpty && onLanguageChanged != null) {
+      Navigator.pop(ctx);
+      // Pass as custom format: "custom:ext"
+      onLanguageChanged!('custom:$ext');
+    }
   }
 
   Widget _buildSymbolBtn(String symbol, VoidCallback onTap) {

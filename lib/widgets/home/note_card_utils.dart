@@ -15,9 +15,10 @@ class NoteCardUtils {
     }
     
     final codeTypes = [
-      'python', 'javascript', 'java', 'dart', 'html', 'css', 'sql',
-      'cpp', 'c', 'csharp', 'swift', 'kotlin', 'go', 'rust', 'php',
-      'ruby', 'bash', 'json', 'xml', 'code', 'pro', 'professional'
+      'python', 'javascript', 'typescript', 'java', 'dart', 'html', 'css',
+      'svg', 'sql', 'cpp', 'c', 'csharp', 'swift', 'kotlin', 'go', 'rust',
+      'php', 'ruby', 'bash', 'json', 'yaml', 'toml', 'xml', 'lua', 'r',
+      'dockerfile', 'code', 'pro', 'professional'
     ];
 
     if (codeTypes.contains(note.noteType)) {
@@ -59,23 +60,34 @@ class NoteCardUtils {
   }
 
   static bool shouldShowExtension(String noteType) {
+    // Custom extensions always show
+    if (noteType.startsWith('custom:')) return true;
     final codeTypes = [
-      'pro', 'code', 'markdown', 'python', 'javascript', 'java', 'dart',
-      'html', 'css', 'sql', 'cpp', 'c', 'csharp', 'swift', 'kotlin',
-      'go', 'rust', 'php', 'ruby', 'bash', 'json', 'xml', 'professional'
+      'pro', 'code', 'markdown', 'python', 'javascript', 'typescript', 'java',
+      'dart', 'html', 'css', 'svg', 'sql', 'cpp', 'c', 'csharp', 'swift',
+      'kotlin', 'go', 'rust', 'php', 'ruby', 'bash', 'json', 'yaml', 'toml',
+      'xml', 'lua', 'r', 'dockerfile', 'professional'
     ];
     return codeTypes.contains(noteType);
   }
 
   static String getFileExtension(String content, String noteType) {
+    // Custom extension stored as "custom:ext"
+    if (noteType.startsWith('custom:')) {
+      return '.${noteType.substring(7)}';
+    }
+
+    // Known noteType → direct mapping (no re-detection)
     final typeToExt = {
       'markdown': '.md',
       'python': '.py',
       'javascript': '.js',
+      'typescript': '.ts',
       'java': '.java',
       'dart': '.dart',
       'html': '.html',
       'css': '.css',
+      'svg': '.svg',
       'sql': '.sql',
       'cpp': '.cpp',
       'c': '.c',
@@ -88,16 +100,24 @@ class NoteCardUtils {
       'ruby': '.rb',
       'bash': '.sh',
       'json': '.json',
+      'yaml': '.yaml',
+      'toml': '.toml',
       'xml': '.xml',
+      'lua': '.lua',
+      'r': '.r',
+      'dockerfile': '.dockerfile',
     };
 
     if (typeToExt.containsKey(noteType)) {
       return typeToExt[noteType]!;
     }
 
-    final detectedLang = LanguageDetector.detectLanguage(content);
-    if (detectedLang != null) {
-      return LanguageDetector.getFileExtension(detectedLang);
+    // Only auto-detect for unknown/generic types (new notes)
+    if (noteType == 'code' || noteType == 'pro' || noteType == 'professional') {
+      final detectedLang = LanguageDetector.detectLanguage(content);
+      if (detectedLang != null) {
+        return LanguageDetector.getFileExtension(detectedLang);
+      }
     }
 
     return '.txt';

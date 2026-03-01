@@ -304,6 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Scaffold(
               key: _scaffoldKey,
+              resizeToAvoidBottomInset: false,
               onDrawerChanged: widget.onDrawerChanged,
               drawer: HomeDrawerWidget(
                 onBackupTap: () {

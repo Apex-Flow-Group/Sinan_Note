@@ -29,8 +29,14 @@ class LanguageDetector {
     'CSS': '.css',
     'SQL': '.sql',
     'JSON': '.json',
+    'YAML': '.yaml',
+    'TOML': '.toml',
     'XML': '.xml',
     'Bash': '.sh',
+    'Lua': '.lua',
+    'R': '.r',
+    'Dockerfile': '.dockerfile',
+    'SVG': '.svg',
   };
 
   static String getFileExtension(String language) {
@@ -62,6 +68,9 @@ class LanguageDetector {
     if (sample.contains('<?xml')) return 'XML';
     if (RegExp(r'<!DOCTYPE\s+html>', caseSensitive: false).hasMatch(sample)) return 'HTML';
     if (sample.startsWith('#!/bin/bash') || sample.startsWith('#!/bin/sh')) return 'Bash';
+    if (sample.contains('<svg') || sample.contains('xmlns="http://www.w3.org/2000/svg"')) return 'SVG';
+    if (sample.startsWith('FROM ') || sample.contains('\nFROM ')) return 'Dockerfile';
+    if (RegExp(r'^\[\w+\]', multiLine: true).hasMatch(sample) && sample.contains(' = ')) return 'TOML';
 
     final patterns = <String, List<MapEntry<RegExp, int>>>{
       'Dart': [
@@ -175,6 +184,23 @@ class LanguageDetector {
       'JSON': [
         MapEntry(RegExp(r'^\s*\{\s*"\w+"\s*:'), 10),
         MapEntry(RegExp(r'"\w+"\s*:\s*(true|false|null|\d+|")'), 6),
+      ],
+      'YAML': [
+        MapEntry(RegExp(r'^\w[\w-]*:\s*\S', multiLine: true), 5),
+        MapEntry(RegExp(r'^\s+-\s+\w', multiLine: true), 4),
+        MapEntry(RegExp(r'^---\s*$', multiLine: true), 10),
+      ],
+      'Lua': [
+        MapEntry(RegExp(r'\bfunction\s+\w+\s*\('), 8),
+        MapEntry(RegExp(r'\blocal\s+\w+'), 6),
+        MapEntry(RegExp(r'\bend\b'), 4),
+        MapEntry(RegExp(r'print\s*\('), 5),
+      ],
+      'R': [
+        MapEntry(RegExp(r'<-\s*'), 8),
+        MapEntry(RegExp(r'\bc\s*\('), 6),
+        MapEntry(RegExp(r'library\s*\('), 10),
+        MapEntry(RegExp(r'data\.frame\s*\('), 12),
       ],
     };
 

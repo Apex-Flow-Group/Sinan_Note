@@ -340,6 +340,7 @@
   "saveAndExit": "حفظ والخروج",
   "discardChanges": "تجاهل",
   "selectLanguage": "اختر اللغة",
+  "otherExtension": "أخرى (امتداد مخصص)",
   "tourPage1Title": "أنواع الملاحظات",
   "tourPage1Desc": "اختر النوع المناسب لاحتياجاتك",
   "tourPage2Title": "الحسابات الذكية",
@@ -578,5 +579,14 @@
   "noteType": "نوع الملاحظة",
   "convertTo": "تحويل إلى",
   "richText": "نص منسق",
-  "noteConverted": "تم تحويل الملاحظة"
+  "noteConverted": "تم تحويل الملاحظة",
+  "file": "ملف",
+  "edit": "تحرير",
+  "view": "عرض",
+  "help": "مساعدة",
+  "refresh": "تحديث",
+  "open": "فتح",
+  "pin": "تثبيت",
+  "unpin": "إلغاء التثبيت",
+  "lock": "قفل"
 }

@@ -6,6 +6,7 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/main.dart' show navigatorKey;
+import 'package:apex_note/screens/onboarding/whats_new_dialog.dart';
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
@@ -13,7 +14,6 @@ import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
-
 import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -151,151 +151,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _showWhatsNewDialog() {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.celebration, color: Colors.blue),
-            const SizedBox(width: 8),
-            Text(isArabic ? 'ما الجديد؟' : 'What\'s New?'),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Version Header
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.rocket_launch,
-                          color: Colors.blue, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        isArabic ? 'الإصدار 2.2.1' : 'Version 2.2.1',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Main Feature
-                _buildFeature(
-                  icon: Icons.devices,
-                  color: Colors.blue,
-                  title:
-                      isArabic ? '🚗 في كل مكان معك' : '🚗 Everywhere With You',
-                  description: isArabic
-                      ? 'الآن سنان نوت متوفر على سيارتك، ساعتك، وتلفازك. منظومة ملاحظات كاملة بحجم 11 ميجابايت فقط.'
-                      : 'Now Sinan Note is available on your car, watch, and TV. A complete notes system in just 11 MB.',
-                ),
-
-                const SizedBox(height: 16),
-
-                // Footer
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.favorite, color: Colors.red, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          isArabic
-                              ? 'شكراً لاستخدامك سنان نوت! نحن نعمل باستمرار لتحسين تجربتك.'
-                              : 'Thank you for using Sinan Note! We\'re constantly working to improve your experience.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[700],
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(isArabic ? 'حسناً' : 'Got it'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeature({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String description,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[700],
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    WhatsNewDialog.show(context);
   }
 
   @override

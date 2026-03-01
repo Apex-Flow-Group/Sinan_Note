@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// - Details Panel (اليمين): محتوى الملاحظة المختارة
 /// 
 /// يمكن سحب المقبض بين اللوحتين لتغيير النسبة
+/// 
+/// ✅ OPTIMIZED: يستخدم RepaintBoundary لعزل إعادة الرسم
 class MasterDetailsLayout extends StatefulWidget {
   final Widget masterPanel;
   final Widget detailsPanel;
@@ -70,23 +72,25 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
           return Row(
             children: [
               // Master Panel
-              SizedBox(
-                width: constraints.maxWidth * _masterWidthRatio,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: masterPanelColor,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: widget.masterPanel,
+              RepaintBoundary(
+                child: SizedBox(
+                  width: constraints.maxWidth * _masterWidthRatio,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: masterPanelColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: widget.masterPanel,
+                    ),
                   ),
                 ),
               ),
@@ -123,21 +127,23 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
               
               // Details Panel
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: detailsPanelColor,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: widget.detailsPanel,
+                child: RepaintBoundary(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: detailsPanelColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: widget.detailsPanel,
+                    ),
                   ),
                 ),
               ),

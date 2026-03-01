@@ -70,15 +70,17 @@ class EditorSaveManager {
       return 'checklist';
     }
 
-    // Priority 2: Manual language selection
-    if (isLanguageManuallySelected && detectedLanguage != null) {
+    // Priority 2: Manual selection OR auto-detected language
+    if (detectedLanguage != null) {
       return smartController.mapLanguageToNoteType(detectedLanguage);
     }
 
-    // Priority 3: Preserve existing type if compatible
+    // Priority 3: Preserve existing specific type (not generic)
+    const genericTypes = {'code', 'pro', 'professional'};
     if (existingNoteType != null &&
         existingNoteType.isNotEmpty &&
-        mode == NoteMode.code) {
+        mode == NoteMode.code &&
+        !genericTypes.contains(existingNoteType)) {
       return existingNoteType;
     }
 

@@ -7,10 +7,21 @@ import 'package:flutter/material.dart';
 class NoteEditorUtils {
   /// Map note type string to language name
   static String? mapNoteTypeToLanguage(String noteType) {
-    final languageMap = {
+    final type = noteType.toLowerCase();
+
+    // Custom extension: return as-is for display
+    if (type.startsWith('custom:')) return type;
+
+    const languageMap = {
       'python': 'Python',
       'javascript': 'JavaScript',
+      'typescript': 'TypeScript',
       'java': 'Java',
+      'dart': 'Dart',
+      'html': 'HTML',
+      'css': 'CSS',
+      'svg': 'SVG',
+      'sql': 'SQL',
       'cpp': 'C++',
       'c': 'C',
       'csharp': 'C#',
@@ -20,16 +31,18 @@ class NoteEditorUtils {
       'rust': 'Rust',
       'kotlin': 'Kotlin',
       'swift': 'Swift',
-      'typescript': 'TypeScript',
-      'html': 'HTML',
-      'css': 'CSS',
-      'sql': 'SQL',
-      'shell': 'Shell',
-      'dart': 'Dart',
+      'bash': 'Bash',
+      'shell': 'Bash',
       'json': 'JSON',
+      'yaml': 'YAML',
+      'toml': 'TOML',
       'xml': 'XML',
+      'lua': 'Lua',
+      'r': 'R',
+      'dockerfile': 'Dockerfile',
+      'markdown': 'Markdown',
     };
-    return languageMap[noteType.toLowerCase()];
+    return languageMap[type];
   }
 
   /// Get background color from color index

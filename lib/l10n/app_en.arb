@@ -340,6 +340,7 @@
   "saveAndExit": "Save & Exit",
   "discardChanges": "Discard",
   "selectLanguage": "Select Language",
+  "otherExtension": "Other (custom extension)",
   "tourPage1Title": "Note Types",
   "tourPage1Desc": "Choose the right type for your needs",
   "tourPage2Title": "Smart Calculations",
@@ -578,5 +579,14 @@
   "noteType": "Note Type",
   "convertTo": "Convert To",
   "richText": "Rich Text",
-  "noteConverted": "Note converted successfully"
+  "noteConverted": "Note converted successfully",
+  "file": "File",
+  "edit": "Edit",
+  "view": "View",
+  "help": "Help",
+  "refresh": "Refresh",
+  "open": "Open",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "lock": "Lock"
 }

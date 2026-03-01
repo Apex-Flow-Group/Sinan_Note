@@ -65,6 +65,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     _coordinator.initialize(context);
 
+    // Rebuild after init so detectedLanguage is reflected in toolbar
+    if (widget.mode == NoteMode.code && widget.note != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    }
+
     // Add listeners
     _coordinator.contentController.addListener(_onContentChanged);
     _coordinator.undoController.addListener(_updateUndoRedoState);

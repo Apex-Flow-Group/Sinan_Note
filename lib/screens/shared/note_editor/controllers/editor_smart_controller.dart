@@ -142,6 +142,9 @@ class EditorSmartController {
 
   /// Get file extension for language
   String getExtensionForLanguage(String language) {
+    if (language.startsWith('custom:')) {
+      return '.${language.substring(7)}';
+    }
     return LanguageDetector.getExtensionForLanguage(language);
   }
 
@@ -149,10 +152,16 @@ class EditorSmartController {
   String mapLanguageToNoteType(String? language) {
     if (language == null) return 'code';
 
+    // Custom extension: preserve full "custom:ext" as noteType
+    if (language.startsWith('custom:')) {
+      return language; // store as "custom:vue" etc.
+    }
+
     final langToType = {
       'Markdown': 'markdown',
       'Python': 'python',
       'JavaScript': 'javascript',
+      'TypeScript': 'typescript',
       'Java': 'java',
       'Dart': 'dart',
       'HTML': 'html',
@@ -169,7 +178,13 @@ class EditorSmartController {
       'Ruby': 'ruby',
       'Bash': 'bash',
       'JSON': 'json',
+      'YAML': 'yaml',
+      'TOML': 'toml',
       'XML': 'xml',
+      'Lua': 'lua',
+      'R': 'r',
+      'Dockerfile': 'dockerfile',
+      'SVG': 'svg',
     };
 
     return langToType[language] ?? 'code';

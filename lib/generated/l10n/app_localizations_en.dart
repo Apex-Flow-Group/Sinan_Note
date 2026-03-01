@@ -1003,6 +1003,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectLanguage => 'Select Language';
 
   @override
+  String get otherExtension => 'Other (custom extension)';
+
+  @override
   String get tourPage1Title => 'Note Types';
 
   @override
@@ -1722,4 +1725,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteConverted => 'Note converted successfully';
+
+  @override
+  String get file => 'File';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get help => 'Help';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get pin => 'Pin';
+
+  @override
+  String get unpin => 'Unpin';
+
+  @override
+  String get lock => 'Lock';
 }

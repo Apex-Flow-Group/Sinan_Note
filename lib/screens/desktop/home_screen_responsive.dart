@@ -9,6 +9,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:apex_note/widgets/details_panel.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
@@ -42,6 +43,7 @@ class HomeScreenResponsive extends StatefulWidget {
 
 class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   final ValueNotifier<Set<int>> _selectedNoteIdsNotifier = ValueNotifier({});
   final ValueNotifier<bool> _isEditModeNotifier =
       ValueNotifier(false); // 🔥 وضع التعديل
@@ -54,6 +56,9 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     ViewType.listCompact,
     ViewType.listExpanded,
   ];
+
+  // ✅ Cache master panel to prevent rebuilds
+  Widget? _cachedDetailsPanel;
 
   @override
   void initState() {
@@ -70,6 +75,13 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
       );
       selectedNoteProvider.clearSelection();
     });
+
+    // ✅ Build cached panels once
+    _buildCachedPanels();
+  }
+
+  void _buildCachedPanels() {
+    _cachedDetailsPanel = const DetailsPanel();
   }
 
   ViewType _parseViewType(String type) {
@@ -104,6 +116,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     _selectedNoteIdsNotifier.dispose();
     _isEditModeNotifier.dispose();
     _viewTypeNotifier.dispose();
@@ -275,6 +288,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
         final bool hasSelection = selectedIds.isNotEmpty;
 
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           drawer: HomeDrawerWidget(
             onBackupTap: () {
               final tempStrings = {
@@ -310,41 +324,70 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   ),
             title: hasSelection
                 ? Text('${selectedIds.length} ${l10n.selected}')
-                : TextField(
+                : _SearchField(
                     controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: l10n.searchNotes,
-                      border: InputBorder.none,
-                      prefixIcon: const Icon(Icons.search),
-                    ),
-                    onChanged: (value) => setState(() {}),
+                    focusNode: _searchFocusNode,
+                    hint: l10n.searchNotes,
                   ),
             actions: hasSelection
                 ? _buildSelectionActions(context, selectedIds)
                 : _buildSearchActions(context),
           ),
-          body: MasterDetailsLayout(
-            masterPanel: Stack(
-              children: [
-                CustomScrollView(
-                  slivers: [
-                    NotesGridView(
-                      viewType: _viewType,
-                      selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
-                      searchController: _searchController,
-                    ),
-                  ],
+          body: Column(
+            children: [
+              DesktopMenuBar(
+                onNewNote: _navigateToNewNote,
+                onSearch: () => FocusScope.of(context).requestFocus(FocusNode()),
+                onRefresh: () => Provider.of<NotesProvider>(context, listen: false).loadNotes(force: true),
+                onSettings: () => Navigator.pushNamed(context, '/settings'),
+                onExport: () {
+                  final tempStrings = {
+                    'exportBackup': l10n.exportBackup,
+                    'importBackup': l10n.importBackup,
+                    'googleDrive': l10n.googleDrive,
+                    'share': l10n.share,
+                    'soon': 'قريباً',
+                  };
+                  BackupOptionsDialog.show(context, tempStrings);
+                },
+                onImport: () {
+                  final tempStrings = {
+                    'exportBackup': l10n.exportBackup,
+                    'importBackup': l10n.importBackup,
+                    'googleDrive': l10n.googleDrive,
+                    'share': l10n.share,
+                    'soon': 'قريباً',
+                  };
+                  BackupOptionsDialog.show(context, tempStrings);
+                },
+                onAbout: () => Navigator.pushNamed(context, '/settings'),
+              ),
+              Expanded(
+                child: MasterDetailsLayout(
+                  masterPanel: Stack(
+                    children: [
+                      CustomScrollView(
+                        slivers: [
+                          NotesGridView(
+                            viewType: _viewType,
+                            selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
+                            searchController: _searchController,
+                          ),
+                        ],
+                      ),
+                      AddMenuWidget(
+                        showMenu: _showAddMenu,
+                        onToggle: () {
+                          setState(() => _showAddMenu = !_showAddMenu);
+                        },
+                        onModeSelected: _navigateToNewNote,
+                      ),
+                    ],
+                  ),
+                  detailsPanel: _cachedDetailsPanel ?? const DetailsPanel(),
                 ),
-                AddMenuWidget(
-                  showMenu: _showAddMenu,
-                  onToggle: () {
-                    setState(() => _showAddMenu = !_showAddMenu);
-                  },
-                  onModeSelected: _navigateToNewNote,
-                ),
-              ],
-            ),
-            detailsPanel: const DetailsPanel(),
+              ),
+            ],
           ),
         );
       },
@@ -354,15 +397,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   List<Widget> _buildSearchActions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return [
-      if (_searchController.text.isNotEmpty)
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            setState(() {
-              _searchController.clear();
-            });
-          },
-        ),
       ValueListenableBuilder<String>(
         valueListenable: _viewTypeNotifier,
         builder: (context, viewType, child) {
@@ -544,5 +578,66 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     );
 
     selectedNoteProvider.selectNote(savedNote);
+  }
+}
+
+class _SearchField extends StatefulWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String hint;
+
+  const _SearchField({
+    required this.controller,
+    required this.focusNode,
+    required this.hint,
+  });
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onChanged);
+    widget.focusNode.addListener(_onFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onChanged);
+    widget.focusNode.removeListener(_onFocusChanged);
+    super.dispose();
+  }
+
+  void _onChanged() => setState(() {});
+  void _onFocusChanged() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    final showClear = widget.controller.text.isNotEmpty || widget.focusNode.hasFocus;
+
+    return TextField(
+      controller: widget.controller,
+      focusNode: widget.focusNode,
+      decoration: InputDecoration(
+        hintText: widget.hint,
+        border: InputBorder.none,
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: Opacity(
+          opacity: showClear ? 1.0 : 0.0,
+          child: IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: showClear
+                ? () {
+                    widget.controller.clear();
+                    widget.focusNode.unfocus();
+                  }
+                : null,
+          ),
+        ),
+      ),
+    );
   }
 }

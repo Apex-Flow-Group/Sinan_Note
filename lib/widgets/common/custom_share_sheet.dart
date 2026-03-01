@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -151,29 +152,9 @@ class CustomShareSheet {
   }
 
   static String _getFileExtension(Note note) {
-    final type = note.noteType.toLowerCase();
-    
-    if (type == 'python' || type == 'py') return 'py';
-    if (type == 'javascript' || type == 'js') return 'js';
-    if (type == 'dart') return 'dart';
-    if (type == 'java') return 'java';
-    if (type == 'html') return 'html';
-    if (type == 'css') return 'css';
-    if (type == 'sql') return 'sql';
-    if (type == 'cpp' || type == 'c++') return 'cpp';
-    if (type == 'c') return 'c';
-    if (type == 'csharp' || type == 'c#') return 'cs';
-    if (type == 'php') return 'php';
-    if (type == 'ruby' || type == 'rb') return 'rb';
-    if (type == 'go') return 'go';
-    if (type == 'rust' || type == 'rs') return 'rs';
-    if (type == 'swift') return 'swift';
-    if (type == 'kotlin' || type == 'kt') return 'kt';
-    if (type == 'bash' || type == 'sh') return 'sh';
-    if (type == 'json') return 'json';
-    if (type == 'xml') return 'xml';
-    
-    return 'txt';
+    final ext = NoteCardUtils.getFileExtension(note.content, note.noteType);
+    // strip leading dot
+    return ext.startsWith('.') ? ext.substring(1) : ext;
   }
 }
 
