@@ -51,7 +51,7 @@ class _ReminderDashboardState extends State<ReminderDashboard>
   Future<void> _checkPermissions() async {
     final prefs = await SharedPreferences.getInstance();
     final dismissed = prefs.getBool('reminder_permission_dismissed') ?? false;
-    
+
     if (!dismissed) {
       await NotificationService().checkAllPermissions();
       // Always show banner to remind about battery optimization
@@ -142,151 +142,179 @@ class _ReminderDashboardState extends State<ReminderDashboard>
               onTap: () => _closeAllSlidables.value++,
               child: SlidableAutoCloseBehavior(
                 child: DefaultTabController(
-              length: 3,
-              child: NestedScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                  SliverAppBar(
-                    title: _searchController.text.isEmpty
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.alarm_rounded, size: 22),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  strings.reminders,
-                                  overflow: TextOverflow.ellipsis,
+                  length: 3,
+                  child: NestedScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                      SliverAppBar(
+                        title: _searchController.text.isEmpty
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.alarm_rounded, size: 22),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      strings.reminders,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : TextField(
+                                controller: _searchController,
+                                autofocus: true,
+                                decoration: InputDecoration(
+                                  hintText: strings.searchNotes,
+                                  border: InputBorder.none,
+                                ),
+                              ),
+                        actions: [
+                          IconButton(
+                            icon: Icon(_searchController.text.isEmpty
+                                ? Icons.search
+                                : Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                if (_searchController.text.isEmpty) {
+                                  _searchController.text = ' ';
+                                } else {
+                                  _searchController.clear();
+                                }
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(_viewType == ViewType.grid
+                                ? Icons.view_list
+                                : Icons.grid_view),
+                            onPressed: () async {
+                              setState(() {
+                                _viewType = _viewType == ViewType.grid
+                                    ? ViewType.listExpanded
+                                    : ViewType.grid;
+                              });
+                              final settings = Provider.of<SettingsProvider>(
+                                  context,
+                                  listen: false);
+                              await settings.setViewType(
+                                  'reminder', _viewType.name);
+                            },
+                          ),
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.sort),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            onSelected: (value) {
+                              setState(() => _sortBy = value);
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'date',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.access_time,
+                                        size: 20,
+                                        color: _sortBy == 'date'
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                            : null),
+                                    const SizedBox(width: 12),
+                                    Text(strings.sortByDate),
+                                    if (_sortBy == 'date') ...[
+                                      const Spacer(),
+                                      Icon(Icons.check,
+                                          size: 20,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'title',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.sort_by_alpha,
+                                        size: 20,
+                                        color: _sortBy == 'title'
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                            : null),
+                                    const SizedBox(width: 12),
+                                    Text(strings.sortByTitle),
+                                    if (_sortBy == 'title') ...[
+                                      const Spacer(),
+                                      Icon(Icons.check,
+                                          size: 20,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary),
+                                    ],
+                                  ],
                                 ),
                               ),
                             ],
-                          )
-                        : TextField(
-                            controller: _searchController,
-                            autofocus: true,
-                            decoration: InputDecoration(
-                              hintText: strings.searchNotes,
-                              border: InputBorder.none,
-                            ),
-                          ),
-                    actions: [
-                      IconButton(
-                        icon: Icon(_searchController.text.isEmpty
-                            ? Icons.search
-                            : Icons.close),
-                        onPressed: () {
-                          setState(() {
-                            if (_searchController.text.isEmpty) {
-                              _searchController.text = ' ';
-                            } else {
-                              _searchController.clear();
-                            }
-                          });
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(_viewType == ViewType.grid
-                            ? Icons.view_list
-                            : Icons.grid_view),
-                        onPressed: () async {
-                          setState(() {
-                            _viewType = _viewType == ViewType.grid
-                                ? ViewType.listExpanded
-                                : ViewType.grid;
-                          });
-                          final settings = Provider.of<SettingsProvider>(context, listen: false);
-                          await settings.setViewType('reminder', _viewType.name);
-                        },
-                      ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.sort),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        onSelected: (value) {
-                          setState(() => _sortBy = value);
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'date',
-                            child: Row(
-                              children: [
-                                Icon(Icons.access_time, size: 20, color: _sortBy == 'date' ? Theme.of(context).colorScheme.primary : null),
-                                const SizedBox(width: 12),
-                                Text(strings.sortByDate),
-                                if (_sortBy == 'date') ...[
-                                  const Spacer(),
-                                  Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
-                                ],
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'title',
-                            child: Row(
-                              children: [
-                                Icon(Icons.sort_by_alpha, size: 20, color: _sortBy == 'title' ? Theme.of(context).colorScheme.primary : null),
-                                const SizedBox(width: 12),
-                                Text(strings.sortByTitle),
-                                if (_sortBy == 'title') ...[
-                                  const Spacer(),
-                                  Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
-                                ],
-                              ],
-                            ),
                           ),
                         ],
+                        floating: true,
+                        snap: true,
+                        pinned: false,
+                        forceElevated: innerBoxIsScrolled,
+                        bottom: TabBar(
+                          controller: _tabController,
+                          indicatorColor: Theme.of(context).primaryColor,
+                          labelColor: isDark
+                              ? Colors.white
+                              : Theme.of(context).primaryColor,
+                          unselectedLabelColor:
+                              isDark ? Colors.grey[400] : Colors.grey[600],
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 14,
+                          ),
+                          physics: const NeverScrollableScrollPhysics(),
+                          tabs: [
+                            Tab(text: strings.upcoming),
+                            Tab(text: strings.scheduled),
+                            Tab(text: strings.expired),
+                          ],
+                        ),
                       ),
                     ],
-                    floating: true,
-                    snap: true,
-                    pinned: false,
-                    forceElevated: innerBoxIsScrolled,
-                    bottom: TabBar(
-                      controller: _tabController,
-                      indicatorColor: Theme.of(context).primaryColor,
-                      labelColor: isDark
-                          ? Colors.white
-                          : Theme.of(context).primaryColor,
-                      unselectedLabelColor:
-                          isDark ? Colors.grey[400] : Colors.grey[600],
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.normal,
-                        fontSize: 14,
-                      ),
-                      physics: const NeverScrollableScrollPhysics(),
-                      tabs: [
-                        Tab(text: strings.upcoming),
-                        Tab(text: strings.scheduled),
-                        Tab(text: strings.expired),
+                    body: Column(
+                      children: [
+                        if (_showPermissionBanner && !_isCheckingPermissions)
+                          _buildPermissionBanner(strings),
+                        Expanded(
+                          child: TabBarView(
+                            controller: _tabController,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: [
+                              _buildReminderList(
+                                  _filterNotes(upcomingReminders),
+                                  'upcoming',
+                                  strings),
+                              _buildReminderList(
+                                  _filterNotes(scheduledReminders),
+                                  'scheduled',
+                                  strings),
+                              _buildReminderList(_filterNotes(expiredReminders),
+                                  'expired', strings),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ],
-                body: Column(
-                  children: [
-                    if (_showPermissionBanner && !_isCheckingPermissions)
-                      _buildPermissionBanner(strings),
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          _buildReminderList(
-                              _filterNotes(upcomingReminders), 'upcoming', strings),
-                          _buildReminderList(
-                              _filterNotes(scheduledReminders), 'scheduled', strings),
-                          _buildReminderList(
-                              _filterNotes(expiredReminders), 'expired', strings),
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ),
               ),
             ),
             AddMenuWidget(
@@ -338,19 +366,22 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.battery_alert, color: Colors.orange, size: 24),
+                      const Icon(Icons.battery_alert,
+                          color: Colors.orange, size: 24),
                       const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
                           'Battery Optimization',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, size: 20),
                         onPressed: () async {
                           final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool('reminder_permission_dismissed', true);
+                          await prefs.setBool(
+                              'reminder_permission_dismissed', true);
                           setState(() => _showPermissionBanner = false);
                         },
                       ),
@@ -382,13 +413,34 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                   Expanded(
                     child: Text(
                       'Battery Optimization',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                   ),
                   Icon(Icons.expand_more, size: 20),
                 ],
               ),
       ),
+    );
+  }
+
+  Widget _buildGridItem(Note note, String type) {
+    return Consumer<SelectedNoteProvider>(
+      builder: (context, selectedNoteProvider, _) {
+        final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
+        return Opacity(
+          opacity: type == 'expired' ? 0.6 : 1.0,
+          child: NoteCardWidget(
+            note: note,
+            viewType: _viewType,
+            closeAllSlidables: _closeAllSlidables,
+            onNoteChanged: () => setState(() {}),
+            onLongPress: () {},
+            source: 'reminder_$type',
+            isCurrentlyOpen: isCurrentlyOpen,
+          ),
+        );
+      },
     );
   }
 
@@ -423,44 +475,23 @@ class _ReminderDashboardState extends State<ReminderDashboard>
     }
 
     if (_viewType == ViewType.grid) {
-      return GridView.builder(
+      return ListView.builder(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: MediaQuery.of(context).size.width >= 1200
-              ? 4
-              : MediaQuery.of(context).size.width >= 600
-                  ? 3
-                  : 2,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: reminders.length,
-        itemBuilder: (context, index) {
-          final note = reminders[index];
-          return Consumer<SelectedNoteProvider>(
-            builder: (context, selectedNoteProvider, _) {
-              final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
-              return Opacity(
-                opacity: type == 'expired' ? 0.6 : 1.0,
-                child: AnimatedPadding(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  padding: isCurrentlyOpen 
-                      ? const EdgeInsets.only(left: 12, right: 0)
-                      : EdgeInsets.zero,
-                  child: NoteCardWidget(
-                    note: note,
-                    viewType: _viewType,
-                    closeAllSlidables: _closeAllSlidables,
-                    onNoteChanged: () => setState(() {}),
-                    onLongPress: () {},
-                    source: 'reminder_$type',
-                    isCurrentlyOpen: isCurrentlyOpen,
-                  ),
-                ),
-              );
-            },
+        itemCount: (reminders.length / 2).ceil(),
+        itemBuilder: (context, rowIndex) {
+          final leftIndex = rowIndex * 2;
+          final rightIndex = leftIndex + 1;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildGridItem(reminders[leftIndex], type)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: rightIndex < reminders.length
+                    ? _buildGridItem(reminders[rightIndex], type)
+                    : const SizedBox(),
+              ),
+            ],
           );
         },
       );
@@ -473,13 +504,14 @@ class _ReminderDashboardState extends State<ReminderDashboard>
         final note = reminders[index];
         return Consumer<SelectedNoteProvider>(
           builder: (context, selectedNoteProvider, _) {
-            final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
+            final isCurrentlyOpen =
+                selectedNoteProvider.selectedNote?.id == note.id;
             return Opacity(
               opacity: type == 'expired' ? 0.6 : 1.0,
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOut,
-                padding: isCurrentlyOpen 
+                padding: isCurrentlyOpen
                     ? const EdgeInsets.only(left: 12, right: 0)
                     : EdgeInsets.zero,
                 child: NoteCardWidget(
