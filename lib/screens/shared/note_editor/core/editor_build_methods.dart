@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -13,13 +14,12 @@ import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dar
 import 'package:apex_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
-import 'package:apex_note/screens/shared/note_editor/widgets/text_editor_widget.dart';
-import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/svg_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/editor/apex_editor_header.dart';
 import 'package:apex_note/widgets/editor/checklist_editor.dart';
+import 'package:apex_note/widgets/editor/quill_editor_widget.dart';
 import 'package:apex_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +44,6 @@ class EditorBuildMethods {
     required VoidCallback onUndoRedoChanged,
     required Function(String) onChecklistTitleChanged,
   }) {
-    final l10n = AppLocalizations.of(context)!;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const toolbarHeight = 60.0;
     final totalBottomSpace = toolbarHeight + bottomPadding + 16;
@@ -75,40 +74,17 @@ class EditorBuildMethods {
         },
       );
     } else {
-      return TextEditorWidget(
-        contentController: coordinator.contentController,
-        undoController: coordinator.undoController,
+      // Ensure quillController is initialized
+      coordinator.quillController ??= QuillMigration.controllerFromContent(
+          coordinator.contentController.text);
+      return QuillEditorWidget(
+        quillController: coordinator.quillController!,
         focusNode: coordinator.textFieldFocusNode,
-        textDirectionController: coordinator.textDirectionController,
-        stateManager: coordinator.stateManager,
-        backgroundColor: coordinator.getBackgroundColor(context),
         textColor: finalTextColor,
         hintColor: finalHintColor,
         fontSize: coordinator.fontSize,
         sidePadding: sidePadding,
         totalBottomSpace: totalBottomSpace,
-        reminderDateTime: coordinator.stateManager.reminderDateTime,
-        onReminderTap: onReminderTap,
-        onReminderRemove: () async {
-          HapticFeedback.lightImpact();
-          coordinator.stateManager.reminderDateTime = null;
-          coordinator.stateManager.recurrenceRule = null;
-          coordinator.stateManager.markDirty();
-
-          if (savedNoteId != null || note?.id != null) {
-            await NotificationService()
-                .cancelNotification(savedNoteId ?? note!.id!);
-          }
-          await saveCallback(isManualSave: true);
-          if (context.mounted) {
-            UnifiedNotificationService().show(
-              context: context,
-              message: l10n.reminderRemoved,
-              type: NotificationType.info,
-            );
-          }
-        },
-        onReminderEdit: onReminderTap,
         autoFocus: note == null,
       );
     }
@@ -306,8 +282,10 @@ class EditorBuildMethods {
                       coordinator.getCurrentTitle(l10n.newNoteTitle),
                       coordinator.contentController.text);
                 } else {
-                  text =
-                      '${coordinator.getCurrentTitle(l10n.newNoteTitle)}\n\n${coordinator.contentController.text}';
+                  final content = coordinator.quillController != null
+                      ? QuillMigration.toPlainText(coordinator.quillController!)
+                      : coordinator.contentController.text;
+                  text = '${coordinator.getCurrentTitle(l10n.newNoteTitle)}\n\n$content';
                 }
                 CustomShareSheet.show(context, text,
                     subject: coordinator.getCurrentTitle(l10n.newNoteTitle));

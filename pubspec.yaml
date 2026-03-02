@@ -52,6 +52,9 @@ dependencies:
   # Code Editor
   flutter_code_editor: ^0.3.3
   flutter_highlight: ^0.7.0
+
+  # Rich Text Editor
+  flutter_quill: ">=11.0.0-dev.15 <12.0.0"
   
   # Other
   home_widget: ^0.6.0
@@ -77,3 +80,8 @@ flutter:
     - assets/images/app_icon.png
     - assets/legal/TERMS_OF_SERVICE_AR.md
     - assets/legal/TERMS_OF_SERVICE_EN.md
+
+dependency_overrides:
+  quill_native_bridge_windows:
+    path: .quill_windows_stub
+

@@ -6,6 +6,7 @@ import 'package:apex_note/controllers/editor/editor_state_manager.dart';
 import 'package:apex_note/controllers/editor/text_direction_controller.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/apex_smart_controller.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
@@ -16,6 +17,7 @@ import 'package:apex_note/services/language_detector.dart';
 import 'package:apex_note/widgets/editor/checklist_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 
 /// Central coordinator for all editor operations
@@ -24,6 +26,7 @@ class EditorCoordinator {
   // Controllers
   late TextEditingController contentController;
   CodeController? codeController;
+  QuillController? quillController;
   final UndoHistoryController undoController = UndoHistoryController();
   final UndoHistoryController codeUndoController = UndoHistoryController();
   ChecklistUndoRedoController? checklistUndoRedo;
@@ -97,7 +100,11 @@ class EditorCoordinator {
 
     String initialText = note?.content ?? '';
     contentController = ApexSmartController(text: initialText);
-    
+
+    if (mode == NoteMode.simple || mode == NoteMode.reminder || mode == NoteMode.rich) {
+      quillController = QuillMigration.controllerFromContent(initialText);
+    }
+
     if (mode == NoteMode.code) {
       codeController = CodeController(text: initialText);
     }
@@ -129,8 +136,10 @@ class EditorCoordinator {
   String getCurrentTitle(String fallback) {
     final text = mode == NoteMode.code && codeController != null
         ? codeController!.text
-        : contentController.text;
-    
+        : (quillController != null
+            ? QuillMigration.toPlainText(quillController!)
+            : contentController.text);
+
     return NoteEditorUtils.generateTitle(
       customTitle: stateManager.customTitle,
       checklistTitle: stateManager.checklistTitle,
@@ -146,6 +155,7 @@ class EditorCoordinator {
     languageDetectionTimer?.cancel();
     contentController.dispose();
     codeController?.dispose();
+    quillController?.dispose();
     undoController.dispose();
     codeUndoController.dispose();
     textFieldFocusNode.dispose();

@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -41,6 +42,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   late EditorCoordinator _coordinator;
   AppLocalizations? _l10nRef;
+  StreamSubscription? _quillChangesSubscription;
 
   @override
   bool get wantKeepAlive => true;
@@ -81,6 +83,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       _coordinator.codeUndoController.addListener(_updateUndoRedoState);
     }
 
+    if (widget.mode == NoteMode.simple || widget.mode == NoteMode.reminder || widget.mode == NoteMode.rich) {
+      _quillChangesSubscription = _coordinator.quillController!.document.changes
+          .listen((_) => _onQuillContentChanged());
+    }
+
     _updateUndoRedoState();
 
     // Show reminder dialog for new reminder notes
@@ -106,6 +113,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   @override
   void dispose() {
+    _quillChangesSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _coordinator.dispose();
     super.dispose();
@@ -212,7 +220,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     try {
       String contentToSave = widget.mode == NoteMode.code
           ? _coordinator.codeController!.text
-          : _coordinator.contentController.text;
+          : (widget.mode == NoteMode.checklist
+              ? _coordinator.contentController.text
+              : QuillMigration.toPlainText(_coordinator.quillController!));
 
       // Handle checklist validation
       if (widget.mode == NoteMode.checklist ||
@@ -347,6 +357,23 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   // ==================== LIFECYCLE METHODS ====================
+
+  void _onQuillContentChanged() {
+    _coordinator.stateManager.markDirty();
+    final newHasContent =
+        QuillMigration.toPlainText(_coordinator.quillController!).trim().isNotEmpty;
+    if (_coordinator.stateManager.hasContent != newHasContent) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _coordinator.stateManager.hasContent = newHasContent);
+      });
+    }
+    _coordinator.autosaveTimer?.cancel();
+    _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 800), () {
+      if (mounted && !_coordinator.stateManager.isSaving) {
+        _saveNoteToDatabase();
+      }
+    });
+  }
 
   void _onContentChanged() {
     _coordinator.stateManager.markDirty();

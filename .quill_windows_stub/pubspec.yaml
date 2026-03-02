@@ -1,0 +1,19 @@
+name: quill_native_bridge_windows
+version: 0.0.2
+description: Stub for non-Windows platforms
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  quill_native_bridge_platform_interface: any
+
+flutter:
+  plugin:
+    implements: quill_native_bridge
+    platforms:
+      windows:
+        dartPluginClass: QuillNativeBridgeWindowsStub
+        fileName: quill_native_bridge_windows.dart
