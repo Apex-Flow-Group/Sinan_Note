@@ -7,7 +7,6 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/widgets/editor/checklist_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart' show Bidi;
 
 class ChecklistUndoRedoController {
   final VoidCallback undo;
@@ -47,7 +46,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   List<ChecklistItem> _items = [];
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
-  final Map<String, VoidCallback> _listeners = {}; // Store listener references
+  final Map<String, VoidCallback> _listeners = {};
   final TextEditingController _titleController = TextEditingController();
 
   // Undo/Redo support
@@ -353,30 +352,24 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
             child: Row(
               children: [
                 Expanded(
-                  child: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _titleController,
-                    builder: (context, value, child) {
-                      final isRtl = value.text.isNotEmpty && Bidi.detectRtlDirectionality(value.text);
-                      return TextField(
-                        controller: _titleController,
-                        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-                        textAlign: isRtl ? TextAlign.right : TextAlign.left,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: l10n.checklistTitle,
-                          hintStyle:
-                              TextStyle(color: textColor.withValues(alpha: 0.4)),
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                        maxLines: null,
-                      );
-                    },
+                  child: TextField(
+                    controller: _titleController,
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.right,
+                    textAlignVertical: TextAlignVertical.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: l10n.checklistTitle,
+                      hintStyle:
+                          TextStyle(color: textColor.withValues(alpha: 0.4)),
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    maxLines: null,
                   ),
                 ),
                 PopupMenuButton<String>(
@@ -520,7 +513,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
   @override
   void dispose() {
-    // 🛑 CRITICAL: Remove title listener BEFORE clearing
+    // 🛑 CRITICAL: Remove title listeners BEFORE clearing
     _titleController.removeListener(_notifyParent);
     _titleController.clear();
     _titleController.dispose();

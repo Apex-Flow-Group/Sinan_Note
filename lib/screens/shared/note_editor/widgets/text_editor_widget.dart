@@ -6,7 +6,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Simple text editor widget with bidirectional text support
-class TextEditorWidget extends StatelessWidget {
+class TextEditorWidget extends StatefulWidget {
   final TextEditingController contentController;
   final UndoHistoryController undoController;
   final FocusNode focusNode;
@@ -45,80 +45,57 @@ class TextEditorWidget extends StatelessWidget {
   });
 
   @override
+  State<TextEditorWidget> createState() => _TextEditorWidgetState();
+}
+
+class _TextEditorWidgetState extends State<TextEditorWidget> {
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
-        if (!focusNode.hasFocus) {
-          focusNode.requestFocus();
+        if (!widget.focusNode.hasFocus) {
+          widget.focusNode.requestFocus();
         }
       },
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
           top: 80,
-          bottom: totalBottomSpace,
-          left: sidePadding,
-          right: sidePadding,
+          bottom: widget.totalBottomSpace,
+          left: widget.sidePadding,
+          right: widget.sidePadding,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             minHeight: MediaQuery.of(context).size.height - 180,
           ),
-          child: _buildTextField(context, l10n),
+          child: TextField(
+            controller: widget.contentController,
+            undoController: widget.undoController,
+            focusNode: widget.focusNode,
+            scrollPadding: const EdgeInsets.only(bottom: 120.0),
+            textAlign: TextAlign.right,
+            textDirection: TextDirection.rtl,
+            style: TextStyle(
+              fontSize: widget.fontSize,
+              height: 1.5,
+              color: widget.textColor,
+            ),
+            cursorColor: widget.textColor.withValues(alpha: 0.8),
+            cursorWidth: 2.5,
+            cursorRadius: const Radius.circular(2),
+            decoration: InputDecoration(
+              hintText: l10n.startWriting,
+              hintStyle: TextStyle(color: widget.hintColor),
+              border: InputBorder.none,
+            ),
+            maxLines: null,
+            autofocus: widget.autoFocus,
+          ),
         ),
       ),
     );
   }
-
-
-
-  Widget _buildTextField(BuildContext context, AppLocalizations l10n) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: contentController,
-      builder: (context, value, child) {
-        // Use TextDirectionController for accurate direction detection
-        final direction = textDirectionController.detectParagraphDirection(value.text);
-        final isRtl = direction == TextDirection.rtl;
-        
-        return TextField(
-          controller: contentController,
-          undoController: undoController,
-          focusNode: focusNode,
-          scrollPadding: const EdgeInsets.only(bottom: 120.0),
-          onTap: () {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              final text = contentController.text;
-              final selection = contentController.selection;
-              if (selection.baseOffset > text.length) {
-                contentController.selection = TextSelection.collapsed(
-                  offset: text.length,
-                );
-              }
-            });
-          },
-          textAlign: isRtl ? TextAlign.right : TextAlign.left,
-          textDirection: direction,
-          style: TextStyle(
-            fontSize: fontSize,
-            height: 1.5,
-            color: textColor,
-          ),
-          cursorColor: textColor.withValues(alpha: 0.8),
-          cursorWidth: 2.5,
-          cursorRadius: const Radius.circular(2),
-          decoration: InputDecoration(
-            hintText: l10n.startWriting,
-            hintStyle: TextStyle(color: hintColor),
-            border: InputBorder.none,
-          ),
-          maxLines: null,
-          autofocus: autoFocus,
-        );
-      },
-    );
-  }
-
-
 }

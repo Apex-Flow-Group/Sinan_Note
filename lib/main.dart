@@ -147,8 +147,17 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
-    // Process in background without showing loading screen
+    // Wait for SplashScreen to finish and MainLayoutScreen to be active
     await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+
+    // Keep waiting until settings are initialized (SplashScreen is done)
+    while (!settings.isInitialized) {
+      await Future.delayed(const Duration(milliseconds: 50));
+      if (!mounted) return;
+    }
+    // Extra delay to ensure MainLayoutScreen has replaced SplashScreen
+    await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
 
     final isUrl = Uri.tryParse(text)?.hasScheme ?? false;
@@ -178,11 +187,9 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     final savedNote = await dbService.getNoteById(savedNoteId);
     if (!mounted) return;
 
-    if (savedNote == null) {
-      return;
-    }
+    if (savedNote == null) return;
 
-    // Open editor directly
+    // Open editor on top of MainLayoutScreen
     navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (context) => NoteEditorImmersive(
