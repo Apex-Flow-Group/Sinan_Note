@@ -3,7 +3,6 @@
 import 'dart:async';
 
 import 'package:apex_note/controllers/editor/editor_state_manager.dart';
-import 'package:apex_note/controllers/editor/text_direction_controller.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/apex_smart_controller.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
@@ -37,7 +36,6 @@ class EditorCoordinator {
   final EditorStorageController storageController = EditorStorageController();
   final EditorFormattingController formattingController = EditorFormattingController();
   final EditorSmartController smartController = EditorSmartController();
-  final TextDirectionController textDirectionController = TextDirectionController();
   final EditorStateManager stateManager = EditorStateManager();
 
   // State Variables
