@@ -1,0 +1,107 @@
+📝 Sinan Note - Notes Without Limits
+A powerful, privacy-focused note-taking app built for productivity. Works fully offline with military-grade encryption. Designed for developers, students, and professionals.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 Five Note Types
+
+• Simple Notes - Quick thoughts with instant auto-save
+• Rich Text Editor - Full formatting: headings, lists, links, bold, italic
+• Professional Code Editor - Syntax highlighting for 25+ languages with line numbers and auto-detection
+• Smart Checklists - Track progress with completion percentage and home screen widget
+• Precise Reminders - One-time or recurring (daily / weekly / monthly) with alerts even when screen is off
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🖥️ Desktop Mode (New)
+
+• Master-Details Layout: Notes list and content side by side
+• Draggable Divider: Resize panels by dragging
+• Auto-Switch: Adapts to screen size (mobile → tablet → desktop)
+• Works on Android, Linux, and Windows
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔐 Uncompromising Security
+
+• AES-256 encryption for locked notes
+• Smart Vault with 5-minute session and auto-lock
+• Biometric authentication (fingerprint / face)
+• Unique recovery code (SN-XXXX-XXXX-XXXX) for vault recovery
+• Content hidden in recent apps list
+• Instant memory wipe on lock
+• 100% offline by default - your data never leaves your device
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 Google Drive Cloud Sync
+
+• Encrypted, compressed backup to Google Drive
+• Smart Merge: Compares notes and keeps the latest automatically
+• Three conflict options: Use Local / Use Cloud / Smart Merge
+• Includes encrypted vault data in backup
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ Smart Features
+
+• Auto Calculations: Type "50 + 20" and see the result instantly
+• Smart Dates: Type "tomorrow" or "next week" and it converts to a date
+• Version History: Go back to any previous version of your note
+• Type Conversion: Convert any note between types with one tap
+• Copy & Save As: Duplicate a note or save with a new title
+• Open Code Files: Open .py .js .dart .java and more directly as code notes
+• Smart Search: Instant search with suggestions and full Arabic support (ignores diacritics)
+• Smart Undo: 3-second window to undo deletions before they execute
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 Home Screen Widgets
+
+• Note Widget: Display your pinned note on the home screen
+• Checklist Widget: Track task progress directly from the home screen
+• Auto-update when the note is modified
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 Modern Design
+
+• Material Design 3 with Dynamic Colors (Material You)
+• Dark / Light mode with system sync
+• 12 colors for note organization
+• Flexible views: Grid or List (expanded / compact)
+• Customizable swipe gestures
+• Full RTL/LTR support for Arabic and English
+• Adjustable text size
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💻 For Developers & Programmers
+
+• Syntax highlighting for 25+ languages: Dart, Python, JavaScript, Java, C++, Kotlin, Swift, Go, Rust, SQL, HTML, CSS, and more
+• Auto language detection
+• Export code with correct extension (.py, .js, .dart...)
+• Line numbers
+• Open code files directly from file manager or other apps
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Perfect For
+• Developers and programmers
+• Students and researchers
+• Writers and journalists
+• Privacy-conscious users
+• Anyone who wants a fast, secure notes app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 Lightweight & Fast
+• Small size (~15 MB)
+• Smooth performance even with thousands of notes
+• Battery efficient
+
+🆓 Free
+Personal use is completely free. Made with ❤️ in the Arab world.
+
+📧 Support: contact.apex.flow@gmail.com
+© 2026 Apex Flow Group. All rights reserved.

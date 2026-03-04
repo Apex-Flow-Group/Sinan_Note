@@ -213,9 +213,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
               HapticFeedback.mediumImpact();
               widget.onLongPress();
             },
-            child: Hero(
-              tag: '${widget.source}_note_${widget.note.id}_${widget.note.createdAt.millisecondsSinceEpoch}',
-              child: Container(
+            child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
@@ -434,7 +432,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   ),  // Stack
                 ),  // PremiumCardEffect
               ),  // Container
-            ),  // Hero
           ),  // GestureDetector
         ),  // Listener
       ),  // SlidableAutoCloser

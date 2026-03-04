@@ -139,11 +139,9 @@ class _NotesGridViewState extends State<NotesGridView> {
     final isCurrentlyOpen = selectedNoteProvider.selectedNote?.id == note.id;
     
     return RepaintBoundary(
-      child: AnimatedPadding(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
+      child: Padding(
         padding: isCurrentlyOpen 
-            ? const EdgeInsets.only(left: 12, right: 0) // 🔥 حركة لليمين
+            ? const EdgeInsets.only(left: 12, right: 0)
             : EdgeInsets.zero,
         child: NoteCardWidget(
           key: ValueKey(note.id),
@@ -151,11 +149,8 @@ class _NotesGridViewState extends State<NotesGridView> {
           viewType: widget.viewType,
           closeAllSlidables: _closeAllSlidables,
           isCurrentlyOpen: isCurrentlyOpen, // 🔥 NEW
-          onNoteChanged: () async {
-            // 🔄 CRITICAL: Reload from DB to get fresh data
-            final provider = Provider.of<NotesProvider>(context, listen: false);
-            await provider.refreshAllNotes();
-            if (mounted) setState(() {});
+          onNoteChanged: () {
+            // Provider يُحدّث تلقائياً عبر notifyListeners
           },
           isSelected: selectedIds.contains(note.id),
           selectionMode: selectedIds.isNotEmpty,

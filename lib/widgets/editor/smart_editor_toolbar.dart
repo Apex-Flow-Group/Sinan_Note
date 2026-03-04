@@ -18,6 +18,7 @@ class SmartEditorToolbar extends StatefulWidget {
   final VoidCallback onShareTap;
   final VoidCallback onArchiveTap;
   final VoidCallback onCalculate;
+  final VoidCallback? onPaste;
   final bool hasReminder;
   final bool hasContent;
 
@@ -44,6 +45,7 @@ class SmartEditorToolbar extends StatefulWidget {
     required this.onShareTap,
     required this.onArchiveTap,
     required this.onCalculate,
+    this.onPaste,
     required this.onBold,
     required this.onItalic,
     required this.onList,
@@ -130,6 +132,7 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
         Row(
           children: [
             _buildIconBtn(Icons.calculate_outlined, widget.onCalculate),
+            _buildIconBtn(Icons.content_paste_rounded, widget.onPaste),
             _buildIconBtn(Icons.text_fields_rounded,
                 () => setState(() => _currentMode = ToolbarMode.format)),
             _buildIconBtn(Icons.palette_outlined,

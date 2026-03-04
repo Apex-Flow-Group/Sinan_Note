@@ -147,16 +147,16 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
     final colorScheme = Theme.of(context).colorScheme;
     final items = [
       {
-        'icon': Icons.checklist_rounded,
-        'color': colorScheme.tertiary,
-        'title': l10n.checklistMenu,
-        'mode': NoteMode.checklist
-      },
-      {
         'icon': Icons.code_rounded,
         'color': colorScheme.secondary,
         'title': l10n.codeEditorMenu,
         'mode': NoteMode.code
+      },
+      {
+        'icon': Icons.checklist_rounded,
+        'color': colorScheme.tertiary,
+        'title': l10n.checklistMenu,
+        'mode': NoteMode.checklist
       },
       {
         'icon': Icons.format_paint_rounded,

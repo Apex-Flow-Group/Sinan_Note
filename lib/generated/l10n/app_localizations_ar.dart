@@ -1007,7 +1007,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tourPage1Title => 'أنواع الملاحظات';
 
   @override
-  String get tourPage1Desc => 'اختر النوع المناسب لاحتياجاتك';
+  String get tourPage1Desc => 'خمسة أنواع من الملاحظات تناسب كل احتياجاتك';
 
   @override
   String get tourPage2Title => 'الحسابات الذكية';
@@ -1028,16 +1028,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tourPage4Desc => 'قفل الملاحظات الحساسة بتشفير قوي';
 
   @override
-  String get tourPage5Title => 'النقل والنسخ الاحتياطي';
+  String get tourPage5Title => 'المزامنة السحابية';
 
   @override
-  String get tourPage5Desc => 'انقل ملاحظاتك بين الأجهزة بسهولة';
+  String get tourPage5Desc => 'زامن ملاحظاتك مع Google Drive تلقائياً';
 
   @override
-  String get tourPage6Title => 'التخصيص';
+  String get tourPage6Title => 'التخصيص والمزيد';
 
   @override
-  String get tourPage6Desc => 'خصص تجربتك حسب رغبتك';
+  String get tourPage6Desc => 'أدوات قوية لتخصيص تجربتك';
+
+  @override
+  String get tourRichNote => 'ملاحظة منسقة: نص منسق مع تنسيقات متعددة';
+
+  @override
+  String get tourGoogleDriveSync => 'مزامنة تلقائية مع Google Drive';
+
+  @override
+  String get tourSmartMerge => 'دمج ذكي عند وجود تعارضات';
+
+  @override
+  String get tourCloudBackup => 'نسخ احتياطي سحابي آمن';
+
+  @override
+  String get tourVersionHistory => 'سجل تعديلات لملاحظاتك';
+
+  @override
+  String get tourHomeWidget => 'ويدجت الشاشة الرئيسية للوصول السريع';
+
+  @override
+  String get tourNoteConversion => 'تحويل بين أنواع الملاحظات بسهولة';
 
   @override
   String get startNow => 'ابدأ الآن';
@@ -1319,6 +1340,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appPageGooglePlay => 'صفحة التطبيق على Google Play';
+
+  @override
+  String get githubRepository => 'مستودع GitHub';
 
   @override
   String get privacyPolicy => 'سياسة الخصوصية';
@@ -1745,4 +1769,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lock => 'قفل';
+
+  @override
+  String get clipboardEmpty => 'الحافظة فارغة أو تحتوي صورة';
+
+  @override
+  String get clipboardTruncated => 'تم اقتطاع النص (الحد الأقصى 50,000 حرف)';
 }

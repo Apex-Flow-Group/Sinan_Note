@@ -12,6 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+/// Max content width for large screens (tablets/desktop)
+const double _kMaxContentWidth = 600.0;
+
 class LockedNotesIntroScreen extends StatefulWidget {
   const LockedNotesIntroScreen({super.key});
 
@@ -105,10 +108,8 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         return;
       }
 
-      // Show loading
       if (!mounted) return;
 
-      // Hide keyboard first
       FocusScope.of(context).unfocus();
 
       showDialog(
@@ -117,11 +118,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Setup vault
       try {
         final code = await VaultService.setupVault(password);
         if (!mounted) return;
-        Navigator.pop(context); // Close loading
+        Navigator.pop(context);
         setState(() {
           _recoveryCode = code;
           _errorText = null;
@@ -129,7 +129,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         _nextPage();
       } catch (e) {
         if (!mounted) return;
-        Navigator.pop(context); // Close loading
+        Navigator.pop(context);
         setState(() => _errorText = 'Setup failed');
       }
       return;
@@ -141,7 +141,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         setState(() => _errorText = l10n.mustSaveCode);
         return;
       }
-      // Skip biometric page if device doesn't support it
       if (!_hasBiometrics) {
         await _finishSetup(enableBiometric: false);
         return;
@@ -160,7 +159,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   }
 
   Future<void> _finishSetup({bool enableBiometric = false}) async {
-    // Always save biometric preference (true or false)
     await VaultService.setBiometricEnabled(enableBiometric);
 
     if (!mounted) return;
@@ -216,31 +214,36 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  physics: _currentPage == 1 || _currentPage == 2
-                      ? const NeverScrollableScrollPhysics()
-                      : null,
-                  onPageChanged: (index) {
-                    FocusScope.of(context).unfocus();
-                    setState(() => _currentPage = index);
-                  },
-                  itemCount: _hasBiometrics ? _totalPages : _totalPages - 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) return _buildFeaturesPage(isDark);
-                    if (index == 1) return _buildPasswordPage(isDark);
-                    if (index == 2) return _buildRecoveryPage(isDark);
-                    if (index == 3) return _buildBiometricPage(isDark);
-                    return const SizedBox();
-                  },
-                ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      physics: _currentPage == 1 || _currentPage == 2
+                          ? const NeverScrollableScrollPhysics()
+                          : null,
+                      onPageChanged: (index) {
+                        FocusScope.of(context).unfocus();
+                        setState(() => _currentPage = index);
+                      },
+                      itemCount: _hasBiometrics ? _totalPages : _totalPages - 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) return _buildFeaturesPage(isDark);
+                        if (index == 1) return _buildPasswordPage(isDark);
+                        if (index == 2) return _buildRecoveryPage(isDark);
+                        if (index == 3) return _buildBiometricPage(isDark);
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                  _buildIndicators(),
+                  _buildBottomButton(isDark),
+                ],
               ),
-              _buildIndicators(),
-              _buildBottomButton(isDark),
-            ],
+            ),
           ),
         ),
       ),
@@ -252,6 +255,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final features = _getFeatures(l10n);
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
@@ -266,7 +270,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                   isDark: isDark,
                 ),
               )),
-          const SizedBox(height: 100),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -328,7 +332,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
 
   Widget _buildIndicators() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(
@@ -353,26 +357,22 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final isLastPage = _currentPage == totalPages - 1;
     final l10n = AppLocalizations.of(context)!;
 
-    // تحديد حالة الزر
     bool isButtonEnabled = true;
 
-    // صفحة كلمة المرور (1)
     if (_currentPage == 1) {
       isButtonEnabled = _passwordController.text.length >= 6 &&
           _confirmController.text.length >= 6;
     }
 
-    // صفحة كود الاستعادة (2)
     if (_currentPage == 2) {
       isButtonEnabled = _codeSaved && _recoveryCode != null;
     }
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Skip button for biometric page
           if (isLastPage && _hasBiometrics)
             TextButton(
               onPressed: () async {
@@ -382,10 +382,9 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
               },
               child: Text(l10n.skipBiometric),
             ),
-
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 52,
             child: ElevatedButton.icon(
               onPressed: isButtonEnabled
                   ? (isLastPage
@@ -419,9 +418,9 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(40.0),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(32.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(height: 20),
           Container(
@@ -484,7 +483,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             Text(_errorText!,
                 style: const TextStyle(color: Colors.red, fontSize: 14)),
           ],
-          const SizedBox(height: 100),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -494,10 +493,11 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
-          const SizedBox(height: 40),
+          const SizedBox(height: 20),
           Container(
             width: 100,
             height: 100,
@@ -649,6 +649,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
           if (_errorText != null)
             Text(_errorText!,
                 style: const TextStyle(color: Colors.red, fontSize: 14)),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -657,42 +658,54 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   Widget _buildBiometricPage(bool isDark) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Padding(
-      padding: const EdgeInsets.all(40.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.teal.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.teal.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.fingerprint,
+                        size: 60, color: Colors.teal),
+                  ),
+                  const SizedBox(height: 40),
+                  Text(
+                    l10n.enableBiometric,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.biometricOptional,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-            child: const Icon(Icons.fingerprint, size: 60, color: Colors.teal),
           ),
-          const SizedBox(height: 40),
-          Text(
-            l10n.enableBiometric,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            l10n.biometricOptional,
-            style: TextStyle(
-              fontSize: 16,
-              height: 1.5,
-              color: isDark ? Colors.grey[300] : Colors.grey[700],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

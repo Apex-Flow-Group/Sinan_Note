@@ -18,6 +18,7 @@ import 'package:apex_note/screens/other/widget_selection_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/screens/shared/note_view_screen.dart';
 import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
+import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/security/security_gate.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/widget_service.dart';
@@ -161,8 +162,11 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
     if (!mounted) return;
 
     final isUrl = Uri.tryParse(text)?.hasScheme ?? false;
-    final content =
-        isUrl ? text : (text.length > 10000 ? text.substring(0, 10000) : text);
+    final content = isUrl
+        ? text
+        : (text.length > kMaxSharedTextLength
+            ? text.substring(0, kMaxSharedTextLength)
+            : text);
 
     final mode = isUrl ? NoteMode.simple : _detectNoteMode(content);
 
@@ -206,7 +210,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
       RegExp(r'^\s*[-*]\s*\[[ xX]\]', multiLine: true),
       RegExp(r'^\s*\d+\.\s*\[[ xX]\]', multiLine: true),
     ];
-    
+
     for (final pattern in checklistPatterns) {
       if (pattern.hasMatch(text)) {
         return NoteMode.checklist;

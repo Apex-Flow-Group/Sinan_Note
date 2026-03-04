@@ -1,6 +1,6 @@
 # Terms of Service - Sinan Note
 
-**Last Updated: January 2025**
+**Last Updated: March 2026**
 
 ## 1. Acceptance of Terms
 
@@ -8,17 +8,12 @@ By using the Sinan Note application, you agree to these terms in their entirety.
 
 ## 2. License and Usage
 
-### 2.1 Google Play Version
+### 2.1 License
 - Proprietary license
 - Personal use permitted
 - Commercial use requires permission
 
-### 2.2 F-Droid Version
-- Fully open source
-- You can view and modify source code
-- Available on GitHub
-
-### 2.3 General Restrictions
+### 2.2 General Restrictions
 You may not:
 - ❌ Sell the app commercially without permission
 - ❌ Use the app for illegal purposes

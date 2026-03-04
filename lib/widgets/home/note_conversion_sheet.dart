@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
@@ -107,16 +108,15 @@ class NoteConversionSheet {
 
     String newContent = note.content;
 
-    // Code → Rich: wrap in markdown code block
-    if ((note.noteType == 'code' || note.isProfessional) &&
-        targetType == 'rich') {
-      newContent = '```\n${note.content}\n```';
+    // أي تحويل من rich: استخرج النص العادي من Delta أولاً
+    if (QuillMigration.isDelta(note.content)) {
+      final ctrl = QuillMigration.controllerFromContent(note.content);
+      newContent = QuillMigration.toPlainText(ctrl);
+      ctrl.dispose();
     }
 
-    // Checklist → Rich: convert to markdown checklist
-    if (note.isChecklist && targetType == 'rich') {
-      newContent = note.content; // Already in markdown format
-    }
+    // code → rich: النص كما هو بدون code block
+    // (Quill يعرض code block بخلفية داكنة غير مرغوبة)
 
     final updatedNote = note.copyWith(
       noteType: targetType,
@@ -127,6 +127,7 @@ class NoteConversionSheet {
     );
 
     await provider.updateNote(updatedNote);
+    await provider.loadNotes(force: true);
     onConverted();
 
     if (context.mounted) {

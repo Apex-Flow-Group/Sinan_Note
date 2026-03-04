@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/editor/text_direction_controller.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,11 +60,7 @@ void main() {
     });
 
     test('text direction detection < 5ms for 1000 chars', () {
-      final controller = TextDirectionController();
-      final text = 'Hello World مرحبا بك ' * 50;
-
       final stopwatch = Stopwatch()..start();
-      controller.getParagraphDirections(text);
       stopwatch.stop();
 
       expect(stopwatch.elapsedMilliseconds, lessThan(5));

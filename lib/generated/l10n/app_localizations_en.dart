@@ -1009,7 +1009,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourPage1Title => 'Note Types';
 
   @override
-  String get tourPage1Desc => 'Choose the right type for your needs';
+  String get tourPage1Desc => 'Five types of notes to suit every need';
 
   @override
   String get tourPage2Title => 'Smart Calculations';
@@ -1031,16 +1031,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourPage4Desc => 'Lock sensitive notes with strong encryption';
 
   @override
-  String get tourPage5Title => 'Transfer & Backup';
+  String get tourPage5Title => 'Cloud Sync';
 
   @override
-  String get tourPage5Desc => 'Transfer your notes between devices easily';
+  String get tourPage5Desc => 'Sync your notes with Google Drive automatically';
 
   @override
-  String get tourPage6Title => 'Customization';
+  String get tourPage6Title => 'Customization & More';
 
   @override
-  String get tourPage6Desc => 'Customize your experience as you like';
+  String get tourPage6Desc => 'Powerful tools to personalize your experience';
+
+  @override
+  String get tourRichNote => 'Rich Note: Formatted text with styling';
+
+  @override
+  String get tourGoogleDriveSync => 'Automatic sync with Google Drive';
+
+  @override
+  String get tourSmartMerge => 'Smart merge when conflicts arise';
+
+  @override
+  String get tourCloudBackup => 'Secure cloud backup';
+
+  @override
+  String get tourVersionHistory => 'Version history for your notes';
+
+  @override
+  String get tourHomeWidget => 'Home screen widget for quick access';
+
+  @override
+  String get tourNoteConversion => 'Convert between note types easily';
 
   @override
   String get startNow => 'Start Now';
@@ -1323,6 +1344,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appPageGooglePlay => 'App Page on Google Play';
+
+  @override
+  String get githubRepository => 'GitHub Repository';
 
   @override
   String get privacyPolicy => 'Privacy Policy';
@@ -1749,4 +1773,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lock => 'Lock';
+
+  @override
+  String get clipboardEmpty => 'Clipboard is empty or contains an image';
+
+  @override
+  String get clipboardTruncated =>
+      'Text was truncated (50,000 character limit)';
 }

@@ -19,6 +19,7 @@ class EditorToolbarFactory {
     VoidCallback? onUndo,
     VoidCallback? onRedo,
     VoidCallback? onCalculate,
+    VoidCallback? onPaste,
     VoidCallback? onBackgroundColorTap,
     VoidCallback? onReminderTap,
     VoidCallback? onShareTap,
@@ -74,6 +75,7 @@ class EditorToolbarFactory {
           onUndo: onUndo,
           onRedo: onRedo,
           onCalculate: onCalculate ?? () {},
+          onPaste: onPaste,
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
           onReminderTap: onReminderTap ?? () {},
           onShareTap: onShareTap ?? () {},
@@ -91,6 +93,7 @@ class EditorToolbarFactory {
           onUndo: onUndo,
           onRedo: onRedo,
           onCalculate: onCalculate ?? () {},
+          onPaste: onPaste,
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
           onReminderTap: onReminderTap ?? () {},
           onShareTap: onShareTap ?? () {},
@@ -118,6 +121,7 @@ class _SimpleToolbar extends StatelessWidget {
   final VoidCallback? onRedo;
   final VoidCallback onCalculate;
   final VoidCallback onBackgroundColorTap;
+  final VoidCallback? onPaste;
   final VoidCallback onReminderTap;
   final VoidCallback onShareTap;
   final VoidCallback onArchiveTap;
@@ -132,6 +136,7 @@ class _SimpleToolbar extends StatelessWidget {
     required this.onRedo,
     required this.onCalculate,
     required this.onBackgroundColorTap,
+    this.onPaste,
     required this.onReminderTap,
     required this.onShareTap,
     required this.onArchiveTap,
@@ -156,6 +161,7 @@ class _SimpleToolbar extends StatelessWidget {
             Row(
               children: [
                 _buildIconBtn(Icons.calculate_outlined, onCalculate),
+                _buildIconBtn(Icons.content_paste_rounded, onPaste),
                 _buildIconBtn(Icons.palette_outlined, onBackgroundColorTap),
                 _buildIconBtn(Icons.undo_rounded, onUndo),
                 _buildIconBtn(Icons.redo_rounded, onRedo),

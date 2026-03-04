@@ -12,6 +12,8 @@ import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatti
 import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:apex_note/screens/shared/note_editor/controllers/editor_storage_controller.dart';
 import 'package:apex_note/screens/shared/note_editor/utils/note_editor_utils.dart';
+import 'package:apex_note/services/clipboard_guard.dart';
+import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/language_detector.dart';
 import 'package:apex_note/widgets/editor/checklist_editor.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +36,8 @@ class EditorCoordinator {
 
   // Feature Controllers
   final EditorStorageController storageController = EditorStorageController();
-  final EditorFormattingController formattingController = EditorFormattingController();
+  final EditorFormattingController formattingController =
+      EditorFormattingController();
   final EditorSmartController smartController = EditorSmartController();
   final EditorStateManager stateManager = EditorStateManager();
 
@@ -75,11 +78,14 @@ class EditorCoordinator {
 
     if (note != null) {
       stateManager.colorIndex = note!.colorIndex;
-      stateManager.isAuthenticated = note!.isChecklist ? true : skipAuthentication;
-      
+      stateManager.isAuthenticated =
+          note!.isChecklist ? true : skipAuthentication;
+
       if (mode == NoteMode.code && note!.noteType.isNotEmpty) {
-        String? restoredLanguage = LanguageDetector.getLanguageFromExtension(note!.noteType);
-        restoredLanguage ??= NoteEditorUtils.mapNoteTypeToLanguage(note!.noteType);
+        String? restoredLanguage =
+            LanguageDetector.getLanguageFromExtension(note!.noteType);
+        restoredLanguage ??=
+            NoteEditorUtils.mapNoteTypeToLanguage(note!.noteType);
 
         // For generic types, detect from content once
         if (restoredLanguage == null &&
@@ -99,14 +105,18 @@ class EditorCoordinator {
     String initialText = note?.content ?? '';
     contentController = ApexSmartController(text: initialText);
 
-    if (mode == NoteMode.simple || mode == NoteMode.reminder || mode == NoteMode.rich) {
+    if (mode == NoteMode.simple ||
+        mode == NoteMode.reminder ||
+        mode == NoteMode.rich) {
       quillController = QuillMigration.controllerFromContent(initialText);
     }
 
     if (mode == NoteMode.code) {
       codeController = CodeController(text: initialText);
     }
-    
+
+    _attachContentGuards();
+
     stateManager.loadFromNote(
       noteContent: initialText,
       noteTitle: note?.title != 'Untitled' ? note?.title : null,
@@ -127,7 +137,8 @@ class EditorCoordinator {
   /// Get background color based on current state
   Color getBackgroundColor(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    return NoteEditorUtils.getBackgroundColor(stateManager.colorIndex, brightness);
+    return NoteEditorUtils.getBackgroundColor(
+        stateManager.colorIndex, brightness);
   }
 
   /// Get current title based on content and state
@@ -145,6 +156,57 @@ class EditorCoordinator {
       isChecklist: mode == NoteMode.checklist || note?.noteType == 'checklist',
       fallback: fallback,
     );
+  }
+
+  /// يربط صمامات الأمان على جميع الـ controllers بعد التهيئة
+  void _attachContentGuards() {
+    contentController.addListener(() {
+      ContentGuard.guardText(contentController);
+    });
+    quillController?.document.changes.listen((_) {
+      ContentGuard.guardQuill(quillController!);
+    });
+    codeController?.addListener(() {
+      ContentGuard.guardCode(codeController!);
+    });
+  }
+
+  /// لصق آمن من الحافظة مع حد أقصى
+  /// يُرجع [ClipboardResult] لإظهار تحذير عند الاقتطاع
+  Future<ClipboardResult> safePaste() async {
+    final result = await ClipboardGuard.getSafeText();
+    if (result.text == null) return result;
+
+    if (mode == NoteMode.code && codeController != null) {
+      final ctrl = codeController!;
+      final sel = ctrl.selection;
+      final text = ctrl.text;
+      final newText = sel.isValid
+          ? text.replaceRange(sel.start, sel.end, result.text!)
+          : text + result.text!;
+      ctrl.text = newText;
+    } else if (quillController != null) {
+      quillController!.document.insert(
+        quillController!.selection.extentOffset,
+        result.text!,
+      );
+    } else {
+      final ctrl = contentController;
+      final sel = ctrl.selection;
+      final text = ctrl.text;
+      final newText = sel.isValid
+          ? text.replaceRange(sel.start, sel.end, result.text!)
+          : text + result.text!;
+      ctrl.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(
+          offset:
+              sel.isValid ? sel.start + result.text!.length : newText.length,
+        ),
+      );
+    }
+    stateManager.markDirty();
+    return result;
   }
 
   /// Dispose all resources

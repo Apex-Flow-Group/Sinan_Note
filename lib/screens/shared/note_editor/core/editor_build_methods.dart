@@ -46,7 +46,8 @@ class EditorBuildMethods {
   }) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const toolbarHeight = 60.0;
-    final totalBottomSpace = toolbarHeight + bottomPadding + 16;
+    const codeToolbarHeight = 110.0; // صفين: language row + symbols row
+    final totalBottomSpace = (mode == NoteMode.code ? codeToolbarHeight : toolbarHeight) + bottomPadding + 16;
 
     if (mode == NoteMode.code) {
       // Ensure codeController is initialized
@@ -262,6 +263,26 @@ class EditorBuildMethods {
                   l10n,
                 );
               },
+              onPaste: () async {
+                HapticFeedback.lightImpact();
+                final result = await coordinator.safePaste();
+                if (!context.mounted) return;
+                if (result.isEmpty) {
+                  UnifiedNotificationService().show(
+                    context: context,
+                    message: l10n.clipboardEmpty,
+                    type: NotificationType.info,
+                    duration: const Duration(seconds: 2),
+                  );
+                } else if (result.isTruncated) {
+                  UnifiedNotificationService().show(
+                    context: context,
+                    message: l10n.clipboardTruncated,
+                    type: NotificationType.warning,
+                    duration: const Duration(seconds: 3),
+                  );
+                }
+              },
               onBackgroundColorTap: () {
                 HapticFeedback.mediumImpact();
                 onColorPaletteTap();
@@ -285,7 +306,8 @@ class EditorBuildMethods {
                   final content = coordinator.quillController != null
                       ? QuillMigration.toPlainText(coordinator.quillController!)
                       : coordinator.contentController.text;
-                  text = '${coordinator.getCurrentTitle(l10n.newNoteTitle)}\n\n$content';
+                  text =
+                      '${coordinator.getCurrentTitle(l10n.newNoteTitle)}\n\n$content';
                 }
                 CustomShareSheet.show(context, text,
                     subject: coordinator.getCurrentTitle(l10n.newNoteTitle));

@@ -136,7 +136,11 @@ class _AboutScreenState extends State<AboutScreen> {
                 _buildSection(l10n.importantLinks, [
                   _buildLink(
                     l10n.appPageGooglePlay,
-                    'https://play.google.com/store/apps/details?id=com.apexflow.sinan_note',
+                    'https://play.google.com/store/apps/details?id=com.apexflow.app.sinan',
+                  ),
+                  _buildLink(
+                    l10n.githubRepository,
+                    'https://github.com/apexflow/sinan-note',
                   ),
                   _buildLink(
                     l10n.privacyPolicy,

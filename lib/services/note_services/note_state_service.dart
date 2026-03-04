@@ -27,6 +27,7 @@ class NoteStateService {
     _cachedActiveNotes = _allNotes
         .where((n) => !n.isLocked && !n.isTrashed && !n.isArchived)
         .toList();
+    _cacheInvalidated = false;
     return _cachedActiveNotes!;
   }
   
@@ -71,11 +72,11 @@ class NoteStateService {
     final index = _allNotes.indexWhere((n) => n.id == note.id);
     if (index != -1) {
       _allNotes[index] = note;
-      _allNotes = List.from(_allNotes);
     } else {
       _allNotes.add(note);
-      _allNotes = List.from(_allNotes);
     }
+    sortNotes(immediate: true);
+    _allNotes = List.from(_allNotes);
     _invalidateCache();
     _silentSync();
   }

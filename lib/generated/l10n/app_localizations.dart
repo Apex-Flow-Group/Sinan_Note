@@ -2057,7 +2057,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourPage1Desc.
   ///
   /// In en, this message translates to:
-  /// **'Choose the right type for your needs'**
+  /// **'Five types of notes to suit every need'**
   String get tourPage1Desc;
 
   /// No description provided for @tourPage2Title.
@@ -2099,26 +2099,68 @@ abstract class AppLocalizations {
   /// No description provided for @tourPage5Title.
   ///
   /// In en, this message translates to:
-  /// **'Transfer & Backup'**
+  /// **'Cloud Sync'**
   String get tourPage5Title;
 
   /// No description provided for @tourPage5Desc.
   ///
   /// In en, this message translates to:
-  /// **'Transfer your notes between devices easily'**
+  /// **'Sync your notes with Google Drive automatically'**
   String get tourPage5Desc;
 
   /// No description provided for @tourPage6Title.
   ///
   /// In en, this message translates to:
-  /// **'Customization'**
+  /// **'Customization & More'**
   String get tourPage6Title;
 
   /// No description provided for @tourPage6Desc.
   ///
   /// In en, this message translates to:
-  /// **'Customize your experience as you like'**
+  /// **'Powerful tools to personalize your experience'**
   String get tourPage6Desc;
+
+  /// No description provided for @tourRichNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Rich Note: Formatted text with styling'**
+  String get tourRichNote;
+
+  /// No description provided for @tourGoogleDriveSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic sync with Google Drive'**
+  String get tourGoogleDriveSync;
+
+  /// No description provided for @tourSmartMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart merge when conflicts arise'**
+  String get tourSmartMerge;
+
+  /// No description provided for @tourCloudBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure cloud backup'**
+  String get tourCloudBackup;
+
+  /// No description provided for @tourVersionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Version history for your notes'**
+  String get tourVersionHistory;
+
+  /// No description provided for @tourHomeWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widget for quick access'**
+  String get tourHomeWidget;
+
+  /// No description provided for @tourNoteConversion.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert between note types easily'**
+  String get tourNoteConversion;
 
   /// No description provided for @startNow.
   ///
@@ -2671,6 +2713,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App Page on Google Play'**
   String get appPageGooglePlay;
+
+  /// No description provided for @githubRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub Repository'**
+  String get githubRepository;
 
   /// No description provided for @privacyPolicy.
   ///
@@ -3469,6 +3517,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lock'**
   String get lock;
+
+  /// No description provided for @clipboardEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard is empty or contains an image'**
+  String get clipboardEmpty;
+
+  /// No description provided for @clipboardTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'Text was truncated (50,000 character limit)'**
+  String get clipboardTruncated;
 }
 
 class _AppLocalizationsDelegate
