@@ -131,96 +131,81 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   void _showFilterDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.filter_list_rounded, size: 22),
-            const SizedBox(width: 8),
-            Text(l10n.filter),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(
-                  l10n.noteType,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.note, color: Colors.blue),
-                title: Text(l10n.simpleNotes),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _searchController.text = 'type:simple';
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.code, color: Colors.purple),
-                title: Text(l10n.professionalNotes),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _searchController.text = 'type:pro';
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.alarm, color: Colors.orange),
-                title: Text(l10n.reminderNotes),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _searchController.text = 'type:reminder';
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.checklist, color: Colors.green),
-                title: Text(l10n.checklists),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _searchController.text = 'type:checklist';
-                },
-              ),
-              const Divider(),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(
-                  l10n.noteStatus,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.filter_list_rounded, size: 22),
+                      const SizedBox(width: 8),
+                      Text(l10n.filter, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
                   ),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.push_pin, color: Colors.red),
-                title: Text(l10n.pinnedOnly),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _searchController.text = 'pinned:true';
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.clear_all, color: Colors.red),
-                title: Text(l10n.clearFilter),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _searchController.clear();
-                },
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Text(l10n.noteType, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.note, color: Colors.blue),
+                  title: Text(l10n.simpleNotes),
+                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:simple'; },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.code, color: Colors.purple),
+                  title: Text(l10n.professionalNotes),
+                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:pro'; },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.alarm, color: Colors.orange),
+                  title: Text(l10n.reminderNotes),
+                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:reminder'; },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.checklist, color: Colors.green),
+                  title: Text(l10n.checklists),
+                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:checklist'; },
+                ),
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Text(l10n.noteStatus, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.push_pin, color: Colors.red),
+                  title: Text(l10n.pinnedOnly),
+                  onTap: () { Navigator.pop(ctx); _searchController.text = 'pinned:true'; },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.clear_all, color: Colors.red),
+                  title: Text(l10n.clearFilter),
+                  onTap: () { Navigator.pop(ctx); _searchController.clear(); },
+                ),
+              ],
+            ),
           ),
         ),
       ),
