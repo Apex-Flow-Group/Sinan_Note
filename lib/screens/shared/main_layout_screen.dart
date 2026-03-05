@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:ui';
+
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/screens/desktop/code_tab_responsive.dart';
@@ -154,19 +156,44 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: BottomNavBar(
-                        currentIndex: _currentIndex,
-                        onTap: (index) {
-                          if (isMenuOpenNotifier.value) {
-                            isMenuOpenNotifier.value = false;
-                          }
-                          setState(() {
-                            _currentIndex = index;
-                            if (index != 0) _isScrollHidden = false;
-                          });
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: isMenuOpenNotifier,
+                        builder: (context, isMenuOpen, child) {
+                          return Stack(
+                            children: [
+                              child!,
+                              if (isMenuOpen)
+                                Positioned.fill(
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => isMenuOpenNotifier.value = false,
+                                    child: ClipRect(
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                        child: Container(
+                                          color: Colors.black.withValues(alpha: 0.05),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
                         },
-                        isScrollHidden: _isScrollHidden,
-                        isDrawerOpen: _isDrawerOpen,
+                        child: BottomNavBar(
+                          currentIndex: _currentIndex,
+                          onTap: (index) {
+                            if (isMenuOpenNotifier.value) {
+                              isMenuOpenNotifier.value = false;
+                            }
+                            setState(() {
+                              _currentIndex = index;
+                              if (index != 0) _isScrollHidden = false;
+                            });
+                          },
+                          isScrollHidden: _isScrollHidden,
+                          isDrawerOpen: _isDrawerOpen,
+                        ),
                       ),
                     ),
                 ],

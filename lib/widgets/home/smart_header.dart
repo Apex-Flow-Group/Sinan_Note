@@ -186,6 +186,10 @@ class _SmartHeaderState extends State<SmartHeader> {
                         context,
                         '${note.title}\n\n${note.content}',
                         subject: note.title,
+                        note: note,
+                        onNoteCopied: () {
+                          if (note.id != null) Provider.of<NotesProvider>(context, listen: false).duplicateNote(note.id!);
+                        },
                       );
                     } : null,
                   ),

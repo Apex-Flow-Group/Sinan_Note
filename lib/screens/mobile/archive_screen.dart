@@ -64,9 +64,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
     
-    for (final id in ids) {
-      await notesProvider.unarchiveNote(id);
-    }
+    await notesProvider.unarchiveNotes(ids);
     
     setState(() {
       _selectedNoteIds.clear();
@@ -75,10 +73,16 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
     
     if (!mounted) return;
     
-    UnifiedNotificationService().show(
+    UnifiedNotificationService().showWithUndo(
       context: context,
       message: '${ids.length} notes restored',
+      actionKey: 'archive_restore',
       type: NotificationType.success,
+      onExecute: () {},
+      onUndo: () async {
+        await notesProvider.archiveNotes(ids);
+      },
+      undoLabel: AppLocalizations.of(context)!.undo,
     );
   }
 
@@ -86,9 +90,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
     
-    for (final id in ids) {
-      await notesProvider.trashNote(id);
-    }
+    await notesProvider.trashNotes(ids);
     
     setState(() {
       _selectedNoteIds.clear();
@@ -97,10 +99,16 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
     
     if (!mounted) return;
     
-    UnifiedNotificationService().show(
+    UnifiedNotificationService().showWithUndo(
       context: context,
       message: '${ids.length} notes moved to trash',
+      actionKey: 'archive_delete',
       type: NotificationType.info,
+      onExecute: () {},
+      onUndo: () async {
+        await notesProvider.unarchiveNotes(ids);
+      },
+      undoLabel: AppLocalizations.of(context)!.undo,
     );
   }
 

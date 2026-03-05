@@ -19,14 +19,11 @@ class NoteBatchOperationsService {
       isPinned: false,
       updatedAt: DateTime.now(),
     ));
-    
-    Future.microtask(() async {
-      for (var id in ids) {
-        await _dbService.trashNote(id);
-        await _sideEffectService.cancelReminderSideEffect(id);
-      }
-      await _sideEffectService.updateWidgetSideEffect();
-    });
+    for (var id in ids) {
+      await _dbService.trashNote(id);
+      await _sideEffectService.cancelReminderSideEffect(id);
+    }
+    await _sideEffectService.updateWidgetSideEffect();
   }
   
   Future<void> batchRestoreNotes(List<int> ids) async {
@@ -36,13 +33,10 @@ class NoteBatchOperationsService {
       updatedAt: DateTime.now(),
     ));
     _stateService.sortNotes();
-    
-    Future.microtask(() async {
-      for (var id in ids) {
-        await _dbService.restoreNote(id);
-      }
-      await _sideEffectService.updateWidgetSideEffect();
-    });
+    for (var id in ids) {
+      await _dbService.restoreNote(id);
+    }
+    await _sideEffectService.updateWidgetSideEffect();
   }
   
   Future<void> batchArchiveNotes(List<int> ids) async {
@@ -51,14 +45,11 @@ class NoteBatchOperationsService {
       isPinned: false,
       updatedAt: DateTime.now(),
     ));
-    
-    Future.microtask(() async {
-      for (var id in ids) {
-        await _dbService.archiveNote(id);
-        await _sideEffectService.cancelReminderSideEffect(id);
-      }
-      await _sideEffectService.updateWidgetSideEffect();
-    });
+    for (var id in ids) {
+      await _dbService.archiveNote(id);
+      await _sideEffectService.cancelReminderSideEffect(id);
+    }
+    await _sideEffectService.updateWidgetSideEffect();
   }
   
   Future<void> batchUnarchiveNotes(List<int> ids) async {
@@ -66,11 +57,9 @@ class NoteBatchOperationsService {
       isArchived: false,
       updatedAt: DateTime.now(),
     ));
-    
-    Future.microtask(() async {
-      for (var id in ids) {
-        await _dbService.unarchiveNote(id);
-      }
-    });
+    for (var id in ids) {
+      await _dbService.unarchiveNote(id);
+    }
+    await _sideEffectService.updateWidgetSideEffect();
   }
 }

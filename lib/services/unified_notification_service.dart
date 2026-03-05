@@ -236,17 +236,15 @@ class UnifiedNotificationService {
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
     final isMobile = screenWidth < 600;
 
-    // تحديد الموضع بناءً على حجم الشاشة
     final position = config.position ?? _getDefaultPosition(isMobile, isTablet, isDesktop);
-    
-    // تحديد العرض والهوامش بناءً على حجم الشاشة
     final width = config.width ?? _getDefaultWidth(isMobile, isTablet, isDesktop);
     final margin = config.margin ?? _getDefaultMargin(position, isMobile, isTablet, isDesktop);
 
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
       SnackBar(
-        content: _buildContent(context, config),
+        content: _buildContent(context, config, messenger),
         backgroundColor: _getBackgroundColor(config.type, context),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -263,18 +261,15 @@ class UnifiedNotificationService {
   }
 
   /// بناء محتوى الإشعار
-  Widget _buildContent(BuildContext context, NotificationConfig config) {
+  Widget _buildContent(BuildContext context, NotificationConfig config, ScaffoldMessengerState messenger) {
     return Row(
       children: [
-        // أيقونة النوع
         Icon(
           _getIcon(config.type),
           color: Colors.white,
           size: 22,
         ),
         const SizedBox(width: 12),
-        
-        // الرسالة
         Expanded(
           child: Text(
             config.message,
@@ -285,16 +280,12 @@ class UnifiedNotificationService {
             ),
           ),
         ),
-        
-        // زر الإجراء أو التراجع
         if (config.actionLabel != null && config.onAction != null)
-          _buildActionButton(context, config),
-        
-        // زر الإغلاق
+          _buildActionButton(config, messenger),
         if (config.dismissible && config.actionLabel == null)
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white, size: 18),
-            onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+            onPressed: () => messenger.hideCurrentSnackBar(),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -303,9 +294,8 @@ class UnifiedNotificationService {
   }
 
   /// بناء زر الإجراء مع المؤقت الدائري
-  Widget _buildActionButton(BuildContext context, NotificationConfig config) {
+  Widget _buildActionButton(NotificationConfig config, ScaffoldMessengerState messenger) {
     if (config.showProgress) {
-      // زر تراجع مع مؤقت دائري
       return Stack(
         alignment: Alignment.center,
         children: [
@@ -328,7 +318,7 @@ class UnifiedNotificationService {
           IconButton(
             icon: const Icon(Icons.undo, color: Colors.white, size: 20),
             onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              messenger.hideCurrentSnackBar();
               config.onAction?.call();
             },
             padding: EdgeInsets.zero,
@@ -337,10 +327,9 @@ class UnifiedNotificationService {
         ],
       );
     } else {
-      // زر إجراء عادي
       return TextButton(
         onPressed: () {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          messenger.hideCurrentSnackBar();
           config.onAction?.call();
         },
         style: TextButton.styleFrom(

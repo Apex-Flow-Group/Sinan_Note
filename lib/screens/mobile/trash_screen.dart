@@ -116,12 +116,10 @@ class _TrashScreenState extends State<TrashScreen> {
   void _restoreSelectedNotes(NotesProvider notesProvider,
       List<Note> trashedNotes, AppLocalizations l10n) async {
     final ids = List<int>.from(_selectedNotes);
-    final notes =
-        trashedNotes.where((n) => ids.contains(n.id)).toList();
+    final notes = trashedNotes.where((n) => ids.contains(n.id)).toList();
     final hasArchived = notes.any((n) => n.isArchived);
     final hasActive = notes.any((n) => !n.isArchived);
 
-    // تحديد الرسالة قبل العملية غير المتزامنة
     String message;
     if (hasArchived && hasActive) {
       message = l10n.notesRestoredMixed;
@@ -131,9 +129,7 @@ class _TrashScreenState extends State<TrashScreen> {
       message = l10n.restoredToHome;
     }
 
-    for (var id in ids) {
-      await notesProvider.restoreNote(id);
-    }
+    await notesProvider.restoreNotes(ids);
     if (!mounted) return;
 
     setState(() {
@@ -141,10 +137,16 @@ class _TrashScreenState extends State<TrashScreen> {
       _selectedNotes.clear();
     });
 
-    UnifiedNotificationService().show(
+    UnifiedNotificationService().showWithUndo(
       context: context,
       message: message,
+      actionKey: 'trash_restore',
       type: NotificationType.success,
+      onExecute: () {},
+      onUndo: () async {
+        await notesProvider.trashNotes(ids);
+      },
+      undoLabel: l10n.undo,
     );
   }
 
@@ -202,15 +204,15 @@ class _TrashScreenState extends State<TrashScreen> {
                           ),
                         ),
               actions: [
-                if (_selectionMode && _selectedNotes.isNotEmpty) ...[
+                if (_selectionMode) ...[
                   IconButton(
-                    icon: const Icon(Icons.restore, color: Colors.green),
-                    onPressed: () => _restoreSelectedNotes(
-                        notesProvider, trashedNotes, l10n),
+                    icon: Icon(Icons.restore, color: _selectedNotes.isNotEmpty ? Colors.green : Colors.grey),
+                    onPressed: _selectedNotes.isNotEmpty ? () => _restoreSelectedNotes(
+                        notesProvider, trashedNotes, l10n) : null,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_forever, color: Colors.red),
-                    onPressed: () async {
+                    icon: Icon(Icons.delete_forever, color: _selectedNotes.isNotEmpty ? Colors.red : Colors.grey),
+                    onPressed: _selectedNotes.isNotEmpty ? () async {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
@@ -240,7 +242,7 @@ class _TrashScreenState extends State<TrashScreen> {
                           await notesProvider.deleteNote(id);
                         }
                       }
-                    },
+                    } : null,
                   ),
                   IconButton(
                     icon: Icon(
