@@ -8,7 +8,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart' show AddMenuWidget, isMenuOpenNotifier;
+import 'package:apex_note/widgets/home/add_menu_widget.dart' show isMenuOpenNotifier;
 import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:apex_note/widgets/home/notes_grid_view.dart';
@@ -22,8 +22,18 @@ enum ViewType { grid, listExpanded, listCompact }
 class HomeScreen extends StatefulWidget {
   final String? sharedText;
   final Function(bool)? onDrawerChanged;
+  final bool showAddMenu;
+  final VoidCallback onToggleMenu;
+  final void Function(void Function(NoteMode))? onRegisterModeHandler;
 
-  const HomeScreen({super.key, this.sharedText, this.onDrawerChanged});
+  const HomeScreen({
+    super.key,
+    this.sharedText,
+    this.onDrawerChanged,
+    this.showAddMenu = false,
+    required this.onToggleMenu,
+    this.onRegisterModeHandler,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -34,10 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchActive = false;
-  ViewType _viewType = ViewType.listCompact; // قيمة افتراضية سريعة
+  ViewType _viewType = ViewType.listCompact;
   late final ValueNotifier<String> _viewTypeNotifier;
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
-  bool _showAddMenu = false;
   Timer? _debounce;
   final bool _isReady = true;
 
@@ -49,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _viewTypeNotifier = ValueNotifier(_viewType.name);
     _selectedNoteIdsNotifier = ValueNotifier({});
     _loadViewType();
+    widget.onRegisterModeHandler?.call(_navigateToEditor);
     
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(() {
@@ -230,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   void _navigateToEditor(NoteMode mode) async {
-    setState(() => _showAddMenu = false);
+    if (widget.showAddMenu) widget.onToggleMenu();
     isMenuOpenNotifier.value = false;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     String colorMode = 'simple';
@@ -283,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
-        final canPopNow = !_showAddMenu && !_isSearchActive && selectedIds.isEmpty;
+        final canPopNow = !widget.showAddMenu && !_isSearchActive && selectedIds.isEmpty;
 
         return _HomeScreenPopScope(
           canPop: canPopNow,
@@ -291,8 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedNoteIdsNotifier.value = {};
           },
           onCloseMenu: () {
-            setState(() => _showAddMenu = false);
-            isMenuOpenNotifier.value = false;
+            if (widget.showAddMenu) widget.onToggleMenu();
           },
           onExitSearch: _exitSearchMode,
           child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -366,14 +375,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                       ],
                     ),
-                  ),
-                  AddMenuWidget(
-                    showMenu: _showAddMenu,
-                    onToggle: () {
-                      setState(() => _showAddMenu = !_showAddMenu);
-                      isMenuOpenNotifier.value = _showAddMenu;
-                    },
-                    onModeSelected: _navigateToEditor,
                   ),
                 ],
               ),

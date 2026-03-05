@@ -30,11 +30,17 @@ import 'package:provider/provider.dart';
 class HomeScreenResponsive extends StatefulWidget {
   final String? sharedText;
   final Function(bool)? onDrawerChanged;
+  final bool showAddMenu;
+  final VoidCallback onToggleMenu;
+  final void Function(void Function(NoteMode))? onRegisterModeHandler;
 
   const HomeScreenResponsive({
     super.key,
     this.sharedText,
     this.onDrawerChanged,
+    this.showAddMenu = false,
+    required this.onToggleMenu,
+    this.onRegisterModeHandler,
   });
 
   @override
@@ -228,6 +234,9 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
       mobileLayout: HomeScreen(
         sharedText: widget.sharedText,
         onDrawerChanged: widget.onDrawerChanged,
+        showAddMenu: widget.showAddMenu,
+        onToggleMenu: widget.onToggleMenu,
+        onRegisterModeHandler: widget.onRegisterModeHandler,
       ),
 
       // Master-Details Layout - للشاشات الكبيرة

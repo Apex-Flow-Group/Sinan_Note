@@ -1,17 +1,16 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/desktop/code_tab_responsive.dart';
 import 'package:apex_note/screens/desktop/home_screen_responsive.dart';
 import 'package:apex_note/screens/desktop/reminder_dashboard_responsive.dart';
 import 'package:apex_note/screens/onboarding/splash_screen.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/security_gate.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart'
-    show isMenuOpenNotifier;
+import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/navigation/bottom_nav_bar.dart';
 import 'package:apex_note/widgets/navigation/side_nav_rail.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +34,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   int _currentIndex = 0;
   bool _isScrollHidden = false;
   bool _isDrawerOpen = false;
+  bool _showAddMenu = false;
+  void Function(NoteMode)? _onModeSelected;
   final _securityController = SecurityController();
 
   // ✅ Cache screens to prevent rebuilds
@@ -63,6 +64,9 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         child: HomeScreenResponsive(
           sharedText: widget.sharedText,
           onDrawerChanged: _onDrawerChanged,
+          showAddMenu: _showAddMenu,
+          onToggleMenu: _toggleMenu,
+          onRegisterModeHandler: (handler) => _onModeSelected = handler,
         ),
       ),
       const ReminderDashboardResponsive(),
@@ -117,6 +121,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     }
   }
 
+  void _toggleMenu() {
+    setState(() => _showAddMenu = !_showAddMenu);
+    isMenuOpenNotifier.value = _showAddMenu;
+  }
+
   void _onDrawerChanged(bool isOpen) {
     setState(() {
       _isDrawerOpen = isOpen;
@@ -149,52 +158,34 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                 children: [
                   IndexedStack(
                     index: _currentIndex,
-                    children: _cachedScreens, // ✅ Use cached screens
+                    children: _cachedScreens,
                   ),
                   if (showBottomBar && !isLargeScreen)
                     Positioned(
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: isMenuOpenNotifier,
-                        builder: (context, isMenuOpen, child) {
-                          return Stack(
-                            children: [
-                              child!,
-                              if (isMenuOpen)
-                                Positioned.fill(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => isMenuOpenNotifier.value = false,
-                                    child: ClipRect(
-                                      child: BackdropFilter(
-                                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                        child: Container(
-                                          color: Colors.black.withValues(alpha: 0.05),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
+                      child: BottomNavBar(
+                        currentIndex: _currentIndex,
+                        onTap: (index) {
+                          if (_showAddMenu) _toggleMenu();
+                          setState(() {
+                            _currentIndex = index;
+                            if (index != 0) _isScrollHidden = false;
+                          });
                         },
-                        child: BottomNavBar(
-                          currentIndex: _currentIndex,
-                          onTap: (index) {
-                            if (isMenuOpenNotifier.value) {
-                              isMenuOpenNotifier.value = false;
-                            }
-                            setState(() {
-                              _currentIndex = index;
-                              if (index != 0) _isScrollHidden = false;
-                            });
-                          },
-                          isScrollHidden: _isScrollHidden,
-                          isDrawerOpen: _isDrawerOpen,
-                        ),
+                        isScrollHidden: _isScrollHidden,
+                        isDrawerOpen: _isDrawerOpen,
                       ),
+                    ),
+                  if (!isLargeScreen)
+                    AddMenuWidget(
+                      showMenu: _showAddMenu,
+                      onToggle: _toggleMenu,
+                      onModeSelected: (mode) {
+                        _toggleMenu();
+                        _onModeSelected?.call(mode);
+                      },
                     ),
                 ],
               ),
