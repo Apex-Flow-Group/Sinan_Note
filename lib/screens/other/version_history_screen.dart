@@ -125,32 +125,49 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
 
     final isDesktop = MediaQuery.of(context).size.width >= 600;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      constraints: isDesktop
-          ? BoxConstraints(
-              maxWidth: 600,
-              maxHeight: MediaQuery.of(context).size.height * 0.8,
-            )
-          : null,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: isDesktop ? 0.8 : 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => _VersionsBottomSheet(
-          note: note,
-          versions: versions,
-          totalVersions: versionCount,
-          scrollController: scrollController,
-          onRestore: (version) => _onRestoreVersion(version, note),
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: 560,
+            height: 600,
+            child: _VersionsBottomSheet(
+              note: note,
+              versions: versions,
+              totalVersions: versionCount,
+              scrollController: ScrollController(),
+              onRestore: (version) => _onRestoreVersion(version, note),
+              isDesktop: true,
+            ),
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) => _VersionsBottomSheet(
+            note: note,
+            versions: versions,
+            totalVersions: versionCount,
+            scrollController: scrollController,
+            onRestore: (version) => _onRestoreVersion(version, note),
+            isDesktop: false,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -168,7 +185,17 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         }
       },
       child: Scaffold(
+        drawer: HomeDrawerWidget(
+          onBackupTap: () {},
+          onNotesChanged: () {},
+        ),
         appBar: AppBar(
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
           title: _isSearching
               ? TextField(
                   controller: _searchController,
@@ -246,10 +273,6 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
             ),
           ],
         ),
-        drawer: HomeDrawerWidget(
-          onBackupTap: () {},
-          onNotesChanged: () {},
-        ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : filteredNotes.isEmpty
@@ -259,100 +282,109 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   )
-                : ListView.builder(
-                    padding: EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      top: 16,
-                      bottom: MediaQuery.of(context).padding.bottom + 80,
-                    ),
-                    itemCount: filteredNotes.length,
-                    itemBuilder: (context, index) {
-                      final note = filteredNotes[index];
-                      // ✅ Format checklist content for display
-                      final displayContent =
-                          (note.isChecklist || note.noteType == 'checklist')
-                              ? _formatChecklistForDisplay(note.content)
-                              : note.content;
-                      final preview = displayContent.length > 100
-                          ? '${displayContent.substring(0, 100)}...'
-                          : displayContent;
-
-                      // ✅ Use note's color (same as note cards)
-                      final brightness = Theme.of(context).brightness;
-                      final baseColor = AppColorPalette.palette[note.colorIndex]
-                          .getColor(brightness);
-                      final isLightColor = baseColor.computeLuminance() > 0.5;
-                      final titleColor =
-                          isLightColor ? Colors.black87 : Colors.white;
-                      final contentColor =
-                          isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 0,
-                        color: baseColor,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          title: Text(
-                            note.title.isEmpty ? l10n.untitled : note.title,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: titleColor,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 8),
-                              Text(
-                                preview,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: contentColor),
-                              ),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              FutureBuilder<int>(
-                                future:
-                                    _versionService.getVersionCount(note.id!),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData) {
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Colors.blue.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        '${snapshot.data}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  return const SizedBox.shrink();
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.history),
-                                onPressed: () => _showVersionsDialog(note),
-                              ),
-                            ],
-                          ),
+                : Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 800),
+                      child: ListView.builder(
+                        padding: EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          top: 16,
+                          bottom: MediaQuery.of(context).padding.bottom + 80,
                         ),
-                      );
-                    },
+                        itemCount: filteredNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = filteredNotes[index];
+                          // ✅ Format checklist content for display
+                          final displayContent =
+                              (note.isChecklist || note.noteType == 'checklist')
+                                  ? _formatChecklistForDisplay(note.content)
+                                  : note.content;
+                          final preview = displayContent.length > 100
+                              ? '${displayContent.substring(0, 100)}...'
+                              : displayContent;
+
+                          // ✅ Use note's color (same as note cards)
+                          final brightness = Theme.of(context).brightness;
+                          final baseColor = AppColorPalette
+                              .palette[note.colorIndex]
+                              .getColor(brightness);
+                          final isLightColor =
+                              baseColor.computeLuminance() > 0.5;
+                          final titleColor =
+                              isLightColor ? Colors.black87 : Colors.white;
+                          final contentColor = isLightColor
+                              ? Colors.grey[700]!
+                              : Colors.grey[300]!;
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            elevation: 0,
+                            color: baseColor,
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              title: Text(
+                                note.title.isEmpty ? l10n.untitled : note.title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: titleColor,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    preview,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(color: contentColor),
+                                  ),
+                                ],
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  FutureBuilder<int>(
+                                    future: _versionService
+                                        .getVersionCount(note.id!),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue
+                                                .withValues(alpha: 0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${snapshot.data}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.history),
+                                    onPressed: () => _showVersionsDialog(note),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
       ),
     );
@@ -365,6 +397,7 @@ class _VersionsBottomSheet extends StatelessWidget {
   final int totalVersions;
   final ScrollController scrollController;
   final Function(NoteVersion) onRestore;
+  final bool isDesktop;
 
   const _VersionsBottomSheet({
     required this.note,
@@ -372,6 +405,7 @@ class _VersionsBottomSheet extends StatelessWidget {
     required this.totalVersions,
     required this.scrollController,
     required this.onRestore,
+    this.isDesktop = false,
   });
 
   @override
@@ -380,19 +414,20 @@ class _VersionsBottomSheet extends StatelessWidget {
 
     return Column(
       children: [
-        // Handle bar
-        Container(
-          margin: const EdgeInsets.only(top: 8, bottom: 16),
-          width: 40,
-          height: 4,
-          decoration: BoxDecoration(
-            color: Colors.grey[300],
-            borderRadius: BorderRadius.circular(2),
+        // Handle bar - موبايل فقط
+        if (!isDesktop)
+          Container(
+            margin: const EdgeInsets.only(top: 8, bottom: 16),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
         // Header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.fromLTRB(20, isDesktop ? 12 : 0, 8, 0),
           child: Row(
             children: [
               const Icon(Icons.history, size: 24),
@@ -420,10 +455,16 @@ class _VersionsBottomSheet extends StatelessWidget {
                   ),
                 ),
               ),
+              if (isDesktop)
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        if (isDesktop) const Divider(height: 1),
+        const SizedBox(height: 8),
         // Versions list
         Expanded(
           child: versions.isEmpty

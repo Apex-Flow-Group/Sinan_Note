@@ -20,6 +20,7 @@ class NotesProvider extends ChangeNotifier {
   late final NoteBatchOperationsService _batchService;
 
   bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
   NotesProvider({IsarDatabaseService? dbService}) {
     _dbService = dbService ?? IsarDatabaseService();

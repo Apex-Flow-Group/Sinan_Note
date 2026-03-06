@@ -471,6 +471,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get close => 'إغلاق';
 
   @override
+  String get added => 'مضاف';
+
+  @override
+  String get deleted => 'محذوف';
+
+  @override
+  String get preview => 'معاينة التغييرات';
+
+  @override
   String get deleteFailed => 'فشل الحذف';
 
   @override

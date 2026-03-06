@@ -8,149 +8,334 @@ import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+// ── Diff types ──────────────────────────────────────────────────────────────
+enum _DiffType { equal, added, removed }
+
+class _DiffSpan {
+  final _DiffType type;
+  final String text;
+  const _DiffSpan(this.type, this.text);
+}
+
+// ── Word-level LCS diff ──────────────────────────────────────────────────────
+List<_DiffSpan> _computeDiff(String oldText, String newText) {
+  final a = oldText.split(RegExp(r'(?<=\s)|(?=\s)'));
+  final b = newText.split(RegExp(r'(?<=\s)|(?=\s)'));
+
+  final m = a.length, n = b.length;
+  // LCS table
+  final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
+  for (var i = m - 1; i >= 0; i--) {
+    for (var j = n - 1; j >= 0; j--) {
+      if (a[i] == b[j]) {
+        dp[i][j] = dp[i + 1][j + 1] + 1;
+      } else {
+        dp[i][j] = dp[i + 1][j] > dp[i][j + 1] ? dp[i + 1][j] : dp[i][j + 1];
+      }
+    }
+  }
+
+  final spans = <_DiffSpan>[];
+  var i = 0, j = 0;
+  while (i < m && j < n) {
+    if (a[i] == b[j]) {
+      spans.add(_DiffSpan(_DiffType.equal, a[i]));
+      i++; j++;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      spans.add(_DiffSpan(_DiffType.removed, a[i]));
+      i++;
+    } else {
+      spans.add(_DiffSpan(_DiffType.added, b[j]));
+      j++;
+    }
+  }
+  while (i < m) { spans.add(_DiffSpan(_DiffType.removed, a[i++])); }
+  while (j < n) { spans.add(_DiffSpan(_DiffType.added, b[j++])); }
+  return spans;
+}
+
+// ── Diff View Widget ─────────────────────────────────────────────────────────
+class _DiffView extends StatelessWidget {
+  final List<_DiffSpan> spans;
+  const _DiffView({required this.spans});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        children: spans.map((s) {
+          switch (s.type) {
+            case _DiffType.added:
+              return TextSpan(
+                text: s.text,
+                style: const TextStyle(
+                  color: Color(0xFF2E7D32),
+                  backgroundColor: Color(0xFFE8F5E9),
+                  fontWeight: FontWeight.w500,
+                ),
+              );
+            case _DiffType.removed:
+              return TextSpan(
+                text: s.text,
+                style: const TextStyle(
+                  color: Color(0xFFC62828),
+                  backgroundColor: Color(0xFFFFEBEE),
+                  decoration: TextDecoration.lineThrough,
+                ),
+              );
+            case _DiffType.equal:
+              return TextSpan(text: s.text);
+          }
+        }).toList(),
+      ),
+      style: const TextStyle(fontSize: 14, height: 1.6),
+    );
+  }
+}
+
+// ── Main Sheet ───────────────────────────────────────────────────────────────
 class NoteHistorySheet extends StatelessWidget {
   final int noteId;
 
   const NoteHistorySheet({super.key, required this.noteId});
 
   static void show(BuildContext context, int noteId) {
-    showModalBottomSheet(
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
+
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: 560,
+            height: 600,
+            child: NoteHistorySheet(noteId: noteId),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => NoteHistorySheet(noteId: noteId),
+      );
+    }
+  }
+
+  void _showDiffDialog(BuildContext context, NoteVersion version, String newerContent) {
+    final l10n = AppLocalizations.of(context)!;
+    final spans = _computeDiff(version.content, newerContent);
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => NoteHistorySheet(noteId: noteId),
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.compare, size: 20),
+            const SizedBox(width: 8),
+            Text(l10n.preview, style: const TextStyle(fontSize: 16)),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _legendDot(const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+                    const SizedBox(width: 4),
+                    Text(l10n.added, style: const TextStyle(fontSize: 12)),
+                    const SizedBox(width: 12),
+                    _legendDot(const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+                    const SizedBox(width: 4),
+                    Text(l10n.deleted, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+                const Divider(height: 16),
+                _DiffView(spans: spans),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
     );
   }
 
+  Widget _legendDot(Color fg, Color bg) => Container(
+        width: 14, height: 14,
+        decoration: BoxDecoration(color: bg, shape: BoxShape.circle,
+            border: Border.all(color: fg, width: 1.5)),
+      );
+
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
+
+    if (isDesktop) {
+      return _buildContent(context, null);
+    }
+
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
       maxChildSize: 0.8,
       minChildSize: 0.3,
-      builder: (_, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (_, scrollController) =>
+          _buildContent(context, scrollController),
+    );
+  }
+
+  Widget _buildContent(
+      BuildContext context, ScrollController? scrollController) {
+    final isDesktop = scrollController == null;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: isDesktop
+            ? BorderRadius.circular(16)
+            : const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          if (!isDesktop)
+            Container(
+              margin: const EdgeInsets.all(8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            child: Row(
+              children: [
+                const Icon(Icons.history_edu, color: Colors.blueAccent),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.noteHistory,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const Spacer(),
+                if (isDesktop)
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.all(8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.history_edu, color: Colors.blueAccent),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context)!.noteHistory,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              Expanded(
-                child: FutureBuilder<List<NoteVersion>>(
-                  future: IsarDatabaseService().getNoteHistory(noteId),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final history = snapshot.data!;
+          const Divider(height: 1),
+          Expanded(
+            child: FutureBuilder<List<NoteVersion>>(
+              future: IsarDatabaseService().getNoteHistory(noteId),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final history = snapshot.data!;
 
-                    if (history.isEmpty) {
-                      return Center(
-                          child:
-                              Text(AppLocalizations.of(context)!.noHistoryYet));
-                    }
+                if (history.isEmpty) {
+                  return Center(child: Text(l10n.noHistoryYet));
+                }
 
-                    return ListView.builder(
-                      controller: scrollController,
-                      itemCount: history.length,
-                      itemBuilder: (context, index) {
-                        final item = history[index];
-                        final date = item.timestamp;
-                        final isCreate = item.action == 'create';
-                        final contentPreview =
-                            item.content.replaceAll('\n', ' ');
+                return ListView.builder(
+                  controller: scrollController,
+                  itemCount: history.length,
+                  itemBuilder: (context, index) {
+                    final item = history[index];
+                    final date = item.timestamp;
+                    final isCreate = item.action == 'create';
+                    final contentPreview = item.content.replaceAll('\n', ' ');
+                    // newerContent: النسخة الأحدث منها (index-1) أو نفسها إن كانت الأحدث
+                    final newerContent = index == 0 ? item.content : history[index - 1].content;
 
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                isCreate ? Colors.green[100] : Colors.blue[100],
-                            child: Icon(
-                              isCreate ? Icons.add_circle_outline : Icons.edit,
-                              color: isCreate ? Colors.green : Colors.blue,
-                              size: 20,
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor:
+                            isCreate ? Colors.green[100] : Colors.blue[100],
+                        child: Icon(
+                          isCreate ? Icons.add_circle_outline : Icons.edit,
+                          color: isCreate ? Colors.green : Colors.blue,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        isCreate ? l10n.created : l10n.edit,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${date.year}-${date.month}-${date.day}  ${date.hour}:${date.minute}",
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            contentPreview,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.color
+                                  ?.withValues(alpha: 0.7),
                             ),
                           ),
-                          title: Text(
-                            isCreate
-                                ? AppLocalizations.of(context)!.created
-                                : AppLocalizations.of(context)!.edit,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "${date.year}-${date.month}-${date.day}  ${date.hour}:${date.minute}",
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                contentPreview,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.color
-                                        ?.withValues(alpha: 0.7)),
-                              ),
-                            ],
-                          ),
-                          trailing: IconButton(
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (index != 0)
+                            IconButton(
+                              icon: const Icon(Icons.compare, size: 20),
+                              tooltip: l10n.preview,
+                              onPressed: () => _showDiffDialog(context, item, newerContent),
+                            ),
+                          IconButton(
                             icon: const Icon(Icons.copy, size: 20),
                             onPressed: () {
-                              String textToCopy;
-                              if (ChecklistFormatter.isValidChecklist(item.content)) {
-                                textToCopy = ChecklistFormatter.formatForSharing('', item.content);
-                              } else {
-                                textToCopy = item.content;
-                              }
+                              final textToCopy =
+                                  ChecklistFormatter.isValidChecklist(item.content)
+                                      ? ChecklistFormatter.formatForSharing(
+                                          '', item.content)
+                                      : item.content;
                               Clipboard.setData(ClipboardData(text: textToCopy));
                               Navigator.pop(context);
                               UnifiedNotificationService().show(
                                 context: context,
-                                message: AppLocalizations.of(context)!.copiedOldVersion,
+                                message: l10n.copiedOldVersion,
                                 type: NotificationType.success,
                               );
                             },
                           ),
-                        );
-                      },
+                        ],
+                      ),
                     );
                   },
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

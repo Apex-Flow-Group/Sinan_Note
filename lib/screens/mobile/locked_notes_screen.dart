@@ -451,10 +451,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
-      canPop: _selectedNoteIds.isEmpty,
+      canPop: _selectedNoteIds.isEmpty && _searchController.text.isEmpty,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
-          // Clear session and kill observer when user manually exits vault
           _providerRef?.clearLockedSession(notify: false);
           _providerRef?.lockVault();
           WidgetsBinding.instance.removeObserver(this);
@@ -462,6 +461,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         }
         if (_selectedNoteIds.isNotEmpty) {
           setState(() => _selectedNoteIds.clear());
+        } else if (_searchController.text.isNotEmpty) {
+          setState(() => _searchController.clear());
         }
       },
       child: Scaffold(

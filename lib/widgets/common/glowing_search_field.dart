@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-class BreathingSearchField extends StatefulWidget {
+class GlowingSearchField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
   final String hintText;
@@ -13,7 +13,7 @@ class BreathingSearchField extends StatefulWidget {
   final VoidCallback? onFilterTap;
   final ValueNotifier<String> viewTypeNotifier;
 
-  const BreathingSearchField({
+  const GlowingSearchField({
     super.key,
     required this.controller,
     this.focusNode,
@@ -25,10 +25,10 @@ class BreathingSearchField extends StatefulWidget {
   });
 
   @override
-  State<BreathingSearchField> createState() => _BreathingSearchFieldState();
+  State<GlowingSearchField> createState() => _GlowingSearchFieldState();
 }
 
-class _BreathingSearchFieldState extends State<BreathingSearchField>
+class _GlowingSearchFieldState extends State<GlowingSearchField>
     with SingleTickerProviderStateMixin { // استخدمنا Ticker واحد فقط للبساطة
   late AnimationController _waveController;
   late FocusNode _focusNode;
@@ -141,7 +141,7 @@ class _BreathingSearchFieldState extends State<BreathingSearchField>
                           color: contentColor.withValues(alpha: 0.5),
                           fontSize: 14),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.only(bottom: 2),
                       isDense: true,
                     ),
                   ),

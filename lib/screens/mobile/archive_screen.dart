@@ -60,6 +60,13 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
     return filtered;
   }
 
+  bool get _isSearchActive => _searchController.text.isNotEmpty;
+
+  void _exitSearch() {
+    _searchController.clear();
+    setState(() => _searchQuery = '');
+  }
+
   void _restoreSelected() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
@@ -121,7 +128,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
         final archivedNotes = _filterNotes(notesProvider.archivedNotes);
 
         return PopScope(
-          canPop: !_selectionMode,
+          canPop: !_selectionMode && !_isSearchActive,
           onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
             if (_selectionMode) {
@@ -129,6 +136,8 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                 _selectionMode = false;
                 _selectedNoteIds.clear();
               });
+            } else if (_isSearchActive) {
+              _exitSearch();
             }
           },
           child: Scaffold(

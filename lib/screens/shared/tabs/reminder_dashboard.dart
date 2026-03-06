@@ -135,9 +135,17 @@ class _ReminderDashboardState extends State<ReminderDashboard>
             .where((n) => n.reminderDateTime!.isBefore(now))
             .toList());
 
-        return Stack(
-          children: [
-            GestureDetector(
+        return PopScope(
+          canPop: _searchController.text.isEmpty,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            if (_searchController.text.isNotEmpty) {
+              setState(() => _searchController.clear());
+            }
+          },
+          child: Stack(
+            children: [
+              GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () => _closeAllSlidables.value++,
               child: SlidableAutoCloseBehavior(
@@ -343,6 +351,7 @@ class _ReminderDashboardState extends State<ReminderDashboard>
               },
             ),
           ],
+        ),
         );
       },
     );

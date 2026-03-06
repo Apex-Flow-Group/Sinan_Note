@@ -15,27 +15,19 @@ class EmptyDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+    final color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // أيقونة ملاحظة
-          Icon(
-            Icons.note_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // رسالة إرشادية
+          Icon(Icons.arrow_back_rounded, size: 32, color: color),
+          const SizedBox(height: 12),
+          Icon(Icons.note_outlined, size: 64, color: color),
+          const SizedBox(height: 12),
           Text(
             l10n.selectNote,
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: color),
           ),
         ],
       ),

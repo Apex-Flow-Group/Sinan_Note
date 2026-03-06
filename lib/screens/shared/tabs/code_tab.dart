@@ -92,7 +92,15 @@ class _CodeTabState extends State<CodeTab> {
             .toList());
 
         return Scaffold(
-          body: Stack(
+          body: PopScope(
+            canPop: _searchController.text.isEmpty,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              if (_searchController.text.isNotEmpty) {
+                setState(() => _searchController.clear());
+              }
+            },
+            child: Stack(
             children: [
               GestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -355,6 +363,7 @@ class _CodeTabState extends State<CodeTab> {
                 },
               ),
             ],
+          ),
           ),
         );
       },

@@ -38,6 +38,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final screenHeight = MediaQuery.of(context).size.height;
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
+    final topPadding = MediaQuery.of(context).padding.top + 56.0;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
@@ -47,14 +49,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       },
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
-          top: 80,
+          top: topPadding,
           bottom: widget.totalBottomSpace,
           left: widget.sidePadding,
           right: widget.sidePadding,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            minHeight: screenHeight - 80 - widget.totalBottomSpace - keyboardHeight,
+            minHeight: screenHeight - topPadding - widget.totalBottomSpace - keyboardHeight,
           ),
           child: Directionality(
             textDirection: TextDirection.rtl,

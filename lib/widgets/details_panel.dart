@@ -35,6 +35,7 @@ class DetailsPanel extends StatefulWidget {
 class _DetailsPanelState extends State<DetailsPanel> {
   NotesProvider? _notesProvider;
   bool _isEditMode = false;
+  bool _isReadOnly = false;
   int? _currentNoteId;
 
   void setEditMode(bool value) {
@@ -110,14 +111,23 @@ class _DetailsPanelState extends State<DetailsPanel> {
         // 🔥 إعادة تعيين وضع التعديل فقط عند تغيير الملاحظة
         if (_currentNoteId != selectedNote.id) {
           _currentNoteId = selectedNote.id;
-          _isEditMode = false;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _isEditMode = false;
+                _isReadOnly = false;
+              });
+            }
+          });
         }
 
         final isDesktop = MediaQuery.of(context).size.width >= 600;
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: (isDesktop && !widget.forceEditMode && !_isEditMode)
+          child: (isDesktop &&
+                  !widget.forceEditMode &&
+                  (!_isEditMode || _isReadOnly))
               ? _buildReadOnlyView(context, selectedNote, selectedNoteProvider)
               : _buildEditorView(context, selectedNote, selectedNoteProvider),
         );
@@ -210,15 +220,23 @@ class _DetailsPanelState extends State<DetailsPanel> {
         actions: [
           if (!note.isTrashed) ...[
             IconButton(
-              icon: const Icon(Icons.edit_rounded),
-              tooltip: l10n.edit,
-              onPressed: () {
-                setState(() {
-                  _isEditMode = true;
-                });
-              },
+              icon: Icon(
+                  _isReadOnly ? Icons.lock_rounded : Icons.lock_open_rounded),
+              tooltip: _isReadOnly ? l10n.edit : 'Read Only',
+              onPressed: () => setState(() => _isReadOnly = !_isReadOnly),
             ),
+            if (!_isReadOnly)
+              IconButton(
+                icon: const Icon(Icons.edit_rounded),
+                tooltip: l10n.edit,
+                onPressed: () => setState(() => _isEditMode = true),
+              ),
           ],
+          IconButton(
+            icon: const Icon(Icons.close_rounded),
+            tooltip: l10n.close,
+            onPressed: () => provider.clearSelection(),
+          ),
           if (note.isArchived) ...[
             IconButton(
               icon: const Icon(Icons.unarchive_rounded),
@@ -308,7 +326,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onDoubleTap: () {
-          if (!note.isTrashed) {
+          if (!note.isTrashed && !_isReadOnly) {
             setState(() {
               _isEditMode = true;
             });

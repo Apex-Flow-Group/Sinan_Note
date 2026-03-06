@@ -284,6 +284,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return _HomeScreenPopScope(
           canPop: canPopNow,
+          showAddMenu: widget.showAddMenu,
+          isSearchActive: _isSearchActive,
           onClearSelection: () {
             _selectedNoteIdsNotifier.value = {};
           },
@@ -376,6 +378,8 @@ class _HomeScreenState extends State<HomeScreen> {
 // OPTIMIZATION: Separate widget to prevent PopScope from rebuilding on every setState
 class _HomeScreenPopScope extends StatefulWidget {
   final bool canPop;
+  final bool showAddMenu;
+  final bool isSearchActive;
   final VoidCallback onClearSelection;
   final VoidCallback onCloseMenu;
   final VoidCallback onExitSearch;
@@ -383,6 +387,8 @@ class _HomeScreenPopScope extends StatefulWidget {
 
   const _HomeScreenPopScope({
     required this.canPop,
+    required this.showAddMenu,
+    required this.isSearchActive,
     required this.onClearSelection,
     required this.onCloseMenu,
     required this.onExitSearch,
@@ -400,11 +406,14 @@ class _HomeScreenPopScopeState extends State<_HomeScreenPopScope> {
       canPop: widget.canPop,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        // Execute callbacks in order of priority
         if (!widget.canPop) {
-          widget.onClearSelection();
-          widget.onCloseMenu();
-          widget.onExitSearch();
+          if (widget.showAddMenu) {
+            widget.onCloseMenu();
+          } else if (widget.isSearchActive) {
+            widget.onExitSearch();
+          } else {
+            widget.onClearSelection();
+          }
         }
       },
       child: widget.child,

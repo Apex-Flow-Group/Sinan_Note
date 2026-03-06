@@ -97,9 +97,9 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
               
               // Resizable Divider
               GestureDetector(
+                onHorizontalDragStart: (_) => setState(() => _isDragging = true),
                 onHorizontalDragUpdate: (details) {
                   setState(() {
-                    _isDragging = true;
                     final delta = details.delta.dx / constraints.maxWidth;
                     _masterWidthRatio = (_masterWidthRatio + delta).clamp(0.2, 0.6);
                   });
@@ -110,16 +110,29 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
                 },
                 child: MouseRegion(
                   cursor: SystemMouseCursors.resizeColumn,
-                  child: Container(
-                    width: 8,
-                    color: Colors.transparent,
-                    child: Center(
-                      child: Container(
-                        width: 2,
-                        color: _isDragging
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey.withValues(alpha: 0.3),
-                      ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 20,
+                    decoration: BoxDecoration(
+                      color: _isDragging
+                          ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                          : Colors.transparent,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedRotation(
+                          turns: 0.25,
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            Icons.drag_handle_rounded,
+                            size: 20,
+                            color: _isDragging
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -8,12 +8,14 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart';
+import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:apex_note/widgets/details_panel.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/note_locator_button.dart';
 import 'package:apex_note/widgets/home/notes_grid_view.dart';
 import 'package:apex_note/widgets/master_details_layout.dart';
 import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
@@ -56,6 +58,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   ViewType _viewType = ViewType.listCompact;
   late final ValueNotifier<String> _viewTypeNotifier;
   bool _showAddMenu = false;
+  final ScrollController _notesScrollController = ScrollController();
 
   // Desktop view types (no grid)
   static const List<ViewType> _desktopViewTypes = [
@@ -126,6 +129,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     _selectedNoteIdsNotifier.dispose();
     _isEditModeNotifier.dispose();
     _viewTypeNotifier.dispose();
+    _notesScrollController.dispose();
     super.dispose();
   }
 
@@ -146,7 +150,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
               children: [
                 Center(
                   child: Container(
-                    width: 40, height: 4,
+                    width: 40,
+                    height: 4,
                     decoration: BoxDecoration(
                       color: Colors.grey[400],
                       borderRadius: BorderRadius.circular(2),
@@ -155,54 +160,85 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                 ),
                 const SizedBox(height: 12),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Row(
                     children: [
                       const Icon(Icons.filter_list_rounded, size: 22),
                       const SizedBox(width: 8),
-                      Text(l10n.filter, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(l10n.filter,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: Text(l10n.noteType, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Text(l10n.noteType,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey)),
                 ),
                 ListTile(
                   leading: const Icon(Icons.note, color: Colors.blue),
                   title: Text(l10n.simpleNotes),
-                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:simple'; },
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _searchController.text = 'type:simple';
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.code, color: Colors.purple),
                   title: Text(l10n.professionalNotes),
-                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:pro'; },
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _searchController.text = 'type:pro';
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.alarm, color: Colors.orange),
                   title: Text(l10n.reminderNotes),
-                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:reminder'; },
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _searchController.text = 'type:reminder';
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.checklist, color: Colors.green),
                   title: Text(l10n.checklists),
-                  onTap: () { Navigator.pop(ctx); _searchController.text = 'type:checklist'; },
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _searchController.text = 'type:checklist';
+                  },
                 ),
                 const Divider(),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: Text(l10n.noteStatus, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Text(l10n.noteStatus,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey)),
                 ),
                 ListTile(
                   leading: const Icon(Icons.push_pin, color: Colors.red),
                   title: Text(l10n.pinnedOnly),
-                  onTap: () { Navigator.pop(ctx); _searchController.text = 'pinned:true'; },
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _searchController.text = 'pinned:true';
+                  },
                 ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.clear_all, color: Colors.red),
                   title: Text(l10n.clearFilter),
-                  onTap: () { Navigator.pop(ctx); _searchController.clear(); },
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _searchController.clear();
+                  },
                 ),
               ],
             ),
@@ -331,8 +367,13 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
             children: [
               DesktopMenuBar(
                 onNewNote: _navigateToNewNote,
-                onSearch: () => FocusScope.of(context).requestFocus(FocusNode()),
-                onRefresh: () => Provider.of<NotesProvider>(context, listen: false).loadNotes(force: true),
+                onSearch: () =>
+                    FocusScope.of(context).requestFocus(_searchFocusNode),
+                onRefresh: () async {
+                  final notesProvider =
+                      Provider.of<NotesProvider>(context, listen: false);
+                  await notesProvider.loadNotes(force: true);
+                },
                 onSettings: () => Navigator.pushNamed(context, '/settings'),
                 onExport: () {
                   final tempStrings = {
@@ -354,18 +395,28 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   };
                   BackupOptionsDialog.show(context, tempStrings);
                 },
-                onAbout: () => Navigator.pushNamed(context, '/settings'),
+                onAbout: () => showDialog(
+                  context: context,
+                  builder: (_) => const Dialog(child: AboutScreen()),
+                ),
+              ),
+              Consumer<NotesProvider>(
+                builder: (_, notes, __) => notes.isLoading
+                    ? const LinearProgressIndicator(minHeight: 2)
+                    : const SizedBox.shrink(),
               ),
               Expanded(
                 child: MasterDetailsLayout(
                   masterPanel: Stack(
                     children: [
                       CustomScrollView(
+                        controller: _notesScrollController,
                         slivers: [
                           NotesGridView(
                             viewType: _viewType,
                             selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
                             searchController: _searchController,
+                            scrollController: _notesScrollController,
                           ),
                         ],
                       ),
@@ -375,6 +426,9 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                           setState(() => _showAddMenu = !_showAddMenu);
                         },
                         onModeSelected: _navigateToNewNote,
+                      ),
+                      NoteLocatorButton(
+                        scrollController: _notesScrollController,
                       ),
                     ],
                   ),
@@ -610,7 +664,8 @@ class _SearchFieldState extends State<_SearchField> {
 
   @override
   Widget build(BuildContext context) {
-    final showClear = widget.controller.text.isNotEmpty || widget.focusNode.hasFocus;
+    final showClear =
+        widget.controller.text.isNotEmpty || widget.focusNode.hasFocus;
 
     return TextField(
       controller: widget.controller,

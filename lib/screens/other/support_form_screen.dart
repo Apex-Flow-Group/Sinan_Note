@@ -83,18 +83,14 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       final String encodedBody = Uri.encodeComponent(body);
       final Uri emailUri = Uri.parse('mailto:$_appEmail?subject=$encodedSubject&body=$encodedBody');
 
-      if (await canLaunchUrl(emailUri)) {
-        await launchUrl(emailUri, mode: LaunchMode.externalApplication);
-        if (mounted) {
-          _clearForm();
-          UnifiedNotificationService().show(
-            context: context,
-            message: l10n.supportMessageSent,
-            type: NotificationType.success,
-          );
-        }
-      } else {
-        throw 'No email app found on device';
+      await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      if (mounted) {
+        _clearForm();
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.supportMessageSent,
+          type: NotificationType.success,
+        );
       }
     } catch (e) {
       if (mounted) {

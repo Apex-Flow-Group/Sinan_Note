@@ -472,6 +472,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get close => 'Close';
 
   @override
+  String get added => 'Added';
+
+  @override
+  String get deleted => 'Deleted';
+
+  @override
+  String get preview => 'Preview changes';
+
+  @override
   String get deleteFailed => 'Delete failed';
 
   @override

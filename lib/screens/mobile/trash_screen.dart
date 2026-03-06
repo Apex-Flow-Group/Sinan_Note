@@ -26,6 +26,13 @@ class _TrashScreenState extends State<TrashScreen> {
   final Set<int> _selectedNotes = {};
   String _sortBy = 'date';
 
+  bool get _isSearchActive => _searchController.text.isNotEmpty;
+
+  void _exitSearch() {
+    _searchController.clear();
+    setState(() => _searchQuery = '');
+  }
+
   Color _getTextColor(int colorIndex) {
     final brightness = Theme.of(context).brightness;
     final color = AppColorPalette.palette[colorIndex].getColor(brightness);
@@ -159,7 +166,7 @@ class _TrashScreenState extends State<TrashScreen> {
         final trashedNotes = _filterNotes(notesProvider.trashedNotes);
 
         return PopScope(
-          canPop: !_selectionMode,
+          canPop: !_selectionMode && !_isSearchActive,
           onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
             if (_selectionMode) {
@@ -167,6 +174,8 @@ class _TrashScreenState extends State<TrashScreen> {
                 _selectionMode = false;
                 _selectedNotes.clear();
               });
+            } else if (_isSearchActive) {
+              _exitSearch();
             }
           },
           child: Scaffold(
