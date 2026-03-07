@@ -28,11 +28,13 @@ class SideNavRail extends StatelessWidget {
     return AnimatedSlide(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOutCubic,
-      offset: isDrawerOpen 
+      offset: isDrawerOpen
           ? (isRTL ? const Offset(1, 0) : const Offset(-1, 0))
-          : (isScrollHidden ? (isRTL ? const Offset(1, 0) : const Offset(-1, 0)) : Offset.zero),
+          : (isScrollHidden
+              ? (isRTL ? const Offset(1, 0) : const Offset(-1, 0))
+              : Offset.zero),
       child: ClipRRect(
-        borderRadius: isRTL 
+        borderRadius: isRTL
             ? const BorderRadius.horizontal(left: Radius.circular(16))
             : const BorderRadius.horizontal(right: Radius.circular(16)),
         child: BackdropFilter(
@@ -40,7 +42,9 @@ class SideNavRail extends StatelessWidget {
           child: Container(
             width: 80,
             decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.85),
+              color: Theme.of(context)
+                  .scaffoldBackgroundColor
+                  .withValues(alpha: 0.85),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -58,7 +62,10 @@ class SideNavRail extends StatelessWidget {
                 size: 28,
               ),
               unselectedIconTheme: IconThemeData(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
                 size: 24,
               ),
               labelType: NavigationRailLabelType.all,
@@ -70,7 +77,10 @@ class SideNavRail extends StatelessWidget {
               unselectedLabelTextStyle: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.normal,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
               destinations: [
                 NavigationRailDestination(
@@ -86,7 +96,8 @@ class SideNavRail extends StatelessWidget {
                 NavigationRailDestination(
                   icon: const Icon(Icons.code_rounded),
                   selectedIcon: const Icon(Icons.code_rounded),
-                  label: Text(l10n.professional),
+                  label:
+                      Text(l10n.professional, overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),

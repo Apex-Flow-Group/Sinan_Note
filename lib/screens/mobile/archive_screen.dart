@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
@@ -18,9 +19,7 @@ class ArchiveScreen extends StatefulWidget {
   State<ArchiveScreen> createState() => _ArchiveScreenState();
 }
 
-class _ArchiveScreenState extends State<ArchiveScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
   final ViewType _viewType = ViewType.listExpanded;
   String _sortBy = 'date';
   bool _selectionMode = false;
@@ -29,9 +28,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.toLowerCase());
-    });
+    initSearch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NotesProvider>(context, listen: false).fetchArchivedNotes();
     });
@@ -39,7 +36,6 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
 
   @override
   void dispose() {
-    _searchController.dispose();
     UnifiedNotificationService().cancelAll();
     super.dispose();
   }
@@ -47,9 +43,9 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
   List<Note> _filterNotes(List<Note> notes) {
     var filtered = notes.where((note) {
       if (note.isLocked) return false;
-      if (_searchQuery.isEmpty) return true;
-      return note.title.toLowerCase().contains(_searchQuery) ||
-          note.content.toLowerCase().contains(_searchQuery);
+      if (searchQuery.isEmpty) return true;
+      return note.title.toLowerCase().contains(searchQuery) ||
+          note.content.toLowerCase().contains(searchQuery);
     }).toList();
 
     if (_sortBy == 'title') {
@@ -60,12 +56,8 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
     return filtered;
   }
 
-  bool get _isSearchActive => _searchController.text.isNotEmpty;
-
-  void _exitSearch() {
-    _searchController.clear();
-    setState(() => _searchQuery = '');
-  }
+  bool get _isSearchActive => isSearchActive;
+  void _exitSearch() => exitSearch();
 
   void _restoreSelected() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
@@ -164,10 +156,10 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                   ),
             title: _selectionMode
                 ? Text('${_selectedNoteIds.length} ${l10n.selected}')
-                : _searchController.text.isEmpty
+                : searchController.text.isEmpty
                     ? Text(l10n.archive)
                     : TextField(
-                        controller: _searchController,
+                        controller: searchController,
                         autofocus: true,
                         decoration: InputDecoration(
                           hintText: l10n.searchNotes,
@@ -204,15 +196,15 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                 ),
               ] else ...[
                 IconButton(
-                  icon: Icon(_searchController.text.isEmpty
+                  icon: Icon(searchController.text.isEmpty
                       ? Icons.search
                       : Icons.close),
                   onPressed: () {
                     setState(() {
-                      if (_searchController.text.isEmpty) {
-                        _searchController.text = ' ';
+                      if (searchController.text.isEmpty) {
+                        searchController.text = ' ';
                       } else {
-                        _searchController.clear();
+                        searchController.clear();
                       }
                     });
                   },

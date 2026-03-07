@@ -3,6 +3,7 @@
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
@@ -19,19 +20,13 @@ class TrashScreen extends StatefulWidget {
   State<TrashScreen> createState() => _TrashScreenState();
 }
 
-class _TrashScreenState extends State<TrashScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+class _TrashScreenState extends State<TrashScreen> with SearchMixin {
   bool _selectionMode = false;
   final Set<int> _selectedNotes = {};
   String _sortBy = 'date';
 
-  bool get _isSearchActive => _searchController.text.isNotEmpty;
-
-  void _exitSearch() {
-    _searchController.clear();
-    setState(() => _searchQuery = '');
-  }
+  bool get _isSearchActive => isSearchActive;
+  void _exitSearch() => exitSearch();
 
   Color _getTextColor(int colorIndex) {
     final brightness = Theme.of(context).brightness;
@@ -43,9 +38,7 @@ class _TrashScreenState extends State<TrashScreen> {
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.toLowerCase());
-    });
+    initSearch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NotesProvider>(context, listen: false).fetchTrashNotes();
     });
@@ -53,16 +46,15 @@ class _TrashScreenState extends State<TrashScreen> {
 
   @override
   void dispose() {
-    _searchController.dispose();
     UnifiedNotificationService().cancelAll();
     super.dispose();
   }
 
   List<Note> _filterNotes(List<Note> notes) {
     var filtered = notes.where((note) {
-      if (_searchQuery.isEmpty) return true;
-      return note.title.toLowerCase().contains(_searchQuery) ||
-          note.content.toLowerCase().contains(_searchQuery);
+      if (searchQuery.isEmpty) return true;
+      return note.title.toLowerCase().contains(searchQuery) ||
+          note.content.toLowerCase().contains(searchQuery);
     }).toList();
 
     if (_sortBy == 'title') {
@@ -202,10 +194,10 @@ class _TrashScreenState extends State<TrashScreen> {
                     ),
               title: _selectionMode
                   ? Text('${_selectedNotes.length} ${l10n.selected}')
-                  : _searchController.text.isEmpty
+                  : searchController.text.isEmpty
                       ? Text(l10n.trash)
                       : TextField(
-                          controller: _searchController,
+                          controller: searchController,
                           autofocus: true,
                           decoration: InputDecoration(
                             hintText: l10n.searchNotes,
@@ -215,43 +207,54 @@ class _TrashScreenState extends State<TrashScreen> {
               actions: [
                 if (_selectionMode) ...[
                   IconButton(
-                    icon: Icon(Icons.restore, color: _selectedNotes.isNotEmpty ? Colors.green : Colors.grey),
-                    onPressed: _selectedNotes.isNotEmpty ? () => _restoreSelectedNotes(
-                        notesProvider, trashedNotes, l10n) : null,
+                    icon: Icon(Icons.restore,
+                        color: _selectedNotes.isNotEmpty
+                            ? Colors.green
+                            : Colors.grey),
+                    onPressed: _selectedNotes.isNotEmpty
+                        ? () => _restoreSelectedNotes(
+                            notesProvider, trashedNotes, l10n)
+                        : null,
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete_forever, color: _selectedNotes.isNotEmpty ? Colors.red : Colors.grey),
-                    onPressed: _selectedNotes.isNotEmpty ? () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: Text(l10n.permanentDelete),
-                          content: Text(
-                              '${l10n.confirmPermanentDeleteMultiple} ${_selectedNotes.length} ${l10n.notesQuestion}'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              child: Text(l10n.cancel),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: Text(l10n.delete,
-                                  style: const TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        final ids = List<int>.from(_selectedNotes);
-                        setState(() {
-                          _selectionMode = false;
-                          _selectedNotes.clear();
-                        });
-                        for (var id in ids) {
-                          await notesProvider.deleteNote(id);
-                        }
-                      }
-                    } : null,
+                    icon: Icon(Icons.delete_forever,
+                        color: _selectedNotes.isNotEmpty
+                            ? Colors.red
+                            : Colors.grey),
+                    onPressed: _selectedNotes.isNotEmpty
+                        ? () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text(l10n.permanentDelete),
+                                content: Text(
+                                    '${l10n.confirmPermanentDeleteMultiple} ${_selectedNotes.length} ${l10n.notesQuestion}'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text(l10n.cancel),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text(l10n.delete,
+                                        style:
+                                            const TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              final ids = List<int>.from(_selectedNotes);
+                              setState(() {
+                                _selectionMode = false;
+                                _selectedNotes.clear();
+                              });
+                              for (var id in ids) {
+                                await notesProvider.deleteNote(id);
+                              }
+                            }
+                          }
+                        : null,
                   ),
                   IconButton(
                     icon: Icon(
@@ -273,15 +276,15 @@ class _TrashScreenState extends State<TrashScreen> {
                   ),
                 ] else ...[
                   IconButton(
-                    icon: Icon(_searchController.text.isEmpty
+                    icon: Icon(searchController.text.isEmpty
                         ? Icons.search
                         : Icons.close),
                     onPressed: () {
                       setState(() {
-                        if (_searchController.text.isEmpty) {
-                          _searchController.text = ' ';
+                        if (searchController.text.isEmpty) {
+                          searchController.text = ' ';
                         } else {
-                          _searchController.clear();
+                          searchController.clear();
                         }
                       });
                     },
@@ -377,7 +380,7 @@ class _TrashScreenState extends State<TrashScreen> {
                             size: 80, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          _searchController.text.isEmpty
+                          searchController.text.isEmpty
                               ? (l10n.emptyTrash)
                               : (l10n.noResults),
                           style:

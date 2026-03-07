@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -183,7 +182,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                       showMenu: _showAddMenu,
                       onToggle: _toggleMenu,
                       onModeSelected: (mode) {
-                        _toggleMenu();
                         _onModeSelected?.call(mode);
                       },
                     ),

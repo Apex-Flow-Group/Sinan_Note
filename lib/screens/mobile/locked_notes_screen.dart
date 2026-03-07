@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -26,8 +27,7 @@ class LockedNotesScreen extends StatefulWidget {
 }
 
 class _LockedNotesScreenState extends State<LockedNotesScreen>
-    with WidgetsBindingObserver {
-  final TextEditingController _searchController = TextEditingController();
+    with WidgetsBindingObserver, SearchMixin {
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
   final ViewType _viewType = ViewType.listExpanded;
   bool _isLoading = true;
@@ -40,7 +40,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _searchController.clear();
+    initSearch();
+    searchController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _providerRef = Provider.of<NotesProvider>(context, listen: false);
       _loadLockedNotes();
@@ -51,7 +52,6 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _searchController.dispose();
     _closeAllSlidables.dispose();
     super.dispose();
   }
@@ -451,7 +451,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
-      canPop: _selectedNoteIds.isEmpty && _searchController.text.isEmpty,
+      canPop: _selectedNoteIds.isEmpty && searchController.text.isEmpty,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
           _providerRef?.clearLockedSession(notify: false);
@@ -461,8 +461,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         }
         if (_selectedNoteIds.isNotEmpty) {
           setState(() => _selectedNoteIds.clear());
-        } else if (_searchController.text.isNotEmpty) {
-          setState(() => _searchController.clear());
+        } else if (searchController.text.isNotEmpty) {
+          setState(() => searchController.clear());
         }
       },
       child: Scaffold(
@@ -560,7 +560,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                     ),
                   ],
                 )
-              : _searchController.text.isEmpty
+              : searchController.text.isEmpty
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -570,7 +570,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                       ],
                     )
                   : TextField(
-                      controller: _searchController,
+                      controller: searchController,
                       autofocus: true,
                       decoration: InputDecoration(
                         hintText: l10n.searchNotes,
@@ -590,15 +590,15 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                     onPressed: _showImportSheet,
                   ),
                   IconButton(
-                    icon: Icon(_searchController.text.isEmpty
+                    icon: Icon(searchController.text.isEmpty
                         ? Icons.search
                         : Icons.close),
                     onPressed: () {
                       setState(() {
-                        if (_searchController.text.isEmpty) {
-                          _searchController.text = ' ';
+                        if (searchController.text.isEmpty) {
+                          searchController.text = ' ';
                         } else {
-                          _searchController.clear();
+                          searchController.clear();
                         }
                       });
                     },
@@ -625,7 +625,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                   )
                 : Builder(
                     builder: (context) {
-                      final query = _searchController.text.toLowerCase();
+                      final query = searchController.text.toLowerCase();
                       final filteredNotes = _decryptedNotes
                           .where((note) => !note.isArchived && !note.isTrashed)
                           .where((note) {

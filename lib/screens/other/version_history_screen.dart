@@ -8,8 +8,94 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/version_history_service.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+// ── Diff types ───────────────────────────────────────────────────────────────
+enum _DiffType { equal, added, removed }
+
+class _DiffSpan {
+  final _DiffType type;
+  final String text;
+  const _DiffSpan(this.type, this.text);
+}
+
+List<_DiffSpan> _computeDiff(String oldText, String newText) {
+  final a = oldText.split(RegExp(r'(?<=\s)|(?=\s)'));
+  final b = newText.split(RegExp(r'(?<=\s)|(?=\s)'));
+  final m = a.length, n = b.length;
+  final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
+  for (var i = m - 1; i >= 0; i--) {
+    for (var j = n - 1; j >= 0; j--) {
+      if (a[i] == b[j]) {
+        dp[i][j] = dp[i + 1][j + 1] + 1;
+      } else {
+        dp[i][j] = dp[i + 1][j] > dp[i][j + 1] ? dp[i + 1][j] : dp[i][j + 1];
+      }
+    }
+  }
+  final spans = <_DiffSpan>[];
+  var i = 0, j = 0;
+  while (i < m && j < n) {
+    if (a[i] == b[j]) {
+      spans.add(_DiffSpan(_DiffType.equal, a[i]));
+      i++;
+      j++;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      spans.add(_DiffSpan(_DiffType.removed, a[i]));
+      i++;
+    } else {
+      spans.add(_DiffSpan(_DiffType.added, b[j]));
+      j++;
+    }
+  }
+  while (i < m) {
+    spans.add(_DiffSpan(_DiffType.removed, a[i++]));
+  }
+  while (j < n) {
+    spans.add(_DiffSpan(_DiffType.added, b[j++]));
+  }
+  return spans;
+}
+
+class _DiffView extends StatelessWidget {
+  final List<_DiffSpan> spans;
+  const _DiffView({required this.spans});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        children: spans.map((s) {
+          switch (s.type) {
+            case _DiffType.added:
+              return TextSpan(
+                text: s.text,
+                style: const TextStyle(
+                  color: Color(0xFF2E7D32),
+                  backgroundColor: Color(0xFFE8F5E9),
+                  fontWeight: FontWeight.w500,
+                ),
+              );
+            case _DiffType.removed:
+              return TextSpan(
+                text: s.text,
+                style: const TextStyle(
+                  color: Color(0xFFC62828),
+                  backgroundColor: Color(0xFFFFEBEE),
+                  decoration: TextDecoration.lineThrough,
+                ),
+              );
+            case _DiffType.equal:
+              return TextSpan(text: s.text);
+          }
+        }).toList(),
+      ),
+      style: const TextStyle(fontSize: 14, height: 1.6),
+    );
+  }
+}
 
 class VersionHistoryScreen extends StatefulWidget {
   const VersionHistoryScreen({super.key});
@@ -485,27 +571,51 @@ class _VersionsBottomSheet extends StatelessWidget {
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(12),
-                        leading: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: actionColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(actionIcon, color: actionColor, size: 22),
-                        ),
-                        title: Text(
-                          version.title.isEmpty ? l10n.untitled : version.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle:
-                            Text(timeAgo, style: const TextStyle(fontSize: 12)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
                           children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: actionColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(actionIcon,
+                                  color: actionColor, size: 22),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    version.title.isEmpty
+                                        ? l10n.untitled
+                                        : version.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(timeAgo,
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey)),
+                                ],
+                              ),
+                            ),
+                            if (index < versions.length - 1)
+                              IconButton(
+                                icon: const Icon(Icons.compare, size: 20),
+                                tooltip: l10n.preview,
+                                onPressed: () => _showDiffDialog(
+                                  context,
+                                  versions[index + 1],
+                                  version,
+                                  l10n,
+                                ),
+                              ),
                             IconButton(
                               icon: const Icon(Icons.visibility_outlined,
                                   size: 20),
@@ -561,9 +671,102 @@ class _VersionsBottomSheet extends StatelessWidget {
     }
   }
 
+  void _showDiffDialog(BuildContext context, NoteVersion older,
+      NoteVersion newer, AppLocalizations l10n) {
+    final oldText = ChecklistFormatter.isValidChecklist(older.content)
+        ? ChecklistFormatter.toDisplayText(older.content)
+        : older.content;
+    final newText = ChecklistFormatter.isValidChecklist(newer.content)
+        ? ChecklistFormatter.toDisplayText(newer.content)
+        : newer.content;
+    final spans = _computeDiff(oldText, newText);
+
+    final screenSize = MediaQuery.of(context).size;
+    final isSmall = screenSize.width < 600;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isSmall ? 16 : 40,
+          vertical: isSmall ? 24 : 40,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 600,
+            maxHeight: screenSize.height * 0.8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.compare, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(l10n.preview,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              // Legend
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    _legendDot(
+                        const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+                    const SizedBox(width: 4),
+                    Text(l10n.added, style: const TextStyle(fontSize: 12)),
+                    const SizedBox(width: 12),
+                    _legendDot(
+                        const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+                    const SizedBox(width: 4),
+                    Text(l10n.deleted, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Diff content - scrollable
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: double.maxFinite,
+                    child: _DiffView(spans: spans),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _legendDot(Color fg, Color bg) => Container(
+        width: 14,
+        height: 14,
+        decoration: BoxDecoration(
+          color: bg,
+          shape: BoxShape.circle,
+          border: Border.all(color: fg, width: 1.5),
+        ),
+      );
+
   void _showVersionPreview(
       BuildContext context, NoteVersion version, AppLocalizations l10n) {
-    // ✅ Format checklist content for preview
     final isChecklist = ChecklistFormatter.isValidChecklist(version.content);
     final displayContent = isChecklist
         ? ChecklistFormatter.toDisplayText(version.content)
@@ -574,7 +777,10 @@ class _VersionsBottomSheet extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: Text(version.title.isEmpty ? l10n.untitled : version.title),
         content: SingleChildScrollView(
-          child: Text(displayContent.isEmpty ? l10n.noHistory : displayContent),
+          child: isChecklist
+              ? NoteCardUtils.buildChecklistPreview(
+                  version.content, Theme.of(ctx).textTheme.bodyMedium!.color!)
+              : Text(displayContent.isEmpty ? l10n.noHistory : displayContent),
         ),
         actions: [
           TextButton(

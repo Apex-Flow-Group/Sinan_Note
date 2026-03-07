@@ -66,7 +66,12 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
     final bool isVisible = widget.showMenu || _controller.isAnimating;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Stack(
+    return PopScope(
+      canPop: !widget.showMenu,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && widget.showMenu) widget.onToggle();
+      },
+      child: Stack(
       children: [
         // Background Blur - Excludes bottom navigation bar
         Positioned(
@@ -139,6 +144,7 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
           ),
         ),
       ],
+    ),
     );
   }
 

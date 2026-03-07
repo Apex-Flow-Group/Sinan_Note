@@ -40,7 +40,8 @@ List<_DiffSpan> _computeDiff(String oldText, String newText) {
   while (i < m && j < n) {
     if (a[i] == b[j]) {
       spans.add(_DiffSpan(_DiffType.equal, a[i]));
-      i++; j++;
+      i++;
+      j++;
     } else if (dp[i + 1][j] >= dp[i][j + 1]) {
       spans.add(_DiffSpan(_DiffType.removed, a[i]));
       i++;
@@ -49,8 +50,12 @@ List<_DiffSpan> _computeDiff(String oldText, String newText) {
       j++;
     }
   }
-  while (i < m) { spans.add(_DiffSpan(_DiffType.removed, a[i++])); }
-  while (j < n) { spans.add(_DiffSpan(_DiffType.added, b[j++])); }
+  while (i < m) {
+    spans.add(_DiffSpan(_DiffType.removed, a[i++]));
+  }
+  while (j < n) {
+    spans.add(_DiffSpan(_DiffType.added, b[j++]));
+  }
   return spans;
 }
 
@@ -125,55 +130,94 @@ class NoteHistorySheet extends StatelessWidget {
     }
   }
 
-  void _showDiffDialog(BuildContext context, NoteVersion version, String newerContent) {
+  void _showDiffDialog(
+      BuildContext context, NoteVersion version, String newerContent) {
     final l10n = AppLocalizations.of(context)!;
-    final spans = _computeDiff(version.content, newerContent);
+    final oldText = ChecklistFormatter.isValidChecklist(version.content)
+        ? ChecklistFormatter.toDisplayText(version.content)
+        : version.content;
+    final newText = ChecklistFormatter.isValidChecklist(newerContent)
+        ? ChecklistFormatter.toDisplayText(newerContent)
+        : newerContent;
+    final spans = _computeDiff(oldText, newText);
+
+    final screenSize = MediaQuery.of(context).size;
+    final isSmall = screenSize.width < 600;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.compare, size: 20),
-            const SizedBox(width: 8),
-            Text(l10n.preview, style: const TextStyle(fontSize: 16)),
-          ],
+      builder: (ctx) => Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isSmall ? 16 : 40,
+          vertical: isSmall ? 24 : 40,
         ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 600,
+            maxHeight: screenSize.height * 0.8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
+                child: Row(
                   children: [
-                    _legendDot(const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+                    const Icon(Icons.compare, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(l10n.preview,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    _legendDot(
+                        const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
                     const SizedBox(width: 4),
                     Text(l10n.added, style: const TextStyle(fontSize: 12)),
                     const SizedBox(width: 12),
-                    _legendDot(const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+                    _legendDot(
+                        const Color(0xFFC62828), const Color(0xFFFFEBEE)),
                     const SizedBox(width: 4),
                     Text(l10n.deleted, style: const TextStyle(fontSize: 12)),
                   ],
                 ),
-                const Divider(height: 16),
-                _DiffView(spans: spans),
-              ],
-            ),
+              ),
+              const Divider(height: 1),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: double.maxFinite,
+                    child: _DiffView(spans: spans),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.close),
-          ),
-        ],
       ),
     );
   }
 
   Widget _legendDot(Color fg, Color bg) => Container(
-        width: 14, height: 14,
-        decoration: BoxDecoration(color: bg, shape: BoxShape.circle,
+        width: 14,
+        height: 14,
+        decoration: BoxDecoration(
+            color: bg,
+            shape: BoxShape.circle,
             border: Border.all(color: fg, width: 1.5)),
       );
 
@@ -259,9 +303,14 @@ class NoteHistorySheet extends StatelessWidget {
                     final item = history[index];
                     final date = item.timestamp;
                     final isCreate = item.action == 'create';
-                    final contentPreview = item.content.replaceAll('\n', ' ');
+                    final rawContent =
+                        ChecklistFormatter.isValidChecklist(item.content)
+                            ? ChecklistFormatter.toDisplayText(item.content)
+                            : item.content;
+                    final contentPreview = rawContent.replaceAll('\n', ' ');
                     // newerContent: النسخة الأحدث منها (index-1) أو نفسها إن كانت الأحدث
-                    final newerContent = index == 0 ? item.content : history[index - 1].content;
+                    final newerContent =
+                        index == 0 ? item.content : history[index - 1].content;
 
                     return ListTile(
                       leading: CircleAvatar(
@@ -283,7 +332,7 @@ class NoteHistorySheet extends StatelessWidget {
                           Text(
                             "${date.year}-${date.month}-${date.day}  ${date.hour}:${date.minute}",
                             style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
+                                fontSize: 13, color: Colors.grey),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -291,9 +340,10 @@ class NoteHistorySheet extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
+                              fontSize: 14,
                               color: Theme.of(context)
                                   .textTheme
-                                  .bodySmall
+                                  .bodyMedium
                                   ?.color
                                   ?.withValues(alpha: 0.7),
                             ),
@@ -307,17 +357,20 @@ class NoteHistorySheet extends StatelessWidget {
                             IconButton(
                               icon: const Icon(Icons.compare, size: 20),
                               tooltip: l10n.preview,
-                              onPressed: () => _showDiffDialog(context, item, newerContent),
+                              onPressed: () =>
+                                  _showDiffDialog(context, item, newerContent),
                             ),
                           IconButton(
                             icon: const Icon(Icons.copy, size: 20),
                             onPressed: () {
                               final textToCopy =
-                                  ChecklistFormatter.isValidChecklist(item.content)
+                                  ChecklistFormatter.isValidChecklist(
+                                          item.content)
                                       ? ChecklistFormatter.formatForSharing(
                                           '', item.content)
                                       : item.content;
-                              Clipboard.setData(ClipboardData(text: textToCopy));
+                              Clipboard.setData(
+                                  ClipboardData(text: textToCopy));
                               Navigator.pop(context);
                               UnifiedNotificationService().show(
                                 context: context,

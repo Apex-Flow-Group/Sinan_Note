@@ -64,8 +64,6 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
     super.dispose();
   }
 
-
-
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate() || !_privacyAccepted) return;
 
@@ -77,13 +75,18 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       final subject = _subjectController.text;
       final category = _selectedCategory ?? 'Other';
 
-      final body = 'Name: $name\nCategory: $category\n\nMessage:\n${_bodyController.text}';
+      final body =
+          'Name: $name\nCategory: $category\n\nMessage:\n${_bodyController.text}';
 
-      final String encodedSubject = Uri.encodeComponent('[Sinan Note Support] $subject');
+      final String encodedSubject =
+          Uri.encodeComponent('[Sinan Note Support] $subject');
       final String encodedBody = Uri.encodeComponent(body);
-      final Uri emailUri = Uri.parse('mailto:$_appEmail?subject=$encodedSubject&body=$encodedBody');
+      final Uri emailUri = Uri.parse(
+          'mailto:$_appEmail?subject=$encodedSubject&body=$encodedBody');
 
-      await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      final launched =
+          await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      if (!launched) throw Exception('no_email_app');
       if (mounted) {
         _clearForm();
         UnifiedNotificationService().show(
@@ -94,9 +97,14 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final isNoApp = e.toString().contains('no_email_app') ||
+            e.toString().contains('channel-error') ||
+            e.toString().contains('Unable to establish');
         UnifiedNotificationService().show(
           context: context,
-          message: '${l10n.supportMessageFailed}: $e',
+          message: isNoApp
+              ? l10n.supportMessageFailed
+              : '${l10n.supportMessageFailed}: $e',
           type: NotificationType.error,
         );
       }
@@ -127,7 +135,8 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
             children: [
               _buildDialogSection(l10n.supportTerms, l10n.supportTermsDesc),
               const SizedBox(height: 16),
-              _buildDialogSection(l10n.supportSharedData, l10n.supportSharedDataDesc),
+              _buildDialogSection(
+                  l10n.supportSharedData, l10n.supportSharedDataDesc),
               const SizedBox(height: 16),
               _buildDialogSection(l10n.supportReason, l10n.supportReasonDesc),
             ],
@@ -159,8 +168,6 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       ],
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -198,129 +205,130 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
             child: Form(
               key: _formKey,
               child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.appDescription,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _nameController,
-                label: l10n.title,
-                icon: Icons.person,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.fillAllFields;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              _buildDropdown(
-                label: l10n.supportCategory,
-                value: _selectedCategory,
-                items: categories,
-                onChanged: (value) => setState(() => _selectedCategory = value),
-                validator: (value) {
-                  if (value == null) {
-                    return l10n.fillAllFields;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _subjectController,
-                label: l10n.supportSubject,
-                icon: Icons.subject,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.fillAllFields;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _bodyController,
-                label: l10n.supportMessage,
-                icon: Icons.description,
-                maxLines: 6,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.fillAllFields;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 32),
-              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.privacyAndData,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    l10n.appDescription,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.privacyDescription,
-                    style: const TextStyle(fontSize: 13),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _nameController,
+                    label: l10n.title,
+                    icon: Icons.person,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.fillAllFields;
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: _showPrivacyDialog,
-                    child: Text(
-                      l10n.readPrivacyPolicy,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.primary,
-                        decoration: TextDecoration.underline,
+                  const SizedBox(height: 16),
+                  _buildDropdown(
+                    label: l10n.supportCategory,
+                    value: _selectedCategory,
+                    items: categories,
+                    onChanged: (value) =>
+                        setState(() => _selectedCategory = value),
+                    validator: (value) {
+                      if (value == null) {
+                        return l10n.fillAllFields;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _subjectController,
+                    label: l10n.supportSubject,
+                    icon: Icons.subject,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.fillAllFields;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _bodyController,
+                    label: l10n.supportMessage,
+                    icon: Icons.description,
+                    maxLines: 6,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.fillAllFields;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.privacyAndData,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.privacyDescription,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: _showPrivacyDialog,
+                        child: Text(
+                          l10n.readPrivacyPolicy,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _privacyAccepted,
+                        onChanged: (val) {
+                          if (val != null) _savePrivacyConsent(val);
+                        },
+                        title: Text(l10n.agreeToPolicy),
+                        activeColor: colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _canSend ? _submitFeedback : null,
+                      icon: _isLoading
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(
+                                  colorScheme.onPrimary,
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.send),
+                      label: Text(
+                        _isLoading ? l10n.autoSaved : l10n.send,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _privacyAccepted,
-                    onChanged: (val) {
-                      if (val != null) _savePrivacyConsent(val);
-                    },
-                    title: Text(l10n.agreeToPolicy),
-                    activeColor: colorScheme.primary,
-                  ),
                 ],
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _canSend ? _submitFeedback : null,
-                  icon: _isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(
-                              colorScheme.onPrimary,
-                            ),
-                          ),
-                        )
-                      : const Icon(Icons.send),
-                  label: Text(
-                    _isLoading ? l10n.autoSaved : l10n.send,
-                  ),
-                ),
-              ),
-              ],
             ),
           ),
         ),
-      ),
       ),
     );
   }
