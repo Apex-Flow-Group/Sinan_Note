@@ -2,8 +2,7 @@
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class GoogleDriveSyncTermsScreen extends StatefulWidget {
   const GoogleDriveSyncTermsScreen({super.key});
@@ -195,7 +194,13 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                     // Privacy policy link
                     Center(
                       child: TextButton.icon(
-                        onPressed: () => _showPrivacyPolicy(context),
+                        onPressed: () {
+                          final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+                          final url = isArabic
+                              ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
+                              : 'https://apexflow.now/en/projects/sinan-note/privacy';
+                          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                        },
                         icon: const Icon(Icons.privacy_tip),
                         label: Text(l10n.readPrivacyPolicyLink),
                       ),
@@ -261,49 +266,6 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                     ),
                   ),
                 ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showPrivacyPolicy(BuildContext context) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final l10n = AppLocalizations.of(context)!;
-    
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: Column(
-          children: [
-            AppBar(
-              title: Text(l10n.privacyPolicy),
-              automaticallyImplyLeading: false,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            Expanded(
-              child: FutureBuilder<String>(
-                future: rootBundle.loadString(
-                  isArabic 
-                    ? 'assets/legal/PRIVACY_POLICY_AR.md'
-                    : 'assets/legal/PRIVACY_POLICY_EN.md',
-                ),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Markdown(
-                      data: snapshot.data!,
-                      selectable: true,
-                    );
-                  }
-                  return const Center(child: CircularProgressIndicator());
-                },
               ),
             ),
           ],

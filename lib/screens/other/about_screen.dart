@@ -136,7 +136,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 _buildSection(l10n.importantLinks, [
                   _buildLink(
                     l10n.appPageGooglePlay,
-                    'https://play.google.com/store/apps/details?id=com.apexflow.app.sinan',
+                    'https://play.google.com/store/apps/dev?id=5409981776310932919',
                   ),
                   _buildLink(
                     l10n.githubRepository,
@@ -145,14 +145,14 @@ class _AboutScreenState extends State<AboutScreen> {
                   _buildLink(
                     l10n.privacyPolicy,
                     isArabic
-                        ? 'https://docs.google.com/document/d/e/2PACX-1vRVJmMZMx5-mzCV2tqLCz6Nx9usUCH1KHxEHeopj5XTxmGV2CeSFg-TbqEcLtfZNarZ5kHJPlG7DsQg/pub'
-                        : 'https://docs.google.com/document/d/e/2PACX-1vSteJ2fwHp0nBT8vpUHAT1B0OOyRSlkfpwJxW2bLn17fy_9lTKzwOHLmZ4SRljtLxgtXluvkp3qAzNV/pub',
+                        ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
+                        : 'https://apexflow.now/en/projects/sinan-note/privacy',
                   ),
                   _buildLink(
                     l10n.termsOfService,
                     isArabic
-                        ? 'https://docs.google.com/document/d/e/2PACX-1vTWx4FoSMwyeNKLiwll5oJnjvOW10vWT-YH9qrA3TaCkCva62zfwUvP-__Ztys83nBQEaYs8d8JZPZ5/pub'
-                        : 'https://docs.google.com/document/d/e/2PACX-1vTkHjTUla85oqqHOXcN9dxjiC5tkJ-Y-vPd9yUfJIQIS5xWtftxjvio4fFKnedHdX5lHGWEV7ZlsL9z/pub',
+                        ? 'https://apexflow.now/ar/projects/sinan-note/terms'
+                        : 'https://apexflow.now/en/projects/sinan-note/terms',
                   ),
                   _buildLink(l10n.licenses, null, onTap: _showLicenses),
                 ]),

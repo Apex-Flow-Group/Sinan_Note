@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 2.3.0+3310
+version: 2.3.0+3311
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -78,10 +78,6 @@ flutter:
   generate: true
   assets:
     - assets/images/app_icon.png
-    - assets/legal/TERMS_OF_SERVICE_AR.md
-    - assets/legal/TERMS_OF_SERVICE_EN.md
-    - assets/legal/PRIVACY_POLICY_AR.md
-    - assets/legal/PRIVACY_POLICY_EN.md
 
 dependency_overrides:
   quill_native_bridge_windows:
