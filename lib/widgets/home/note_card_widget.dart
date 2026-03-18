@@ -53,9 +53,35 @@ class NoteCardWidget extends StatefulWidget {
 }
 
 class _NoteCardWidgetState extends State<NoteCardWidget> {
+  late String _displayTitle;
+  late String _displayContent;
+  late bool _isChecklist;
+  late bool _shouldShowExt;
+  late String _fileExtension;
+
   @override
   void initState() {
     super.initState();
+    _cacheNoteData();
+  }
+
+  @override
+  void didUpdateWidget(NoteCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.note.updatedAt != widget.note.updatedAt ||
+        oldWidget.note.id != widget.note.id) {
+      _cacheNoteData();
+    }
+  }
+
+  void _cacheNoteData() {
+    _displayTitle = NoteCardUtils.getDisplayTitle(widget.note);
+    _displayContent = NoteCardUtils.fixNoteContent(widget.note.content);
+    _isChecklist = ChecklistFormatter.isValidChecklist(widget.note.content);
+    _shouldShowExt = NoteCardUtils.shouldShowExtension(widget.note.noteType);
+    _fileExtension = _shouldShowExt
+        ? NoteCardUtils.getFileExtension(widget.note.content, widget.note.noteType)
+        : '';
   }
 
 
@@ -67,16 +93,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
 
     final brightness = Theme.of(context).brightness;
     final baseColor = AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
-    
-    // حساب لون الحافة بذكاء
-    final Color borderColor = brightness == Brightness.light
-        ? baseColor.withValues(alpha: 0.4)
-        : Color.lerp(baseColor, Colors.black, 0.3)!;
-    
     final bool isLightColor = baseColor.computeLuminance() > 0.5;
     final Color titleColor = isLightColor ? Colors.black87 : Colors.white;
     final Color contentColor = isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
-
     final bool enableSwipe = !widget.selectionMode && settings.swipeEnabled && !widget.note.isLocked && widget.source != 'archive';
 
     return Padding(
@@ -84,7 +103,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
       child: Slidable(
         key: Key(widget.note.id.toString()),
         groupTag: 'notes_group',
-        closeOnScroll: true,
+        closeOnScroll: false,
         enabled: enableSwipe,
         startActionPane: enableSwipe
             ? ActionPane(
@@ -213,26 +232,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
               HapticFeedback.mediumImpact();
               widget.onLongPress();
             },
-            child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: widget.isSelected
-                        ? Theme.of(context).colorScheme.secondary
-                        : borderColor,
-                    width: 0.8,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0F000000),
-                      blurRadius: 2.0,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: PremiumCardEffect(
+            child: PremiumCardEffect(
                   baseColor: baseColor,
                   enableMotion: settings.cardMotionEnabled,
+                  isSelected: widget.isSelected,
                   child: Stack(
                     children: [
                       Padding(
@@ -245,11 +248,12 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                 Expanded(
                                   child: widget.viewType == ViewType.listCompact
                                       ? Text(
-                                          NoteCardUtils.getDisplayTitle(widget.note),
+                                          _displayTitle,
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
                                               color: titleColor),
+                                          maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         )
                                       : Column(
@@ -257,7 +261,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              NoteCardUtils.getDisplayTitle(widget.note),
+                                              _displayTitle,
                                               style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 16,
@@ -275,10 +279,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                       fontStyle: FontStyle.italic,
                                                     ),
                                                   )
-                                                : ChecklistFormatter.isValidChecklist(widget.note.content)
+                                                : _isChecklist
                                                     ? NoteCardUtils.buildChecklistPreview(widget.note.content, titleColor)
                                                     : Text(
-                                                        NoteCardUtils.fixNoteContent(widget.note.content),
+                                                        _displayContent,
                                                         maxLines: 4,
                                                         overflow: TextOverflow.ellipsis,
                                                         style: TextStyle(
@@ -366,7 +370,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                   ),
                                 ),
                               ),
-                            if (NoteCardUtils.shouldShowExtension(widget.note.noteType))
+                            if (_shouldShowExt)
                               Padding(
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Row(
@@ -391,7 +395,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            NoteCardUtils.getFileExtension(widget.note.content, widget.note.noteType),
+                                            _fileExtension,
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: widget.note.noteType == 'markdown'
@@ -431,7 +435,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                     ],
                   ),  // Stack
                 ),  // PremiumCardEffect
-              ),  // Container
           ),  // GestureDetector
         ),  // Listener
       ),  // SlidableAutoCloser

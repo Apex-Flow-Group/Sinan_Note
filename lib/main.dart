@@ -23,6 +23,7 @@ import 'package:apex_note/services/security/security_gate.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -347,6 +348,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                 ),
               ),
               home: const _AppHome(),
+              scrollBehavior: const _AppScrollBehavior(),
               builder: (context, child) {
                 return child ?? const SizedBox.shrink();
               },
@@ -393,5 +395,37 @@ class _AppHomeState extends State<_AppHome> {
         return const SplashScreen();
       },
     );
+  }
+}
+
+// على Linux/Desktop: يمنع Scrollbar التلقائي من إيقاف الـ scroll عند السحب
+class _AppScrollBehavior extends MaterialScrollBehavior {
+  const _AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+
+  @override
+  Widget buildScrollbar(
+          BuildContext context, Widget child, ScrollableDetails details) {
+    switch (Theme.of(context).platform) {
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+      case TargetPlatform.macOS:
+        return Scrollbar(
+          controller: details.controller,
+          thumbVisibility: false,
+          trackVisibility: false,
+          interactive: true,
+          child: child,
+        );
+      default:
+        return child;
+    }
   }
 }

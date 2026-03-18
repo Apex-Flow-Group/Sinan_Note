@@ -15,36 +15,30 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class BackupService {
+  String _backupFileName() {
+    final now = DateTime.now();
+    return 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.isar';
+  }
+
+  Future<String> _getIsarFilePath() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return join(dir.path, 'sinan_notes.isar');
+  }
+
   Future<void> exportDatabase() async {
     await ApexErrorManager.monitorCritical(() async {
-      final dbService = IsarDatabaseService();
-      final notes = await dbService.getAllNotes();
-      
-      // Create backup data structure
-      Map<String, dynamic> backupData = {
-        'version': '2.0',
-        'notes': notes.map((n) => n.toMap()).toList(),
-      };
-      
-      // Add vault data if vault exists
-      final vaultData = await VaultService.getVaultDataForBackup();
-      if (vaultData != null) {
-        backupData['vault_data'] = vaultData;
-      }
-      
-      final json = jsonEncode(backupData);
-      
-      final now = DateTime.now();
-      final fileName = 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.json';
-      
+      final isarPath = await _getIsarFilePath();
+      if (!await File(isarPath).exists()) throw Exception('ملف قاعدة البيانات غير موجود');
+
+      final fileName = _backupFileName();
       final tempDir = await getTemporaryDirectory();
       final tempPath = join(tempDir.path, fileName);
-      await File(tempPath).writeAsString(json);
-      
+      await File(isarPath).copy(tempPath);
+
       final params = SaveFileDialogParams(
         sourceFilePath: tempPath,
         fileName: fileName,
-        mimeTypesFilter: ['application/json'],
+        mimeTypesFilter: ['application/octet-stream'],
       );
       final result = await FlutterFileDialog.saveFile(params: params);
       if (result == null) throw Exception('تم إلغاء الحفظ');
@@ -53,60 +47,28 @@ class BackupService {
 
   Future<String> exportDatabaseToPath(String directoryPath) async {
     return await ApexErrorManager.monitorCritical(() async {
-      final dbService = IsarDatabaseService();
-      final notes = await dbService.getAllNotes();
-      
-      // Create backup data structure
-      Map<String, dynamic> backupData = {
-        'version': '2.0',
-        'notes': notes.map((n) => n.toMap()).toList(),
-      };
-      
-      // Add vault data if vault exists
-      final vaultData = await VaultService.getVaultDataForBackup();
-      if (vaultData != null) {
-        backupData['vault_data'] = vaultData;
-      }
-      
-      final json = jsonEncode(backupData);
-      
-      final now = DateTime.now();
-      final fileName = 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.json';
+      final isarPath = await _getIsarFilePath();
+      if (!await File(isarPath).exists()) throw Exception('ملف قاعدة البيانات غير موجود');
+
+      final fileName = _backupFileName();
       final outputPath = join(directoryPath, fileName);
-      
-      await File(outputPath).writeAsString(json);
+      await File(isarPath).copy(outputPath);
       return outputPath;
     }, 'Backup_ExportToPath');
   }
 
   Future<void> shareDatabase() async {
     try {
-      final dbService = IsarDatabaseService();
-      final notes = await dbService.getAllNotes();
-      
-      // Create backup data structure
-      Map<String, dynamic> backupData = {
-        'version': '2.0',
-        'notes': notes.map((n) => n.toMap()).toList(),
-      };
-      
-      // Add vault data if vault exists
-      final vaultData = await VaultService.getVaultDataForBackup();
-      if (vaultData != null) {
-        backupData['vault_data'] = vaultData;
-      }
-      
-      final json = jsonEncode(backupData);
-      
-      final now = DateTime.now();
-      final fileName = 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.json';
-      
+      final isarPath = await _getIsarFilePath();
+      if (!await File(isarPath).exists()) throw Exception('ملف قاعدة البيانات غير موجود');
+
+      final fileName = _backupFileName();
       final tempDir = await getTemporaryDirectory();
       final tempPath = join(tempDir.path, fileName);
-      await File(tempPath).writeAsString(json);
-      
+      await File(isarPath).copy(tempPath);
+
       await Share.shareXFiles(
-        [XFile(tempPath, mimeType: 'application/json', name: fileName)],
+        [XFile(tempPath, mimeType: 'application/octet-stream', name: fileName)],
         subject: 'نسخة احتياطية - Sinan Note',
         text: 'احفظ هذا الملف في مكان آمن لاستعادة بياناتك لاحقاً.',
       );

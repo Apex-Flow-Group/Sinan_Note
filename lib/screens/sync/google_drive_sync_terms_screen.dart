@@ -2,7 +2,7 @@
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 class GoogleDriveSyncTermsScreen extends StatefulWidget {
   const GoogleDriveSyncTermsScreen({super.key});
@@ -194,12 +194,13 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                     // Privacy policy link
                     Center(
                       child: TextButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           final isArabic = Localizations.localeOf(context).languageCode == 'ar';
                           final url = isArabic
                               ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
                               : 'https://apexflow.now/en/projects/sinan-note/privacy';
-                          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                          await const MethodChannel('com.apexflow.app.sinan/launcher')
+                              .invokeMethod('launch', url);
                         },
                         icon: const Icon(Icons.privacy_tip),
                         label: Text(l10n.readPrivacyPolicyLink),

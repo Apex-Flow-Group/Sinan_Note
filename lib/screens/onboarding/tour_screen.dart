@@ -2,9 +2,9 @@
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/onboarding/terms_screen.dart';
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 /// Max content width for large screens (tablets/desktop)
@@ -252,10 +252,21 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
-  void _openTerms() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const TermsScreen()),
-    );
+  static const _channel = MethodChannel('com.apexflow.app.sinan/launcher');
+
+  void _openTerms() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final systemLocale =
+        View.of(context).platformDispatcher.locale.languageCode;
+    final currentLang = settings.languageCode == 'system'
+        ? systemLocale
+        : settings.languageCode;
+    final url = currentLang == 'ar'
+        ? 'https://apexflow.now/ar/projects/sinan-note/terms'
+        : 'https://apexflow.now/en/projects/sinan-note/terms';
+    try {
+      await _channel.invokeMethod('launch', url);
+    } catch (_) {}
   }
 
   Widget _buildPage7(BuildContext context) {

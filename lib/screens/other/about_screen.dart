@@ -2,8 +2,8 @@
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -14,6 +14,7 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   String _version = '...';
+  bool _isLaunching = false;
 
   @override
   void initState() {
@@ -34,12 +35,16 @@ class _AboutScreenState extends State<AboutScreen> {
     }
   }
 
+  static const _channel = MethodChannel('com.apexflow.app.sinan/launcher');
+
   Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
+    if (_isLaunching) return;
+    setState(() => _isLaunching = true);
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      // Failed to launch URL
+      await _channel.invokeMethod('launch', url);
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _isLaunching = false);
     }
   }
 
@@ -279,24 +284,28 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   Widget _buildLink(String title, String? url, {VoidCallback? onTap}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: GestureDetector(
-        onTap: onTap ?? () => url != null ? _launchUrl(url) : null,
+    final color = Theme.of(context).colorScheme.primary;
+    final effectiveOnTap = onTap ?? (url != null ? () => _launchUrl(url) : null);
+    return InkWell(
+      onTap: _isLaunching ? null : effectiveOnTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Row(
           children: [
-            const Icon(Icons.link, size: 18, color: Colors.blue),
+            Icon(Icons.link, size: 18, color: color),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.blue,
+                style: TextStyle(
+                  color: color,
                   decoration: TextDecoration.underline,
+                  decorationColor: color,
                 ),
               ),
             ),
-            const Icon(Icons.arrow_outward, size: 16, color: Colors.blue),
+            Icon(Icons.arrow_outward, size: 16, color: color),
           ],
         ),
       ),

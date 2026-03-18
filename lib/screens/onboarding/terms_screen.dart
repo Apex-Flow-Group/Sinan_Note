@@ -2,7 +2,7 @@
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 class TermsScreen extends StatelessWidget {
   const TermsScreen({super.key});
@@ -26,8 +26,10 @@ class TermsScreen extends StatelessWidget {
               const Icon(Icons.open_in_browser, size: 48, color: Colors.blue),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: () => launchUrl(Uri.parse(url),
-                    mode: LaunchMode.externalApplication),
+                onPressed: () async {
+                  await const MethodChannel('com.apexflow.app.sinan/launcher')
+                      .invokeMethod('launch', url);
+                },
                 icon: const Icon(Icons.launch),
                 label: Text(l10n.termsOfService),
               ),

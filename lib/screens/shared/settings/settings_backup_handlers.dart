@@ -316,8 +316,7 @@ class SettingsBackupHandlers {
       final fileName = result.files.single.name;
 
       // 🔍 Auto-detect file type
-      final isDatabase =
-          fileName.endsWith('.isar') || fileName.contains('backup');
+      final isDatabase = fileName.endsWith('.isar');
 
       if (!context.mounted) return;
       if (isDatabase) {
@@ -584,6 +583,7 @@ class SettingsBackupHandlers {
 
       // Check if there are existing notes
       final dbService = IsarDatabaseService();
+      await IsarDatabaseService.initialize();
       final localCount = await BackupService().checkLocalNotesCount();
 
       if (localCount == 0) {
@@ -651,6 +651,7 @@ class SettingsBackupHandlers {
 
       if (action == 'cancel' || action == null) return;
 
+      await IsarDatabaseService.initialize();
       final isar = await dbService.database;
 
       if (action == 'replace') {

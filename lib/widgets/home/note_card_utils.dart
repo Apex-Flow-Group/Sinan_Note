@@ -36,11 +36,14 @@ class NoteCardUtils {
     return hsl.withLightness((hsl.lightness - 0.15).clamp(0.0, 1.0)).toColor();
   }
 
-  static String fixNoteContent(String content) {
+  static String fixNoteContent(String content, {int maxChars = 300}) {
     if (ChecklistFormatter.isValidChecklist(content)) {
       return ChecklistFormatter.toDisplayText(content);
     }
-    return content;
+    if (content.length <= maxChars) return content;
+    final runes = content.runes.toList();
+    if (runes.length <= maxChars) return content;
+    return String.fromCharCodes(runes.take(maxChars));
   }
 
   static String getDisplayTitle(Note note) {

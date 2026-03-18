@@ -413,7 +413,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                         controller: _notesScrollController,
                         slivers: [
                           NotesGridView(
-                            viewType: _viewType,
+                            viewTypeNotifier: _viewTypeNotifier,
                             selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
                             searchController: _searchController,
                             scrollController: _notesScrollController,
@@ -659,8 +659,12 @@ class _SearchFieldState extends State<_SearchField> {
     super.dispose();
   }
 
-  void _onChanged() => setState(() {});
-  void _onFocusChanged() => setState(() {});
+  void _onChanged() {
+    setState(() {});
+  }
+  void _onFocusChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {

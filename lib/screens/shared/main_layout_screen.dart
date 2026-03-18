@@ -136,10 +136,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
-    final notesProvider = Provider.of<NotesProvider>(context);
-    final bool showBottomBar =
-        settings.isSetupCompleted || notesProvider.isInitialDataLoaded;
+    final bool showBottomBar = context.select<SettingsProvider, bool>((s) => s.isSetupCompleted) ||
+        context.select<NotesProvider, bool>((n) => n.isInitialDataLoaded);
     final isRTL = Directionality.of(context) == TextDirection.rtl;
     final isLargeScreen = MediaQuery.of(context).size.width >= 600;
 

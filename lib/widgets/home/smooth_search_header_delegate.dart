@@ -1,7 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -24,48 +22,19 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final double progress = shrinkOffset / expandedHeight;
-    final double curvedProgress =
-        Curves.easeInOutCubic.transform(progress.clamp(0.0, 1.0));
-    final double scale = 1.0 - (curvedProgress * 0.1);
+    final bgColor = Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95);
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-        child: Material(
-          color: Colors.transparent,
-          child: Transform.scale(
-            scale: scale,
-            alignment: Alignment.bottomCenter,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: SizedBox(
-                height: expandedHeight,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  switchInCurve: Curves.easeInOut,
-                  switchOutCurve: Curves.easeInOut,
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(
-                        scale: animation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: selectionMode && selectionBar != null
-                      ? Container(
-                          key: const ValueKey('selection'),
-                          child: selectionBar!,
-                        )
-                      : Container(
-                          key: const ValueKey('search'),
-                          child: child,
-                        ),
-                ),
-              ),
-            ),
+    return Material(
+      color: bgColor,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: SizedBox(
+          height: expandedHeight,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: selectionMode && selectionBar != null
+                ? Container(key: const ValueKey('selection'), child: selectionBar!)
+                : Container(key: const ValueKey('search'), child: child),
           ),
         ),
       ),

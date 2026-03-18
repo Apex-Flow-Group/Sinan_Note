@@ -2720,6 +2720,12 @@ abstract class AppLocalizations {
   /// **'Official Version - Google Play'**
   String get officialVersion;
 
+  /// No description provided for @sinanAiNet.
+  ///
+  /// In en, this message translates to:
+  /// **'SinanAi.net — Emerging Apps'**
+  String get sinanAiNet;
+
   /// No description provided for @importantLinks.
   ///
   /// In en, this message translates to:

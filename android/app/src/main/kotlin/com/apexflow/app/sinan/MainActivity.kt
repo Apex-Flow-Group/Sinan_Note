@@ -2,6 +2,7 @@ package com.apexflow.app.sinan
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -10,6 +11,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity: FlutterFragmentActivity() {
     private val CHANNEL = "com.apexflow.app.sinan/widget"
     private val SECURITY_CHANNEL = "com.apexflow.app.sinan/security"
+    private val LAUNCHER_CHANNEL = "com.apexflow.app.sinan/launcher"
     private var startIntent: Intent? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +28,20 @@ class MainActivity: FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: io.flutter.embedding.engine.FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, LAUNCHER_CHANNEL).setMethodCallHandler { call, result ->
+            if (call.method == "launch") {
+                val url = call.arguments as? String
+                if (url != null) {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    result.success(null)
+                } else {
+                    result.error("INVALID_URL", "URL is null", null)
+                }
+            } else {
+                result.notImplemented()
+            }
+        }
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "getStartIntent" -> {

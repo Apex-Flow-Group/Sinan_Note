@@ -6,12 +6,14 @@ class PremiumCardEffect extends StatefulWidget {
   final Widget child;
   final Color baseColor;
   final bool enableMotion;
+  final bool isSelected;
 
   const PremiumCardEffect({
     super.key,
     required this.child,
     required this.baseColor,
     this.enableMotion = false,
+    this.isSelected = false,
   });
 
   @override
@@ -53,7 +55,6 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         _controller.reset();
       }
     } else if (widget.baseColor != oldWidget.baseColor && mounted) {
-      // Hot reload: حافظ على الأنيميشن بدون إعادة تشغيل
       if (widget.enableMotion && !_controller.isAnimating) {
         _controller.repeat(reverse: true);
       }
@@ -81,13 +82,16 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         ? Colors.white.withValues(alpha: 0.9)
         : Colors.white.withValues(alpha: 0.5);
 
+    final Color effectiveBorderColor = widget.isSelected
+        ? Theme.of(context).colorScheme.secondary
+        : baseBorderColor;
+
     if (!widget.enableMotion) {
-      // الحالة الثابتة (سريعة جداً بدون أنيميشن)
       return Container(
         decoration: BoxDecoration(
           color: widget.baseColor,
           borderRadius: borderRadius,
-          border: Border.all(color: baseBorderColor, width: 0.8), // الحافة الرفيعة
+          border: Border.all(color: effectiveBorderColor, width: widget.isSelected ? 2.0 : 0.8),
         ),
         clipBehavior: Clip.hardEdge,
         child: widget.child,
@@ -104,8 +108,10 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
               borderRadius: borderRadius,
               // السحر هنا: دمج لون الحافة الأساسي مع لون مضيء بنسبة متغيرة
               border: Border.all(
-                color: Color.lerp(baseBorderColor, glowColor, _glowAnimation.value * 0.4)!,
-                width: 0.8, // نحافظ على السماكة الرفيعة والأنيقة
+                color: widget.isSelected
+                    ? Theme.of(context).colorScheme.secondary
+                    : Color.lerp(baseBorderColor, glowColor, _glowAnimation.value * 0.4)!,
+                width: widget.isSelected ? 2.0 : 0.8,
               ),
               boxShadow: [
                 // ظل خفيف جداً يظهر ويختفي مع نبض الحافة

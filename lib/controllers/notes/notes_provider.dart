@@ -56,6 +56,7 @@ class NotesProvider extends ChangeNotifier {
       _stateService.updateAllNotes(notes);
     } finally {
       _isLoading = false;
+      debugPrint('[PERF] NotesProvider.notifyListeners() ← refreshAllNotes');
       notifyListeners();
     }
   }

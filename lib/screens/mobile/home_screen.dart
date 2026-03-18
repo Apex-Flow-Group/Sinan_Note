@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
-      if (mounted) setState(() {});
+      // لا حاجة لـ setState — NotesGridView يستمع لـ searchController مباشرة
     });
   }
 
@@ -321,6 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   SafeArea(
                     child: CustomScrollView(
+                      cacheExtent: 500,
                       slivers: [
                         SmartHeader(
                           selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
@@ -350,10 +351,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                           isSearchActive: _isSearchActive,
                         ),
-                        // Deferred rendering: Show Grid only after 300ms delay
                         if (_isReady)
                           NotesGridView(
-                            viewType: _viewType,
+                            viewTypeNotifier: _viewTypeNotifier,
                             selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
                             searchController: _searchController,
                           )
