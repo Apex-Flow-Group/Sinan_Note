@@ -164,9 +164,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       fontSize: widget.fontSize,
                       height: 1.6,
                       color: widget.textColor,
-                      fontFeatures: [
-                        const FontFeature.disable('liga'),
-                        const FontFeature.disable('clig'),
+                      fontFeatures: const [
+                        FontFeature.disable('liga'),
+                        FontFeature.disable('clig'),
                       ],
                     ),
                     HorizontalSpacing.zero,
