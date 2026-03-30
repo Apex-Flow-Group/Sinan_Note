@@ -2,7 +2,6 @@
 
 import 'dart:async';
 
-import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_batch_operations_service.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
@@ -56,7 +55,6 @@ class NotesProvider extends ChangeNotifier {
       _stateService.updateAllNotes(notes);
     } finally {
       _isLoading = false;
-      debugPrint('[PERF] NotesProvider.notifyListeners() ← refreshAllNotes');
       notifyListeners();
     }
   }
@@ -64,13 +62,11 @@ class NotesProvider extends ChangeNotifier {
   Future<void> loadNotes({bool force = false}) async {
     if (_isLoading) return;
     if (!force && _stateService.isInitialDataLoaded) return;
-    
+
     // ✅ Load in background without blocking UI
     refreshAllNotes().then((_) {
       // Silently loaded
-    }).catchError((e) {
-      AppLogger.error('Background load failed', 'Provider', e);
-    });
+    }).catchError((e) {});
   }
 
   Future<List<Note>> getNotes() async {
@@ -81,12 +77,10 @@ class NotesProvider extends ChangeNotifier {
   Future<void> fetchNotes() async => await refreshAllNotes();
   Future<void> fetchTrashedNotes() async => await refreshAllNotes();
   Future<void> fetchArchivedNotes() async => await refreshAllNotes();
-  Future<void> fetchTrashNotes() async => await refreshAllNotes();
 
   List<Note> searchNotes(String query) => _stateService.searchNotes(query);
 
   Future<int> addNote(Note note) async {
-    AppLogger.info('addNote called - title: ${note.title}', 'Provider');
     Note noteToInsert = note;
     if (note.isLocked && note.content.isNotEmpty) {
       final encryptedTitle = note.title.isNotEmpty
@@ -103,15 +97,12 @@ class NotesProvider extends ChangeNotifier {
     await _sideEffectService
         .handleReminderSideEffect(noteToInsert.copyWith(id: id));
     notifyListeners();
-    AppLogger.success('addNote completed - ID: $id', 'Provider');
     return id;
   }
 
   Future<int> insertNote(Note note) async => addNote(note);
 
   Future<int> updateNote(Note note, {bool silent = false}) async {
-    AppLogger.info(
-        'updateNote called - ID: ${note.id}, title: ${note.title}', 'Provider');
     Note noteToUpdate = note;
     if (note.isLocked && note.content.isNotEmpty) {
       if (!VaultService.isEncrypted(note.content)) {
@@ -130,7 +121,6 @@ class NotesProvider extends ChangeNotifier {
     await _sideEffectService.handleReminderSideEffect(note);
     await _sideEffectService.checkAndUpdateIfPinned(note);
     if (!silent) notifyListeners();
-    AppLogger.success('updateNote completed - ID: $result', 'Provider');
     return result;
   }
 
@@ -181,8 +171,6 @@ class NotesProvider extends ChangeNotifier {
   }
 
   Future<int> addOrUpdateNote(Note note, {bool silent = false}) async {
-    AppLogger.info(
-        'addOrUpdateNote - ID: ${note.id}, title: ${note.title}', 'Provider');
     if (note.id != null) {
       await updateNote(note, silent: silent);
       return note.id!;
@@ -192,10 +180,8 @@ class NotesProvider extends ChangeNotifier {
   }
 
   Future<int> duplicateNote(int id) async {
-    AppLogger.info('duplicateNote called - ID: $id', 'Provider');
     final note = await _dbService.getNoteById(id);
     if (note == null) {
-      AppLogger.error('Note not found for duplication', 'Provider');
       return -1;
     }
 
@@ -212,8 +198,6 @@ class NotesProvider extends ChangeNotifier {
     );
 
     final newId = await addNote(copy);
-    AppLogger.success(
-        'duplicateNote completed - Original: $id, New: $newId', 'Provider');
     return newId;
   }
 

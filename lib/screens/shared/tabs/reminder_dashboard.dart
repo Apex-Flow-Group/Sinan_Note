@@ -10,6 +10,7 @@ import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/notification_service.dart';
+import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -155,11 +156,18 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                               onPressed: () => setState(toggleSearch),
                             ),
                             IconButton(
-                              icon: Icon(_viewType == ViewType.grid ? Icons.view_list : Icons.grid_view),
+                              icon: Icon(
+                                _viewType == ViewType.listExpanded
+                                    ? Icons.view_headline
+                                    : _viewType == ViewType.listCompact
+                                        ? Icons.grid_view
+                                        : Icons.view_day,
+                              ),
                               onPressed: () async {
-                                setState(() => _viewType = _viewType == ViewType.grid
-                                    ? ViewType.listExpanded
-                                    : ViewType.grid);
+                                setState(() {
+                                  final next = (_viewType.index + 1) % ViewType.values.length;
+                                  _viewType = ViewType.values[next];
+                                });
                                 await Provider.of<SettingsProvider>(context, listen: false)
                                     .setViewType('reminder', _viewType.name);
                               },
@@ -393,20 +401,15 @@ class _ReminderTabView extends StatelessWidget {
       );
     }
 
+    // listExpanded أو listCompact — NoteCardWidget يتعامل مع viewType داخلياً
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
       itemCount: notes.length,
       itemBuilder: (context, index) => Consumer<SelectedNoteProvider>(
         builder: (context, sel, _) {
-          final isOpen = sel.selectedNote?.id == notes[index].id;
           return Opacity(
             opacity: type == 'expired' ? 0.6 : 1.0,
-            child: AnimatedPadding(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              padding: isOpen ? const EdgeInsets.only(left: 12) : EdgeInsets.zero,
-              child: _buildCard(context, notes[index]),
-            ),
+            child: _buildCard(context, notes[index]),
           );
         },
       ),
@@ -417,14 +420,17 @@ class _ReminderTabView extends StatelessWidget {
     return Consumer<SelectedNoteProvider>(
       builder: (context, sel, _) => Opacity(
         opacity: type == 'expired' ? 0.6 : 1.0,
-        child: NoteCardWidget(
+        child: SelectedNoteIndicator(
           note: note,
-          viewType: viewType,
-          closeAllSlidables: closeAllSlidables,
-          onNoteChanged: onChanged,
-          onLongPress: () {},
-          source: 'reminder_$type',
-          isCurrentlyOpen: sel.selectedNote?.id == note.id,
+          child: NoteCardWidget(
+            note: note,
+            viewType: viewType,
+            closeAllSlidables: closeAllSlidables,
+            onNoteChanged: onChanged,
+            onLongPress: () {},
+            source: 'reminder_$type',
+            isCurrentlyOpen: sel.selectedNote?.id == note.id,
+          ),
         ),
       ),
     );

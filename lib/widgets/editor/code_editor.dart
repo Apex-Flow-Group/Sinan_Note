@@ -26,6 +26,28 @@ class CodeEditor extends StatefulWidget {
 }
 
 class _CodeEditorState extends State<CodeEditor> {
+  late double _gutterWidth;
+
+  @override
+  void initState() {
+    super.initState();
+    _gutterWidth = _calculateGutterWidth(widget.controller.text);
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    final newWidth = _calculateGutterWidth(widget.controller.text);
+    if (newWidth != _gutterWidth) {
+      setState(() => _gutterWidth = newWidth);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.backgroundColor.computeLuminance() < 0.5;
@@ -53,13 +75,13 @@ class _CodeEditorState extends State<CodeEditor> {
             showErrors: false,
             textStyle: TextStyle(
               fontFamily: 'monospace',
-              fontSize: 12,
+              fontSize: 14,
+              height: 1.5,
               color: gutterColor,
             ),
             background: Colors.transparent,
             margin: 8,
-            // 🔥 FIX: مساحة مرنة حسب عدد الأسطر
-            width: _calculateGutterWidth(widget.controller.text),
+            width: _gutterWidth,
           ),
           background: Colors.transparent,
           expands: true,

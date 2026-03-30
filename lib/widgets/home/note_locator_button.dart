@@ -20,6 +20,8 @@ class NoteCardKeyRegistry {
 
   void remove(int noteId) => _heights.remove(noteId);
 
+  Map<int, double> get heights => _heights;
+
   /// يحسب الـ offset المتراكم للبطاقة بناءً على ترتيب القائمة
   /// مع استخدام الارتفاعات المحفوظة لكل بطاقة
   double estimateOffset(int noteId, List<Note> orderedNotes,
@@ -33,16 +35,17 @@ class NoteCardKeyRegistry {
   }
 
   /// هل الـ offset داخل الـ viewport الحالي؟
-  bool isVisible(int noteId, List<Note> orderedNotes,
-      ScrollController scrollController,
+  bool isVisible(
+      int noteId, List<Note> orderedNotes, ScrollController scrollController,
       {double fallbackHeight = 72.0}) {
     if (!scrollController.hasClients) return false;
-    final offset = estimateOffset(noteId, orderedNotes,
-        fallbackHeight: fallbackHeight);
+    final offset =
+        estimateOffset(noteId, orderedNotes, fallbackHeight: fallbackHeight);
     final height = _heights[noteId] ?? fallbackHeight;
     final scrollOffset = scrollController.offset;
     final viewportHeight = scrollController.position.viewportDimension;
-    return offset >= scrollOffset && offset + height <= scrollOffset + viewportHeight;
+    return offset >= scrollOffset &&
+        offset + height <= scrollOffset + viewportHeight;
   }
 }
 
@@ -102,7 +105,8 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
 
     final notes = Provider.of<NotesProvider>(context, listen: false).notes;
     final registry = NoteCardKeyRegistry.instance;
-    final isVis = registry.isVisible(selectedNote.id!, notes, widget.scrollController);
+    final isVis =
+        registry.isVisible(selectedNote.id!, notes, widget.scrollController);
 
     if (isVis) {
       if (_direction.value != null) _direction.value = null;
@@ -130,8 +134,8 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
     if (!widget.scrollController.hasClients) return;
 
     final notes = Provider.of<NotesProvider>(context, listen: false).notes;
-    final offset = NoteCardKeyRegistry.instance.estimateOffset(
-        selectedNote.id!, notes);
+    final offset =
+        NoteCardKeyRegistry.instance.estimateOffset(selectedNote.id!, notes);
 
     final target = (offset - 8.0)
         .clamp(0.0, widget.scrollController.position.maxScrollExtent);
@@ -165,8 +169,8 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
                 onTap: _scrollToNote,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
                     shape: BoxShape.circle,

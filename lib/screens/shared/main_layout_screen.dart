@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/platform_helper.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/desktop/code_tab_responsive.dart';
 import 'package:apex_note/screens/desktop/home_screen_responsive.dart';
@@ -46,6 +47,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     _securityController.addListener(_onSecurityChanged);
     _autoSyncOnStartup();
 
+    // ⚠️ قفل الاتجاه للموبايل فقط
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PlatformHelper.lockOrientationForMobile(context);
+    });
+
     // ✅ Cache screens to prevent unnecessary rebuilds
     // Each screen is created once and reused
     _cachedScreens = [
@@ -89,6 +95,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   @override
   void dispose() {
     _securityController.removeListener(_onSecurityChanged);
+    // ✅ إلغاء قفل الاتجاه عند الخروج
+    PlatformHelper.unlockOrientation();
     super.dispose();
   }
 
@@ -110,7 +118,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   void _handleScrollNotification(bool isScrollingDown) {
     if (_currentIndex != 0 || _isDrawerOpen) return;
 
-    final isLargeScreen = MediaQuery.of(context).size.width >= 600;
+    final isLargeScreen = PlatformHelper.shouldUseDesktopLayout(context);
     if (isLargeScreen) return; // Don't hide on tablets/desktop
 
     if (isScrollingDown && !_isScrollHidden) {
@@ -139,7 +147,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final bool showBottomBar = context.select<SettingsProvider, bool>((s) => s.isSetupCompleted) ||
         context.select<NotesProvider, bool>((n) => n.isInitialDataLoaded);
     final isRTL = Directionality.of(context) == TextDirection.rtl;
-    final isLargeScreen = MediaQuery.of(context).size.width >= 600;
+    final isLargeScreen = PlatformHelper.shouldUseDesktopLayout(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,

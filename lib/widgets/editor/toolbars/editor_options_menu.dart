@@ -6,90 +6,100 @@ import 'package:flutter/material.dart';
 class EditorOptionsMenu {
   static Future<String?> show({
     required BuildContext context,
-    required RelativeRect position,
     required bool hasContent,
     bool showReminder = false,
     bool showLock = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return showMenu<String>(
+    return showModalBottomSheet<String>(
       context: context,
-      position: position,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-      elevation: 8,
-      items: [
-        if (showReminder)
-          PopupMenuItem(
-            value: 'reminder',
-            enabled: hasContent,
-            child: Row(
-              children: [
-                Icon(Icons.alarm,
-                    size: 20, color: hasContent ? null : Colors.grey),
-                const SizedBox(width: 12),
-                Text(l10n.reminder,
-                    style: TextStyle(color: hasContent ? null : Colors.grey)),
-              ],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-        if (showLock)
-          PopupMenuItem(
-            value: 'lock',
-            enabled: hasContent,
-            child: Row(
-              children: [
-                Icon(Icons.lock_outline,
-                    size: 20, color: hasContent ? null : Colors.grey),
-                const SizedBox(width: 12),
-                Text(l10n.lockNote,
-                    style: TextStyle(color: hasContent ? null : Colors.grey)),
-              ],
+            const SizedBox(height: 8),
+            if (showReminder)
+              ListTile(
+                leading: Icon(
+                  Icons.alarm_add_rounded,
+                  color: hasContent ? Colors.orange : Colors.grey,
+                ),
+                title: Text(
+                  l10n.reminder,
+                  style: TextStyle(color: hasContent ? null : Colors.grey),
+                ),
+                enabled: hasContent,
+                onTap: hasContent
+                    ? () => Navigator.pop(ctx, 'reminder')
+                    : null,
+              ),
+            if (showLock)
+              ListTile(
+                leading: Icon(
+                  Icons.lock_outline,
+                  color: hasContent ? Colors.blue : Colors.grey,
+                ),
+                title: Text(
+                  l10n.lockNote,
+                  style: TextStyle(color: hasContent ? null : Colors.grey),
+                ),
+                enabled: hasContent,
+                onTap: hasContent ? () => Navigator.pop(ctx, 'lock') : null,
+              ),
+            ListTile(
+              leading: Icon(
+                Icons.share_rounded,
+                color: hasContent ? Colors.blue : Colors.grey,
+              ),
+              title: Text(
+                l10n.actionShare,
+                style: TextStyle(color: hasContent ? null : Colors.grey),
+              ),
+              enabled: hasContent,
+              onTap: hasContent ? () => Navigator.pop(ctx, 'share') : null,
             ),
-          ),
-        PopupMenuItem(
-          value: 'share',
-          enabled: hasContent,
-          child: Row(
-            children: [
-              Icon(Icons.share_outlined,
-                  size: 20, color: hasContent ? null : Colors.grey),
-              const SizedBox(width: 12),
-              Text(l10n.actionShare,
-                  style: TextStyle(color: hasContent ? null : Colors.grey)),
-            ],
-          ),
+            ListTile(
+              leading: Icon(
+                Icons.archive_rounded,
+                color: hasContent ? Colors.green : Colors.grey,
+              ),
+              title: Text(
+                l10n.actionArchive,
+                style: TextStyle(color: hasContent ? null : Colors.grey),
+              ),
+              enabled: hasContent,
+              onTap: hasContent ? () => Navigator.pop(ctx, 'archive') : null,
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Icon(
+                Icons.delete_rounded,
+                color: hasContent ? Colors.red : Colors.grey,
+              ),
+              title: Text(
+                l10n.actionDelete,
+                style: TextStyle(color: hasContent ? Colors.red : Colors.grey),
+              ),
+              enabled: hasContent,
+              onTap: hasContent ? () => Navigator.pop(ctx, 'delete') : null,
+            ),
+            SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
+          ],
         ),
-        PopupMenuItem(
-          value: 'archive',
-          enabled: hasContent,
-          child: Row(
-            children: [
-              Icon(Icons.archive_outlined,
-                  size: 20, color: hasContent ? null : Colors.grey),
-              const SizedBox(width: 12),
-              Text(l10n.actionArchive,
-                  style: TextStyle(color: hasContent ? null : Colors.grey)),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          enabled: hasContent,
-          child: Row(
-            children: [
-              Icon(Icons.delete_outline_rounded,
-                  color: hasContent ? Colors.red : Colors.grey, size: 20),
-              const SizedBox(width: 12),
-              Text(l10n.actionDelete,
-                  style: TextStyle(
-                      color: hasContent ? Colors.red : Colors.grey)),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

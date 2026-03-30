@@ -72,23 +72,8 @@ class ChecklistBottomBar extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      final RenderBox button =
-                          ctx.findRenderObject() as RenderBox;
-                      final RenderBox overlay = Overlay.of(context)
-                          .context
-                          .findRenderObject() as RenderBox;
-                      final RelativeRect position = RelativeRect.fromRect(
-                        Rect.fromPoints(
-                          button.localToGlobal(Offset.zero, ancestor: overlay),
-                          button.localToGlobal(
-                              button.size.bottomRight(Offset.zero),
-                              ancestor: overlay),
-                        ),
-                        Offset.zero & overlay.size,
-                      );
                       EditorOptionsMenu.show(
                         context: context,
-                        position: position,
                         hasContent: hasContent,
                         showReminder: true,
                       ).then((value) {

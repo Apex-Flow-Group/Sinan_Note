@@ -12,6 +12,7 @@ class MainActivity: FlutterFragmentActivity() {
     private val CHANNEL = "com.apexflow.app.sinan/widget"
     private val SECURITY_CHANNEL = "com.apexflow.app.sinan/security"
     private val LAUNCHER_CHANNEL = "com.apexflow.app.sinan/launcher"
+    private val EMAIL_CHANNEL = "apex_note/email"
     private var startIntent: Intent? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +28,36 @@ class MainActivity: FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: io.flutter.embedding.engine.FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        
+        // Email Channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, EMAIL_CHANNEL).setMethodCallHandler { call, result ->
+            if (call.method == "sendEmail") {
+                try {
+                    val email = call.argument<String>("email")
+                    val subject = call.argument<String>("subject")
+                    val body = call.argument<String>("body")
+                    
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:")
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+                        putExtra(Intent.EXTRA_SUBJECT, subject)
+                        putExtra(Intent.EXTRA_TEXT, body)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    
+                    if (intent.resolveActivity(packageManager) != null) {
+                        startActivity(intent)
+                        result.success(true)
+                    } else {
+                        result.error("NO_EMAIL_APP", "No email app found", null)
+                    }
+                } catch (e: Exception) {
+                    result.error("ERROR", e.message, null)
+                }
+            } else {
+                result.notImplemented()
+            }
+        }
         
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, LAUNCHER_CHANNEL).setMethodCallHandler { call, result ->
             if (call.method == "launch") {

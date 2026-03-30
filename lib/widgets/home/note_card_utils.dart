@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/services/language_detector.dart';
@@ -40,9 +41,17 @@ class NoteCardUtils {
     if (ChecklistFormatter.isValidChecklist(content)) {
       return ChecklistFormatter.toDisplayText(content);
     }
-    if (content.length <= maxChars) return content;
-    final runes = content.runes.toList();
-    if (runes.length <= maxChars) return content;
+    // تحويل Delta JSON لـ plain text للعرض في البطاقة
+    String displayContent = content;
+    if (QuillMigration.isDelta(content)) {
+      try {
+        final controller = QuillMigration.controllerFromContent(content);
+        displayContent = QuillMigration.toPlainText(controller);
+      } catch (_) {}
+    }
+    if (displayContent.length <= maxChars) return displayContent;
+    final runes = displayContent.runes.toList();
+    if (runes.length <= maxChars) return displayContent;
     return String.fromCharCodes(runes.take(maxChars));
   }
 

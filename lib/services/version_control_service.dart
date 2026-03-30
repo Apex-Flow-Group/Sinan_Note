@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 
-import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:crypto/crypto.dart';
@@ -14,7 +13,7 @@ class VersionControlService {
   static const int _minSignificantChange = 100; // 100 chars minimum
   static const double _minChangePercentage = 0.10; // 10% change minimum
   static const int _maxVersionsPerNote = 5; // Keep only 5 versions max
-  
+
   // Session tracking (in-memory)
   static final Map<int, String> _sessionSnapshots = {};
   static final Map<int, DateTime> _sessionStartTimes = {};
@@ -25,7 +24,6 @@ class VersionControlService {
   void startEditingSession(int noteId, String title, String content) {
     _sessionSnapshots[noteId] = _generateHash(title + content);
     _sessionStartTimes[noteId] = DateTime.now();
-    AppLogger.debug('Session started for note $noteId', 'VersionControl');
   }
 
   /// End editing session - Save ONLY if significant change
@@ -38,7 +36,6 @@ class VersionControlService {
     // 🔒 SECURITY: Never save locked notes
     if (isLocked) {
       _cleanupSession(noteId);
-      AppLogger.debug('Session ended: Note is locked (no version saved)', 'VersionControl');
       return;
     }
 
@@ -47,20 +44,18 @@ class VersionControlService {
 
     // No session? Skip
     if (sessionHash == null) {
-      AppLogger.debug('No session found for note $noteId', 'VersionControl');
       return;
     }
 
     // No change? Skip
     if (currentHash == sessionHash) {
       _cleanupSession(noteId);
-      AppLogger.debug('Session ended: No changes detected', 'VersionControl');
       return;
     }
 
     // Get last version to compare
     final lastVersion = await _db.getLastNoteVersion(noteId);
-    
+
     if (lastVersion != null) {
       // Calculate semantic difference
       final significance = _calculateSignificance(
@@ -73,17 +68,8 @@ class VersionControlService {
       // Not significant? Skip
       if (!significance.isSignificant) {
         _cleanupSession(noteId);
-        AppLogger.debug(
-          'Session ended: Change not significant (${significance.reason})',
-          'VersionControl',
-        );
         return;
       }
-
-      AppLogger.info(
-        'Significant change detected: ${significance.reason}',
-        'VersionControl',
-      );
     }
 
     // ✅ Save ONE version for this session
@@ -97,9 +83,8 @@ class VersionControlService {
 
     await _db.logNoteVersion(newVersion);
     await _pruneOldVersions(noteId);
-    
+
     _cleanupSession(noteId);
-    AppLogger.success('Session version saved', 'VersionControl');
   }
 
   /// Calculate if change is significant (ULTRA SMART)
@@ -127,7 +112,8 @@ class VersionControlService {
     if (changePercentage < _minChangePercentage) {
       return _ChangeSignificance(
         isSignificant: false,
-        reason: '${(changePercentage * 100).toStringAsFixed(1)}% changed (min: ${(_minChangePercentage * 100).toStringAsFixed(0)}%)',
+        reason:
+            '${(changePercentage * 100).toStringAsFixed(1)}% changed (min: ${(_minChangePercentage * 100).toStringAsFixed(0)}%)',
       );
     }
 
@@ -147,8 +133,10 @@ class VersionControlService {
     }
 
     // 4. Line-level change
-    final oldLines = oldContent.split('\n').where((l) => l.trim().isNotEmpty).length;
-    final newLines = newContent.split('\n').where((l) => l.trim().isNotEmpty).length;
+    final oldLines =
+        oldContent.split('\n').where((l) => l.trim().isNotEmpty).length;
+    final newLines =
+        newContent.split('\n').where((l) => l.trim().isNotEmpty).length;
     final lineDiff = (newLines - oldLines).abs();
 
     if (lineDiff > 3) {
@@ -161,7 +149,8 @@ class VersionControlService {
     // Default: Significant if passed char/percentage checks
     return _ChangeSignificance(
       isSignificant: true,
-      reason: '$lengthDiff chars, ${(changePercentage * 100).toStringAsFixed(1)}% changed',
+      reason:
+          '$lengthDiff chars, ${(changePercentage * 100).toStringAsFixed(1)}% changed',
     );
   }
 
@@ -201,13 +190,11 @@ class VersionControlService {
   }) async {
     // 🔒 SECURITY: Skip locked notes
     if (isLocked) {
-      AppLogger.debug('Version skipped: Note is locked', 'VersionControl');
       return;
     }
 
     // Only save manual actions (user explicitly saved)
     if (!isManualAction) {
-      AppLogger.debug('Version skipped: Auto-save (use session-based)', 'VersionControl');
       return;
     }
 
@@ -216,9 +203,8 @@ class VersionControlService {
     if (lastVersion != null) {
       final currentHash = _generateHash(title + content);
       final lastHash = _generateHash(lastVersion.title + lastVersion.content);
-      
+
       if (currentHash == lastHash) {
-        AppLogger.debug('Version skipped: Content identical', 'VersionControl');
         return;
       }
     }
@@ -234,7 +220,6 @@ class VersionControlService {
 
     await _db.logNoteVersion(newVersion);
     await _pruneOldVersions(noteId);
-    AppLogger.success('Manual version saved', 'VersionControl');
   }
 }
 

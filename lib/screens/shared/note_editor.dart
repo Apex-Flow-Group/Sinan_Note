@@ -2,7 +2,6 @@
 
 import 'dart:async';
 
-import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
@@ -83,9 +82,14 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       _coordinator.codeUndoController.addListener(_updateUndoRedoState);
     }
 
-    if (widget.mode == NoteMode.simple || widget.mode == NoteMode.reminder || widget.mode == NoteMode.rich) {
+    if (widget.mode == NoteMode.simple ||
+        widget.mode == NoteMode.reminder ||
+        widget.mode == NoteMode.rich) {
       _quillChangesSubscription = _coordinator.quillController!.document.changes
-          .listen((_) => _onQuillContentChanged());
+          .listen((_) {
+        _onQuillContentChanged();
+        _updateUndoRedoState();
+      });
     }
 
     _updateUndoRedoState();
@@ -189,15 +193,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   // ==================== SAVE METHODS ====================
 
-  Future<void> _saveNoteToDatabase(
+  Future<bool> _saveNoteToDatabase(
       {bool forceUpdate = false, bool isManualSave = false}) async {
-    AppLogger.info(
-        '_saveNoteToDatabase called - forceUpdate: $forceUpdate, isManualSave: $isManualSave',
-        'Editor');
-
     if (_coordinator.stateManager.isSaving) {
-      AppLogger.warning('Already saving, skipping', 'Editor');
-      return;
+      return false;
     }
 
     final isNewLockedNote =
@@ -209,12 +208,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         !isNewLockedNote &&
         (_coordinator.savedNoteId != null || widget.note != null)) {
       if (!_coordinator.stateManager.hasChanges()) {
-        AppLogger.info('No changes detected, skipping save', 'Editor');
-        return;
+        return false;
       }
     }
 
-    AppLogger.info('Proceeding with save...', 'Editor');
     _coordinator.stateManager.isSaving = true;
 
     try {
@@ -222,7 +219,15 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           ? _coordinator.codeController!.text
           : (widget.mode == NoteMode.checklist
               ? _coordinator.contentController.text
-              : QuillMigration.toPlainText(_coordinator.quillController!));
+              : QuillMigration.toDeltaJson(_coordinator.quillController!));
+
+      // Handle code note empty validation
+      if (widget.mode == NoteMode.code) {
+        if (contentToSave.trim().isEmpty && !isNewLockedNote) {
+          _coordinator.stateManager.isSaving = false;
+          return false;
+        }
+      }
 
       // Handle checklist validation
       if (widget.mode == NoteMode.checklist ||
@@ -235,7 +240,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         if (EditorSaveManager.isContentEmpty(
             contentToSave, NoteMode.checklist)) {
           _coordinator.stateManager.isSaving = false;
-          return;
+          return false;
         }
       }
 
@@ -247,7 +252,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           await _coordinator.notesProviderRef!.trashNote(noteId);
         }
         _coordinator.stateManager.isSaving = false;
-        return;
+        return false;
       }
 
       String noteType = EditorSaveManager.determineNoteType(
@@ -286,8 +291,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       if (isManualSave) {
         _coordinator.stateManager.updateSnapshot();
       }
+
+      return true; // Successfully saved
     } catch (e) {
       // Ignore save errors
+      return false;
     } finally {
       _coordinator.stateManager.isSaving = false;
     }
@@ -295,17 +303,32 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   Future<void> _saveNote() async {
     _coordinator.autosaveTimer?.cancel();
-    await _saveNoteToDatabase(isManualSave: true);
 
-    // REMOVED: Unnecessary loadNotes() that causes race condition
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    UnifiedNotificationService().show(
-      context: context,
-      message: l10n!.noteSaved,
-      type: NotificationType.success,
-      duration: const Duration(seconds: 1),
-    );
+    // Check if content is empty before saving
+    final content = widget.mode == NoteMode.code
+        ? _coordinator.codeController!.text
+        : widget.mode == NoteMode.checklist
+            ? _coordinator.contentController.text
+            : QuillMigration.toPlainText(_coordinator.quillController!);
+    final title = _coordinator.stateManager.customTitle ?? '';
+
+    if (content.trim().isEmpty && title.trim().isEmpty) {
+      // Don't save or show message for empty notes
+      return;
+    }
+
+    final savedSuccessfully = await _saveNoteToDatabase(isManualSave: true);
+
+    // Only show message if actually saved
+    if (savedSuccessfully && mounted) {
+      final l10n = AppLocalizations.of(context);
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n!.noteSaved,
+        type: NotificationType.success,
+        duration: const Duration(seconds: 1),
+      );
+    }
   }
 
   Future<void> _saveAsMarkdown() async {
@@ -361,10 +384,14 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void _onQuillContentChanged() {
     _coordinator.stateManager.markDirty();
     final newHasContent =
-        QuillMigration.toPlainText(_coordinator.quillController!).trim().isNotEmpty;
+        QuillMigration.toPlainText(_coordinator.quillController!)
+            .trim()
+            .isNotEmpty;
     if (_coordinator.stateManager.hasContent != newHasContent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _coordinator.stateManager.hasContent = newHasContent);
+        if (mounted) {
+          setState(() => _coordinator.stateManager.hasContent = newHasContent);
+        }
       });
     }
     _coordinator.autosaveTimer?.cancel();
@@ -393,8 +420,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     _coordinator.autosaveTimer?.cancel();
     _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 500), () {
-      if (mounted && 
-          _coordinator.contentController.text.isNotEmpty && 
+      if (mounted &&
+          _coordinator.codeController!.text.trim().isNotEmpty &&
           !_coordinator.stateManager.isSaving) {
         _saveNoteToDatabase();
       }
@@ -402,16 +429,27 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   void _updateUndoRedoState() {
-    if (widget.mode == NoteMode.checklist) {
-      return;
+    if (widget.mode == NoteMode.checklist) return;
+
+    if (widget.mode == NoteMode.code) {
+      setState(() {
+        _coordinator.stateManager.canUndo =
+            _coordinator.codeUndoController.value.canUndo;
+        _coordinator.stateManager.canRedo =
+            _coordinator.codeUndoController.value.canRedo;
+      });
+    } else if (widget.mode == NoteMode.simple ||
+        widget.mode == NoteMode.rich ||
+        widget.mode == NoteMode.reminder) {
+      final quill = _coordinator.quillController;
+      if (quill == null) return;
+      setState(() {
+        _coordinator.stateManager.canUndo =
+            quill.document.history.hasUndo;
+        _coordinator.stateManager.canRedo =
+            quill.document.history.hasRedo;
+      });
     }
-    final controller = widget.mode == NoteMode.code
-        ? _coordinator.codeUndoController
-        : _coordinator.undoController;
-    setState(() {
-      _coordinator.stateManager.canUndo = controller.value.canUndo;
-      _coordinator.stateManager.canRedo = controller.value.canRedo;
-    });
   }
 
   void _updateChecklistUndoRedo() {
@@ -431,6 +469,43 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // Decryption logic
   }
 
+  Future<void> _handleBack() async {
+    final content = widget.mode == NoteMode.code
+        ? _coordinator.codeController!.text
+        : (widget.mode == NoteMode.checklist
+            ? _coordinator.contentController.text
+            : QuillMigration.toPlainText(_coordinator.quillController!));
+    final title = _coordinator.stateManager.customTitle ??
+        _coordinator.stateManager.checklistTitle ??
+        '';
+
+    final hasContent = content.trim().isNotEmpty || title.trim().isNotEmpty;
+    final hasChanges = _coordinator.stateManager.hasChanges();
+    final wasSaved = _coordinator.savedNoteId != null || widget.note != null;
+
+    if (hasContent && hasChanges) {
+      await _saveNoteToDatabase(isManualSave: true);
+    }
+
+    if (hasContent && wasSaved && mounted) {
+      final l10n = AppLocalizations.of(context);
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n!.noteSaved,
+        type: NotificationType.success,
+        duration: const Duration(seconds: 1),
+      );
+    }
+
+    if (!mounted) return;
+    if (widget.onClose != null) {
+      widget.onClose!();
+    } else {
+      Navigator.of(context)
+          .pop(_coordinator.savedNoteId != null || widget.note != null);
+    }
+  }
+
   // ==================== BUILD METHOD ====================
 
   @override
@@ -446,19 +521,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final sidePadding = screenWidth > 600 ? 16.0 : screenWidth * 0.05;
 
     return PopScope(
-      canPop: widget.onClose == null && !_coordinator.stateManager.hasChanges(),
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
-        if (!didPop && _coordinator.stateManager.hasChanges()) {
-          await _saveNote();
-          if (context.mounted) {
-            if (widget.onClose != null) {
-              widget.onClose!();
-            } else {
-              Navigator.of(context)
-                  .pop(_coordinator.savedNoteId != null || widget.note != null);
-            }
-          }
-        }
+        if (!didPop) await _handleBack();
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
@@ -506,7 +571,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               onReminderTap: _showReminderDialog,
               onHistoryTap: _showHistorySheet,
               onTitleTap: _showRenameTitleDialog,
-              onBackTap: widget.onClose,
+              onBackTap: _handleBack,
               onSaveTap: () async {
                 if (widget.mode == NoteMode.code &&
                     _coordinator.detectedLanguage != null) {
@@ -549,6 +614,24 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 }
               },
               saveNote: _saveNote,
+              onInsertSymbol: (symbol) {
+                final ctrl = _coordinator.codeController;
+                if (ctrl == null) return;
+                final sel = ctrl.selection;
+                final text = ctrl.text;
+                if (sel.isValid && !sel.isCollapsed) {
+                  ctrl.text = text.replaceRange(sel.start, sel.end, symbol);
+                } else if (sel.isValid) {
+                  final pos = sel.baseOffset;
+                  final newText = text.substring(0, pos) + symbol + text.substring(pos);
+                  ctrl.value = ctrl.value.copyWith(
+                    text: newText,
+                    selection: TextSelection.collapsed(offset: pos + symbol.length ~/ 2),
+                  );
+                } else {
+                  ctrl.text = text + symbol;
+                }
+              },
             ),
           ],
         ),

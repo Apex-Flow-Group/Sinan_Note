@@ -29,7 +29,10 @@ class ChecklistEditorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: 80, bottom: totalBottomSpace),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 56.0,
+        bottom: totalBottomSpace,
+      ),
       child: ChecklistEditor(
         initialContent: contentController.text,
         backgroundColor: backgroundColor,

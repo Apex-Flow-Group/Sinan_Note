@@ -1,6 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
+
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -130,15 +133,38 @@ class NoteHistorySheet extends StatelessWidget {
     }
   }
 
+  String _toPlainText(String content) {
+    debugPrint('[History] raw content: ${content.substring(0, content.length.clamp(0, 100))}');
+    if (ChecklistFormatter.isValidChecklist(content)) {
+      debugPrint('[History] detected: checklist');
+      return ChecklistFormatter.toDisplayText(content);
+    }
+    if (QuillMigration.isDelta(content)) {
+      debugPrint('[History] detected: delta JSON');
+      try {
+        final list = jsonDecode(content) as List;
+        final buffer = StringBuffer();
+        for (final op in list) {
+          if (op is Map && op['insert'] is String) {
+            buffer.write(op['insert'] as String);
+          }
+        }
+        final result = buffer.toString().trimRight();
+        debugPrint('[History] converted to: ${result.substring(0, result.length.clamp(0, 100))}');
+        return result;
+      } catch (e) {
+        debugPrint('[History] delta parse error: $e');
+      }
+    }
+    debugPrint('[History] detected: plain text');
+    return content;
+  }
+
   void _showDiffDialog(
       BuildContext context, NoteVersion version, String newerContent) {
     final l10n = AppLocalizations.of(context)!;
-    final oldText = ChecklistFormatter.isValidChecklist(version.content)
-        ? ChecklistFormatter.toDisplayText(version.content)
-        : version.content;
-    final newText = ChecklistFormatter.isValidChecklist(newerContent)
-        ? ChecklistFormatter.toDisplayText(newerContent)
-        : newerContent;
+    final oldText = _toPlainText(version.content);
+    final newText = _toPlainText(newerContent);
     final spans = _computeDiff(oldText, newText);
 
     final screenSize = MediaQuery.of(context).size;
@@ -303,10 +329,7 @@ class NoteHistorySheet extends StatelessWidget {
                     final item = history[index];
                     final date = item.timestamp;
                     final isCreate = item.action == 'create';
-                    final rawContent =
-                        ChecklistFormatter.isValidChecklist(item.content)
-                            ? ChecklistFormatter.toDisplayText(item.content)
-                            : item.content;
+                    final rawContent = _toPlainText(item.content);
                     final contentPreview = rawContent.replaceAll('\n', ' ');
                     // newerContent: النسخة الأحدث منها (index-1) أو نفسها إن كانت الأحدث
                     final newerContent =
@@ -363,12 +386,7 @@ class NoteHistorySheet extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.copy, size: 20),
                             onPressed: () {
-                              final textToCopy =
-                                  ChecklistFormatter.isValidChecklist(
-                                          item.content)
-                                      ? ChecklistFormatter.formatForSharing(
-                                          '', item.content)
-                                      : item.content;
+                              final textToCopy = _toPlainText(item.content);
                               Clipboard.setData(
                                   ClipboardData(text: textToCopy));
                               Navigator.pop(context);

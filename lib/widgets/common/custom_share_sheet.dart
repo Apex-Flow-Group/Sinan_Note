@@ -12,7 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 class CustomShareSheet {
-  static void show(BuildContext context, String text, {String? subject, Note? note, VoidCallback? onNoteCopied}) {
+  static void show(BuildContext context, String text, {String? subject, Note? note, VoidCallback? onNoteCopied, bool appShare = false}) {
     final strings = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final isArabic = Directionality.of(context) == TextDirection.rtl;
@@ -44,7 +44,9 @@ class CustomShareSheet {
             
             // Title
             Text(
-              isArabic ? 'مشاركة الملاحظة' : 'Share Note',
+              appShare
+                  ? (isArabic ? 'مشاركة التطبيق' : 'Share App')
+                  : (isArabic ? 'مشاركة الملاحظة' : 'Share Note'),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
@@ -65,10 +67,11 @@ class CustomShareSheet {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _ShareOption(
-                  icon: Icons.file_download_outlined,
-                  label: isArabic ? 'حفظ كملف' : 'Save File',
-                  onTap: () async {
+                if (!appShare)
+                  _ShareOption(
+                    icon: Icons.file_download_outlined,
+                    label: isArabic ? 'حفظ كملف' : 'Save File',
+                    onTap: () async {
                     Navigator.pop(context);
                     try {
                       final extension = note != null ? _getFileExtension(note) : 'txt';

@@ -1,7 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
@@ -11,7 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Handles all storage operations (save, load, encryption)
 class EditorStorageController {
-
   /// Convert Color to int (ARGB) - avoids deprecated .value
   int _colorToInt(Color color) {
     final int a = (color.a * 255).round();
@@ -39,9 +37,8 @@ class EditorStorageController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('last_font_size', fontSize);
       await prefs.setInt('last_note_color', _colorToInt(backgroundColor));
-    } catch (e) {
-      AppLogger.error('Failed to save sticky settings', 'EditorStorage', e);
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   /// Authenticate user for locked notes
@@ -50,8 +47,12 @@ class EditorStorageController {
     if (!authenticated) return null;
 
     // CRITICAL: Checklists are plain JSON, skip decryption
-    final decryptedTitle = note.isChecklist ? note.title : await VaultService.decryptWithMasterKey(note.title);
-    final decryptedContent = note.isChecklist ? note.content : await VaultService.decryptWithMasterKey(note.content);
+    final decryptedTitle = note.isChecklist
+        ? note.title
+        : await VaultService.decryptWithMasterKey(note.title);
+    final decryptedContent = note.isChecklist
+        ? note.content
+        : await VaultService.decryptWithMasterKey(note.content);
 
     return {
       'title': decryptedTitle,
@@ -63,15 +64,18 @@ class EditorStorageController {
   Future<Map<String, String>?> decryptNoteWithoutAuth(Note note) async {
     try {
       // CRITICAL: Checklists are plain JSON, skip decryption
-      final decryptedTitle = note.isChecklist ? note.title : await VaultService.decryptWithMasterKey(note.title);
-      final decryptedContent = note.isChecklist ? note.content : await VaultService.decryptWithMasterKey(note.content);
+      final decryptedTitle = note.isChecklist
+          ? note.title
+          : await VaultService.decryptWithMasterKey(note.title);
+      final decryptedContent = note.isChecklist
+          ? note.content
+          : await VaultService.decryptWithMasterKey(note.content);
 
       return {
         'title': decryptedTitle,
         'content': decryptedContent,
       };
     } catch (e) {
-      AppLogger.error('Decryption failed', 'EditorStorage', e);
       return null;
     }
   }

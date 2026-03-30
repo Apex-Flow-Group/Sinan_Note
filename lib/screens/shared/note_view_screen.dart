@@ -18,7 +18,6 @@ import 'package:apex_note/services/widget_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 
 /// Interactive read-only note viewer with markdown rendering
@@ -198,27 +197,8 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                 ChecklistFormatter.isValidChecklist(_currentNote.content)
                     ? NoteViewWidgets.buildChecklistView(
                         _currentNote.content, textColor)
-                    : Directionality(
-                        textDirection:
-                            NoteViewHelpers.getDirection(_currentNote.content)
-                                ? TextDirection.rtl
-                                : TextDirection.ltr,
-                        child: MarkdownBody(
-                          data: _currentNote.content.replaceAll('\n', '  \n'),
-                          checkboxBuilder: (bool checked) => Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Icon(
-                              checked
-                                  ? Icons.check_box
-                                  : Icons.check_box_outline_blank,
-                              size: 20,
-                              color: textColor,
-                            ),
-                          ),
-                          styleSheet:
-                              NoteViewWidgets.buildMarkdownStyle(textColor),
-                        ),
-                      ),
+                    : NoteViewWidgets.buildDirectionalMarkdown(
+                        _currentNote.content, textColor),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -261,12 +241,15 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
                         InkWell(
                           onTap: () async {
                             HapticFeedback.lightImpact();
-                            final provider = Provider.of<NotesProvider>(context, listen: false);
+                            final provider = Provider.of<NotesProvider>(context,
+                                listen: false);
                             final messenger = UnifiedNotificationService();
                             final nav = Navigator.of(context);
-                            final reminderRemovedMsg = AppLocalizations.of(context)!.reminderRemoved;
+                            final reminderRemovedMsg =
+                                AppLocalizations.of(context)!.reminderRemoved;
                             final noteId = _currentNote.id!;
-                            await NotificationService().cancelNotification(noteId);
+                            await NotificationService()
+                                .cancelNotification(noteId);
                             final updatedNote = _currentNote.copyWith(
                               reminderDateTime: null,
                               recurrenceRule: null,
@@ -460,7 +443,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     final deleteConfirm = l10n.deleteConfirm;
     final cancel = l10n.cancel;
     final delete = l10n.delete;
-    
+
     if (!mounted) return;
     final confirm = await showDialog<bool>(
       context: currentContext,
@@ -497,7 +480,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
           type: NotificationType.error,
         );
       }
-    }  
+    }
   }
 
   Future<void> _confirmPermanentDelete() async {
@@ -510,7 +493,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     final confirmPermanentDelete = l10n.confirmPermanentDelete;
     final cancel = l10n.cancel;
     final delete = l10n.delete;
-    
+
     if (!mounted) return;
     final confirm = await showDialog<bool>(
       context: currentContext,

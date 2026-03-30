@@ -46,8 +46,9 @@ class EditorBuildMethods {
   }) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const toolbarHeight = 60.0;
-    const codeToolbarHeight = 110.0; // صفين: language row + symbols row
+    const codeToolbarHeight = 110.0;
     final totalBottomSpace = (mode == NoteMode.code ? codeToolbarHeight : toolbarHeight) + bottomPadding + 16;
+    debugPrint('[BuildMethods] bottomPadding=$bottomPadding, totalBottomSpace=$totalBottomSpace, toolbarOnly=${mode == NoteMode.code ? codeToolbarHeight : toolbarHeight}');
 
     if (mode == NoteMode.code) {
       // Ensure codeController is initialized
@@ -113,7 +114,7 @@ class EditorBuildMethods {
         bottom: false,
         child: ClipRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
             child: Container(
               decoration: BoxDecoration(
                 boxShadow: [
@@ -127,7 +128,7 @@ class EditorBuildMethods {
               child: ApexEditorHeader(
                 backgroundColor: coordinator
                     .getBackgroundColor(context)
-                    .withValues(alpha: 0.7),
+                    .withValues(alpha: 0.95),
                 textColor: finalTextColor,
                 title: currentTitle,
                 isLocked: note?.isLocked == true || notePassword != null,
@@ -169,6 +170,7 @@ class EditorBuildMethods {
     required VoidCallback onColorPaletteTap,
     required VoidCallback onSmartSaveDialog,
     required Future<void> Function() saveNote,
+    Function(String)? onInsertSymbol,
   }) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -202,7 +204,7 @@ class EditorBuildMethods {
                       } else if (mode == NoteMode.code) {
                         coordinator.codeUndoController.undo();
                       } else {
-                        coordinator.undoController.undo();
+                        coordinator.quillController?.undo();
                       }
                     }
                   : null,
@@ -214,7 +216,7 @@ class EditorBuildMethods {
                       } else if (mode == NoteMode.code) {
                         coordinator.codeUndoController.redo();
                       } else {
-                        coordinator.undoController.redo();
+                        coordinator.quillController?.redo();
                       }
                     }
                   : null,
@@ -229,6 +231,7 @@ class EditorBuildMethods {
                 coordinator.isLanguageManuallySelected = normalizedLang != null;
                 coordinator.stateManager.markDirty();
               },
+              onInsertSymbol: onInsertSymbol,
               onRunCode: coordinator.detectedLanguage == 'SVG'
                   ? () async {
                       HapticFeedback.mediumImpact();

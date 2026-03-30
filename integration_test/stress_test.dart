@@ -16,10 +16,10 @@ void main() {
       for (int i = 0; i < 50; i++) {
         await tester.tap(find.byIcon(Icons.add));
         await tester.pumpAndSettle();
-        
+
         await tester.enterText(find.byType(TextField).first, 'Stress $i');
         await tester.pumpAndSettle();
-        
+
         await tester.tap(find.byIcon(Icons.save));
         await tester.pumpAndSettle(const Duration(milliseconds: 100));
       }
@@ -48,7 +48,7 @@ void main() {
         await tester.enterText(find.byType(TextField).first, 'Temp $i');
         await tester.tap(find.byIcon(Icons.save));
         await tester.pumpAndSettle();
-        
+
         // Delete
         await tester.longPress(find.text('Temp $i'));
         await tester.pumpAndSettle();

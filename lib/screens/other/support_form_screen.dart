@@ -3,6 +3,7 @@
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,6 +15,8 @@ class SupportFormScreen extends StatefulWidget {
 }
 
 class _SupportFormScreenState extends State<SupportFormScreen> {
+  static const MethodChannel _channel = MethodChannel('apex_note/email');
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _subjectController = TextEditingController();
@@ -69,24 +72,69 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
 
     setState(() => _isLoading = true);
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     try {
       final name = _nameController.text;
       final subject = _subjectController.text;
       final category = _selectedCategory ?? 'Other';
-
       final body =
           'Name: $name\nCategory: $category\n\nMessage:\n${_bodyController.text}';
 
-      final String encodedSubject =
-          Uri.encodeComponent('[Sinan Note Support] $subject');
-      final String encodedBody = Uri.encodeComponent(body);
-      final Uri emailUri = Uri.parse(
-          'mailto:$_appEmail?subject=$encodedSubject&body=$encodedBody');
+      bool launched = false;
+      String? lastError;
 
-      final launched =
-          await launchUrl(emailUri, mode: LaunchMode.externalApplication);
-      if (!launched) throw Exception('no_email_app');
+      // Try Method 1: Native Android Intent (for Android)
+      try {
+        await _channel.invokeMethod('sendEmail', {
+          'email': _appEmail,
+          'subject': '[Sinan Note Support] $subject',
+          'body': body,
+        });
+        launched = true;
+      } catch (e) {
+        lastError = e.toString();
+      }
+
+      // Try Method 2: url_launcher (fallback)
+      if (!launched) {
+        final Uri emailUri = Uri(
+          scheme: 'mailto',
+          path: _appEmail,
+          queryParameters: {
+            'subject': '[Sinan Note Support] $subject',
+            'body': body,
+          },
+        );
+
+        bool canLaunch = false;
+        try {
+          canLaunch = await canLaunchUrl(emailUri);
+        } catch (e) {
+          canLaunch = true;
+        }
+
+        if (canLaunch) {
+          try {
+            launched = await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+          } catch (e) {
+            lastError = e.toString();
+          }
+
+          if (!launched) {
+            try {
+              launched = await launchUrl(emailUri, mode: LaunchMode.platformDefault);
+            } catch (e) {
+              lastError = e.toString();
+            }
+          }
+        }
+      }
+
+      if (!launched) {
+        throw Exception(lastError ?? 'no_email_app');
+      }
+
       if (mounted) {
         _clearForm();
         UnifiedNotificationService().show(
@@ -97,22 +145,73 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final isNoApp = e.toString().contains('no_email_app') ||
-            e.toString().contains('channel-error') ||
-            e.toString().contains('Unable to establish');
-        UnifiedNotificationService().show(
-          context: context,
-          message: isNoApp
-              ? l10n.supportMessageFailed
-              : '${l10n.supportMessageFailed}: $e',
-          type: NotificationType.error,
-        );
+        final err = e.toString();
+        final isNoApp = err.contains('no_email_app') ||
+            err.contains('channel-error') ||
+            err.contains('Unable to establish') ||
+            err.contains('No Activity found') ||
+            err.contains('ActivityNotFoundException') ||
+            err.contains('MissingPluginException');
+        if (isNoApp) {
+          _showNoEmailAppDialog(isAr);
+        } else {
+          UnifiedNotificationService().show(
+            context: context,
+            message: '${l10n.supportMessageFailed}: $err',
+            type: NotificationType.error,
+          );
+        }
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showNoEmailAppDialog(bool isAr) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.email_outlined, size: 40, color: Colors.orange),
+        title: Text(isAr ? 'لا يوجد تطبيق بريد' : 'No Email App Found'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isAr
+                  ? 'لم يتم العثور على تطبيق بريد إلكتروني على جهازك.\n\nيمكنك التواصل معنا مباشرة عبر:'
+                  : 'No email app was found on your device.\n\nYou can contact us directly at:',
+            ),
+            const SizedBox(height: 12),
+            const SelectableText(
+              _appEmail,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.copy, size: 18),
+            label: Text(isAr ? 'نسخ البريد' : 'Copy Email'),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await Clipboard.setData(const ClipboardData(text: _appEmail));
+              if (mounted) {
+                UnifiedNotificationService().show(
+                  context: context,
+                  message: isAr ? 'تم نسخ البريد الإلكتروني' : 'Email copied',
+                  type: NotificationType.success,
+                );
+              }
+            },
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(context)!.gotIt),
+          ),
+        ],
+      ),
+    );
   }
 
   void _clearForm() {

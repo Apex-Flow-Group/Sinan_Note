@@ -2,11 +2,13 @@
 
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:pointycastle/export.dart' as pc;
 
 class VaultService {
   static const _storage = FlutterSecureStorage(
@@ -43,13 +45,13 @@ class VaultService {
       final recoveryCode = generateRecoveryCode();
       final encryptedWithPassword = await _encryptMasterKey(masterKey, password);
       final encryptedWithRecovery = await _encryptMasterKey(masterKey, recoveryCode);
-      
+
       await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithPassword);
       await _storage.write(key: '${_masterKeyName}_recovery', value: encryptedWithRecovery);
-      await _storage.write(key: _passwordHashName, value: _hash(password));
-      await _storage.write(key: _recoveryHashName, value: _hash(recoveryCode));
+      await _storage.write(key: _passwordHashName, value: await _hashSecure(password));
+      await _storage.write(key: _recoveryHashName, value: await _hashSecure(recoveryCode));
       await _storage.write(key: _masterKeyName, value: masterKey.base64);
-      
+
       return recoveryCode;
     }, 'VaultSetup');
   }
@@ -58,14 +60,14 @@ class VaultService {
   static Future<bool> verifyPassword(String password) async {
     final storedHash = await _storage.read(key: _passwordHashName);
     if (storedHash == null) return false;
-    return storedHash == _hash(password);
+    return await _verifySecureHash(password, storedHash);
   }
 
   /// Verify recovery code
   static Future<bool> verifyRecoveryCode(String recoveryCode) async {
     final storedHash = await _storage.read(key: _recoveryHashName);
     if (storedHash == null) return false;
-    return storedHash == _hash(recoveryCode);
+    return await _verifySecureHash(recoveryCode, storedHash);
   }
 
   /// Unlock vault with password
@@ -132,31 +134,27 @@ class VaultService {
   static Future<bool> changePassword(String oldPassword, String newPassword) async {
     // If oldPassword is empty, it means we're setting password after recovery
     if (oldPassword.isEmpty) {
-      // Master key is already unlocked, just re-encrypt with new password
       final masterKeyBase64 = await _storage.read(key: _masterKeyName);
       if (masterKeyBase64 == null) return false;
-      
+
       final masterKey = Key.fromBase64(masterKeyBase64);
       final encryptedWithNewPassword = await _encryptMasterKey(masterKey, newPassword);
       await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithNewPassword);
-      await _storage.write(key: _passwordHashName, value: _hash(newPassword));
+      await _storage.write(key: _passwordHashName, value: await _hashSecure(newPassword));
       return true;
     }
     
     // Normal password change
     if (!await verifyPassword(oldPassword)) return false;
-    
-    // Get master key
+
     final masterKeyBase64 = await _storage.read(key: _masterKeyName);
     if (masterKeyBase64 == null) return false;
-    
+
     final masterKey = Key.fromBase64(masterKeyBase64);
-    
-    // Re-encrypt with new password
     final encryptedWithNewPassword = await _encryptMasterKey(masterKey, newPassword);
     await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithNewPassword);
-    await _storage.write(key: _passwordHashName, value: _hash(newPassword));
-    
+    await _storage.write(key: _passwordHashName, value: await _hashSecure(newPassword));
+
     return true;
   }
 
@@ -171,11 +169,31 @@ class VaultService {
     return value == 'true';
   }
 
+  static const _saltKeyName = 'vault_pbkdf2_salt';
+
+  /// Derive a 32-byte key from secret using PBKDF2-SHA256
+  static Future<Key> _deriveKey(String secret, {Uint8List? salt}) async {
+    final storedSalt = salt ?? await _getOrCreateSalt();
+    final params = pc.Pbkdf2Parameters(storedSalt, 100000, 32);
+    final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64));
+    pbkdf2.init(params);
+    final keyBytes = pbkdf2.process(Uint8List.fromList(utf8.encode(secret)));
+    return Key(keyBytes);
+  }
+
+  static Future<Uint8List> _getOrCreateSalt() async {
+    final stored = await _storage.read(key: _saltKeyName);
+    if (stored != null) return base64.decode(stored);
+    final salt = IV.fromSecureRandom(16).bytes;
+    await _storage.write(key: _saltKeyName, value: base64.encode(salt));
+    return salt;
+  }
+
   /// Encrypt master key with password/recovery code
   static Future<String> _encryptMasterKey(Key masterKey, String secret) async {
-    final key = Key.fromUtf8(secret.padRight(32).substring(0, 32));
+    final derivedKey = await _deriveKey(secret);
     final iv = IV.fromSecureRandom(16);
-    final encrypter = Encrypter(AES(key));
+    final encrypter = Encrypter(AES(derivedKey));
     final encrypted = encrypter.encrypt(masterKey.base64, iv: iv);
     return '${iv.base64}:${encrypted.base64}';
   }
@@ -184,16 +202,44 @@ class VaultService {
   static Future<Key> _decryptMasterKey(String encrypted, String secret) async {
     final parts = encrypted.split(':');
     if (parts.length != 2) throw Exception('Invalid encrypted data');
-    
-    final key = Key.fromUtf8(secret.padRight(32).substring(0, 32));
+    final derivedKey = await _deriveKey(secret);
     final iv = IV.fromBase64(parts[0]);
-    final encrypter = Encrypter(AES(key));
+    final encrypter = Encrypter(AES(derivedKey));
     final decrypted = encrypter.decrypt64(parts[1], iv: iv);
-    
     return Key.fromBase64(decrypted);
   }
 
-  /// Hash password/recovery code for verification
+  /// Hash with PBKDF2 for verification (stored as salt:hash)
+  static Future<String> _hashSecure(String input) async {
+    final salt = IV.fromSecureRandom(16).bytes;
+    final params = pc.Pbkdf2Parameters(salt, 100000, 32);
+    final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64));
+    pbkdf2.init(params);
+    final hash = pbkdf2.process(Uint8List.fromList(utf8.encode(input)));
+    return '${base64.encode(salt)}:${base64.encode(hash)}';
+  }
+
+  static Future<bool> _verifySecureHash(String input, String stored) async {
+    // Legacy SHA-256 (no salt) — للتوافق مع الإصدارات القديمة
+    if (!stored.contains(':')) {
+      return stored == sha256.convert(utf8.encode(input)).toString();
+    }
+    final parts = stored.split(':');
+    if (parts.length != 2) return false;
+    final salt = base64.decode(parts[0]);
+    final expectedHash = base64.decode(parts[1]);
+    final params = pc.Pbkdf2Parameters(salt, 100000, 32);
+    final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64));
+    pbkdf2.init(params);
+    final hash = pbkdf2.process(Uint8List.fromList(utf8.encode(input)));
+    if (hash.length != expectedHash.length) return false;
+    int diff = 0;
+    for (int i = 0; i < hash.length; i++) { diff |= hash[i] ^ expectedHash[i]; }
+    return diff == 0;
+  }
+
+  /// Legacy hash — kept for backward compatibility detection only
+  // ignore: unused_element
   static String _hash(String input) {
     final bytes = utf8.encode(input);
     final digest = sha256.convert(bytes);

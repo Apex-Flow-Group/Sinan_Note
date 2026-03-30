@@ -3,7 +3,6 @@
 import 'dart:convert';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -103,10 +102,8 @@ class EditorSaveManager {
     required String? recurrenceRule,
     required NoteMode mode,
     bool silent = false,
-    bool isAutoSave = false, // NEW: distinguish auto-save from manual
+    bool isAutoSave = false,
   }) async {
-    AppLogger.info(
-        'saveNote called - title: $title, noteType: $noteType', 'SaveManager');
     final noteToSave = Note(
       id: savedNoteId ?? existingNote?.id,
       title: title,
@@ -127,7 +124,6 @@ class EditorSaveManager {
     );
 
     final newId = await provider.addOrUpdateNote(noteToSave, silent: silent);
-    AppLogger.success('Note saved with ID: $newId', 'SaveManager');
 
     // Log version for history
     try {

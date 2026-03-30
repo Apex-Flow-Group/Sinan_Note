@@ -7,6 +7,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -261,7 +262,9 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                   itemBuilder: (context, index) {
                     final note = archivedNotes[index];
                     final isSelected = _selectedNoteIds.contains(note.id);
-                    return NoteCardWidget(
+                    return SelectedNoteIndicator(
+                      note: note,
+                      child: NoteCardWidget(
                       note: note,
                       viewType: _viewType,
                       closeAllSlidables: ValueNotifier<int>(0),
@@ -298,6 +301,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                       source: 'archive',
                       selectionMode: _selectionMode,
                       isSelected: isSelected,
+                    ),
                     );
                   },
                 ),

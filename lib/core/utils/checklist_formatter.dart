@@ -74,6 +74,16 @@ class ChecklistFormatter {
   /// Check if content is valid JSON checklist
   static bool isValidChecklist(String content) {
     try {
+      // Delta JSON ليس checklist
+      if (content.trimLeft().startsWith('[')) {
+        final decoded = jsonDecode(content);
+        if (decoded is List && decoded.isNotEmpty) {
+          final first = decoded.first;
+          // Delta له 'insert' key، Checklist له 'text' أو 'isDone'
+          if (first is Map && first.containsKey('insert')) return false;
+        }
+      }
+
       final decoded = jsonDecode(content);
 
       // Check for {"title":"...", "items":[...]} format
@@ -83,6 +93,8 @@ class ChecklistFormatter {
 
       // Check for direct array format
       if (decoded is List && decoded.isNotEmpty && decoded.first is Map) {
+        final first = decoded.first as Map;
+        if (first.containsKey('insert')) return false; // Delta
         return true;
       }
 

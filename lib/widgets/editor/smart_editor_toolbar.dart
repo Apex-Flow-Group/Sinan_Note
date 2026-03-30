@@ -129,71 +129,67 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
       key: const ValueKey('main'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            _buildIconBtn(Icons.calculate_outlined, widget.onCalculate),
-            _buildIconBtn(Icons.content_paste_rounded, widget.onPaste),
-            _buildIconBtn(Icons.text_fields_rounded,
-                () => setState(() => _currentMode = ToolbarMode.format)),
-            _buildIconBtn(Icons.palette_outlined,
-                () => setState(() => _currentMode = ToolbarMode.style)),
-            _buildIconBtn(Icons.undo_rounded, widget.onUndo, isEnabled: true),
-            _buildIconBtn(Icons.redo_rounded, widget.onRedo, isEnabled: true),
-          ],
+        Flexible(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildIconBtn(Icons.calculate_outlined, widget.onCalculate),
+                _buildIconBtn(Icons.content_paste_rounded, widget.onPaste),
+                _buildIconBtn(Icons.text_fields_rounded,
+                    () => setState(() => _currentMode = ToolbarMode.format)),
+                _buildIconBtn(Icons.palette_outlined,
+                    () => setState(() => _currentMode = ToolbarMode.style)),
+                _buildIconBtn(Icons.undo_rounded, widget.onUndo,
+                    isEnabled: true),
+                _buildIconBtn(Icons.redo_rounded, widget.onRedo,
+                    isEnabled: true),
+              ],
+            ),
+          ),
         ),
-        Builder(
-          builder: (ctx) => Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                final RenderBox button = ctx.findRenderObject() as RenderBox;
-                final RenderBox overlay =
-                    Overlay.of(context).context.findRenderObject() as RenderBox;
-                final RelativeRect position = RelativeRect.fromRect(
-                  Rect.fromPoints(
-                    button.localToGlobal(Offset.zero, ancestor: overlay),
-                    button.localToGlobal(button.size.bottomRight(Offset.zero),
-                        ancestor: overlay),
-                  ),
-                  Offset.zero & overlay.size,
-                );
-                EditorOptionsMenu.show(
-                  context: context,
-                  position: position,
-                  hasContent: widget.hasContent,
-                  showReminder: true,
-                ).then((value) {
-                  if (value == 'reminder') {
-                    widget.onReminderTap();
-                  } else if (value == 'share') {
-                    widget.onShareTap();
-                  } else if (value == 'archive') {
-                    widget.onArchiveTap();
-                  } else if (value == 'delete') {
-                    widget.onDeleteTap();
-                  }
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: widget.textColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: widget.textColor.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
+        const SizedBox(width: 8),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _showOptionsMenu(),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: widget.textColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: widget.textColor.withValues(alpha: 0.2),
+                  width: 1,
                 ),
-                child: Icon(Icons.more_vert_rounded,
-                    color: widget.textColor, size: 22),
               ),
+              child: Icon(Icons.more_vert_rounded,
+                  color: widget.textColor, size: 22),
             ),
           ),
         ),
       ],
     );
+  }
+
+  void _showOptionsMenu() {
+    EditorOptionsMenu.show(
+      context: context,
+      hasContent: widget.hasContent,
+      showReminder: true,
+    ).then((value) {
+      if (value == 'reminder') {
+        widget.onReminderTap();
+      } else if (value == 'share') {
+        widget.onShareTap();
+      } else if (value == 'archive') {
+        widget.onArchiveTap();
+      } else if (value == 'delete') {
+        widget.onDeleteTap();
+      }
+    });
   }
 
   Widget _buildFormatBar() {

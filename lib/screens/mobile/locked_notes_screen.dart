@@ -11,9 +11,9 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
+import 'package:apex_note/widgets/home/dialogs/vault_dialogs.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -60,13 +60,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      if (_showAddMenu) {
-        setState(() => _showAddMenu = false);
-      }
-
-      // Clear session and navigate away when app goes to background
+      if (_showAddMenu) setState(() => _showAddMenu = false);
       _providerRef?.clearLockedSession(notify: false);
-
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -81,17 +76,13 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     setState(() => _isLoading = true);
     final provider = Provider.of<NotesProvider>(context, listen: false);
     _decryptedNotes = await provider.fetchAndDecryptLockedNotes();
-    AppLogger.info(
-        'Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
+    AppLogger.info('Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
     if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _createLockedNote(NoteMode mode) async {
-    AppLogger.info('Creating new locked ${mode.name} note', 'LockedNotes');
-
     String noteType;
-    bool isChecklist = false;
-    bool isProfessional = false;
+    bool isChecklist = false, isProfessional = false;
     String initialContent = '';
 
     switch (mode) {
@@ -103,11 +94,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       case NoteMode.code:
         noteType = 'code';
         isProfessional = true;
-        initialContent = '';
         break;
       default:
         noteType = 'simple';
-        initialContent = '';
     }
 
     await Navigator.push(
@@ -131,11 +120,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       ),
     );
 
-    AppLogger.info('Editor closed, reloading', 'LockedNotes');
-    if (mounted) {
-      await _loadLockedNotes();
-      AppLogger.info('Locked notes: ${_decryptedNotes.length}', 'LockedNotes');
-    }
+    if (mounted) await _loadLockedNotes();
   }
 
   Future<void> _showImportSheet() async {
@@ -167,281 +152,85 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         builder: (context, setModalState) {
           final l10n = AppLocalizations.of(context)!;
           return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Container(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.75,
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 16, bottom: 24),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(l10n.importNotes,
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                      IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context)),
-                    ],
-                  ),
-                  const Divider(),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: unlocked.length,
-                      itemBuilder: (context, i) {
-                        final note = unlocked[i];
-                        final isSelected = selected.contains(note.id);
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 24),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(l10n.importNotes,
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context)),
+                      ],
+                    ),
+                    const Divider(),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: unlocked.length,
+                        itemBuilder: (context, i) {
+                          final note = unlocked[i];
+                          final isSelected = selected.contains(note.id);
+                          String displayTitle = note.title.isEmpty ? l10n.untitled : note.title;
+                          String displayContent = note.content;
 
-                        String displayTitle =
-                            note.title.isEmpty ? l10n.untitled : note.title;
-                        String displayContent = note.content;
-
-                        if (note.isChecklist) {
-                          try {
-                            final decoded = jsonDecode(note.content);
-                            if (decoded is Map) {
-                              displayTitle =
-                                  (decoded['title'] ?? '').toString().trim();
-                              if (displayTitle.isEmpty) {
-                                displayTitle = 'Checklist';
+                          if (note.isChecklist) {
+                            try {
+                              final decoded = jsonDecode(note.content);
+                              if (decoded is Map) {
+                                displayTitle = (decoded['title'] ?? '').toString().trim();
+                                if (displayTitle.isEmpty) displayTitle = 'Checklist';
+                                final items = decoded['items'] as List? ?? [];
+                                displayContent = '${items.length} ${items.length == 1 ? 'item' : 'items'}';
                               }
-                              final items = decoded['items'] as List? ?? [];
-                              displayContent =
-                                  '${items.length} ${items.length == 1 ? 'item' : 'items'}';
+                            } catch (_) {
+                              displayContent = 'Checklist';
                             }
-                          } catch (e) {
-                            displayContent = 'Checklist';
                           }
-                        }
 
-                        return CheckboxListTile(
-                          value: isSelected,
-                          onChanged: (val) => setModalState(() {
-                            if (val == true) {
-                              selected.add(note.id!);
-                            } else {
-                              selected.remove(note.id);
-                            }
-                          }),
-                          title: Text(displayTitle, maxLines: 1),
-                          subtitle: Text(displayContent,
-                              maxLines: 2, overflow: TextOverflow.ellipsis),
-                        );
-                      },
+                          return CheckboxListTile(
+                            value: isSelected,
+                            onChanged: (val) => setModalState(() {
+                              if (val == true) { selected.add(note.id!); }
+                              else { selected.remove(note.id); }
+                            }),
+                            title: Text(displayTitle, maxLines: 1),
+                            subtitle: Text(displayContent,
+                                maxLines: 2, overflow: TextOverflow.ellipsis),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SafeArea(
-                    child: ElevatedButton.icon(
-                      onPressed: selected.isEmpty
-                          ? null
-                          : () async {
-                              for (final id in selected) {
-                                await provider.toggleLockStatus(id, true);
-                              }
-                              if (!context.mounted) return;
-                              Navigator.pop(context);
-                              await _loadLockedNotes();
-                            },
-                      icon: const Icon(Icons.lock),
-                      label: Text(l10n.lockNotesCount(selected.length)),
-                      style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48)),
+                    const SizedBox(height: 8),
+                    SafeArea(
+                      child: ElevatedButton.icon(
+                        onPressed: selected.isEmpty
+                            ? null
+                            : () async {
+                                for (final id in selected) {
+                                  await provider.toggleLockStatus(id, true);
+                                }
+                                if (!context.mounted) return;
+                                Navigator.pop(context);
+                                await _loadLockedNotes();
+                              },
+                        icon: const Icon(Icons.lock),
+                        label: Text(l10n.lockNotesCount(selected.length)),
+                        style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48)),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
         },
-      ),
-    );
-  }
-
-  void _showVaultSettings() {
-    final l10n = AppLocalizations.of(context)!;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.settings, size: 24),
-            const SizedBox(width: 12),
-            Text(l10n.settings),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.vpn_key),
-              title: Text(l10n.createPassword),
-              subtitle: const Text('Change vault password'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _showChangePasswordDialog();
-              },
-            ),
-            FutureBuilder<bool>(
-              future: VaultService.isBiometricEnabled(),
-              builder: (context, snapshot) {
-                final isEnabled = snapshot.data ?? false;
-                return SwitchListTile(
-                  secondary: const Icon(Icons.fingerprint),
-                  title: Text(l10n.enableBiometric),
-                  subtitle: Text(l10n.biometricOptional),
-                  value: isEnabled,
-                  onChanged: (val) async {
-                    await VaultService.setBiometricEnabled(val);
-                    if (!context.mounted) return;
-                    Navigator.pop(ctx);
-                    UnifiedNotificationService().show(
-                      context: context,
-                      message:
-                          val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
-                      type: NotificationType.success,
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showChangePasswordDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final oldPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmController = TextEditingController();
-    bool obscureOld = true;
-    bool obscureNew = true;
-    bool obscureConfirm = true;
-    String? errorText;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(l10n.createPassword),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: oldPasswordController,
-                  obscureText: obscureOld,
-                  decoration: InputDecoration(
-                    labelText: l10n.oldPassword,
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                          obscureOld ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () =>
-                          setDialogState(() => obscureOld = !obscureOld),
-                    ),
-                  ),
-                  onChanged: (_) => setDialogState(() => errorText = null),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: newPasswordController,
-                  obscureText: obscureNew,
-                  decoration: InputDecoration(
-                    labelText: l10n.newPassword,
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                          obscureNew ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () =>
-                          setDialogState(() => obscureNew = !obscureNew),
-                    ),
-                  ),
-                  onChanged: (_) => setDialogState(() => errorText = null),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: confirmController,
-                  obscureText: obscureConfirm,
-                  decoration: InputDecoration(
-                    labelText: l10n.confirmPassword,
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscureConfirm
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                      onPressed: () => setDialogState(
-                          () => obscureConfirm = !obscureConfirm),
-                    ),
-                  ),
-                  onChanged: (_) => setDialogState(() => errorText = null),
-                ),
-                if (errorText != null) ...[
-                  const SizedBox(height: 12),
-                  Text(errorText!,
-                      style: const TextStyle(color: Colors.red, fontSize: 14)),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () async {
-                final oldPassword = oldPasswordController.text;
-                final newPassword = newPasswordController.text;
-                final confirm = confirmController.text;
-
-                if (oldPassword.isEmpty ||
-                    newPassword.isEmpty ||
-                    confirm.isEmpty) {
-                  setDialogState(() => errorText = l10n.fillAllFields);
-                  return;
-                }
-
-                if (newPassword.length < 6) {
-                  setDialogState(() => errorText = l10n.passwordMinLength);
-                  return;
-                }
-
-                if (newPassword != confirm) {
-                  setDialogState(() => errorText = l10n.passwordMismatch);
-                  return;
-                }
-
-                final success =
-                    await VaultService.changePassword(oldPassword, newPassword);
-
-                if (success && context.mounted) {
-                  Navigator.pop(ctx);
-                  UnifiedNotificationService().show(
-                    context: context,
-                    message: 'Password changed successfully',
-                    type: NotificationType.success,
-                  );
-                } else {
-                  setDialogState(() => errorText = l10n.incorrectPassword);
-                }
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -466,10 +255,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         }
       },
       child: Scaffold(
-        drawer: HomeDrawerWidget(
-          onBackupTap: () {},
-          onNotesChanged: _loadLockedNotes,
-        ),
+        drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: _loadLockedNotes),
         appBar: AppBar(
           leading: _selectedNoteIds.isEmpty
               ? Builder(
@@ -482,209 +268,12 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                   icon: const Icon(Icons.close),
                   onPressed: () => setState(() => _selectedNoteIds.clear()),
                 ),
-          title: _selectedNoteIds.isNotEmpty
-              ? Row(
-                  children: [
-                    Text('${_selectedNoteIds.length} ${l10n.selected}'),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.select_all, size: 20),
-                      onPressed: () {
-                        setState(() {
-                          for (final note in _decryptedNotes) {
-                            if (!note.isArchived && !note.isTrashed) {
-                              _selectedNoteIds.add(note.id!);
-                            }
-                          }
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.lock_open, size: 20),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(l10n.unlockNote),
-                            content: Text(l10n.unlockNoteConfirmation),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: Text(l10n.cancel),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(ctx);
-                                  for (final id in _selectedNoteIds) {
-                                    await _providerRef?.toggleLockStatus(
-                                        id, false);
-                                  }
-                                  setState(() => _selectedNoteIds.clear());
-                                  await _loadLockedNotes();
-                                },
-                                child: Text(l10n.unlock),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, size: 20),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(l10n.permanentDelete),
-                            content: Text(l10n.confirmPermanentDelete),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: Text(l10n.cancel),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(ctx);
-                                  for (final id in _selectedNoteIds) {
-                                    await _providerRef?.trashNote(id);
-                                  }
-                                  setState(() => _selectedNoteIds.clear());
-                                  await _loadLockedNotes();
-                                },
-                                child: Text(l10n.delete),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                )
-              : searchController.text.isEmpty
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.lock, size: 22),
-                        const SizedBox(width: 8),
-                        Text(l10n.locked),
-                      ],
-                    )
-                  : TextField(
-                      controller: searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: l10n.searchNotes,
-                        border: InputBorder.none,
-                      ),
-                    ),
-          actions: _selectedNoteIds.isEmpty
-              ? [
-                  IconButton(
-                    icon: const Icon(Icons.settings),
-                    tooltip: l10n.settings,
-                    onPressed: _showVaultSettings,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.file_download),
-                    tooltip: l10n.import,
-                    onPressed: _showImportSheet,
-                  ),
-                  IconButton(
-                    icon: Icon(searchController.text.isEmpty
-                        ? Icons.search
-                        : Icons.close),
-                    onPressed: () {
-                      setState(() {
-                        if (searchController.text.isEmpty) {
-                          searchController.text = ' ';
-                        } else {
-                          searchController.clear();
-                        }
-                      });
-                    },
-                  ),
-                ]
-              : [],
+          title: _buildAppBarTitle(l10n),
+          actions: _selectedNoteIds.isEmpty ? _buildActions(l10n) : [],
         ),
         body: Stack(
           children: [
-            _isLoading
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.decryptingVault,
-                          style:
-                              const TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                : Builder(
-                    builder: (context) {
-                      final query = searchController.text.toLowerCase();
-                      final filteredNotes = _decryptedNotes
-                          .where((note) => !note.isArchived && !note.isTrashed)
-                          .where((note) {
-                        if (query.isEmpty) return true;
-                        return note.title.toLowerCase().contains(query) ||
-                            note.content.toLowerCase().contains(query);
-                      }).toList();
-
-                      if (filteredNotes.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.lock_open,
-                                  size: 80, color: Colors.grey),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.noLockedNotes,
-                                style: const TextStyle(
-                                    fontSize: 18, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(
-                            left: 8, right: 8, top: 8, bottom: 100),
-                        itemCount: filteredNotes.length,
-                        itemBuilder: (context, index) {
-                          final note = filteredNotes[index];
-                          return NoteCardWidget(
-                            note: note,
-                            viewType: _viewType,
-                            closeAllSlidables: _closeAllSlidables,
-                            onNoteChanged:
-                                () {}, // No reload needed - note already decrypted
-                            onLongPress: () =>
-                                setState(() => _selectedNoteIds.add(note.id!)),
-                            source: 'locked',
-                            selectionMode: _selectedNoteIds.isNotEmpty,
-                            isSelected: _selectedNoteIds.contains(note.id),
-                            onTap: () {
-                              if (_selectedNoteIds.isNotEmpty) {
-                                setState(() {
-                                  if (_selectedNoteIds.contains(note.id)) {
-                                    _selectedNoteIds.remove(note.id);
-                                  } else {
-                                    _selectedNoteIds.add(note.id!);
-                                  }
-                                });
-                              }
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
+            _isLoading ? _buildLoading(l10n) : _buildNotesList(l10n),
             AddMenuWidget(
               showMenu: _showAddMenu,
               onToggle: () => setState(() => _showAddMenu = !_showAddMenu),
@@ -692,6 +281,182 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAppBarTitle(AppLocalizations l10n) {
+    if (_selectedNoteIds.isNotEmpty) {
+      return Row(
+        children: [
+          Text('${_selectedNoteIds.length} ${l10n.selected}'),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.select_all, size: 20),
+            onPressed: () => setState(() {
+              for (final note in _decryptedNotes) {
+                if (!note.isArchived && !note.isTrashed) {
+                  _selectedNoteIds.add(note.id!);
+                }
+              }
+            }),
+          ),
+          IconButton(
+            icon: const Icon(Icons.lock_open, size: 20),
+            onPressed: () => _confirmAction(
+              l10n.unlockNote,
+              l10n.unlockNoteConfirmation,
+              l10n.unlock,
+              () async {
+                for (final id in _selectedNoteIds) {
+                  await _providerRef?.toggleLockStatus(id, false);
+                }
+                setState(() => _selectedNoteIds.clear());
+                await _loadLockedNotes();
+              },
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, size: 20),
+            onPressed: () => _confirmAction(
+              l10n.permanentDelete,
+              l10n.confirmPermanentDelete,
+              l10n.delete,
+              () async {
+                for (final id in _selectedNoteIds) {
+                  await _providerRef?.trashNote(id);
+                }
+                setState(() => _selectedNoteIds.clear());
+                await _loadLockedNotes();
+              },
+            ),
+          ),
+        ],
+      );
+    }
+    if (searchController.text.isNotEmpty) {
+      return TextField(
+        controller: searchController,
+        autofocus: true,
+        decoration: InputDecoration(hintText: l10n.searchNotes, border: InputBorder.none),
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.lock, size: 22),
+        const SizedBox(width: 8),
+        Text(l10n.locked),
+      ],
+    );
+  }
+
+  List<Widget> _buildActions(AppLocalizations l10n) => [
+        IconButton(
+          icon: const Icon(Icons.settings),
+          tooltip: l10n.settings,
+          onPressed: () => VaultDialogs.showSettings(context),
+        ),
+        IconButton(
+          icon: const Icon(Icons.file_download),
+          tooltip: l10n.import,
+          onPressed: _showImportSheet,
+        ),
+        IconButton(
+          icon: Icon(searchController.text.isEmpty ? Icons.search : Icons.close),
+          onPressed: () => setState(() {
+            if (searchController.text.isEmpty) {
+              searchController.text = ' ';
+            } else {
+              searchController.clear();
+            }
+          }),
+        ),
+      ];
+
+  Widget _buildLoading(AppLocalizations l10n) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(l10n.decryptingVault,
+                style: const TextStyle(fontSize: 16, color: Colors.grey)),
+          ],
+        ),
+      );
+
+  Widget _buildNotesList(AppLocalizations l10n) {
+    final query = searchController.text.toLowerCase();
+    final filtered = _decryptedNotes
+        .where((n) => !n.isArchived && !n.isTrashed)
+        .where((n) => query.isEmpty ||
+            n.title.toLowerCase().contains(query) ||
+            n.content.toLowerCase().contains(query))
+        .toList();
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.lock_open, size: 80, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(l10n.noLockedNotes,
+                style: const TextStyle(fontSize: 18, color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 100),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final note = filtered[index];
+        return NoteCardWidget(
+          note: note,
+          viewType: _viewType,
+          closeAllSlidables: _closeAllSlidables,
+          onNoteChanged: () {},
+          onLongPress: () => setState(() => _selectedNoteIds.add(note.id!)),
+          source: 'locked',
+          selectionMode: _selectedNoteIds.isNotEmpty,
+          isSelected: _selectedNoteIds.contains(note.id),
+          onTap: () {
+            if (_selectedNoteIds.isNotEmpty) {
+              setState(() {
+                if (_selectedNoteIds.contains(note.id)) {
+                  _selectedNoteIds.remove(note.id);
+                } else {
+                  _selectedNoteIds.add(note.id!);
+                }
+              });
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmAction(
+      String title, String content, String confirmLabel, Future<void> Function() onConfirm) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await onConfirm();
+            },
+            child: Text(confirmLabel),
+          ),
+        ],
       ),
     );
   }

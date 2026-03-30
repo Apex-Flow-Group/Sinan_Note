@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double expandedHeight;
   final Widget child;
-  final bool isDark;
   final bool selectionMode;
   final Widget? selectionBar;
   final bool isSearchActive;
@@ -13,7 +12,6 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   SmoothSearchHeaderDelegate({
     required this.expandedHeight,
     required this.child,
-    required this.isDark,
     this.selectionMode = false,
     this.selectionBar,
     this.isSearchActive = false,
@@ -22,19 +20,29 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final bgColor = Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95);
+    final bgColor = Theme.of(context).colorScheme.surface;
 
     return Material(
       color: bgColor,
+      elevation: 0,
+      shadowColor: Colors.transparent,
       child: Align(
         alignment: Alignment.bottomCenter,
         child: SizedBox(
           height: expandedHeight,
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: selectionMode && selectionBar != null
-                ? Container(key: const ValueKey('selection'), child: selectionBar!)
-                : Container(key: const ValueKey('search'), child: child),
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: animation,
+                  child: child,
+                ),
+              );
+            },
+            child:
+                selectionMode && selectionBar != null ? selectionBar! : child,
           ),
         ),
       ),
@@ -48,10 +56,5 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => expandedHeight;
 
   @override
-  bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) {
-    return oldDelegate.expandedHeight != expandedHeight ||
-        oldDelegate.isDark != isDark ||
-        oldDelegate.selectionMode != selectionMode ||
-        oldDelegate.isSearchActive != isSearchActive;
-  }
+  bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) => true;
 }

@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 2.3.0+3313
+version: 2.3.0+3317
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -42,6 +42,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   crypto: ^3.0.3
   encrypt: ^5.0.3
+  pointycastle: ^3.7.3
   
   # UI
   flutter_slidable: ^4.0.3

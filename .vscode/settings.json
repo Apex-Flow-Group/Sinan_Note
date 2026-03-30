@@ -48,5 +48,7 @@
   "editor.cursorBlinking": "smooth",
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.smoothScrolling": true,
-  "editor.fontLigatures": true
+  "editor.fontLigatures": true,
+  "kiroAgent.configureMCP": "Disabled",
+  "chat.mcp.assisted.nuget.enabled": false
 }

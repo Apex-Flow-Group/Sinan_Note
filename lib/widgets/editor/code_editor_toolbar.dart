@@ -207,6 +207,9 @@ class CodeEditorToolbar extends StatelessWidget {
 
   void _showLanguageSelector(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     final languages = [
       'Auto',
       'Python',
@@ -240,51 +243,63 @@ class CodeEditorToolbar extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: backgroundColor.withValues(alpha: 0.98),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: EdgeInsets.only(
-          top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 100,
-        ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
+      builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Header - ثابت
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.language, color: textColor),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.selectLanguage,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: textColor,
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Icon(Icons.language, color: colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.selectLanguage,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            Divider(color: textColor.withValues(alpha: 0.2)),
+            const Divider(height: 1),
+            // Content - قابل للسكرول
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: languages.length + 1, // +1 for "Other"
+                itemCount: languages.length + 1,
                 itemBuilder: (context, index) {
-                  // Last item = "Other..."
                   if (index == languages.length) {
                     return ListTile(
                       leading: Icon(Icons.edit_outlined,
-                          color: textColor.withValues(alpha: 0.6)),
-                      title: Text(
-                        l10n.otherExtension,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: textColor,
-                            ),
-                      ),
+                          color: colorScheme.secondary),
+                      title: Text(l10n.otherExtension),
                       onTap: () {
                         Navigator.pop(ctx);
                         _showCustomExtensionDialog(context);
@@ -300,20 +315,19 @@ class CodeEditorToolbar extends StatelessWidget {
                     leading: Icon(
                       lang == 'Auto' ? Icons.auto_awesome : Icons.code,
                       color: isSelected
-                          ? Colors.blue
-                          : textColor.withValues(alpha: 0.6),
+                          ? colorScheme.primary
+                          : colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                     title: Text(
                       lang,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: textColor,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
+                      style: TextStyle(
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
                     ),
                     trailing: isSelected
-                        ? const Icon(Icons.check, color: Colors.blue)
+                        ? Icon(Icons.check, color: colorScheme.primary)
                         : null,
                     onTap: () {
                       Navigator.pop(ctx);
@@ -334,27 +348,26 @@ class CodeEditorToolbar extends StatelessWidget {
   void _showCustomExtensionDialog(BuildContext context) {
     final controller = TextEditingController();
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: backgroundColor,
-        title: Text(l10n.otherExtension, style: TextStyle(color: textColor)),
+        title: Text(l10n.otherExtension),
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: TextStyle(color: textColor, fontFamily: 'monospace'),
+          style: const TextStyle(fontFamily: 'monospace'),
           decoration: InputDecoration(
             hintText: 'e.g. vue, proto, graphql',
-            hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
             prefixText: '.',
-            prefixStyle: TextStyle(
-                color: textColor, fontFamily: 'monospace', fontSize: 16),
+            prefixStyle: const TextStyle(
+                fontFamily: 'monospace', fontSize: 16),
             enabledBorder: UnderlineInputBorder(
                 borderSide:
-                    BorderSide(color: textColor.withValues(alpha: 0.3))),
-            focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue)),
+                    BorderSide(color: colorScheme.outline)),
+            focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: colorScheme.primary)),
           ),
           onSubmitted: (val) {
             _applyCustomExtension(ctx, val);
@@ -363,10 +376,9 @@ class CodeEditorToolbar extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel,
-                style: TextStyle(color: textColor.withValues(alpha: 0.6))),
+            child: Text(l10n.cancel),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () => _applyCustomExtension(ctx, controller.text),
             child: Text(l10n.save),
           ),

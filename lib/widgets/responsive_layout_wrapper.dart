@@ -1,14 +1,15 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/core/utils/platform_helper.dart';
 import 'package:flutter/material.dart';
 
-/// Widget رئيسي يحدد أي Layout يجب عرضه بناءً على حجم الشاشة
+/// Widget رئيسي يحدد أي Layout يجب عرضه بناءً على نوع الجهاز وحجم الشاشة
 /// 
-/// يستخدم LayoutBuilder لقياس عرض الشاشة المتاح ويختار بين:
-/// - mobileLayout: للشاشات الصغيرة (< 600px) - Navigation التقليدي
-/// - masterDetailsLayout: للشاشات الكبيرة (>= 600px) - عرض Master-Details
+/// يستخدم Platform + LayoutBuilder للاختيار بين:
+/// - mobileLayout: للأجهزة المحمولة (Android/iOS) - Navigation التقليدي
+/// - masterDetailsLayout: لأجهزة Desktop (Linux/Windows/macOS) مع عرض >= 600px
 /// 
-/// يستجيب تلقائياً لتغييرات حجم الشاشة (مثل تدوير الجهاز أو تغيير حجم النافذة)
+/// يمنع تحول الموبايل إلى Desktop Layout عند التدوير
 class ResponsiveLayoutWrapper extends StatelessWidget {
   /// Layout للشاشات الصغيرة (Mobile)
   final Widget mobileLayout;
@@ -31,11 +32,15 @@ class ResponsiveLayoutWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // إذا كان عرض الشاشة >= breakpoint، نعرض Master-Details Layout
-        if (constraints.maxWidth >= breakpoint) {
+        // التحقق من نوع الجهاز + حجم الشاشة
+        // Desktop Layout فقط على Linux/Windows/macOS مع عرض >= breakpoint
+        final shouldUseDesktop = PlatformHelper.isDesktopPlatform && 
+                                 constraints.maxWidth >= breakpoint;
+        
+        if (shouldUseDesktop) {
           return masterDetailsLayout;
         }
-        // وإلا نعرض Mobile Layout التقليدي
+        // Mobile Layout للأجهزة المحمولة (حتى في Landscape)
         return mobileLayout;
       },
     );

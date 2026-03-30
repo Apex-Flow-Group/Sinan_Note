@@ -9,8 +9,8 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart';
 import 'package:apex_note/screens/other/about_screen.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/desktop/desktop_menu_bar.dart';
+import 'package:apex_note/widgets/desktop/desktop_selection_actions.dart';
 import 'package:apex_note/widgets/details_panel.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
@@ -480,109 +480,10 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   List<Widget> _buildSelectionActions(
       BuildContext context, Set<int> selectedIds) {
-    final l10n = AppLocalizations.of(context)!;
-    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-
     return [
-      IconButton(
-        icon: const Icon(Icons.push_pin),
-        onPressed: () async {
-          final ids = List<int>.from(selectedIds);
-          final count = ids.length;
-          final notesToRestore = <Note>[];
-
-          for (final id in ids) {
-            final note = notesProvider.notes.firstWhere((n) => n.id == id);
-            notesToRestore.add(note);
-            final updatedNote = Note(
-              id: note.id,
-              title: note.title,
-              content: note.content,
-              createdAt: note.createdAt,
-              updatedAt: DateTime.now(),
-              colorIndex: note.colorIndex,
-              isArchived: note.isArchived,
-              isTrashed: note.isTrashed,
-              reminderDateTime: note.reminderDateTime,
-              isLocked: note.isLocked,
-              noteType: note.noteType,
-              recurrenceRule: note.recurrenceRule,
-              isCompleted: note.isCompleted,
-              isProfessional: note.isProfessional,
-              isPinned: !note.isPinned,
-              isChecklist: note.isChecklist,
-            );
-            await notesProvider.updateNote(updatedNote);
-          }
-
-          _selectedNoteIdsNotifier.value = {};
-
-          if (context.mounted) {
-            UnifiedNotificationService().showWithUndo(
-              context: context,
-              message: '$count ${l10n.notesPinned}',
-              actionKey: 'bulk_pin',
-              type: NotificationType.success,
-              onExecute: () {},
-              onUndo: () async {
-                for (final note in notesToRestore) {
-                  await notesProvider.updateNote(note);
-                }
-              },
-              undoLabel: l10n.undo,
-            );
-          }
-        },
-      ),
-      IconButton(
-        icon: const Icon(Icons.archive),
-        onPressed: () async {
-          final ids = List<int>.from(selectedIds);
-          final count = ids.length;
-
-          await notesProvider.archiveNotes(ids);
-          _selectedNoteIdsNotifier.value = {};
-
-          if (context.mounted) {
-            UnifiedNotificationService().showWithUndo(
-              context: context,
-              message: '$count ${l10n.notesArchived}',
-              actionKey: 'bulk_archive',
-              type: NotificationType.success,
-              onExecute: () {},
-              onUndo: () async {
-                await notesProvider.unarchiveNotes(ids);
-              },
-              undoLabel: l10n.undo,
-            );
-          }
-        },
-        tooltip: l10n.archive,
-      ),
-      IconButton(
-        icon: const Icon(Icons.delete),
-        onPressed: () async {
-          final ids = List<int>.from(selectedIds);
-          final count = ids.length;
-
-          await notesProvider.trashNotes(ids);
-          _selectedNoteIdsNotifier.value = {};
-
-          if (context.mounted) {
-            UnifiedNotificationService().showWithUndo(
-              context: context,
-              message: '$count ${l10n.notesDeleted}',
-              actionKey: 'bulk_delete',
-              type: NotificationType.info,
-              onExecute: () {},
-              onUndo: () async {
-                await notesProvider.restoreNotes(ids);
-              },
-              undoLabel: l10n.undo,
-            );
-          }
-        },
-        tooltip: l10n.delete,
+      DesktopSelectionActions(
+        selectedIds: selectedIds,
+        onClearSelection: () => _selectedNoteIdsNotifier.value = {},
       ),
     ];
   }

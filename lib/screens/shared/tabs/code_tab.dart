@@ -9,6 +9,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -167,14 +168,17 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                           },
                         ),
                         IconButton(
-                          icon: Icon(_viewType == ViewType.grid
-                              ? Icons.view_list
-                              : Icons.grid_view),
+                          icon: Icon(
+                            _viewType == ViewType.listExpanded
+                                ? Icons.view_headline
+                                : _viewType == ViewType.listCompact
+                                    ? Icons.grid_view
+                                    : Icons.view_day,
+                          ),
                           onPressed: () async {
                             setState(() {
-                              _viewType = _viewType == ViewType.grid
-                                  ? ViewType.listExpanded
-                                  : ViewType.grid;
+                              final next = (_viewType.index + 1) % ViewType.values.length;
+                              _viewType = ViewType.values[next];
                             });
                             final settings = Provider.of<SettingsProvider>(
                                 context, listen: false);
@@ -265,12 +269,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                           return SliverPadding(
                             padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
                             sliver: SliverMasonryGrid.count(
-                              crossAxisCount:
-                                  MediaQuery.of(context).size.width >= 1200
-                                      ? 4
-                                      : MediaQuery.of(context).size.width >= 600
-                                          ? 3
-                                          : 2,
+                              crossAxisCount: 2,
                               mainAxisSpacing: 8,
                               crossAxisSpacing: 8,
                               childCount: notes.length,
@@ -280,6 +279,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                           );
                         }
 
+                        // listCompact أو listExpanded
                         return SliverPadding(
                           padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
                           sliver: SliverList(
@@ -334,12 +334,8 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
       child: Selector<SelectedNoteProvider, bool>(
         selector: (_, p) => p.selectedNote?.id == note.id,
         builder: (context, isCurrentlyOpen, _) {
-          return AnimatedPadding(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            padding: isCurrentlyOpen
-                ? const EdgeInsets.only(left: 12)
-                : EdgeInsets.zero,
+          return SelectedNoteIndicator(
+            note: note,
             child: NoteCardWidget(
               note: note,
               viewType: _viewType,

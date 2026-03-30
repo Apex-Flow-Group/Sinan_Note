@@ -51,8 +51,7 @@ class _SmartHeaderState extends State<SmartHeader> {
           pinned: selectedIds.isNotEmpty,
           floating: selectedIds.isEmpty,
           delegate: SmoothSearchHeaderDelegate(
-            expandedHeight: 80.0,
-            isDark: isDark,
+            expandedHeight: 68.0,
             selectionMode: selectedIds.isNotEmpty,
             isSearchActive: widget.isSearchActive,
             selectionBar: Center(
@@ -62,8 +61,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16.0, vertical: 10),
                   child: SelectionActionBar(
-                    selectedIdsNotifier: widget
-                        .selectedNoteIdsNotifier, // 🔥 Pass notifier directly
+                    selectedIdsNotifier: widget.selectedNoteIdsNotifier,
                     isDark: isDark,
                     allPinned: false,
                     onClear: () {
@@ -79,9 +77,7 @@ class _SmartHeaderState extends State<SmartHeader> {
 
                             widget.selectedNoteIdsNotifier.value = {};
 
-                            NoteConversionSheet.show(context, note, () {
-                              // Refresh will happen automatically via provider
-                            });
+                            NoteConversionSheet.show(context, note, () {});
                           }
                         : null,
                     onPin: () async {
@@ -91,7 +87,6 @@ class _SmartHeaderState extends State<SmartHeader> {
                       final count = ids.length;
                       final notesToRestore = <Note>[];
 
-                      // IMMEDIATE: Execute action first (Google Keep style)
                       for (final id in ids) {
                         final note =
                             provider.notes.firstWhere((n) => n.id == id);
@@ -125,7 +120,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                           message: '$count ${l10n.notesPinned}',
                           actionKey: 'bulk_pin',
                           type: NotificationType.success,
-                          onExecute: () {}, // Empty - action already executed
+                          onExecute: () {},
                           onUndo: () async {
                             for (final note in notesToRestore) {
                               await provider.updateNote(note);
@@ -141,7 +136,6 @@ class _SmartHeaderState extends State<SmartHeader> {
                       final ids = List<int>.from(selectedIds);
                       final count = ids.length;
 
-                      // IMMEDIATE: Execute batch action
                       await provider.archiveNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
 
@@ -165,7 +159,6 @@ class _SmartHeaderState extends State<SmartHeader> {
                       final ids = List<int>.from(selectedIds);
                       final count = ids.length;
 
-                      // IMMEDIATE: Execute batch action
                       await provider.trashNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
 
@@ -191,10 +184,8 @@ class _SmartHeaderState extends State<SmartHeader> {
                             final note = provider.notes
                                 .firstWhere((n) => n.id == noteId);
 
-                            // Clear selection first to prevent multiple taps
                             widget.selectedNoteIdsNotifier.value = {};
 
-                            // 📤 Use CustomShareSheet widget
                             CustomShareSheet.show(
                               context,
                               '${note.title}\n\n${note.content}',

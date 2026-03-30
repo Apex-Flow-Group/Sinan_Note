@@ -9,6 +9,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/shared/note_view_screen.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -40,7 +41,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
     super.initState();
     initSearch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotesProvider>(context, listen: false).fetchTrashNotes();
+      Provider.of<NotesProvider>(context, listen: false).fetchTrashedNotes();
     });
   }
 
@@ -395,9 +396,11 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                     itemBuilder: (context, index) {
                       final note = trashedNotes[index];
                       final isSelected = _selectedNotes.contains(note.id);
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 8),
+                      return SelectedNoteIndicator(
+                        note: note,
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 8),
                         color: AppColorPalette.palette[note.colorIndex]
                             .getColor(Theme.of(context).brightness),
                         child: InkWell(
@@ -492,6 +495,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                             ),
                           ),
                         ),
+                      ),
                       );
                     },
                   ),

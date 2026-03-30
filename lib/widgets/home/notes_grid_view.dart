@@ -15,6 +15,7 @@ class NotesGridView extends StatefulWidget {
   final ValueNotifier<Set<int>> selectedNoteIdsNotifier;
   final TextEditingController searchController;
   final ScrollController? scrollController;
+  final ValueNotifier<List<Note>>? filteredNotesNotifier;
 
   const NotesGridView({
     super.key,
@@ -22,6 +23,7 @@ class NotesGridView extends StatefulWidget {
     required this.selectedNoteIdsNotifier,
     required this.searchController,
     this.scrollController,
+    this.filteredNotesNotifier,
   });
 
   @override
@@ -31,13 +33,21 @@ class NotesGridView extends StatefulWidget {
 class _NotesGridViewState extends State<NotesGridView> {
   late final ScrollController _scrollController;
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier(0);
-  final ValueNotifier<List<Note>> _filteredNotesNotifier = ValueNotifier([]);
+  late final ValueNotifier<List<Note>> _filteredNotesNotifier;
+  bool _ownsFilteredNotifier = false;
   NotesProvider? _notesProvider;
 
   @override
   void initState() {
     super.initState();
     _scrollController = widget.scrollController ?? ScrollController();
+    if (widget.filteredNotesNotifier != null) {
+      _filteredNotesNotifier = widget.filteredNotesNotifier!;
+      _ownsFilteredNotifier = false;
+    } else {
+      _filteredNotesNotifier = ValueNotifier([]);
+      _ownsFilteredNotifier = true;
+    }
     widget.searchController.addListener(_onSearchChanged);
   }
 
@@ -60,7 +70,7 @@ class _NotesGridViewState extends State<NotesGridView> {
     widget.searchController.removeListener(_onSearchChanged);
     if (widget.scrollController == null) _scrollController.dispose();
     _closeAllSlidables.dispose();
-    _filteredNotesNotifier.dispose();
+    if (_ownsFilteredNotifier) _filteredNotesNotifier.dispose();
     super.dispose();
   }
 
@@ -254,7 +264,6 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
         padding:
             EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
         sliver: SliverMasonryGrid.count(
-          key: const PageStorageKey('notes_masonry_grid'),
           crossAxisCount: MediaQuery.of(context).size.width >= 1200
               ? 4
               : MediaQuery.of(context).size.width >= 600
@@ -290,6 +299,15 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
   }
 
   Widget _buildNoteCard(Note note, String source) {
+    if (source == 'home_grid') {
+      return _NoteCardWrapper(
+        note: note,
+        viewType: _viewType,
+        closeAllSlidables: widget.closeAllSlidables,
+        selectedNoteIdsNotifier: widget.selectedNoteIdsNotifier,
+        source: source,
+      );
+    }
     return RepaintBoundary(
       key: ValueKey<int>(note.id!),
       child: _HeightRecorder(

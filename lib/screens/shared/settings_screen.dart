@@ -207,9 +207,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ListTile(
                 leading: const Icon(Icons.share),
                 title: Text(l10n.shareApp),
-                onTap: () => CustomShareSheet.show(context, currentLang == 'ar'
-                    ? 'جرب Sinan Note!'
-                    : 'Try Sinan Note!'),
+                onTap: () {
+                  final msg = currentLang == 'ar'
+                      ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
+                      : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
+                  CustomShareSheet.show(context, msg, appShare: true);
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.info_outline),
@@ -469,9 +472,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.share),
             title: Text(l10n.shareApp),
-            onTap: () => CustomShareSheet.show(context, currentLang == 'ar'
-                ? 'جرب Sinan Note!'
-                : 'Try Sinan Note!'),
+            onTap: () {
+              final msg = currentLang == 'ar'
+                  ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
+                  : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
+              CustomShareSheet.show(context, msg, appShare: true);
+            },
           ),
           ListTile(
             leading: const Icon(Icons.info_outline),

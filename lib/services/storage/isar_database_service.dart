@@ -2,7 +2,7 @@
 
 import 'dart:async';
 
-import 'package:apex_note/core/utils/logger.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
@@ -59,24 +59,28 @@ class IsarDatabaseService {
   }
 
   Future<Isar> get database async {
-    // Return existing instance immediately - no initialization
     if (_isar != null && _isar!.isOpen) return _isar!;
-
-    // If not initialized, throw error - must call initialize() first
-    throw StateError(
-        'IsarDatabaseService not initialized. Call IsarDatabaseService.initialize() first.');
+    await IsarDatabaseService.initialize();
+    return _isar!;
   }
 
   // CRUD Operations
   final _writeLock = <String, Completer<void>>{};
 
+  static String _getPlainContent(String content) {
+    if (QuillMigration.isDelta(content)) {
+      try {
+        final controller = QuillMigration.controllerFromContent(content);
+        return QuillMigration.toPlainText(controller);
+      } catch (_) {}
+    }
+    return content;
+  }
+
   Future<int> insertNote(Note note) async {
     return await ApexErrorManager.monitorDB(() async {
-      AppLogger.info('insertNote called - title: ${note.title}', 'DB');
-
-      // Auto-update normalized fields
       note.normalizedTitle = Note.normalize(note.title);
-      note.normalizedContent = Note.normalize(note.content);
+      note.normalizedContent = Note.normalize(_getPlainContent(note.content));
 
       while (_writeLock.containsKey('insert')) {
         await _writeLock['insert']!.future;
@@ -89,7 +93,6 @@ class IsarDatabaseService {
           note.updatedAt = DateTime.now();
           return await isar.notes.put(note);
         });
-        AppLogger.success('Note inserted with ID: $id', 'DB');
         return id;
       } finally {
         _writeLock['insert']!.complete();
@@ -170,12 +173,8 @@ class IsarDatabaseService {
 
   Future<int> updateNote(Note note) async {
     return await ApexErrorManager.monitorDB(() async {
-      AppLogger.info(
-          'updateNote called - ID: ${note.id}, title: ${note.title}', 'DB');
-
-      // Auto-update normalized fields
       note.normalizedTitle = Note.normalize(note.title);
-      note.normalizedContent = Note.normalize(note.content);
+      note.normalizedContent = Note.normalize(_getPlainContent(note.content));
 
       final lockKey = 'update_${note.id}';
       while (_writeLock.containsKey(lockKey)) {
@@ -189,7 +188,6 @@ class IsarDatabaseService {
           note.updatedAt = DateTime.now();
           return await isar.notes.put(note);
         });
-        AppLogger.success('Note updated with ID: $id', 'DB');
         return id;
       } finally {
         _writeLock[lockKey]!.complete();
@@ -320,14 +318,10 @@ class IsarDatabaseService {
 
   // Version control
   Future<void> logNoteVersion(NoteVersion version) async {
-    AppLogger.info(
-        'logNoteVersion - noteId: ${version.noteId}, action: ${version.action}',
-        'DB');
     final isar = await database;
     await isar.writeTxn(() async {
       await isar.noteVersions.put(version);
     });
-    AppLogger.success('Version saved successfully', 'DB');
     await keepMaxVersions(version.noteId, 50);
   }
 
@@ -386,7 +380,7 @@ class IsarDatabaseService {
 
   Future<void> reopenDatabase() async {
     await closeDB();
-    await database;
+    await IsarDatabaseService.initialize();
   }
 
   Future<void> runLegacyHistoryCleanup() async {
