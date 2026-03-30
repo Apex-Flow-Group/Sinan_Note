@@ -18,11 +18,8 @@ class TextDirectionUtils {
   /// يحدد اتجاه النص بناءً على أول حرف مؤثر (يتجاهل الرموز والأرقام)
   static TextDirection getDirection(String text) {
     if (text.isEmpty) return TextDirection.rtl;
-
-    // تجاهل الرموز والمسافات في البداية
     final stripped = text.replaceAll(_neutralRegex, '');
     if (stripped.isEmpty) return TextDirection.rtl;
-
     return _rtlRegex.hasMatch(stripped[0])
         ? TextDirection.rtl
         : TextDirection.ltr;

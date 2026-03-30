@@ -48,7 +48,6 @@ class EditorBuildMethods {
     const toolbarHeight = 60.0;
     const codeToolbarHeight = 110.0;
     final totalBottomSpace = (mode == NoteMode.code ? codeToolbarHeight : toolbarHeight) + bottomPadding + 16;
-    debugPrint('[BuildMethods] bottomPadding=$bottomPadding, totalBottomSpace=$totalBottomSpace, toolbarOnly=${mode == NoteMode.code ? codeToolbarHeight : toolbarHeight}');
 
     if (mode == NoteMode.code) {
       // Ensure codeController is initialized

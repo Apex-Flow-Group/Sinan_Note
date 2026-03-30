@@ -31,12 +31,13 @@ class CodeEditorWidget extends StatelessWidget {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final topPadding = statusBarHeight + 56.0;
 
-    debugPrint('[CodeLayout] ── Screen: ${screenWidth}x${screenHeight}');
+    debugPrint('[CodeLayout] ── Screen: ${screenWidth}x$screenHeight');
     debugPrint('[CodeLayout] ── statusBar: $statusBarHeight');
     debugPrint('[CodeLayout] ── header(top padding): $topPadding');
     debugPrint('[CodeLayout] ── toolbar(bottom padding): $totalBottomSpace');
     debugPrint('[CodeLayout] ── keyboard: $keyboardHeight');
-    debugPrint('[CodeLayout] ── available height: ${screenHeight - topPadding - totalBottomSpace - keyboardHeight}');
+    debugPrint(
+        '[CodeLayout] ── available height: ${screenHeight - topPadding - totalBottomSpace - keyboardHeight}');
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,

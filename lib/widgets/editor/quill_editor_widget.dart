@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +35,7 @@ class QuillEditorWidget extends StatefulWidget {
 class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   TextDirection _textDirection = TextDirection.rtl;
   final ScrollController _scrollController = ScrollController();
+  bool _isFormatting = false;
 
   @override
   void initState() {
@@ -52,26 +52,15 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     super.dispose();
   }
 
-  bool _isFormatting = false;
-
   void _onChanged() {
-    debugPrint('[Quill] _onChanged called, _isFormatting=$_isFormatting');
-    if (_isFormatting) {
-      debugPrint('[Quill] skipped (formatting in progress)');
-      return;
-    }
+    if (_isFormatting) return;
 
     final doc = widget.quillController.document;
     final selection = widget.quillController.selection;
-    debugPrint('[Quill] selection=$selection, isValid=${selection.isValid}');
     if (!selection.isValid) return;
 
     final plainText = doc.toPlainText();
-    debugPrint('[Quill] plainText="${plainText.replaceAll('\n', '\\n')}"');
-    if (plainText.trim().isEmpty) {
-      debugPrint('[Quill] plainText is empty, skipping');
-      return;
-    }
+    if (plainText.trim().isEmpty) return;
 
     final offset = selection.baseOffset.clamp(0, plainText.length);
     final lineStart = plainText.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
@@ -80,34 +69,17 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       lineStart < 0 ? 0 : lineStart + 1,
       lineEnd < 0 ? plainText.length : lineEnd,
     );
-    debugPrint('[Quill] offset=$offset, lineStart=$lineStart, lineEnd=$lineEnd');
-    debugPrint('[Quill] currentLine="$currentLine"');
 
-    final newDir = TextDirectionUtils.getDirection(
-      currentLine.isNotEmpty ? currentLine : plainText,
-    );
-    debugPrint('[Quill] newDir=$newDir');
+    if (currentLine.isEmpty) return;
 
-    if (currentLine.isEmpty) {
-      debugPrint('[Quill] empty line, skipping');
-      return;
-    }
-
+    final newDir = TextDirectionUtils.getDirection(currentLine);
     final isRtl = newDir == TextDirection.rtl;
-    final selectionStyle = widget.quillController.getSelectionStyle();
-    final currentAttr = selectionStyle.attributes['direction'];
+    final currentAttr =
+        widget.quillController.getSelectionStyle().attributes['direction'];
     final currentIsRtl = currentAttr?.value == 'rtl';
-    debugPrint('[Quill] selectionStyle.attributes=${selectionStyle.attributes}');
-    debugPrint('[Quill] currentAttr=$currentAttr, currentIsRtl=$currentIsRtl, isRtl=$isRtl');
-
-    // مع Directionality(rtl):
-    // عربي = بدون direction (يرث rtl من الأب) ← currentIsRtl يجب أن يكون false
-    // إنجليزي = direction:rtl (يعكس) ← currentIsRtl يجب أن يكون true
-    // إذن: isRtl=true يعني نريد currentIsRtl=false، وisRtl=false يعني نريد currentIsRtl=true
-    final wantAttr = !isRtl; // عربي=false(بدون attr)، إنجليزي=true(direction:rtl)
+    final wantAttr = !isRtl;
 
     if (currentIsRtl != wantAttr) {
-      debugPrint('[Quill] APPLYING: ${isRtl ? 'Arabic→remove direction' : 'English→add direction:rtl'}');
       _isFormatting = true;
       if (isRtl) {
         widget.quillController.formatSelection(const DirectionAttribute(null));
@@ -117,17 +89,11 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         widget.quillController.formatSelection(const AlignAttribute(null));
       }
       _isFormatting = false;
-      debugPrint('[Quill] formatting done');
-    } else {
-      debugPrint('[Quill] no change needed');
     }
 
     if (newDir != _textDirection) {
-      debugPrint('[Quill] _textDirection: $_textDirection → $newDir (hint only)');
       setState(() => _textDirection = newDir);
     }
-
-    debugPrint('[Quill] delta=${jsonEncode(widget.quillController.document.toDelta().toJson())}');
   }
 
   @override
@@ -198,6 +164,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       fontSize: widget.fontSize,
                       height: 1.6,
                       color: widget.textColor,
+                      fontFeatures: [
+                        const FontFeature.disable('liga'),
+                        const FontFeature.disable('clig'),
+                      ],
                     ),
                     HorizontalSpacing.zero,
                     VerticalSpacing.zero,
