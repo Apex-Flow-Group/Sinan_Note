@@ -6,6 +6,7 @@ import 'package:apex_note/controllers/editor/editor_state_manager.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/apex_smart_controller.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
+import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
@@ -186,10 +187,29 @@ class EditorCoordinator {
           : text + result.text!;
       ctrl.text = newText;
     } else if (quillController != null) {
-      quillController!.document.insert(
-        quillController!.selection.extentOffset,
-        result.text!,
-      );
+      final ctrl = quillController!;
+      final sel = ctrl.selection;
+      final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
+      final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
+      // replaceText يحافظ على style الحالي (لون، حجم، إلخ)
+      ctrl.replaceText(offset, deleteLen, result.text!, null);
+      // إزالة أي color attribute من النص الملصوق لإرثه من customStyles
+      ctrl.formatText(offset, result.text!.length, const ColorAttribute(null));
+      // تطبيق اتجاه كل فقرة
+      final lines = result.text!.split('\n');
+      int pos = offset;
+      for (final line in lines) {
+        if (line.isNotEmpty) {
+          final isRtl =
+              TextDirectionUtils.getDirection(line) == TextDirection.rtl;
+          ctrl.formatText(
+            pos + line.length,
+            1,
+            isRtl ? const DirectionAttribute(null) : Attribute.rtl,
+          );
+        }
+        pos += line.length + 1;
+      }
     } else {
       final ctrl = contentController;
       final sel = ctrl.selection;

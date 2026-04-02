@@ -22,6 +22,11 @@ class NoteCardKeyRegistry {
 
   Map<int, double> get heights => _heights;
 
+  /// مجموع ارتفاعات كل البطاقات المحفوظة
+  double totalHeight(List<Note> orderedNotes, {double fallbackHeight = 72.0}) {
+    return orderedNotes.fold(0, (sum, n) => sum + (_heights[n.id] ?? fallbackHeight));
+  }
+
   /// يحسب الـ offset المتراكم للبطاقة بناءً على ترتيب القائمة
   /// مع استخدام الارتفاعات المحفوظة لكل بطاقة
   double estimateOffset(int noteId, List<Note> orderedNotes,

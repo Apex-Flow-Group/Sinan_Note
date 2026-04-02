@@ -128,7 +128,6 @@ class _SplashScreenState extends State<SplashScreen> {
       if (Platform.isAndroid || Platform.isIOS) {
         await NotificationService().initialize();
         if (Platform.isAndroid) {
-          await NotificationService().requestNotificationPermissions();
           await WidgetService().initialize();
         }
       }

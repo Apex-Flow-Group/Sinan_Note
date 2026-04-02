@@ -6,6 +6,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/common/glowing_search_field.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:apex_note/widgets/home/note_conversion_sheet.dart';
 import 'package:apex_note/widgets/home/selection_action_bar.dart';
 import 'package:apex_note/widgets/home/smooth_search_header_delegate.dart';
@@ -186,9 +187,12 @@ class _SmartHeaderState extends State<SmartHeader> {
 
                             widget.selectedNoteIdsNotifier.value = {};
 
+                            final plainContent = NoteCardUtils.fixNoteContent(
+                                note.content,
+                                maxChars: note.content.length);
                             CustomShareSheet.show(
                               context,
-                              '${note.title}\n\n${note.content}',
+                              '${note.title}\n\n$plainContent',
                               subject: note.title,
                               note: note,
                               onNoteCopied: () {

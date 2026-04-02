@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:io';
+
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/shared/settings/backup_dialogs.dart';
@@ -10,6 +12,8 @@ import 'package:apex_note/services/storage/backup_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 class DatabaseRestoreHandler {
@@ -19,6 +23,20 @@ class DatabaseRestoreHandler {
     AppLocalizations l10n,
     String backupPath,
   ) async {
+    // ── 1. Validate file integrity & size ────────────────────────────────
+    final isDb = BackupValidators.isDatabaseFile(backupPath.split('/').last);
+    final validationError =
+        await BackupValidators.validate(backupPath, isDatabase: isDb);
+    if (validationError != null) {
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+          context: context,
+          message: validationError,
+          type: NotificationType.error);
+      return;
+    }
+
+    // ── 2. Warn about locked notes ────────────────────────────────────────
     try {
       final dbService = IsarDatabaseService();
       final lockedNotes = await dbService.getLockedNotes();
@@ -39,27 +57,32 @@ class DatabaseRestoreHandler {
     }
 
     try {
-      final hasVaultData = await BackupValidators.checkForVaultData(backupPath);
-      if (hasVaultData) {
-        if (!context.mounted) return;
-        final recovered = await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => const RecoveryCodeDialog(),
-        );
-        if (recovered != true) {
+      // ── 3. Vault recovery if needed (JSON only) ───────────────────────
+      if (!isDb) {
+        final hasVaultData =
+            await BackupValidators.checkForVaultData(backupPath);
+        if (hasVaultData) {
           if (!context.mounted) return;
-          UnifiedNotificationService().show(
+          final recovered = await showDialog<bool>(
             context: context,
-            message: BackupMessages.getCancelMessage(lang, 'restore'),
-            type: NotificationType.warning,
+            barrierDismissible: false,
+            builder: (ctx) => const RecoveryCodeDialog(),
           );
-          return;
+          if (recovered != true) {
+            if (!context.mounted) return;
+            UnifiedNotificationService().show(
+              context: context,
+              message: BackupMessages.getCancelMessage(lang, 'restore'),
+              type: NotificationType.warning,
+            );
+            return;
+          }
         }
       }
 
       final localCount = await BackupService().checkLocalNotesCount();
 
+      // ── 4. No local notes → restore directly ─────────────────────────
       if (localCount == 0) {
         if (!context.mounted) return;
         showDialog(
@@ -69,7 +92,11 @@ class DatabaseRestoreHandler {
               child: CircularProgressIndicator(
                   color: Theme.of(context).colorScheme.primary)),
         );
-        await BackupService().replaceDatabase(backupPath);
+        if (isDb) {
+          await _restoreIsarFile(backupPath);
+        } else {
+          await BackupService().replaceDatabase(backupPath);
+        }
         if (!context.mounted) return;
         await Provider.of<NotesProvider>(context, listen: false)
             .loadNotes(force: true);
@@ -106,6 +133,7 @@ class DatabaseRestoreHandler {
         return;
       }
 
+      // ── 5. Has local notes → ask merge/replace ────────────────────────
       if (!context.mounted) return;
       final action = await showDialog<String>(
         context: context,
@@ -133,7 +161,9 @@ class DatabaseRestoreHandler {
 
       if (action == null || action == 'cancel') return;
 
-      if (action == 'merge') {
+      if (isDb) {
+        await _restoreIsarFile(backupPath);
+      } else if (action == 'merge') {
         await BackupService().mergeDatabase(backupPath);
       } else {
         await BackupService().replaceDatabase(backupPath);
@@ -162,7 +192,8 @@ class DatabaseRestoreHandler {
         if (!context.mounted) return;
         UnifiedNotificationService().show(
           context: context,
-          message: action == 'merge' ? l10n.mergedSuccessfully : l10n.restoredSuccessfully,
+          message:
+              action == 'merge' ? l10n.mergedSuccessfully : l10n.restoredSuccessfully,
           type: NotificationType.success,
         );
       }
@@ -177,5 +208,13 @@ class DatabaseRestoreHandler {
           message: e.toString().replaceAll('Exception:', ''),
           type: NotificationType.error);
     }
+  }
+
+  static Future<void> _restoreIsarFile(String backupPath) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final targetPath = p.join(dir.path, 'sinan_notes.isar');
+    await IsarDatabaseService().closeDB();
+    await File(backupPath).copy(targetPath);
+    await IsarDatabaseService.initialize();
   }
 }

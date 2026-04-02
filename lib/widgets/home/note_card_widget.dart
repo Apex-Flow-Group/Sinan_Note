@@ -31,7 +31,7 @@ class NoteCardWidget extends StatefulWidget {
   final VoidCallback? onTap;
   final bool isSelected;
   final bool selectionMode;
-  final bool isCurrentlyOpen; // 🔥 NEW
+  final bool isCurrentlyOpen;
   final String source;
 
   const NoteCardWidget({
@@ -45,7 +45,7 @@ class NoteCardWidget extends StatefulWidget {
     this.onTap,
     this.isSelected = false,
     this.selectionMode = false,
-    this.isCurrentlyOpen = false, // 🔥 NEW
+    this.isCurrentlyOpen = false,
   });
 
   @override
@@ -83,8 +83,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
         ? NoteCardUtils.getFileExtension(widget.note.content, widget.note.noteType)
         : '';
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -141,13 +139,11 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
           closerNotifier: widget.closeAllSlidables,
           child: Listener(
             onPointerDown: (event) {
-              // Increment to trigger close on ALL other cards
               widget.closeAllSlidables.value++;
             },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onSecondaryTapDown: (details) {
-                // 🔥 ضغط يمين على سطح المكتب
                 final isDesktop = MediaQuery.of(context).size.width >= 600;
                 if (isDesktop && !widget.selectionMode) {
                   NoteContextMenu.show(context, widget.note, widget.onNoteChanged);
@@ -157,15 +153,11 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 if (widget.selectionMode && widget.onTap != null) {
                   widget.onTap!();
                 } else if (!widget.selectionMode) {
-                  // 🔥 FIX: استخدام SelectedNoteProvider على سطح المكتب
                   final isDesktop = MediaQuery.of(context).size.width >= 600;
-                  
                   if (isDesktop) {
-                    // سطح المكتب: تحديث SelectedNoteProvider
                     final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
                     selectedNoteProvider.selectNote(widget.note);
                   } else {
-                    // موبايل: فتح شاشة كاملة
                     if (widget.note.isLocked && widget.source == 'locked') {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
                       final decryptedNote = Note(
@@ -228,218 +220,218 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   }
                 }
               },
-            onLongPress: () {
-              HapticFeedback.mediumImpact();
-              widget.onLongPress();
-            },
-            child: PremiumCardEffect(
-                  baseColor: baseColor,
-                  enableMotion: settings.cardMotionEnabled,
-                  isSelected: widget.isSelected,
-                  child: Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: widget.viewType == ViewType.listCompact
-                                      ? Text(
-                                          _displayTitle,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: titleColor),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        )
-                                      : Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _displayTitle,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  color: titleColor),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            widget.note.isLocked
-                                                ? Text(
-                                                    l10n.protectedContent,
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      color: contentColor.withValues(alpha: 0.6),
-                                                      fontStyle: FontStyle.italic,
-                                                    ),
-                                                  )
-                                                : _isChecklist
-                                                    ? NoteCardUtils.buildChecklistPreview(widget.note.content, titleColor)
-                                                    : Text(
-                                                        _displayContent,
-                                                        maxLines: 4,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                          color: contentColor,
-                                                        ),
-                                                      ),
-                                          ],
-                                        ),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (widget.note.isPinned)
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 4),
-                                        child: Icon(Icons.push_pin,
-                                            size: 18,
-                                            color: titleColor.withValues(alpha: 0.7)),
-                                      ),
-                                    if (widget.note.isLocked)
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 4),
-                                        child: Icon(Icons.lock, size: 20, color: titleColor),
-                                      ),
-                                    if (widget.note.isLocked && !widget.selectionMode)
-                                      NoteCardActions.buildLockedNoteMenu(context, widget.note, titleColor, widget.onNoteChanged),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            if (widget.note.reminderDateTime != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.alarm, size: 14, color: Colors.orange),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Text(
-                                          '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: titleColor,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
-                                        ),
-                                      ),
-                                      if (widget.note.recurrenceRule != null) ...[
-                                        const SizedBox(width: 4),
-                                        const Icon(Icons.repeat, size: 12, color: Colors.orange),
-                                      ],
-                                      const SizedBox(width: 4),
-                                      InkWell(
-                                        onTap: () async {
-                                          HapticFeedback.lightImpact();
-                                          final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-                                          await NotificationService().cancelNotification(widget.note.id!);
-                                          final updatedNote = widget.note.copyWith(
-                                            reminderDateTime: null,
-                                            recurrenceRule: null,
-                                          );
-                                          await notesProvider.updateNote(updatedNote);
-                                          widget.onNoteChanged();
-                                          if (context.mounted) {
-                                            UnifiedNotificationService().show(
-                                              context: context,
-                                              message: l10n.reminderRemoved,
-                                              type: NotificationType.info,
-                                            );
-                                          }
-                                        },
-                                        child: Icon(Icons.close, size: 14, color: titleColor.withValues(alpha: 0.7)),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            if (_shouldShowExt)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: widget.note.noteType == 'markdown'
-                                            ? Colors.orange.withValues(alpha: 0.15)
-                                            : Colors.blue.withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Row(
+              onLongPress: () {
+                HapticFeedback.mediumImpact();
+                widget.onLongPress();
+              },
+              child: PremiumCardEffect(
+                baseColor: baseColor,
+                enableMotion: settings.cardMotionEnabled,
+                isSelected: widget.isSelected,
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: widget.viewType == ViewType.listCompact
+                                    ? Text(
+                                        _displayTitle,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: titleColor),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    : Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(
-                                            Icons.code,
-                                            size: 12,
-                                            color: widget.note.noteType == 'markdown'
-                                                ? Colors.orange.shade700
-                                                : Colors.blue.shade700,
-                                          ),
-                                          const SizedBox(width: 4),
                                           Text(
-                                            _fileExtension,
+                                            _displayTitle,
                                             style: TextStyle(
-                                              fontSize: 11,
-                                              color: widget.note.noteType == 'markdown'
-                                                  ? Colors.orange.shade700
-                                                  : Colors.blue.shade700,
-                                              fontWeight: FontWeight.w600,
-                                              fontFamily: 'monospace',
-                                            ),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: titleColor),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
+                                          const SizedBox(height: 8),
+                                          widget.note.isLocked
+                                              ? Text(
+                                                  l10n.protectedContent,
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: contentColor.withValues(alpha: 0.6),
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                )
+                                              : _isChecklist
+                                                  ? NoteCardUtils.buildChecklistPreview(widget.note.content, titleColor)
+                                                  : Text(
+                                                      _displayContent,
+                                                      maxLines: 4,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: contentColor,
+                                                      ),
+                                                    ),
                                         ],
                                       ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (widget.note.isPinned)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 4),
+                                      child: Icon(Icons.push_pin,
+                                          size: 18,
+                                          color: titleColor.withValues(alpha: 0.7)),
+                                    ),
+                                  if (widget.note.isLocked)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 4),
+                                      child: Icon(Icons.lock, size: 20, color: titleColor),
+                                    ),
+                                  if (widget.note.isLocked && !widget.selectionMode)
+                                    NoteCardActions.buildLockedNoteMenu(context, widget.note, titleColor, widget.onNoteChanged),
+                                ],
+                              ),
+                            ],
+                          ),
+                          if (widget.note.reminderDateTime != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.alarm, size: 14, color: Colors.orange),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: titleColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                    if (widget.note.recurrenceRule != null) ...[
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.repeat, size: 12, color: Colors.orange),
+                                    ],
+                                    const SizedBox(width: 4),
+                                    InkWell(
+                                      onTap: () async {
+                                        HapticFeedback.lightImpact();
+                                        final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+                                        await NotificationService().cancelNotification(widget.note.id!);
+                                        final updatedNote = widget.note.copyWith(
+                                          reminderDateTime: null,
+                                          recurrenceRule: null,
+                                        );
+                                        await notesProvider.updateNote(updatedNote);
+                                        widget.onNoteChanged();
+                                        if (context.mounted) {
+                                          UnifiedNotificationService().show(
+                                            context: context,
+                                            message: l10n.reminderRemoved,
+                                            type: NotificationType.info,
+                                          );
+                                        }
+                                      },
+                                      child: Icon(Icons.close, size: 14, color: titleColor.withValues(alpha: 0.7)),
                                     ),
                                   ],
                                 ),
                               ),
-                          ],
-                        ),
+                            ),
+                          if (_shouldShowExt)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: widget.note.noteType == 'markdown'
+                                          ? Colors.orange.withValues(alpha: 0.15)
+                                          : Colors.blue.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.code,
+                                          size: 12,
+                                          color: widget.note.noteType == 'markdown'
+                                              ? Colors.orange.shade700
+                                              : Colors.blue.shade700,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _fileExtension,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: widget.note.noteType == 'markdown'
+                                                ? Colors.orange.shade700
+                                                : Colors.blue.shade700,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: 'monospace',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
-                      if (widget.selectionMode)
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: baseColor,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              widget.isSelected ? Icons.check_circle : Icons.circle_outlined,
-                              color: widget.isSelected
-                                  ? Theme.of(context).primaryColor
-                                  : titleColor.withValues(alpha: 0.5),
-                              size: 24,
-                            ),
+                    ),
+                    if (widget.selectionMode)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: baseColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            widget.isSelected ? Icons.check_circle : Icons.circle_outlined,
+                            color: widget.isSelected
+                                ? Theme.of(context).primaryColor
+                                : titleColor.withValues(alpha: 0.5),
+                            size: 24,
                           ),
                         ),
-                    ],
-                  ),  // Stack
-                ),  // PremiumCardEffect
-          ),  // GestureDetector
-        ),  // Listener
-      ),  // SlidableAutoCloser
-    ),  // Slidable
-  );  // Padding
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

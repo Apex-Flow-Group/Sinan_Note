@@ -183,12 +183,12 @@ class SettingsBackupHandlers {
   static Future<void> handleSmartImport(
       BuildContext context, String lang, AppLocalizations l10n) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-          type: FileType.custom, allowedExtensions: ['json', 'isar']);
+      final result = await FilePicker.platform.pickFiles(type: FileType.any);
       if (result == null || result.files.single.path == null) return;
 
       final filePath = result.files.single.path!;
-      final isDatabase = result.files.single.name.endsWith('.isar');
+      final name = result.files.single.name;
+      final isDatabase = name.endsWith('.isar') || name.endsWith('.sinannote');
 
       if (!context.mounted) return;
       if (isDatabase) {

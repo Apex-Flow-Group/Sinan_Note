@@ -25,6 +25,17 @@ class JsonImportHandler {
   ) async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     try {
+      final validationError =
+          await BackupValidators.validate(filePath, isDatabase: false);
+      if (validationError != null) {
+        if (!context.mounted) return;
+        UnifiedNotificationService().show(
+            context: context,
+            message: validationError,
+            type: NotificationType.error);
+        return;
+      }
+
       final hasVaultData = await BackupValidators.checkForVaultData(filePath);
       if (hasVaultData) {
         if (!context.mounted) return;

@@ -195,19 +195,24 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
   Widget _buildFormatBar() {
     return Row(
       key: const ValueKey('format'),
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _buildCloseBtn(),
-        Container(
-            height: 24,
-            width: 1,
-            color: widget.textColor.withValues(alpha: 0.2)),
-        _buildIconBtn(Icons.format_bold_rounded, widget.onBold),
-        _buildIconBtn(Icons.format_italic_rounded, widget.onItalic),
-        _buildIconBtn(Icons.title_rounded, widget.onH1),
-        _buildIconBtn(Icons.format_size_rounded, widget.onH2),
-        _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList),
-        _buildIconBtn(Icons.checklist_rounded, widget.onChecklist),
+        Container(height: 24, width: 1, color: widget.textColor.withValues(alpha: 0.2)),
+        Flexible(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildIconBtn(Icons.format_bold_rounded, widget.onBold),
+                _buildIconBtn(Icons.format_italic_rounded, widget.onItalic),
+                _buildIconBtn(Icons.title_rounded, widget.onH1),
+                _buildIconBtn(Icons.format_size_rounded, widget.onH2),
+                _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList),
+                _buildIconBtn(Icons.checklist_rounded, widget.onChecklist),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -215,16 +220,21 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
   Widget _buildStyleBar() {
     return Row(
       key: const ValueKey('style'),
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _buildCloseBtn(),
-        Container(
-            height: 24,
-            width: 1,
-            color: widget.textColor.withValues(alpha: 0.2)),
-        if (widget.onBackgroundColorTap != null)
-          _buildIconBtn(Icons.color_lens, widget.onBackgroundColorTap),
-        _buildIconBtn(Icons.format_color_text_rounded, widget.onColorTap),
+        Container(height: 24, width: 1, color: widget.textColor.withValues(alpha: 0.2)),
+        Flexible(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                if (widget.onBackgroundColorTap != null)
+                  _buildIconBtn(Icons.color_lens, widget.onBackgroundColorTap),
+                _buildIconBtn(Icons.format_color_text_rounded, widget.onColorTap),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }

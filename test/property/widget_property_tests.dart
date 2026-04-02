@@ -2,13 +2,10 @@
 
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
-import 'package:faker/faker.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Widget Integration Property Tests', () {
-    final faker = Faker();
-
     group('Property 10: Widget Update on Pinned Note Modification', () {
       test('widget updates called for pinned notes', () async {
         final service = NoteSideEffectService();
@@ -16,8 +13,8 @@ void main() {
         for (int i = 0; i < 50; i++) {
           final note = Note(
             id: i,
-            title: faker.lorem.word(),
-            content: faker.lorem.sentence(),
+            title: 'title_$i',
+            content: 'content sentence $i',
             isPinned: true,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
@@ -33,8 +30,8 @@ void main() {
         for (int i = 0; i < 50; i++) {
           final note = Note(
             id: i,
-            title: faker.lorem.word(),
-            content: faker.lorem.sentence(),
+            title: 'title_$i',
+            content: 'content sentence $i',
             isPinned: false,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),

@@ -5,6 +5,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -56,9 +57,10 @@ class NoteContextMenu extends StatelessWidget {
         }
       case 'share':
         if (context.mounted) {
+          final plainContent = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
           CustomShareSheet.show(
             context,
-            '${note.title}\n\n${note.content}',
+            '${note.title}\n\n$plainContent',
             subject: note.title,
             note: note,
             onNoteCopied: () async {

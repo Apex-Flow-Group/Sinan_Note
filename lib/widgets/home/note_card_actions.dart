@@ -5,6 +5,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -183,7 +184,8 @@ class NoteCardActions {
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          CustomShareSheet.show(context, '${note.title}\n\n${note.content}',
+          final plainContent = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
+          CustomShareSheet.show(context, '${note.title}\n\n$plainContent',
               subject: note.title);
         };
         break;

@@ -16,6 +16,7 @@ import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -363,7 +364,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         _currentNote.content,
       );
     } else {
-      textToShare = '${_currentNote.title}\n\n${_currentNote.content}';
+      textToShare = '${_currentNote.title}\n\n${NoteCardUtils.fixNoteContent(_currentNote.content, maxChars: _currentNote.content.length)}';
     }
 
     if (!mounted) return;
