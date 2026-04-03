@@ -11,6 +11,7 @@ import 'package:apex_note/screens/shared/note_view_screen.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -478,7 +479,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                                           ? _buildChecklistPreview(note.content,
                                               _getTextColor(note.colorIndex))
                                           : Text(
-                                              note.content,
+                                              NoteCardUtils.fixNoteContent(note.content),
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 color: _getTextColor(

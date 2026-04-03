@@ -121,33 +121,33 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         title: Text(
             _currentNote.title.isEmpty ? l10n.viewNote : _currentNote.title),
         actions: [
-          // زر التصنيفات
-          IconButton(
-            icon: Icon(
-              _currentNote.categoryIds.isEmpty
-                  ? Icons.label_outline_rounded
-                  : Icons.label_rounded,
-              color: _currentNote.categoryIds.isEmpty
-                  ? null
-                  : Theme.of(context).colorScheme.primary,
+          if (!_currentNote.isTrashed)
+            IconButton(
+              icon: Icon(
+                _currentNote.categoryIds.isEmpty
+                    ? Icons.label_outline_rounded
+                    : Icons.label_rounded,
+                color: _currentNote.categoryIds.isEmpty
+                    ? null
+                    : Theme.of(context).colorScheme.primary,
+              ),
+              tooltip: l10n.categories,
+              onPressed: () async {
+                final provider = Provider.of<NotesProvider>(context, listen: false);
+                final result = await CategoryPickerSheet.show(
+                  context, _currentNote.categoryIds,
+                  isHiddenFromHome: _currentNote.isHiddenFromHome,
+                );
+                if (result == null || !mounted) return;
+                final updated = _currentNote.copyWith(
+                  categoryIds: result['categoryIds'] as List<int>,
+                  isHiddenFromHome: result['isHiddenFromHome'] as bool,
+                );
+                await provider.updateNote(updated);
+                if (!mounted) return;
+                await _refreshNote();
+              },
             ),
-            tooltip: l10n.categories,
-            onPressed: () async {
-              final provider = Provider.of<NotesProvider>(context, listen: false);
-              final result = await CategoryPickerSheet.show(
-                context, _currentNote.categoryIds,
-                isHiddenFromHome: _currentNote.isHiddenFromHome,
-              );
-              if (result == null || !mounted) return;
-              final updated = _currentNote.copyWith(
-                categoryIds: result['categoryIds'] as List<int>,
-                isHiddenFromHome: result['isHiddenFromHome'] as bool,
-              );
-              await provider.updateNote(updated);
-              if (!mounted) return;
-              await _refreshNote();
-            },
-          ),
           if (!_currentNote.isTrashed)
             IconButton(
               icon: const Icon(Icons.widgets_outlined),
@@ -223,11 +223,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ChecklistFormatter.isValidChecklist(_currentNote.content)
-                    ? NoteViewWidgets.buildChecklistView(
-                        _currentNote.content, textColor)
-                    : NoteViewWidgets.buildDirectionalMarkdown(
-                        _currentNote.content, textColor),
+                _buildNoteContent(textColor),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -311,6 +307,33 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
           : NoteViewBars.buildActionBar(context, l10n, _currentNote,
               _onShareTap, _toggleArchive, _confirmDelete, _editNote),
     );
+  }
+
+  Widget _buildNoteContent(Color textColor) {
+    final content = _currentNote.content;
+
+    // checklist
+    if (ChecklistFormatter.isValidChecklist(content)) {
+      return NoteViewWidgets.buildChecklistView(content, textColor);
+    }
+
+    // نوت محترف (كود) — نص خام بخط monospace
+    if (_currentNote.isProfessional == true ||
+        _currentNote.noteType == 'code' ||
+        _currentNote.noteType == 'pro') {
+      return SelectableText(
+        content,
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.6,
+          color: textColor,
+          fontFamily: 'monospace',
+        ),
+      );
+    }
+
+    // نوت عادي أو rich — تنظيف Delta إن وجد ثم عرض markdown
+    return NoteViewWidgets.buildDirectionalMarkdown(content, textColor);
   }
 
   Future<void> _editNote() async {

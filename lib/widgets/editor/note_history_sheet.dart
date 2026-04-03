@@ -1,9 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -133,26 +130,8 @@ class NoteHistorySheet extends StatelessWidget {
     }
   }
 
-  String _toPlainText(String content) {
-    if (ChecklistFormatter.isValidChecklist(content)) {
-      return ChecklistFormatter.toDisplayText(content);
-    }
-    if (QuillMigration.isDelta(content)) {
-      try {
-        final list = jsonDecode(content) as List;
-        final buffer = StringBuffer();
-        for (final op in list) {
-          if (op is Map && op['insert'] is String) {
-            buffer.write(op['insert'] as String);
-          }
-        }
-        final result = buffer.toString().trimRight();
-        return result;
-        // ignore: empty_catches
-      } catch (e) {}
-    }
-    return content;
-  }
+  String _toPlainText(String content) =>
+      NoteContentUtils.toDisplayText(content);
 
   void _showDiffDialog(
       BuildContext context, NoteVersion version, String newerContent) {

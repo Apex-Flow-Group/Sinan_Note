@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -57,15 +57,7 @@ class NoteViewWidgets {
   /// كل فقرة تأخذ اتجاهها المستقل بناءً على أول حرف مؤثر
   static Widget buildDirectionalMarkdown(String content, Color textColor) {
     // إذا كان Delta JSON حوله لـ plain text أولاً
-    String displayContent = content;
-    if (QuillMigration.isDelta(content)) {
-      try {
-        final controller = QuillMigration.controllerFromContent(content);
-        displayContent = QuillMigration.toPlainText(controller);
-      } catch (_) {
-        displayContent = content;
-      }
-    }
+    String displayContent = NoteContentUtils.toDisplayText(content);
 
     final paragraphs = displayContent.split('\n');
     return Column(

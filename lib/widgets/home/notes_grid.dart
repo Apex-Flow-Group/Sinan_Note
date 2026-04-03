@@ -79,7 +79,7 @@ class _NotesGridState extends State<NotesGrid> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = Provider.of<SettingsProvider>(context);
+    Provider.of<SettingsProvider>(context);
 
     if (widget.notes.isEmpty) {
       return Center(child: Text(l10n.noNotes));
@@ -113,7 +113,7 @@ class _NotesGridState extends State<NotesGrid> {
           },
           child: PremiumCardEffect(
             baseColor: Color(note.colorIndex),
-            enableMotion: settings.cardMotionEnabled,
+            enableMotion: false,
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(

@@ -2,7 +2,7 @@
 
 import 'dart:async';
 
-import 'package:apex_note/core/utils/quill_migration.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/models/category.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
@@ -69,15 +69,7 @@ class IsarDatabaseService implements NoteDbInterface {
   // CRUD Operations
   final _writeLock = <String, Completer<void>>{};
 
-  static String _getPlainContent(String content) {
-    if (QuillMigration.isDelta(content)) {
-      try {
-        final controller = QuillMigration.controllerFromContent(content);
-        return QuillMigration.toPlainText(controller);
-      } catch (_) {}
-    }
-    return content;
-  }
+  static String _getPlainContent(String content) => NoteContentUtils.toDisplayText(content);
 
   Future<int> insertNote(Note note) async {
     return await ApexErrorManager.monitorDB(() async {

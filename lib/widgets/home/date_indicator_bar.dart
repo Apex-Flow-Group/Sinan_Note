@@ -213,6 +213,126 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     );
   }
 
+  void _showCategoryPicker(CategoriesProvider categoriesProvider) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final categories = categoriesProvider.categories;
+    final selectedId = categoriesProvider.selectedCategoryId;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.label_outline_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      isAr ? 'اختر كتالوج' : 'Select Catalog',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.45,
+                ),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    // خيار الكل
+                    ListTile(
+                      leading: Icon(
+                        Icons.all_inbox_rounded,
+                        color: selectedId == null ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      title: Text(
+                        isAr ? 'الكل' : 'All',
+                        style: TextStyle(
+                          fontWeight: selectedId == null ? FontWeight.bold : FontWeight.normal,
+                          color: selectedId == null ? colorScheme.primary : null,
+                        ),
+                      ),
+                      trailing: selectedId == null
+                          ? Icon(Icons.check_rounded, color: colorScheme.primary, size: 18)
+                          : null,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        categoriesProvider.selectCategory(null);
+                      },
+                    ),
+                    // كتالوج المحترف
+                    ListTile(
+                      leading: Icon(
+                        Icons.code_rounded,
+                        color: selectedId == kProCategoryId ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      title: Text(
+                        isAr ? 'المحترف' : 'Professional',
+                        style: TextStyle(
+                          fontWeight: selectedId == kProCategoryId ? FontWeight.bold : FontWeight.normal,
+                          color: selectedId == kProCategoryId ? colorScheme.primary : null,
+                        ),
+                      ),
+                      trailing: selectedId == kProCategoryId
+                          ? Icon(Icons.check_rounded, color: colorScheme.primary, size: 18)
+                          : null,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        categoriesProvider.selectCategory(kProCategoryId);
+                      },
+                    ),
+                    if (categories.isNotEmpty) const Divider(height: 1),
+                    // باقي الكتالوجات
+                    ...categories.map((cat) => ListTile(
+                      leading: Icon(
+                        Icons.label_rounded,
+                        color: selectedId == cat.id ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      title: Text(
+                        cat.name,
+                        style: TextStyle(
+                          fontWeight: selectedId == cat.id ? FontWeight.bold : FontWeight.normal,
+                          color: selectedId == cat.id ? colorScheme.primary : null,
+                        ),
+                      ),
+                      trailing: selectedId == cat.id
+                          ? Icon(Icons.check_rounded, color: colorScheme.primary, size: 18)
+                          : null,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        categoriesProvider.selectCategory(cat.id);
+                      },
+                    )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   String _formatDateStatic(DateTime date, bool isAr) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -232,32 +352,51 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
 
     // ─── وضع التصنيف ───
     if (selectedId != null) {
-      final cat = categoriesProvider.categories
-          .where((c) => c.id == selectedId)
-          .firstOrNull;
-      final catName = cat?.name ?? '';
+      final isProCategory = selectedId == kProCategoryId;
+      final cat = isProCategory
+          ? null
+          : categoriesProvider.categories
+              .where((c) => c.id == selectedId)
+              .firstOrNull;
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      final catName = isProCategory
+          ? (isAr ? 'المحترف' : 'Professional')
+          : (cat?.name ?? '');
 
       return Container(
         height: 28,
         color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.only(left: 16),
         child: Row(
           children: [
             Icon(Icons.label_rounded, size: 13, color: colorScheme.primary),
             const SizedBox(width: 6),
-            Text(
-              catName,
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w600,
+            GestureDetector(
+              onTap: () => _showCategoryPicker(categoriesProvider),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    catName,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(Icons.expand_more_rounded, size: 14, color: colorScheme.primary),
+                ],
               ),
             ),
             const Spacer(),
             GestureDetector(
               onTap: () => categoriesProvider.selectCategory(null),
-              child: Icon(Icons.close_rounded,
-                  size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Icon(Icons.close_rounded,
+                    size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              ),
             ),
           ],
         ),

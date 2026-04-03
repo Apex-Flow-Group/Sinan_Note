@@ -371,6 +371,16 @@ class _AboutScreenState extends State<AboutScreen> {
       context: context,
       applicationName: 'Sinan Note',
       applicationVersion: _version,
+      applicationIcon: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.asset(
+          'assets/images/app_icon.png',
+          width: 64,
+          height: 64,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.note_rounded, size: 64, color: Colors.blue),
+        ),
+      ),
     );
   }
 }

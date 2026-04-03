@@ -3,7 +3,7 @@
 import 'dart:convert';
 
 import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/services/language_detector.dart';
@@ -14,12 +14,37 @@ class NoteCardUtils {
     if (note.isChecklist) {
       return NoteMode.checklist;
     }
-    
+
     final codeTypes = [
-      'python', 'javascript', 'typescript', 'java', 'dart', 'html', 'css',
-      'svg', 'sql', 'cpp', 'c', 'csharp', 'swift', 'kotlin', 'go', 'rust',
-      'php', 'ruby', 'bash', 'json', 'yaml', 'toml', 'xml', 'lua', 'r',
-      'dockerfile', 'code', 'pro', 'professional'
+      'python',
+      'javascript',
+      'typescript',
+      'java',
+      'dart',
+      'html',
+      'css',
+      'svg',
+      'sql',
+      'cpp',
+      'c',
+      'csharp',
+      'swift',
+      'kotlin',
+      'go',
+      'rust',
+      'php',
+      'ruby',
+      'bash',
+      'json',
+      'yaml',
+      'toml',
+      'xml',
+      'lua',
+      'r',
+      'dockerfile',
+      'code',
+      'pro',
+      'professional'
     ];
 
     if (codeTypes.contains(note.noteType)) {
@@ -37,23 +62,8 @@ class NoteCardUtils {
     return hsl.withLightness((hsl.lightness - 0.15).clamp(0.0, 1.0)).toColor();
   }
 
-  static String fixNoteContent(String content, {int maxChars = 300}) {
-    if (ChecklistFormatter.isValidChecklist(content)) {
-      return ChecklistFormatter.toDisplayText(content);
-    }
-    // تحويل Delta JSON لـ plain text للعرض في البطاقة
-    String displayContent = content;
-    if (QuillMigration.isDelta(content)) {
-      try {
-        final controller = QuillMigration.controllerFromContent(content);
-        displayContent = QuillMigration.toPlainText(controller);
-      } catch (_) {}
-    }
-    if (displayContent.length <= maxChars) return displayContent;
-    final runes = displayContent.runes.toList();
-    if (runes.length <= maxChars) return displayContent;
-    return String.fromCharCodes(runes.take(maxChars));
-  }
+  static String fixNoteContent(String content, {int maxChars = 300}) =>
+      NoteContentUtils.toDisplayText(content, maxChars: maxChars);
 
   static String getDisplayTitle(Note note) {
     if (note.isChecklist && ChecklistFormatter.isValidChecklist(note.content)) {
@@ -75,10 +85,36 @@ class NoteCardUtils {
     // Custom extensions always show
     if (noteType.startsWith('custom:')) return true;
     final codeTypes = [
-      'pro', 'code', 'markdown', 'python', 'javascript', 'typescript', 'java',
-      'dart', 'html', 'css', 'svg', 'sql', 'cpp', 'c', 'csharp', 'swift',
-      'kotlin', 'go', 'rust', 'php', 'ruby', 'bash', 'json', 'yaml', 'toml',
-      'xml', 'lua', 'r', 'dockerfile', 'professional'
+      'pro',
+      'code',
+      'markdown',
+      'python',
+      'javascript',
+      'typescript',
+      'java',
+      'dart',
+      'html',
+      'css',
+      'svg',
+      'sql',
+      'cpp',
+      'c',
+      'csharp',
+      'swift',
+      'kotlin',
+      'go',
+      'rust',
+      'php',
+      'ruby',
+      'bash',
+      'json',
+      'yaml',
+      'toml',
+      'xml',
+      'lua',
+      'r',
+      'dockerfile',
+      'professional'
     ];
     return codeTypes.contains(noteType);
   }
@@ -142,7 +178,8 @@ class NoteCardUtils {
         content,
         maxLines: 4,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 14, color: titleColor.withValues(alpha: 0.7)),
+        style:
+            TextStyle(fontSize: 14, color: titleColor.withValues(alpha: 0.7)),
       );
     }
 

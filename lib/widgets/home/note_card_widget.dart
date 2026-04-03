@@ -241,7 +241,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
               },
               child: PremiumCardEffect(
                 baseColor: baseColor,
-                enableMotion: settings.cardMotionEnabled,
+                enableMotion: false,
                 isSelected: widget.isSelected,
                 child: Stack(
                   children: [

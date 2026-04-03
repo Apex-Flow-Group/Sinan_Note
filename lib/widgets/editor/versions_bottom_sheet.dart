@@ -1,8 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
@@ -53,11 +52,13 @@ class VersionsBottomSheet extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.noteHistory,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -65,7 +66,9 @@ class VersionsBottomSheet extends StatelessWidget {
                 child: Text(
                   '$totalVersions',
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue),
                 ),
               ),
               if (isDesktop)
@@ -107,7 +110,8 @@ class VersionsBottomSheet extends StatelessWidget {
                                 color: actionColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Icon(actionIcon, color: actionColor, size: 22),
+                              child: Icon(actionIcon,
+                                  color: actionColor, size: 22),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -115,10 +119,13 @@ class VersionsBottomSheet extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    version.title.isEmpty ? l10n.untitled : version.title,
+                                    version.title.isEmpty
+                                        ? l10n.untitled
+                                        : version.title,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontWeight: FontWeight.w500),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(timeAgo,
@@ -131,11 +138,12 @@ class VersionsBottomSheet extends StatelessWidget {
                               IconButton(
                                 icon: const Icon(Icons.compare, size: 20),
                                 tooltip: l10n.preview,
-                                onPressed: () => _showDiffDialog(
-                                    context, versions[index + 1], version, l10n),
+                                onPressed: () => _showDiffDialog(context,
+                                    versions[index + 1], version, l10n),
                               ),
                             IconButton(
-                              icon: const Icon(Icons.visibility_outlined, size: 20),
+                              icon: const Icon(Icons.visibility_outlined,
+                                  size: 20),
                               onPressed: () =>
                                   _showVersionPreview(context, version, l10n),
                             ),
@@ -156,45 +164,40 @@ class VersionsBottomSheet extends StatelessWidget {
 
   IconData _getActionIcon(String action) {
     switch (action) {
-      case 'manual_save': return Icons.save;
-      case 'auto_save':   return Icons.update;
-      case 'created':     return Icons.add_circle;
-      case 'archived':    return Icons.archive;
-      case 'restored':    return Icons.restore;
-      default:            return Icons.edit;
+      case 'manual_save':
+        return Icons.save;
+      case 'auto_save':
+        return Icons.update;
+      case 'created':
+        return Icons.add_circle;
+      case 'archived':
+        return Icons.archive;
+      case 'restored':
+        return Icons.restore;
+      default:
+        return Icons.edit;
     }
   }
 
   Color _getActionColor(String action) {
     switch (action) {
-      case 'manual_save': return Colors.green;
-      case 'auto_save':   return Colors.blue;
-      case 'created':     return Colors.purple;
-      case 'archived':    return Colors.orange;
-      case 'restored':    return Colors.teal;
-      default:            return Colors.grey;
+      case 'manual_save':
+        return Colors.green;
+      case 'auto_save':
+        return Colors.blue;
+      case 'created':
+        return Colors.purple;
+      case 'archived':
+        return Colors.orange;
+      case 'restored':
+        return Colors.teal;
+      default:
+        return Colors.grey;
     }
   }
 
-  String _toPlainText(String content) {
-    if (ChecklistFormatter.isValidChecklist(content)) {
-      return ChecklistFormatter.toDisplayText(content);
-    }
-    if (content.trimLeft().startsWith('[')) {
-      try {
-        final list = jsonDecode(content) as List;
-        final buffer = StringBuffer();
-        for (final op in list) {
-          if (op is Map && op['insert'] is String) {
-            buffer.write(op['insert'] as String);
-          }
-        }
-        return buffer.toString().trimRight();
-      } catch (_) {}
-    }
-    return content;
-  }
-
+  String _toPlainText(String content) =>
+      NoteContentUtils.toDisplayText(content);
   void _showDiffDialog(BuildContext context, NoteVersion older,
       NoteVersion newer, AppLocalizations l10n) {
     final oldText = _toPlainText(older.content);
@@ -233,14 +236,17 @@ class VersionsBottomSheet extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
-                    _legendDot(const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+                    _legendDot(
+                        const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
                     const SizedBox(width: 4),
                     Text(l10n.added, style: const TextStyle(fontSize: 12)),
                     const SizedBox(width: 12),
-                    _legendDot(const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+                    _legendDot(
+                        const Color(0xFFC62828), const Color(0xFFFFEBEE)),
                     const SizedBox(width: 4),
                     Text(l10n.deleted, style: const TextStyle(fontSize: 12)),
                   ],
@@ -282,8 +288,8 @@ class VersionsBottomSheet extends StatelessWidget {
         title: Text(version.title.isEmpty ? l10n.untitled : version.title),
         content: SingleChildScrollView(
           child: isChecklist
-              ? NoteCardUtils.buildChecklistPreview(version.content,
-                  Theme.of(ctx).textTheme.bodyMedium!.color!)
+              ? NoteCardUtils.buildChecklistPreview(
+                  version.content, Theme.of(ctx).textTheme.bodyMedium!.color!)
               : Text(displayContent.isEmpty ? l10n.noHistory : displayContent),
         ),
         actions: [

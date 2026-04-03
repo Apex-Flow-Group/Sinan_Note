@@ -9,12 +9,14 @@ class HomeScrollbar extends StatelessWidget {
   final ScrollController scrollController;
   final ValueNotifier<List<Note>> notesNotifier;
   final bool interactive;
+  final ValueNotifier<int>? totalCountNotifier;
 
   const HomeScrollbar({
     super.key,
     required this.scrollController,
     required this.notesNotifier,
     this.interactive = true,
+    this.totalCountNotifier,
   });
 
   @override
@@ -30,6 +32,7 @@ class HomeScrollbar extends StatelessWidget {
         child: _ScrollThumb(
           scrollController: scrollController,
           color: color,
+          totalCountNotifier: totalCountNotifier,
         ),
       ),
     );
@@ -39,10 +42,12 @@ class HomeScrollbar extends StatelessWidget {
 class _ScrollThumb extends StatefulWidget {
   final ScrollController scrollController;
   final Color color;
+  final ValueNotifier<int>? totalCountNotifier;
 
   const _ScrollThumb({
     required this.scrollController,
     required this.color,
+    this.totalCountNotifier,
   });
 
   @override
@@ -50,7 +55,7 @@ class _ScrollThumb extends StatefulWidget {
 }
 
 class _ScrollThumbState extends State<_ScrollThumb>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const double _trackPadTop = 80.0;
   static const double _trackPadBottom = 60.0;
   static const double _thumbMinHeight = 32.0;
@@ -58,35 +63,54 @@ class _ScrollThumbState extends State<_ScrollThumb>
 
   double _thumbTop = 0;
   double _thumbHeight = 40;
+  double _targetTop = 0;
+  double _targetHeight = 40;
   bool _visible = false;
   Timer? _hideTimer;
 
   late final AnimationController _fadeController;
-  late final Animation<double> _fadeAnimation;
+  late final AnimationController _posController;
+  late Animation<double> _topAnimation;
+  late Animation<double> _heightAnimation;
 
   @override
   void initState() {
     super.initState();
+
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
-    _fadeAnimation = _fadeController;
+
+    _posController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+
+    _topAnimation = AlwaysStoppedAnimation(_thumbTop);
+    _heightAnimation = AlwaysStoppedAnimation(_thumbHeight);
+
+    _posController.addListener(() {
+      if (mounted) setState(() {});
+    });
+
     widget.scrollController.addListener(_update);
+    widget.totalCountNotifier?.addListener(_update);
   }
 
   @override
   void dispose() {
     _hideTimer?.cancel();
     _fadeController.dispose();
+    _posController.dispose();
     widget.scrollController.removeListener(_update);
+    widget.totalCountNotifier?.removeListener(_update);
     super.dispose();
   }
 
   void _update() {
     if (!widget.scrollController.hasClients) return;
     final pos = widget.scrollController.position;
-
     if (pos.maxScrollExtent <= 0) {
       _hide();
       return;
@@ -95,29 +119,69 @@ class _ScrollThumbState extends State<_ScrollThumb>
     final trackH = pos.viewportDimension - _trackPadTop - _trackPadBottom;
     if (trackH <= 0) return;
 
-    final ratio = pos.viewportDimension / (pos.maxScrollExtent + pos.viewportDimension);
-    final newThumbH = (trackH * ratio).clamp(_thumbMinHeight, trackH);
-    final newThumbTop = _trackPadTop +
-        (pos.pixels / pos.maxScrollExtent) * (trackH - newThumbH);
+    final totalCount = widget.totalCountNotifier?.value ?? 0;
+    double ratio;
+    double scrollFraction;
 
-    // تجاهل تغييرات أقل من 0.5px
+    if (totalCount > 0 && pos.maxScrollExtent > 0) {
+      // حساب متوسط ارتفاع العنصر من الـ viewport الحالي
+      final visibleItems = pos.viewportDimension /
+          (pos.maxScrollExtent / (totalCount * 0.85)).clamp(40.0, 300.0);
+      ratio = (visibleItems / totalCount).clamp(0.04, 1.0);
+      // موضع السحب بناءً على النسبة الحقيقية من الكل
+      final loadedFraction =
+          (pos.maxScrollExtent + pos.viewportDimension) / (totalCount / visibleItems * pos.viewportDimension);
+      scrollFraction =
+          (pos.pixels / pos.maxScrollExtent * loadedFraction).clamp(0.0, 1.0);
+    } else {
+      ratio = pos.viewportDimension /
+          (pos.maxScrollExtent + pos.viewportDimension);
+      scrollFraction = pos.pixels / pos.maxScrollExtent;
+    }
+
+    final newThumbH = (trackH * ratio).clamp(_thumbMinHeight, trackH);
+    final newThumbTop =
+        _trackPadTop + scrollFraction * (trackH - newThumbH);
+
     if (_visible &&
-        (_thumbTop - newThumbTop).abs() < 0.5 &&
-        (_thumbHeight - newThumbH).abs() < 0.5) {
+        (_targetTop - newThumbTop).abs() < 0.5 &&
+        (_targetHeight - newThumbH).abs() < 0.5) {
       _resetHideTimer();
       return;
     }
 
-    _thumbTop = newThumbTop;
-    _thumbHeight = newThumbH;
+    final prevTop = _topAnimation.value;
+    final prevHeight = _heightAnimation.value;
+
+    _targetTop = newThumbTop;
+    _targetHeight = newThumbH;
+
+    // قفزة كبيرة = pagination جديد → تمهيد ناعم
+    final bigJump = (_targetTop - prevTop).abs() > 30 ||
+        (_targetHeight - prevHeight).abs() > 10;
+
+    if (bigJump) {
+      _topAnimation = Tween<double>(begin: prevTop, end: _targetTop).animate(
+          CurvedAnimation(parent: _posController, curve: Curves.easeOut));
+      _heightAnimation = Tween<double>(begin: prevHeight, end: _targetHeight)
+          .animate(
+              CurvedAnimation(parent: _posController, curve: Curves.easeOut));
+      _posController
+        ..reset()
+        ..forward();
+    } else {
+      _thumbTop = _targetTop;
+      _thumbHeight = _targetHeight;
+      _topAnimation = AlwaysStoppedAnimation(_thumbTop);
+      _heightAnimation = AlwaysStoppedAnimation(_thumbHeight);
+      if (mounted) setState(() {});
+    }
 
     if (!_visible) {
       _visible = true;
       _fadeController.forward();
     }
 
-    // setState صغير يؤثر فقط على هذا الـ widget
-    if (mounted) setState(() {});
     _resetHideTimer();
   }
 
@@ -138,12 +202,12 @@ class _ScrollThumbState extends State<_ScrollThumb>
     if (!_visible) return const SizedBox.shrink();
 
     return FadeTransition(
-      opacity: _fadeAnimation,
+      opacity: _fadeController,
       child: CustomPaint(
         painter: _ThumbPainter(
           color: widget.color,
-          thumbTop: _thumbTop,
-          thumbHeight: _thumbHeight,
+          thumbTop: _topAnimation.value,
+          thumbHeight: _heightAnimation.value,
           thumbWidth: _thumbWidth,
         ),
       ),

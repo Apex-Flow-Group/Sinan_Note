@@ -92,30 +92,64 @@ class NoteViewBars {
     VoidCallback onRestore,
     VoidCallback onPermanentDelete,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.1),
-        border: const Border(top: BorderSide(color: Colors.green, width: 2)),
+        color: Theme.of(context).bottomAppBarTheme.color ??
+            colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.restore),
-              label: Text(l10n.restore),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: onRestore,
-            ),
-            if (note.isTrashed)
-              OutlinedButton.icon(
-                icon: const Icon(Icons.delete_forever, color: Colors.red),
-                label: Text(l10n.permanentDelete),
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                onPressed: onPermanentDelete,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.delete_forever_outlined, size: 20),
+                  label: Text(l10n.permanentDelete),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    minimumSize: const Size(0, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: onPermanentDelete,
+                ),
               ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.restore_rounded, size: 20),
+                  label: Text(l10n.restore),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 48),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: onRestore,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

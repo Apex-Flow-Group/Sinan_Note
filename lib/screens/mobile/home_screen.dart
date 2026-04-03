@@ -53,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<List<Note>> _filteredNotesNotifier = ValueNotifier([]);
+  final ValueNotifier<int> _totalCountNotifier = ValueNotifier(0);
   late final ValueNotifier<String> _viewTypeNotifier;
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
   bool _isSearchActive = false;
@@ -302,6 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchFocusNode.dispose();
     _scrollController.dispose();
     _filteredNotesNotifier.dispose();
+    _totalCountNotifier.dispose();
     _viewTypeNotifier.dispose();
     _selectedNoteIdsNotifier.dispose();
     UnifiedNotificationService().cancelAll();
@@ -370,8 +372,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             .copyWith(scrollbars: false),
                         child: CustomScrollView(
                           controller: _scrollController,
-                          cacheExtent: 200,
-                          physics: const AlwaysScrollableScrollPhysics(),
+                          cacheExtent: 1500,
+                          physics: const BouncingScrollPhysics(
+                            decelerationRate: ScrollDecelerationRate.fast,
+                            parent: AlwaysScrollableScrollPhysics(),
+                          ),
                           slivers: [
                             SmartHeader(
                               selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
@@ -413,6 +418,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               searchController: _searchController,
                               scrollController: _scrollController,
                               filteredNotesNotifier: _filteredNotesNotifier,
+                              totalCountNotifier: _totalCountNotifier,
                             ),
                           ],
                         ),
@@ -425,6 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       scrollController: _scrollController,
                       notesNotifier: _filteredNotesNotifier,
                       interactive: _viewTypeNotifier.value == 'listCompact',
+                      totalCountNotifier: _totalCountNotifier,
                     ),
                   ),
                   NoteLocatorButton(scrollController: _scrollController),

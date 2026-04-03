@@ -20,10 +20,8 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final bgColor = Theme.of(context).colorScheme.surface;
-
     return Material(
-      color: bgColor,
+      color: Theme.of(context).scaffoldBackgroundColor,
       elevation: 0,
       shadowColor: Colors.transparent,
       child: Align(
@@ -57,8 +55,6 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) {
-    return oldDelegate.selectionMode != selectionMode ||
-        oldDelegate.isSearchActive != isSearchActive ||
-        oldDelegate.expandedHeight != expandedHeight;
+    return true;
   }
 }

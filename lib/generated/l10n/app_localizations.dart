@@ -785,7 +785,7 @@ abstract class AppLocalizations {
   /// No description provided for @permanentDelete.
   ///
   /// In en, this message translates to:
-  /// **'Permanent Delete'**
+  /// **'Delete'**
   String get permanentDelete;
 
   /// No description provided for @confirmPermanentDelete.
@@ -1783,12 +1783,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note Colors'**
   String get noteColors;
-
-  /// No description provided for @cardShineEffect.
-  ///
-  /// In en, this message translates to:
-  /// **'Card Shine Effect'**
-  String get cardShineEffect;
 
   /// No description provided for @enabled.
   ///

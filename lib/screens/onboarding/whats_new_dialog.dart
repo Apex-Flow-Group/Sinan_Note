@@ -63,7 +63,7 @@ class WhatsNewDialog extends StatelessWidget {
                               color: Colors.blue, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            isArabic ? 'الإصدار 3.0.0' : 'Version 3.0.0',
+                            isArabic ? 'الإصدار 3.0.1' : 'Version 3.0.1',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: isDesktop ? 17 : 15,
@@ -77,30 +77,45 @@ class WhatsNewDialog extends StatelessWidget {
                     _WhatsNewFeature(
                       icon: Icons.label_rounded,
                       color: Colors.blue,
-                      title: isArabic ? '🏷️ نظام التصنيفات' : '🏷️ Categories System',
+                      title: isArabic
+                          ? '🏷️ تحسينات الكتالوج'
+                          : '🏷️ Catalog Improvements',
                       description: isArabic
-                          ? 'نظّم ملاحظاتك بتصنيفات مخصصة. أضف ملاحظة لأكثر من تصنيف واحد، وصفّح بسهولة من القائمة الجانبية.'
-                          : 'Organize your notes with custom categories. Assign a note to multiple categories and filter easily from the sidebar.',
+                          ? 'اختر كتالوجاً مختلفاً مباشرة من شريط الكتالوج بنقرة واحدة، مع إصلاح عرض اسم كتالوج المحترف.'
+                          : 'Switch catalogs directly from the catalog bar with one tap, with a fix for the Professional catalog name display.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
-                      icon: Icons.content_paste_rounded,
+                      icon: Icons.speed_rounded,
                       color: Colors.orange,
-                      title: isArabic ? '📋 تحسينات نظام اللصق' : '📋 Improved Paste System',
+                      title: isArabic
+                          ? '⚡ تمرير أسرع وأسلس'
+                          : '⚡ Faster & Smoother Scrolling',
                       description: isArabic
-                          ? 'لصق أذكى يحافظ على النص الصريح ويزيل التنسيق الزائد تلقائياً.'
-                          : 'Smart paste that preserves plain text and automatically removes unwanted formatting.',
+                          ? 'تحسين كبير في أداء التمرير مع 600+ ملاحظة، وشريط تمرير جانبي بحركة ناعمة بدون قفز.'
+                          : 'Major scrolling performance improvement with 600+ notes, and a smooth sidebar scrollbar without jumping.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
-                      icon: Icons.translate_rounded,
-                      color: Colors.purple,
-                      title: isArabic ? '🌐 تحسينات اتجاه اللغة' : '🌐 Language Direction Improvements',
+                      icon: Icons.bug_report_rounded,
+                      color: Colors.green,
+                      title:
+                          isArabic ? '🔧 إصلاحات متعددة' : '🔧 Multiple Fixes',
                       description: isArabic
-                          ? 'كشف تلقائي أدق لاتجاه السطر عند الكتابة، مع دعم محسّن للتشكيل والحذف الذكي.'
-                          : 'More accurate auto-detection of text direction while typing, with improved diacritics support and smart delete.',
+                          ? 'إصلاح لون شريط البحث عند فتح التطبيق، إصلاح عرض النص الخام في السلة، وتحسين شريط الاستعادة في السلة.'
+                          : 'Fixed search bar color on app launch, fixed raw text display in trash, and improved the restore bar in trash.',
+                      isDesktop: isDesktop,
+                    ),
+                    const SizedBox(height: 16),
+                    _WhatsNewFeature(
+                      icon: Icons.cleaning_services_rounded,
+                      color: Colors.purple,
+                      title: isArabic ? '🧹 تنظيف الكود' : '🧹 Code Cleanup',
+                      description: isArabic
+                          ? 'توحيد منطق تحويل المحتوى في ملف واحد (NoteContentUtils) بدل تكراره في 7 أماكن مختلفة.'
+                          : 'Unified content conversion logic in one file (NoteContentUtils) instead of repeating it in 7 different places.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),

@@ -353,7 +353,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesRestored => 'تم استعادة الملاحظات';
 
   @override
-  String get permanentDelete => 'حذف نهائي';
+  String get permanentDelete => 'حذف';
 
   @override
   String get confirmPermanentDelete =>
@@ -868,9 +868,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noteColors => 'ألوان الملاحظات';
-
-  @override
-  String get cardShineEffect => 'تأثير اللمعة';
 
   @override
   String get enabled => 'مفعّل';

@@ -1,10 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
@@ -34,8 +32,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   void initState() {
     super.initState();
     _loadNotesWithHistory();
-    _searchController.addListener(
-        () => setState(() => _searchQuery = _searchController.text.toLowerCase()));
+    _searchController.addListener(() =>
+        setState(() => _searchQuery = _searchController.text.toLowerCase()));
   }
 
   @override
@@ -108,7 +106,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       showDialog(
         context: context,
         builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: SizedBox(
             width: 560,
             height: 600,
@@ -189,8 +188,10 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                   borderRadius: BorderRadius.circular(12)),
               onSelected: (v) => setState(() => _sortBy = v),
               itemBuilder: (context) => [
-                _sortMenuItem(context, 'date', Icons.access_time, l10n.sortByDate),
-                _sortMenuItem(context, 'title', Icons.sort_by_alpha, l10n.sortByTitle),
+                _sortMenuItem(
+                    context, 'date', Icons.access_time, l10n.sortByDate),
+                _sortMenuItem(
+                    context, 'title', Icons.sort_by_alpha, l10n.sortByTitle),
               ],
             ),
           ],
@@ -246,26 +247,11 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     );
   }
 
-  String _toPlainText(String content) {
-    if (ChecklistFormatter.isValidChecklist(content)) {
-      return ChecklistFormatter.toDisplayText(content);
-    }
-    if (content.trimLeft().startsWith('[')) {
-      try {
-        final list = jsonDecode(content) as List;
-        final buffer = StringBuffer();
-        for (final op in list) {
-          if (op is Map && op['insert'] is String) {
-            buffer.write(op['insert'] as String);
-          }
-        }
-        return buffer.toString().trimRight();
-      } catch (_) {}
-    }
-    return content;
-  }
+  String _toPlainText(String content) =>
+      NoteContentUtils.toDisplayText(content);
 
-  Widget _buildNoteCard(BuildContext context, Note note, AppLocalizations l10n) {
+  Widget _buildNoteCard(
+      BuildContext context, Note note, AppLocalizations l10n) {
     final displayContent = _toPlainText(note.content);
     final preview = displayContent.length > 100
         ? '${displayContent.substring(0, 100)}...'

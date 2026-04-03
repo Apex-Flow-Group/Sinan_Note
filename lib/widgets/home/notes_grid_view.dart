@@ -17,6 +17,7 @@ class NotesGridView extends StatefulWidget {
   final TextEditingController searchController;
   final ScrollController? scrollController;
   final ValueNotifier<List<Note>>? filteredNotesNotifier;
+  final ValueNotifier<int>? totalCountNotifier;
 
   const NotesGridView({
     super.key,
@@ -25,6 +26,7 @@ class NotesGridView extends StatefulWidget {
     required this.searchController,
     this.scrollController,
     this.filteredNotesNotifier,
+    this.totalCountNotifier,
   });
 
   @override
@@ -41,10 +43,11 @@ class _NotesGridViewState extends State<NotesGridView> {
   NotesProvider? _notesProvider;
 
   static const int _pageSize = 100;
-  static const double _loadThreshold = 0.85;
+  static const double _loadThreshold = 0.95;
   List<Note> _allFiltered = [];
   int _visibleCount = _pageSize;
   final ValueNotifier<bool> _hasMoreNotifier = ValueNotifier(false);
+  final ValueNotifier<int> _totalCountNotifier = ValueNotifier(0);
 
   @override
   void initState() {
@@ -100,6 +103,7 @@ class _NotesGridViewState extends State<NotesGridView> {
     if (widget.scrollController == null) _scrollController.dispose();
     _closeAllSlidables.dispose();
     _hasMoreNotifier.dispose();
+    _totalCountNotifier.dispose();
     if (_ownsFilteredNotifier) _filteredNotesNotifier.dispose();
     super.dispose();
   }
@@ -123,6 +127,8 @@ class _NotesGridViewState extends State<NotesGridView> {
     _allFiltered = newFiltered;
     _visibleCount = _pageSize.clamp(0, newFiltered.length);
     _hasMoreNotifier.value = _visibleCount < newFiltered.length;
+    _totalCountNotifier.value = newFiltered.length;
+    widget.totalCountNotifier?.value = newFiltered.length;
     final page = newFiltered.sublist(0, _visibleCount);
     final current = _filteredNotesNotifier.value;
     if (page.length == current.length) {
@@ -226,6 +232,8 @@ class _NotesGridViewState extends State<NotesGridView> {
         return false;
     }
   }
+
+  ValueNotifier<int> get totalCountNotifier => _totalCountNotifier;
 
   @override
   Widget build(BuildContext context) {

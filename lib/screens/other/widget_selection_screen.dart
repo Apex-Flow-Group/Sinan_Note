@@ -2,8 +2,7 @@
 
 import 'dart:convert';
 
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -15,7 +14,7 @@ class WidgetSelectionScreen extends StatefulWidget {
   final int currentNoteId; // النوت الحالية المثبتة
 
   const WidgetSelectionScreen({
-    super.key, 
+    super.key,
     this.widgetType = 'note',
     this.currentNoteId = 0,
   });
@@ -44,14 +43,19 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
       if (widget.widgetType == 'checklist') {
         notes = allNotes
             .where((n) =>
-                n.isLocked == false && n.isTrashed == false && n.isArchived == false && 
+                n.isLocked == false &&
+                n.isTrashed == false &&
+                n.isArchived == false &&
                 (n.isChecklist == true || n.noteType == 'checklist'))
             .toList();
       } else {
         notes = allNotes
             .where((n) =>
-                n.isLocked == false && n.isTrashed == false && n.isArchived == false && 
-                n.isChecklist != true && n.noteType != 'checklist')
+                n.isLocked == false &&
+                n.isTrashed == false &&
+                n.isArchived == false &&
+                n.isChecklist != true &&
+                n.noteType != 'checklist')
             .toList();
       }
       _applyFilter();
@@ -61,7 +65,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
 
   void _applyFilter() {
     List<Note> result = List.from(notes);
-    
+
     // فلتر البحث
     if (searchQuery.isNotEmpty) {
       result = result.where((note) {
@@ -71,7 +75,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
         return title.contains(query) || content.contains(query);
       }).toList();
     }
-    
+
     // فلتر النوع
     if (filterType == 'pinned') {
       result = result.where((n) => n.isPinned).toList();
@@ -86,7 +90,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
         return b.updatedAt.compareTo(a.updatedAt);
       });
     }
-    
+
     setState(() {
       filteredNotes = result;
     });
@@ -109,10 +113,10 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    final title = note.title.isEmpty 
+    final title = note.title.isEmpty
         ? (widget.widgetType == 'checklist' ? l10n.checklist : l10n.note)
         : note.title;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -131,22 +135,14 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
     Navigator.pop(context);
   }
 
-  String _getPlainContent(String content) {
-    if (QuillMigration.isDelta(content)) {
-      try {
-        final controller = QuillMigration.controllerFromContent(content);
-        return QuillMigration.toPlainText(controller);
-      } catch (_) {}
-    }
-    return content;
-  }
-
   Map<String, int> _parseChecklistStats(String content) {
     try {
-      final decoded = content.isNotEmpty ? 
-          (content.startsWith('[') || content.startsWith('{') ? 
-              _parseJson(content) : <dynamic>[]) : <dynamic>[];
-      
+      final decoded = content.isNotEmpty
+          ? (content.startsWith('[') || content.startsWith('{')
+              ? _parseJson(content)
+              : <dynamic>[])
+          : <dynamic>[];
+
       List items = [];
       if (decoded is Map && decoded.containsKey('items')) {
         items = decoded['items'];
@@ -196,7 +192,10 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                 value: 'all',
                 child: Row(
                   children: [
-                    Icon(Icons.list, color: filterType == 'all' ? Theme.of(context).colorScheme.primary : null),
+                    Icon(Icons.list,
+                        color: filterType == 'all'
+                            ? Theme.of(context).colorScheme.primary
+                            : null),
                     const SizedBox(width: 8),
                     Text(isArabic ? 'الكل' : 'All'),
                   ],
@@ -206,7 +205,10 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                 value: 'pinned',
                 child: Row(
                   children: [
-                    Icon(Icons.push_pin, color: filterType == 'pinned' ? Theme.of(context).colorScheme.primary : null),
+                    Icon(Icons.push_pin,
+                        color: filterType == 'pinned'
+                            ? Theme.of(context).colorScheme.primary
+                            : null),
                     const SizedBox(width: 8),
                     Text(isArabic ? 'مثبتة' : 'Pinned'),
                   ],
@@ -216,7 +218,10 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                 value: 'recent',
                 child: Row(
                   children: [
-                    Icon(Icons.access_time, color: filterType == 'recent' ? Theme.of(context).colorScheme.primary : null),
+                    Icon(Icons.access_time,
+                        color: filterType == 'recent'
+                            ? Theme.of(context).colorScheme.primary
+                            : null),
                     const SizedBox(width: 8),
                     Text(isArabic ? 'الأحدث' : 'Recent'),
                   ],
@@ -258,7 +263,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
               },
             ),
           ),
-          
+
           // عداد النتائج
           if (!isLoading && filteredNotes.isNotEmpty)
             Padding(
@@ -266,7 +271,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
               child: Row(
                 children: [
                   Text(
-                    isArabic 
+                    isArabic
                         ? 'عدد النتائج: ${filteredNotes.length}'
                         : 'Results: ${filteredNotes.length}',
                     style: TextStyle(
@@ -277,7 +282,8 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                   if (widget.currentNoteId > 0) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(8),
@@ -286,7 +292,8 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                         isArabic ? 'مثبت حالياً' : 'Currently Pinned',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ),
@@ -294,7 +301,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                 ],
               ),
             ),
-          
+
           // قائمة النتائج
           Expanded(
             child: isLoading
@@ -305,16 +312,21 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              searchQuery.isNotEmpty ? Icons.search_off : Icons.note_add_outlined,
+                              searchQuery.isNotEmpty
+                                  ? Icons.search_off
+                                  : Icons.note_add_outlined,
                               size: 80,
                               color: Colors.grey,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               searchQuery.isNotEmpty
-                                  ? (isArabic ? 'لا توجد نتائج' : 'No results found')
+                                  ? (isArabic
+                                      ? 'لا توجد نتائج'
+                                      : 'No results found')
                                   : l10n.noNotesAvailable,
-                              style: const TextStyle(fontSize: 18, color: Colors.grey),
+                              style: const TextStyle(
+                                  fontSize: 18, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -323,18 +335,23 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                         itemCount: filteredNotes.length,
                         itemBuilder: (context, index) {
                           final note = filteredNotes[index];
-                          final isCurrentlyPinned = note.id == widget.currentNoteId;
-                          
+                          final isCurrentlyPinned =
+                              note.id == widget.currentNoteId;
+
                           return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             elevation: isCurrentlyPinned ? 4 : 1,
-                            color: isCurrentlyPinned 
-                                ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                            color: isCurrentlyPinned
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer
+                                    .withValues(alpha: 0.3)
                                 : null,
                             child: ListTile(
                               leading: Icon(
                                 note.isPinned ? Icons.push_pin : Icons.note,
-                                color: isCurrentlyPinned 
+                                color: isCurrentlyPinned
                                     ? Theme.of(context).colorScheme.primary
                                     : (note.isPinned ? Colors.orange : null),
                               ),
@@ -342,32 +359,35 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      note.title.isNotEmpty 
-                                          ? note.title 
-                                          : (isArabic ? 'بدون عنوان' : 'Untitled'),
+                                      note.title.isNotEmpty
+                                          ? note.title
+                                          : (isArabic
+                                              ? 'بدون عنوان'
+                                              : 'Untitled'),
                                       style: TextStyle(
-                                        fontWeight: isCurrentlyPinned ? FontWeight.bold : FontWeight.w600,
+                                        fontWeight: isCurrentlyPinned
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
                                       ),
                                     ),
                                   ),
                                   if (isCurrentlyPinned)
                                     Icon(
                                       Icons.check_circle,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                       size: 20,
                                     ),
                                 ],
                               ),
                               subtitle: Text(
-                                note.isChecklist
-                                    ? ChecklistFormatter.toDisplayText(note.content)
-                                    : _getPlainContent(note.content),
+                                NoteContentUtils.toDisplayText(note.content),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               trailing: Icon(
                                 Icons.chevron_right,
-                                color: isCurrentlyPinned 
+                                color: isCurrentlyPinned
                                     ? Theme.of(context).colorScheme.primary
                                     : Colors.grey,
                               ),

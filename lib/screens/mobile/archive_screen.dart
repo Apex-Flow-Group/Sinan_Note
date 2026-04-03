@@ -168,14 +168,16 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                         ),
                       ),
             actions: [
-              if (_selectionMode && _selectedNoteIds.isNotEmpty) ...[
+              if (_selectionMode) ...[
                 IconButton(
-                  icon: const Icon(Icons.unarchive, color: Colors.green),
-                  onPressed: _restoreSelected,
+                  icon: Icon(Icons.unarchive,
+                      color: _selectedNoteIds.isNotEmpty ? Colors.green : Colors.grey),
+                  onPressed: _selectedNoteIds.isNotEmpty ? _restoreSelected : null,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: _deleteSelected,
+                  icon: Icon(Icons.delete,
+                      color: _selectedNoteIds.isNotEmpty ? Colors.red : Colors.grey),
+                  onPressed: _selectedNoteIds.isNotEmpty ? _deleteSelected : null,
                 ),
                 IconButton(
                   icon: Icon(

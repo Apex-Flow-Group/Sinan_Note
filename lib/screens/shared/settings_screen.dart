@@ -103,13 +103,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // EDITOR SECTION
               SettingsUtils.buildSectionHeader(context, l10n.editor),
               SwitchListTile(
-                secondary: const Icon(Icons.auto_awesome),
-                title: Text(l10n.cardShineEffect),
-                subtitle: Text(settings.cardMotionEnabled ? l10n.enabled : l10n.disabled),
-                value: settings.cardMotionEnabled,
-                onChanged: (val) => settings.setCardMotionEnabled(val),
-              ),
-              SwitchListTile(
                 secondary: const Icon(Icons.swipe),
                 title: Text(l10n.swipeGestures),
                 subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
@@ -163,7 +156,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     }
                   },
                 ),
-              const Divider(height: 1),
               SwitchListTile(
                 secondary: const Icon(Icons.visibility_off),
                 title: Text(l10n.hideContentInBackground),
@@ -347,13 +339,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           SettingsUtils.buildSectionHeader(context, l10n.editor),
           SwitchListTile(
-            secondary: const Icon(Icons.auto_awesome),
-            title: Text(l10n.cardShineEffect),
-            subtitle: Text(settings.cardMotionEnabled ? l10n.enabled : l10n.disabled),
-            value: settings.cardMotionEnabled,
-            onChanged: (val) => settings.setCardMotionEnabled(val),
-          ),
-          SwitchListTile(
             secondary: const Icon(Icons.swipe),
             title: Text(l10n.swipeGestures),
             subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
@@ -414,7 +399,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               },
             ),
-          const Divider(height: 1),
           SwitchListTile(
             secondary: const Icon(Icons.visibility_off),
             title: Text(l10n.hideContentInBackground),
