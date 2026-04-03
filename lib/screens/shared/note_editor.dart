@@ -276,6 +276,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         isChecklist: widget.mode == NoteMode.checklist,
         reminderDateTime: _coordinator.stateManager.reminderDateTime,
         recurrenceRule: _coordinator.stateManager.recurrenceRule,
+        categoryIds: _coordinator.stateManager.categoryIds,
+        isHiddenFromHome: _coordinator.stateManager.isHiddenFromHome,
         mode: widget.mode,
         silent: !isManualSave,
         isAutoSave: !isManualSave, // FIXED: Pass auto-save flag
@@ -572,6 +574,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               onHistoryTap: _showHistorySheet,
               onTitleTap: _showRenameTitleDialog,
               onBackTap: _handleBack,
+              onCategoryChanged: (ids) {
+                setState(() => _coordinator.stateManager.categoryIds = ids);
+                _coordinator.stateManager.markDirty();
+              },
+              originallyLocked: widget.originallyLocked,
               onSaveTap: () async {
                 if (widget.mode == NoteMode.code &&
                     _coordinator.detectedLanguage != null) {

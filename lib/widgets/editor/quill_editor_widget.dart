@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
-
 /// Rich text editor widget powered by flutter_quill
 class QuillEditorWidget extends StatefulWidget {
   final QuillController quillController;
@@ -50,8 +49,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   };
   static const _shadda = '\u0651'; // الشدة تُحذف بعد باقي التشكيل
 
-  static bool _isTashkeel(String ch) =>
-      _harakat.contains(ch) || ch == _shadda;
+  static bool _isTashkeel(String ch) => _harakat.contains(ch) || ch == _shadda;
 
   @override
   void initState() {
@@ -74,9 +72,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final doc = widget.quillController.document;
     final selection = widget.quillController.selection;
     if (!selection.isValid) return;
-    debugPrint('🔵 [cursor] offset=${selection.baseOffset} isCollapsed=${selection.isCollapsed}');
-    final _dbgAttr = widget.quillController.getSelectionStyle().attributes;
-    debugPrint('🔵 [cursor] attrs: direction=${_dbgAttr['direction']?.value} align=${_dbgAttr['align']?.value}');
 
     final plainText = doc.toPlainText();
     if (plainText.trim().isEmpty) return;
@@ -85,8 +80,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final off2 = selection.baseOffset.clamp(0, pt.length);
     final ls2 = pt.lastIndexOf('\n', off2 > 0 ? off2 - 1 : 0);
     final le2 = pt.indexOf('\n', off2);
-    final cl2 = pt.substring(ls2 < 0 ? 0 : ls2 + 1, le2 < 0 ? pt.length : le2);
-    debugPrint('🔵 [cursor] line="${cl2.substring(0, cl2.length.clamp(0, 30))}" lineStart=$ls2 lineEnd=$le2');
+    pt.substring(ls2 < 0 ? 0 : ls2 + 1, le2 < 0 ? pt.length : le2);
 
     final docLength = plainText.length;
     if (!selection.isCollapsed &&
@@ -187,8 +181,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     ctrl.formatText(offset, text.length, const ColorAttribute(null));
     ctrl.formatText(offset, text.length, const BackgroundAttribute(null));
     ctrl.formatText(offset, text.length, Attribute.clone(Attribute.bold, null));
-    ctrl.formatText(offset, text.length, Attribute.clone(Attribute.italic, null));
-    ctrl.formatText(offset, text.length, Attribute.clone(Attribute.underline, null));
+    ctrl.formatText(
+        offset, text.length, Attribute.clone(Attribute.italic, null));
+    ctrl.formatText(
+        offset, text.length, Attribute.clone(Attribute.underline, null));
     ctrl.formatText(offset, text.length, const SizeAttribute(null));
 
     final lines = text.split('\n');
@@ -198,16 +194,17 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       final lineLen = line.length + (i < lines.length - 1 ? 1 : 0);
       ctrl.formatText(pos, lineLen, const AlignAttribute(null));
       if (line.isNotEmpty) {
-        final isRtl = TextDirectionUtils.getDirection(line) == TextDirection.rtl;
+        final isRtl =
+            TextDirectionUtils.getDirection(line) == TextDirection.rtl;
         ctrl.formatText(
-          pos, lineLen,
+          pos,
+          lineLen,
           isRtl ? const DirectionAttribute(null) : Attribute.rtl,
         );
       }
       pos += lineLen;
     }
     _isPasting = false;
-    debugPrint('🟠 [Paste] delta: ${ctrl.document.toDelta().toJson()}');
     // تمرير لموضع المؤشر بعد اللصق
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -256,12 +253,16 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
             final sel = ctrl.selection;
             if (sel.isCollapsed && sel.baseOffset > 0) {
               ctrl.replaceText(
-                sel.baseOffset - 1, 1, '',
+                sel.baseOffset - 1,
+                1,
+                '',
                 TextSelection.collapsed(offset: sel.baseOffset - 1),
               );
             } else if (!sel.isCollapsed) {
               ctrl.replaceText(
-                sel.start, sel.end - sel.start, '',
+                sel.start,
+                sel.end - sel.start,
+                '',
                 TextSelection.collapsed(offset: sel.start),
               );
             }
@@ -278,107 +279,106 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       child: Focus(
         onKeyEvent: (_, event) => _handleKeyEvent(event),
         child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () {
-          if (!widget.focusNode.hasFocus) {
-            widget.focusNode.requestFocus();
-          }
-        },
-        child: Padding(
-          padding: EdgeInsets.only(
-            top: topPadding,
-            bottom: widget.totalBottomSpace,
-            left: widget.sidePadding,
-            right: widget.sidePadding,
-          ),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: ListenableBuilder(
-              listenable: widget.quillController,
-              builder: (context, child) {
-                final isEmpty = widget.quillController.document.isEmpty();
-                return Stack(
-                  fit: StackFit.expand,
-                  alignment: AlignmentDirectional.topStart,
-                  children: [
-                    child!,
-                    if (isEmpty)
-                      IgnorePointer(
-                        child: Text(
-                          l10n.startWriting,
-                          style: TextStyle(
-                            fontSize: widget.fontSize,
-                            height: 1.6,
-                            color: widget.hintColor,
+          behavior: HitTestBehavior.translucent,
+          onTap: () {
+            if (!widget.focusNode.hasFocus) {
+              widget.focusNode.requestFocus();
+            }
+          },
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: topPadding,
+              bottom: widget.totalBottomSpace,
+              left: widget.sidePadding,
+              right: widget.sidePadding,
+            ),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: ListenableBuilder(
+                listenable: widget.quillController,
+                builder: (context, child) {
+                  final isEmpty = widget.quillController.document.isEmpty();
+                  return Stack(
+                    fit: StackFit.expand,
+                    alignment: AlignmentDirectional.topStart,
+                    children: [
+                      child!,
+                      if (isEmpty)
+                        IgnorePointer(
+                          child: Text(
+                            l10n.startWriting,
+                            style: TextStyle(
+                              fontSize: widget.fontSize,
+                              height: 1.6,
+                              color: widget.hintColor,
+                            ),
                           ),
                         ),
+                    ],
+                  );
+                },
+                child: QuillEditor(
+                  controller: widget.quillController,
+                  focusNode: widget.focusNode,
+                  scrollController: _scrollController,
+                  config: QuillEditorConfig(
+                    autoFocus: widget.autoFocus,
+                    expands: true,
+                    scrollable: true,
+                    padding: EdgeInsets.zero,
+                    placeholder: '',
+                    paintCursorAboveText: true,
+                    contextMenuBuilder: (context, rawEditorState) {
+                      final anchor = rawEditorState.contextMenuAnchors;
+                      final items =
+                          rawEditorState.contextMenuButtonItems.map((item) {
+                        if (item.type == ContextMenuButtonType.paste) {
+                          return item.copyWith(
+                            onPressed: () {
+                              ContextMenuController.removeAny();
+                              _pastePlainText();
+                            },
+                          );
+                        }
+                        return item;
+                      }).toList();
+                      return AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: TextSelectionToolbarAnchors(
+                          primaryAnchor: anchor.primaryAnchor,
+                          secondaryAnchor: anchor.secondaryAnchor,
+                        ),
+                        buttonItems: items,
+                      );
+                    },
+                    quillMagnifierBuilder: (dragPosition) =>
+                        QuillMagnifier(dragPosition: dragPosition),
+                    textSelectionThemeData: TextSelectionThemeData(
+                      cursorColor: widget.textColor,
+                      selectionColor: widget.textColor.withValues(alpha: 0.2),
+                      selectionHandleColor: widget.textColor,
+                    ),
+                    customStyles: DefaultStyles(
+                      paragraph: DefaultTextBlockStyle(
+                        TextStyle(
+                          fontSize: widget.fontSize,
+                          height: 1.6,
+                          color: widget.textColor,
+                          fontFeatures: const [
+                            FontFeature.disable('liga'),
+                            FontFeature.disable('clig'),
+                          ],
+                        ),
+                        HorizontalSpacing.zero,
+                        VerticalSpacing.zero,
+                        VerticalSpacing.zero,
+                        null,
                       ),
-                  ],
-                );
-              },
-              child: QuillEditor(
-                controller: widget.quillController,
-                focusNode: widget.focusNode,
-                scrollController: _scrollController,
-                config: QuillEditorConfig(
-                  autoFocus: widget.autoFocus,
-                  expands: true,
-                  scrollable: true,
-                  padding: EdgeInsets.zero,
-                  placeholder: '',
-                  paintCursorAboveText: true,
-                  contextMenuBuilder: (context, rawEditorState) {
-                    final anchor = rawEditorState.contextMenuAnchors;
-                    final items = rawEditorState.contextMenuButtonItems
-                        .map((item) {
-                          if (item.type == ContextMenuButtonType.paste) {
-                            return item.copyWith(
-                              onPressed: () {
-                                ContextMenuController.removeAny();
-                                _pastePlainText();
-                              },
-                            );
-                          }
-                          return item;
-                        })
-                        .toList();
-                    return AdaptiveTextSelectionToolbar.buttonItems(
-                      anchors: TextSelectionToolbarAnchors(
-                        primaryAnchor: anchor.primaryAnchor,
-                        secondaryAnchor: anchor.secondaryAnchor,
-                      ),
-                      buttonItems: items,
-                    );
-                  },
-                  quillMagnifierBuilder: (dragPosition) =>
-                      QuillMagnifier(dragPosition: dragPosition),
-                  textSelectionThemeData: TextSelectionThemeData(
-                    cursorColor: widget.textColor,
-                    selectionColor: widget.textColor.withValues(alpha: 0.2),
-                    selectionHandleColor: widget.textColor,
-                  ),
-                  customStyles: DefaultStyles(
-                    paragraph: DefaultTextBlockStyle(
-                      TextStyle(
-                        fontSize: widget.fontSize,
-                        height: 1.6,
-                        color: widget.textColor,
-                        fontFeatures: const [
-                          FontFeature.disable('liga'),
-                          FontFeature.disable('clig'),
-                        ],
-                      ),
-                      HorizontalSpacing.zero,
-                      VerticalSpacing.zero,
-                      VerticalSpacing.zero,
-                      null,
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );

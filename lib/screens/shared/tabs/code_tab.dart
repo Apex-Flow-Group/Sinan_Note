@@ -4,6 +4,7 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/main.dart' show tabToHomeNotifier;
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
@@ -66,8 +67,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
 
   void _syncNotes() {
     final query = searchController.text;
-    if (query == _lastSearchQuery &&
-        _filteredNotesNotifier.value.isNotEmpty) {
+    if (query == _lastSearchQuery && _filteredNotesNotifier.value.isNotEmpty) {
       // أعد الحساب فقط إذا تغيرت البيانات
     }
     _lastSearchQuery = query;
@@ -114,11 +114,12 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
 
     return Scaffold(
       body: PopScope(
-        canPop: searchController.text.isEmpty,
+        canPop: false,
         onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
           if (searchController.text.isNotEmpty) {
             setState(() => searchController.clear());
+          } else {
+            tabToHomeNotifier.value++;
           }
         },
         child: Stack(
@@ -177,11 +178,13 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                           ),
                           onPressed: () async {
                             setState(() {
-                              final next = (_viewType.index + 1) % ViewType.values.length;
+                              final next = (_viewType.index + 1) %
+                                  ViewType.values.length;
                               _viewType = ViewType.values[next];
                             });
                             final settings = Provider.of<SettingsProvider>(
-                                context, listen: false);
+                                context,
+                                listen: false);
                             await settings.setViewType(
                                 'professional', _viewType.name);
                           },
@@ -202,7 +205,9 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                   Icon(Icons.access_time,
                                       size: 20,
                                       color: _sortBy == 'date'
-                                          ? Theme.of(context).colorScheme.primary
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
                                           : null),
                                   const SizedBox(width: 12),
                                   Text(strings.sortByDate),
@@ -210,7 +215,9 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                     const Spacer(),
                                     Icon(Icons.check,
                                         size: 20,
-                                        color: Theme.of(context).colorScheme.primary),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                                   ],
                                 ],
                               ),
@@ -222,7 +229,9 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                   Icon(Icons.sort_by_alpha,
                                       size: 20,
                                       color: _sortBy == 'title'
-                                          ? Theme.of(context).colorScheme.primary
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
                                           : null),
                                   const SizedBox(width: 12),
                                   Text(strings.sortByTitle),
@@ -230,7 +239,9 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                     const Spacer(),
                                     Icon(Icons.check,
                                         size: 20,
-                                        color: Theme.of(context).colorScheme.primary),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                                   ],
                                 ],
                               ),

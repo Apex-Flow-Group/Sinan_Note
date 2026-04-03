@@ -13,6 +13,7 @@ import 'package:apex_note/widgets/common/rename_dialog.dart';
 import 'package:apex_note/widgets/editor/note_history_sheet.dart';
 import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -161,21 +162,26 @@ class EditorDialogHandlers {
     );
   }
 
-  /// Show inline text color picker
+  /// Show inline text color picker and apply to Quill selection
   static Future<void> showInlineColorPicker({
     required BuildContext context,
     required Color backgroundColor,
+    required QuillController quillController,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final textColors = [
-      Colors.black87,
+      null, // reset
       Colors.red,
       Colors.blue,
       Colors.green,
       Colors.orange,
       Colors.purple,
       Colors.pink,
-      Colors.teal
+      Colors.teal,
+      Colors.yellow.shade700,
+      Colors.cyan,
+      Colors.white,
+      Colors.black87,
     ];
 
     await showModalBottomSheet(
@@ -183,7 +189,7 @@ class EditorDialogHandlers {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding:
-            const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 100),
+            const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 32),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -201,16 +207,32 @@ class EditorDialogHandlers {
               children: textColors.map((color) {
                 return GestureDetector(
                   onTap: () {
+                    if (color == null) {
+                      quillController
+                          .formatSelection(const ColorAttribute(null));
+                    } else {
+                      final hex =
+                          '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+                      quillController.formatSelection(ColorAttribute(hex));
+                    }
                     Navigator.pop(ctx);
                   },
                   child: Container(
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: color,
+                      color: color ?? Colors.transparent,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade300, width: 2),
+                      border: Border.all(
+                        color:
+                            color == null ? Colors.grey : Colors.grey.shade300,
+                        width: 2,
+                      ),
                     ),
+                    child: color == null
+                        ? const Icon(Icons.format_clear,
+                            size: 20, color: Colors.grey)
+                        : null,
                   ),
                 );
               }).toList(),

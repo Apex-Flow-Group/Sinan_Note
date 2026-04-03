@@ -6,6 +6,19 @@ import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+final _vaultPasswordFormatter = FilteringTextInputFormatter.allow(
+  RegExp(r'[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]'),
+);
+
+String? validateVaultPassword(String password) {
+  if (password.length < 8) return 'Minimum 8 characters';
+  if (!RegExp(r'[0-9]').hasMatch(password)) return 'Must contain at least one number';
+  if (!RegExp(r'[!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]').hasMatch(password)) {
+    return 'Must contain at least one symbol';
+  }
+  return null;
+}
+
 class VaultFeaturesPage extends StatelessWidget {
   final bool isDark;
   final List<FeatureInfo> features;
@@ -128,9 +141,24 @@ class VaultPasswordPage extends StatelessWidget {
                   color: isDark ? Colors.white : Colors.black87),
               textAlign: TextAlign.center),
           const SizedBox(height: 24),
+          // hint للمتطلبات
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.purple.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              '• Min 8 characters\n• At least one number (0-9)\n• At least one symbol (!@#\$...)\n• English letters only',
+              style: TextStyle(fontSize: 12, color: Colors.purple),
+            ),
+          ),
+          const SizedBox(height: 16),
           TextField(
             controller: passwordController,
             obscureText: obscurePassword,
+            keyboardType: TextInputType.visiblePassword,
+            inputFormatters: [_vaultPasswordFormatter],
             onChanged: (_) => onChanged(),
             decoration: InputDecoration(
               labelText: l10n.enterPassword,
@@ -146,6 +174,8 @@ class VaultPasswordPage extends StatelessWidget {
           TextField(
             controller: confirmController,
             obscureText: obscureConfirm,
+            keyboardType: TextInputType.visiblePassword,
+            inputFormatters: [_vaultPasswordFormatter],
             onChanged: (_) => onChanged(),
             decoration: InputDecoration(
               labelText: l10n.confirmPassword,

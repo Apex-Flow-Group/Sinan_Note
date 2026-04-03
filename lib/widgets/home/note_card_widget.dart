@@ -58,6 +58,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late bool _isChecklist;
   late bool _shouldShowExt;
   late String _fileExtension;
+  late Color _baseColor;
+  late Color _titleColor;
+  late Color _contentColor;
 
   @override
   void initState() {
@@ -72,6 +75,20 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
         oldWidget.note.id != widget.note.id) {
       _cacheNoteData();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _cacheColors();
+  }
+
+  void _cacheColors() {
+    final brightness = Theme.of(context).brightness;
+    _baseColor = AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
+    final isLight = _baseColor.computeLuminance() > 0.5;
+    _titleColor = isLight ? Colors.black87 : Colors.white;
+    _contentColor = isLight ? Colors.grey[700]! : Colors.grey[300]!;
   }
 
   void _cacheNoteData() {
@@ -89,11 +106,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     final l10n = AppLocalizations.of(context)!;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    final brightness = Theme.of(context).brightness;
-    final baseColor = AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
-    final bool isLightColor = baseColor.computeLuminance() > 0.5;
-    final Color titleColor = isLightColor ? Colors.black87 : Colors.white;
-    final Color contentColor = isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
+    final baseColor = _baseColor;
+    final Color titleColor = _titleColor;
+    final Color contentColor = _contentColor;
     final bool enableSwipe = !widget.selectionMode && settings.swipeEnabled && !widget.note.isLocked && widget.source != 'archive';
 
     return Padding(

@@ -124,6 +124,8 @@ class EditorCoordinator {
       noteColorIndex: stateManager.colorIndex,
       noteReminderDateTime: note?.reminderDateTime,
       noteRecurrenceRule: note?.recurrenceRule,
+      noteCategoryIds: note?.categoryIds ?? [],
+      noteIsHiddenFromHome: note?.isHiddenFromHome ?? false,
     );
 
     if (note != null) {

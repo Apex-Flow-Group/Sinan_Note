@@ -8,8 +8,8 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:apex_note/widgets/empty_details_view.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -158,7 +158,6 @@ class _DetailsPanelState extends State<DetailsPanel> {
         },
       );
     } catch (e) {
-      if (kDebugMode) debugPrint('DetailsPanel Error: $e');
       final l10n = AppLocalizations.of(context)!;
 
       return Center(
@@ -218,6 +217,31 @@ class _DetailsPanelState extends State<DetailsPanel> {
         elevation: 0,
         leading: const SizedBox.shrink(),
         actions: [
+          // زر الكتالوج
+          IconButton(
+            icon: Icon(
+              note.categoryIds.isEmpty
+                  ? Icons.label_outline_rounded
+                  : Icons.label_rounded,
+              color: note.categoryIds.isEmpty
+                  ? null
+                  : Theme.of(context).colorScheme.primary,
+            ),
+            tooltip: AppLocalizations.of(context)!.categories,
+            onPressed: () async {
+              final provider = Provider.of<NotesProvider>(context, listen: false);
+              final result = await CategoryPickerSheet.show(
+                context, note.categoryIds,
+                isHiddenFromHome: note.isHiddenFromHome,
+              );
+              if (result == null || !mounted) return;
+              final updated = note.copyWith(
+                categoryIds: result['categoryIds'] as List<int>,
+                isHiddenFromHome: result['isHiddenFromHome'] as bool,
+              );
+              await provider.updateNote(updated);
+            },
+          ),
           if (!note.isTrashed) ...[
             IconButton(
               icon: Icon(
@@ -425,8 +449,6 @@ class _DetailsPanelState extends State<DetailsPanel> {
 
   /// تحويل نوع الملاحظة (String) إلى NoteMode
   NoteMode _getNoteMode(String noteType) {
-    if (kDebugMode) debugPrint('_getNoteMode: noteType = $noteType');
-
     // تطبيع النوع
     final normalizedType = noteType.toLowerCase().trim();
 

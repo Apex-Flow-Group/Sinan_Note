@@ -36,6 +36,7 @@ class EditorToolbarFactory {
     VoidCallback? onRunCode,
     VoidCallback? onExportCode,
     Function(String)? onLanguageChanged,
+    bool showChecklist = true,
   }) {
     switch (mode) {
       case NoteMode.code:
@@ -105,6 +106,7 @@ class EditorToolbarFactory {
           onH2: onH2 ?? () {},
           onList: onList ?? () {},
           onChecklist: onChecklist ?? () {},
+          showChecklist: showChecklist,
           onColorTap: onColorTap ?? () {},
         );
     }

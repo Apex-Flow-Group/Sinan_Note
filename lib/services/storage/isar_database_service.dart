@@ -3,13 +3,15 @@
 import 'dart:async';
 
 import 'package:apex_note/core/utils/quill_migration.dart';
+import 'package:apex_note/models/category.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
+import 'package:apex_note/services/note_services/note_db_interface.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-class IsarDatabaseService {
+class IsarDatabaseService implements NoteDbInterface {
   static Isar? _isar;
   static bool _isInitializing = false;
   static IsarDatabaseService? _instance;
@@ -43,7 +45,7 @@ class IsarDatabaseService {
         _isar = existing;
       } else {
         _isar = await Isar.open(
-          [NoteSchema, NoteVersionSchema],
+          [NoteSchema, NoteVersionSchema, NoteCategorySchema],
           directory: dir.path,
           name: 'sinan_notes',
         );
@@ -101,6 +103,7 @@ class IsarDatabaseService {
     }, name: 'InsertNote');
   }
 
+  @override
   Future<Note?> getNoteById(int id) async {
     final isar = await database;
     return await isar.notes.get(id);
@@ -161,6 +164,7 @@ class IsarDatabaseService {
         .findAll();
   }
 
+  @override
   Future<List<Note>> getLockedNotes() async {
     final isar = await database;
     return await isar.notes
@@ -171,6 +175,7 @@ class IsarDatabaseService {
         .findAll();
   }
 
+  @override
   Future<int> updateNote(Note note) async {
     return await ApexErrorManager.monitorDB(() async {
       note.normalizedTitle = Note.normalize(note.title);

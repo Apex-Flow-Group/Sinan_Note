@@ -65,6 +65,7 @@ class _TourScreenState extends State<TourScreen> {
                     _buildPage5(context),
                     _buildPage6(context),
                     _buildPage7(context),
+                    _buildPage8(context),
                   ],
                 ),
               ),
@@ -173,6 +174,21 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
+  Widget _buildPage8(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return _TourPage(
+      icon: Icons.label_rounded,
+      title: l10n.tourPage8Title,
+      description: l10n.tourPage8Desc,
+      features: [
+        _FeatureItem(icon: Icons.create_new_folder_outlined, text: l10n.tourCatCreate),
+        _FeatureItem(icon: Icons.filter_list_rounded, text: l10n.tourCatFilter),
+        _FeatureItem(icon: Icons.edit_outlined, text: l10n.tourCatEdit),
+        _FeatureItem(icon: Icons.playlist_add_check_rounded, text: l10n.tourCatAssign),
+      ],
+    );
+  }
+
   Widget _buildBottomBar(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Center(
@@ -186,7 +202,7 @@ class _TourScreenState extends State<TourScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  7,
+                  8,
                   (index) => Container(
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     width: _currentPage == index ? 24 : 8,
@@ -201,7 +217,7 @@ class _TourScreenState extends State<TourScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (_currentPage < 6)
+              if (_currentPage < 7)
                 ElevatedButton(
                   onPressed: _nextPage,
                   style: ElevatedButton.styleFrom(
@@ -218,10 +234,10 @@ class _TourScreenState extends State<TourScreen> {
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-              if (_currentPage < 6)
+              if (_currentPage < 7)
                 TextButton(
                   onPressed: () {
-                    _pageController.jumpToPage(6);
+                    _pageController.jumpToPage(7);
                   },
                   child: Text(
                     l10n.skip,

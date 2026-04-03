@@ -1,8 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 /// شريط التاريخ الذكي — يظهر تاريخ أول نوت مرئي أثناء التمرير
 /// ويتيح الضغط لاختيار تاريخ والقفز إليه
@@ -24,25 +26,36 @@ class DateIndicatorBar extends StatefulWidget {
 
 class _DateIndicatorBarState extends State<DateIndicatorBar> {
   DateTime? _visibleDate;
+  int _lastScrollOffset = -1;
 
   @override
   void initState() {
     super.initState();
     widget.scrollController.addListener(_onScroll);
-    widget.filteredNotesNotifier.addListener(_onScroll);
+    widget.filteredNotesNotifier.addListener(_onNotesChanged);
   }
 
   @override
   void dispose() {
     widget.scrollController.removeListener(_onScroll);
-    widget.filteredNotesNotifier.removeListener(_onScroll);
+    widget.filteredNotesNotifier.removeListener(_onNotesChanged);
     super.dispose();
+  }
+
+  void _onNotesChanged() {
+    _lastScrollOffset = -1;
+    _onScroll();
   }
 
   void _onScroll() {
     if (!widget.scrollController.hasClients) return;
     final notes = widget.filteredNotesNotifier.value;
     if (notes.isEmpty) return;
+
+    // Throttle: تجاهل إذا لم يتغير الموضع بما يكفي (60px)
+    final offset = widget.scrollController.offset.toInt();
+    if ((_lastScrollOffset - offset).abs() < 60) return;
+    _lastScrollOffset = offset;
 
     final scrollOffset = widget.scrollController.offset;
     double accumulated = 0;
@@ -213,9 +226,46 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
   @override
   Widget build(BuildContext context) {
     final notes = widget.filteredNotesNotifier.value;
-    if (notes.isEmpty || _visibleDate == null) return const SizedBox.shrink();
-
     final colorScheme = Theme.of(context).colorScheme;
+    final categoriesProvider = context.watch<CategoriesProvider>();
+    final selectedId = categoriesProvider.selectedCategoryId;
+
+    // ─── وضع التصنيف ───
+    if (selectedId != null) {
+      final cat = categoriesProvider.categories
+          .where((c) => c.id == selectedId)
+          .firstOrNull;
+      final catName = cat?.name ?? '';
+
+      return Container(
+        height: 28,
+        color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Icon(Icons.label_rounded, size: 13, color: colorScheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              catName,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => categoriesProvider.selectCategory(null),
+              child: Icon(Icons.close_rounded,
+                  size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ─── وضع التاريخ الافتراضي ───
+    if (notes.isEmpty || _visibleDate == null) return const SizedBox.shrink();
 
     return GestureDetector(
       onTap: _showDatePicker,
@@ -266,5 +316,5 @@ class DateIndicatorDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => 28;
 
   @override
-  bool shouldRebuild(covariant DateIndicatorDelegate old) => true;
+  bool shouldRebuild(covariant DateIndicatorDelegate old) => old.child != child;
 }

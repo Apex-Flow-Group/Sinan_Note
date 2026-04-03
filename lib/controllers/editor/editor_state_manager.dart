@@ -63,6 +63,10 @@ class EditorStateManager {
   
   /// Recurrence rule for repeating reminders (daily, weekly, monthly)
   String? recurrenceRule;
+
+  /// التصنيفات المرتبطة بالملاحظة
+  List<int> categoryIds = [];
+  bool isHiddenFromHome = false;
   
   // ==================== ORIGINAL STATE SNAPSHOT ====================
   // Used for dirty checking to detect changes
@@ -183,9 +187,13 @@ class EditorStateManager {
     int? noteColorIndex,
     DateTime? noteReminderDateTime,
     String? noteRecurrenceRule,
+    List<int> noteCategoryIds = const [],
+    bool noteIsHiddenFromHome = false,
     bool isChecklist = false,
   }) {
     content = noteContent;
+    categoryIds = List.from(noteCategoryIds);
+    isHiddenFromHome = noteIsHiddenFromHome;
     
     // For checklist notes, store title in checklistTitle
     if (isChecklist) {

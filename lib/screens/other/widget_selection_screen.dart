@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -128,6 +129,16 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
     );
 
     Navigator.pop(context);
+  }
+
+  String _getPlainContent(String content) {
+    if (QuillMigration.isDelta(content)) {
+      try {
+        final controller = QuillMigration.controllerFromContent(content);
+        return QuillMigration.toPlainText(controller);
+      } catch (_) {}
+    }
+    return content;
   }
 
   Map<String, int> _parseChecklistStats(String content) {
@@ -350,7 +361,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                               subtitle: Text(
                                 note.isChecklist
                                     ? ChecklistFormatter.toDisplayText(note.content)
-                                    : note.content,
+                                    : _getPlainContent(note.content),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),

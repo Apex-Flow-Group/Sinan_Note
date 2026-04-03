@@ -56,5 +56,9 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => expandedHeight;
 
   @override
-  bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) => true;
+  bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) {
+    return oldDelegate.selectionMode != selectionMode ||
+        oldDelegate.isSearchActive != isSearchActive ||
+        oldDelegate.expandedHeight != expandedHeight;
+  }
 }

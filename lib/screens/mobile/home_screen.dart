@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
@@ -11,7 +12,8 @@ import 'package:apex_note/screens/mobile/home_screen_widgets.dart';
 import 'package:apex_note/screens/mobile/home_scrollbar.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart' show isMenuOpenNotifier;
+import 'package:apex_note/widgets/home/add_menu_widget.dart'
+    show isMenuOpenNotifier;
 import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:apex_note/widgets/home/note_locator_button.dart';
@@ -70,8 +72,11 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(() {
       if (mounted) {
-        final newState = _searchFocusNode.hasFocus || _searchController.text.isNotEmpty;
-        if (_isSearchActive != newState) setState(() => _isSearchActive = newState);
+        final newState =
+            _searchFocusNode.hasFocus || _searchController.text.isNotEmpty;
+        if (_isSearchActive != newState) {
+          setState(() => _isSearchActive = newState);
+        }
       }
     });
 
@@ -101,9 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ViewType _parseViewType(String type) {
     switch (type) {
-      case 'grid': return ViewType.grid;
-      case 'listExpanded': return ViewType.listExpanded;
-      default: return ViewType.listCompact;
+      case 'grid':
+        return ViewType.grid;
+      case 'listExpanded':
+        return ViewType.listExpanded;
+      default:
+        return ViewType.listCompact;
     }
   }
 
@@ -148,7 +156,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Center(
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
                         color: Colors.grey[400],
                         borderRadius: BorderRadius.circular(2),
@@ -157,12 +166,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                     child: Row(
                       children: [
                         const Icon(Icons.filter_list_rounded, size: 22),
                         const SizedBox(width: 8),
-                        Text(l10n.filter, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(l10n.filter,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
@@ -177,21 +189,68 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      child: Text(l10n.noteType, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      child: Text(l10n.noteType,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey)),
                     ),
-                    ListTile(leading: const Icon(Icons.note, color: Colors.blue), title: Text(l10n.simpleNotes), onTap: () { Navigator.pop(ctx); _searchController.text = 'type:simple'; }),
-                    ListTile(leading: const Icon(Icons.code, color: Colors.purple), title: Text(l10n.professionalNotes), onTap: () { Navigator.pop(ctx); _searchController.text = 'type:pro'; }),
-                    ListTile(leading: const Icon(Icons.alarm, color: Colors.orange), title: Text(l10n.reminderNotes), onTap: () { Navigator.pop(ctx); _searchController.text = 'type:reminder'; }),
-                    ListTile(leading: const Icon(Icons.checklist, color: Colors.green), title: Text(l10n.checklists), onTap: () { Navigator.pop(ctx); _searchController.text = 'type:checklist'; }),
+                    ListTile(
+                        leading: const Icon(Icons.note, color: Colors.blue),
+                        title: Text(l10n.simpleNotes),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _searchController.text = 'type:simple';
+                        }),
+                    ListTile(
+                        leading: const Icon(Icons.code, color: Colors.purple),
+                        title: Text(l10n.professionalNotes),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _searchController.text = 'type:pro';
+                        }),
+                    ListTile(
+                        leading: const Icon(Icons.alarm, color: Colors.orange),
+                        title: Text(l10n.reminderNotes),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _searchController.text = 'type:reminder';
+                        }),
+                    ListTile(
+                        leading:
+                            const Icon(Icons.checklist, color: Colors.green),
+                        title: Text(l10n.checklists),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _searchController.text = 'type:checklist';
+                        }),
                     const Divider(),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      child: Text(l10n.noteStatus, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      child: Text(l10n.noteStatus,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey)),
                     ),
-                    ListTile(leading: const Icon(Icons.push_pin, color: Colors.red), title: Text(l10n.pinnedOnly), onTap: () { Navigator.pop(ctx); _searchController.text = 'pinned:true'; }),
+                    ListTile(
+                        leading: const Icon(Icons.push_pin, color: Colors.red),
+                        title: Text(l10n.pinnedOnly),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _searchController.text = 'pinned:true';
+                        }),
                     const Divider(),
-                    ListTile(leading: const Icon(Icons.clear_all, color: Colors.red), title: Text(l10n.clearFilter), onTap: () { Navigator.pop(ctx); _searchController.clear(); }),
+                    ListTile(
+                        leading: const Icon(Icons.clear_all, color: Colors.red),
+                        title: Text(l10n.clearFilter),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _searchController.clear();
+                        }),
                   ],
                 ),
               ),
@@ -206,6 +265,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (widget.showAddMenu) widget.onToggleMenu();
     isMenuOpenNotifier.value = false;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final categories = Provider.of<CategoriesProvider>(context, listen: false);
+    final selectedCatId = categories.selectedCategoryId;
     final colorMode = switch (mode) {
       NoteMode.reminder => 'reminder',
       NoteMode.code => 'professional',
@@ -227,6 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
             noteType: mode.name,
             isChecklist: mode == NoteMode.checklist,
             isProfessional: mode == NoteMode.code,
+            categoryIds: selectedCatId != null ? [selectedCatId] : [],
           ),
         ),
       ),
@@ -254,21 +316,27 @@ class _HomeScreenState extends State<HomeScreen> {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
-        final canPop = !widget.showAddMenu && !_isSearchActive && selectedIds.isEmpty;
+        final canPop =
+            !widget.showAddMenu && !_isSearchActive && selectedIds.isEmpty;
 
         return HomeScreenPopScope(
           canPop: canPop,
           showAddMenu: widget.showAddMenu,
           isSearchActive: _isSearchActive,
           onClearSelection: () => _selectedNoteIdsNotifier.value = {},
-          onCloseMenu: () { if (widget.showAddMenu) widget.onToggleMenu(); },
+          onCloseMenu: () {
+            if (widget.showAddMenu) widget.onToggleMenu();
+          },
           onExitSearch: _exitSearchMode,
           child: AnnotatedRegion<SystemUiOverlayStyle>(
             value: SystemUiOverlayStyle(
               statusBarColor: Colors.transparent,
-              statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-              systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-              systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+              statusBarIconBrightness:
+                  isDark ? Brightness.light : Brightness.dark,
+              systemNavigationBarColor:
+                  Theme.of(context).scaffoldBackgroundColor,
+              systemNavigationBarIconBrightness:
+                  isDark ? Brightness.light : Brightness.dark,
             ),
             child: Scaffold(
               key: _scaffoldKey,
@@ -288,17 +356,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   SafeArea(
                     child: RefreshIndicator(
-                      onRefresh: () async => Provider.of<NotesProvider>(context, listen: false).refreshAllNotes(),
+                      onRefresh: () async =>
+                          Provider.of<NotesProvider>(context, listen: false)
+                              .refreshAllNotes(),
                       displacement: 60,
                       edgeOffset: 68,
                       color: Theme.of(context).colorScheme.primary,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                       strokeWidth: 2.5,
                       child: ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                        behavior: ScrollConfiguration.of(context)
+                            .copyWith(scrollbars: false),
                         child: CustomScrollView(
                           controller: _scrollController,
-                          cacheExtent: 500,
+                          cacheExtent: 200,
                           physics: const AlwaysScrollableScrollPhysics(),
                           slivers: [
                             SmartHeader(
@@ -309,17 +381,26 @@ class _HomeScreenState extends State<HomeScreen> {
                               onViewToggle: () async {
                                 FocusScope.of(context).unfocus();
                                 setState(() {
-                                  _viewType = ViewType.values[(_viewType.index + 1) % ViewType.values.length];
+                                  _viewType = ViewType.values[
+                                      (_viewType.index + 1) %
+                                          ViewType.values.length];
                                   _viewTypeNotifier.value = _viewType.name;
                                 });
-                                await Provider.of<SettingsProvider>(context, listen: false)
+                                await Provider.of<SettingsProvider>(context,
+                                        listen: false)
                                     .setViewType('home', _viewType.name);
                               },
                               onMenuTap: () {
-                                if (_isSearchActive) { _exitSearchMode(); return; }
+                                if (_isSearchActive) {
+                                  _exitSearchMode();
+                                  return;
+                                }
                                 _scaffoldKey.currentState?.openDrawer();
                               },
-                              onFilterTap: () { FocusScope.of(context).unfocus(); _showFilterDialog(context); },
+                              onFilterTap: () {
+                                FocusScope.of(context).unfocus();
+                                _showFilterDialog(context);
+                              },
                               isSearchActive: _isSearchActive,
                             ),
                             DateBarHeader(

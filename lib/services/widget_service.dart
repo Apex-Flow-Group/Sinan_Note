@@ -155,9 +155,26 @@ class WidgetService {
   /// Format note content (simple truncation)
   String _formatNoteContent(String content, int maxLength) {
     if (content.trim().isEmpty) return 'Empty note';
-    return content.length > maxLength 
-        ? '${content.substring(0, maxLength)}...' 
-        : content;
+    
+    // إذا كان Delta JSON → استخرج النص العادي
+    String plainText = content;
+    if (content.trimLeft().startsWith('[')) {
+      try {
+        final List ops = jsonDecode(content) as List;
+        final buffer = StringBuffer();
+        for (final op in ops) {
+          if (op is Map && op['insert'] is String) {
+            buffer.write(op['insert']);
+          }
+        }
+        plainText = buffer.toString().trimRight();
+      } catch (_) {}
+    }
+    
+    if (plainText.trim().isEmpty) return 'Empty note';
+    return plainText.length > maxLength
+        ? '${plainText.substring(0, maxLength)}...'
+        : plainText;
   }
 
   /// SNAPSHOT STRATEGY: Generate simple text snapshot for widget persistence

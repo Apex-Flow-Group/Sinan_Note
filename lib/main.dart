@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
@@ -33,6 +34,11 @@ import 'package:provider/provider.dart';
 // Global navigator key for error feedback
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+// Notifier لإعادة التبويب للرئيسية عند Back
+final ValueNotifier<int> tabToHomeNotifier = ValueNotifier<int>(0);
+// Notifier للتبويب الحالي
+final ValueNotifier<int> currentTabIndexNotifier = ValueNotifier<int>(0);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -50,6 +56,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => NotesProvider()),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
+        ChangeNotifierProvider(create: (_) => CategoriesProvider()),
       ],
       child: const ApexNoteApp(),
     ),
@@ -382,16 +389,10 @@ class _AppHomeState extends State<_AppHome> {
       builder: (context, settings, child) {
         if (!settings.isInitialized) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
-
-        if (settings.isFirstLaunch) {
-          return CinematicIntroScreen();
-        }
-
+        if (settings.isFirstLaunch) return CinematicIntroScreen();
         return const SplashScreen();
       },
     );

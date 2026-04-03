@@ -76,11 +76,15 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     setState(() => _isLoading = true);
     final provider = Provider.of<NotesProvider>(context, listen: false);
     _decryptedNotes = await provider.fetchAndDecryptLockedNotes();
-    AppLogger.info('Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
+    AppLogger.info(
+        'Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
     if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _createLockedNote(NoteMode mode) async {
+    // إخفاء NoteMode.checklist من الخزنة لأنه غير ضروري
+    if (mode == NoteMode.checklist) return;
+
     String noteType;
     bool isChecklist = false, isProfessional = false;
     String initialContent = '';
@@ -152,18 +156,21 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         builder: (context, setModalState) {
           final l10n = AppLocalizations.of(context)!;
           return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom),
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.75,
               child: Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 24),
+                padding: const EdgeInsets.only(
+                    left: 16, right: 16, top: 16, bottom: 24),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(l10n.importNotes,
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
                         IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () => Navigator.pop(context)),
@@ -176,28 +183,62 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                         itemBuilder: (context, i) {
                           final note = unlocked[i];
                           final isSelected = selected.contains(note.id);
-                          String displayTitle = note.title.isEmpty ? l10n.untitled : note.title;
-                          String displayContent = note.content;
+                          String displayTitle =
+                              note.title.isEmpty ? l10n.untitled : note.title;
+                          String displayContent;
 
                           if (note.isChecklist) {
                             try {
                               final decoded = jsonDecode(note.content);
                               if (decoded is Map) {
-                                displayTitle = (decoded['title'] ?? '').toString().trim();
-                                if (displayTitle.isEmpty) displayTitle = 'Checklist';
+                                final t =
+                                    (decoded['title'] ?? '').toString().trim();
+                                displayTitle = t.isEmpty ? 'Checklist' : t;
                                 final items = decoded['items'] as List? ?? [];
-                                displayContent = '${items.length} ${items.length == 1 ? 'item' : 'items'}';
+                                displayContent = items
+                                    .map((i) =>
+                                        '${i['isDone'] == true ? '☑' : '☐'} ${i['text'] ?? ''}')
+                                    .join('\n');
+                                if (displayContent.isEmpty) {
+                                  displayContent = '${items.length} items';
+                                }
+                              } else {
+                                displayContent = 'Checklist';
                               }
                             } catch (_) {
                               displayContent = 'Checklist';
+                            }
+                          } else {
+                            // استخراج النص الحقيقي من Delta JSON أو نص عادي
+                            final raw = note.content.trim();
+                            if (raw.startsWith('[') || raw.startsWith('{')) {
+                              try {
+                                final decoded = jsonDecode(raw);
+                                if (decoded is List) {
+                                  // Delta format من Quill
+                                  displayContent = decoded
+                                      .map((op) => op['insert'] ?? '')
+                                      .join()
+                                      .trim();
+                                } else {
+                                  displayContent = raw;
+                                }
+                              } catch (_) {
+                                displayContent = raw;
+                              }
+                            } else {
+                              displayContent = raw;
                             }
                           }
 
                           return CheckboxListTile(
                             value: isSelected,
                             onChanged: (val) => setModalState(() {
-                              if (val == true) { selected.add(note.id!); }
-                              else { selected.remove(note.id); }
+                              if (val == true) {
+                                selected.add(note.id!);
+                              } else {
+                                selected.remove(note.id);
+                              }
                             }),
                             title: Text(displayTitle, maxLines: 1),
                             subtitle: Text(displayContent,
@@ -255,7 +296,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         }
       },
       child: Scaffold(
-        drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: _loadLockedNotes),
+        drawer: HomeDrawerWidget(
+            onBackupTap: () {}, onNotesChanged: _loadLockedNotes),
         appBar: AppBar(
           leading: _selectedNoteIds.isEmpty
               ? Builder(
@@ -278,6 +320,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
               showMenu: _showAddMenu,
               onToggle: () => setState(() => _showAddMenu = !_showAddMenu),
               onModeSelected: _createLockedNote,
+              hideChecklist: true,
             ),
           ],
         ),
@@ -338,7 +381,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       return TextField(
         controller: searchController,
         autofocus: true,
-        decoration: InputDecoration(hintText: l10n.searchNotes, border: InputBorder.none),
+        decoration: InputDecoration(
+            hintText: l10n.searchNotes, border: InputBorder.none),
       );
     }
     return Row(
@@ -363,7 +407,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           onPressed: _showImportSheet,
         ),
         IconButton(
-          icon: Icon(searchController.text.isEmpty ? Icons.search : Icons.close),
+          icon:
+              Icon(searchController.text.isEmpty ? Icons.search : Icons.close),
           onPressed: () => setState(() {
             if (searchController.text.isEmpty) {
               searchController.text = ' ';
@@ -390,7 +435,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final query = searchController.text.toLowerCase();
     final filtered = _decryptedNotes
         .where((n) => !n.isArchived && !n.isTrashed)
-        .where((n) => query.isEmpty ||
+        .where((n) =>
+            query.isEmpty ||
             n.title.toLowerCase().contains(query) ||
             n.content.toLowerCase().contains(query))
         .toList();
@@ -439,8 +485,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     );
   }
 
-  void _confirmAction(
-      String title, String content, String confirmLabel, Future<void> Function() onConfirm) {
+  void _confirmAction(String title, String content, String confirmLabel,
+      Future<void> Function() onConfirm) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -448,7 +494,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);

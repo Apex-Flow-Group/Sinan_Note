@@ -63,7 +63,7 @@ class WhatsNewDialog extends StatelessWidget {
                               color: Colors.blue, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            isArabic ? 'الإصدار 2.3.0' : 'Version 2.3.0',
+                            isArabic ? 'الإصدار 3.0.0' : 'Version 3.0.0',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: isDesktop ? 17 : 15,
@@ -75,49 +75,32 @@ class WhatsNewDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
-                      icon: Icons.edit,
+                      icon: Icons.label_rounded,
                       color: Colors.blue,
-                      title: isArabic
-                          ? '🖥️ تحسينات سطح المكتب'
-                          : '🖥️ Desktop Improvements',
+                      title: isArabic ? '🏷️ نظام التصنيفات' : '🏷️ Categories System',
                       description: isArabic
-                          ? 'عارض النوت يدعم الآن وضع القراءة فقط، زر إغلاق العارض، وتحديث تلقائي لموضع النوت في القائمة.'
-                          : 'Note viewer now supports read-only mode, close button, and automatic note position tracking in the list.',
+                          ? 'نظّم ملاحظاتك بتصنيفات مخصصة. أضف ملاحظة لأكثر من تصنيف واحد، وصفّح بسهولة من القائمة الجانبية.'
+                          : 'Organize your notes with custom categories. Assign a note to multiple categories and filter easily from the sidebar.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
-                      icon: Icons.lock_outline,
+                      icon: Icons.content_paste_rounded,
                       color: Colors.orange,
-                      title:
-                          isArabic ? '🔒 وضع القراءة فقط' : '🔒 Read-Only Mode',
+                      title: isArabic ? '📋 تحسينات نظام اللصق' : '📋 Improved Paste System',
                       description: isArabic
-                          ? 'أقفل النوت من التعديل العرضي بضغطة واحدة. يُعاد تلقائياً عند إغلاق النوت وفتحها من جديد.'
-                          : 'Lock notes from accidental edits with one tap. Automatically resets when you close and reopen the note.',
+                          ? 'لصق أذكى يحافظ على النص الصريح ويزيل التنسيق الزائد تلقائياً.'
+                          : 'Smart paste that preserves plain text and automatically removes unwanted formatting.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
-                      icon: Icons.history,
+                      icon: Icons.translate_rounded,
                       color: Colors.purple,
-                      title: isArabic
-                          ? '📋 سجل التعديلات المحسّن'
-                          : '📋 Improved Version History',
+                      title: isArabic ? '🌐 تحسينات اتجاه اللغة' : '🌐 Language Direction Improvements',
                       description: isArabic
-                          ? 'شاشة سجل التعديلات محسّنة لسطح المكتب مع نافذة حوار أنيقة وقائمة جانبية للتنقل السريع.'
-                          : 'Version history screen optimized for desktop with an elegant dialog and sidebar for quick navigation.',
-                      isDesktop: isDesktop,
-                    ),
-                    const SizedBox(height: 16),
-                    _WhatsNewFeature(
-                      icon: Icons.settings,
-                      color: Colors.teal,
-                      title: isArabic
-                          ? '⚙️ إعدادات محسّنة لسطح المكتب'
-                          : '⚙️ Improved Desktop Settings',
-                      description: isArabic
-                          ? 'شاشة الإعدادات على سطح المكتب بتصميم جديد مع قائمة أقسام جانبية وألوان محسّنة.'
-                          : 'Desktop settings screen with a new design featuring a side section menu and improved colors.',
+                          ? 'كشف تلقائي أدق لاتجاه السطر عند الكتابة، مع دعم محسّن للتشكيل والحذف الذكي.'
+                          : 'More accurate auto-detection of text direction while typing, with improved diacritics support and smart delete.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),

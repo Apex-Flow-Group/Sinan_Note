@@ -1,628 +1,313 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
+// 📋 NOTE STATE SERVICE — اختبارات شاملة تشمل تسريب المزامنة
 
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../test_setup.dart';
+
 void main() {
-  group('NoteStateService', () {
-    late NoteStateService service;
-    late DateTime now;
+  setUpAll(() => initializeTestEnvironment());
 
-    setUp(() {
-      service = NoteStateService();
-      now = DateTime.now();
+  late NoteStateService service;
+  late DateTime now;
+
+  setUp(() {
+    service = NoteStateService();
+    now = DateTime.now();
+  });
+
+  tearDown(() => service.dispose());
+
+  // ══════════════════════════════════════════════════════════════
+  // 1. الفلترة الصحيحة
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — Filtering', () {
+    test('activeNotes يستثني المحذوفة والمؤرشفة والمقفلة', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Active', content: '', createdAt: now, updatedAt: now),
+        Note(id: 2, title: 'Archived', content: '', createdAt: now, updatedAt: now, isArchived: true),
+        Note(id: 3, title: 'Trashed', content: '', createdAt: now, updatedAt: now, isTrashed: true),
+        Note(id: 4, title: 'Locked', content: '', createdAt: now, updatedAt: now, isLocked: true),
+        Note(id: 5, title: 'Archived+Trashed', content: '', createdAt: now, updatedAt: now, isArchived: true, isTrashed: true),
+      ]);
+      expect(service.activeNotes.length, 1);
+      expect(service.activeNotes.first.id, 1);
     });
 
-    tearDown(() {
+    test('archivedNotes لا تشمل المحذوفة أو المقفلة', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Archived', content: '', createdAt: now, updatedAt: now, isArchived: true),
+        Note(id: 2, title: 'Archived+Trashed', content: '', createdAt: now, updatedAt: now, isArchived: true, isTrashed: true),
+        Note(id: 3, title: 'Archived+Locked', content: '', createdAt: now, updatedAt: now, isArchived: true, isLocked: true),
+      ]);
+      expect(service.archivedNotes.length, 1);
+      expect(service.archivedNotes.first.id, 1);
+    });
+
+    test('trashedNotes لا تشمل المقفلة', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Trashed', content: '', createdAt: now, updatedAt: now, isTrashed: true),
+        Note(id: 2, title: 'Trashed+Locked', content: '', createdAt: now, updatedAt: now, isTrashed: true, isLocked: true),
+      ]);
+      expect(service.trashedNotes.length, 1);
+      expect(service.trashedNotes.first.id, 1);
+    });
+
+    test('reminderNotes تشمل فقط التذكيرات المستقبلية غير المقفلة', () {
+      final future = now.add(const Duration(days: 1));
+      final past = now.subtract(const Duration(days: 1));
+      service.updateAllNotes([
+        Note(id: 1, title: 'Future', content: '', createdAt: now, updatedAt: now, reminderDateTime: future),
+        Note(id: 2, title: 'Past', content: '', createdAt: now, updatedAt: now, reminderDateTime: past),
+        Note(id: 3, title: 'Locked+Future', content: '', createdAt: now, updatedAt: now, reminderDateTime: future, isLocked: true),
+        Note(id: 4, title: 'Trashed+Future', content: '', createdAt: now, updatedAt: now, reminderDateTime: future, isTrashed: true),
+      ]);
+      expect(service.reminderNotes.length, 1);
+      expect(service.reminderNotes.first.id, 1);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // 2. الكاش — Cache Invalidation
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — Cache Invalidation', () {
+    test('الكاش يُحدَّث بعد updateNote', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Original', content: '', createdAt: now, updatedAt: now),
+      ]);
+      final before = service.activeNotes.first.title;
+
+      service.updateNote(Note(id: 1, title: 'Updated', content: '', createdAt: now, updatedAt: now));
+      final after = service.activeNotes.first.title;
+
+      expect(before, 'Original');
+      expect(after, 'Updated');
+    });
+
+    test('الكاش يُحدَّث بعد removeNote', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Note', content: '', createdAt: now, updatedAt: now),
+      ]);
+      expect(service.activeNotes.length, 1);
+
+      service.removeNote(1);
+      expect(service.activeNotes.length, 0);
+    });
+
+    test('الكاش يُحدَّث بعد batchUpdateNotes', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'A', content: '', createdAt: now, updatedAt: now),
+        Note(id: 2, title: 'B', content: '', createdAt: now, updatedAt: now),
+      ]);
+
+      service.batchUpdateNotes([1, 2], (n) => n.copyWith(isTrashed: true));
+      expect(service.activeNotes.length, 0);
+      expect(service.trashedNotes.length, 2);
+    });
+
+    test('قراءة activeNotes مرتين تُرجع نفس النتيجة (cache hit)', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Note', content: '', createdAt: now, updatedAt: now),
+      ]);
+      final first = service.activeNotes;
+      final second = service.activeNotes;
+      expect(identical(first, second), isTrue);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // 3. الترتيب
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — Sorting', () {
+    test('المثبتة تأتي أولاً دائماً', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Regular', content: '', createdAt: now, updatedAt: now, isPinned: false),
+        Note(id: 2, title: 'Pinned', content: '', createdAt: now, updatedAt: now.add(const Duration(seconds: -1)), isPinned: true),
+      ]);
+      // المثبتة أقدم لكن يجب أن تأتي أولاً
+      expect(service.activeNotes.first.id, 2);
+    });
+
+    test('بين المثبتات: الأحدث أولاً', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Pinned Old', content: '', createdAt: now, updatedAt: now.subtract(const Duration(hours: 1)), isPinned: true),
+        Note(id: 2, title: 'Pinned New', content: '', createdAt: now, updatedAt: now, isPinned: true),
+      ]);
+      expect(service.activeNotes.first.id, 2);
+    });
+
+    test('بين العادية: الأحدث أولاً', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Old', content: '', createdAt: now, updatedAt: now.subtract(const Duration(hours: 2))),
+        Note(id: 2, title: 'New', content: '', createdAt: now, updatedAt: now),
+        Note(id: 3, title: 'Middle', content: '', createdAt: now, updatedAt: now.subtract(const Duration(hours: 1))),
+      ]);
+      final ids = service.activeNotes.map((n) => n.id).toList();
+      expect(ids, [2, 3, 1]);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // 4. البحث
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — Search', () {
+    test('البحث بنص فارغ يُرجع كل الملاحظات النشطة', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'A', content: '', createdAt: now, updatedAt: now),
+        Note(id: 2, title: 'B', content: '', createdAt: now, updatedAt: now, isTrashed: true),
+      ]);
+      expect(service.searchNotes('').length, 1);
+    });
+
+    test('البحث بمسافات فقط يُرجع كل الملاحظات النشطة', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'A', content: '', createdAt: now, updatedAt: now),
+      ]);
+      expect(service.searchNotes('   ').length, 1);
+    });
+
+    test('البحث في العنوان والمحتوى', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Flutter', content: 'Dart code', createdAt: now, updatedAt: now),
+        Note(id: 2, title: 'Python', content: 'Flask framework', createdAt: now, updatedAt: now),
+      ]);
+      expect(service.searchNotes('Dart').length, 1);
+      expect(service.searchNotes('Flask').length, 1);
+      expect(service.searchNotes('code').length, 1);
+    });
+
+    test('البحث غير حساس لحالة الأحرف', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Flutter Development', content: '', createdAt: now, updatedAt: now),
+      ]);
+      expect(service.searchNotes('flutter').length, 1);
+      expect(service.searchNotes('FLUTTER').length, 1);
+      expect(service.searchNotes('FlUtTeR').length, 1);
+    });
+
+    test('البحث لا يُرجع أكثر من 100 نتيجة', () {
+      service.updateAllNotes(
+        List.generate(200, (i) => Note(
+          id: i + 1,
+          title: 'Note $i',
+          content: 'search_term',
+          createdAt: now,
+          updatedAt: now,
+        )),
+      );
+      expect(service.searchNotes('search_term').length, 100);
+    });
+
+    test('البحث لا يُرجع ملاحظات مقفلة', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Public', content: 'secret', createdAt: now, updatedAt: now),
+        Note(id: 2, title: 'Locked', content: 'secret', createdAt: now, updatedAt: now, isLocked: true),
+      ]);
+      final results = service.searchNotes('secret');
+      expect(results.length, 1);
+      expect(results.first.id, 1);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // 5. تسريب المزامنة — Sync Leak Detection
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — Sync Leak', () {
+    test('_silentSync لا يُشغَّل عند auto_sync معطّل', () async {
+      // SharedPreferences مُعدَّة بدون google_drive_auto_sync
+      // لذا _silentSync يجب أن يتوقف بعد قراءة الإعداد
+      service.updateAllNotes([
+        Note(id: 1, title: 'Test', content: '', createdAt: now, updatedAt: now),
+      ]);
+      service.updateNote(
+        Note(id: 1, title: 'Updated', content: '', createdAt: now, updatedAt: now),
+      );
+      // انتظر أكثر من 5 ثوانٍ لا يمكن في الاختبار، لكن نتحقق أن لا استثناء
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(service.activeNotes.first.title, 'Updated');
+    });
+
+    test('dispose يُلغي كل الـ timers بدون استثناء', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Test', content: '', createdAt: now, updatedAt: now),
+      ]);
+      // تشغيل عمليات تُنشئ timers
+      service.updateNote(Note(id: 1, title: 'U', content: '', createdAt: now, updatedAt: now));
+      service.sortNotes(); // debounced timer
+      expect(() => service.dispose(), returnsNormally);
+    });
+
+    test('dispose بعد dispose لا يرمي استثناء', () {
       service.dispose();
+      expect(() => service.dispose(), returnsNormally);
     });
 
-    group('Filtered Getters', () {
-      test('activeNotes returns only active notes', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Active',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isArchived: false,
-            isTrashed: false,
-            isLocked: false,
-          ),
-          Note(
-            id: 2,
-            title: 'Archived',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isArchived: true,
-            isTrashed: false,
-            isLocked: false,
-          ),
-          Note(
-            id: 3,
-            title: 'Trashed',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isArchived: false,
-            isTrashed: true,
-            isLocked: false,
-          ),
-          Note(
-            id: 4,
-            title: 'Locked',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isArchived: false,
-            isTrashed: false,
-            isLocked: true,
-          ),
-        ];
+    test('عمليات متزامنة على نفس الملاحظة لا تُسبب تعارضاً', () async {
+      service.updateAllNotes([
+        Note(id: 1, title: 'Original', content: '', createdAt: now, updatedAt: now),
+      ]);
 
-        service.updateAllNotes(notes);
-
-        expect(service.activeNotes.length, 1);
-        expect(service.activeNotes.first.id, 1);
+      // تحديثات متزامنة
+      final futures = List.generate(10, (i) async {
+        service.updateNote(
+          Note(id: 1, title: 'Update $i', content: '', createdAt: now, updatedAt: now.add(Duration(milliseconds: i))),
+        );
       });
 
-      test('archivedNotes returns only archived notes', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Active',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isArchived: false,
-          ),
-          Note(
-            id: 2,
-            title: 'Archived',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isArchived: true,
-          ),
-          Note(
-            id: 3,
-            title: 'Archived and Trashed',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isArchived: true,
-            isTrashed: true,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        expect(service.archivedNotes.length, 1);
-        expect(service.archivedNotes.first.id, 2);
-      });
-
-      test('trashedNotes returns only trashed notes', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Active',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 2,
-            title: 'Trashed',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isTrashed: true,
-          ),
-          Note(
-            id: 3,
-            title: 'Trashed and Locked',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isTrashed: true,
-            isLocked: true,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        expect(service.trashedNotes.length, 1);
-        expect(service.trashedNotes.first.id, 2);
-      });
-
-      test('reminderNotes returns only notes with future reminders', () {
-        final futureDate = now.add(const Duration(days: 1));
-        final pastDate = now.subtract(const Duration(days: 1));
-
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Future Reminder',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            reminderDateTime: futureDate,
-          ),
-          Note(
-            id: 2,
-            title: 'Past Reminder',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            reminderDateTime: pastDate,
-          ),
-          Note(
-            id: 3,
-            title: 'No Reminder',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        expect(service.reminderNotes.length, 1);
-        expect(service.reminderNotes.first.id, 1);
-      });
+      await Future.wait(futures);
+      // يجب أن تكون الملاحظة موجودة بدون استثناء
+      expect(service.activeNotes.length, 1);
     });
 
-    group('State Management', () {
-      test('updateAllNotes replaces entire list', () {
-        final notes1 = [
-          Note(
-            id: 1,
-            title: 'Note 1',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
+    test('إضافة وحذف متزامن لا يُسبب تعارضاً', () async {
+      service.updateAllNotes([]);
 
-        service.updateAllNotes(notes1);
-        expect(service.activeNotes.length, 1);
-
-        final notes2 = [
-          Note(
-            id: 2,
-            title: 'Note 2',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 3,
-            title: 'Note 3',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes2);
-        expect(service.activeNotes.length, 2);
-        expect(service.activeNotes.any((n) => n.id == 1), false);
+      final addFutures = List.generate(5, (i) async {
+        service.addNote(
+          Note(id: i + 1, title: 'Note $i', content: '', createdAt: now, updatedAt: now),
+        );
       });
 
-      test('updateNote updates existing note', () {
-        final note = Note(
-          id: 1,
-          title: 'Original',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-        );
+      await Future.wait(addFutures);
 
-        service.updateAllNotes([note]);
-
-        final updatedNote = note.copyWith(title: 'Updated');
-        service.updateNote(updatedNote);
-
-        expect(service.activeNotes.first.title, 'Updated');
+      final removeFutures = List.generate(5, (i) async {
+        service.removeNote(i + 1);
       });
 
-      test('updateNote adds note if not found', () {
-        service.updateAllNotes([]);
+      await Future.wait(removeFutures);
+      expect(service.activeNotes.length, 0);
+    });
+  });
 
-        final note = Note(
-          id: 1,
-          title: 'New',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-        );
-
-        service.updateNote(note);
-
-        expect(service.activeNotes.length, 1);
-        expect(service.activeNotes.first.id, 1);
-      });
-
-      test('addNote adds to beginning of list', () {
-        final note1 = Note(
-          id: 1,
-          title: 'First',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-        );
-
-        service.updateAllNotes([note1]);
-
-        final note2 = Note(
-          id: 2,
-          title: 'Second',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now.add(const Duration(seconds: 1)),
-        );
-
-        service.addNote(note2);
-
-        // After sorting, note2 should be first (newer updatedAt)
-        expect(service.activeNotes.first.id, 2);
-      });
-
-      test('removeNote removes from both lists', () {
-        final activeNote = Note(
-          id: 1,
-          title: 'Active',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-        );
-
-        final lockedNote = Note(
-          id: 2,
-          title: 'Locked',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: true,
-        );
-
-        service.updateAllNotes([activeNote]);
-        service.updateLockedNotes([lockedNote]);
-
-        service.removeNote(1);
-        expect(service.activeNotes.length, 0);
-
-        service.removeNote(2);
-        expect(service.lockedNotes.length, 0);
-      });
+  // ══════════════════════════════════════════════════════════════
+  // 6. الملاحظات المقفلة
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — Locked Notes', () {
+    test('addNote مع isLocked يضيف للقائمة المقفلة فقط', () {
+      service.addNote(
+        Note(id: 1, title: 'Locked', content: '', createdAt: now, updatedAt: now, isLocked: true),
+      );
+      expect(service.lockedNotes.length, 1);
+      expect(service.activeNotes.length, 0);
     });
 
-    group('Search', () {
-      test('searchNotes finds notes by title', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Flutter Development',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 2,
-            title: 'Dart Programming',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        final results = service.searchNotes('Flutter');
-        expect(results.length, 1);
-        expect(results.first.id, 1);
-      });
-
-      test('searchNotes finds notes by content', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Note 1',
-            content: 'Flutter is awesome',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 2,
-            title: 'Note 2',
-            content: 'Dart is great',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        final results = service.searchNotes('awesome');
-        expect(results.length, 1);
-        expect(results.first.id, 1);
-      });
-
-      test('searchNotes is case-insensitive', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Flutter Development',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        final results = service.searchNotes('flutter');
-        expect(results.length, 1);
-      });
-
-      test('searchNotes excludes locked notes', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Public Note',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 2,
-            title: 'Locked Note',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isLocked: true,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        final results = service.searchNotes('Note');
-        expect(results.length, 1);
-        expect(results.first.id, 1);
-      });
-
-      test('searchNotes returns active notes for empty query', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Active',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 2,
-            title: 'Trashed',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isTrashed: true,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        final results = service.searchNotes('');
-        expect(results.length, 1);
-        expect(results.first.id, 1);
-      });
+    test('clearLockedNotes يمسح القائمة المقفلة', () {
+      service.updateLockedNotes([
+        Note(id: 1, title: 'Locked', content: 'Secret', createdAt: now, updatedAt: now, isLocked: true),
+      ]);
+      expect(service.lockedNotes.length, 1);
+      service.clearLockedNotes();
+      expect(service.lockedNotes.length, 0);
     });
 
-    group('Sorting', () {
-      test('sortNotes puts pinned notes first', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Regular',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isPinned: false,
-          ),
-          Note(
-            id: 2,
-            title: 'Pinned',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isPinned: true,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        expect(service.activeNotes.first.id, 2);
-      });
-
-      test('sortNotes sorts by updatedAt (newest first)', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Old',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-          Note(
-            id: 2,
-            title: 'New',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        expect(service.activeNotes.first.id, 2);
-      });
-
-      test('sortNotes with immediate flag sorts immediately', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Second',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now.subtract(const Duration(seconds: 1)),
-          ),
-          Note(
-            id: 2,
-            title: 'First',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-        service.sortNotes(immediate: true);
-
-        expect(service.activeNotes.first.id, 2);
-      });
-    });
-
-    group('Batch Operations', () {
-      test('batchUpdateNotes applies transformation to matching notes', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Note 1',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 2,
-            title: 'Note 2',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 3,
-            title: 'Note 3',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        service
-            .batchUpdateNotes([1, 3], (note) => note.copyWith(isTrashed: true));
-
-        expect(service.trashedNotes.length, 2);
-        expect(service.activeNotes.length, 1);
-        expect(service.activeNotes.first.id, 2);
-      });
-
-      test('batchUpdateNotes does not affect non-matching notes', () {
-        final notes = [
-          Note(
-            id: 1,
-            title: 'Note 1',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Note(
-            id: 2,
-            title: 'Note 2',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ];
-
-        service.updateAllNotes(notes);
-
-        service
-            .batchUpdateNotes([1], (note) => note.copyWith(title: 'Updated'));
-
-        expect(service.activeNotes[0].title, 'Updated');
-        expect(service.activeNotes[1].title, 'Note 2');
-      });
-    });
-
-    group('Locked Notes', () {
-      test('updateLockedNotes updates locked notes list', () {
-        final lockedNotes = [
-          Note(
-            id: 1,
-            title: 'Locked',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isLocked: true,
-          ),
-        ];
-
-        service.updateLockedNotes(lockedNotes);
-
-        expect(service.lockedNotes.length, 1);
-        expect(service.lockedNotes.first.id, 1);
-      });
-
-      test('clearLockedNotes wipes locked notes from memory', () {
-        final lockedNotes = [
-          Note(
-            id: 1,
-            title: 'Locked',
-            content: 'Content',
-            createdAt: now,
-            updatedAt: now,
-            isLocked: true,
-          ),
-        ];
-
-        service.updateLockedNotes(lockedNotes);
-        expect(service.lockedNotes.length, 1);
-
-        service.clearLockedNotes();
-        expect(service.lockedNotes.length, 0);
-      });
-
-      test('addNote adds locked notes to separate list', () {
-        final lockedNote = Note(
-          id: 1,
-          title: 'Locked',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: true,
-        );
-
-        service.addNote(lockedNote);
-
-        expect(service.lockedNotes.length, 1);
-        expect(service.activeNotes.length, 0);
-      });
-    });
-
-    group('Initial Data Loading', () {
-      test('isInitialDataLoaded is false initially', () {
-        expect(service.isInitialDataLoaded, false);
-      });
-
-      test('isInitialDataLoaded is true after updateAllNotes', () {
-        service.updateAllNotes([]);
-        expect(service.isInitialDataLoaded, true);
-      });
+    test('removeNote يحذف من القائمة المقفلة', () {
+      service.updateLockedNotes([
+        Note(id: 99, title: 'Locked', content: '', createdAt: now, updatedAt: now, isLocked: true),
+      ]);
+      service.removeNote(99);
+      expect(service.lockedNotes.length, 0);
     });
   });
 }

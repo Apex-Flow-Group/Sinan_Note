@@ -52,6 +52,11 @@ class Note {
   
   late bool isChecklist;
 
+  List<int> categoryIds;
+
+  @Index()
+  late bool isHiddenFromHome;
+
   Note({
     this.id,
     required this.title,
@@ -69,6 +74,8 @@ class Note {
     this.isProfessional = false,
     this.isPinned = false,
     this.isChecklist = false,
+    this.categoryIds = const [],
+    this.isHiddenFromHome = false,
   }) {
     // Auto-normalize on creation
     normalizedTitle = normalize(title);
@@ -116,6 +123,8 @@ class Note {
     bool? isProfessional,
     bool? isPinned,
     bool? isChecklist,
+    List<int>? categoryIds,
+    bool? isHiddenFromHome,
   }) {
     final newNote = Note(
       id: id ?? this.id,
@@ -134,6 +143,8 @@ class Note {
       isProfessional: isProfessional ?? this.isProfessional,
       isPinned: isPinned ?? this.isPinned,
       isChecklist: isChecklist ?? this.isChecklist,
+      categoryIds: categoryIds ?? this.categoryIds,
+      isHiddenFromHome: isHiddenFromHome ?? this.isHiddenFromHome,
     );
     // Auto-update normalized fields
     newNote.normalizedTitle = normalize(newNote.title);

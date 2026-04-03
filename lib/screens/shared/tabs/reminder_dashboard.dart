@@ -4,6 +4,7 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/main.dart' show tabToHomeNotifier;
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
@@ -82,9 +83,11 @@ class _ReminderDashboardState extends State<ReminderDashboard>
   List<Note> _filterNotes(List<Note> notes) {
     var filtered = searchQuery.isEmpty
         ? notes
-        : notes.where((n) =>
-            n.title.toLowerCase().contains(searchQuery) ||
-            n.content.toLowerCase().contains(searchQuery)).toList();
+        : notes
+            .where((n) =>
+                n.title.toLowerCase().contains(searchQuery) ||
+                n.content.toLowerCase().contains(searchQuery))
+            .toList();
     if (_sortBy == 'title') {
       filtered.sort((a, b) => a.title.compareTo(b.title));
     } else {
@@ -105,20 +108,26 @@ class _ReminderDashboardState extends State<ReminderDashboard>
             .where((n) => n.reminderDateTime != null && !n.isTrashed)
             .toList();
 
-        final upcoming = _filterNotes(all.where((n) =>
-            n.reminderDateTime!.isAfter(now) &&
-            n.reminderDateTime!.difference(now).inHours <= 24).toList());
-        final scheduled = _filterNotes(all.where((n) =>
-            n.reminderDateTime!.isAfter(now) &&
-            n.reminderDateTime!.difference(now).inHours > 24).toList());
+        final upcoming = _filterNotes(all
+            .where((n) =>
+                n.reminderDateTime!.isAfter(now) &&
+                n.reminderDateTime!.difference(now).inHours <= 24)
+            .toList());
+        final scheduled = _filterNotes(all
+            .where((n) =>
+                n.reminderDateTime!.isAfter(now) &&
+                n.reminderDateTime!.difference(now).inHours > 24)
+            .toList());
         final expired = _filterNotes(
             all.where((n) => n.reminderDateTime!.isBefore(now)).toList());
 
         return PopScope(
-          canPop: searchController.text.isEmpty,
+          canPop: false,
           onPopInvokedWithResult: (didPop, result) {
-            if (!didPop && searchController.text.isNotEmpty) {
+            if (searchController.text.isNotEmpty) {
               setState(() => searchController.clear());
+            } else {
+              tabToHomeNotifier.value++;
             }
           },
           child: Stack(
@@ -139,7 +148,9 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                   children: [
                                     const Icon(Icons.alarm_rounded, size: 22),
                                     const SizedBox(width: 8),
-                                    Flexible(child: Text(strings.reminders, overflow: TextOverflow.ellipsis)),
+                                    Flexible(
+                                        child: Text(strings.reminders,
+                                            overflow: TextOverflow.ellipsis)),
                                   ],
                                 )
                               : TextField(
@@ -152,7 +163,9 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                 ),
                           actions: [
                             IconButton(
-                              icon: Icon(searchController.text.isEmpty ? Icons.search : Icons.close),
+                              icon: Icon(searchController.text.isEmpty
+                                  ? Icons.search
+                                  : Icons.close),
                               onPressed: () => setState(toggleSearch),
                             ),
                             IconButton(
@@ -165,20 +178,25 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                               ),
                               onPressed: () async {
                                 setState(() {
-                                  final next = (_viewType.index + 1) % ViewType.values.length;
+                                  final next = (_viewType.index + 1) %
+                                      ViewType.values.length;
                                   _viewType = ViewType.values[next];
                                 });
-                                await Provider.of<SettingsProvider>(context, listen: false)
+                                await Provider.of<SettingsProvider>(context,
+                                        listen: false)
                                     .setViewType('reminder', _viewType.name);
                               },
                             ),
                             PopupMenuButton<String>(
                               icon: const Icon(Icons.sort),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
                               onSelected: (v) => setState(() => _sortBy = v),
                               itemBuilder: (_) => [
-                                _sortItem(context, 'date', Icons.access_time, strings.sortByDate),
-                                _sortItem(context, 'title', Icons.sort_by_alpha, strings.sortByTitle),
+                                _sortItem(context, 'date', Icons.access_time,
+                                    strings.sortByDate),
+                                _sortItem(context, 'title', Icons.sort_by_alpha,
+                                    strings.sortByTitle),
                               ],
                             ),
                           ],
@@ -189,10 +207,15 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                           bottom: TabBar(
                             controller: _tabController,
                             indicatorColor: Theme.of(context).primaryColor,
-                            labelColor: isDark ? Colors.white : Theme.of(context).primaryColor,
-                            unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
-                            labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+                            labelColor: isDark
+                                ? Colors.white
+                                : Theme.of(context).primaryColor,
+                            unselectedLabelColor:
+                                isDark ? Colors.grey[400] : Colors.grey[600],
+                            labelStyle: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 14),
+                            unselectedLabelStyle: const TextStyle(
+                                fontWeight: FontWeight.normal, fontSize: 14),
                             physics: const NeverScrollableScrollPhysics(),
                             tabs: [
                               Tab(text: strings.upcoming),
@@ -206,16 +229,35 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                         children: [
                           if (_showPermissionBanner && !_isCheckingPermissions)
                             _BatteryBanner(
-                              onDismiss: () => setState(() => _showPermissionBanner = false),
+                              onDismiss: () =>
+                                  setState(() => _showPermissionBanner = false),
                             ),
                           Expanded(
                             child: TabBarView(
                               controller: _tabController,
                               physics: const NeverScrollableScrollPhysics(),
                               children: [
-                                _ReminderTabView(notes: upcoming, type: 'upcoming', viewType: _viewType, closeAllSlidables: _closeAllSlidables, onChanged: () => setState(() {}), strings: strings),
-                                _ReminderTabView(notes: scheduled, type: 'scheduled', viewType: _viewType, closeAllSlidables: _closeAllSlidables, onChanged: () => setState(() {}), strings: strings),
-                                _ReminderTabView(notes: expired, type: 'expired', viewType: _viewType, closeAllSlidables: _closeAllSlidables, onChanged: () => setState(() {}), strings: strings),
+                                _ReminderTabView(
+                                    notes: upcoming,
+                                    type: 'upcoming',
+                                    viewType: _viewType,
+                                    closeAllSlidables: _closeAllSlidables,
+                                    onChanged: () => setState(() {}),
+                                    strings: strings),
+                                _ReminderTabView(
+                                    notes: scheduled,
+                                    type: 'scheduled',
+                                    viewType: _viewType,
+                                    closeAllSlidables: _closeAllSlidables,
+                                    onChanged: () => setState(() {}),
+                                    strings: strings),
+                                _ReminderTabView(
+                                    notes: expired,
+                                    type: 'expired',
+                                    viewType: _viewType,
+                                    closeAllSlidables: _closeAllSlidables,
+                                    onChanged: () => setState(() {}),
+                                    strings: strings),
                               ],
                             ),
                           ),
@@ -236,9 +278,12 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                       builder: (_) => NoteEditorImmersive(
                         mode: mode,
                         note: Note(
-                          title: '', content: '',
-                          createdAt: DateTime.now(), updatedAt: DateTime.now(),
-                          colorIndex: 0, noteType: mode.name,
+                          title: '',
+                          content: '',
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                          colorIndex: 0,
+                          noteType: mode.name,
                           isChecklist: mode == NoteMode.checklist,
                           isProfessional: mode == NoteMode.code,
                         ),
@@ -254,7 +299,8 @@ class _ReminderDashboardState extends State<ReminderDashboard>
     );
   }
 
-  PopupMenuItem<String> _sortItem(BuildContext context, String value, IconData icon, String label) {
+  PopupMenuItem<String> _sortItem(
+      BuildContext context, String value, IconData icon, String label) {
     final isSelected = _sortBy == value;
     final color = Theme.of(context).colorScheme.primary;
     return PopupMenuItem(
@@ -264,7 +310,10 @@ class _ReminderDashboardState extends State<ReminderDashboard>
           Icon(icon, size: 20, color: isSelected ? color : null),
           const SizedBox(width: 12),
           Text(label),
-          if (isSelected) ...[ const Spacer(), Icon(Icons.check, size: 20, color: color) ],
+          if (isSelected) ...[
+            const Spacer(),
+            Icon(Icons.check, size: 20, color: color)
+          ],
         ],
       ),
     );
@@ -303,43 +352,51 @@ class _BatteryBannerState extends State<_BatteryBanner> {
   }
 
   Widget _buildCollapsed() => const Row(
-    children: [
-      Icon(Icons.battery_alert, color: Colors.orange, size: 24),
-      SizedBox(width: 12),
-      Expanded(child: Text('Battery Optimization', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
-      Icon(Icons.expand_more, size: 20),
-    ],
-  );
+        children: [
+          Icon(Icons.battery_alert, color: Colors.orange, size: 24),
+          SizedBox(width: 12),
+          Expanded(
+              child: Text('Battery Optimization',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
+          Icon(Icons.expand_more, size: 20),
+        ],
+      );
 
   Widget _buildExpanded() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.battery_alert, color: Colors.orange, size: 24),
-          const SizedBox(width: 12),
-          const Expanded(child: Text('Battery Optimization', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
-          IconButton(
-            icon: const Icon(Icons.close, size: 20),
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('reminder_permission_dismissed', true);
-              widget.onDismiss();
-            },
+          Row(
+            children: [
+              const Icon(Icons.battery_alert, color: Colors.orange, size: 24),
+              const SizedBox(width: 12),
+              const Expanded(
+                  child: Text('Battery Optimization',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14))),
+              IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('reminder_permission_dismissed', true);
+                  widget.onDismiss();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+              'Disable battery optimization to ensure reminders work reliably in the background',
+              style: TextStyle(fontSize: 12)),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: openAppSettings,
+            icon: const Icon(Icons.settings, size: 18),
+            label: const Text('Open Settings'),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange, foregroundColor: Colors.white),
           ),
         ],
-      ),
-      const SizedBox(height: 8),
-      const Text('Disable battery optimization to ensure reminders work reliably in the background', style: TextStyle(fontSize: 12)),
-      const SizedBox(height: 12),
-      ElevatedButton.icon(
-        onPressed: openAppSettings,
-        icon: const Icon(Icons.settings, size: 18),
-        label: const Text('Open Settings'),
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-      ),
-    ],
-  );
+      );
 }
 
 // ── Reminder Tab View ─────────────────────────────────────────────────────────
@@ -369,12 +426,21 @@ class _ReminderTabView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              type == 'upcoming' ? Icons.alarm_add : type == 'scheduled' ? Icons.event_repeat : Icons.alarm_off,
-              size: 80, color: Colors.grey[400],
+              type == 'upcoming'
+                  ? Icons.alarm_add
+                  : type == 'scheduled'
+                      ? Icons.event_repeat
+                      : Icons.alarm_off,
+              size: 80,
+              color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
-              type == 'upcoming' ? strings.noUpcomingReminders : type == 'scheduled' ? strings.noScheduledReminders : strings.noExpiredReminders,
+              type == 'upcoming'
+                  ? strings.noUpcomingReminders
+                  : type == 'scheduled'
+                      ? strings.noScheduledReminders
+                      : strings.noExpiredReminders,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -394,7 +460,10 @@ class _ReminderTabView extends StatelessWidget {
             children: [
               Expanded(child: _buildCard(context, notes[l])),
               const SizedBox(width: 8),
-              Expanded(child: r < notes.length ? _buildCard(context, notes[r]) : const SizedBox()),
+              Expanded(
+                  child: r < notes.length
+                      ? _buildCard(context, notes[r])
+                      : const SizedBox()),
             ],
           );
         },

@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
@@ -10,10 +11,13 @@ import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
 import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/widgets/home/categories_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class HomeDrawerWidget extends StatelessWidget {
+enum _CatMode { normal, delete, edit }
+
+class HomeDrawerWidget extends StatefulWidget {
   final VoidCallback onBackupTap;
   final VoidCallback onNotesChanged;
 
@@ -24,69 +28,118 @@ class HomeDrawerWidget extends StatelessWidget {
   });
 
   @override
+  State<HomeDrawerWidget> createState() => _HomeDrawerWidgetState();
+}
+
+class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
+  bool _categoriesExpanded = false;
+  _CatMode _catMode = _CatMode.normal;
+  bool _isAdding = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
 
     return Drawer(
+      backgroundColor: scheme.surface,
       child: Column(
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top),
+          SizedBox(height: MediaQuery.of(context).padding.top + 8),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.only(top: 16, bottom: 8),
+              padding: const EdgeInsets.only(top: 8, bottom: 8),
               children: [
                 _buildDrawerItem(
                   context,
                   icon: Icons.home_rounded,
                   title: l10n.home,
+                  scheme: scheme,
+                  isDark: isDark,
+                  isActive: currentRoute == '/',
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
                 ),
+                // ─── زر التصنيفات ───
+                _buildCategoriesItem(context, l10n, scheme, isDark),
+                ClipRect(
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: _categoriesExpanded
+                        ? Padding(
+                            padding: const EdgeInsetsDirectional.only(start: 16),
+                            child: CategoriesPanel(
+                              mode: _catMode == _CatMode.delete
+                                  ? CatPanelMode.delete
+                                  : _catMode == _CatMode.edit
+                                      ? CatPanelMode.edit
+                                      : CatPanelMode.normal,
+                              isAdding: _isAdding,
+                              onAddDone: () => setState(() => _isAdding = false),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.archive_rounded,
+                  icon: Icons.inventory_2_rounded,
                   title: l10n.archive,
+                  scheme: scheme,
+                  isDark: isDark,
+                  isActive: currentRoute == '/archive',
                   onTap: () async {
                     Navigator.pop(context);
                     if (!context.mounted) return;
                     Navigator.popUntil(context, (route) => route.isFirst);
                     await Navigator.pushNamed(context, '/archive');
                     if (!context.mounted) return;
-                    onNotesChanged();
+                    widget.onNotesChanged();
                   },
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.delete_rounded,
+                  icon: Icons.delete_sweep_rounded,
                   title: l10n.trash,
+                  scheme: scheme,
+                  isDark: isDark,
+                  isActive: currentRoute == '/trash',
                   onTap: () async {
                     Navigator.pop(context);
                     if (!context.mounted) return;
                     Navigator.popUntil(context, (route) => route.isFirst);
                     await Navigator.pushNamed(context, '/trash');
                     if (!context.mounted) return;
-                    onNotesChanged();
+                    widget.onNotesChanged();
                   },
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.lock_rounded,
+                  icon: Icons.shield_rounded,
                   title: l10n.locked,
+                  scheme: scheme,
+                  isDark: isDark,
+                  isActive: currentRoute == '/locked',
                   onTap: () => _openLockedNotes(context),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Divider(height: 1, color: scheme.outlineVariant),
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.cloud_rounded,
+                  icon: Icons.cloud_sync_rounded,
                   title: l10n.googleDrive,
                   subtitle: isArabic ? 'مزامنة السحابة' : 'Cloud sync',
                   iconColor: const Color(0xFF4285F4),
+                  scheme: scheme,
+                  isDark: isDark,
                   onTap: () {
                     Navigator.pop(context);
                     if (!context.mounted) return;
@@ -100,10 +153,12 @@ class HomeDrawerWidget extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.history_rounded,
+                  icon: Icons.manage_history_rounded,
                   title: l10n.noteHistory,
                   subtitle: isArabic ? 'سجل التعديلات' : 'Version history',
                   iconColor: Colors.orange,
+                  scheme: scheme,
+                  isDark: isDark,
                   onTap: () {
                     Navigator.pop(context);
                     if (!context.mounted) return;
@@ -117,8 +172,10 @@ class HomeDrawerWidget extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.settings_rounded,
+                  icon: Icons.tune_rounded,
                   title: l10n.settings,
+                  scheme: scheme,
+                  isDark: isDark,
                   onTap: () async {
                     Navigator.pop(context);
                     if (!context.mounted) return;
@@ -128,26 +185,172 @@ class HomeDrawerWidget extends StatelessWidget {
                       MaterialPageRoute(builder: (_) => const SettingsScreenResponsive()),
                     );
                     if (!context.mounted) return;
-                    onNotesChanged();
+                    widget.onNotesChanged();
                   },
                 ),
-
               ],
             ),
           ),
           Container(
-            padding:
-                EdgeInsets.only(left: 16, right: 16, top: 16, bottom: MediaQuery.of(context).padding.bottom + 24),
-            child: const Text(
+            padding: EdgeInsets.only(
+              left: 16, right: 16, top: 12,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
+            ),
+            child: Text(
               '© 2025 Apex Flow Group',
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCategoriesItem(BuildContext context, AppLocalizations l10n,
+      ColorScheme scheme, bool isDark) {
+    final catProvider = context.watch<CategoriesProvider>();
+    final selectedId = catProvider.selectedCategoryId;
+    final hasSelection = selectedId != null;
+    final selectedName = hasSelection
+        ? (selectedId == kProCategoryId
+            ? AppLocalizations.of(context)!.professional
+            : catProvider.categories
+                .where((c) => c.id == selectedId)
+                .map((c) => c.name)
+                .firstOrNull)
+        : null;
+
+    // نفس الحاوية لكليهما لتثبيت الحجم
+    final iconBox = Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: isDark ? 0.18 : 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(Icons.label_important_rounded, color: scheme.primary, size: 20),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: SizedBox(
+        height: 56,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: _categoriesExpanded
+                ? null
+                : () => setState(() => _categoriesExpanded = true),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  iconBox,
+                  const SizedBox(width: 16),
+                  // ─── المحتوى يتغيّر بانيميشن ───
+                  Expanded(
+                    child: AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 220),
+                      crossFadeState: _categoriesExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      // ─── وضع النص ───
+                      firstChild: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  l10n.categories,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: hasSelection ? scheme.primary : scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                if (selectedName != null)
+                                  Text(
+                                    selectedName,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: scheme.primary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  )
+                                else
+                                  Text(
+                                    l10n.allNotes,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: scheme.onSurface,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.keyboard_arrow_down_rounded,
+                              size: 20, color: scheme.onSurfaceVariant),
+                        ],
+                      ),
+                      // ─── وضع الأدوات ───
+                      secondChild: Row(
+                        children: [
+                          _ModeBtn(
+                            icon: Icons.add_rounded,
+                            active: _isAdding,
+                            color: scheme.primary,
+                            onTap: () {
+                              if (context.read<CategoriesProvider>().categories.length >= kMaxCategories) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(l10n.maxCategoriesReached),
+                                  duration: const Duration(seconds: 2),
+                                ));
+                                return;
+                              }
+                              setState(() { _isAdding = !_isAdding; _catMode = _CatMode.normal; });
+                            },
+                          ),
+                          _ModeBtn(
+                            icon: Icons.delete_outline_rounded,
+                            active: _catMode == _CatMode.delete,
+                            color: scheme.error,
+                            onTap: () => setState(() {
+                              _catMode = _catMode == _CatMode.delete ? _CatMode.normal : _CatMode.delete;
+                              _isAdding = false;
+                            }),
+                          ),
+                          _ModeBtn(
+                            icon: Icons.edit_outlined,
+                            active: _catMode == _CatMode.edit,
+                            color: scheme.primary,
+                            onTap: () => setState(() {
+                              _catMode = _catMode == _CatMode.edit ? _CatMode.normal : _CatMode.edit;
+                              _isAdding = false;
+                            }),
+                          ),
+                          const Spacer(),
+                          _ModeBtn(
+                            icon: Icons.close_rounded,
+                            active: false,
+                            color: scheme.onSurfaceVariant,
+                            onTap: () => setState(() {
+                              _categoriesExpanded = false;
+                              _catMode = _CatMode.normal;
+                              _isAdding = false;
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -166,7 +369,7 @@ Future<void> _openLockedNotes(BuildContext context) async {
             builder: (context) => const LockedNotesIntroScreen()),
       );
       if (!context.mounted) return;
-      onNotesChanged();
+      widget.onNotesChanged();
     } else {
       // Check if biometric is enabled
       final biometricEnabled = await VaultService.isBiometricEnabled();
@@ -187,7 +390,7 @@ Future<void> _openLockedNotes(BuildContext context) async {
             MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
           );
           if (!context.mounted) return;
-          onNotesChanged();
+          widget.onNotesChanged();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -208,7 +411,7 @@ Future<void> _openLockedNotes(BuildContext context) async {
           MaterialPageRoute(builder: (context) => const VaultEntryScreen()),
         );
         if (!context.mounted) return;
-        onNotesChanged();
+        widget.onNotesChanged();
       }
     }
   }
@@ -219,37 +422,79 @@ Future<void> _openLockedNotes(BuildContext context) async {
     required String title,
     String? subtitle,
     Color? iconColor,
+    required ColorScheme scheme,
+    required bool isDark,
     required VoidCallback onTap,
+    bool isActive = false,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveColor = iconColor ??
-        (isDark
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).primaryColor);
+    final effectiveColor = iconColor ?? scheme.primary;
 
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: effectiveColor.withValues(alpha: isDark ? 0.2 : 0.1),
+          color: isActive
+              ? scheme.primary.withValues(alpha: isDark ? 0.15 : 0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: effectiveColor.withValues(
+                  alpha: isActive ? (isDark ? 0.28 : 0.18) : (isDark ? 0.18 : 0.1)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: effectiveColor, size: 20),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+              color: isActive ? scheme.primary : scheme.onSurface,
+            ),
+          ),
+          subtitle: subtitle != null
+              ? Text(subtitle,
+                  style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant))
+              : null,
+          onTap: onTap,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeBtn extends StatelessWidget {
+  final IconData icon;
+  final bool active;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ModeBtn({required this.icon, required this.active, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 36, height: 36,
+        decoration: BoxDecoration(
+          color: active ? color.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
-          icon,
-          color: effectiveColor,
-          size: 22,
+          icon, size: 20,
+          color: active ? color : scheme.onSurfaceVariant.withValues(alpha: 0.6),
         ),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      subtitle: subtitle != null
-          ? Text(subtitle, style: const TextStyle(fontSize: 12))
-          : null,
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
 }

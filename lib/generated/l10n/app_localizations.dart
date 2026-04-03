@@ -1154,6 +1154,24 @@ abstract class AppLocalizations {
   /// **'No expired reminders'**
   String get noExpiredReminders;
 
+  /// No description provided for @hideProFromHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide from Home'**
+  String get hideProFromHome;
+
+  /// No description provided for @hiddenFromHomeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible in category only — won\'t be deleted'**
+  String get hiddenFromHomeDesc;
+
+  /// No description provided for @visibleInHomeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible in Home and category'**
+  String get visibleInHomeDesc;
+
   /// No description provided for @noProfessionalNotes.
   ///
   /// In en, this message translates to:
@@ -1219,24 +1237,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose Text Color'**
   String get chooseTextColor;
-
-  /// No description provided for @formattingHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Formatting Hint'**
-  String get formattingHint;
-
-  /// No description provided for @formattingHintMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Styles like Bold and Italic are shown as symbols here. They will be rendered beautifully when you save and view the note.'**
-  String get formattingHintMessage;
-
-  /// No description provided for @dontShowAgain.
-  ///
-  /// In en, this message translates to:
-  /// **'Don\'t show this again'**
-  String get dontShowAgain;
 
   /// No description provided for @gotIt.
   ///
@@ -1531,6 +1531,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Note'**
   String get selectNote;
+
+  /// No description provided for @pressBackToExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackToExit;
 
   /// No description provided for @tapToSelect.
   ///
@@ -3434,6 +3440,12 @@ abstract class AppLocalizations {
   /// **'⚠️ The developer and Google are not responsible for your security key (Recovery Code).\n\n🔑 You must keep the key in a safe place.\n\n📥 When restoring from Google Drive, you will need to enter the key to unlock encrypted notes.'**
   String get googleDriveVaultWarning;
 
+  /// No description provided for @dontShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show this again'**
+  String get dontShowAgain;
+
   /// No description provided for @makeCopy.
   ///
   /// In en, this message translates to:
@@ -3553,6 +3565,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Text was truncated (50,000 character limit)'**
   String get clipboardTruncated;
+
+  /// No description provided for @categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categories;
+
+  /// No description provided for @allNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'All Notes'**
+  String get allNotes;
+
+  /// No description provided for @addCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'New Category'**
+  String get addCategory;
+
+  /// No description provided for @categoryNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Category name...'**
+  String get categoryNameHint;
+
+  /// No description provided for @maxCategoriesReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum 20 categories reached'**
+  String get maxCategoriesReached;
+
+  /// No description provided for @renameCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameCategory;
+
+  /// No description provided for @deleteCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteCategory;
+
+  /// No description provided for @catWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get catWork;
+
+  /// No description provided for @catPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get catPersonal;
+
+  /// No description provided for @catIdeas.
+  ///
+  /// In en, this message translates to:
+  /// **'Ideas'**
+  String get catIdeas;
+
+  /// No description provided for @catTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get catTasks;
+
+  /// No description provided for @tourPage8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get tourPage8Title;
+
+  /// No description provided for @tourPage8Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize your notes into categories to find them quickly'**
+  String get tourPage8Desc;
+
+  /// No description provided for @tourCatCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create custom categories like Work, Personal, and Ideas'**
+  String get tourCatCreate;
+
+  /// No description provided for @tourCatFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a category to view only its notes'**
+  String get tourCatFilter;
+
+  /// No description provided for @tourCatEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename or delete categories easily'**
+  String get tourCatEdit;
+
+  /// No description provided for @tourCatAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign a note to multiple categories at once'**
+  String get tourCatAssign;
 }
 
 class _AppLocalizationsDelegate

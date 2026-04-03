@@ -12,18 +12,21 @@ import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatti
 import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:apex_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
+import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
 import 'package:apex_note/services/svg_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/editor/apex_editor_header.dart';
+import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:apex_note/widgets/editor/checklist_editor.dart';
 import 'package:apex_note/widgets/editor/quill_editor_widget.dart';
 import 'package:apex_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 
 /// All build methods extracted from main editor
@@ -104,6 +107,8 @@ class EditorBuildMethods {
     required VoidCallback onTitleTap,
     required VoidCallback onSaveTap,
     VoidCallback? onBackTap,
+    required void Function(List<int>) onCategoryChanged,
+    bool originallyLocked = false,
   }) {
     return Positioned(
       top: 0,
@@ -147,6 +152,18 @@ class EditorBuildMethods {
                   onSaveTap();
                 },
                 onBackTap: onBackTap,
+                onCategoryTap: originallyLocked ? null : () async {
+                  final current = coordinator.stateManager.categoryIds;
+                  final result = await CategoryPickerSheet.show(
+                    context, current,
+                    isHiddenFromHome: coordinator.stateManager.isHiddenFromHome,
+                  );
+                  if (result != null) {
+                    onCategoryChanged(result['categoryIds'] as List<int>);
+                    coordinator.stateManager.isHiddenFromHome =
+                        result['isHiddenFromHome'] as bool;
+                  }
+                },
               ),
             ),
           ),
@@ -195,6 +212,7 @@ class EditorBuildMethods {
               detectedLanguage: coordinator.detectedLanguage,
               hasReminder: coordinator.stateManager.reminderDateTime != null,
               hasContent: coordinator.stateManager.hasContent,
+              showChecklist: note?.isLocked != true,
               onUndo: coordinator.stateManager.canUndo
                   ? () {
                       HapticFeedback.lightImpact();
@@ -259,9 +277,11 @@ class EditorBuildMethods {
                   : null,
               onCalculate: () {
                 HapticFeedback.mediumImpact();
+                final dynamic calcController =
+                    coordinator.quillController ?? coordinator.contentController;
                 smartController.showSmartCalculationResult(
                   context,
-                  coordinator.contentController,
+                  calcController,
                   l10n,
                 );
               },
@@ -343,42 +363,76 @@ class EditorBuildMethods {
               ),
               onBold: () {
                 HapticFeedback.lightImpact();
-                formattingController.showFormattingHint(
-                  context,
-                  coordinator.getBackgroundColor(context),
-                  coordinator.textColor,
-                  () => formattingController.wrapText(
-                      coordinator.contentController, '**'),
-                );
+                final qc = coordinator.quillController;
+                if (qc != null) {
+                  final isBold = qc.getSelectionStyle().attributes['bold']?.value == true;
+                  qc.formatSelection(isBold ? Attribute.clone(Attribute.bold, null) : Attribute.bold);
+                } else {
+                  formattingController.wrapText(coordinator.contentController, '**');
+                }
               },
               onItalic: () {
                 HapticFeedback.lightImpact();
-                formattingController.wrapText(
-                    coordinator.contentController, '*');
+                final qc = coordinator.quillController;
+                if (qc != null) {
+                  final isItalic = qc.getSelectionStyle().attributes['italic']?.value == true;
+                  qc.formatSelection(isItalic ? Attribute.clone(Attribute.italic, null) : Attribute.italic);
+                } else {
+                  formattingController.wrapText(coordinator.contentController, '*');
+                }
               },
               onH1: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(
-                    coordinator.contentController, '# ');
+                final qc = coordinator.quillController;
+                if (qc != null) {
+                  final isH1 = qc.getSelectionStyle().attributes['header']?.value == 1;
+                  qc.formatSelection(isH1 ? Attribute.clone(Attribute.h1, null) : Attribute.h1);
+                } else {
+                  formattingController.insertText(coordinator.contentController, '# ');
+                }
               },
               onH2: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(
-                    coordinator.contentController, '## ');
+                final qc = coordinator.quillController;
+                if (qc != null) {
+                  final isH2 = qc.getSelectionStyle().attributes['header']?.value == 2;
+                  qc.formatSelection(isH2 ? Attribute.clone(Attribute.h2, null) : Attribute.h2);
+                } else {
+                  formattingController.insertText(coordinator.contentController, '## ');
+                }
               },
               onList: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(
-                    coordinator.contentController, '• ');
+                final qc = coordinator.quillController;
+                if (qc != null) {
+                  final isList = qc.getSelectionStyle().attributes['list']?.value == 'bullet';
+                  qc.formatSelection(isList ? Attribute.clone(Attribute.ul, null) : Attribute.ul);
+                } else {
+                  formattingController.insertText(coordinator.contentController, '• ');
+                }
               },
               onChecklist: () {
                 HapticFeedback.lightImpact();
-                formattingController.insertText(
-                    coordinator.contentController, '☐ ');
+                final qc = coordinator.quillController;
+                if (qc != null) {
+                  final isCheck = qc.getSelectionStyle().attributes['list']?.value == 'unchecked';
+                  qc.formatSelection(isCheck ? Attribute.clone(Attribute.ul, null) : const ListAttribute('unchecked'));
+                } else {
+                  formattingController.insertText(coordinator.contentController, '☐ ');
+                }
               },
               onColorTap: () {
                 HapticFeedback.mediumImpact();
-                onColorPaletteTap();
+                final qc = coordinator.quillController;
+                if (qc != null) {
+                  EditorDialogHandlers.showInlineColorPicker(
+                    context: context,
+                    backgroundColor: coordinator.getBackgroundColor(context),
+                    quillController: qc,
+                  );
+                } else {
+                  onColorPaletteTap();
+                }
               },
             ),
           ),

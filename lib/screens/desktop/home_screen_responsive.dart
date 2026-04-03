@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/shortcuts/app_shortcuts.dart';
@@ -496,6 +497,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final selectedNoteProvider =
         Provider.of<SelectedNoteProvider>(context, listen: false);
+    final categories = Provider.of<CategoriesProvider>(context, listen: false);
+    final selectedCatId = categories.selectedCategoryId;
 
     String colorMode = 'simple';
     if (mode == NoteMode.reminder) {
@@ -517,6 +520,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
       noteType: mode.name,
       isChecklist: mode == NoteMode.checklist,
       isProfessional: mode == NoteMode.code,
+      categoryIds: selectedCatId != null ? [selectedCatId] : [],
     );
 
     final noteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
@@ -563,6 +567,7 @@ class _SearchFieldState extends State<_SearchField> {
   void _onChanged() {
     setState(() {});
   }
+
   void _onFocusChanged() {
     setState(() {});
   }

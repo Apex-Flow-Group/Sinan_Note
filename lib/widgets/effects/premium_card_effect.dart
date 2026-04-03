@@ -22,48 +22,44 @@ class PremiumCardEffect extends StatefulWidget {
 
 class _PremiumCardEffectState extends State<PremiumCardEffect>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _glowAnimation;
+  AnimationController? _controller;
+  Animation<double>? _glowAnimation;
 
-  @override
-  void initState() {
-    super.initState();
-    // حركة هادئة جداً للنبض (3 ثواني)
+  void _startMotion() {
+    if (_controller != null) return;
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     );
-
-    // حركة من 0 إلى 1 لدمج الألوان بنعومة
     _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+      CurvedAnimation(parent: _controller!, curve: Curves.easeInOutSine),
     );
+    _controller!.repeat(reverse: true);
+  }
 
-    if (widget.enableMotion && mounted) {
-      _controller.repeat(reverse: true);
-    }
+  void _stopMotion() {
+    _controller?.dispose();
+    _controller = null;
+    _glowAnimation = null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enableMotion) _startMotion();
   }
 
   @override
   void didUpdateWidget(PremiumCardEffect oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.enableMotion != oldWidget.enableMotion) {
-      if (widget.enableMotion && mounted) {
-        _controller.repeat(reverse: true);
-      } else if (mounted) {
-        _controller.stop();
-        _controller.reset();
-      }
-    } else if (widget.baseColor != oldWidget.baseColor && mounted) {
-      if (widget.enableMotion && !_controller.isAnimating) {
-        _controller.repeat(reverse: true);
-      }
+      widget.enableMotion ? _startMotion() : _stopMotion();
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -100,7 +96,7 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
 
     return RepaintBoundary(
       child: AnimatedBuilder(
-        animation: _glowAnimation,
+        animation: _glowAnimation!,
         builder: (context, child) {
           return Container(
             decoration: BoxDecoration(
@@ -110,14 +106,13 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
               border: Border.all(
                 color: widget.isSelected
                     ? Theme.of(context).colorScheme.secondary
-                    : Color.lerp(baseBorderColor, glowColor, _glowAnimation.value * 0.4)!,
+                    : Color.lerp(baseBorderColor, glowColor, _glowAnimation!.value * 0.4)!,
                 width: widget.isSelected ? 2.0 : 0.8,
               ),
               boxShadow: [
-                // ظل خفيف جداً يظهر ويختفي مع نبض الحافة
                 BoxShadow(
-                  color: glowColor.withValues(alpha: _glowAnimation.value * 0.15),
-                  blurRadius: 6 * _glowAnimation.value,
+                  color: glowColor.withValues(alpha: _glowAnimation!.value * 0.15),
+                  blurRadius: 6 * _glowAnimation!.value,
                   spreadRadius: 0,
                 ),
               ],

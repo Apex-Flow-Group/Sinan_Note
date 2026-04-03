@@ -29,6 +29,7 @@ class SmartEditorToolbar extends StatefulWidget {
   final VoidCallback onH1;
   final VoidCallback onH2;
   final VoidCallback onChecklist;
+  final bool showChecklist;
 
   // Style Callbacks
   final VoidCallback onColorTap;
@@ -52,6 +53,7 @@ class SmartEditorToolbar extends StatefulWidget {
     required this.onH1,
     required this.onH2,
     required this.onChecklist,
+    this.showChecklist = true,
     required this.onColorTap,
     this.onBackgroundColorTap,
     this.mode = ToolbarMode.main,
@@ -208,7 +210,8 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
                 _buildIconBtn(Icons.title_rounded, widget.onH1),
                 _buildIconBtn(Icons.format_size_rounded, widget.onH2),
                 _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList),
-                _buildIconBtn(Icons.checklist_rounded, widget.onChecklist),
+                if (widget.showChecklist)
+                  _buildIconBtn(Icons.checklist_rounded, widget.onChecklist),
               ],
             ),
           ),

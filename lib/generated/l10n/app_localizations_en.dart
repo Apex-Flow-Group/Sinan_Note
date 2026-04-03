@@ -541,6 +541,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noExpiredReminders => 'No expired reminders';
 
   @override
+  String get hideProFromHome => 'Hide from Home';
+
+  @override
+  String get hiddenFromHomeDesc =>
+      'Visible in category only — won\'t be deleted';
+
+  @override
+  String get visibleInHomeDesc => 'Visible in Home and category';
+
+  @override
   String get noProfessionalNotes => 'No professional notes';
 
   @override
@@ -572,16 +582,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseTextColor => 'Choose Text Color';
-
-  @override
-  String get formattingHint => 'Formatting Hint';
-
-  @override
-  String get formattingHintMessage =>
-      'Styles like Bold and Italic are shown as symbols here. They will be rendered beautifully when you save and view the note.';
-
-  @override
-  String get dontShowAgain => 'Don\'t show this again';
 
   @override
   String get gotIt => 'Got it';
@@ -731,6 +731,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectNote => 'Select Note';
+
+  @override
+  String get pressBackToExit => 'Press back again to exit';
 
   @override
   String get tapToSelect => 'Tap to select +';
@@ -1733,6 +1736,9 @@ class AppLocalizationsEn extends AppLocalizations {
       '⚠️ The developer and Google are not responsible for your security key (Recovery Code).\n\n🔑 You must keep the key in a safe place.\n\n📥 When restoring from Google Drive, you will need to enter the key to unlock encrypted notes.';
 
   @override
+  String get dontShowAgain => 'Don\'t show this again';
+
+  @override
   String get makeCopy => 'Make a Copy';
 
   @override
@@ -1792,4 +1798,57 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clipboardTruncated =>
       'Text was truncated (50,000 character limit)';
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get allNotes => 'All Notes';
+
+  @override
+  String get addCategory => 'New Category';
+
+  @override
+  String get categoryNameHint => 'Category name...';
+
+  @override
+  String get maxCategoriesReached => 'Maximum 20 categories reached';
+
+  @override
+  String get renameCategory => 'Rename';
+
+  @override
+  String get deleteCategory => 'Delete';
+
+  @override
+  String get catWork => 'Work';
+
+  @override
+  String get catPersonal => 'Personal';
+
+  @override
+  String get catIdeas => 'Ideas';
+
+  @override
+  String get catTasks => 'Tasks';
+
+  @override
+  String get tourPage8Title => 'Categories';
+
+  @override
+  String get tourPage8Desc =>
+      'Organize your notes into categories to find them quickly';
+
+  @override
+  String get tourCatCreate =>
+      'Create custom categories like Work, Personal, and Ideas';
+
+  @override
+  String get tourCatFilter => 'Tap a category to view only its notes';
+
+  @override
+  String get tourCatEdit => 'Rename or delete categories easily';
+
+  @override
+  String get tourCatAssign => 'Assign a note to multiple categories at once';
 }

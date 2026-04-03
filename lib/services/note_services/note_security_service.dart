@@ -3,9 +3,9 @@
 import 'dart:convert';
 
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/note_services/note_db_interface.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
 
 class NoteSecurityService {
   bool _isVaultUnlocked = false;
@@ -33,7 +33,7 @@ class NoteSecurityService {
     _vaultUnlockedAt = null;
   }
   
-  Future<List<Note>> fetchAndDecryptLockedNotes(IsarDatabaseService dbService) async {
+  Future<List<Note>> fetchAndDecryptLockedNotes(NoteDbInterface dbService) async {
     final encryptedNotes = await dbService.getLockedNotes();
     final decryptedNotes = <Note>[];
     
@@ -66,7 +66,7 @@ class NoteSecurityService {
     return decryptedNotes;
   }
   
-  Future<void> toggleLockStatus(int id, bool lockStatus, IsarDatabaseService dbService) async {
+  Future<void> toggleLockStatus(int id, bool lockStatus, NoteDbInterface dbService) async {
     final note = await dbService.getNoteById(id);
     if (note == null) return;
     

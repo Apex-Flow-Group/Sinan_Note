@@ -101,6 +101,8 @@ class EditorSaveManager {
     required DateTime? reminderDateTime,
     required String? recurrenceRule,
     required NoteMode mode,
+    List<int> categoryIds = const [],
+    bool isHiddenFromHome = false,
     bool silent = false,
     bool isAutoSave = false,
   }) async {
@@ -121,6 +123,8 @@ class EditorSaveManager {
       isProfessional: existingNote?.isProfessional ?? (mode == NoteMode.code),
       isPinned: existingNote?.isPinned ?? false,
       isChecklist: isChecklist,
+      categoryIds: categoryIds,
+      isHiddenFromHome: isHiddenFromHome,
     );
 
     final newId = await provider.addOrUpdateNote(noteToSave, silent: silent);

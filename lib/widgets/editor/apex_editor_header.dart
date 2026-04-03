@@ -14,6 +14,7 @@ class ApexEditorHeader extends StatelessWidget {
   final bool hasReminder;
   final VoidCallback? onReminderTap;
   final VoidCallback? onTitleTap;
+  final VoidCallback? onCategoryTap;
 
   const ApexEditorHeader({
     super.key,
@@ -28,6 +29,7 @@ class ApexEditorHeader extends StatelessWidget {
     this.onReminderTap,
     this.onTitleTap,
     this.onBackTap,
+    this.onCategoryTap,
   });
 
   @override
@@ -93,6 +95,13 @@ class ApexEditorHeader extends StatelessWidget {
                 onPressed: onReminderTap,
                 splashRadius: 24,
                 tooltip: 'تذكير',
+              ),
+            if (onCategoryTap != null)
+              IconButton(
+                icon: Icon(Icons.label_rounded,
+                    color: textColor.withValues(alpha: 0.7), size: 22),
+                onPressed: onCategoryTap,
+                splashRadius: 24,
               ),
             if (hasHistory)
               IconButton(

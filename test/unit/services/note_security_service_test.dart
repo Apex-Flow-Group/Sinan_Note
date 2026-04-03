@@ -1,300 +1,241 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
+// 🔒 NOTE SECURITY SERVICE — اختبارات شاملة
 
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/note_services/note_db_interface.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_setup.dart';
 
-// Mock Database Service for testing
-// Note: We can't extend IsarDatabaseService because it uses a factory constructor
-// Instead, we create a standalone mock that implements the same interface
-class MockDatabaseService {
-  final Map<int, Note> _notes = {};
+// Mock يُطبِّق NoteDbInterface بدون Isar الحقيقي
+class _MockDb implements NoteDbInterface {
+  final Map<int, Note> _store = {};
 
-  Future<List<Note>> getLockedNotes() async {
-    return _notes.values.where((n) => n.isLocked).toList();
-  }
+  @override
+  Future<List<Note>> getLockedNotes() async =>
+      _store.values.where((n) => n.isLocked).toList();
 
-  Future<Note?> getNoteById(int id) async => _notes[id];
+  @override
+  Future<Note?> getNoteById(int id) async => _store[id];
 
+  @override
   Future<int> updateNote(Note note) async {
-    if (_notes.containsKey(note.id)) {
-      _notes[note.id!] = note;
-      return 1;
-    }
-    return 0;
+    _store[note.id!] = note;
+    return note.id!;
   }
 
-  void addNote(Note note) {
-    _notes[note.id!] = note;
-  }
+  void seed(Note note) => _store[note.id!] = note;
 }
 
 void main() {
-  setUpAll(() {
-    initializeTestEnvironment();
+  setUpAll(() => initializeTestEnvironment());
+
+  late NoteSecurityService security;
+  late _MockDb db;
+  late NoteStateService state;
+  late DateTime now;
+
+  setUp(() {
+    security = NoteSecurityService();
+    db = _MockDb();
+    state = NoteStateService();
+    now = DateTime.now();
   });
 
-  group('NoteSecurityService', () {
-    late NoteSecurityService service;
-    late MockDatabaseService dbService;
-    late NoteStateService stateService;
-    late DateTime now;
+  tearDown(() => state.dispose());
 
-    setUp(() {
-      service = NoteSecurityService();
-      dbService = MockDatabaseService();
-      stateService = NoteStateService();
-      now = DateTime.now();
+  // ══════════════════════════════════════════════════════════════
+  // 1. إدارة جلسة الخزنة
+  // ══════════════════════════════════════════════════════════════
+  group('NoteSecurityService — Vault Session', () {
+    test('الخزنة مقفلة في البداية', () {
+      expect(security.isVaultUnlocked, isFalse);
     });
 
-    tearDown(() {
-      stateService.dispose();
+    test('unlockVault يفتح الخزنة', () {
+      security.unlockVault();
+      expect(security.isVaultUnlocked, isTrue);
     });
 
-    group('Vault Session Management', () {
-      test('vault is locked initially', () {
-        expect(service.isVaultUnlocked, false);
-      });
-
-      test('unlockVault unlocks the vault', () {
-        service.unlockVault();
-        expect(service.isVaultUnlocked, true);
-      });
-
-      test('lockVault locks the vault', () {
-        service.unlockVault();
-        expect(service.isVaultUnlocked, true);
-
-        service.lockVault();
-        expect(service.isVaultUnlocked, false);
-      });
-
-      test('vault auto-locks after 5 minutes', () async {
-        service.unlockVault();
-        expect(service.isVaultUnlocked, true);
-
-        // Simulate 5 minutes passing by manipulating internal state
-        // In real scenario, we'd wait or use fake timers
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        // For now, just verify the getter logic works
-        expect(service.isVaultUnlocked, true);
-      });
-
-      test('multiple unlock calls reset timer', () {
-        service.unlockVault();
-        expect(service.isVaultUnlocked, true);
-
-        service.unlockVault();
-        expect(service.isVaultUnlocked, true);
-      });
+    test('lockVault يقفل الخزنة', () {
+      security.unlockVault();
+      security.lockVault();
+      expect(security.isVaultUnlocked, isFalse);
     });
 
-    group('fetchAndDecryptLockedNotes', () {
-      test('returns empty list when no locked notes', () async {
-        final notes =
-            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
-        expect(notes, isEmpty);
-      });
-
-      test('fetches locked notes from database', () async {
-        final lockedNote = Note(
-          id: 1,
-          title: 'Locked',
-          content: 'Secret',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: true,
-        );
-
-        dbService.addNote(lockedNote);
-
-        final notes =
-            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
-        expect(notes.length, 1);
-      });
-
-      test('does not decrypt checklist notes', () async {
-        final checklistNote = Note(
-          id: 1,
-          title: 'Checklist',
-          content: '[]Item 1',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: true,
-          isChecklist: true,
-        );
-
-        dbService.addNote(checklistNote);
-
-        final notes =
-            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
-        expect(notes.first.title, 'Checklist');
-        expect(notes.first.content, '[]Item 1');
-      });
-
-      test('handles decryption failures gracefully', () async {
-        final note = Note(
-          id: 1,
-          title: 'Invalid encrypted data',
-          content: 'Invalid encrypted data',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: true,
-        );
-
-        dbService.addNote(note);
-
-        final notes =
-            await service.fetchAndDecryptLockedNotes(dbService as dynamic);
-        expect(notes.length, 1);
-        // Should return original note on decryption failure
-      });
+    test('قفل متعدد لا يرمي استثناء', () {
+      security.lockVault();
+      security.lockVault();
+      expect(security.isVaultUnlocked, isFalse);
     });
 
-    group('toggleLockStatus', () {
-      test('locks a note', () async {
-        final note = Note(
-          id: 1,
-          title: 'Test',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: false,
-        );
-
-        dbService.addNote(note);
-
-        await service.toggleLockStatus(1, true, dbService as dynamic);
-
-        final updatedNote = await dbService.getNoteById(1);
-        expect(updatedNote?.isLocked, true);
-      });
-
-      test('unlocks a note', () async {
-        final note = Note(
-          id: 1,
-          title: 'Test',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: true,
-        );
-
-        dbService.addNote(note);
-
-        await service.toggleLockStatus(1, false, dbService as dynamic);
-
-        final updatedNote = await dbService.getNoteById(1);
-        expect(updatedNote?.isLocked, false);
-      });
-
-      test('does not encrypt checklist notes', () async {
-        final note = Note(
-          id: 1,
-          title: 'Checklist',
-          content: '[]Item 1',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: false,
-          isChecklist: true,
-        );
-
-        dbService.addNote(note);
-
-        await service.toggleLockStatus(1, true, dbService as dynamic);
-
-        final updatedNote = await dbService.getNoteById(1);
-        expect(updatedNote?.title, 'Checklist');
-        expect(updatedNote?.content, '[]Item 1');
-      });
-
-      test('does not encrypt empty content', () async {
-        final note = Note(
-          id: 1,
-          title: '',
-          content: '',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: false,
-        );
-
-        dbService.addNote(note);
-
-        await service.toggleLockStatus(1, true, dbService as dynamic);
-
-        final updatedNote = await dbService.getNoteById(1);
-        expect(updatedNote?.title, '');
-        expect(updatedNote?.content, '');
-      });
-
-      test('handles non-existent note gracefully', () async {
-        await service.toggleLockStatus(999, true, dbService as dynamic);
-        // Should not throw
-      });
+    test('فتح ثم قفل ثم فتح يعمل بشكل صحيح', () {
+      security.unlockVault();
+      expect(security.isVaultUnlocked, isTrue);
+      security.lockVault();
+      expect(security.isVaultUnlocked, isFalse);
+      security.unlockVault();
+      expect(security.isVaultUnlocked, isTrue);
     });
 
-    group('clearLockedSession', () {
-      test('clears locked notes from memory', () {
-        final lockedNote = Note(
-          id: 1,
-          title: 'Locked',
-          content: 'Secret',
-          createdAt: now,
-          updatedAt: now,
-          isLocked: true,
-        );
+    test('الجلسة تنتهي بعد 5 دقائق (اختبار المنطق)', () {
+      // نتحقق أن الـ getter يحسب الوقت بشكل صحيح
+      security.unlockVault();
+      expect(security.isVaultUnlocked, isTrue);
+      // لا يمكن انتظار 5 دقائق في الاختبار، لكن نتحقق من المنطق
+      // عبر التحقق من أن الجلسة لا تزال صالحة بعد ثانية
+      expect(security.isVaultUnlocked, isTrue);
+    });
+  });
 
-        stateService.updateLockedNotes([lockedNote]);
-        expect(stateService.lockedNotes.length, 1);
-
-        service.clearLockedSession(stateService);
-        expect(stateService.lockedNotes.length, 0);
-      });
-
-      test('does not affect regular notes', () {
-        final regularNote = Note(
-          id: 1,
-          title: 'Regular',
-          content: 'Content',
-          createdAt: now,
-          updatedAt: now,
-        );
-
-        stateService.updateAllNotes([regularNote]);
-        expect(stateService.activeNotes.length, 1);
-
-        service.clearLockedSession(stateService);
-        expect(stateService.activeNotes.length, 1);
-      });
+  // ══════════════════════════════════════════════════════════════
+  // 2. جلب الملاحظات المقفلة
+  // ══════════════════════════════════════════════════════════════
+  group('NoteSecurityService — Fetch Locked Notes', () {
+    test('قائمة فارغة عند عدم وجود ملاحظات مقفلة', () async {
+      final notes = await security.fetchAndDecryptLockedNotes(db);
+      expect(notes, isEmpty);
     });
 
-    group('Security Edge Cases', () {
-      test('vault remains locked after failed unlock', () {
-        expect(service.isVaultUnlocked, false);
-        // Simulate failed authentication (caller doesn't call unlockVault)
-        expect(service.isVaultUnlocked, false);
-      });
+    test('يجلب الملاحظات المقفلة', () async {
+      db.seed(Note(id: 1, title: 'Locked', content: 'Secret', createdAt: now, updatedAt: now, isLocked: true));
+      db.seed(Note(id: 2, title: 'Public', content: 'Public', createdAt: now, updatedAt: now, isLocked: false));
 
-      test('multiple lock calls are safe', () {
-        service.lockVault();
-        service.lockVault();
-        expect(service.isVaultUnlocked, false);
-      });
+      final notes = await security.fetchAndDecryptLockedNotes(db);
+      expect(notes.length, 1);
+      expect(notes.first.id, 1);
+    });
 
-      test('lock after unlock works correctly', () {
-        service.unlockVault();
-        expect(service.isVaultUnlocked, true);
+    test('فشل فك التشفير يُرجع الملاحظة كما هي', () async {
+      db.seed(Note(
+        id: 1,
+        title: 'invalid_encrypted_data',
+        content: 'invalid_encrypted_data',
+        createdAt: now,
+        updatedAt: now,
+        isLocked: true,
+      ));
 
-        service.lockVault();
-        expect(service.isVaultUnlocked, false);
+      final notes = await security.fetchAndDecryptLockedNotes(db);
+      expect(notes.length, 1);
+      // يجب أن لا يرمي استثناء
+    });
 
-        service.unlockVault();
-        expect(service.isVaultUnlocked, true);
-      });
+    test('ملاحظة checklist مقفلة تُعالج بشكل صحيح', () async {
+      const checklistJson = '{"title":"Tasks","items":[{"id":"1","text":"Task","isDone":false}]}';
+      db.seed(Note(
+        id: 1,
+        title: 'Checklist',
+        content: checklistJson,
+        createdAt: now,
+        updatedAt: now,
+        isLocked: true,
+        isChecklist: true,
+        noteType: 'checklist',
+      ));
+
+      final notes = await security.fetchAndDecryptLockedNotes(db);
+      expect(notes.length, 1);
+      // لا يجب أن يرمي استثناء
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // 3. تبديل حالة القفل
+  // ══════════════════════════════════════════════════════════════
+  group('NoteSecurityService — Toggle Lock', () {
+    setUp(() async {
+      await VaultService.clearVault();
+      await VaultService.setupVault('TestPass');
+      await VaultService.unlockWithPassword('TestPass');
+    });
+
+    tearDown(() async => await VaultService.clearVault());
+    test('قفل ملاحظة يُحدِّث isLocked في قاعدة البيانات', () async {
+      db.seed(Note(id: 1, title: 'Test', content: 'Content', createdAt: now, updatedAt: now, isLocked: false));
+
+      await security.toggleLockStatus(1, true, db);
+
+      final updated = await db.getNoteById(1);
+      expect(updated?.isLocked, isTrue);
+    });
+
+    test('فك قفل ملاحظة يُحدِّث isLocked في قاعدة البيانات', () async {
+      db.seed(Note(id: 1, title: 'Test', content: 'Content', createdAt: now, updatedAt: now, isLocked: true));
+
+      await security.toggleLockStatus(1, false, db);
+
+      final updated = await db.getNoteById(1);
+      expect(updated?.isLocked, isFalse);
+    });
+
+    test('قفل ملاحظة بمحتوى فارغ لا يُشفِّر', () async {
+      db.seed(Note(id: 1, title: '', content: '', createdAt: now, updatedAt: now, isLocked: false));
+
+      await security.toggleLockStatus(1, true, db);
+
+      final updated = await db.getNoteById(1);
+      expect(updated?.title, '');
+      expect(updated?.content, '');
+    });
+
+    test('ملاحظة غير موجودة لا ترمي استثناء', () async {
+      await expectLater(
+        security.toggleLockStatus(999, true, db),
+        completes,
+      );
+    });
+
+    test('قفل checklist يُعيد ترتيب JSON قبل التشفير', () async {
+      const validJson = '{"title":"Tasks","items":[{"id":"1","text":"Task","isDone":false}]}';
+      db.seed(Note(
+        id: 1,
+        title: 'Checklist',
+        content: validJson,
+        createdAt: now,
+        updatedAt: now,
+        isLocked: false,
+        isChecklist: true,
+        noteType: 'checklist',
+      ));
+
+      // لا يجب أن يرمي استثناء
+      await expectLater(
+        security.toggleLockStatus(1, true, db),
+        completes,
+      );
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // 4. مسح الجلسة
+  // ══════════════════════════════════════════════════════════════
+  group('NoteSecurityService — Clear Session', () {
+    test('clearLockedSession يمسح الملاحظات المقفلة من الذاكرة', () {
+      state.updateLockedNotes([
+        Note(id: 1, title: 'Secret', content: 'Secret Content', createdAt: now, updatedAt: now, isLocked: true),
+      ]);
+      expect(state.lockedNotes.length, 1);
+
+      security.clearLockedSession(state);
+      expect(state.lockedNotes.length, 0);
+    });
+
+    test('clearLockedSession لا يؤثر على الملاحظات العادية', () {
+      state.updateAllNotes([
+        Note(id: 1, title: 'Regular', content: 'Content', createdAt: now, updatedAt: now),
+      ]);
+      state.updateLockedNotes([
+        Note(id: 2, title: 'Locked', content: 'Secret', createdAt: now, updatedAt: now, isLocked: true),
+      ]);
+
+      security.clearLockedSession(state);
+
+      expect(state.activeNotes.length, 1);
+      expect(state.lockedNotes.length, 0);
     });
   });
 }

@@ -17,93 +17,103 @@ const NoteSchema = CollectionSchema(
   name: r'Note',
   id: 6284318083599466921,
   properties: {
-    r'colorIndex': PropertySchema(
+    r'categoryIds': PropertySchema(
       id: 0,
+      name: r'categoryIds',
+      type: IsarType.longList,
+    ),
+    r'colorIndex': PropertySchema(
+      id: 1,
       name: r'colorIndex',
       type: IsarType.long,
     ),
     r'content': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'content',
       type: IsarType.string,
     ),
     r'createdAt': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'isArchived': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'isArchived',
       type: IsarType.bool,
     ),
     r'isChecklist': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'isChecklist',
       type: IsarType.bool,
     ),
     r'isCompleted': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
     r'isEncrypted': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'isEncrypted',
       type: IsarType.bool,
     ),
+    r'isHiddenFromHome': PropertySchema(
+      id: 8,
+      name: r'isHiddenFromHome',
+      type: IsarType.bool,
+    ),
     r'isLocked': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'isLocked',
       type: IsarType.bool,
     ),
     r'isPinned': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'isPinned',
       type: IsarType.bool,
     ),
     r'isProfessional': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'isProfessional',
       type: IsarType.bool,
     ),
     r'isTrashed': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'isTrashed',
       type: IsarType.bool,
     ),
     r'normalizedContent': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'normalizedContent',
       type: IsarType.string,
     ),
     r'normalizedTitle': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'normalizedTitle',
       type: IsarType.string,
     ),
     r'noteType': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'noteType',
       type: IsarType.string,
     ),
     r'recurrenceRule': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'recurrenceRule',
       type: IsarType.string,
     ),
     r'reminderDateTime': PropertySchema(
-      id: 15,
+      id: 17,
       name: r'reminderDateTime',
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(
-      id: 16,
+      id: 18,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 17,
+      id: 19,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -256,6 +266,19 @@ const NoteSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'isHiddenFromHome': IndexSchema(
+      id: 4991228381868232062,
+      name: r'isHiddenFromHome',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'isHiddenFromHome',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
     )
   },
   links: {},
@@ -272,6 +295,7 @@ int _noteEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.categoryIds.length * 8;
   bytesCount += 3 + object.content.length * 3;
   bytesCount += 3 + object.normalizedContent.length * 3;
   bytesCount += 3 + object.normalizedTitle.length * 3;
@@ -292,24 +316,26 @@ void _noteSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.colorIndex);
-  writer.writeString(offsets[1], object.content);
-  writer.writeDateTime(offsets[2], object.createdAt);
-  writer.writeBool(offsets[3], object.isArchived);
-  writer.writeBool(offsets[4], object.isChecklist);
-  writer.writeBool(offsets[5], object.isCompleted);
-  writer.writeBool(offsets[6], object.isEncrypted);
-  writer.writeBool(offsets[7], object.isLocked);
-  writer.writeBool(offsets[8], object.isPinned);
-  writer.writeBool(offsets[9], object.isProfessional);
-  writer.writeBool(offsets[10], object.isTrashed);
-  writer.writeString(offsets[11], object.normalizedContent);
-  writer.writeString(offsets[12], object.normalizedTitle);
-  writer.writeString(offsets[13], object.noteType);
-  writer.writeString(offsets[14], object.recurrenceRule);
-  writer.writeDateTime(offsets[15], object.reminderDateTime);
-  writer.writeString(offsets[16], object.title);
-  writer.writeDateTime(offsets[17], object.updatedAt);
+  writer.writeLongList(offsets[0], object.categoryIds);
+  writer.writeLong(offsets[1], object.colorIndex);
+  writer.writeString(offsets[2], object.content);
+  writer.writeDateTime(offsets[3], object.createdAt);
+  writer.writeBool(offsets[4], object.isArchived);
+  writer.writeBool(offsets[5], object.isChecklist);
+  writer.writeBool(offsets[6], object.isCompleted);
+  writer.writeBool(offsets[7], object.isEncrypted);
+  writer.writeBool(offsets[8], object.isHiddenFromHome);
+  writer.writeBool(offsets[9], object.isLocked);
+  writer.writeBool(offsets[10], object.isPinned);
+  writer.writeBool(offsets[11], object.isProfessional);
+  writer.writeBool(offsets[12], object.isTrashed);
+  writer.writeString(offsets[13], object.normalizedContent);
+  writer.writeString(offsets[14], object.normalizedTitle);
+  writer.writeString(offsets[15], object.noteType);
+  writer.writeString(offsets[16], object.recurrenceRule);
+  writer.writeDateTime(offsets[17], object.reminderDateTime);
+  writer.writeString(offsets[18], object.title);
+  writer.writeDateTime(offsets[19], object.updatedAt);
 }
 
 Note _noteDeserialize(
@@ -319,25 +345,27 @@ Note _noteDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Note(
-    colorIndex: reader.readLongOrNull(offsets[0]) ?? 0,
-    content: reader.readString(offsets[1]),
-    createdAt: reader.readDateTime(offsets[2]),
+    categoryIds: reader.readLongList(offsets[0]) ?? const [],
+    colorIndex: reader.readLongOrNull(offsets[1]) ?? 0,
+    content: reader.readString(offsets[2]),
+    createdAt: reader.readDateTime(offsets[3]),
     id: id,
-    isArchived: reader.readBoolOrNull(offsets[3]) ?? false,
-    isChecklist: reader.readBoolOrNull(offsets[4]) ?? false,
-    isCompleted: reader.readBoolOrNull(offsets[5]) ?? false,
-    isLocked: reader.readBoolOrNull(offsets[7]) ?? false,
-    isPinned: reader.readBoolOrNull(offsets[8]) ?? false,
-    isProfessional: reader.readBoolOrNull(offsets[9]) ?? false,
-    isTrashed: reader.readBoolOrNull(offsets[10]) ?? false,
-    noteType: reader.readStringOrNull(offsets[13]) ?? 'simple',
-    recurrenceRule: reader.readStringOrNull(offsets[14]),
-    reminderDateTime: reader.readDateTimeOrNull(offsets[15]),
-    title: reader.readString(offsets[16]),
-    updatedAt: reader.readDateTime(offsets[17]),
+    isArchived: reader.readBoolOrNull(offsets[4]) ?? false,
+    isChecklist: reader.readBoolOrNull(offsets[5]) ?? false,
+    isCompleted: reader.readBoolOrNull(offsets[6]) ?? false,
+    isHiddenFromHome: reader.readBoolOrNull(offsets[8]) ?? false,
+    isLocked: reader.readBoolOrNull(offsets[9]) ?? false,
+    isPinned: reader.readBoolOrNull(offsets[10]) ?? false,
+    isProfessional: reader.readBoolOrNull(offsets[11]) ?? false,
+    isTrashed: reader.readBoolOrNull(offsets[12]) ?? false,
+    noteType: reader.readStringOrNull(offsets[15]) ?? 'simple',
+    recurrenceRule: reader.readStringOrNull(offsets[16]),
+    reminderDateTime: reader.readDateTimeOrNull(offsets[17]),
+    title: reader.readString(offsets[18]),
+    updatedAt: reader.readDateTime(offsets[19]),
   );
-  object.normalizedContent = reader.readString(offsets[11]);
-  object.normalizedTitle = reader.readString(offsets[12]);
+  object.normalizedContent = reader.readString(offsets[13]);
+  object.normalizedTitle = reader.readString(offsets[14]);
   return object;
 }
 
@@ -349,21 +377,21 @@ P _noteDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readLongList(offset) ?? const []) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 2:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readDateTime(offset)) as P;
     case 4:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 5:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
-    case 7:
       return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
     case 8:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 9:
@@ -371,18 +399,22 @@ P _noteDeserializeProp<P>(
     case 10:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 11:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 12:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 13:
-      return (reader.readStringOrNull(offset) ?? 'simple') as P;
-    case 14:
-      return (reader.readStringOrNull(offset)) as P;
-    case 15:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 16:
       return (reader.readString(offset)) as P;
+    case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
+      return (reader.readStringOrNull(offset) ?? 'simple') as P;
+    case 16:
+      return (reader.readStringOrNull(offset)) as P;
     case 17:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 18:
+      return (reader.readString(offset)) as P;
+    case 19:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -484,6 +516,14 @@ extension NoteQueryWhereSort on QueryBuilder<Note, Note, QWhere> {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'isPinned'),
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhere> anyIsHiddenFromHome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'isHiddenFromHome'),
       );
     });
   }
@@ -1516,9 +1556,191 @@ extension NoteQueryWhere on QueryBuilder<Note, Note, QWhereClause> {
       }
     });
   }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> isHiddenFromHomeEqualTo(
+      bool isHiddenFromHome) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'isHiddenFromHome',
+        value: [isHiddenFromHome],
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterWhereClause> isHiddenFromHomeNotEqualTo(
+      bool isHiddenFromHome) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isHiddenFromHome',
+              lower: [],
+              upper: [isHiddenFromHome],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isHiddenFromHome',
+              lower: [isHiddenFromHome],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isHiddenFromHome',
+              lower: [isHiddenFromHome],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'isHiddenFromHome',
+              lower: [],
+              upper: [isHiddenFromHome],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
 }
 
 extension NoteQueryFilter on QueryBuilder<Note, Note, QFilterCondition> {
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsElementEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryIds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'categoryIds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'categoryIds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'categoryIds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'categoryIds',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'categoryIds',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'categoryIds',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'categoryIds',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'categoryIds',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> categoryIdsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'categoryIds',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterFilterCondition> colorIndexEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1855,6 +2077,16 @@ extension NoteQueryFilter on QueryBuilder<Note, Note, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isEncrypted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterFilterCondition> isHiddenFromHomeEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isHiddenFromHome',
         value: value,
       ));
     });
@@ -2773,6 +3005,18 @@ extension NoteQuerySortBy on QueryBuilder<Note, Note, QSortBy> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterSortBy> sortByIsHiddenFromHome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isHiddenFromHome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> sortByIsHiddenFromHomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isHiddenFromHome', Sort.desc);
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterSortBy> sortByIsLocked() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isLocked', Sort.asc);
@@ -3003,6 +3247,18 @@ extension NoteQuerySortThenBy on QueryBuilder<Note, Note, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterSortBy> thenByIsHiddenFromHome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isHiddenFromHome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> thenByIsHiddenFromHomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isHiddenFromHome', Sort.desc);
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterSortBy> thenByIsLocked() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isLocked', Sort.asc);
@@ -3137,6 +3393,12 @@ extension NoteQuerySortThenBy on QueryBuilder<Note, Note, QSortThenBy> {
 }
 
 extension NoteQueryWhereDistinct on QueryBuilder<Note, Note, QDistinct> {
+  QueryBuilder<Note, Note, QDistinct> distinctByCategoryIds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'categoryIds');
+    });
+  }
+
   QueryBuilder<Note, Note, QDistinct> distinctByColorIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'colorIndex');
@@ -3177,6 +3439,12 @@ extension NoteQueryWhereDistinct on QueryBuilder<Note, Note, QDistinct> {
   QueryBuilder<Note, Note, QDistinct> distinctByIsEncrypted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isEncrypted');
+    });
+  }
+
+  QueryBuilder<Note, Note, QDistinct> distinctByIsHiddenFromHome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isHiddenFromHome');
     });
   }
 
@@ -3262,6 +3530,12 @@ extension NoteQueryProperty on QueryBuilder<Note, Note, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Note, List<int>, QQueryOperations> categoryIdsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'categoryIds');
+    });
+  }
+
   QueryBuilder<Note, int, QQueryOperations> colorIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'colorIndex');
@@ -3301,6 +3575,12 @@ extension NoteQueryProperty on QueryBuilder<Note, Note, QQueryProperty> {
   QueryBuilder<Note, bool, QQueryOperations> isEncryptedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isEncrypted');
+    });
+  }
+
+  QueryBuilder<Note, bool, QQueryOperations> isHiddenFromHomeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isHiddenFromHome');
     });
   }
 

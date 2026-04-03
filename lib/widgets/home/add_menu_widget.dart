@@ -13,12 +13,14 @@ class AddMenuWidget extends StatefulWidget {
   final bool showMenu;
   final VoidCallback onToggle;
   final Function(NoteMode) onModeSelected;
+  final bool hideChecklist;
 
   const AddMenuWidget({
     super.key,
     required this.showMenu,
     required this.onToggle,
     required this.onModeSelected,
+    this.hideChecklist = false,
   });
 
   @override
@@ -158,12 +160,13 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
         'title': l10n.codeEditorMenu,
         'mode': NoteMode.code
       },
-      {
-        'icon': Icons.checklist_rounded,
-        'color': colorScheme.tertiary,
-        'title': l10n.checklistMenu,
-        'mode': NoteMode.checklist
-      },
+      if (!widget.hideChecklist)
+        {
+          'icon': Icons.checklist_rounded,
+          'color': colorScheme.tertiary,
+          'title': l10n.checklistMenu,
+          'mode': NoteMode.checklist
+        },
       {
         'icon': Icons.format_paint_rounded,
         'color': colorScheme.primary,

@@ -540,6 +540,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noExpiredReminders => 'لا توجد تذكيرات منتهية';
 
   @override
+  String get hideProFromHome => 'إخفاء من الرئيسية';
+
+  @override
+  String get hiddenFromHomeDesc => 'يظهر في الكتالوج فقط — لن يُحذف';
+
+  @override
+  String get visibleInHomeDesc => 'يظهر في الرئيسية والكتالوج';
+
+  @override
   String get noProfessionalNotes => 'لا توجد ملاحظات احترافية';
 
   @override
@@ -571,16 +580,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chooseTextColor => 'اختر لون النص';
-
-  @override
-  String get formattingHint => 'تلميح التنسيق';
-
-  @override
-  String get formattingHintMessage =>
-      'الأنماط مثل الغامق والمائل يتم عرضها كرموز هنا. سيتم تصييرها بشكل جميل عند الحفظ.';
-
-  @override
-  String get dontShowAgain => 'لا تذكرني مرة أخرى';
 
   @override
   String get gotIt => 'فهمت';
@@ -730,6 +729,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get selectNote => 'اختر ملاحظة';
+
+  @override
+  String get pressBackToExit => 'اضغط مرة أخرى للخروج';
 
   @override
   String get tapToSelect => 'اضغط هنا للتحديد +';
@@ -1729,6 +1731,9 @@ class AppLocalizationsAr extends AppLocalizations {
       '⚠️ المطور وGoogle ليسوا مسؤولين عن مفتاح الأمان (Recovery Code) الخاص بك.\n\n🔑 يجب عليك الاحتفاظ بالمفتاح في مكان آمن.\n\n📥 عند الاستعادة من Google Drive، ستحتاج إلى إدخال المفتاح لفتح الملاحظات المشفرة.';
 
   @override
+  String get dontShowAgain => 'لا تذكرني مرة أخرى';
+
+  @override
   String get makeCopy => 'عمل نسخة';
 
   @override
@@ -1787,4 +1792,55 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clipboardTruncated => 'تم اقتطاع النص (الحد الأقصى 50,000 حرف)';
+
+  @override
+  String get categories => 'التصنيفات';
+
+  @override
+  String get allNotes => 'كل الملاحظات';
+
+  @override
+  String get addCategory => 'تصنيف جديد';
+
+  @override
+  String get categoryNameHint => 'اسم التصنيف...';
+
+  @override
+  String get maxCategoriesReached => 'الحد الأقصى 20 تصنيف';
+
+  @override
+  String get renameCategory => 'تعديل الاسم';
+
+  @override
+  String get deleteCategory => 'حذف التصنيف';
+
+  @override
+  String get catWork => 'العمل';
+
+  @override
+  String get catPersonal => 'شخصي';
+
+  @override
+  String get catIdeas => 'أفكار';
+
+  @override
+  String get catTasks => 'مهام';
+
+  @override
+  String get tourPage8Title => 'التصنيفات';
+
+  @override
+  String get tourPage8Desc => 'نظّم ملاحظاتك في تصنيفات لإيجادها بسرعة';
+
+  @override
+  String get tourCatCreate => 'أنشئ تصنيفات مخصصة كالعمل والشخصي والأفكار';
+
+  @override
+  String get tourCatFilter => 'اضغط على تصنيف لعرض ملاحظاته فقط';
+
+  @override
+  String get tourCatEdit => 'عدّل أو احذف التصنيفات بسهولة';
+
+  @override
+  String get tourCatAssign => 'أضف ملاحظة لأكثر من تصنيف في آنٍ واحد';
 }

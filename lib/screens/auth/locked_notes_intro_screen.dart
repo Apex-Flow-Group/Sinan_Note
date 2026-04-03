@@ -88,8 +88,9 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     if (_currentPage == 1) {
       final password = _passwordController.text;
       final confirm = _confirmController.text;
-      if (password.length < 6) {
-        setState(() => _errorText = l10n.passwordMinLength);
+      final validationError = validateVaultPassword(password);
+      if (validationError != null) {
+        setState(() => _errorText = validationError);
         return;
       }
       if (password != confirm) {
@@ -281,8 +282,8 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   Widget _buildBottomButton(bool isDark, int pageCount, AppLocalizations l10n) {
     final isLastPage = _currentPage == pageCount - 1;
     final isButtonEnabled = _currentPage == 1
-        ? _passwordController.text.length >= 6 &&
-            _confirmController.text.length >= 6
+        ? _passwordController.text.length >= 8 &&
+            _confirmController.text.length >= 8
         : _currentPage == 2
             ? _codeSaved && _recoveryCode != null
             : true;

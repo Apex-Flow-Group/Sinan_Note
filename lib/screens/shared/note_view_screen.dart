@@ -16,6 +16,7 @@ import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -120,6 +121,33 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
         title: Text(
             _currentNote.title.isEmpty ? l10n.viewNote : _currentNote.title),
         actions: [
+          // زر التصنيفات
+          IconButton(
+            icon: Icon(
+              _currentNote.categoryIds.isEmpty
+                  ? Icons.label_outline_rounded
+                  : Icons.label_rounded,
+              color: _currentNote.categoryIds.isEmpty
+                  ? null
+                  : Theme.of(context).colorScheme.primary,
+            ),
+            tooltip: l10n.categories,
+            onPressed: () async {
+              final provider = Provider.of<NotesProvider>(context, listen: false);
+              final result = await CategoryPickerSheet.show(
+                context, _currentNote.categoryIds,
+                isHiddenFromHome: _currentNote.isHiddenFromHome,
+              );
+              if (result == null || !mounted) return;
+              final updated = _currentNote.copyWith(
+                categoryIds: result['categoryIds'] as List<int>,
+                isHiddenFromHome: result['isHiddenFromHome'] as bool,
+              );
+              await provider.updateNote(updated);
+              if (!mounted) return;
+              await _refreshNote();
+            },
+          ),
           if (!_currentNote.isTrashed)
             IconButton(
               icon: const Icon(Icons.widgets_outlined),

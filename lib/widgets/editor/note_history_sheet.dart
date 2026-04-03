@@ -134,13 +134,10 @@ class NoteHistorySheet extends StatelessWidget {
   }
 
   String _toPlainText(String content) {
-    debugPrint('[History] raw content: ${content.substring(0, content.length.clamp(0, 100))}');
     if (ChecklistFormatter.isValidChecklist(content)) {
-      debugPrint('[History] detected: checklist');
       return ChecklistFormatter.toDisplayText(content);
     }
     if (QuillMigration.isDelta(content)) {
-      debugPrint('[History] detected: delta JSON');
       try {
         final list = jsonDecode(content) as List;
         final buffer = StringBuffer();
@@ -150,13 +147,10 @@ class NoteHistorySheet extends StatelessWidget {
           }
         }
         final result = buffer.toString().trimRight();
-        debugPrint('[History] converted to: ${result.substring(0, result.length.clamp(0, 100))}');
         return result;
-      } catch (e) {
-        debugPrint('[History] delta parse error: $e');
-      }
+        // ignore: empty_catches
+      } catch (e) {}
     }
-    debugPrint('[History] detected: plain text');
     return content;
   }
 

@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
@@ -8,7 +9,7 @@ import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:apex_note/widgets/home/note_locator_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:provider/provider.dart' show ReadContext;
+import 'package:provider/provider.dart' show ReadContext, WatchContext;
 
 class NotesGridView extends StatefulWidget {
   final ValueNotifier<String> viewTypeNotifier;
@@ -35,7 +36,15 @@ class _NotesGridViewState extends State<NotesGridView> {
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier(0);
   late final ValueNotifier<List<Note>> _filteredNotesNotifier;
   bool _ownsFilteredNotifier = false;
+  int? _lastSelectedCategoryId;
+  bool _lastHideProFromHome = false;
   NotesProvider? _notesProvider;
+
+  static const int _pageSize = 100;
+  static const double _loadThreshold = 0.85;
+  List<Note> _allFiltered = [];
+  int _visibleCount = _pageSize;
+  final ValueNotifier<bool> _hasMoreNotifier = ValueNotifier(false);
 
   @override
   void initState() {
@@ -49,6 +58,7 @@ class _NotesGridViewState extends State<NotesGridView> {
       _ownsFilteredNotifier = true;
     }
     widget.searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -59,8 +69,26 @@ class _NotesGridViewState extends State<NotesGridView> {
       _notesProvider?.removeListener(_onProviderChanged);
       _notesProvider = provider;
       _notesProvider!.addListener(_onProviderChanged);
-      // Initial sync
       _syncFilteredNotes(provider.notes);
+    }
+    // فقط أعد الفلترة إذا تغيّر التصنيف أو hideProFromHome
+    final catProvider = context.watch<CategoriesProvider>();
+    final selectedId = catProvider.selectedCategoryId;
+    final hideProFromHome = catProvider.hideProFromHome;
+    if (selectedId != _lastSelectedCategoryId || hideProFromHome != _lastHideProFromHome) {
+      _lastSelectedCategoryId = selectedId;
+      _lastHideProFromHome = hideProFromHome;
+      _syncFilteredNotes(_notesProvider?.notes ?? []);
+    }
+  }
+
+  void _onScroll() {
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent * _loadThreshold &&
+        _visibleCount < _allFiltered.length) {
+      _visibleCount = (_visibleCount + _pageSize).clamp(0, _allFiltered.length);
+      _hasMoreNotifier.value = _visibleCount < _allFiltered.length;
+      _filteredNotesNotifier.value = _allFiltered.sublist(0, _visibleCount);
     }
   }
 
@@ -68,8 +96,10 @@ class _NotesGridViewState extends State<NotesGridView> {
   void dispose() {
     _notesProvider?.removeListener(_onProviderChanged);
     widget.searchController.removeListener(_onSearchChanged);
+    _scrollController.removeListener(_onScroll);
     if (widget.scrollController == null) _scrollController.dispose();
     _closeAllSlidables.dispose();
+    _hasMoreNotifier.dispose();
     if (_ownsFilteredNotifier) _filteredNotesNotifier.dispose();
     super.dispose();
   }
@@ -82,35 +112,56 @@ class _NotesGridViewState extends State<NotesGridView> {
 
   void _onSearchChanged() {
     final query = widget.searchController.text;
-    if (query == _lastSearchQuery) return; // تجاهل إذا لم يتغير النص
+    if (query == _lastSearchQuery) return;
     _lastSearchQuery = query;
     _syncFilteredNotes(_notesProvider?.notes ?? []);
   }
 
   void _syncFilteredNotes(List<Note> notes) {
     final newFiltered = _filterNotes(notes);
+    // إعادة ضبط الـ pagination عند تغيير الفلتر/البحث
+    _allFiltered = newFiltered;
+    _visibleCount = _pageSize.clamp(0, newFiltered.length);
+    _hasMoreNotifier.value = _visibleCount < newFiltered.length;
+    final page = newFiltered.sublist(0, _visibleCount);
     final current = _filteredNotesNotifier.value;
-    // مقارنة عميقة بالـ IDs — لا تُحدّث إذا كانت القائمة نفسها
-    if (newFiltered.length == current.length &&
-        newFiltered.every((n) {
-          final i = newFiltered.indexOf(n);
-          return i < current.length && current[i].id == n.id && current[i].updatedAt == n.updatedAt;
-        })) {
-      return;
+    if (page.length == current.length) {
+      bool same = true;
+      for (int i = 0; i < page.length; i++) {
+        if (current[i].id != page[i].id ||
+            current[i].updatedAt != page[i].updatedAt) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return;
     }
-    _filteredNotesNotifier.value = newFiltered;
+    _filteredNotesNotifier.value = page;
   }
 
   List<Note> _filterNotes(List<Note> notes) {
     final searchQuery = widget.searchController.text.toLowerCase();
+    final selectedCategoryId = _lastSelectedCategoryId;
+    final hideProFromHome = _lastHideProFromHome;
     return notes.where((note) {
       if (note.isLocked || note.isArchived || note.isTrashed) return false;
-      if (searchQuery.isEmpty) return true;
+      // إخفاء من الرئيسية
+      if (selectedCategoryId == null && note.isHiddenFromHome) return false;
+      // فلترة كتالوج المحترف
+      if (selectedCategoryId == kProCategoryId) {
+        if (!note.isProfessional) return false;
+      } else if (selectedCategoryId != null) {
+        if (!note.categoryIds.contains(selectedCategoryId)) return false;
+      } else {
+        // كل الملاحظات — إخفاء المحترف إذا كان الخيار مفعلاً
+        if (hideProFromHome && note.isProfessional) return false;
+      }
+      if (searchQuery.isEmpty) { return true; }
 
       if (searchQuery.startsWith('type:')) {
         return _matchNoteType(note, searchQuery.substring(5));
       }
-      if (searchQuery.startsWith('pinned:')) return note.isPinned;
+      if (searchQuery.startsWith('pinned:')) { return note.isPinned; }
 
       final normalized = Note.normalize(searchQuery);
       if (note.normalizedTitle.contains(normalized) ||
@@ -138,7 +189,14 @@ class _NotesGridViewState extends State<NotesGridView> {
     if (s2.isEmpty) return s1.length;
     final m = s1.length, n = s2.length;
     final dp = List.generate(
-        m + 1, (i) => List.generate(n + 1, (j) => i == 0 ? j : j == 0 ? i : 0));
+        m + 1,
+        (i) => List.generate(
+            n + 1,
+            (j) => i == 0
+                ? j
+                : j == 0
+                    ? i
+                    : 0));
     for (int i = 1; i <= m; i++) {
       for (int j = 1; j <= n; j++) {
         dp[i][j] = s1[i - 1] == s2[j - 1]
@@ -176,6 +234,7 @@ class _NotesGridViewState extends State<NotesGridView> {
       filteredNotesNotifier: _filteredNotesNotifier,
       selectedNoteIdsNotifier: widget.selectedNoteIdsNotifier,
       closeAllSlidables: _closeAllSlidables,
+      hasMoreNotifier: _hasMoreNotifier,
     );
   }
 }
@@ -185,12 +244,14 @@ class _NotesSliversView extends StatefulWidget {
   final ValueNotifier<List<Note>> filteredNotesNotifier;
   final ValueNotifier<Set<int>> selectedNoteIdsNotifier;
   final ValueNotifier<int> closeAllSlidables;
+  final ValueNotifier<bool> hasMoreNotifier;
 
   const _NotesSliversView({
     required this.viewTypeNotifier,
     required this.filteredNotesNotifier,
     required this.selectedNoteIdsNotifier,
     required this.closeAllSlidables,
+    required this.hasMoreNotifier,
   });
 
   @override
@@ -200,14 +261,17 @@ class _NotesSliversView extends StatefulWidget {
 class _NotesSliversViewState extends State<_NotesSliversView> {
   List<Note> _filteredNotes = [];
   String _viewTypeName = 'listCompact';
+  bool _hasMore = false;
 
   @override
   void initState() {
     super.initState();
     _filteredNotes = widget.filteredNotesNotifier.value;
     _viewTypeName = widget.viewTypeNotifier.value;
+    _hasMore = widget.hasMoreNotifier.value;
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
     widget.viewTypeNotifier.addListener(_onViewTypeChanged);
+    widget.hasMoreNotifier.addListener(_onHasMoreChanged);
     // selectedNoteIdsNotifier لا يُشغّل setState هنا — كل بطاقة تقرأه مباشرة
   }
 
@@ -215,14 +279,21 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
   void dispose() {
     widget.filteredNotesNotifier.removeListener(_onNotesChanged);
     widget.viewTypeNotifier.removeListener(_onViewTypeChanged);
+    widget.hasMoreNotifier.removeListener(_onHasMoreChanged);
     super.dispose();
   }
 
-  void _onNotesChanged() =>
-      setState(() => _filteredNotes = widget.filteredNotesNotifier.value);
+  void _onHasMoreChanged() {
+    setState(() => _hasMore = widget.hasMoreNotifier.value);
+  }
 
-  void _onViewTypeChanged() =>
-      setState(() => _viewTypeName = widget.viewTypeNotifier.value);
+  void _onNotesChanged() {
+    setState(() => _filteredNotes = widget.filteredNotesNotifier.value);
+  }
+
+  void _onViewTypeChanged() {
+    setState(() => _viewTypeName = widget.viewTypeNotifier.value);
+  }
 
   ViewType get _viewType {
     switch (_viewTypeName) {
@@ -254,9 +325,8 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
       );
     }
 
-    final fabBottom = MediaQuery.of(context).padding.bottom +
-        kBottomNavigationBarHeight +
-        16;
+    final fabBottom =
+        MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
     final bottomPadding = fabBottom + 56 + 8;
 
     if (_viewType == ViewType.grid) {
@@ -271,9 +341,16 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
                   : 2,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childCount: _filteredNotes.length,
-          itemBuilder: (context, index) =>
-              _buildNoteCard(_filteredNotes[index], 'home_grid'),
+          childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == _filteredNotes.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return _buildNoteCard(_filteredNotes[index], 'home_grid');
+          },
         ),
       );
     }
@@ -283,11 +360,19 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
           EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
-          (context, index) =>
-              _buildNoteCard(_filteredNotes[index], 'home_list'),
-          childCount: _filteredNotes.length,
+          (context, index) {
+            if (index == _filteredNotes.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return _buildNoteCard(_filteredNotes[index], 'home_list');
+          },
+          childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
           findChildIndexCallback: (key) {
-            final id = (key as ValueKey<int>).value;
+            if (key is! ValueKey<int>) return null;
+            final id = key.value;
             final index = _filteredNotes.indexWhere((n) => n.id == id);
             return index == -1 ? null : index;
           },
@@ -404,9 +489,8 @@ class _NoteCardWrapperState extends State<_NoteCardWrapper> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: _isCurrentlyOpen
-          ? const EdgeInsets.only(left: 4)
-          : EdgeInsets.zero,
+      padding:
+          _isCurrentlyOpen ? const EdgeInsets.only(left: 4) : EdgeInsets.zero,
       child: Row(
         children: [
           AnimatedContainer(
@@ -472,7 +556,8 @@ class _HeightRecorderState extends State<_HeightRecorder> {
       if (!mounted) return;
       final ro = context.findRenderObject() as RenderBox?;
       if (ro != null && ro.hasSize) {
-        NoteCardKeyRegistry.instance.recordHeight(widget.noteId, ro.size.height);
+        NoteCardKeyRegistry.instance
+            .recordHeight(widget.noteId, ro.size.height);
       }
     });
   }
