@@ -20,6 +20,8 @@ class NotesProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+  int _refreshStamp = 0;
+  int get refreshStamp => _refreshStamp;
 
   NotesProvider({IsarDatabaseService? dbService}) {
     _dbService = dbService ?? IsarDatabaseService();
@@ -50,9 +52,11 @@ class NotesProvider extends ChangeNotifier {
   Future<void> refreshAllNotes() async {
     if (_isLoading) return;
     _isLoading = true;
+    notifyListeners();
     try {
       final notes = await _dbService.getAllNotes();
       _stateService.updateAllNotes(notes);
+      _refreshStamp++;
     } finally {
       _isLoading = false;
       notifyListeners();

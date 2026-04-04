@@ -10,9 +10,14 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:apex_note/widgets/home/note_card_widget.dart';
+import 'package:apex_note/widgets/home/note_conversion_sheet.dart';
+import 'package:apex_note/widgets/home/selection_action_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -28,6 +33,7 @@ class CodeTab extends StatefulWidget {
 class _CodeTabState extends State<CodeTab> with SearchMixin {
   bool _showAddMenu = false;
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
+  final ValueNotifier<Set<int>> _selectedNoteIdsNotifier = ValueNotifier({});
   String _sortBy = 'date';
   ViewType _viewType = ViewType.listExpanded;
   NotesProvider? _notesProvider;
@@ -57,6 +63,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
   void dispose() {
     _notesProvider?.removeListener(_onProviderChanged);
     _closeAllSlidables.dispose();
+    _selectedNoteIdsNotifier.dispose();
     _filteredNotesNotifier.dispose();
     super.dispose();
   }
@@ -130,128 +137,160 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
               child: SlidableAutoCloseBehavior(
                 child: CustomScrollView(
                   slivers: [
-                    SliverAppBar(
-                      title: searchController.text.isEmpty
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.code_rounded, size: 22),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    strings.professional,
-                                    overflow: TextOverflow.ellipsis,
+                    ValueListenableBuilder<Set<int>>(
+                      valueListenable: _selectedNoteIdsNotifier,
+                      builder: (context, selectedIds, _) {
+                        final isDark = Theme.of(context).brightness == Brightness.dark;
+                        final inSelection = selectedIds.isNotEmpty;
+                        return SliverAppBar(
+                          floating: !inSelection,
+                          snap: !inSelection,
+                          pinned: inSelection,
+                          automaticallyImplyLeading: false,
+                          titleSpacing: inSelection ? 0 : null,
+                          title: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            transitionBuilder: (child, anim) => FadeTransition(
+                              opacity: anim,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, -0.2),
+                                  end: Offset.zero,
+                                ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
+                                child: child,
+                              ),
+                            ),
+                            child: inSelection
+                                ? SelectionActionBar(
+                                    key: const ValueKey('selection'),
+                                    selectedIdsNotifier: _selectedNoteIdsNotifier,
+                                    isDark: isDark,
+                                    allPinned: false,
+                                    onClear: () => _selectedNoteIdsNotifier.value = {},
+                                    onConvert: selectedIds.length == 1
+                                        ? () {
+                                            final provider = Provider.of<NotesProvider>(context, listen: false);
+                                            final note = provider.notes.firstWhere((n) => n.id == selectedIds.first);
+                                            _selectedNoteIdsNotifier.value = {};
+                                            NoteConversionSheet.show(context, note, () {});
+                                          }
+                                        : null,
+                                    onPin: () async {
+                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final ids = List<int>.from(selectedIds);
+                                      for (final id in ids) {
+                                        final note = provider.notes.firstWhere((n) => n.id == id);
+                                        await provider.updateNote(note.copyWith(isPinned: !note.isPinned, updatedAt: DateTime.now()));
+                                      }
+                                      _selectedNoteIdsNotifier.value = {};
+                                      if (context.mounted) {
+                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesPinned}', type: NotificationType.success);
+                                      }
+                                    },
+                                    onArchive: () async {
+                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final ids = List<int>.from(selectedIds);
+                                      await provider.archiveNotes(ids);
+                                      _selectedNoteIdsNotifier.value = {};
+                                      if (context.mounted) {
+                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesArchived}', type: NotificationType.success);
+                                      }
+                                    },
+                                    onDelete: () async {
+                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final ids = List<int>.from(selectedIds);
+                                      await provider.trashNotes(ids);
+                                      _selectedNoteIdsNotifier.value = {};
+                                      if (context.mounted) {
+                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesDeleted}', type: NotificationType.info);
+                                      }
+                                    },
+                                    onShare: selectedIds.length == 1
+                                        ? () {
+                                            final provider = Provider.of<NotesProvider>(context, listen: false);
+                                            final note = provider.notes.firstWhere((n) => n.id == selectedIds.first);
+                                            _selectedNoteIdsNotifier.value = {};
+                                            final content = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
+                                            CustomShareSheet.show(context, '${note.title}\n\n$content', subject: note.title, note: note);
+                                          }
+                                        : null,
+                                  )
+                                : Row(
+                                    key: const ValueKey('normal'),
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.code_rounded, size: 22),
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        child: Text(
+                                          strings.professional,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                          ),
+                          actions: inSelection ? [] : [
+                            IconButton(
+                              icon: Icon(searchController.text.isEmpty ? Icons.search : Icons.close),
+                              onPressed: () {
+                                setState(() {
+                                  if (searchController.text.isEmpty) {
+                                    searchController.text = ' ';
+                                  } else {
+                                    searchController.clear();
+                                  }
+                                });
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                _viewType == ViewType.listExpanded
+                                    ? Icons.view_headline
+                                    : _viewType == ViewType.listCompact
+                                        ? Icons.grid_view
+                                        : Icons.view_day,
+                              ),
+                              onPressed: () async {
+                                setState(() {
+                                  final next = (_viewType.index + 1) % ViewType.values.length;
+                                  _viewType = ViewType.values[next];
+                                });
+                                await Provider.of<SettingsProvider>(context, listen: false)
+                                    .setViewType('professional', _viewType.name);
+                              },
+                            ),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.sort),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              onSelected: (value) {
+                                setState(() => _sortBy = value);
+                                _syncNotes();
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'date',
+                                  child: Row(children: [
+                                    Icon(Icons.access_time, size: 20, color: _sortBy == 'date' ? Theme.of(context).colorScheme.primary : null),
+                                    const SizedBox(width: 12),
+                                    Text(strings.sortByDate),
+                                    if (_sortBy == 'date') ...[ const Spacer(), Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary)],
+                                  ]),
+                                ),
+                                PopupMenuItem(
+                                  value: 'title',
+                                  child: Row(children: [
+                                    Icon(Icons.sort_by_alpha, size: 20, color: _sortBy == 'title' ? Theme.of(context).colorScheme.primary : null),
+                                    const SizedBox(width: 12),
+                                    Text(strings.sortByTitle),
+                                    if (_sortBy == 'title') ...[ const Spacer(), Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary)],
+                                  ]),
                                 ),
                               ],
-                            )
-                          : TextField(
-                              controller: searchController,
-                              autofocus: true,
-                              decoration: InputDecoration(
-                                hintText: strings.searchNotes,
-                                border: InputBorder.none,
-                              ),
-                            ),
-                      actions: [
-                        IconButton(
-                          icon: Icon(searchController.text.isEmpty
-                              ? Icons.search
-                              : Icons.close),
-                          onPressed: () {
-                            setState(() {
-                              if (searchController.text.isEmpty) {
-                                searchController.text = ' ';
-                              } else {
-                                searchController.clear();
-                              }
-                            });
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            _viewType == ViewType.listExpanded
-                                ? Icons.view_headline
-                                : _viewType == ViewType.listCompact
-                                    ? Icons.grid_view
-                                    : Icons.view_day,
-                          ),
-                          onPressed: () async {
-                            setState(() {
-                              final next = (_viewType.index + 1) %
-                                  ViewType.values.length;
-                              _viewType = ViewType.values[next];
-                            });
-                            final settings = Provider.of<SettingsProvider>(
-                                context,
-                                listen: false);
-                            await settings.setViewType(
-                                'professional', _viewType.name);
-                          },
-                        ),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.sort),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          onSelected: (value) {
-                            setState(() => _sortBy = value);
-                            _syncNotes();
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'date',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.access_time,
-                                      size: 20,
-                                      color: _sortBy == 'date'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null),
-                                  const SizedBox(width: 12),
-                                  Text(strings.sortByDate),
-                                  if (_sortBy == 'date') ...[
-                                    const Spacer(),
-                                    Icon(Icons.check,
-                                        size: 20,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'title',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.sort_by_alpha,
-                                      size: 20,
-                                      color: _sortBy == 'title'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null),
-                                  const SizedBox(width: 12),
-                                  Text(strings.sortByTitle),
-                                  if (_sortBy == 'title') ...[
-                                    const Spacer(),
-                                    Icon(Icons.check,
-                                        size: 20,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ],
-                                ],
-                              ),
                             ),
                           ],
-                        ),
-                      ],
-                      floating: true,
-                      snap: true,
-                      pinned: false,
+                        );
+                      },
                     ),
                     ValueListenableBuilder<List<Note>>(
                       valueListenable: _filteredNotesNotifier,
@@ -342,20 +381,44 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
   Widget _buildCard(Note note) {
     return RepaintBoundary(
       key: ValueKey(note.id),
-      child: Selector<SelectedNoteProvider, bool>(
-        selector: (_, p) => p.selectedNote?.id == note.id,
-        builder: (context, isCurrentlyOpen, _) {
-          return SelectedNoteIndicator(
-            note: note,
-            child: NoteCardWidget(
-              note: note,
-              viewType: _viewType,
-              closeAllSlidables: _closeAllSlidables,
-              onNoteChanged: () {},
-              onLongPress: () {},
-              source: 'professional',
-              isCurrentlyOpen: isCurrentlyOpen,
-            ),
+      child: ValueListenableBuilder<Set<int>>(
+        valueListenable: _selectedNoteIdsNotifier,
+        builder: (context, selectedIds, _) {
+          final isSelected = selectedIds.contains(note.id);
+          final selectionMode = selectedIds.isNotEmpty;
+          return Selector<SelectedNoteProvider, bool>(
+            selector: (_, p) => p.selectedNote?.id == note.id,
+            builder: (context, isCurrentlyOpen, _) {
+              return SelectedNoteIndicator(
+                note: note,
+                child: NoteCardWidget(
+                  note: note,
+                  viewType: _viewType,
+                  closeAllSlidables: _closeAllSlidables,
+                  onNoteChanged: () {},
+                  isSelected: isSelected,
+                  selectionMode: selectionMode,
+                  source: 'professional',
+                  isCurrentlyOpen: isCurrentlyOpen,
+                  onLongPress: () {
+                    if (_selectedNoteIdsNotifier.value.isNotEmpty) return;
+                    _selectedNoteIdsNotifier.value = {note.id!};
+                  },
+                  onTap: () {
+                    final current = _selectedNoteIdsNotifier.value;
+                    if (current.isNotEmpty) {
+                      final newSet = Set<int>.from(current);
+                      if (newSet.contains(note.id)) {
+                        newSet.remove(note.id);
+                      } else {
+                        newSet.add(note.id!);
+                      }
+                      _selectedNoteIdsNotifier.value = Set<int>.of(newSet);
+                    }
+                  },
+                ),
+              );
+            },
           );
         },
       ),

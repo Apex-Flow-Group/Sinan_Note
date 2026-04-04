@@ -55,7 +55,7 @@ class _ScrollThumb extends StatefulWidget {
 }
 
 class _ScrollThumbState extends State<_ScrollThumb>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   static const double _trackPadTop = 80.0;
   static const double _trackPadBottom = 60.0;
   static const double _thumbMinHeight = 32.0;
@@ -96,6 +96,14 @@ class _ScrollThumbState extends State<_ScrollThumb>
 
     widget.scrollController.addListener(_update);
     widget.totalCountNotifier?.addListener(_update);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _update());
+    }
   }
 
   @override
@@ -105,6 +113,7 @@ class _ScrollThumbState extends State<_ScrollThumb>
     _posController.dispose();
     widget.scrollController.removeListener(_update);
     widget.totalCountNotifier?.removeListener(_update);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

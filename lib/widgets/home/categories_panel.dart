@@ -76,9 +76,42 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
   }
 
   void _commitAdd(CategoriesProvider provider) async {
-    await provider.addCategory(_addCtrl.text);
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    if (provider.categories.length >= kMaxCategories) {
+      _addCtrl.clear();
+      widget.onAddDone();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic
+                ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
+                : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
+            style: const TextStyle(fontSize: 13),
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+    final success = await provider.addCategory(_addCtrl.text);
     _addCtrl.clear();
     widget.onAddDone();
+    if (!success && mounted) {
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isAr ? '⚠️ اسم غير صالح أو مكرر' : '⚠️ Invalid or duplicate name',
+            style: const TextStyle(fontSize: 13),
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
   }
 
   void _startEditing(NoteCategory cat) {

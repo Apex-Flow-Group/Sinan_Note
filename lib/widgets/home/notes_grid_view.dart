@@ -41,6 +41,7 @@ class _NotesGridViewState extends State<NotesGridView> {
   int? _lastSelectedCategoryId;
   bool _lastHideProFromHome = false;
   NotesProvider? _notesProvider;
+  int _lastRefreshStamp = -1;
 
   static const int _pageSize = 100;
   static const double _loadThreshold = 0.95;
@@ -109,7 +110,11 @@ class _NotesGridViewState extends State<NotesGridView> {
   }
 
   void _onProviderChanged() {
-    if (mounted) _syncFilteredNotes(_notesProvider!.notes);
+    if (!mounted) return;
+    final stamp = _notesProvider!.refreshStamp;
+    final forceRefresh = stamp != _lastRefreshStamp;
+    if (forceRefresh) _lastRefreshStamp = stamp;
+    _syncFilteredNotes(_notesProvider!.notes, force: forceRefresh);
   }
 
   String _lastSearchQuery = '';
@@ -121,28 +126,29 @@ class _NotesGridViewState extends State<NotesGridView> {
     _syncFilteredNotes(_notesProvider?.notes ?? []);
   }
 
-  void _syncFilteredNotes(List<Note> notes) {
+  void _syncFilteredNotes(List<Note> notes, {bool force = false}) {
     final newFiltered = _filterNotes(notes);
-    // إعادة ضبط الـ pagination عند تغيير الفلتر/البحث
     _allFiltered = newFiltered;
     _visibleCount = _pageSize.clamp(0, newFiltered.length);
     _hasMoreNotifier.value = _visibleCount < newFiltered.length;
     _totalCountNotifier.value = newFiltered.length;
     widget.totalCountNotifier?.value = newFiltered.length;
     final page = newFiltered.sublist(0, _visibleCount);
-    final current = _filteredNotesNotifier.value;
-    if (page.length == current.length) {
-      bool same = true;
-      for (int i = 0; i < page.length; i++) {
-        if (current[i].id != page[i].id ||
-            current[i].updatedAt != page[i].updatedAt) {
-          same = false;
-          break;
+    if (!force) {
+      final current = _filteredNotesNotifier.value;
+      if (page.length == current.length) {
+        bool same = true;
+        for (int i = 0; i < page.length; i++) {
+          if (current[i].id != page[i].id ||
+              current[i].updatedAt != page[i].updatedAt) {
+            same = false;
+            break;
+          }
         }
+        if (same) return;
       }
-      if (same) return;
     }
-    _filteredNotesNotifier.value = page;
+    _filteredNotesNotifier.value = List.of(page);
   }
 
   List<Note> _filterNotes(List<Note> notes) {

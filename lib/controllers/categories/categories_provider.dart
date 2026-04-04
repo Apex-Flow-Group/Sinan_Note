@@ -3,6 +3,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const int kMaxCategories = 20;
 const int kMaxCategoryNameLength = 20;
@@ -23,6 +24,7 @@ class CategoriesProvider extends ChangeNotifier {
   void setHideProFromHome(bool value) {
     _hideProFromHome = value;
     notifyListeners();
+    SharedPreferences.getInstance().then((p) => p.setBool('hide_pro_from_home', value));
   }
 
   CategoriesProvider() {
@@ -30,6 +32,8 @@ class CategoriesProvider extends ChangeNotifier {
   }
 
   Future<void> _init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _hideProFromHome = prefs.getBool('hide_pro_from_home') ?? false;
     await _load();
     if (_categories.isEmpty) {
       await _seedDefaults(null);

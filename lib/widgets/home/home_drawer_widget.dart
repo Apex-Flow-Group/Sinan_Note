@@ -301,12 +301,22 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                           _ModeBtn(
                             icon: Icons.add_rounded,
                             active: _isAdding,
-                            color: scheme.primary,
+                            color: context.read<CategoriesProvider>().categories.length >= kMaxCategories
+                                ? scheme.onSurface.withValues(alpha: 0.3)
+                                : scheme.primary,
                             onTap: () {
+                              final isArabic = Localizations.localeOf(context).languageCode == 'ar';
                               if (context.read<CategoriesProvider>().categories.length >= kMaxCategories) {
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text(l10n.maxCategoriesReached),
-                                  duration: const Duration(seconds: 2),
+                                  content: Text(
+                                    isArabic
+                                        ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
+                                        : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 3),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ));
                                 return;
                               }
