@@ -325,6 +325,23 @@ class VaultService {
     }, 'VaultDecrypt');
   }
   
+  /// فك تشفير بمفتاح جاهز (sync) — للاستخدام عند فك تشفير ملاحظات متعددة
+  static String decryptWithKey(String encryptedText, Key masterKey) {
+    if (encryptedText.isEmpty) return '';
+    final parts = encryptedText.split(':');
+    if (parts.length != 2) return encryptedText;
+    try {
+      final iv = IV.fromBase64(parts[0]);
+      final encrypter = Encrypter(AES(masterKey));
+      return encrypter.decrypt64(parts[1], iv: iv);
+    } catch (_) {
+      return encryptedText;
+    }
+  }
+
+  /// مسح المفتاح من الذاكرة بعد الانتهاء
+  static void wipeMasterKey(Key key) => _wipeKey(key);
+
   /// Wipe key bytes from memory (security best practice)
   static void _wipeKey(Key key) {
     try {

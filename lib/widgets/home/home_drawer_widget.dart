@@ -17,6 +17,9 @@ import 'package:provider/provider.dart';
 
 enum _CatMode { normal, delete, edit }
 
+/// يبقى حياً طول عمر التطبيق — لا يضيع عند إغلاق الـ Drawer
+final _activeExtraNotifier = ValueNotifier<String?>( null);
+
 class HomeDrawerWidget extends StatefulWidget {
   final VoidCallback onBackupTap;
   final VoidCallback onNotesChanged;
@@ -44,7 +47,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
 
-    return Drawer(
+    return ValueListenableBuilder<String?>(
+      valueListenable: _activeExtraNotifier,
+      builder: (context, activeExtra, _) => Drawer(
       backgroundColor: scheme.surface,
       child: Column(
         children: [
@@ -140,15 +145,18 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                   iconColor: const Color(0xFF4285F4),
                   scheme: scheme,
                   isDark: isDark,
-                  onTap: () {
+                  isActive: activeExtra == 'drive',
+                  onTap: () async {
+                    _activeExtraNotifier.value = 'drive';
                     Navigator.pop(context);
                     if (!context.mounted) return;
-                    Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const GoogleDriveScreenResponsive(),
                       ),
                     );
+                    _activeExtraNotifier.value = null;
                   },
                 ),
                 _buildDrawerItem(
@@ -159,15 +167,18 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                   iconColor: Colors.orange,
                   scheme: scheme,
                   isDark: isDark,
-                  onTap: () {
+                  isActive: activeExtra == 'history',
+                  onTap: () async {
+                    _activeExtraNotifier.value = 'history';
                     Navigator.pop(context);
                     if (!context.mounted) return;
-                    Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const VersionHistoryScreen(),
                       ),
                     );
+                    _activeExtraNotifier.value = null;
                   },
                 ),
                 _buildDrawerItem(
@@ -176,7 +187,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                   title: l10n.settings,
                   scheme: scheme,
                   isDark: isDark,
+                  isActive: activeExtra == 'settings',
                   onTap: () async {
+                    _activeExtraNotifier.value = 'settings';
                     Navigator.pop(context);
                     if (!context.mounted) return;
                     Navigator.popUntil(context, (route) => route.isFirst);
@@ -184,6 +197,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       context,
                       MaterialPageRoute(builder: (_) => const SettingsScreenResponsive()),
                     );
+                    _activeExtraNotifier.value = null;
                     if (!context.mounted) return;
                     widget.onNotesChanged();
                   },
@@ -203,6 +217,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

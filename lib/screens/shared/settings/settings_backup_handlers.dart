@@ -1,11 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/shared/settings/backup_dialogs.dart';
 import 'package:apex_note/screens/shared/settings/database_restore_handler.dart';
 import 'package:apex_note/screens/shared/settings/json_import_handler.dart';
 import 'package:apex_note/services/storage/backup_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/storage/storage_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:file_picker/file_picker.dart';
@@ -13,10 +11,7 @@ import 'package:flutter/material.dart';
 
 class SettingsBackupHandlers {
   static void showBackupDialog(
-      BuildContext context, String lang, AppLocalizations l10n) async {
-    if (!await _checkLockedNotes(context, lang, l10n)) return;
-    if (!context.mounted) return;
-
+      BuildContext context, String lang, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -81,39 +76,34 @@ class SettingsBackupHandlers {
   }
 
   static void showExportDialog(
-      BuildContext context, String lang, AppLocalizations l10n) async {
-    if (!await _checkLockedNotes(context, lang, l10n)) return;
-    if (!context.mounted) return;
-
+      BuildContext context, String lang, AppLocalizations l10n) {
+    final isArabic = lang == 'ar';
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.exportJson),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── تصدير عادي ──
+            Text(
+              isArabic ? 'تصدير عادي (بدون مشفرة)' : 'Normal export (no encrypted)',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
             _actionButton(
               icon: Icons.save_alt,
               label: l10n.saveToFolder,
               onPressed: () async {
                 Navigator.pop(ctx);
                 final result = await FilePicker.platform.getDirectoryPath();
-                if (result == null) {
-                  if (!context.mounted) return;
-                  UnifiedNotificationService().show(
-                      context: context,
-                      message: l10n.noFileSelected,
-                      type: NotificationType.warning);
-                  return;
-                }
+                if (result == null) return;
                 try {
-                  final message =
-                      await StorageService().exportNotesToPath(result);
+                  final msg = await StorageService().exportNotesToPath(result);
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
-                      context: context,
-                      message: message,
-                      type: NotificationType.success,
+                      context: context, message: msg, type: NotificationType.success,
                       duration: const Duration(seconds: 4));
                 } catch (e) {
                   if (!context.mounted) return;
@@ -124,7 +114,7 @@ class SettingsBackupHandlers {
                 }
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             _actionButton(
               icon: Icons.share,
               label: l10n.share,
@@ -132,6 +122,66 @@ class SettingsBackupHandlers {
                 Navigator.pop(ctx);
                 try {
                   await StorageService().shareNotesFile();
+                } catch (e) {
+                  if (!context.mounted) return;
+                  UnifiedNotificationService().show(
+                      context: context,
+                      message: e.toString().replaceAll('Exception:', ''),
+                      type: NotificationType.error);
+                }
+              },
+            ),
+            const Divider(height: 24),
+            // ── تصدير كامل ──
+            Text(
+              isArabic ? 'تصدير كامل (مع المشفرة)' : 'Full export (with encrypted)',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            Container(
+              margin: const EdgeInsets.only(top: 6, bottom: 8),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isArabic
+                    ? 'الملاحظات المشفرة ستُصدَّر كـ ciphertext — تحتاج مفتاح الخزنة للاستعادة'
+                    : 'Encrypted notes exported as ciphertext — vault key needed to restore',
+                style: const TextStyle(fontSize: 12, color: Colors.orange),
+              ),
+            ),
+            _actionButton(
+              icon: Icons.save_alt,
+              label: l10n.saveToFolder,
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final result = await FilePicker.platform.getDirectoryPath();
+                if (result == null) return;
+                try {
+                  final msg = await StorageService()
+                      .exportNotesToPath(result, includeVault: true);
+                  if (!context.mounted) return;
+                  UnifiedNotificationService().show(
+                      context: context, message: msg, type: NotificationType.success,
+                      duration: const Duration(seconds: 4));
+                } catch (e) {
+                  if (!context.mounted) return;
+                  UnifiedNotificationService().show(
+                      context: context,
+                      message: e.toString().replaceAll('Exception:', ''),
+                      type: NotificationType.error);
+                }
+              },
+            ),
+            const SizedBox(height: 6),
+            _actionButton(
+              icon: Icons.share,
+              label: l10n.share,
+              onPressed: () async {
+                Navigator.pop(ctx);
+                try {
+                  await StorageService().shareNotesFile(includeVault: true);
                 } catch (e) {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
@@ -207,8 +257,6 @@ class SettingsBackupHandlers {
 
   static void handleSmartRestore(
       BuildContext context, String lang, AppLocalizations l10n) async {
-    if (!await _checkLockedNotes(context, lang, l10n)) return;
-
     try {
       final backupPath = await BackupService().pickBackupFile();
       if (backupPath == null) return;
@@ -220,30 +268,6 @@ class SettingsBackupHandlers {
           context: context,
           message: e.toString().replaceAll('Exception:', ''),
           type: NotificationType.error);
-    }
-  }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
-  static Future<bool> _checkLockedNotes(
-      BuildContext context, String lang, AppLocalizations l10n) async {
-    try {
-      final lockedNotes = await IsarDatabaseService().getLockedNotes();
-      if (lockedNotes.isNotEmpty) {
-        if (!context.mounted) return false;
-        final agreed = await BackupDialogs.showEncryptionAgreement(
-            context, l10n, lang, lockedNotes.length);
-        if (agreed != true) return false;
-      }
-      return true;
-    } catch (e) {
-      if (context.mounted) {
-        UnifiedNotificationService().show(
-            context: context,
-            message: l10n.databaseError,
-            type: NotificationType.error);
-      }
-      return false;
     }
   }
 
@@ -261,5 +285,3 @@ class SettingsBackupHandlers {
     );
   }
 }
-
-

@@ -92,7 +92,7 @@ class _FeatureCard extends StatelessWidget {
   }
 }
 
-class VaultPasswordPage extends StatelessWidget {
+class VaultPasswordPage extends StatefulWidget {
   final bool isDark;
   final TextEditingController passwordController;
   final TextEditingController confirmController;
@@ -117,11 +117,52 @@ class VaultPasswordPage extends StatelessWidget {
   });
 
   @override
+  State<VaultPasswordPage> createState() => _VaultPasswordPageState();
+}
+
+class _VaultPasswordPageState extends State<VaultPasswordPage> {
+  bool _hasLength = false;
+  bool _hasNumber = false;
+  bool _hasSymbol = false;
+  bool _passwordsMatch = false;
+
+  void _updateChecks() {
+    final p = widget.passwordController.text;
+    final c = widget.confirmController.text;
+    setState(() {
+      _hasLength = p.length >= 8;
+      _hasNumber = RegExp(r'[0-9]').hasMatch(p);
+      _hasSymbol = RegExp(r'[!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]').hasMatch(p);
+      _passwordsMatch = p.isNotEmpty && p == c;
+    });
+    widget.onChanged();
+  }
+
+  Widget _req(String label, bool met) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Icon(
+              met ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 16,
+              color: met ? Colors.green : Colors.purple.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 6),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: met ? Colors.green : Colors.purple.withValues(alpha: 0.8))),
+          ],
+        ),
+      );
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(32.0),
+      padding: EdgeInsets.fromLTRB(
+          32, 32, 32, MediaQuery.of(context).viewInsets.bottom + 32),
       child: Column(
         children: [
           const SizedBox(height: 20),
@@ -138,58 +179,63 @@ class VaultPasswordPage extends StatelessWidget {
               style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87),
+                  color: widget.isDark ? Colors.white : Colors.black87),
               textAlign: TextAlign.center),
           const SizedBox(height: 24),
-          // hint للمتطلبات
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.purple.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text(
-              '• Min 8 characters\n• At least one number (0-9)\n• At least one symbol (!@#\$...)\n• English letters only',
-              style: TextStyle(fontSize: 12, color: Colors.purple),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _req('Min 8 characters', _hasLength),
+                _req('At least one number (0-9)', _hasNumber),
+                _req('At least one symbol (!@#\$...)', _hasSymbol),
+                _req('Passwords match', _passwordsMatch),
+              ],
             ),
           ),
           const SizedBox(height: 16),
           TextField(
-            controller: passwordController,
-            obscureText: obscurePassword,
+            controller: widget.passwordController,
+            obscureText: widget.obscurePassword,
             keyboardType: TextInputType.visiblePassword,
             inputFormatters: [_vaultPasswordFormatter],
-            onChanged: (_) => onChanged(),
+            onChanged: (_) => _updateChecks(),
             decoration: InputDecoration(
               labelText: l10n.enterPassword,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               prefixIcon: const Icon(Icons.lock),
               suffixIcon: IconButton(
-                icon: Icon(obscurePassword ? Icons.visibility : Icons.visibility_off),
-                onPressed: onTogglePassword,
+                icon: Icon(widget.obscurePassword ? Icons.visibility : Icons.visibility_off),
+                onPressed: widget.onTogglePassword,
               ),
             ),
           ),
           const SizedBox(height: 16),
           TextField(
-            controller: confirmController,
-            obscureText: obscureConfirm,
+            controller: widget.confirmController,
+            obscureText: widget.obscureConfirm,
             keyboardType: TextInputType.visiblePassword,
             inputFormatters: [_vaultPasswordFormatter],
-            onChanged: (_) => onChanged(),
+            onChanged: (_) => _updateChecks(),
             decoration: InputDecoration(
               labelText: l10n.confirmPassword,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(obscureConfirm ? Icons.visibility : Icons.visibility_off),
-                onPressed: onToggleConfirm,
+                icon: Icon(widget.obscureConfirm ? Icons.visibility : Icons.visibility_off),
+                onPressed: widget.onToggleConfirm,
               ),
             ),
           ),
-          if (errorText != null) ...[
+          if (widget.errorText != null) ...[
             const SizedBox(height: 12),
-            Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 14)),
+            Text(widget.errorText!, style: const TextStyle(color: Colors.red, fontSize: 14)),
           ],
           const SizedBox(height: 20),
         ],

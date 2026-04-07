@@ -173,6 +173,8 @@ class Note {
       'isProfessional': isProfessional ? 1 : 0,
       'isPinned': isPinned ? 1 : 0,
       'isChecklist': isChecklist ? 1 : 0,
+      'categoryIds': categoryIds.join(','),
+      'isHiddenFromHome': isHiddenFromHome ? 1 : 0,
     };
   }
 
@@ -202,6 +204,10 @@ class Note {
         isProfessional: (map['isProfessional'] ?? 0) == 1,
         isPinned: (map['isPinned'] ?? 0) == 1,
         isChecklist: (map['isChecklist'] ?? 0) == 1,
+        categoryIds: map['categoryIds'] != null && (map['categoryIds'] as String).isNotEmpty
+            ? (map['categoryIds'] as String).split(',').map(int.parse).toList()
+            : [],
+        isHiddenFromHome: (map['isHiddenFromHome'] ?? 0) == 1,
       );
     } catch (e) {
       if (e is ValidationException) rethrow;

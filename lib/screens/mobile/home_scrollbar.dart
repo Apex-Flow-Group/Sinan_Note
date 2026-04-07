@@ -91,12 +91,17 @@ class _ScrollThumbState extends State<_ScrollThumb>
     _heightAnimation = AlwaysStoppedAnimation(_thumbHeight);
 
     _posController.addListener(() {
-      if (mounted) setState(() {});
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      }
     });
 
     widget.scrollController.addListener(_update);
     widget.totalCountNotifier?.addListener(_update);
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _update());
   }
 
   @override
@@ -118,6 +123,12 @@ class _ScrollThumbState extends State<_ScrollThumb>
   }
 
   void _update() {
+    if (!mounted) return;
+    // إذا كنا أثناء البناء → أجّل لما بعده
+    if (WidgetsBinding.instance.buildOwner?.debugBuilding ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _update());
+      return;
+    }
     if (!widget.scrollController.hasClients) return;
     final pos = widget.scrollController.position;
     if (pos.maxScrollExtent <= 0) {

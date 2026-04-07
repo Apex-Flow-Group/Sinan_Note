@@ -48,7 +48,7 @@ void main() {
     });
 
     test('checkForVaultData يُرجع false عند عدم تسجيل الدخول', () async {
-      expect(await GoogleDriveService.checkForVaultData(), isFalse);
+      expect(await GoogleDriveService.hasBackupInDrive(), isFalse);
     });
 
     test('getDriveNotesCount يُرجع 0 عند عدم تسجيل الدخول', () async {

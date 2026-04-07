@@ -4,7 +4,7 @@ import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/screens/other/support_form_screen.dart';
-import 'package:apex_note/screens/shared/settings/settings_backup_handlers.dart';
+import 'package:apex_note/screens/shared/backup_wizard_screen.dart';
 import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:apex_note/screens/shared/settings/settings_utils.dart';
 import 'package:apex_note/screens/shared/settings_screen.dart';
@@ -293,30 +293,17 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
           BuildContext context, AppLocalizations l10n, String currentLang) =>
       _sectionList([
         ListTile(
-          leading: Icon(Icons.cloud_upload_outlined,
+          leading: Icon(Icons.backup_outlined,
               color: Theme.of(context).colorScheme.primary),
-          title: Text(l10n.exportBackup),
-          subtitle: Text(l10n.exportDatabase),
-          onTap: () => SettingsBackupHandlers.showBackupDialog(
-              context, currentLang, l10n),
-        ),
-        ListTile(
-          leading: Icon(Icons.upload_file,
-              color: Theme.of(context).colorScheme.secondary),
-          title: Text(l10n.exportJson),
-          subtitle: Text(l10n.saveAsJsonFile),
-          onTap: () => SettingsBackupHandlers.showExportDialog(
-              context, currentLang, l10n),
-        ),
-        ListTile(
-          leading: Icon(Icons.cloud_download_outlined,
-              color: Theme.of(context).colorScheme.tertiary),
-          title: Text(l10n.restore),
+          title: Text(currentLang == 'ar' ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore'),
           subtitle: Text(currentLang == 'ar'
-              ? 'استيراد من JSON أو Database'
-              : 'Import from JSON or Database'),
-          onTap: () => SettingsBackupHandlers.handleSmartImport(
-              context, currentLang, l10n),
+              ? 'تصدير واستيراد ملاحظاتك'
+              : 'Export and import your notes'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BackupWizardScreen()),
+          ),
         ),
       ]);
 

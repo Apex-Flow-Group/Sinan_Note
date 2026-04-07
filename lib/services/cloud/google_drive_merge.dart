@@ -7,7 +7,6 @@ import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/compression_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:flutter/material.dart';
@@ -18,17 +17,14 @@ import 'package:path_provider/path_provider.dart';
 class GoogleDriveMerge {
   static Future<bool> mergeWithDrive(
     dynamic context, {
-    bool uploadMasterKey = false,
-    bool uploadVault = false,
-    required Future<bool> Function(dynamic, {bool uploadMasterKey, bool uploadVault}) uploadFn,
+    required Future<bool> Function(dynamic) uploadFn,
   }) async {
     if (GoogleDriveAuth.driveApi == null) throw Exception('Not signed in');
 
     try {
       final file = await GoogleDriveAuth.findFile('sinan_backup.gz');
       if (file == null) {
-        return await uploadFn(context,
-            uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
+        return await uploadFn(context);
       }
 
       final driveNotes = await _downloadDriveNotes(file);
@@ -41,7 +37,7 @@ class GoogleDriveMerge {
       final isar = await dbService.database;
 
       if (action == 'useLocal') {
-        await uploadFn(context, uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
+        await uploadFn(context);
         AppLogger.success('Used local notes (${localNotes.length})', 'GoogleDrive');
         return true;
       }
@@ -77,7 +73,7 @@ class GoogleDriveMerge {
         for (final note in mergedMap.values) { await isar.notes.put(note); }
       });
 
-      await uploadFn(context, uploadMasterKey: uploadMasterKey, uploadVault: uploadVault);
+      await uploadFn(context);
       AppLogger.success('Merged ${mergedMap.length} notes', 'GoogleDrive');
       return true;
     } catch (e) {
@@ -105,10 +101,7 @@ class GoogleDriveMerge {
     List<dynamic> notesList;
     if (jsonData is Map<String, dynamic>) {
       notesList = jsonData['notes'] ?? [];
-      final vaultData = jsonData['vault_data'];
-      if (vaultData != null) {
-        await VaultService.restoreVaultDataFromBackup(vaultData);
-      }
+      // vault_data لا يُستعاد تلقائياً في الدمج أيضاً
     } else {
       notesList = jsonData;
     }

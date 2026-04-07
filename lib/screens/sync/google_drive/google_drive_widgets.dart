@@ -176,32 +176,73 @@ class GoogleDriveWidgets {
     bool isSignedIn,
     ValueChanged<bool>? onChanged,
   ) {
-    return Card(
-      elevation: 0,
-      
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    return Column(
+      children: [
+        Card(
+          elevation: 0,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.settings, size: 28, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(l10n.settings, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Icon(Icons.settings, size: 28, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Text(l10n.settings, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.autoSync),
+                  subtitle: Text(l10n.autoSyncDesc),
+                  value: autoSync,
+                  onChanged: isSignedIn ? onChanged : null,
+                ),
               ],
             ),
-            const SizedBox(height: 16),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.autoSync),
-              subtitle: Text(l10n.autoSyncDesc),
-              value: autoSync,
-              onChanged: isSignedIn ? onChanged : null,
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: 8),
+        // ── بطاقة تعليمية ثابتة ──
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.lock, color: Colors.orange, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    isArabic ? 'الخزنة المشفرة' : 'Encrypted Vault',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                isArabic
+                    ? '• الخزنة محلية بالكامل — لا تُرفع أبداً إلى Google Drive.\n• لمزامنة الخزنة يجب فك تشفير الملاحظات ونقلها يدوياً.\n• التطبيق غير مسؤول عن فقدان محتوى الخزنة.'
+                    : '• The vault is fully local — never uploaded to Google Drive.\n• To sync vault notes, decrypt them manually first.\n• The app is not responsible for vault content loss.',
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.6,
+                  color: isDark ? Colors.grey[300] : Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

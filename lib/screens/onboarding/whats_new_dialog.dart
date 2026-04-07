@@ -38,8 +38,7 @@ class WhatsNewDialog extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.celebration,
-                            color: Colors.blue, size: 28),
+                        const Icon(Icons.celebration, color: Colors.blue, size: 28),
                         const SizedBox(width: 12),
                         Text(
                           isArabic ? 'ما الجديد؟' : "What's New?",
@@ -59,11 +58,10 @@ class WhatsNewDialog extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.rocket_launch,
-                              color: Colors.blue, size: 20),
+                          const Icon(Icons.rocket_launch, color: Colors.blue, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            isArabic ? 'الإصدار 3.0.1' : 'Version 3.0.1',
+                            isArabic ? 'الإصدار 3.0.2' : 'Version 3.0.2',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: isDesktop ? 17 : 15,
@@ -75,47 +73,42 @@ class WhatsNewDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
-                      icon: Icons.label_rounded,
+                      icon: Icons.cloud_sync_rounded,
                       color: Colors.blue,
-                      title: isArabic
-                          ? '🏷️ تحسينات الكتالوج'
-                          : '🏷️ Catalog Improvements',
+                      title: isArabic ? '☁️ مزامنة Google Drive أذكى' : '☁️ Smarter Google Drive Sync',
                       description: isArabic
-                          ? 'اختر كتالوجاً مختلفاً مباشرة من شريط الكتالوج بنقرة واحدة، مع إصلاح عرض اسم كتالوج المحترف.'
-                          : 'Switch catalogs directly from the catalog bar with one tap, with a fix for the Professional catalog name display.',
+                          ? 'المزامنة الآن تعمل على مستوى كل ملاحظة — لا تضيع تعديلاتك عند فتح التطبيق من جهازين. الكتالوجات تُزامَن أيضاً.'
+                          : 'Sync now works at the note level — your edits won\'t be lost when opening from two devices. Catalogs are synced too.',
+                      isDesktop: isDesktop,
+                    ),
+                    const SizedBox(height: 16),
+                    _WhatsNewFeature(
+                      icon: Icons.lock_rounded,
+                      color: Colors.orange,
+                      title: isArabic ? '🔐 الخزنة محلية بالكامل' : '🔐 Vault is Fully Local',
+                      description: isArabic
+                          ? 'الملاحظات المشفرة لا تُرفع إلى Google Drive أبداً. الخزنة محلية 100% لحماية خصوصيتك.'
+                          : 'Encrypted notes are never uploaded to Google Drive. The vault is 100% local to protect your privacy.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
                       icon: Icons.speed_rounded,
-                      color: Colors.orange,
-                      title: isArabic
-                          ? '⚡ تمرير أسرع وأسلس'
-                          : '⚡ Faster & Smoother Scrolling',
+                      color: Colors.green,
+                      title: isArabic ? '⚡ فتح الخزنة أسرع' : '⚡ Faster Vault Opening',
                       description: isArabic
-                          ? 'تحسين كبير في أداء التمرير مع 600+ ملاحظة، وشريط تمرير جانبي بحركة ناعمة بدون قفز.'
-                          : 'Major scrolling performance improvement with 600+ notes, and a smooth sidebar scrollbar without jumping.',
+                          ? 'فك تشفير الملاحظات الآن يعمل بشكل متوازٍ — وقت التحميل أقل بكثير مع عدد كبير من الملاحظات.'
+                          : 'Note decryption now runs in parallel — much faster loading with large numbers of notes.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),
                     _WhatsNewFeature(
                       icon: Icons.bug_report_rounded,
-                      color: Colors.green,
-                      title:
-                          isArabic ? '🔧 إصلاحات متعددة' : '🔧 Multiple Fixes',
-                      description: isArabic
-                          ? 'إصلاح لون شريط البحث عند فتح التطبيق، إصلاح عرض النص الخام في السلة، وتحسين شريط الاستعادة في السلة.'
-                          : 'Fixed search bar color on app launch, fixed raw text display in trash, and improved the restore bar in trash.',
-                      isDesktop: isDesktop,
-                    ),
-                    const SizedBox(height: 16),
-                    _WhatsNewFeature(
-                      icon: Icons.cleaning_services_rounded,
                       color: Colors.purple,
-                      title: isArabic ? '🧹 تنظيف الكود' : '🧹 Code Cleanup',
+                      title: isArabic ? '🔧 إصلاحات متعددة' : '🔧 Multiple Fixes',
                       description: isArabic
-                          ? 'توحيد منطق تحويل المحتوى في ملف واحد (NoteContentUtils) بدل تكراره في 7 أماكن مختلفة.'
-                          : 'Unified content conversion logic in one file (NoteContentUtils) instead of repeating it in 7 different places.',
+                          ? 'إصلاح حفظ تغيير اللون في الخزنة، إضافة الجيك لست لقائمة الإضافة، وتحسينات في شريط التمرير.'
+                          : 'Fixed color change saving in vault, added checklist to the add menu, and scrollbar improvements.',
                       isDesktop: isDesktop,
                     ),
                     const SizedBox(height: 16),
@@ -127,8 +120,7 @@ class WhatsNewDialog extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.favorite,
-                              color: Colors.red, size: 18),
+                          const Icon(Icons.favorite, color: Colors.red, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

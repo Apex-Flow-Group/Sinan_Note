@@ -94,8 +94,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
 
     if (autoSync && GoogleDriveService.isSignedIn) {
-      if (!mounted) return;
-      await GoogleDriveService.uploadDatabase(context);
+      await GoogleDriveService.smartSyncOnStartup();
     }
   }
 

@@ -4,10 +4,7 @@ import 'dart:io';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/shared/settings/backup_dialogs.dart';
-import 'package:apex_note/screens/shared/settings/backup_messages.dart';
 import 'package:apex_note/screens/shared/settings/backup_validators.dart';
-import 'package:apex_note/screens/shared/settings/recovery_code_dialog.dart';
 import 'package:apex_note/services/storage/backup_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
@@ -23,7 +20,6 @@ class DatabaseRestoreHandler {
     AppLocalizations l10n,
     String backupPath,
   ) async {
-    // ── 1. Validate file integrity & size ────────────────────────────────
     final isDb = BackupValidators.isDatabaseFile(backupPath.split('/').last);
     final validationError =
         await BackupValidators.validate(backupPath, isDatabase: isDb);
@@ -36,53 +32,9 @@ class DatabaseRestoreHandler {
       return;
     }
 
-    // ── 2. Warn about locked notes ────────────────────────────────────────
     try {
-      final dbService = IsarDatabaseService();
-      final lockedNotes = await dbService.getLockedNotes();
-      if (lockedNotes.isNotEmpty) {
-        if (!context.mounted) return;
-        final agreed = await BackupDialogs.showEncryptionAgreement(
-            context, l10n, lang, lockedNotes.length);
-        if (agreed != true) return;
-      }
-    } catch (e) {
-      if (context.mounted) {
-        UnifiedNotificationService().show(
-            context: context,
-            message: l10n.databaseError,
-            type: NotificationType.error);
-      }
-      return;
-    }
-
-    try {
-      // ── 3. Vault recovery if needed (JSON only) ───────────────────────
-      if (!isDb) {
-        final hasVaultData =
-            await BackupValidators.checkForVaultData(backupPath);
-        if (hasVaultData) {
-          if (!context.mounted) return;
-          final recovered = await showDialog<bool>(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) => const RecoveryCodeDialog(),
-          );
-          if (recovered != true) {
-            if (!context.mounted) return;
-            UnifiedNotificationService().show(
-              context: context,
-              message: BackupMessages.getCancelMessage(lang, 'restore'),
-              type: NotificationType.warning,
-            );
-            return;
-          }
-        }
-      }
-
       final localCount = await BackupService().checkLocalNotesCount();
 
-      // ── 4. No local notes → restore directly ─────────────────────────
       if (localCount == 0) {
         if (!context.mounted) return;
         showDialog(
@@ -112,7 +64,7 @@ class DatabaseRestoreHandler {
                 ? 'تم استعادة $restoredCount ملاحظة\n($unlockedCount عادية، ${lockedNotes.length} مشفرة)'
                 : 'Restored $restoredCount notes\n($unlockedCount normal, ${lockedNotes.length} encrypted)')
             : (lang == 'ar'
-                ? 'تم استعادة $restoredCount ملاحظة/مذكرات.'
+                ? 'تم استعادة $restoredCount ملاحظة.'
                 : 'Successfully restored $restoredCount notes.');
 
         if (!context.mounted) return;
@@ -133,7 +85,6 @@ class DatabaseRestoreHandler {
         return;
       }
 
-      // ── 5. Has local notes → ask merge/replace ────────────────────────
       if (!context.mounted) return;
       final action = await showDialog<String>(
         context: context,
@@ -152,8 +103,7 @@ class DatabaseRestoreHandler {
             TextButton(
               onPressed: () => Navigator.pop(ctx, 'replace'),
               child: Text(l10n.replace,
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.error)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ),
           ],
         ),
@@ -178,25 +128,17 @@ class DatabaseRestoreHandler {
       final totalNotes = await BackupService().checkLocalNotesCount();
       final unlockedCount = totalNotes - lockedNotes.length;
 
-      if (lockedNotes.isNotEmpty) {
-        if (!context.mounted) return;
-        UnifiedNotificationService().show(
-          context: context,
-          message: lang == 'ar'
-              ? '${action == 'merge' ? 'تم الدمج' : 'تم الاستبدال'}: $totalNotes ملاحظة ($unlockedCount عادية، ${lockedNotes.length} مشفرة)'
-              : '${action == 'merge' ? 'Merged' : 'Replaced'}: $totalNotes notes ($unlockedCount normal, ${lockedNotes.length} encrypted)',
-          type: NotificationType.success,
-          duration: const Duration(seconds: 5),
-        );
-      } else {
-        if (!context.mounted) return;
-        UnifiedNotificationService().show(
-          context: context,
-          message:
-              action == 'merge' ? l10n.mergedSuccessfully : l10n.restoredSuccessfully,
-          type: NotificationType.success,
-        );
-      }
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: lockedNotes.isNotEmpty
+            ? (lang == 'ar'
+                ? '${action == 'merge' ? 'تم الدمج' : 'تم الاستبدال'}: $totalNotes ملاحظة ($unlockedCount عادية، ${lockedNotes.length} مشفرة)'
+                : '${action == 'merge' ? 'Merged' : 'Replaced'}: $totalNotes notes ($unlockedCount normal, ${lockedNotes.length} encrypted)')
+            : (action == 'merge' ? l10n.mergedSuccessfully : l10n.restoredSuccessfully),
+        type: NotificationType.success,
+        duration: const Duration(seconds: 5),
+      );
 
       if (action == 'replace' && context.mounted) {
         Navigator.of(context).pop();

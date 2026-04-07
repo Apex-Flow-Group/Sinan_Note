@@ -192,6 +192,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                         isProfessional: widget.note.isProfessional,
                         isPinned: widget.note.isPinned,
                         isChecklist: widget.note.isChecklist,
+                        categoryIds: widget.note.categoryIds,
+                        isHiddenFromHome: widget.note.isHiddenFromHome,
                       );
                       final result = await Navigator.push(
                         context,

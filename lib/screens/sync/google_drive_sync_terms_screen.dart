@@ -13,8 +13,6 @@ class GoogleDriveSyncTermsScreen extends StatefulWidget {
 
 class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen> {
   bool _agreedToTerms = false;
-  bool _uploadMasterKey = false;
-  bool _uploadVault = false;
 
   @override
   Widget build(BuildContext context) {
@@ -78,11 +76,13 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                     
                     const SizedBox(height: 16),
                     
-                    // Vault notes info
+                    // Vault notes info — الخزنة محلية دائماً
                     _buildInfoCard(
                       icon: Icons.lock,
-                      title: l10n.syncTermsVaultNotes,
-                      color: Colors.green,
+                      title: Localizations.localeOf(context).languageCode == 'ar'
+                          ? 'الخزنة المشفرة: محلية بالكامل — لا تُرفع أبداً'
+                          : 'Encrypted Vault: fully local — never uploaded',
+                      color: Colors.orange,
                       isDark: isDark,
                     ),
                     
@@ -145,52 +145,6 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                     
                     const SizedBox(height: 24),
                     
-                    // Upload options
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey[850] : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.uploadOptions,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 12),
-                          CheckboxListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(l10n.uploadMasterKey),
-                            subtitle: Text(l10n.uploadMasterKeyDesc, style: const TextStyle(fontSize: 12)),
-                            value: _uploadMasterKey,
-                            onChanged: (val) {
-                              setState(() {
-                                _uploadMasterKey = val ?? false;
-                                if (!_uploadMasterKey) {
-                                  _uploadVault = false; // إلغاء الثاني إذا تم إلغاء الأول
-                                }
-                              });
-                            },
-                          ),
-                          CheckboxListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(l10n.uploadVault),
-                            subtitle: Text(l10n.uploadVaultDesc, style: const TextStyle(fontSize: 12)),
-                            value: _uploadVault,
-                            enabled: _uploadMasterKey, // يعتمد على الأول
-                            onChanged: _uploadMasterKey
-                                ? (val) => setState(() => _uploadVault = val ?? false)
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
                     // Privacy policy link
                     Center(
                       child: TextButton.icon(
@@ -242,11 +196,7 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                     height: 56,
                     child: ElevatedButton.icon(
                       onPressed: _agreedToTerms
-                          ? () => Navigator.pop(context, {
-                              'agreed': true,
-                              'uploadMasterKey': _uploadMasterKey,
-                              'uploadVault': _uploadVault,
-                            })
+                          ? () => Navigator.pop(context, {'agreed': true})
                           : null,
                       icon: const Icon(Icons.check_circle),
                       label: Text(

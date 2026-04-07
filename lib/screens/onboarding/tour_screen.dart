@@ -22,6 +22,8 @@ class _TourScreenState extends State<TourScreen> {
   int _currentPage = 0;
   bool _isAgreed = false;
 
+  static const int _totalPages = 8;
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -58,14 +60,22 @@ class _TourScreenState extends State<TourScreen> {
                   onPageChanged: (index) =>
                       setState(() => _currentPage = index),
                   children: [
+                    // 1. الترحيب — ما هو التطبيق
+                    _buildPageWelcome(context),
+                    // 2. أنواع الملاحظات — الجوهر الأساسي
                     _buildPage1(context),
-                    _buildPage2(context),
-                    _buildPage3(context),
-                    _buildPage4(context),
-                    _buildPage5(context),
-                    _buildPage6(context),
-                    _buildPage7(context),
+                    // 3. التصنيفات — تنظيم الملاحظات
                     _buildPage8(context),
+                    // 4. التذكيرات — إضافة قيمة
+                    _buildPage3(context),
+                    // 5. الخزنة — الأمان
+                    _buildPage4(context),
+                    // 6. المزامنة — الاستمرارية
+                    _buildPage5(context),
+                    // 7. مميزات إضافية — الختام
+                    _buildPage6(context),
+                    // 8. الاتفاقية + ابدأ — آخر صفحة دائماً
+                    _buildPageAgreement(context),
                   ],
                 ),
               ),
@@ -77,27 +87,25 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
-  Widget _buildPage1(BuildContext context) {
+  // ── صفحة الترحيب ──────────────────────────────────────────────────────────
+  Widget _buildPageWelcome(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return _TourPage(
       icon: Icons.edit_note,
       title: l10n.tourPage1Title,
       description: l10n.tourPage1Desc,
       features: [
-        _FeatureItem(
-            icon: Icons.note_outlined,
-            text: '${l10n.simpleNote}: ${l10n.simpleNoteDesc}'),
+        _FeatureItem(icon: Icons.note_outlined, text: '${l10n.simpleNote}: ${l10n.simpleNoteDesc}'),
         _FeatureItem(icon: Icons.format_paint_rounded, text: l10n.tourRichNote),
-        _FeatureItem(
-            icon: Icons.code, text: '${l10n.proEditor}: ${l10n.proEditorDesc}'),
-        _FeatureItem(
-            icon: Icons.alarm, text: '${l10n.reminder}: ${l10n.reminderDesc}'),
+        _FeatureItem(icon: Icons.code, text: '${l10n.proEditor}: ${l10n.proEditorDesc}'),
+        _FeatureItem(icon: Icons.alarm, text: '${l10n.reminder}: ${l10n.reminderDesc}'),
         _FeatureItem(icon: Icons.check_box, text: l10n.checklists),
       ],
     );
   }
 
-  Widget _buildPage2(BuildContext context) {
+  // ── أنواع الملاحظات ────────────────────────────────────────────────────────
+  Widget _buildPage1(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return _TourPage(
       icon: Icons.calculate,
@@ -112,6 +120,23 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
+  // ── التصنيفات ──────────────────────────────────────────────────────────────
+  Widget _buildPage8(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return _TourPage(
+      icon: Icons.label_rounded,
+      title: l10n.tourPage8Title,
+      description: l10n.tourPage8Desc,
+      features: [
+        _FeatureItem(icon: Icons.create_new_folder_outlined, text: l10n.tourCatCreate),
+        _FeatureItem(icon: Icons.filter_list_rounded, text: l10n.tourCatFilter),
+        _FeatureItem(icon: Icons.edit_outlined, text: l10n.tourCatEdit),
+        _FeatureItem(icon: Icons.playlist_add_check_rounded, text: l10n.tourCatAssign),
+      ],
+    );
+  }
+
+  // ── التذكيرات ──────────────────────────────────────────────────────────────
   Widget _buildPage3(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return _TourPage(
@@ -127,6 +152,7 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
+  // ── الخزنة ─────────────────────────────────────────────────────────────────
   Widget _buildPage4(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return _TourPage(
@@ -134,16 +160,15 @@ class _TourScreenState extends State<TourScreen> {
       title: l10n.tourPage4Title,
       description: l10n.tourPage4Desc,
       features: [
-        _FeatureItem(
-            icon: Icons.enhanced_encryption, text: l10n.encryptionUsed),
-        _FeatureItem(
-            icon: Icons.fingerprint, text: l10n.authenticateWithBiometric),
+        _FeatureItem(icon: Icons.enhanced_encryption, text: l10n.encryptionUsed),
+        _FeatureItem(icon: Icons.fingerprint, text: l10n.authenticateWithBiometric),
         _FeatureItem(icon: Icons.lock_clock, text: l10n.sessionProtection),
         _FeatureItem(icon: Icons.security, text: l10n.dataEncryptedOnExit),
       ],
     );
   }
 
+  // ── المزامنة ───────────────────────────────────────────────────────────────
   Widget _buildPage5(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return _TourPage(
@@ -158,6 +183,7 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
+  // ── مميزات إضافية ──────────────────────────────────────────────────────────
   Widget _buildPage6(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return _TourPage(
@@ -174,118 +200,8 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
-  Widget _buildPage8(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return _TourPage(
-      icon: Icons.label_rounded,
-      title: l10n.tourPage8Title,
-      description: l10n.tourPage8Desc,
-      features: [
-        _FeatureItem(icon: Icons.create_new_folder_outlined, text: l10n.tourCatCreate),
-        _FeatureItem(icon: Icons.filter_list_rounded, text: l10n.tourCatFilter),
-        _FeatureItem(icon: Icons.edit_outlined, text: l10n.tourCatEdit),
-        _FeatureItem(icon: Icons.playlist_add_check_rounded, text: l10n.tourCatAssign),
-      ],
-    );
-  }
-
-  Widget _buildBottomBar(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  8,
-                  (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: _currentPage == index ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? const Color(0xFFFFD700)
-                          : const Color(0xFFFFD700).withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (_currentPage < 7)
-                ElevatedButton(
-                  onPressed: _nextPage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
-                    foregroundColor: const Color(0xFF0A1929),
-                    minimumSize: const Size(double.infinity, 52),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.next,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              if (_currentPage < 7)
-                TextButton(
-                  onPressed: () {
-                    _pageController.jumpToPage(7);
-                  },
-                  child: Text(
-                    l10n.skip,
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToHome() async {
-    if (!_isAgreed) return;
-    await Provider.of<SettingsProvider>(context, listen: false).completeSetup();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const MainLayoutScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-      (route) => false,
-    );
-  }
-
-  static const _channel = MethodChannel('com.apexflow.app.sinan/launcher');
-
-  void _openTerms() async {
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final systemLocale =
-        View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system'
-        ? systemLocale
-        : settings.languageCode;
-    final url = currentLang == 'ar'
-        ? 'https://apexflow.now/ar/projects/sinan-note/terms'
-        : 'https://apexflow.now/en/projects/sinan-note/terms';
-    try {
-      await _channel.invokeMethod('launch', url);
-    } catch (_) {}
-  }
-
-  Widget _buildPage7(BuildContext context) {
+  // ── الاتفاقية + ابدأ (آخر صفحة) ───────────────────────────────────────────
+  Widget _buildPageAgreement(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final systemLocale =
@@ -392,6 +308,103 @@ class _TourScreenState extends State<TourScreen> {
       },
     );
   }
+
+  Widget _buildBottomBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isLastPage = _currentPage == _totalPages - 1;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _totalPages,
+                  (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: _currentPage == index ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _currentPage == index
+                          ? const Color(0xFFFFD700)
+                          : const Color(0xFFFFD700).withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (!isLastPage) ...[
+                ElevatedButton(
+                  onPressed: _nextPage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD700),
+                    foregroundColor: const Color(0xFF0A1929),
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.next,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _pageController.jumpToPage(_totalPages - 1);
+                  },
+                  child: Text(
+                    l10n.skip,
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToHome() async {
+    if (!_isAgreed) return;
+    await Provider.of<SettingsProvider>(context, listen: false).completeSetup();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainLayoutScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+      (route) => false,
+    );
+  }
+
+  static const _channel = MethodChannel('com.apexflow.app.sinan/launcher');
+
+  void _openTerms() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final systemLocale =
+        View.of(context).platformDispatcher.locale.languageCode;
+    final currentLang = settings.languageCode == 'system'
+        ? systemLocale
+        : settings.languageCode;
+    final url = currentLang == 'ar'
+        ? 'https://apexflow.now/ar/projects/sinan-note/terms'
+        : 'https://apexflow.now/en/projects/sinan-note/terms';
+    try {
+      await _channel.invokeMethod('launch', url);
+    } catch (_) {}
+  }
 }
 
 class _TourPage extends StatelessWidget {
@@ -411,7 +424,6 @@ class _TourPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Fixed header - centered on wide screens
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
@@ -454,7 +466,6 @@ class _TourPage extends StatelessWidget {
             ),
           ),
         ),
-        // Scrollable body - centered on wide screens
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),

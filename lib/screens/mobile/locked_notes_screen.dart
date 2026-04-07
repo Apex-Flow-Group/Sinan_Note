@@ -82,9 +82,6 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   }
 
   Future<void> _createLockedNote(NoteMode mode) async {
-    // إخفاء NoteMode.checklist من الخزنة لأنه غير ضروري
-    if (mode == NoteMode.checklist) return;
-
     String noteType;
     bool isChecklist = false, isProfessional = false;
     String initialContent = '';
@@ -298,29 +295,37 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       child: Scaffold(
         drawer: HomeDrawerWidget(
             onBackupTap: () {}, onNotesChanged: _loadLockedNotes),
-        appBar: AppBar(
-          leading: _selectedNoteIds.isEmpty
-              ? Builder(
-                  builder: (context) => IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
-                  ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => setState(() => _selectedNoteIds.clear()),
-                ),
-          title: _buildAppBarTitle(l10n),
-          actions: _selectedNoteIds.isEmpty ? _buildActions(l10n) : [],
-        ),
         body: Stack(
           children: [
-            _isLoading ? _buildLoading(l10n) : _buildNotesList(l10n),
+            // المحتوى مع padding للـ AppBar
+            Column(
+              children: [
+                AppBar(
+                  leading: _selectedNoteIds.isEmpty
+                      ? Builder(
+                          builder: (context) => IconButton(
+                            icon: const Icon(Icons.menu),
+                            onPressed: () => Scaffold.of(context).openDrawer(),
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => setState(() => _selectedNoteIds.clear()),
+                        ),
+                  title: _buildAppBarTitle(l10n),
+                  actions: _selectedNoteIds.isEmpty ? _buildActions(l10n) : [],
+                ),
+                Expanded(
+                  child: _isLoading ? _buildLoading(l10n) : _buildNotesList(l10n),
+                ),
+              ],
+            ),
+            // القائمة تغطي كامل الشاشة بما فيها الشريط العلوي
             AddMenuWidget(
               showMenu: _showAddMenu,
               onToggle: () => setState(() => _showAddMenu = !_showAddMenu),
               onModeSelected: _createLockedNote,
-              hideChecklist: true,
+              showLockBadge: true,
             ),
           ],
         ),
@@ -464,7 +469,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           note: note,
           viewType: _viewType,
           closeAllSlidables: _closeAllSlidables,
-          onNoteChanged: () {},
+          onNoteChanged: () async {
+            if (mounted) await _loadLockedNotes();
+          },
           onLongPress: () => setState(() => _selectedNoteIds.add(note.id!)),
           source: 'locked',
           selectionMode: _selectedNoteIds.isNotEmpty,

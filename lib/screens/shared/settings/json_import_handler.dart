@@ -6,13 +6,12 @@ import 'dart:io';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/screens/shared/settings/backup_messages.dart';
 import 'package:apex_note/screens/shared/settings/backup_validators.dart';
-import 'package:apex_note/screens/shared/settings/recovery_code_dialog.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/backup_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,38 +35,13 @@ class JsonImportHandler {
         return;
       }
 
-      final hasVaultData = await BackupValidators.checkForVaultData(filePath);
-      if (hasVaultData) {
-        if (!context.mounted) return;
-        final recovered = await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => const RecoveryCodeDialog(),
-        );
-        if (recovered != true) {
-          if (!context.mounted) return;
-          UnifiedNotificationService().show(
-            context: context,
-            message: BackupMessages.getCancelMessage(lang, 'import'),
-            type: NotificationType.warning,
-          );
-          return;
-        }
-      }
-
       final file = File(filePath);
       final jsonString = await file.readAsString();
       final dynamic jsonData = jsonDecode(jsonString);
 
       List<dynamic> notesList;
-      Map<String, dynamic>? vaultData;
-
       if (jsonData is Map<String, dynamic>) {
         notesList = jsonData['notes'] ?? [];
-        vaultData = jsonData['vault_data'];
-        if (vaultData != null) {
-          await VaultService.restoreVaultDataFromBackup(vaultData);
-        }
       } else {
         notesList = jsonData;
       }
@@ -77,8 +51,35 @@ class JsonImportHandler {
             lang == 'ar' ? 'لا توجد ملاحظات في الملف' : 'No notes in file');
       }
 
-      final notesToImport =
-          notesList.map((json) => Note.fromMap(json)).toList();
+      // فك تشفير تلقائي لو عنده مفتاح — بدون إجبار
+      final hasKey = await VaultService.isVaultSetup();
+      enc.Key? masterKey;
+      if (hasKey) {
+        try {
+          masterKey = await VaultService.getMasterKey();
+        } catch (_) {}
+      }
+
+      final notesToImport = <Note>[];
+      for (final map in notesList) {
+        final note = Note.fromMap(map);
+        if (note.isLocked &&
+            masterKey != null &&
+            VaultService.isEncrypted(note.content)) {
+          try {
+            final decTitle = VaultService.decryptWithKey(note.title, masterKey);
+            final decContent =
+                VaultService.decryptWithKey(note.content, masterKey);
+            notesToImport
+                .add(note.copyWith(title: decTitle, content: decContent));
+          } catch (_) {
+            notesToImport.add(note);
+          }
+        } else {
+          notesToImport.add(note);
+        }
+      }
+      if (masterKey != null) VaultService.wipeMasterKey(masterKey);
 
       final dbService = IsarDatabaseService();
       await IsarDatabaseService.initialize();
@@ -87,7 +88,6 @@ class JsonImportHandler {
       if (localCount == 0) {
         await _writeNotes(dbService, notesToImport, replace: false);
         await notesProvider.loadNotes(force: true);
-        // ignore: use_build_context_synchronously
         await _showResult(context, lang, l10n, dbService, notesToImport.length,
             action: 'import');
         return;
@@ -111,8 +111,7 @@ class JsonImportHandler {
             TextButton(
               onPressed: () => Navigator.pop(ctx, 'replace'),
               child: Text(l10n.replace,
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.error)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ),
           ],
         ),
@@ -124,7 +123,6 @@ class JsonImportHandler {
       await notesProvider.loadNotes(force: true);
 
       final totalNotes = await BackupService().checkLocalNotesCount();
-      // ignore: use_build_context_synchronously
       await _showResult(context, lang, l10n, dbService, totalNotes,
           action: action);
     } catch (e) {

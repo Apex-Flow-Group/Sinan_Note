@@ -10,6 +10,7 @@ import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/note_services/note_db_interface.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class IsarDatabaseService implements NoteDbInterface {
   static Isar? _isar;
@@ -197,10 +198,56 @@ class IsarDatabaseService implements NoteDbInterface {
     return await ApexErrorManager.monitorDB(() async {
       await deleteNoteVersions(id);
       final isar = await database;
-      return await isar.writeTxn(() async {
+      final deleted = await isar.writeTxn(() async {
         return await isar.notes.delete(id);
       });
+      if (deleted) await _recordDeletion(id);
+      return deleted;
     }, name: 'DeleteNote');
+  }
+
+  /// تسجيل الحذف في SharedPreferences للمزامنة
+  static Future<void> _recordDeletion(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getStringList('deleted_note_ids') ?? [];
+    final entry = '$id:${DateTime.now().millisecondsSinceEpoch}';
+    if (!existing.any((e) => e.startsWith('$id:'))) {
+      existing.add(entry);
+      // احتفظ بآخر 1000 حذف فقط
+      if (existing.length > 1000) existing.removeRange(0, existing.length - 1000);
+      await prefs.setStringList('deleted_note_ids', existing);
+    }
+  }
+
+  /// جلب قائمة المحذوفات: {id: deletedAt}
+  static Future<Map<int, DateTime>> getDeletedNoteIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('deleted_note_ids') ?? [];
+    final map = <int, DateTime>{};
+    for (final e in list) {
+      final parts = e.split(':');
+      if (parts.length == 2) {
+        final id = int.tryParse(parts[0]);
+        final ms = int.tryParse(parts[1]);
+        if (id != null && ms != null) {
+          map[id] = DateTime.fromMillisecondsSinceEpoch(ms);
+        }
+      }
+    }
+    return map;
+  }
+
+  /// مسح سجلات الحذف القديمة (أقدم من 30 يوم)
+  static Future<void> cleanOldDeletions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('deleted_note_ids') ?? [];
+    final cutoff = DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch;
+    final filtered = list.where((e) {
+      final parts = e.split(':');
+      final ms = int.tryParse(parts.length == 2 ? parts[1] : '');
+      return ms != null && ms > cutoff;
+    }).toList();
+    await prefs.setStringList('deleted_note_ids', filtered);
   }
 
   Future<int> archiveNote(int id) async {
@@ -382,5 +429,10 @@ class IsarDatabaseService implements NoteDbInterface {
 
   Future<void> runLegacyHistoryCleanup() async {
     // Not needed for Isar
+  }
+
+  Future<List<NoteCategory>> getAllCategories() async {
+    final isar = await database;
+    return await isar.noteCategorys.where().sortBySortOrder().findAll();
   }
 }

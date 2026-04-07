@@ -14,6 +14,7 @@ class AddMenuWidget extends StatefulWidget {
   final VoidCallback onToggle;
   final Function(NoteMode) onModeSelected;
   final bool hideChecklist;
+  final bool showLockBadge;
 
   const AddMenuWidget({
     super.key,
@@ -21,6 +22,7 @@ class AddMenuWidget extends StatefulWidget {
     required this.onToggle,
     required this.onModeSelected,
     this.hideChecklist = false,
+    this.showLockBadge = false,
   });
 
   @override
@@ -206,6 +208,7 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
           color: item['color'] as Color,
           title: item['title'] as String,
           animation: itemAnimation,
+          showLockBadge: widget.showLockBadge,
           onTap: () {
             widget.onToggle();
             widget.onModeSelected(item['mode'] as NoteMode);
@@ -222,6 +225,7 @@ class _AnimatedMenuItem extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
   final Animation<double> animation;
+  final bool showLockBadge;
 
   const _AnimatedMenuItem({
     required this.icon,
@@ -229,6 +233,7 @@ class _AnimatedMenuItem extends StatelessWidget {
     required this.title,
     required this.onTap,
     required this.animation,
+    this.showLockBadge = false,
   });
 
   @override
@@ -292,15 +297,26 @@ class _AnimatedMenuItem extends StatelessWidget {
                               ((animation.value - 0.5).clamp(0.0, 1.0) * 2.0)
                                   .clamp(0.0, 1.0),
                           child: Center(
-                            child: Text(
-                              title,
-                              style: TextStyle(
-                                color: color,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (showLockBadge) ...[
+                                  Icon(Icons.lock, size: 13, color: color),
+                                  const SizedBox(width: 4),
+                                ],
+                                Flexible(
+                                  child: Text(
+                                    title,
+                                    style: TextStyle(
+                                      color: color,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

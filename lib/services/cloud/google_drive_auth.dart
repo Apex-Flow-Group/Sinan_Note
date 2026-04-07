@@ -20,7 +20,11 @@ class GoogleDriveAuth {
   static bool get isSignedIn => currentUser != null;
   static String? get currentUserEmail => currentUser?.email;
 
+  static bool _initialized = false;
+
   static Future<void> initializeSignIn() async {
+    if (_initialized) return;
+    _initialized = true;
     try {
       currentUser = await googleSignIn.signInSilently();
       if (currentUser != null) {

@@ -6,11 +6,9 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
-import 'package:apex_note/screens/sync/google_drive/google_drive_vault_warning_dialog.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -70,80 +68,27 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       final success = await GoogleDriveService.signIn();
       if (mounted && success) {
         final l10n = AppLocalizations.of(context)!;
-
-        // Check if there are locked notes and show warning BEFORE showing loading
-        bool shouldContinue = true;
-
-        try {
-          final dbService = IsarDatabaseService();
-          final lockedNotes = await dbService.getLockedNotes();
-
-          if (lockedNotes.isNotEmpty) {
-            // Show vault warning if needed
-            final shouldShowWarning =
-                await GoogleDriveVaultWarningDialog.shouldShow();
-
-            if (shouldShowWarning && mounted) {
-              final agreed = await showDialog<bool>(
-                context: context,
-                barrierDismissible: false,
-                builder: (ctx) => const GoogleDriveVaultWarningDialog(),
-              );
-
-              if (agreed != true) {
-                shouldContinue = false;
-              }
-            }
-          }
-        } catch (e) {
-          // Continue even if check fails
-        }
-
-        if (!shouldContinue) {
-          // User cancelled, sign out
-          await GoogleDriveService.signOut();
-          return;
-        }
-
-        // Now show loading and start the sync
         if (mounted) setState(() => _isLoading = true);
-
         if (!mounted) return;
-        await GoogleDriveService.mergeWithDrive(
-          context,
-          uploadMasterKey: false,
-          uploadVault: false,
-        );
-
-        // Enable auto sync
+        await GoogleDriveService.mergeWithDrive(context);
         await _saveAutoSyncSetting(true);
-
         if (mounted) {
           setState(() => _isLoading = false);
-          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.signInSuccess),
-              backgroundColor: Colors.green,
-            ),
+            SnackBar(content: Text(l10n.signInSuccess), backgroundColor: Colors.green),
           );
         }
       } else if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.signInFailed),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(l10n.signInFailed), backgroundColor: Colors.red),
         );
       }
     } on MissingPluginException {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                'Google Sign In is not supported on ${Platform.operatingSystem}. Use Android/iOS/Web.'),
+            content: Text('Google Sign In is not supported on ${Platform.operatingSystem}.'),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 5),
           ),
@@ -152,11 +97,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('${l10n.signInFailed}: $e'),
-              backgroundColor: Colors.red),
+          SnackBar(content: Text('${l10n.signInFailed}: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -171,22 +113,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   }
 
   Future<void> _handleUpload() async {
-    if (!mounted) return;
-    // عرض dialog لاختيار نوع الرفع
-    final result = await showDialog<Map<String, bool>>(
-      context: context,
-      builder: (context) => _UploadOptionsDialog(),
-    );
-
-    if (result == null) return; // المستخدم ألغى
-
     setState(() => _isLoading = true);
-    if (!mounted) return;
-    await GoogleDriveHandlers.handleUpload(
-      context,
-      uploadMasterKey: result['uploadMasterKey'] ?? false,
-      uploadVault: result['uploadVault'] ?? false,
-    );
+    await GoogleDriveHandlers.handleUpload(context);
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -441,95 +369,6 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _UploadOptionsDialog extends StatefulWidget {
-  @override
-  State<_UploadOptionsDialog> createState() => _UploadOptionsDialogState();
-}
-
-class _UploadOptionsDialogState extends State<_UploadOptionsDialog> {
-  bool _uploadMasterKey = false;
-  bool _uploadVault = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AlertDialog(
-      title: Text(l10n.uploadOptions),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.uploadOptionsDesc,
-              style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.grey[400] : Colors.grey[700]),
-            ),
-            const SizedBox(height: 20),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.uploadMasterKey),
-              subtitle: Text(l10n.uploadMasterKeyDesc,
-                  style: const TextStyle(fontSize: 12)),
-              value: _uploadMasterKey,
-              onChanged: (val) =>
-                  setState(() => _uploadMasterKey = val ?? false),
-            ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.uploadVault),
-              subtitle: Text(l10n.uploadVaultDesc,
-                  style: const TextStyle(fontSize: 12)),
-              value: _uploadVault,
-              onChanged: (val) => setState(() => _uploadVault = val ?? false),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline,
-                      color: Colors.orange, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.uploadWarning,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[300] : Colors.grey[800]),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, {
-            'uploadMasterKey': _uploadMasterKey,
-            'uploadVault': _uploadVault,
-          }),
-          child: Text(l10n.upload),
-        ),
-      ],
     );
   }
 }
