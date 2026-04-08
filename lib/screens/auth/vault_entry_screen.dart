@@ -25,6 +25,11 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     _checkVaultStatus();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
   Future<void> _checkVaultStatus() async {
     // التحقق من وجود ملاحظات مقفلة
     final dbService = IsarDatabaseService();
@@ -82,7 +87,6 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     final authenticated = await BiometricService.authenticate();
 
     if (authenticated && mounted) {
-      // نجحت البصمة → دخول مباشر
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -108,8 +112,8 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      body: Center(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

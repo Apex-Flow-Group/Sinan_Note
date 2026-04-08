@@ -15,10 +15,12 @@ import 'package:apex_note/screens/desktop/locked_notes_screen_responsive.dart';
 import 'package:apex_note/screens/desktop/trash_screen_responsive.dart';
 import 'package:apex_note/screens/onboarding/cinematic_intro_screen.dart';
 import 'package:apex_note/screens/onboarding/splash_screen.dart';
+import 'package:apex_note/screens/other/version_history_screen.dart';
 import 'package:apex_note/screens/other/widget_selection_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/screens/shared/note_view_screen.dart';
 import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
+import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/security/security_gate.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -365,6 +367,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                 '/archive': (context) => const ArchiveScreenResponsive(),
                 '/locked': (context) => const LockedNotesScreenResponsive(),
                 '/widget_selection': (context) => const WidgetSelectionScreen(),
+                '/drive': (context) => const GoogleDriveScreenResponsive(),
+                '/history': (context) => const VersionHistoryScreen(),
               },
               debugShowCheckedModeBanner: false,
             );
@@ -413,7 +417,7 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
 
   @override
   Widget buildScrollbar(
-          BuildContext context, Widget child, ScrollableDetails details) {
+      BuildContext context, Widget child, ScrollableDetails details) {
     switch (Theme.of(context).platform) {
       case TargetPlatform.linux:
       case TargetPlatform.windows:

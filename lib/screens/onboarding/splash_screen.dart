@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
@@ -76,8 +77,14 @@ class _SplashScreenState extends State<SplashScreen> {
         if (!mounted) return;
       }
 
-      // Initialize Google Sign-In silently in background
-      GoogleDriveService.initializeSignIn();
+      // Initialize Google Sign-In + smart sync in background
+      await GoogleDriveService.initializeSignIn();
+      if (GoogleDriveService.isSignedIn) {
+        unawaited(GoogleDriveService.smartSyncOnStartup().then((_) async {
+          if (!mounted) return;
+          await Provider.of<NotesProvider>(context, listen: false).loadNotes();
+        }));
+      }
 
       if (!mounted) return;
 

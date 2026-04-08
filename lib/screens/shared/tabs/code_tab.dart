@@ -86,9 +86,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
     final savedType = await settings.getViewType('professional');
     if (mounted) {
       setState(() {
-        if (savedType == 'grid') {
-          _viewType = ViewType.grid;
-        } else if (savedType == 'listCompact') {
+        if (savedType == 'listCompact') {
           _viewType = ViewType.listCompact;
         } else {
           _viewType = ViewType.listExpanded;
@@ -247,14 +245,13 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                               icon: Icon(
                                 _viewType == ViewType.listExpanded
                                     ? Icons.view_headline
-                                    : _viewType == ViewType.listCompact
-                                        ? Icons.grid_view
-                                        : Icons.view_day,
+                                    : Icons.view_day,
                               ),
                               onPressed: () async {
                                 setState(() {
-                                  final next = (_viewType.index + 1) % ViewType.values.length;
-                                  _viewType = ViewType.values[next];
+                                  _viewType = _viewType == ViewType.listExpanded
+                                      ? ViewType.listCompact
+                                      : ViewType.listExpanded;
                                 });
                                 await Provider.of<SettingsProvider>(context, listen: false)
                                     .setViewType('professional', _viewType.name);

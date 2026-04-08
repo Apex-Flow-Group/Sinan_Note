@@ -44,6 +44,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   bool _obscureConfirm = true;
   bool _showRecoveryMode = false;
   bool _showNewPasswordMode = false;
+  bool _unlocked = false;
   String? _errorText;
 
   @override
@@ -61,6 +62,11 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
         }
       });
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   @override
@@ -156,7 +162,10 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     }
   }
 
-  void _navigateToVault() {
+  void _navigateToVault() async {
+    setState(() => _unlocked = true);
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
@@ -174,6 +183,12 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(l10n.locked),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          systemNavigationBarColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -186,10 +201,20 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: _unlocked
+                      ? Colors.green.withValues(alpha: 0.15)
+                      : Colors.orange.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.lock_outline, size: 50, color: Colors.orange),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(
+                    _unlocked ? Icons.lock_open : Icons.lock_outline,
+                    key: ValueKey(_unlocked),
+                    size: 50,
+                    color: _unlocked ? Colors.green : Colors.orange,
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
               if (!_showRecoveryMode && !_showNewPasswordMode)

@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
+import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/category.dart';
 import 'package:flutter/material.dart';
@@ -27,16 +28,13 @@ class CategoriesPanel extends StatefulWidget {
 }
 
 class _CategoriesPanelState extends State<CategoriesPanel> {
-  static const _catColors = [
-    Color(0xFF7C4DFF), // بنفسجي
-    Color(0xFF00897B), // أخضر مزرق
-    Color(0xFFE64A19), // برتقالي
-    Color(0xFF1E88E5), // أزرق
-    Color(0xFFD81B60), // وردي
-    Color(0xFF43A047), // أخضر
-    Color(0xFFFFB300), // ذهبي
-    Color(0xFF00ACC1), // سماوي
-  ];
+  // ألوان الكتالوجات — من نظام الألوان الديناميكي (adaptive light/dark)
+  static const _catColorIndices = [8, 2, 5, 10, 3, 6, 9, 11]; // Blue, Red, Green, Pink, Orange, Teal, Purple, Brown
+
+  Color _catColor(int index, Brightness brightness) {
+    final paletteIndex = _catColorIndices[index % _catColorIndices.length];
+    return AppColorPalette.palette[paletteIndex].getColor(brightness);
+  }
 
   int? _editingId;
   final _addCtrl = TextEditingController();
@@ -178,7 +176,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
             ...cats.asMap().entries.map((entry) {
               final i = entry.key;
               final cat = entry.value;
-              final color = _catColors[i % _catColors.length];
+              final color = _catColor(i, Theme.of(context).brightness);
               if (_editingId == cat.id) {
                 return _InlineField(
                   controller: _editCtrl,
@@ -222,7 +220,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                 focusNode: _addFocus,
                 scheme: scheme,
                 accentColor:
-                    _catColors[provider.categories.length % _catColors.length],
+                    _catColor(provider.categories.length, Theme.of(context).brightness),
                 onSubmit: () => _commitAdd(provider),
                 onCancel: widget.onAddDone,
               ),
@@ -356,11 +354,11 @@ class _ProCategoryTile extends StatefulWidget {
 
 class _ProCategoryTileState extends State<_ProCategoryTile> {
   bool _expanded = false;
-  static const _proColor = Color(0xFF6200EA);
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CategoriesProvider>();
+    final proColor = AppColorPalette.palette[6].getColor(Theme.of(context).brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: Column(
@@ -370,7 +368,7 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: widget.isSelected
-                  ? _proColor.withValues(alpha: widget.isDark ? 0.15 : 0.08)
+                  ? proColor.withValues(alpha: widget.isDark ? 0.15 : 0.08)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
@@ -384,11 +382,11 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
                 height: 36,
                 decoration: BoxDecoration(
                   color:
-                      _proColor.withValues(alpha: widget.isDark ? 0.2 : 0.12),
+                      proColor.withValues(alpha: widget.isDark ? 0.2 : 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.workspace_premium_rounded,
-                    color: _proColor, size: 18),
+                child: Icon(Icons.workspace_premium_rounded,
+                    color: proColor, size: 18),
               ),
               title: Text(
                 widget.label,
@@ -396,7 +394,7 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
                   fontWeight:
                       widget.isSelected ? FontWeight.w700 : FontWeight.w500,
                   color:
-                      widget.isSelected ? _proColor : widget.scheme.onSurface,
+                      widget.isSelected ? proColor : widget.scheme.onSurface,
                 ),
               ),
               trailing: GestureDetector(
@@ -408,7 +406,7 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
                         ? Icons.expand_less_rounded
                         : Icons.settings_rounded,
                     size: 22,
-                    color: _proColor.withValues(alpha: 0.7),
+                    color: proColor.withValues(alpha: 0.7),
                   ),
                 ),
               ),
@@ -422,11 +420,11 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
                 ? Container(
                     margin: const EdgeInsets.only(top: 4, bottom: 4),
                     decoration: BoxDecoration(
-                      color: _proColor.withValues(
+                      color: proColor.withValues(
                           alpha: widget.isDark ? 0.08 : 0.04),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: _proColor.withValues(alpha: 0.15),
+                        color: proColor.withValues(alpha: 0.15),
                       ),
                     ),
                     child: Column(
@@ -440,7 +438,7 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
                             AppLocalizations.of(context)!.hideProFromHome,
                             style: const TextStyle(fontSize: 13),
                           ),
-                          activeThumbColor: _proColor,
+                          activeThumbColor: proColor,
                         ),
                       ],
                     ),

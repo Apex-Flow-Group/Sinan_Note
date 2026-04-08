@@ -38,6 +38,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   final ScrollController _scrollController = ScrollController();
   bool _isFormatting = false;
   bool _isPasting = false;
+  String _lastPlainText = '';
 
   // حروف التشكيل العربية (بدون الشدة)
   static const _harakat = {
@@ -55,6 +56,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   void initState() {
     super.initState();
     final initialText = widget.quillController.document.toPlainText();
+    _lastPlainText = initialText;
     _textDirection = TextDirectionUtils.getDirection(initialText);
     widget.quillController.addListener(_onChanged);
   }
@@ -70,10 +72,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     if (_isFormatting || _isPasting) return;
 
     final doc = widget.quillController.document;
+    final plainText = doc.toPlainText();
+
+    // ← الجديد: تجاهل إذا لم يتغير النص (مجرد تحريك cursor أو تحديد)
+    if (plainText == _lastPlainText) return;
+    _lastPlainText = plainText;
+
     final selection = widget.quillController.selection;
     if (!selection.isValid) return;
-
-    final plainText = doc.toPlainText();
     if (plainText.trim().isEmpty) return;
 
     final pt = plainText;
@@ -98,10 +104,13 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     );
 
     if (currentLine.isEmpty) {
-      _isFormatting = true;
-      widget.quillController.formatSelection(const DirectionAttribute(null));
-      widget.quillController.formatSelection(const AlignAttribute(null));
-      _isFormatting = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _isFormatting) return;
+        _isFormatting = true;
+        widget.quillController.formatSelection(const DirectionAttribute(null));
+        widget.quillController.formatSelection(const AlignAttribute(null));
+        _isFormatting = false;
+      });
       if (_textDirection != TextDirection.rtl) {
         setState(() => _textDirection = TextDirection.rtl);
       }
@@ -116,15 +125,18 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final wantAttr = !isRtl;
 
     if (currentIsRtl != wantAttr) {
-      _isFormatting = true;
-      if (isRtl) {
-        widget.quillController.formatSelection(const DirectionAttribute(null));
-        widget.quillController.formatSelection(const AlignAttribute(null));
-      } else {
-        widget.quillController.formatSelection(Attribute.rtl);
-        widget.quillController.formatSelection(const AlignAttribute(null));
-      }
-      _isFormatting = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _isFormatting) return;
+        _isFormatting = true;
+        if (isRtl) {
+          widget.quillController.formatSelection(const DirectionAttribute(null));
+          widget.quillController.formatSelection(const AlignAttribute(null));
+        } else {
+          widget.quillController.formatSelection(Attribute.rtl);
+          widget.quillController.formatSelection(const AlignAttribute(null));
+        }
+        _isFormatting = false;
+      });
     }
 
     if (newDir != _textDirection) {

@@ -18,6 +18,7 @@ class NotesGridView extends StatefulWidget {
   final ScrollController? scrollController;
   final ValueNotifier<List<Note>>? filteredNotesNotifier;
   final ValueNotifier<int>? totalCountNotifier;
+  final ValueNotifier<int>? visibleCountNotifier;
 
   const NotesGridView({
     super.key,
@@ -27,6 +28,7 @@ class NotesGridView extends StatefulWidget {
     this.scrollController,
     this.filteredNotesNotifier,
     this.totalCountNotifier,
+    this.visibleCountNotifier,
   });
 
   @override
@@ -48,6 +50,7 @@ class _NotesGridViewState extends State<NotesGridView> {
   List<Note> _allFiltered = [];
   int _visibleCount = _pageSize;
   final ValueNotifier<bool> _hasMoreNotifier = ValueNotifier(false);
+  final ValueNotifier<int> _visibleCountNotifier = ValueNotifier(0);
   final ValueNotifier<int> _totalCountNotifier = ValueNotifier(0);
 
   @override
@@ -92,6 +95,8 @@ class _NotesGridViewState extends State<NotesGridView> {
         _visibleCount < _allFiltered.length) {
       _visibleCount = (_visibleCount + _pageSize).clamp(0, _allFiltered.length);
       _hasMoreNotifier.value = _visibleCount < _allFiltered.length;
+      _visibleCountNotifier.value = _visibleCount;
+      widget.visibleCountNotifier?.value = _visibleCount;
       _filteredNotesNotifier.value = _allFiltered.sublist(0, _visibleCount);
     }
   }
@@ -105,6 +110,7 @@ class _NotesGridViewState extends State<NotesGridView> {
     _closeAllSlidables.dispose();
     _hasMoreNotifier.dispose();
     _totalCountNotifier.dispose();
+    _visibleCountNotifier.dispose();
     if (_ownsFilteredNotifier) _filteredNotesNotifier.dispose();
     super.dispose();
   }
@@ -114,7 +120,56 @@ class _NotesGridViewState extends State<NotesGridView> {
     final stamp = _notesProvider!.refreshStamp;
     final forceRefresh = stamp != _lastRefreshStamp;
     if (forceRefresh) _lastRefreshStamp = stamp;
-    _syncFilteredNotes(_notesProvider!.notes, force: forceRefresh);
+
+    final newNotes = _notesProvider!.notes;
+
+    if (!forceRefresh) {
+      final newIds = newNotes.map((n) => n.id).toSet();
+      final currentIds = _allFiltered.map((n) => n.id).toSet();
+
+      // حذف/أرشفة
+      final removedIds = currentIds.difference(newIds);
+      // نوتات جديدة
+      final addedIds = newIds.difference(currentIds);
+
+      if (removedIds.isNotEmpty) {
+        _allFiltered.removeWhere((n) => removedIds.contains(n.id));
+        _totalCountNotifier.value = _allFiltered.length;
+        widget.totalCountNotifier?.value = _allFiltered.length;
+        _visibleCount = _visibleCount.clamp(0, _allFiltered.length);
+        _visibleCountNotifier.value = _visibleCount;
+        widget.visibleCountNotifier?.value = _visibleCount;
+        _hasMoreNotifier.value = _visibleCount < _allFiltered.length;
+        _filteredNotesNotifier.value = List.of(_allFiltered.sublist(0, _visibleCount));
+        return;
+      }
+
+      if (addedIds.isNotEmpty) {
+        // نوتة جديدة → أعد بناء القائمة لتظهر في مكانها الصحيح
+        _syncFilteredNotes(newNotes, force: true);
+        return;
+      }
+
+      // تعديل محتوى نوتة موجودة
+      bool anyUpdated = false;
+      for (int i = 0; i < _allFiltered.length; i++) {
+        final updated = newNotes.firstWhere(
+          (n) => n.id == _allFiltered[i].id,
+          orElse: () => _allFiltered[i],
+        );
+        if (updated.updatedAt != _allFiltered[i].updatedAt) {
+          _allFiltered[i] = updated;
+          anyUpdated = true;
+        }
+      }
+      if (anyUpdated) {
+        _filteredNotesNotifier.value = List.of(_allFiltered.sublist(0, _visibleCount));
+      }
+      return;
+    }
+
+    // force refresh (مزامنة أو تحميل أولي) — أعد البناء كاملاً
+    _syncFilteredNotes(newNotes, force: true);
   }
 
   String _lastSearchQuery = '';
@@ -131,6 +186,8 @@ class _NotesGridViewState extends State<NotesGridView> {
     _allFiltered = newFiltered;
     _visibleCount = _pageSize.clamp(0, newFiltered.length);
     _hasMoreNotifier.value = _visibleCount < newFiltered.length;
+    _visibleCountNotifier.value = _visibleCount;
+    widget.visibleCountNotifier?.value = _visibleCount;
     _totalCountNotifier.value = newFiltered.length;
     widget.totalCountNotifier?.value = newFiltered.length;
     final page = newFiltered.sublist(0, _visibleCount);
@@ -240,6 +297,7 @@ class _NotesGridViewState extends State<NotesGridView> {
   }
 
   ValueNotifier<int> get totalCountNotifier => _totalCountNotifier;
+  ValueNotifier<int> get visibleCountNotifier => _visibleCountNotifier;
 
   @override
   Widget build(BuildContext context) {

@@ -14,9 +14,11 @@ import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/dialogs/vault_dialogs.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/home_drawer_widget.dart'
+    show HomeDrawerWidget;
 import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class LockedNotesScreen extends StatefulWidget {
@@ -50,14 +52,22 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _closeAllSlidables.dispose();
     super.dispose();
   }
 
+  final bool _isAuthenticating = false;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isAuthenticating) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       if (_showAddMenu) setState(() => _showAddMenu = false);
@@ -206,13 +216,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                               displayContent = 'Checklist';
                             }
                           } else {
-                            // استخراج النص الحقيقي من Delta JSON أو نص عادي
                             final raw = note.content.trim();
                             if (raw.startsWith('[') || raw.startsWith('{')) {
                               try {
                                 final decoded = jsonDecode(raw);
                                 if (decoded is List) {
-                                  // Delta format من Quill
                                   displayContent = decoded
                                       .map((op) => op['insert'] ?? '')
                                       .join()
@@ -293,14 +301,29 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         drawer: HomeDrawerWidget(
             onBackupTap: () {}, onNotesChanged: _loadLockedNotes),
         body: Stack(
           children: [
-            // المحتوى مع padding للـ AppBar
             Column(
               children: [
                 AppBar(
+                  systemOverlayStyle: SystemUiOverlayStyle(
+                    statusBarColor: Colors.transparent,
+                    statusBarIconBrightness:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Brightness.light
+                            : Brightness.dark,
+                    systemNavigationBarColor:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF1E1E1E)
+                            : Colors.white,
+                    systemNavigationBarIconBrightness:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Brightness.light
+                            : Brightness.dark,
+                  ),
                   leading: _selectedNoteIds.isEmpty
                       ? Builder(
                           builder: (context) => IconButton(
@@ -310,17 +333,18 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                         )
                       : IconButton(
                           icon: const Icon(Icons.close),
-                          onPressed: () => setState(() => _selectedNoteIds.clear()),
+                          onPressed: () =>
+                              setState(() => _selectedNoteIds.clear()),
                         ),
                   title: _buildAppBarTitle(l10n),
                   actions: _selectedNoteIds.isEmpty ? _buildActions(l10n) : [],
                 ),
                 Expanded(
-                  child: _isLoading ? _buildLoading(l10n) : _buildNotesList(l10n),
+                  child:
+                      _isLoading ? _buildLoading(l10n) : _buildNotesList(l10n),
                 ),
               ],
             ),
-            // القائمة تغطي كامل الشاشة بما فيها الشريط العلوي
             AddMenuWidget(
               showMenu: _showAddMenu,
               onToggle: () => setState(() => _showAddMenu = !_showAddMenu),

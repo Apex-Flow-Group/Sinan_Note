@@ -88,6 +88,7 @@ class JsonImportHandler {
       if (localCount == 0) {
         await _writeNotes(dbService, notesToImport, replace: false);
         await notesProvider.loadNotes(force: true);
+        if (!context.mounted) return;
         await _showResult(context, lang, l10n, dbService, notesToImport.length,
             action: 'import');
         return;
@@ -111,7 +112,7 @@ class JsonImportHandler {
             TextButton(
               onPressed: () => Navigator.pop(ctx, 'replace'),
               child: Text(l10n.replace,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
             ),
           ],
         ),
@@ -123,6 +124,7 @@ class JsonImportHandler {
       await notesProvider.loadNotes(force: true);
 
       final totalNotes = await BackupService().checkLocalNotesCount();
+      if (!context.mounted) return;
       await _showResult(context, lang, l10n, dbService, totalNotes,
           action: action);
     } catch (e) {

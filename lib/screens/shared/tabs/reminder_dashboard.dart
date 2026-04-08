@@ -85,11 +85,9 @@ class _ReminderDashboardState extends State<ReminderDashboard>
     final savedType = await settings.getViewType('reminder');
     if (!mounted) return;
     setState(() {
-      _viewType = savedType == 'grid'
-          ? ViewType.grid
-          : savedType == 'listCompact'
-              ? ViewType.listCompact
-              : ViewType.listExpanded;
+      _viewType = savedType == 'listCompact'
+          ? ViewType.listCompact
+          : ViewType.listExpanded;
     });
   }
 
@@ -263,14 +261,13 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                 icon: Icon(
                                   _viewType == ViewType.listExpanded
                                       ? Icons.view_headline
-                                      : _viewType == ViewType.listCompact
-                                          ? Icons.grid_view
-                                          : Icons.view_day,
+                                      : Icons.view_day,
                                 ),
                                 onPressed: () async {
                                   setState(() {
-                                    final next = (_viewType.index + 1) % ViewType.values.length;
-                                    _viewType = ViewType.values[next];
+                                    _viewType = _viewType == ViewType.listExpanded
+                                        ? ViewType.listCompact
+                                        : ViewType.listExpanded;
                                   });
                                   await Provider.of<SettingsProvider>(context, listen: false)
                                       .setViewType('reminder', _viewType.name);

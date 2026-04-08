@@ -5,11 +5,16 @@ import 'dart:async';
 import 'package:apex_note/models/note.dart';
 import 'package:flutter/material.dart';
 
+// ارتفاع ثابت للعرض المطوي (padding 6*2 + card 60)
+const double _kCompactItemH = 72.0;
+
 class HomeScrollbar extends StatelessWidget {
   final ScrollController scrollController;
   final ValueNotifier<List<Note>> notesNotifier;
   final bool interactive;
   final ValueNotifier<int>? totalCountNotifier;
+  final ValueNotifier<String>? viewTypeNotifier;
+  final ValueNotifier<int>? visibleCountNotifier;
 
   const HomeScrollbar({
     super.key,
@@ -17,6 +22,8 @@ class HomeScrollbar extends StatelessWidget {
     required this.notesNotifier,
     this.interactive = true,
     this.totalCountNotifier,
+    this.viewTypeNotifier,
+    this.visibleCountNotifier,
   });
 
   @override
@@ -33,6 +40,8 @@ class HomeScrollbar extends StatelessWidget {
           scrollController: scrollController,
           color: color,
           totalCountNotifier: totalCountNotifier,
+          viewTypeNotifier: viewTypeNotifier,
+          visibleCountNotifier: visibleCountNotifier,
         ),
       ),
     );
@@ -43,11 +52,15 @@ class _ScrollThumb extends StatefulWidget {
   final ScrollController scrollController;
   final Color color;
   final ValueNotifier<int>? totalCountNotifier;
+  final ValueNotifier<String>? viewTypeNotifier;
+  final ValueNotifier<int>? visibleCountNotifier;
 
   const _ScrollThumb({
     required this.scrollController,
     required this.color,
     this.totalCountNotifier,
+    this.viewTypeNotifier,
+    this.visibleCountNotifier,
   });
 
   @override
@@ -67,6 +80,10 @@ class _ScrollThumbState extends State<_ScrollThumb>
   double _targetHeight = 40;
   bool _visible = false;
   Timer? _hideTimer;
+
+  // avgH محسوب مرة واحدة فقط لكل viewType
+  double _cachedAvgH = 0;
+  String _cachedViewType = '';
 
   late final AnimationController _fadeController;
   late final AnimationController _posController;
@@ -91,15 +108,13 @@ class _ScrollThumbState extends State<_ScrollThumb>
     _heightAnimation = AlwaysStoppedAnimation(_thumbHeight);
 
     _posController.addListener(() {
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) setState(() {});
-        });
-      }
+      if (mounted) setState(() {});
     });
 
     widget.scrollController.addListener(_update);
-    widget.totalCountNotifier?.addListener(_update);
+    widget.totalCountNotifier?.addListener(_onTotalCountChanged);
+    widget.viewTypeNotifier?.addListener(_onViewTypeChanged);
+    widget.visibleCountNotifier?.addListener(_onVisibleCountChanged);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _update());
   }
@@ -117,14 +132,46 @@ class _ScrollThumbState extends State<_ScrollThumb>
     _fadeController.dispose();
     _posController.dispose();
     widget.scrollController.removeListener(_update);
-    widget.totalCountNotifier?.removeListener(_update);
+    widget.totalCountNotifier?.removeListener(_onTotalCountChanged);
+    widget.viewTypeNotifier?.removeListener(_onViewTypeChanged);
+    widget.visibleCountNotifier?.removeListener(_onVisibleCountChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  void _update() {
+  void _onViewTypeChanged() {
+    _cachedAvgH = 0;
+    _cachedViewType = '';
+    _update();
+  }
+
+  void _onVisibleCountChanged() {
+    // تحميل صفحة جديدة → أعد حساب avgH من المحمّل الجديد
+    _cachedAvgH = 0;
+    _update(isTotalCountChange: true);
+  }
+
+  void _onTotalCountChanged() {
+    _update(isTotalCountChange: true);
+  }
+
+  double _getAvgH(ScrollPosition pos, String viewType) {
+    if (viewType == 'listCompact') return _kCompactItemH;
+    if (_cachedAvgH > 0 && _cachedViewType == viewType) return _cachedAvgH;
+
+    // visibleCount = عدد النوتات المحمّلة فعلاً في الـ list
+    final visibleCount = widget.visibleCountNotifier?.value ?? 0;
+    if (visibleCount > 0 && pos.maxScrollExtent > 0) {
+      _cachedAvgH =
+          (pos.maxScrollExtent + pos.viewportDimension) / visibleCount;
+      _cachedViewType = viewType;
+      return _cachedAvgH;
+    }
+    return _kCompactItemH;
+  }
+
+  void _update({bool isTotalCountChange = false}) {
     if (!mounted) return;
-    // إذا كنا أثناء البناء → أجّل لما بعده
     if (WidgetsBinding.instance.buildOwner?.debugBuilding ?? false) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _update());
       return;
@@ -140,28 +187,21 @@ class _ScrollThumbState extends State<_ScrollThumb>
     if (trackH <= 0) return;
 
     final totalCount = widget.totalCountNotifier?.value ?? 0;
-    double ratio;
-    double scrollFraction;
+    if (totalCount == 0) return;
 
-    if (totalCount > 0 && pos.maxScrollExtent > 0) {
-      // حساب متوسط ارتفاع العنصر من الـ viewport الحالي
-      final visibleItems = pos.viewportDimension /
-          (pos.maxScrollExtent / (totalCount * 0.85)).clamp(40.0, 300.0);
-      ratio = (visibleItems / totalCount).clamp(0.04, 1.0);
-      // موضع السحب بناءً على النسبة الحقيقية من الكل
-      final loadedFraction =
-          (pos.maxScrollExtent + pos.viewportDimension) / (totalCount / visibleItems * pos.viewportDimension);
-      scrollFraction =
-          (pos.pixels / pos.maxScrollExtent * loadedFraction).clamp(0.0, 1.0);
-    } else {
-      ratio = pos.viewportDimension /
-          (pos.maxScrollExtent + pos.viewportDimension);
-      scrollFraction = pos.pixels / pos.maxScrollExtent;
-    }
+    final viewType = widget.viewTypeNotifier?.value ?? 'listCompact';
+    final avgH = _getAvgH(pos, viewType);
+    final estimatedTotalH = avgH * totalCount;
 
+    // حجم الـ thumb
+    final ratio = (pos.viewportDimension / estimatedTotalH).clamp(0.04, 1.0);
     final newThumbH = (trackH * ratio).clamp(_thumbMinHeight, trackH);
-    final newThumbTop =
-        _trackPadTop + scrollFraction * (trackH - newThumbH);
+
+    // موضع الـ thumb — بناءً على pixels الحقيقية
+    final maxEstimated = estimatedTotalH - pos.viewportDimension;
+    final scrollFraction =
+        maxEstimated > 0 ? (pos.pixels / maxEstimated).clamp(0.0, 1.0) : 0.0;
+    final newThumbTop = _trackPadTop + scrollFraction * (trackH - newThumbH);
 
     if (_visible &&
         (_targetTop - newThumbTop).abs() < 0.5 &&
@@ -172,13 +212,14 @@ class _ScrollThumbState extends State<_ScrollThumb>
 
     final prevTop = _topAnimation.value;
     final prevHeight = _heightAnimation.value;
-
     _targetTop = newThumbTop;
     _targetHeight = newThumbH;
 
-    // قفزة كبيرة = pagination جديد → تمهيد ناعم
-    final bigJump = (_targetTop - prevTop).abs() > 30 ||
-        (_targetHeight - prevHeight).abs() > 10;
+    // عند تحميل صفحة جديدة: لا animation — الـ thumb يبقى في مكانه
+    // عند سكرول عادي وقفزة كبيرة: animation ناعم
+    final bigJump = !isTotalCountChange &&
+        ((_targetTop - prevTop).abs() > 30 ||
+            (_targetHeight - prevHeight).abs() > 10);
 
     if (bigJump) {
       _topAnimation = Tween<double>(begin: prevTop, end: _targetTop).animate(
@@ -201,7 +242,6 @@ class _ScrollThumbState extends State<_ScrollThumb>
       _visible = true;
       _fadeController.forward();
     }
-
     _resetHideTimer();
   }
 

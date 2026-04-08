@@ -11,6 +11,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/mobile/home_screen_widgets.dart';
 import 'package:apex_note/screens/mobile/home_scrollbar.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;
@@ -20,7 +21,6 @@ import 'package:apex_note/widgets/home/note_locator_button.dart';
 import 'package:apex_note/widgets/home/notes_grid_view.dart';
 import 'package:apex_note/widgets/home/smart_header.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 export 'package:apex_note/screens/mobile/home_screen_widgets.dart';
@@ -54,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<List<Note>> _filteredNotesNotifier = ValueNotifier([]);
   final ValueNotifier<int> _totalCountNotifier = ValueNotifier(0);
+  final ValueNotifier<int> _visibleCountNotifier = ValueNotifier(0);
   late final ValueNotifier<String> _viewTypeNotifier;
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
   bool _isSearchActive = false;
@@ -296,14 +297,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  DateTime? _lastSyncTime;
+  static const _syncCooldown = Duration(seconds: 20);
+
+  Future<void> _onRefresh() async {
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final now = DateTime.now();
+
+    if (_lastSyncTime != null &&
+        now.difference(_lastSyncTime!) < _syncCooldown) {
+      // لا تزال في فترة التبريد — حدّث محلياً فقط
+      await notesProvider.refreshAllNotes();
+      return;
+    }
+
+    _lastSyncTime = now;
+    if (GoogleDriveService.isSignedIn) {
+      await GoogleDriveService.smartSyncOnStartup();
+    }
+    await notesProvider.refreshAllNotes();
+  }
+
   @override
   void dispose() {
-    _debounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     _scrollController.dispose();
     _filteredNotesNotifier.dispose();
     _totalCountNotifier.dispose();
+    _visibleCountNotifier.dispose();
     _viewTypeNotifier.dispose();
     _selectedNoteIdsNotifier.dispose();
     UnifiedNotificationService().cancelAll();
@@ -313,7 +335,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
@@ -330,113 +351,102 @@ class _HomeScreenState extends State<HomeScreen> {
             if (widget.showAddMenu) widget.onToggleMenu();
           },
           onExitSearch: _exitSearchMode,
-          child: AnnotatedRegion<SystemUiOverlayStyle>(
-            value: SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              statusBarIconBrightness:
-                  isDark ? Brightness.light : Brightness.dark,
-              systemNavigationBarColor:
-                  Theme.of(context).scaffoldBackgroundColor,
-              systemNavigationBarIconBrightness:
-                  isDark ? Brightness.light : Brightness.dark,
+          child: Scaffold(
+            key: _scaffoldKey,
+            resizeToAvoidBottomInset: false,
+            onDrawerChanged: widget.onDrawerChanged,
+            drawer: HomeDrawerWidget(
+              onBackupTap: () => BackupOptionsDialog.show(context, {
+                'exportBackup': l10n.exportBackup,
+                'importBackup': l10n.importBackup,
+                'googleDrive': l10n.googleDrive,
+                'share': l10n.share,
+                'soon': 'قريباً',
+              }),
+              onNotesChanged: () {},
             ),
-            child: Scaffold(
-              key: _scaffoldKey,
-              resizeToAvoidBottomInset: false,
-              onDrawerChanged: widget.onDrawerChanged,
-              drawer: HomeDrawerWidget(
-                onBackupTap: () => BackupOptionsDialog.show(context, {
-                  'exportBackup': l10n.exportBackup,
-                  'importBackup': l10n.importBackup,
-                  'googleDrive': l10n.googleDrive,
-                  'share': l10n.share,
-                  'soon': 'قريباً',
-                }),
-                onNotesChanged: () {},
-              ),
-              body: Stack(
-                children: [
-                  SafeArea(
-                    child: RefreshIndicator(
-                      onRefresh: () async =>
-                          Provider.of<NotesProvider>(context, listen: false)
-                              .refreshAllNotes(),
-                      displacement: 60,
-                      edgeOffset: 68,
-                      color: Theme.of(context).colorScheme.primary,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
-                      strokeWidth: 2.5,
-                      child: ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(context)
-                            .copyWith(scrollbars: false),
-                        child: CustomScrollView(
-                          controller: _scrollController,
-                          cacheExtent: 1500,
-                          physics: const BouncingScrollPhysics(
-                            decelerationRate: ScrollDecelerationRate.fast,
-                            parent: AlwaysScrollableScrollPhysics(),
-                          ),
-                          slivers: [
-                            SmartHeader(
-                              selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
-                              searchController: _searchController,
-                              searchFocusNode: _searchFocusNode,
-                              viewTypeNotifier: _viewTypeNotifier,
-                              onViewToggle: () async {
-                                FocusScope.of(context).unfocus();
-                                setState(() {
-                                  _viewType = ViewType.values[
-                                      (_viewType.index + 1) %
-                                          ViewType.values.length];
-                                  _viewTypeNotifier.value = _viewType.name;
-                                });
-                                await Provider.of<SettingsProvider>(context,
-                                        listen: false)
-                                    .setViewType('home', _viewType.name);
-                              },
-                              onMenuTap: () {
-                                if (_isSearchActive) {
-                                  _exitSearchMode();
-                                  return;
-                                }
-                                _scaffoldKey.currentState?.openDrawer();
-                              },
-                              onFilterTap: () {
-                                FocusScope.of(context).unfocus();
-                                _showFilterDialog(context);
-                              },
-                              isSearchActive: _isSearchActive,
-                            ),
-                            DateBarHeader(
-                              scrollController: _scrollController,
-                              filteredNotesNotifier: _filteredNotesNotifier,
-                            ),
-                            NotesGridView(
-                              viewTypeNotifier: _viewTypeNotifier,
-                              selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
-                              searchController: _searchController,
-                              scrollController: _scrollController,
-                              filteredNotesNotifier: _filteredNotesNotifier,
-                              totalCountNotifier: _totalCountNotifier,
-                            ),
-                          ],
+            body: Stack(
+              children: [
+                SafeArea(
+                  child: RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    displacement: 60,
+                    edgeOffset: 68,
+                    color: Theme.of(context).colorScheme.primary,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    strokeWidth: 2.5,
+                    child: ScrollConfiguration(
+                      behavior: ScrollConfiguration.of(context)
+                          .copyWith(scrollbars: false),
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        cacheExtent: 1500,
+                        physics: const BouncingScrollPhysics(
+                          decelerationRate: ScrollDecelerationRate.fast,
+                          parent: AlwaysScrollableScrollPhysics(),
                         ),
+                        slivers: [
+                          SmartHeader(
+                            selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
+                            searchController: _searchController,
+                            searchFocusNode: _searchFocusNode,
+                            viewTypeNotifier: _viewTypeNotifier,
+                            onViewToggle: () async {
+                              FocusScope.of(context).unfocus();
+                              setState(() {
+                                _viewType = ViewType.values[
+                                    (_viewType.index + 1) %
+                                        ViewType.values.length];
+                                _viewTypeNotifier.value = _viewType.name;
+                              });
+                              await Provider.of<SettingsProvider>(context,
+                                      listen: false)
+                                  .setViewType('home', _viewType.name);
+                            },
+                            onMenuTap: () {
+                              if (_isSearchActive) {
+                                _exitSearchMode();
+                                return;
+                              }
+                              _scaffoldKey.currentState?.openDrawer();
+                            },
+                            onFilterTap: () {
+                              FocusScope.of(context).unfocus();
+                              _showFilterDialog(context);
+                            },
+                            isSearchActive: _isSearchActive,
+                          ),
+                          DateBarHeader(
+                            scrollController: _scrollController,
+                            filteredNotesNotifier: _filteredNotesNotifier,
+                          ),
+                          NotesGridView(
+                            viewTypeNotifier: _viewTypeNotifier,
+                            selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
+                            searchController: _searchController,
+                            scrollController: _scrollController,
+                            filteredNotesNotifier: _filteredNotesNotifier,
+                            totalCountNotifier: _totalCountNotifier,
+                            visibleCountNotifier: _visibleCountNotifier,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  ListenableBuilder(
-                    listenable: _viewTypeNotifier,
-                    builder: (context, _) => HomeScrollbar(
-                      scrollController: _scrollController,
-                      notesNotifier: _filteredNotesNotifier,
-                      interactive: _viewTypeNotifier.value == 'listCompact',
-                      totalCountNotifier: _totalCountNotifier,
-                    ),
+                ),
+                ListenableBuilder(
+                  listenable: _viewTypeNotifier,
+                  builder: (context, _) => HomeScrollbar(
+                    scrollController: _scrollController,
+                    notesNotifier: _filteredNotesNotifier,
+                    interactive: _viewTypeNotifier.value == 'listCompact',
+                    totalCountNotifier: _totalCountNotifier,
+                    viewTypeNotifier: _viewTypeNotifier,
                   ),
-                  NoteLocatorButton(scrollController: _scrollController),
-                ],
-              ),
+                ),
+                NoteLocatorButton(scrollController: _scrollController),
+              ],
             ),
           ),
         );
