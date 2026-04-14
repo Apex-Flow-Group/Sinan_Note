@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -43,6 +44,28 @@ class ChecklistItemWidget extends StatefulWidget {
 }
 
 class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
+  late TextDirection _textDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    _textDirection = TextDirectionUtils.getDirection(widget.controller.text);
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    final newDir = TextDirectionUtils.getDirection(widget.controller.text);
+    if (newDir != _textDirection) {
+      setState(() => _textDirection = newDir);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -102,8 +125,10 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
             child: TextField(
               controller: widget.controller,
               focusNode: widget.focusNode,
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.right,
+              textDirection: _textDirection,
+              textAlign: _textDirection == TextDirection.rtl
+                  ? TextAlign.right
+                  : TextAlign.left,
               textAlignVertical: TextAlignVertical.center,
               maxLines: null,
               textInputAction: TextInputAction.newline,

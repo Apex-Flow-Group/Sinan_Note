@@ -53,11 +53,13 @@ class SettingsProvider with ChangeNotifier {
   bool get isLoaded => _isInitialized;
 
   SettingsProvider() {
-    Future.microtask(() => _loadSettings().catchError((e) {
-          AppLogger.debug('Error loading settings: $e');
-          _isInitialized = true;
-          notifyListeners();
-        }));
+    Future.microtask(
+      () => _loadSettings().catchError((e) {
+        AppLogger.debug('Error loading settings: $e');
+        _isInitialized = true;
+        notifyListeners();
+      }),
+    );
   }
 
   Future<void> ensureInitialized() async {
@@ -267,7 +269,8 @@ class SettingsProvider with ChangeNotifier {
     }
 
     AppLogger.debug(
-        '🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground');
+      '🔒 Updating Security Config: Lock=$_isAppLockEnabled, Delay=${effectiveDelaySeconds}s, Privacy=$_hideContentInBackground',
+    );
     controller.updateConfig(newConfig);
   }
 }

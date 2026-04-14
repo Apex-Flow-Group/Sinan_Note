@@ -4,7 +4,7 @@ import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 class NoteViewWidgets {
   static Widget buildChecklistView(String content, Color textColor) {

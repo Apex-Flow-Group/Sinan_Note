@@ -384,6 +384,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   // ==================== LIFECYCLE METHODS ====================
 
   void _onQuillContentChanged() {
+    // لا نحفظ أثناء تحميل النوتة — تغييرات _fixDeltaDirections ليست من المستخدم
+    if (_coordinator.stateManager.isLoading) return;
     _coordinator.stateManager.markDirty();
     final newHasContent =
         QuillMigration.toPlainText(_coordinator.quillController!)

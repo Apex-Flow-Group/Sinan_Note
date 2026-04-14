@@ -42,6 +42,9 @@ class EditorStateManager {
   /// Whether note is currently being saved
   bool isSaving = false;
   
+  /// Whether note is loading (prevents autosave during initial load)
+  bool isLoading = true;
+  
   /// Whether note has unsaved changes
   bool isDirty = false;
   

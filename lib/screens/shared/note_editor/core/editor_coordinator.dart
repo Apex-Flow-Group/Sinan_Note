@@ -135,6 +135,11 @@ class EditorCoordinator {
         stateManager.isAuthenticated = true;
       }
     }
+
+    // التحميل انتهى — نسمح بالـ autosave بعد frame واحد
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      stateManager.isLoading = false;
+    });
   }
 
   /// Get background color based on current state

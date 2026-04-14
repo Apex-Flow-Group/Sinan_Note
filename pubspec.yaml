@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.0.2+3330
+version: 3.0.2+3332
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -58,8 +58,8 @@ dependencies:
   
   # Other
   home_widget: ^0.6.0
-  flutter_markdown: ^0.7.4+1
   url_launcher: ^6.2.0
+  flutter_markdown_plus: ^1.0.7
 
 dev_dependencies:
   flutter_test:

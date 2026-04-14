@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -12,8 +13,7 @@ class QuillMigration {
   static QuillController controllerFromContent(String content) {
     if (content.isEmpty) {
       // ملاحظة جديدة — فقرة فارغة بدون direction ترث rtl من الأب
-      final delta = Delta()
-        ..insert('\n');
+      final delta = Delta()..insert('\n');
       final doc = Document.fromDelta(delta);
       return QuillController(
         document: doc,
@@ -47,14 +47,16 @@ class QuillMigration {
 
   /// إصلاح اتجاهات فقرات Delta محفوظة مسبقاً
   /// يمر على كل op من نوع \n ويصحح direction/align بناءً على نص الفقرة
+  /// يُنظف أيضاً align:right المتبقية من إصدارات قديمة
   static Delta _fixDeltaDirections(Delta original) {
     final ops = original.toList();
     final fixed = Delta();
     String paragraphText = '';
+    String lastNonEmptyDir =
+        ''; // آخر فقرة غير فارغة — لتوريث اتجاه الأسطر الفارغة
 
     for (final op in ops) {
       if (!op.isInsert) {
-        // retain/delete — نمررها كما هي
         if (op.isDelete) fixed.delete(op.length!);
         if (op.isRetain) fixed.retain(op.length!, op.attributes);
         continue;
@@ -68,21 +70,31 @@ class QuillMigration {
         continue;
       }
 
+      // تنظيف align:right من attributes النصية (إرث من إصدارات قديمة)
+      Map<String, dynamic>? cleanAttrs;
+      if (op.attributes != null) {
+        cleanAttrs = Map<String, dynamic>.from(op.attributes!);
+        if (cleanAttrs['align'] == 'right') cleanAttrs.remove('align');
+        if (cleanAttrs.isEmpty) cleanAttrs = null;
+      }
+
       // نص عادي — نقسمه على \n
       final segments = data.split('\n');
       for (int i = 0; i < segments.length; i++) {
         final seg = segments[i];
         if (seg.isNotEmpty) {
           paragraphText += seg;
-          fixed.insert(seg, op.attributes);
+          fixed.insert(seg, cleanAttrs);
         }
 
         if (i < segments.length - 1) {
           // هذا \n — نصحح اتجاه الفقرة
+          // إذا كانت الفقرة فارغة — نرث اتجاه آخر فقرة غير فارغة
+          final dirText =
+              paragraphText.isNotEmpty ? paragraphText : lastNonEmptyDir;
           final isRtl =
-              TextDirectionUtils.getDirection(paragraphText) == TextDirection.rtl;
+              TextDirectionUtils.getDirection(dirText) == TextDirection.rtl;
           final attrs = Map<String, dynamic>.from(op.attributes ?? {});
-          // مع Directionality(rtl): عربي=null، إنجليزي=direction:rtl
           if (isRtl) {
             attrs.remove('direction');
             attrs.remove('align');
@@ -91,6 +103,7 @@ class QuillMigration {
             attrs.remove('align');
           }
           fixed.insert('\n', attrs.isEmpty ? null : attrs);
+          if (paragraphText.isNotEmpty) lastNonEmptyDir = paragraphText;
           paragraphText = '';
         }
       }
@@ -128,6 +141,7 @@ class QuillMigration {
   }
 
   /// Converts a Quill document to Delta JSON string for storage
+  /// يحتفظ بالأسطر الفارغة من نهاية النص
   static String toDeltaJson(QuillController controller) {
     return jsonEncode(controller.document.toDelta().toJson());
   }

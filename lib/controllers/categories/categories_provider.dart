@@ -24,7 +24,9 @@ class CategoriesProvider extends ChangeNotifier {
   void setHideProFromHome(bool value) {
     _hideProFromHome = value;
     notifyListeners();
-    SharedPreferences.getInstance().then((p) => p.setBool('hide_pro_from_home', value));
+    SharedPreferences.getInstance().then(
+      (p) => p.setBool('hide_pro_from_home', value),
+    );
   }
 
   CategoriesProvider() {
@@ -50,8 +52,10 @@ class CategoriesProvider extends ChangeNotifier {
 
   Future<void> _load() async {
     final isar = await IsarDatabaseService().database;
-    final all =
-        await isar.noteCategorys.filter().sortOrderGreaterThan(-1).findAll();
+    final all = await isar.noteCategorys
+        .filter()
+        .sortOrderGreaterThan(-1)
+        .findAll();
     all.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     // حذف المكررات بناءً على الاسم
@@ -97,8 +101,9 @@ class CategoriesProvider extends ChangeNotifier {
     if (trimmed.length > kMaxCategoryNameLength) return false;
 
     // الحل لمشكلة الترتيب: أخذ الترتيب الأخير + 1
-    final nextSortOrder =
-        _categories.isEmpty ? 0 : _categories.last.sortOrder + 1;
+    final nextSortOrder = _categories.isEmpty
+        ? 0
+        : _categories.last.sortOrder + 1;
 
     final isar = await IsarDatabaseService().database;
     await isar.writeTxn(() async {
@@ -126,8 +131,10 @@ class CategoriesProvider extends ChangeNotifier {
     final isar = await IsarDatabaseService().database;
 
     // أزل الـ id من جميع الملاحظات التي تحمله لتجنب orphan IDs
-    final notesWithCat =
-        await isar.notes.filter().categoryIdsElementEqualTo(id).findAll();
+    final notesWithCat = await isar.notes
+        .filter()
+        .categoryIdsElementEqualTo(id)
+        .findAll();
     if (notesWithCat.isNotEmpty) {
       await isar.writeTxn(() async {
         for (final note in notesWithCat) {
