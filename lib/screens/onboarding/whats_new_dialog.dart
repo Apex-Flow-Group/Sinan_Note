@@ -1,15 +1,19 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class WhatsNewDialog extends StatelessWidget {
-  const WhatsNewDialog({super.key});
+  final String version;
+  const WhatsNewDialog({super.key, required this.version});
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context) async {
+    final info = await PackageInfo.fromPlatform();
+    if (!context.mounted) return;
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (_) => const WhatsNewDialog(),
+      builder: (_) => WhatsNewDialog(version: info.version),
     );
   }
 
@@ -61,7 +65,7 @@ class WhatsNewDialog extends StatelessWidget {
                           const Icon(Icons.rocket_launch, color: Colors.blue, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            isArabic ? 'الإصدار 3.0.2' : 'Version 3.0.2',
+                            isArabic ? 'الإصدار $version' : 'Version $version',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: isDesktop ? 17 : 15,

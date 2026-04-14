@@ -51,6 +51,7 @@ class CategoriesProvider extends ChangeNotifier {
   }
 
   Future<void> _load() async {
+    await IsarDatabaseService.initialize();
     final isar = await IsarDatabaseService().database;
     final all = await isar.noteCategorys
         .filter()

@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class IsarDatabaseService implements NoteDbInterface {
   static Isar? _isar;
-  static bool _isInitializing = false;
   static IsarDatabaseService? _instance;
   static Completer<Isar>? _initCompleter;
 
@@ -28,36 +27,37 @@ class IsarDatabaseService implements NoteDbInterface {
 
   static Future<void> initialize() async {
     if (_isar != null && _isar!.isOpen) return;
-
-    // If initialization is in progress, wait for it
-    if (_isInitializing && _initCompleter != null) {
+    if (_initCompleter != null) {
       await _initCompleter!.future;
       return;
     }
-
-    _isInitializing = true;
     _initCompleter = Completer<Isar>();
-
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final existing = Isar.getInstance('sinan_notes');
-
-      if (existing != null && existing.isOpen) {
-        _isar = existing;
-      } else {
-        _isar = await Isar.open(
-          [NoteSchema, NoteVersionSchema, NoteCategorySchema],
-          directory: dir.path,
-          name: 'sinan_notes',
-        );
+      for (int i = 0; i < 3; i++) {
+        try {
+          final existing = Isar.getInstance('sinan_notes');
+          if (existing != null && existing.isOpen) {
+            _isar = existing;
+          } else {
+            _isar = await Isar.open(
+              [NoteSchema, NoteVersionSchema, NoteCategorySchema],
+              directory: dir.path,
+              name: 'sinan_notes',
+            );
+          }
+          break;
+        } catch (e) {
+          if (i == 2) rethrow;
+          await Future.delayed(Duration(milliseconds: 300 * (i + 1)));
+        }
       }
-
       _initCompleter!.complete(_isar!);
     } catch (e) {
-      _initCompleter!.completeError(e);
+      final c = _initCompleter!;
+      _initCompleter = null;
+      c.completeError(e);
       rethrow;
-    } finally {
-      _isInitializing = false;
     }
   }
 

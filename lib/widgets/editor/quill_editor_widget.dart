@@ -8,6 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
+/// ScrollController يتجاهل animateTo أثناء تغيير الاتجاه
+class _StableScrollController extends ScrollController {
+  bool freezed = false;
+
+  @override
+  Future<void> animateTo(double offset,
+      {required Duration duration, required Curve curve}) {
+    if (freezed) return Future.value();
+    return super.animateTo(offset, duration: duration, curve: curve);
+  }
+}
+
 /// Rich text editor widget powered by flutter_quill
 class QuillEditorWidget extends StatefulWidget {
   final QuillController quillController;
@@ -37,11 +49,26 @@ class QuillEditorWidget extends StatefulWidget {
 
 class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   TextDirection _textDirection = TextDirection.rtl;
-  final ScrollController _scrollController = ScrollController();
+  final _StableScrollController _scrollController = _StableScrollController();
   bool _isFormatting = false;
   bool _isPasting = false;
   bool _isKeyboardOpening = false;
   bool _isLoading = true; // يمنع _onDocumentChange أثناء تحميل النوتة
+  bool _isDirectionFormatting = false;
+
+  void _applyDirectionFormat(VoidCallback applyFn) {
+    if (_isFormatting || _isDirectionFormatting) return;
+    _isFormatting = true;
+    _isDirectionFormatting = true;
+    _scrollController.freezed = true;
+    applyFn();
+    _isFormatting = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.freezed = false;
+      _isDirectionFormatting = false;
+    });
+  }
+
   String _lastPlainText = '';
   StreamSubscription? _docChangeSub;
 
@@ -79,7 +106,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   /// يكتشف إدراج \n عبر IME (أندرويد) ويحقن سمة الاتجاه
   /// ويُصلح التشكيل المعلق بعد حذف IME
   void _onDocumentChange(DocChange change) {
-    if (_isFormatting || _isPasting || _isLoading) return;
+    if (_isFormatting || _isPasting || _isLoading || _isDirectionFormatting) {
+      return;
+    }
     if (change.source != ChangeSource.local) return;
 
     final delta = change.change;
@@ -106,15 +135,16 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _isFormatting) return;
-      _isFormatting = true;
-      if (prevDir == TextDirection.ltr) {
-        widget.quillController.formatSelection(Attribute.rtl);
-      } else {
-        widget.quillController.formatSelection(const DirectionAttribute(null));
-      }
-      widget.quillController.formatSelection(const AlignAttribute(null));
-      _isFormatting = false;
+      if (!mounted || _isFormatting || _isDirectionFormatting) return;
+      _applyDirectionFormat(() {
+        if (prevDir == TextDirection.ltr) {
+          widget.quillController.formatSelection(Attribute.rtl);
+        } else {
+          widget.quillController
+              .formatSelection(const DirectionAttribute(null));
+        }
+        widget.quillController.formatSelection(const AlignAttribute(null));
+      });
     });
   }
 
@@ -138,7 +168,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
     // تشكيل معلق — احذفه
     ctrl.replaceText(
-      pos - 1, 1, '',
+      pos - 1,
+      1,
+      '',
       TextSelection.collapsed(offset: pos - 1),
     );
   }
@@ -165,7 +197,12 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   }
 
   void _onChanged() {
-    if (_isFormatting || _isPasting || _isKeyboardOpening) return;
+    if (_isFormatting ||
+        _isPasting ||
+        _isKeyboardOpening ||
+        _isDirectionFormatting) {
+      return;
+    }
 
     final doc = widget.quillController.document;
     final plainText = doc.toPlainText();
@@ -223,17 +260,17 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
     if (currentIsRtl != wantAttr) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _isFormatting) return;
-        _isFormatting = true;
-        if (isRtl) {
-          widget.quillController
-              .formatSelection(const DirectionAttribute(null));
-          widget.quillController.formatSelection(const AlignAttribute(null));
-        } else {
-          widget.quillController.formatSelection(Attribute.rtl);
-          widget.quillController.formatSelection(const AlignAttribute(null));
-        }
-        _isFormatting = false;
+        if (!mounted || _isFormatting || _isDirectionFormatting) return;
+        _applyDirectionFormat(() {
+          if (isRtl) {
+            widget.quillController
+                .formatSelection(const DirectionAttribute(null));
+            widget.quillController.formatSelection(const AlignAttribute(null));
+          } else {
+            widget.quillController.formatSelection(Attribute.rtl);
+            widget.quillController.formatSelection(const AlignAttribute(null));
+          }
+        });
       });
     }
 
@@ -279,8 +316,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     }
     // start الآن يشير إلى الحرف الأساسي أو تشكيل إذا كان كل شيء تشكيل
 
-    final hasTashkeel = (pos - start) > 1 ||
-        (pos - start == 1 && _isTashkeel(text[start]));
+    final hasTashkeel =
+        (pos - start) > 1 || (pos - start == 1 && _isTashkeel(text[start]));
 
     if (!hasTashkeel) return false; // لا يوجد تشكيل — اتركه للسلوك الافتراضي
 
@@ -292,7 +329,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     }
     if (_isTashkeel(text[tashkeelPos])) {
       ctrl.replaceText(
-        tashkeelPos, 1, '',
+        tashkeelPos,
+        1,
+        '',
         TextSelection.collapsed(offset: tashkeelPos),
       );
       return true;
@@ -347,15 +386,20 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       pos += lineLen;
     }
     _isPasting = false;
-    // تمرير لموضع المؤشر بعد اللصق
+    // تمرير للمؤشر فقط إذا كان خارج نطاق الرؤية
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeOut,
-        );
-      }
+      if (!_scrollController.hasClients) return;
+      final pos = _scrollController.position;
+      final offset = widget.quillController.selection.extentOffset;
+      // نقدّر موضع المؤشر تقريباً — نتجنب القفز إذا كان في المنتصف
+      if (pos.pixels < pos.maxScrollExtent - 100) return;
+      _scrollController.animateTo(
+        pos.maxScrollExtent,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+      );
+      // تجنب تحذير unused variable
+      offset;
     });
   }
 
@@ -393,17 +437,15 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
     // بعد Enter بمليسثانية واحدة — طبّق السمة على السطر الجديد
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _isFormatting) return;
-      _isFormatting = true;
-      if (prevDir == TextDirection.ltr) {
-        // إنجليزي: نحتاج direction:rtl ليعكس الاتجاه في سياق الأب RTL
-        ctrl.formatSelection(Attribute.rtl);
-      } else {
-        // عربي: نحذف أي direction صريح — يرث RTL من الأب تلقائياً
-        ctrl.formatSelection(const DirectionAttribute(null));
-      }
-      ctrl.formatSelection(const AlignAttribute(null));
-      _isFormatting = false;
+      if (!mounted || _isFormatting || _isDirectionFormatting) return;
+      _applyDirectionFormat(() {
+        if (prevDir == TextDirection.ltr) {
+          ctrl.formatSelection(Attribute.rtl);
+        } else {
+          ctrl.formatSelection(const DirectionAttribute(null));
+        }
+        ctrl.formatSelection(const AlignAttribute(null));
+      });
     });
   }
 
