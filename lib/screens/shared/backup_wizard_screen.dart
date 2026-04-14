@@ -27,14 +27,19 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: _flow != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => setState(() => _flow = null),
-              )
-            : null,
+    return PopScope(
+      canPop: _flow == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _flow = null);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: _flow != null
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => setState(() => _flow = null),
+                )
+              : null,
         title: Text(_flow == null
             ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
             : _flow == 'backup'
@@ -55,6 +60,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
                         : _buildRestoreFlow(l10n, isArabic, scheme),
               ),
             ),
+      ),
     );
   }
 
