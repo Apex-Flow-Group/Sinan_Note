@@ -298,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   DateTime? _lastSyncTime;
-  static const _syncCooldown = Duration(seconds: 20);
+  static const _syncCooldown = Duration(seconds: 45);
 
   Future<void> _onRefresh() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
@@ -306,7 +306,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_lastSyncTime != null &&
         now.difference(_lastSyncTime!) < _syncCooldown) {
-      // لا تزال في فترة التبريد — حدّث محلياً فقط
       await notesProvider.refreshAllNotes();
       return;
     }
@@ -314,6 +313,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _lastSyncTime = now;
     if (GoogleDriveService.isSignedIn) {
       await GoogleDriveService.smartSyncOnStartup();
+      // انتظر حتى تنتهي المزامنة كاملاً قبل تحديث الواجهة
+      while (GoogleDriveService.isSyncing.value) {
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
     }
     await notesProvider.refreshAllNotes();
   }

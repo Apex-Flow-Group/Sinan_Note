@@ -193,14 +193,14 @@ class _ScrollThumbState extends State<_ScrollThumb>
     final avgH = _getAvgH(pos, viewType);
     final estimatedTotalH = avgH * totalCount;
 
-    // حجم الـ thumb
+    // حجم الـ thumb — بناءً على التقدير
     final ratio = (pos.viewportDimension / estimatedTotalH).clamp(0.04, 1.0);
     final newThumbH = (trackH * ratio).clamp(_thumbMinHeight, trackH);
 
-    // موضع الـ thumb — بناءً على pixels الحقيقية
-    final maxEstimated = estimatedTotalH - pos.viewportDimension;
-    final scrollFraction =
-        maxEstimated > 0 ? (pos.pixels / maxEstimated).clamp(0.0, 1.0) : 0.0;
+    // موضع الـ thumb — بناءً على maxScrollExtent الحقيقي دائماً
+    final scrollFraction = pos.maxScrollExtent > 0
+        ? (pos.pixels / pos.maxScrollExtent).clamp(0.0, 1.0)
+        : 0.0;
     final newThumbTop = _trackPadTop + scrollFraction * (trackH - newThumbH);
 
     if (_visible &&

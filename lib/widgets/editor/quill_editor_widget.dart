@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
+
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +40,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   final ScrollController _scrollController = ScrollController();
   bool _isFormatting = false;
   bool _isPasting = false;
+  bool _isKeyboardOpening = false;
+  bool _isLoading = true; // يمنع _onDocumentChange أثناء تحميل النوتة
   String _lastPlainText = '';
+  StreamSubscription? _docChangeSub;
 
   // حروف التشكيل العربية (بدون الشدة)
   static const _harakat = {
@@ -58,18 +63,109 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final initialText = widget.quillController.document.toPlainText();
     _lastPlainText = initialText;
     _textDirection = TextDirectionUtils.getDirection(initialText);
+    final lines = initialText.split('\n');
+    lines.lastWhere(
+      (l) => l.trim().isNotEmpty,
+      orElse: () => '',
+    );
     widget.quillController.addListener(_onChanged);
+    _docChangeSub =
+        widget.quillController.document.changes.listen(_onDocumentChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _isLoading = false;
+    });
+  }
+
+  /// يكتشف إدراج \n عبر IME (أندرويد) ويحقن سمة الاتجاه
+  /// ويُصلح التشكيل المعلق بعد حذف IME
+  void _onDocumentChange(DocChange change) {
+    if (_isFormatting || _isPasting || _isLoading) return;
+    if (change.source != ChangeSource.local) return;
+
+    final delta = change.change;
+    final ops = delta.toList();
+
+    // ── اكتشاف حذف IME وإصلاح التشكيل المعلق ──────────────────────────
+    final isDelete = ops.any((op) => op.isDelete);
+    if (isDelete) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _fixDanglingTashkeel();
+      });
+      return;
+    }
+
+    // ── اكتشاف Enter عبر IME ─────────────────────────────────────────────
+    final isOnlyNewline =
+        ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
+    if (!isOnlyNewline) return;
+
+    final plainText = widget.quillController.document.toPlainText();
+    final offset =
+        widget.quillController.selection.baseOffset.clamp(0, plainText.length);
+    final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _isFormatting) return;
+      _isFormatting = true;
+      if (prevDir == TextDirection.ltr) {
+        widget.quillController.formatSelection(Attribute.rtl);
+      } else {
+        widget.quillController.formatSelection(const DirectionAttribute(null));
+      }
+      widget.quillController.formatSelection(const AlignAttribute(null));
+      _isFormatting = false;
+    });
+  }
+
+  /// يفحص النص بعد أي حذف — إذا وُجد تشكيل في بداية المجموعة (بدون حرف أساسي) يحذفه
+  void _fixDanglingTashkeel() {
+    final ctrl = widget.quillController;
+    final sel = ctrl.selection;
+    if (!sel.isCollapsed) return;
+
+    final text = ctrl.document.toPlainText();
+    final pos = sel.baseOffset;
+    if (pos == 0 || pos > text.length) return;
+
+    // إذا كان الحرف قبل المؤشر تشكيلاً والحرف قبله أيضاً تشكيل أو بداية النص
+    // → يعني تشكيل معلق بدون حرف أساسي
+    final charBefore = text[pos - 1];
+    if (!_isTashkeel(charBefore)) return;
+
+    // تحقق: هل قبله حرف أساسي؟
+    if (pos >= 2 && !_isTashkeel(text[pos - 2])) return; // طبيعي — حرف + تشكيل
+
+    // تشكيل معلق — احذفه
+    ctrl.replaceText(
+      pos - 1, 1, '',
+      TextSelection.collapsed(offset: pos - 1),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // عند ظهور الكيبورد (viewInsets تتغير) — نوقف formatSelection مؤقتاً
+    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+    if (keyboardVisible && !_isKeyboardOpening) {
+      _isKeyboardOpening = true;
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _isKeyboardOpening = false;
+      });
+    }
   }
 
   @override
   void dispose() {
     widget.quillController.removeListener(_onChanged);
+    _docChangeSub?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
 
   void _onChanged() {
-    if (_isFormatting || _isPasting) return;
+    if (_isFormatting || _isPasting || _isKeyboardOpening) return;
 
     final doc = widget.quillController.document;
     final plainText = doc.toPlainText();
@@ -104,21 +200,22 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     );
 
     if (currentLine.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _isFormatting) return;
-        _isFormatting = true;
-        widget.quillController.formatSelection(const DirectionAttribute(null));
-        widget.quillController.formatSelection(const AlignAttribute(null));
-        _isFormatting = false;
-      });
-      if (_textDirection != TextDirection.rtl) {
-        setState(() => _textDirection = TextDirection.rtl);
+      // السطر الفارغ تُعالجه _handleEnterKey — فقط نحدّث الاتجاه المرئي
+      final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
+      if (_textDirection != prevDir) {
+        setState(() => _textDirection = prevDir);
       }
       return;
     }
 
     final newDir = TextDirectionUtils.getDirection(currentLine);
-    final isRtl = newDir == TextDirection.rtl;
+    // إذا كان السطر حرفاً واحداً فقط والحرف محايد (رقم أو رمز) — ارث اتجاه السطر السابق
+    final effectiveDir = (currentLine.length == 1 &&
+            newDir == TextDirection.rtl &&
+            !RegExp(r'[\u0600-\u06FF]').hasMatch(currentLine))
+        ? _getPrevNonEmptyLineDirection(plainText, offset)
+        : newDir;
+    final isRtl = effectiveDir == TextDirection.rtl;
     final currentAttr =
         widget.quillController.getSelectionStyle().attributes['direction'];
     final currentIsRtl = currentAttr?.value == 'rtl';
@@ -129,7 +226,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         if (!mounted || _isFormatting) return;
         _isFormatting = true;
         if (isRtl) {
-          widget.quillController.formatSelection(const DirectionAttribute(null));
+          widget.quillController
+              .formatSelection(const DirectionAttribute(null));
           widget.quillController.formatSelection(const AlignAttribute(null));
         } else {
           widget.quillController.formatSelection(Attribute.rtl);
@@ -139,9 +237,27 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       });
     }
 
-    if (newDir != _textDirection) {
-      setState(() => _textDirection = newDir);
+    if (effectiveDir != _textDirection) {
+      setState(() => _textDirection = effectiveDir);
     }
+  }
+
+  /// يجد اتجاه آخر سطر غير فارغ قبل موضع المؤشر
+  TextDirection _getPrevNonEmptyLineDirection(String text, int offset) {
+    // ابحث عن بداية السطر الحالي
+    final currentLineStart =
+        text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
+    if (currentLineStart <= 0) return TextDirection.rtl;
+
+    // ابحث للخلف عن أول سطر غير فارغ
+    final before = text.substring(0, currentLineStart);
+    final prevLines = before.split('\n');
+    for (int i = prevLines.length - 1; i >= 0; i--) {
+      if (prevLines[i].trim().isNotEmpty) {
+        return TextDirectionUtils.getDirection(prevLines[i]);
+      }
+    }
+    return TextDirection.rtl;
   }
 
   /// يحذف التشكيل أولاً قبل الحرف — يعمل على الموبايل والديسكتوب
@@ -154,26 +270,40 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final pos = sel.baseOffset;
     if (pos > text.length) return false;
 
-    final charBefore = text[pos - 1];
+    // ابحث للخلف عن بداية المجموعة (حرف + تشكيله متراكم)
+    // مثال: "لً" في الذاكرة = [ل][ً] — نجد بداية المجموعة من pos للخلف
+    int start = pos - 1;
+    // تخطّ كل تشكيل متراكم للخلف
+    while (start > 0 && _isTashkeel(text[start])) {
+      start--;
+    }
+    // start الآن يشير إلى الحرف الأساسي أو تشكيل إذا كان كل شيء تشكيل
 
-    // إذا كان الحرف قبل الكرسر تشكيلاً — احذفه فقط
-    if (_isTashkeel(charBefore)) {
+    final hasTashkeel = (pos - start) > 1 ||
+        (pos - start == 1 && _isTashkeel(text[start]));
+
+    if (!hasTashkeel) return false; // لا يوجد تشكيل — اتركه للسلوك الافتراضي
+
+    // احذف آخر تشكيل فقط (واحد في كل ضغطة)
+    // ابحث عن آخر تشكيل قبل المؤشر
+    int tashkeelPos = pos - 1;
+    while (tashkeelPos > start && !_isTashkeel(text[tashkeelPos])) {
+      tashkeelPos--;
+    }
+    if (_isTashkeel(text[tashkeelPos])) {
       ctrl.replaceText(
-        pos - 1,
-        1,
-        '',
-        TextSelection.collapsed(offset: pos - 1),
+        tashkeelPos, 1, '',
+        TextSelection.collapsed(offset: tashkeelPos),
       );
       return true;
     }
 
-    // إذا كان الحرف عادياً — تحقق هل قبله تشكيل متراكم
-    // مثال: "كَـ" → الكرسر بعد الفتحة، نحذف الفتحة أولاً
-    // هذا يُعالج حالة: حرف + تشكيل + كرسر → احذف التشكيل لا الحرف
-    // (هذه الحالة تُعالجها الفقرة أعلاه بالفعل)
-
-    return false; // اتركه للسلوك الافتراضي
+    return false;
   }
+
+  // محارف التحكم BiDi (محفوظة للاستخدام المستقبلي)
+  // static const _lrm = '\u200E'; // Left-to-Right Mark
+  // static const _rlm = '\u200F'; // Right-to-Left Mark
 
   Future<void> _pastePlainText() async {
     _isPasting = true;
@@ -239,6 +369,12 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       _pastePlainText();
       return KeyEventResult.handled;
     }
+    // Enter — حقن سمة الاتجاه للسطر الجديد قبل إنشائه
+    if (event.logicalKey == LogicalKeyboardKey.enter ||
+        event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+      _handleEnterKey();
+      return KeyEventResult.ignored; // نترك Quill ينشئ السطر بعد تحديث الحالة
+    }
     // Backspace
     if (event.logicalKey == LogicalKeyboardKey.backspace) {
       return _deleteWithTashkeelAwareness()
@@ -246,6 +382,29 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
           : KeyEventResult.ignored;
     }
     return KeyEventResult.ignored;
+  }
+
+  /// يحدد اتجاه السطر الحالي ويحفظه ليُطبَّق على السطر الجديد
+  void _handleEnterKey() {
+    final ctrl = widget.quillController;
+    final plainText = ctrl.document.toPlainText();
+    final offset = ctrl.selection.baseOffset.clamp(0, plainText.length);
+    final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
+
+    // بعد Enter بمليسثانية واحدة — طبّق السمة على السطر الجديد
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _isFormatting) return;
+      _isFormatting = true;
+      if (prevDir == TextDirection.ltr) {
+        // إنجليزي: نحتاج direction:rtl ليعكس الاتجاه في سياق الأب RTL
+        ctrl.formatSelection(Attribute.rtl);
+      } else {
+        // عربي: نحذف أي direction صريح — يرث RTL من الأب تلقائياً
+        ctrl.formatSelection(const DirectionAttribute(null));
+      }
+      ctrl.formatSelection(const AlignAttribute(null));
+      _isFormatting = false;
+    });
   }
 
   @override

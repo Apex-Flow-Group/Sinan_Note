@@ -10,6 +10,7 @@ import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/cloud/google_drive_merge.dart';
 import 'package:apex_note/services/storage/compression_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,11 +31,12 @@ class GoogleDriveService {
   }
 
   // ── Rate limiting ─────────────────────────────────────────────────────────
+  static final ValueNotifier<bool> isSyncing = ValueNotifier(false);
+
   static bool _isUploading = false;
   static bool _isDownloading = false;
   static DateTime? _lastUploadTime;
   static int _uploadCount = 0;
-  static const _minUploadInterval = Duration(seconds: 30);
   static const _maxUploadsPerHour = 60;
 
   // ── Internet check ────────────────────────────────────────────────────────
@@ -95,6 +97,7 @@ class GoogleDriveService {
   static Future<void> _silentMerge() async {
     if (_isDownloading || _isUploading) return;
     _isDownloading = true;
+    isSyncing.value = true;
     try {
       final file = await GoogleDriveAuth.findFile('sinan_backup.gz');
       if (file == null) return;
@@ -191,16 +194,16 @@ class GoogleDriveService {
         }
       });
 
-      _isDownloading = false;
-      await uploadDatabase(null);
-
       _lastSyncTime = DateTime.now();
       AppLogger.success('Silent merge: ${merged.length} notes', 'GoogleDrive');
     } catch (e) {
       AppLogger.error('Silent merge failed', 'GoogleDrive', e);
     } finally {
       _isDownloading = false;
+      isSyncing.value = false;
     }
+    // رفع بعد انتهاء الدمج كاملاً — خارج finally لضمان isSyncing صحيح
+    await uploadDatabase(null);
   }
 
   // ── Upload (العادية فقط — الخزنة محلية دائماً) ───────────────────────────
@@ -210,13 +213,14 @@ class GoogleDriveService {
 
     if (_lastUploadTime != null) {
       final elapsed = DateTime.now().difference(_lastUploadTime!);
-      if (elapsed < _minUploadInterval) return false;
+      // تجاوز rate limit إذا كانت المزامنة مطلوبة من merge
       if (elapsed > const Duration(hours: 1)) _uploadCount = 0;
       if (_uploadCount >= _maxUploadsPerHour) return false;
     }
 
     if (_isUploading) return false;
     _isUploading = true;
+    isSyncing.value = true;
 
     try {
       _lastUploadTime = DateTime.now();
@@ -278,6 +282,7 @@ class GoogleDriveService {
       return false;
     } finally {
       _isUploading = false;
+      if (!_isDownloading) isSyncing.value = false;
     }
   }
 
@@ -287,6 +292,7 @@ class GoogleDriveService {
     if (!await _hasInternet()) throw Exception('No internet connection');
     if (_isDownloading) return false;
     _isDownloading = true;
+    isSyncing.value = true;
 
     try {
       var file = await GoogleDriveAuth.findFile('sinan_backup.json');
@@ -360,6 +366,7 @@ class GoogleDriveService {
       return false;
     } finally {
       _isDownloading = false;
+      if (!_isUploading) isSyncing.value = false;
     }
   }
 

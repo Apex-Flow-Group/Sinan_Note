@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -239,14 +240,16 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Row(
                   children: [
                     const Icon(Icons.label_outline_rounded, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       isAr ? 'اختر كتالوج' : 'Select Catalog',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -263,17 +266,23 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
                     ListTile(
                       leading: Icon(
                         Icons.all_inbox_rounded,
-                        color: selectedId == null ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: selectedId == null
+                            ? colorScheme.primary
+                            : colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       title: Text(
                         isAr ? 'الكل' : 'All',
                         style: TextStyle(
-                          fontWeight: selectedId == null ? FontWeight.bold : FontWeight.normal,
-                          color: selectedId == null ? colorScheme.primary : null,
+                          fontWeight: selectedId == null
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color:
+                              selectedId == null ? colorScheme.primary : null,
                         ),
                       ),
                       trailing: selectedId == null
-                          ? Icon(Icons.check_rounded, color: colorScheme.primary, size: 18)
+                          ? Icon(Icons.check_rounded,
+                              color: colorScheme.primary, size: 18)
                           : null,
                       onTap: () {
                         Navigator.pop(ctx);
@@ -284,17 +293,24 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
                     ListTile(
                       leading: Icon(
                         Icons.code_rounded,
-                        color: selectedId == kProCategoryId ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: selectedId == kProCategoryId
+                            ? colorScheme.primary
+                            : colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       title: Text(
                         isAr ? 'المحترف' : 'Professional',
                         style: TextStyle(
-                          fontWeight: selectedId == kProCategoryId ? FontWeight.bold : FontWeight.normal,
-                          color: selectedId == kProCategoryId ? colorScheme.primary : null,
+                          fontWeight: selectedId == kProCategoryId
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: selectedId == kProCategoryId
+                              ? colorScheme.primary
+                              : null,
                         ),
                       ),
                       trailing: selectedId == kProCategoryId
-                          ? Icon(Icons.check_rounded, color: colorScheme.primary, size: 18)
+                          ? Icon(Icons.check_rounded,
+                              color: colorScheme.primary, size: 18)
                           : null,
                       onTap: () {
                         Navigator.pop(ctx);
@@ -304,25 +320,32 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
                     if (categories.isNotEmpty) const Divider(height: 1),
                     // باقي الكتالوجات
                     ...categories.map((cat) => ListTile(
-                      leading: Icon(
-                        Icons.label_rounded,
-                        color: selectedId == cat.id ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                      title: Text(
-                        cat.name,
-                        style: TextStyle(
-                          fontWeight: selectedId == cat.id ? FontWeight.bold : FontWeight.normal,
-                          color: selectedId == cat.id ? colorScheme.primary : null,
-                        ),
-                      ),
-                      trailing: selectedId == cat.id
-                          ? Icon(Icons.check_rounded, color: colorScheme.primary, size: 18)
-                          : null,
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        categoriesProvider.selectCategory(cat.id);
-                      },
-                    )),
+                          leading: Icon(
+                            Icons.label_rounded,
+                            color: selectedId == cat.id
+                                ? colorScheme.primary
+                                : colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                          title: Text(
+                            cat.name,
+                            style: TextStyle(
+                              fontWeight: selectedId == cat.id
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: selectedId == cat.id
+                                  ? colorScheme.primary
+                                  : null,
+                            ),
+                          ),
+                          trailing: selectedId == cat.id
+                              ? Icon(Icons.check_rounded,
+                                  color: colorScheme.primary, size: 18)
+                              : null,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            categoriesProvider.selectCategory(cat.id);
+                          },
+                        )),
                   ],
                 ),
               ),
@@ -363,75 +386,151 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
           ? (isAr ? 'المحترف' : 'Professional')
           : (cat?.name ?? '');
 
-      return Container(
-        height: 28,
-        color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
-        padding: const EdgeInsets.only(left: 16),
-        child: Row(
-          children: [
-            Icon(Icons.label_rounded, size: 13, color: colorScheme.primary),
-            const SizedBox(width: 6),
-            GestureDetector(
-              onTap: () => _showCategoryPicker(categoriesProvider),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    catName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+      return _BarWithSyncProgress(
+        child: Container(
+          height: 28,
+          color:
+              Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
+          padding: const EdgeInsets.only(left: 16),
+          child: Row(
+            children: [
+              Icon(Icons.label_rounded, size: 13, color: colorScheme.primary),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () => _showCategoryPicker(categoriesProvider),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      catName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 2),
-                  Icon(Icons.expand_more_rounded, size: 14, color: colorScheme.primary),
-                ],
+                    const SizedBox(width: 2),
+                    Icon(Icons.expand_more_rounded,
+                        size: 14, color: colorScheme.primary),
+                  ],
+                ),
               ),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => categoriesProvider.selectCategory(null),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(Icons.close_rounded,
-                    size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => categoriesProvider.selectCategory(null),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.close_rounded,
+                      size: 16,
+                      color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
 
     // ─── وضع التاريخ الافتراضي ───
-    if (notes.isEmpty || _visibleDate == null) return const SizedBox.shrink();
+    if (notes.isEmpty || _visibleDate == null) {
+      return const _BarWithSyncProgress(
+        showLabelOnly: true,
+        child: SizedBox.shrink(),
+      );
+    }
 
-    return GestureDetector(
-      onTap: _showDatePicker,
-      child: Container(
-        height: 28,
-        color:
-            Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_today_outlined,
-                size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-            const SizedBox(width: 6),
-            Text(
-              _formatDate(_visibleDate!),
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurface.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w500,
+    return _BarWithSyncProgress(
+      child: GestureDetector(
+        onTap: _showDatePicker,
+        child: Container(
+          height: 28,
+          color:
+              Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Icon(Icons.calendar_today_outlined,
+                  size: 13,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              const SizedBox(width: 6),
+              Text(
+                _formatDate(_visibleDate!),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const Spacer(),
-            Icon(Icons.expand_more_rounded,
-                size: 16, color: colorScheme.onSurface.withValues(alpha: 0.4)),
-          ],
+              const Spacer(),
+              Icon(Icons.expand_more_rounded,
+                  size: 16,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4)),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// يُغلّف أي شريط ويضيف LinearProgressIndicator + نص المزامنة أسفله
+class _BarWithSyncProgress extends StatelessWidget {
+  final Widget child;
+  final bool showLabelOnly;
+  const _BarWithSyncProgress({required this.child, this.showLabelOnly = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: GoogleDriveService.isSyncing,
+      builder: (context, syncing, _) {
+        if (!syncing && showLabelOnly) return const SizedBox.shrink();
+        return Stack(
+          children: [
+            if (!showLabelOnly) child,
+            if (syncing) ...[
+              // خلفية الشريط عند showLabelOnly
+              if (showLabelOnly)
+                Container(
+                  height: 28,
+                  color: Theme.of(context)
+                      .scaffoldBackgroundColor
+                      .withValues(alpha: 0.97),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.sync_rounded,
+                          size: 13,
+                          color: colorScheme.primary.withValues(alpha: 0.7)),
+                      const SizedBox(width: 6),
+                      Text(
+                        isAr ? 'جارٍ المزامنة...' : 'Syncing...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.primary.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: LinearProgressIndicator(
+                  minHeight: 2,
+                  backgroundColor: Colors.transparent,
+                  color: colorScheme.primary.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
