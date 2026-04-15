@@ -7,6 +7,7 @@ import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/compression_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:flutter/material.dart';
@@ -31,50 +32,34 @@ class GoogleDriveMerge {
       final dbService = IsarDatabaseService();
       final localNotes = await dbService.getAllNotes();
 
-      final action = await _showMergeDialog(context, localNotes.length, driveNotes.length);
+      final action =
+          await _showMergeDialog(context, localNotes.length, driveNotes.length);
       if (action == null || action == 'cancel') return false;
 
       final isar = await dbService.database;
 
       if (action == 'useLocal') {
         await uploadFn(context);
-        AppLogger.success('Used local notes (${localNotes.length})', 'GoogleDrive');
+        AppLogger.success(
+            'Used local notes (${localNotes.length})', 'GoogleDrive');
         return true;
       }
 
       if (action == 'useDrive') {
         await isar.writeTxn(() async {
           await isar.notes.clear();
-          for (final note in driveNotes) { await isar.notes.put(note); }
+          for (final note in driveNotes) {
+            await isar.notes.put(note);
+          }
         });
-        AppLogger.success('Used Drive notes (${driveNotes.length})', 'GoogleDrive');
+        AppLogger.success(
+            'Used Drive notes (${driveNotes.length})', 'GoogleDrive');
         return true;
       }
 
-      // Smart merge
-      final Map<int, Note> mergedMap = {};
-      for (final note in localNotes) {
-        if (note.id != null) mergedMap[note.id!] = note;
-      }
-      for (final driveNote in driveNotes) {
-        if (driveNote.id != null) {
-          if (mergedMap.containsKey(driveNote.id!)) {
-            if (driveNote.updatedAt.isAfter(mergedMap[driveNote.id!]!.updatedAt)) {
-              mergedMap[driveNote.id!] = driveNote;
-            }
-          } else {
-            mergedMap[driveNote.id!] = driveNote;
-          }
-        }
-      }
-
-      await isar.writeTxn(() async {
-        await isar.notes.clear();
-        for (final note in mergedMap.values) { await isar.notes.put(note); }
-      });
-
-      await uploadFn(context);
-      AppLogger.success('Merged ${mergedMap.length} notes', 'GoogleDrive');
+      // Smart merge — استخدم المنطق الكامل من _silentMerge
+      await GoogleDriveService.silentMerge();
+      AppLogger.success('Smart merge completed', 'GoogleDrive');
       return true;
     } catch (e) {
       AppLogger.error('Merge failed', 'GoogleDrive', e);
@@ -129,27 +114,39 @@ class GoogleDriveMerge {
           children: [
             Text(l10n.syncConflictDesc, style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 20),
-            _countRow(Icons.phone_android, Colors.blue, '${l10n.onDevice}: ', l10n.notesCount(localCount)),
+            _countRow(Icons.phone_android, Colors.blue, '${l10n.onDevice}: ',
+                l10n.notesCount(localCount)),
             const SizedBox(height: 8),
-            _countRow(Icons.cloud, Colors.green, '${l10n.onDrive}: ', l10n.notesCount(driveCount)),
+            _countRow(Icons.cloud, Colors.green, '${l10n.onDrive}: ',
+                l10n.notesCount(driveCount)),
             const SizedBox(height: 16),
-            Text(l10n.chooseAction, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(l10n.chooseAction,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, 'cancel'), child: Text(l10n.cancel)),
-          TextButton.icon(onPressed: () => Navigator.pop(context, 'useDrive'),
-              icon: const Icon(Icons.cloud, size: 18), label: Text(l10n.useDrive)),
-          TextButton.icon(onPressed: () => Navigator.pop(context, 'useLocal'),
-              icon: const Icon(Icons.phone_android, size: 18), label: Text(l10n.useDevice)),
-          FilledButton.icon(onPressed: () => Navigator.pop(context, 'merge'),
-              icon: const Icon(Icons.merge, size: 18), label: Text(l10n.smartMerge)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, 'cancel'),
+              child: Text(l10n.cancel)),
+          TextButton.icon(
+              onPressed: () => Navigator.pop(context, 'useDrive'),
+              icon: const Icon(Icons.cloud, size: 18),
+              label: Text(l10n.useDrive)),
+          TextButton.icon(
+              onPressed: () => Navigator.pop(context, 'useLocal'),
+              icon: const Icon(Icons.phone_android, size: 18),
+              label: Text(l10n.useDevice)),
+          FilledButton.icon(
+              onPressed: () => Navigator.pop(context, 'merge'),
+              icon: const Icon(Icons.merge, size: 18),
+              label: Text(l10n.smartMerge)),
         ],
       ),
     );
   }
 
-  static Widget _countRow(IconData icon, Color color, String label, String value) {
+  static Widget _countRow(
+      IconData icon, Color color, String label, String value) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

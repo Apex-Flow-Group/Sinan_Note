@@ -1,7 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/sync_step.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
@@ -27,13 +25,6 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
   Future<bool> signIn() async {
     try {
-      if (Platform.isLinux) {
-        _currentStep = SyncStep.checking;
-        notifyListeners();
-        await _checkState();
-        return true;
-      }
-
       final success = await GoogleDriveService.signIn();
       if (success) {
         _currentStep = SyncStep.checking;
@@ -66,13 +57,6 @@ class GoogleDriveSyncController extends ChangeNotifier {
       // العادية فقط — الخزنة محلية لا تُحسب
       final localNotes = await dbService.getAllNotes();
       _localNotesCount = localNotes.where((n) => !n.isLocked).length;
-
-      if (Platform.isLinux) {
-        _hasConflict = false;
-        _currentStep = SyncStep.success;
-        notifyListeners();
-        return;
-      }
 
       final hasBackup = await GoogleDriveService.hasBackupInDrive();
       AppLogger.info('hasBackup: $hasBackup', 'SyncController');
@@ -161,15 +145,6 @@ class GoogleDriveSyncController extends ChangeNotifier {
     try {
       _currentStep = SyncStep.syncing;
       notifyListeners();
-
-      if (Platform.isLinux) {
-        await Future.delayed(const Duration(seconds: 2));
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('google_drive_auto_sync', true);
-        _currentStep = SyncStep.success;
-        notifyListeners();
-        return;
-      }
 
       final success = await GoogleDriveService.uploadDatabase(null);
       if (success) {

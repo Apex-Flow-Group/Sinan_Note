@@ -11,6 +11,7 @@ import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/animated_search_bar.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
@@ -39,6 +40,8 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
   NotesProvider? _notesProvider;
   final ValueNotifier<List<Note>> _filteredNotesNotifier = ValueNotifier([]);
   String _lastSearchQuery = '';
+  bool _isSearchMode = false;
+  final GlobalKey<AnimatedSearchBarState> _searchBarKey = GlobalKey();
 
   @override
   void initState() {
@@ -121,7 +124,12 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
       body: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
-          if (searchController.text.isNotEmpty) {
+          if (_isSearchMode) {
+            setState(() {
+              _isSearchMode = false;
+              exitSearch();
+            });
+          } else if (searchController.text.isNotEmpty) {
             setState(() => searchController.clear());
           } else {
             tabToHomeNotifier.value++;
@@ -138,7 +146,8 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                     ValueListenableBuilder<Set<int>>(
                       valueListenable: _selectedNoteIdsNotifier,
                       builder: (context, selectedIds, _) {
-                        final isDark = Theme.of(context).brightness == Brightness.dark;
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
                         final inSelection = selectedIds.isNotEmpty;
                         return SliverAppBar(
                           floating: !inSelection,
@@ -154,138 +163,232 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                 position: Tween<Offset>(
                                   begin: const Offset(0, -0.2),
                                   end: Offset.zero,
-                                ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
+                                ).animate(CurvedAnimation(
+                                    parent: anim, curve: Curves.easeOut)),
                                 child: child,
                               ),
                             ),
                             child: inSelection
                                 ? SelectionActionBar(
                                     key: const ValueKey('selection'),
-                                    selectedIdsNotifier: _selectedNoteIdsNotifier,
+                                    selectedIdsNotifier:
+                                        _selectedNoteIdsNotifier,
                                     isDark: isDark,
                                     allPinned: false,
-                                    onClear: () => _selectedNoteIdsNotifier.value = {},
+                                    onClear: () =>
+                                        _selectedNoteIdsNotifier.value = {},
                                     onConvert: selectedIds.length == 1
                                         ? () {
-                                            final provider = Provider.of<NotesProvider>(context, listen: false);
-                                            final note = provider.notes.firstWhere((n) => n.id == selectedIds.first);
+                                            final provider =
+                                                Provider.of<NotesProvider>(
+                                                    context,
+                                                    listen: false);
+                                            final note = provider.notes
+                                                .firstWhere((n) =>
+                                                    n.id == selectedIds.first);
                                             _selectedNoteIdsNotifier.value = {};
-                                            NoteConversionSheet.show(context, note, () {});
+                                            NoteConversionSheet.show(
+                                                context, note, () {});
                                           }
                                         : null,
                                     onPin: () async {
-                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final provider =
+                                          Provider.of<NotesProvider>(context,
+                                              listen: false);
                                       final ids = List<int>.from(selectedIds);
                                       for (final id in ids) {
-                                        final note = provider.notes.firstWhere((n) => n.id == id);
-                                        await provider.updateNote(note.copyWith(isPinned: !note.isPinned, updatedAt: DateTime.now()));
+                                        final note = provider.notes
+                                            .firstWhere((n) => n.id == id);
+                                        await provider.updateNote(note.copyWith(
+                                            isPinned: !note.isPinned,
+                                            updatedAt: DateTime.now()));
                                       }
                                       _selectedNoteIdsNotifier.value = {};
                                       if (context.mounted) {
-                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesPinned}', type: NotificationType.success);
+                                        UnifiedNotificationService().show(
+                                            context: context,
+                                            message:
+                                                '${ids.length} ${strings.notesPinned}',
+                                            type: NotificationType.success);
                                       }
                                     },
                                     onArchive: () async {
-                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final provider =
+                                          Provider.of<NotesProvider>(context,
+                                              listen: false);
                                       final ids = List<int>.from(selectedIds);
                                       await provider.archiveNotes(ids);
                                       _selectedNoteIdsNotifier.value = {};
                                       if (context.mounted) {
-                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesArchived}', type: NotificationType.success);
+                                        UnifiedNotificationService().show(
+                                            context: context,
+                                            message:
+                                                '${ids.length} ${strings.notesArchived}',
+                                            type: NotificationType.success);
                                       }
                                     },
                                     onDelete: () async {
-                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final provider =
+                                          Provider.of<NotesProvider>(context,
+                                              listen: false);
                                       final ids = List<int>.from(selectedIds);
                                       await provider.trashNotes(ids);
                                       _selectedNoteIdsNotifier.value = {};
                                       if (context.mounted) {
-                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesDeleted}', type: NotificationType.info);
+                                        UnifiedNotificationService().show(
+                                            context: context,
+                                            message:
+                                                '${ids.length} ${strings.notesDeleted}',
+                                            type: NotificationType.info);
                                       }
                                     },
                                     onShare: selectedIds.length == 1
                                         ? () {
-                                            final provider = Provider.of<NotesProvider>(context, listen: false);
-                                            final note = provider.notes.firstWhere((n) => n.id == selectedIds.first);
+                                            final provider =
+                                                Provider.of<NotesProvider>(
+                                                    context,
+                                                    listen: false);
+                                            final note = provider.notes
+                                                .firstWhere((n) =>
+                                                    n.id == selectedIds.first);
                                             _selectedNoteIdsNotifier.value = {};
-                                            final content = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
-                                            CustomShareSheet.show(context, '${note.title}\n\n$content', subject: note.title, note: note);
+                                            final content =
+                                                NoteCardUtils.fixNoteContent(
+                                                    note.content,
+                                                    maxChars:
+                                                        note.content.length);
+                                            CustomShareSheet.show(context,
+                                                '${note.title}\n\n$content',
+                                                subject: note.title,
+                                                note: note);
                                           }
                                         : null,
                                   )
-                                : Row(
-                                    key: const ValueKey('normal'),
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.code_rounded, size: 22),
-                                      const SizedBox(width: 8),
-                                      Flexible(
-                                        child: Text(
-                                          strings.professional,
-                                          overflow: TextOverflow.ellipsis,
+                                : AnimatedSearchBar(
+                                    key: _searchBarKey,
+                                    isSearchMode: _isSearchMode,
+                                    searchController: searchController,
+                                    hintText: strings.searchNotes,
+                                    onChanged: () => _syncNotes(),
+                                    onClose: () {
+                                      setState(() {
+                                        _isSearchMode = false;
+                                        exitSearch();
+                                      });
+                                    },
+                                    titleWidget: Row(
+                                      key: const ValueKey('normal'),
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.code_rounded,
+                                            size: 22),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            strings.professional,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
+                                      ],
+                                    ),
+                                  ),
+                          ),
+                          actions: inSelection
+                              ? []
+                              : [
+                                  IconButton(
+                                    icon: Icon(_isSearchMode
+                                        ? Icons.close
+                                        : Icons.search),
+                                    onPressed: () {
+                                      if (_isSearchMode) {
+                                        _searchBarKey.currentState?.unfocus();
+                                        setState(() {
+                                          _isSearchMode = false;
+                                          exitSearch();
+                                        });
+                                      } else {
+                                        setState(() => _isSearchMode = true);
+                                      }
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      _viewType == ViewType.listExpanded
+                                          ? Icons.view_headline
+                                          : Icons.view_day,
+                                    ),
+                                    onPressed: () async {
+                                      setState(() {
+                                        _viewType =
+                                            _viewType == ViewType.listExpanded
+                                                ? ViewType.listCompact
+                                                : ViewType.listExpanded;
+                                      });
+                                      await Provider.of<SettingsProvider>(
+                                              context,
+                                              listen: false)
+                                          .setViewType(
+                                              'professional', _viewType.name);
+                                    },
+                                  ),
+                                  PopupMenuButton<String>(
+                                    icon: const Icon(Icons.sort),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    onSelected: (value) {
+                                      setState(() => _sortBy = value);
+                                      _syncNotes();
+                                    },
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 'date',
+                                        child: Row(children: [
+                                          Icon(Icons.access_time,
+                                              size: 20,
+                                              color: _sortBy == 'date'
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                  : null),
+                                          const SizedBox(width: 12),
+                                          Text(strings.sortByDate),
+                                          if (_sortBy == 'date') ...[
+                                            const Spacer(),
+                                            Icon(Icons.check,
+                                                size: 20,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary)
+                                          ],
+                                        ]),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'title',
+                                        child: Row(children: [
+                                          Icon(Icons.sort_by_alpha,
+                                              size: 20,
+                                              color: _sortBy == 'title'
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                  : null),
+                                          const SizedBox(width: 12),
+                                          Text(strings.sortByTitle),
+                                          if (_sortBy == 'title') ...[
+                                            const Spacer(),
+                                            Icon(Icons.check,
+                                                size: 20,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary)
+                                          ],
+                                        ]),
                                       ),
                                     ],
                                   ),
-                          ),
-                          actions: inSelection ? [] : [
-                            IconButton(
-                              icon: Icon(searchController.text.isEmpty ? Icons.search : Icons.close),
-                              onPressed: () {
-                                setState(() {
-                                  if (searchController.text.isEmpty) {
-                                    searchController.text = ' ';
-                                  } else {
-                                    searchController.clear();
-                                  }
-                                });
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                _viewType == ViewType.listExpanded
-                                    ? Icons.view_headline
-                                    : Icons.view_day,
-                              ),
-                              onPressed: () async {
-                                setState(() {
-                                  _viewType = _viewType == ViewType.listExpanded
-                                      ? ViewType.listCompact
-                                      : ViewType.listExpanded;
-                                });
-                                await Provider.of<SettingsProvider>(context, listen: false)
-                                    .setViewType('professional', _viewType.name);
-                              },
-                            ),
-                            PopupMenuButton<String>(
-                              icon: const Icon(Icons.sort),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              onSelected: (value) {
-                                setState(() => _sortBy = value);
-                                _syncNotes();
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'date',
-                                  child: Row(children: [
-                                    Icon(Icons.access_time, size: 20, color: _sortBy == 'date' ? Theme.of(context).colorScheme.primary : null),
-                                    const SizedBox(width: 12),
-                                    Text(strings.sortByDate),
-                                    if (_sortBy == 'date') ...[ const Spacer(), Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary)],
-                                  ]),
-                                ),
-                                PopupMenuItem(
-                                  value: 'title',
-                                  child: Row(children: [
-                                    Icon(Icons.sort_by_alpha, size: 20, color: _sortBy == 'title' ? Theme.of(context).colorScheme.primary : null),
-                                    const SizedBox(width: 12),
-                                    Text(strings.sortByTitle),
-                                    if (_sortBy == 'title') ...[ const Spacer(), Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary)],
-                                  ]),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
                         );
                       },
                     ),

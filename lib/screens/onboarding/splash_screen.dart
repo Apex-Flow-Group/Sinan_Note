@@ -120,7 +120,8 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       );
 
-      if (mounted) _checkAndShowWhatsNew();
+      // TODO: أعد تفعيل رسالة "ما الجديد" عند إصدار تحديث جديد
+      // if (mounted) _checkAndShowWhatsNew();
     } catch (e) {
       AppLogger.error('Splash initialization error', 'SplashScreen', e);
       _updateStatus(isArabic ? 'حدث خطأ...' : 'Error occurred...', 0.0);

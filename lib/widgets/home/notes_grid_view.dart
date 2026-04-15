@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart';
@@ -82,7 +83,8 @@ class _NotesGridViewState extends State<NotesGridView> {
     final catProvider = context.watch<CategoriesProvider>();
     final selectedId = catProvider.selectedCategoryId;
     final hideProFromHome = catProvider.hideProFromHome;
-    if (selectedId != _lastSelectedCategoryId || hideProFromHome != _lastHideProFromHome) {
+    if (selectedId != _lastSelectedCategoryId ||
+        hideProFromHome != _lastHideProFromHome) {
       _lastSelectedCategoryId = selectedId;
       _lastHideProFromHome = hideProFromHome;
       _syncFilteredNotes(_notesProvider?.notes ?? []);
@@ -140,7 +142,8 @@ class _NotesGridViewState extends State<NotesGridView> {
         _visibleCountNotifier.value = _visibleCount;
         widget.visibleCountNotifier?.value = _visibleCount;
         _hasMoreNotifier.value = _visibleCount < _allFiltered.length;
-        _filteredNotesNotifier.value = List.of(_allFiltered.sublist(0, _visibleCount));
+        _filteredNotesNotifier.value =
+            List.of(_allFiltered.sublist(0, _visibleCount));
         return;
       }
 
@@ -163,7 +166,8 @@ class _NotesGridViewState extends State<NotesGridView> {
         }
       }
       if (anyUpdated) {
-        _filteredNotesNotifier.value = List.of(_allFiltered.sublist(0, _visibleCount));
+        _filteredNotesNotifier.value =
+            List.of(_allFiltered.sublist(0, _visibleCount));
       }
       return;
     }
@@ -225,12 +229,16 @@ class _NotesGridViewState extends State<NotesGridView> {
         // كل الملاحظات — إخفاء المحترف إذا كان الخيار مفعلاً
         if (hideProFromHome && note.isProfessional) return false;
       }
-      if (searchQuery.isEmpty) { return true; }
+      if (searchQuery.isEmpty) {
+        return true;
+      }
 
       if (searchQuery.startsWith('type:')) {
         return _matchNoteType(note, searchQuery.substring(5));
       }
-      if (searchQuery.startsWith('pinned:')) { return note.isPinned; }
+      if (searchQuery.startsWith('pinned:')) {
+        return note.isPinned;
+      }
 
       final normalized = Note.normalize(searchQuery);
       if (note.normalizedTitle.contains(normalized) ||
@@ -334,6 +342,7 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
   List<Note> _filteredNotes = [];
   String _viewTypeName = 'listCompact';
   bool _hasMore = false;
+  bool _isNavHidden = false;
 
   @override
   void initState() {
@@ -341,9 +350,11 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
     _filteredNotes = widget.filteredNotesNotifier.value;
     _viewTypeName = widget.viewTypeNotifier.value;
     _hasMore = widget.hasMoreNotifier.value;
+    _isNavHidden = bottomNavHiddenNotifier.value;
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
     widget.viewTypeNotifier.addListener(_onViewTypeChanged);
     widget.hasMoreNotifier.addListener(_onHasMoreChanged);
+    bottomNavHiddenNotifier.addListener(_onNavHiddenChanged);
     // selectedNoteIdsNotifier لا يُشغّل setState هنا — كل بطاقة تقرأه مباشرة
   }
 
@@ -352,7 +363,12 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
     widget.filteredNotesNotifier.removeListener(_onNotesChanged);
     widget.viewTypeNotifier.removeListener(_onViewTypeChanged);
     widget.hasMoreNotifier.removeListener(_onHasMoreChanged);
+    bottomNavHiddenNotifier.removeListener(_onNavHiddenChanged);
     super.dispose();
+  }
+
+  void _onNavHiddenChanged() {
+    setState(() => _isNavHidden = bottomNavHiddenNotifier.value);
   }
 
   void _onHasMoreChanged() {
@@ -397,8 +413,8 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
       );
     }
 
-    final fabBottom =
-        MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
+    final navBarHeight = _isNavHidden ? 0.0 : kBottomNavigationBarHeight;
+    final fabBottom = MediaQuery.of(context).padding.bottom + navBarHeight + 16;
     final bottomPadding = fabBottom + 56 + 8;
 
     if (_viewType == ViewType.grid) {

@@ -94,6 +94,7 @@ class GoogleDriveService {
       SharedPreferences.getInstance();
 
   // ── Silent merge (note-level, no dialog) ─────────────────────────────────
+  static Future<void> silentMerge() => _silentMerge();
   static Future<void> _silentMerge() async {
     if (_isDownloading || _isUploading) return;
     _isDownloading = true;

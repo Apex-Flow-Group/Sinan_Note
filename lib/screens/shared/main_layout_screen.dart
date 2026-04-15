@@ -5,7 +5,7 @@ import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/platform_helper.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/main.dart'
-    show tabToHomeNotifier, currentTabIndexNotifier;
+    show tabToHomeNotifier, currentTabIndexNotifier, bottomNavHiddenNotifier;
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/desktop/code_tab_responsive.dart';
 import 'package:apex_note/screens/desktop/home_screen_responsive.dart';
@@ -135,8 +135,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
     if (isScrollingDown && !_isScrollHidden) {
       setState(() => _isScrollHidden = true);
+      bottomNavHiddenNotifier.value = true;
     } else if (!isScrollingDown && _isScrollHidden) {
       setState(() => _isScrollHidden = false);
+      bottomNavHiddenNotifier.value = false;
     }
   }
 
@@ -150,6 +152,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       _isDrawerOpen = isOpen;
       if (!isOpen) {
         _isScrollHidden = false;
+        bottomNavHiddenNotifier.value = false;
       }
     });
   }
@@ -217,7 +220,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                             if (_showAddMenu) _toggleMenu();
                             setState(() {
                               _currentIndex = index;
-                              if (index != 0) _isScrollHidden = false;
+                              if (index != 0) {
+                                _isScrollHidden = false;
+                                bottomNavHiddenNotifier.value = false;
+                              }
                             });
                             currentTabIndexNotifier.value = index;
                           },
@@ -245,7 +251,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                     }
                     setState(() {
                       _currentIndex = index;
-                      if (index != 0) _isScrollHidden = false;
+                      if (index != 0) {
+                        _isScrollHidden = false;
+                        bottomNavHiddenNotifier.value = false;
+                      }
                     });
                     currentTabIndexNotifier.value = index;
                   },

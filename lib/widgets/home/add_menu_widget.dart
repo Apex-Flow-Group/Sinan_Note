@@ -3,6 +3,7 @@
 import 'dart:ui';
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:apex_note/models/note_mode.dart';
 import 'package:flutter/material.dart';
 
@@ -32,10 +33,13 @@ class AddMenuWidget extends StatefulWidget {
 class _AddMenuWidgetState extends State<AddMenuWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _isNavHidden = false;
 
   @override
   void initState() {
     super.initState();
+    _isNavHidden = bottomNavHiddenNotifier.value;
+    bottomNavHiddenNotifier.addListener(_onNavHiddenChanged);
     _controller = AnimationController(
       duration: const Duration(milliseconds: 350),
       vsync: this,
@@ -59,8 +63,13 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
     }
   }
 
+  void _onNavHiddenChanged() {
+    if (mounted) setState(() => _isNavHidden = bottomNavHiddenNotifier.value);
+  }
+
   @override
   void dispose() {
+    bottomNavHiddenNotifier.removeListener(_onNavHiddenChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -76,79 +85,82 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
         if (!didPop && widget.showMenu) widget.onToggle();
       },
       child: Stack(
-      children: [
-        // Background Blur - Excludes bottom navigation bar
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: IgnorePointer(
-            ignoring: !isVisible,
-            child: GestureDetector(
-              onTap: widget.onToggle,
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(
-                        sigmaX: 10.0 * _controller.value,
-                        sigmaY: 10.0 * _controller.value,
+        children: [
+          // Background Blur - Excludes bottom navigation bar
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              ignoring: !isVisible,
+              child: GestureDetector(
+                onTap: widget.onToggle,
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(
+                          sigmaX: 10.0 * _controller.value,
+                          sigmaY: 10.0 * _controller.value,
+                        ),
+                        child: Container(
+                          color: isVisible
+                              ? (isDark
+                                  ? Colors.black.withValues(
+                                      alpha: 0.2 * _controller.value)
+                                  : Colors.black.withValues(
+                                      alpha: 0.05 * _controller.value))
+                              : Colors.transparent,
+                        ),
                       ),
-                      child: Container(
-                        color: isVisible
-                            ? (isDark
-                                ? Colors.black.withValues(alpha: 0.2 * _controller.value)
-                                : Colors.black.withValues(alpha: 0.05 * _controller.value))
-                            : Colors.transparent,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-        // Menu items without SafeArea
-        if (isVisible)
-          Stack(children: _buildAnimatedMenuItems(context)),
-        // FAB outside SafeArea - dynamic position
-        Positioned(
-          bottom: MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16,
-          right: 16,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Colors.blue[400]!, Colors.blue[600]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                    );
+                  },
                 ),
-              ],
-            ),
-            child: FloatingActionButton(
-              heroTag: null,
-              onPressed: widget.onToggle,
-              backgroundColor: Colors.blue,
-              elevation: 0,
-              child: AnimatedRotation(
-                turns: widget.showMenu ? 0.125 : 0,
-                duration: const Duration(milliseconds: 300),
-                child: const Icon(Icons.add, size: 32),
               ),
             ),
           ),
-        ),
-      ],
-    ),
+          // Menu items without SafeArea
+          if (isVisible) Stack(children: _buildAnimatedMenuItems(context)),
+          // FAB outside SafeArea - dynamic position
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom +
+                (_isNavHidden ? 0.0 : kBottomNavigationBarHeight) +
+                16,
+            right: 16,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Colors.blue[400]!, Colors.blue[600]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: FloatingActionButton(
+                heroTag: null,
+                onPressed: widget.onToggle,
+                backgroundColor: Colors.blue,
+                elevation: 0,
+                child: AnimatedRotation(
+                  turns: widget.showMenu ? 0.125 : 0,
+                  duration: const Duration(milliseconds: 300),
+                  child: const Icon(Icons.add, size: 32),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -183,7 +195,9 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
       },
     ];
 
-    final double fabBottom = MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
+    final double fabBottom = MediaQuery.of(context).padding.bottom +
+        (_isNavHidden ? 0.0 : kBottomNavigationBarHeight) +
+        16;
     const double fabSize = 56.0;
     const double itemSpacing = 8.0;
     final double baseBottom = fabBottom + fabSize + itemSpacing;
@@ -258,8 +272,7 @@ class _AnimatedMenuItem extends StatelessWidget {
                   color: color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                      color: color.withValues(alpha: 0.3),
-                      width: 1.5),
+                      color: color.withValues(alpha: 0.3), width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: color.withValues(alpha: 0.15),
@@ -281,9 +294,7 @@ class _AnimatedMenuItem extends StatelessWidget {
                           color: color.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(icon,
-                            color: color,
-                            size: 24),
+                        child: Icon(icon, color: color, size: 24),
                       ),
                     ),
                     if (animation.value > 0.3)

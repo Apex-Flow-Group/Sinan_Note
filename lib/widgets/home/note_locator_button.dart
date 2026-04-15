@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,8 @@ class NoteCardKeyRegistry {
 
   /// مجموع ارتفاعات كل البطاقات المحفوظة
   double totalHeight(List<Note> orderedNotes, {double fallbackHeight = 72.0}) {
-    return orderedNotes.fold(0, (sum, n) => sum + (_heights[n.id] ?? fallbackHeight));
+    return orderedNotes.fold(
+        0, (sum, n) => sum + (_heights[n.id] ?? fallbackHeight));
   }
 
   /// يحسب الـ offset المتراكم للبطاقة بناءً على ترتيب القائمة
@@ -159,43 +161,49 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
         if (!hasNote) return const SizedBox.shrink();
 
         final colorScheme = Theme.of(context).colorScheme;
-        final fabBottom = MediaQuery.of(context).padding.bottom +
-            kBottomNavigationBarHeight +
-            16;
 
-        return ValueListenableBuilder<bool?>(
-          valueListenable: _direction,
-          builder: (context, direction, _) {
-            if (direction == null) return const SizedBox.shrink();
-            return Positioned(
-              bottom: fabBottom,
-              left: 16,
-              child: GestureDetector(
-                onTap: _scrollToNote,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+        return ValueListenableBuilder<bool>(
+          valueListenable: bottomNavHiddenNotifier,
+          builder: (context, isNavHidden, _) {
+            final fabBottom = MediaQuery.of(context).padding.bottom +
+                (isNavHidden ? 0.0 : kBottomNavigationBarHeight) +
+                16;
+
+            return ValueListenableBuilder<bool?>(
+              valueListenable: _direction,
+              builder: (context, direction, _) {
+                if (direction == null) return const SizedBox.shrink();
+                return Positioned(
+                  bottom: fabBottom,
+                  left: 16,
+                  child: GestureDetector(
+                    onTap: _scrollToNote,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
+                      child: Icon(
+                        direction
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        color: colorScheme.onPrimaryContainer,
+                        size: 28,
+                      ),
+                    ),
                   ),
-                  child: Icon(
-                    direction
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: colorScheme.onPrimaryContainer,
-                    size: 28,
-                  ),
-                ),
-              ),
+                );
+              },
             );
           },
         );

@@ -40,6 +40,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final ValueNotifier<int> tabToHomeNotifier = ValueNotifier<int>(0);
 // Notifier للتبويب الحالي
 final ValueNotifier<int> currentTabIndexNotifier = ValueNotifier<int>(0);
+// Notifier لحالة إخفاء الشريط السفلي عند السحب
+final ValueNotifier<bool> bottomNavHiddenNotifier = ValueNotifier<bool>(false);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

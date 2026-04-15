@@ -17,11 +17,12 @@ class SyncSignInWidget extends StatefulWidget {
 class _SyncSignInWidgetState extends State<SyncSignInWidget> {
   bool _isLoading = false;
 
+  bool get _isUnsupportedPlatform => Platform.isLinux || Platform.isWindows;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isLinux = Platform.isLinux;
 
     return Center(
       child: Padding(
@@ -29,59 +30,70 @@ class _SyncSignInWidgetState extends State<SyncSignInWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // أيقونة Google Drive
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
+                color: _isUnsupportedPlatform
+                    ? theme.colorScheme.errorContainer
+                    : theme.colorScheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.cloud,
+                _isUnsupportedPlatform
+                    ? Icons.construction_rounded
+                    : Icons.cloud,
                 size: 64,
-                color: theme.colorScheme.primary,
+                color: _isUnsupportedPlatform
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
               ),
             ),
-            
             const SizedBox(height: 24),
-            
-            // العنوان
             Text(
               l10n.googleDriveSync,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
             const SizedBox(height: 8),
-            
-            // الوصف
             Text(
-              isLinux
-                  ? '🚧 Demo Mode (Linux)'
+              _isUnsupportedPlatform
+                  ? 'المزامنة مع Google Drive غير متاحة حالياً على هذا النظام\nقيد التطوير'
                   : l10n.syncTermsRegularNotes,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                color: _isUnsupportedPlatform
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
-            
             const SizedBox(height: 32),
-            
-            // زر تسجيل الدخول
-            _isLoading
-                ? const CircularProgressIndicator()
-                : FilledButton.icon(
-                    onPressed: _handleSignIn,
-                    icon: Icon(isLinux ? Icons.bug_report : Icons.login),
-                    label: Text(isLinux ? 'Test Flow' : l10n.signIn),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
+            if (_isUnsupportedPlatform)
+              FilledButton.icon(
+                onPressed: null,
+                icon: const Icon(Icons.lock_clock_rounded),
+                label: const Text('قريباً'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+              )
+            else
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : FilledButton.icon(
+                      onPressed: _handleSignIn,
+                      icon: const Icon(Icons.login),
+                      label: Text(l10n.signIn),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                       ),
                     ),
-                  ),
           ],
         ),
       ),
@@ -90,13 +102,13 @@ class _SyncSignInWidgetState extends State<SyncSignInWidget> {
 
   Future<void> _handleSignIn() async {
     setState(() => _isLoading = true);
-    
+
     final controller = context.read<GoogleDriveSyncController>();
     final success = await controller.signIn();
-    
+
     if (mounted) {
       setState(() => _isLoading = false);
-      
+
       if (!success) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
