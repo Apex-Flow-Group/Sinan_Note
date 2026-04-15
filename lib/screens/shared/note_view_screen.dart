@@ -205,6 +205,20 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       ),
       body: GestureDetector(
         onDoubleTap: _editNote,
+        onLongPress: () {
+          final content = _currentNote.isChecklist
+              ? ChecklistFormatter.formatForSharing(
+                  _currentNote.title, _currentNote.content)
+              : '${_currentNote.title}\n\n${NoteCardUtils.fixNoteContent(_currentNote.content, maxChars: _currentNote.content.length)}';
+          Clipboard.setData(ClipboardData(text: content.trim()));
+          HapticFeedback.mediumImpact();
+          UnifiedNotificationService().show(
+            context: context,
+            message: AppLocalizations.of(context)!.noteCopied,
+            type: NotificationType.success,
+            duration: const Duration(seconds: 2),
+          );
+        },
         child: SingleChildScrollView(
           child: Container(
             margin: const EdgeInsets.all(16),

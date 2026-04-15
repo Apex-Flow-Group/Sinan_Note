@@ -85,8 +85,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     if (widget.mode == NoteMode.simple ||
         widget.mode == NoteMode.reminder ||
         widget.mode == NoteMode.rich) {
-      _quillChangesSubscription = _coordinator.quillController!.document.changes
-          .listen((_) {
+      _quillChangesSubscription =
+          _coordinator.quillController!.document.changes.listen((_) {
         _onQuillContentChanged();
         _updateUndoRedoState();
       });
@@ -448,10 +448,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       final quill = _coordinator.quillController;
       if (quill == null) return;
       setState(() {
-        _coordinator.stateManager.canUndo =
-            quill.document.history.hasUndo;
-        _coordinator.stateManager.canRedo =
-            quill.document.history.hasRedo;
+        _coordinator.stateManager.canUndo = quill.document.history.hasUndo;
+        _coordinator.stateManager.canRedo = quill.document.history.hasRedo;
       });
     }
   }
@@ -615,6 +613,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               formattingController: _coordinator.formattingController,
               onReminderTap: _showReminderDialog,
               onColorPaletteTap: _showColorPalette,
+              onRebuild: () {
+                if (mounted) setState(() {});
+              },
               onSmartSaveDialog: () async {
                 if (_coordinator.detectedLanguage != null) {
                   final ext = _coordinator.smartController
@@ -632,10 +633,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   ctrl.text = text.replaceRange(sel.start, sel.end, symbol);
                 } else if (sel.isValid) {
                   final pos = sel.baseOffset;
-                  final newText = text.substring(0, pos) + symbol + text.substring(pos);
+                  final newText =
+                      text.substring(0, pos) + symbol + text.substring(pos);
                   ctrl.value = ctrl.value.copyWith(
                     text: newText,
-                    selection: TextSelection.collapsed(offset: pos + symbol.length ~/ 2),
+                    selection: TextSelection.collapsed(
+                        offset: pos + symbol.length ~/ 2),
                   );
                 } else {
                   ctrl.text = text + symbol;

@@ -50,11 +50,40 @@ class QuillEditorWidget extends StatefulWidget {
 class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   TextDirection _textDirection = TextDirection.rtl;
   final _StableScrollController _scrollController = _StableScrollController();
+  final GlobalKey<EditorState> _editorKey = GlobalKey<EditorState>();
   bool _isFormatting = false;
   bool _isPasting = false;
   bool _isKeyboardOpening = false;
   bool _isLoading = true; // يمنع _onDocumentChange أثناء تحميل النوتة
   bool _isDirectionFormatting = false;
+
+  bool _isHandlingEnter = false;
+
+  /// يستخرج اتجاه السطر الذي يقع فيه offset
+  TextDirection _getLineDirection(String text, int offset) {
+    final lineStart = text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
+    final lineEnd = text.indexOf('\n', offset);
+    final line = text.substring(
+      lineStart < 0 ? 0 : lineStart + 1,
+      lineEnd < 0 ? text.length : lineEnd,
+    );
+    if (line.trim().isEmpty) {
+      // سطر فارغ — ارث اتجاه السطر السابق غير الفارغ
+      return _getPrevNonEmptyLineDirection(text, offset);
+    }
+    return TextDirectionUtils.getDirection(line);
+  }
+
+  void _applyEnterDirection(TextDirection dir) {
+    _applyDirectionFormat(() {
+      if (dir == TextDirection.ltr) {
+        widget.quillController.formatSelection(Attribute.rtl);
+      } else {
+        widget.quillController.formatSelection(const DirectionAttribute(null));
+      }
+      widget.quillController.formatSelection(const AlignAttribute(null));
+    });
+  }
 
   void _applyDirectionFormat(VoidCallback applyFn) {
     if (_isFormatting || _isDirectionFormatting) return;
@@ -103,20 +132,17 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     });
   }
 
-  /// يكتشف إدراج \n عبر IME (أندرويد) ويحقن سمة الاتجاه
-  /// ويُصلح التشكيل المعلق بعد حذف IME
+  /// يكتشف Enter عبر IME (أندرويد)
   void _onDocumentChange(DocChange change) {
     if (_isFormatting || _isPasting || _isLoading || _isDirectionFormatting) {
       return;
     }
     if (change.source != ChangeSource.local) return;
 
-    final delta = change.change;
-    final ops = delta.toList();
+    final ops = change.change.toList();
 
-    // ── اكتشاف حذف IME وإصلاح التشكيل المعلق ──────────────────────────
-    final isDelete = ops.any((op) => op.isDelete);
-    if (isDelete) {
+    // ── اكتشاف حذف IME ──────────────────────────
+    if (ops.any((op) => op.isDelete)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _fixDanglingTashkeel();
@@ -124,27 +150,25 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       return;
     }
 
-    // ── اكتشاف Enter عبر IME ─────────────────────────────────────────────
+    // ── اكتشاف Enter عبر IME ─────────────────────
     final isOnlyNewline =
         ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
     if (!isOnlyNewline) return;
 
+    // احسب الاتجاه من السطر الذي كان فيه الـ cursor قبل Enter
     final plainText = widget.quillController.document.toPlainText();
-    final offset =
+    final cursorOffset =
         widget.quillController.selection.baseOffset.clamp(0, plainText.length);
-    final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
+    // السطر الجديد أُنشئ بالفعل — نرجع خطوة للسطر السابق
+    final prevLineOffset = cursorOffset > 0 ? cursorOffset - 1 : 0;
+    final dir = _getLineDirection(plainText, prevLineOffset);
 
+    _isHandlingEnter = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isHandlingEnter = false;
       if (!mounted || _isFormatting || _isDirectionFormatting) return;
-      _applyDirectionFormat(() {
-        if (prevDir == TextDirection.ltr) {
-          widget.quillController.formatSelection(Attribute.rtl);
-        } else {
-          widget.quillController
-              .formatSelection(const DirectionAttribute(null));
-        }
-        widget.quillController.formatSelection(const AlignAttribute(null));
-      });
+      _applyEnterDirection(dir);
+      _scrollToCursor();
     });
   }
 
@@ -200,7 +224,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     if (_isFormatting ||
         _isPasting ||
         _isKeyboardOpening ||
-        _isDirectionFormatting) {
+        _isDirectionFormatting ||
+        _isHandlingEnter) {
       return;
     }
 
@@ -403,6 +428,15 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     });
   }
 
+  /// يُمرر الـ scroll لإظهار السطر الحالي — يستخدم آلية Quill الداخلية
+  void _scrollToCursor() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final editorState = _editorKey.currentState;
+      editorState?.requestKeyboard();
+    });
+  }
+
   KeyEventResult _handleKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
@@ -428,24 +462,19 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     return KeyEventResult.ignored;
   }
 
-  /// يحدد اتجاه السطر الحالي ويحفظه ليُطبَّق على السطر الجديد
+  /// يحدد اتجاه السطر الحالي ويُطبّقه على السطر الجديد (كيبورد فيزيائي)
   void _handleEnterKey() {
     final ctrl = widget.quillController;
     final plainText = ctrl.document.toPlainText();
     final offset = ctrl.selection.baseOffset.clamp(0, plainText.length);
-    final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
+    final dir = _getLineDirection(plainText, offset);
 
-    // بعد Enter بمليسثانية واحدة — طبّق السمة على السطر الجديد
+    _isHandlingEnter = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isHandlingEnter = false;
       if (!mounted || _isFormatting || _isDirectionFormatting) return;
-      _applyDirectionFormat(() {
-        if (prevDir == TextDirection.ltr) {
-          ctrl.formatSelection(Attribute.rtl);
-        } else {
-          ctrl.formatSelection(const DirectionAttribute(null));
-        }
-        ctrl.formatSelection(const AlignAttribute(null));
-      });
+      _applyEnterDirection(dir);
+      _scrollToCursor();
     });
   }
 
@@ -535,6 +564,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                   focusNode: widget.focusNode,
                   scrollController: _scrollController,
                   config: QuillEditorConfig(
+                    editorKey: _editorKey,
                     autoFocus: widget.autoFocus,
                     expands: true,
                     scrollable: true,

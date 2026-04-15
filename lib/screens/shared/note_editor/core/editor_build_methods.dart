@@ -50,7 +50,10 @@ class EditorBuildMethods {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const toolbarHeight = 60.0;
     const codeToolbarHeight = 110.0;
-    final totalBottomSpace = (mode == NoteMode.code ? codeToolbarHeight : toolbarHeight) + bottomPadding + 16;
+    final totalBottomSpace =
+        (mode == NoteMode.code ? codeToolbarHeight : toolbarHeight) +
+            bottomPadding +
+            16;
 
     if (mode == NoteMode.code) {
       // Ensure codeController is initialized
@@ -152,18 +155,22 @@ class EditorBuildMethods {
                   onSaveTap();
                 },
                 onBackTap: onBackTap,
-                onCategoryTap: originallyLocked ? null : () async {
-                  final current = coordinator.stateManager.categoryIds;
-                  final result = await CategoryPickerSheet.show(
-                    context, current,
-                    isHiddenFromHome: coordinator.stateManager.isHiddenFromHome,
-                  );
-                  if (result != null) {
-                    onCategoryChanged(result['categoryIds'] as List<int>);
-                    coordinator.stateManager.isHiddenFromHome =
-                        result['isHiddenFromHome'] as bool;
-                  }
-                },
+                onCategoryTap: originallyLocked
+                    ? null
+                    : () async {
+                        final current = coordinator.stateManager.categoryIds;
+                        final result = await CategoryPickerSheet.show(
+                          context,
+                          current,
+                          isHiddenFromHome:
+                              coordinator.stateManager.isHiddenFromHome,
+                        );
+                        if (result != null) {
+                          onCategoryChanged(result['categoryIds'] as List<int>);
+                          coordinator.stateManager.isHiddenFromHome =
+                              result['isHiddenFromHome'] as bool;
+                        }
+                      },
               ),
             ),
           ),
@@ -187,6 +194,7 @@ class EditorBuildMethods {
     required VoidCallback onSmartSaveDialog,
     required Future<void> Function() saveNote,
     Function(String)? onInsertSymbol,
+    VoidCallback? onRebuild,
   }) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -242,11 +250,12 @@ class EditorBuildMethods {
                 if (newLang == 'Auto') {
                   normalizedLang = null;
                 } else {
-                  normalizedLang = newLang; // includes "custom:ext" as-is
+                  normalizedLang = newLang;
                 }
                 coordinator.detectedLanguage = normalizedLang;
                 coordinator.isLanguageManuallySelected = normalizedLang != null;
                 coordinator.stateManager.markDirty();
+                onRebuild?.call();
               },
               onInsertSymbol: onInsertSymbol,
               onRunCode: coordinator.detectedLanguage == 'SVG'
@@ -277,8 +286,8 @@ class EditorBuildMethods {
                   : null,
               onCalculate: () {
                 HapticFeedback.mediumImpact();
-                final dynamic calcController =
-                    coordinator.quillController ?? coordinator.contentController;
+                final dynamic calcController = coordinator.quillController ??
+                    coordinator.contentController;
                 smartController.showSmartCalculationResult(
                   context,
                   calcController,
@@ -365,60 +374,87 @@ class EditorBuildMethods {
                 HapticFeedback.lightImpact();
                 final qc = coordinator.quillController;
                 if (qc != null) {
-                  final isBold = qc.getSelectionStyle().attributes['bold']?.value == true;
-                  qc.formatSelection(isBold ? Attribute.clone(Attribute.bold, null) : Attribute.bold);
+                  final isBold =
+                      qc.getSelectionStyle().attributes['bold']?.value == true;
+                  qc.formatSelection(isBold
+                      ? Attribute.clone(Attribute.bold, null)
+                      : Attribute.bold);
                 } else {
-                  formattingController.wrapText(coordinator.contentController, '**');
+                  formattingController.wrapText(
+                      coordinator.contentController, '**');
                 }
               },
               onItalic: () {
                 HapticFeedback.lightImpact();
                 final qc = coordinator.quillController;
                 if (qc != null) {
-                  final isItalic = qc.getSelectionStyle().attributes['italic']?.value == true;
-                  qc.formatSelection(isItalic ? Attribute.clone(Attribute.italic, null) : Attribute.italic);
+                  final isItalic =
+                      qc.getSelectionStyle().attributes['italic']?.value ==
+                          true;
+                  qc.formatSelection(isItalic
+                      ? Attribute.clone(Attribute.italic, null)
+                      : Attribute.italic);
                 } else {
-                  formattingController.wrapText(coordinator.contentController, '*');
+                  formattingController.wrapText(
+                      coordinator.contentController, '*');
                 }
               },
               onH1: () {
                 HapticFeedback.lightImpact();
                 final qc = coordinator.quillController;
                 if (qc != null) {
-                  final isH1 = qc.getSelectionStyle().attributes['header']?.value == 1;
-                  qc.formatSelection(isH1 ? Attribute.clone(Attribute.h1, null) : Attribute.h1);
+                  final isH1 =
+                      qc.getSelectionStyle().attributes['header']?.value == 1;
+                  qc.formatSelection(isH1
+                      ? Attribute.clone(Attribute.h1, null)
+                      : Attribute.h1);
                 } else {
-                  formattingController.insertText(coordinator.contentController, '# ');
+                  formattingController.insertText(
+                      coordinator.contentController, '# ');
                 }
               },
               onH2: () {
                 HapticFeedback.lightImpact();
                 final qc = coordinator.quillController;
                 if (qc != null) {
-                  final isH2 = qc.getSelectionStyle().attributes['header']?.value == 2;
-                  qc.formatSelection(isH2 ? Attribute.clone(Attribute.h2, null) : Attribute.h2);
+                  final isH2 =
+                      qc.getSelectionStyle().attributes['header']?.value == 2;
+                  qc.formatSelection(isH2
+                      ? Attribute.clone(Attribute.h2, null)
+                      : Attribute.h2);
                 } else {
-                  formattingController.insertText(coordinator.contentController, '## ');
+                  formattingController.insertText(
+                      coordinator.contentController, '## ');
                 }
               },
               onList: () {
                 HapticFeedback.lightImpact();
                 final qc = coordinator.quillController;
                 if (qc != null) {
-                  final isList = qc.getSelectionStyle().attributes['list']?.value == 'bullet';
-                  qc.formatSelection(isList ? Attribute.clone(Attribute.ul, null) : Attribute.ul);
+                  final isList =
+                      qc.getSelectionStyle().attributes['list']?.value ==
+                          'bullet';
+                  qc.formatSelection(isList
+                      ? Attribute.clone(Attribute.ul, null)
+                      : Attribute.ul);
                 } else {
-                  formattingController.insertText(coordinator.contentController, '• ');
+                  formattingController.insertText(
+                      coordinator.contentController, '• ');
                 }
               },
               onChecklist: () {
                 HapticFeedback.lightImpact();
                 final qc = coordinator.quillController;
                 if (qc != null) {
-                  final isCheck = qc.getSelectionStyle().attributes['list']?.value == 'unchecked';
-                  qc.formatSelection(isCheck ? Attribute.clone(Attribute.ul, null) : const ListAttribute('unchecked'));
+                  final isCheck =
+                      qc.getSelectionStyle().attributes['list']?.value ==
+                          'unchecked';
+                  qc.formatSelection(isCheck
+                      ? Attribute.clone(Attribute.ul, null)
+                      : const ListAttribute('unchecked'));
                 } else {
-                  formattingController.insertText(coordinator.contentController, '☐ ');
+                  formattingController.insertText(
+                      coordinator.contentController, '☐ ');
                 }
               },
               onColorTap: () {
