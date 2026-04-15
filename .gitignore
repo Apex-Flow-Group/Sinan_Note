@@ -27,6 +27,9 @@ migrate_working_dir/
 # Kiro IDE settings
 .kiro/
 
+# Archive folder
+archive/
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
