@@ -144,6 +144,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
+  // ignore: unused_element
   Future<void> _checkAndShowWhatsNew() async {
     final prefs = await SharedPreferences.getInstance();
     final packageInfo = await PackageInfo.fromPlatform();
