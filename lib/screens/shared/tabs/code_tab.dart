@@ -499,6 +499,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                   isSelected: isSelected,
                   selectionMode: selectionMode,
                   source: 'professional',
+                  isFiltering: false,
                   isCurrentlyOpen: isCurrentlyOpen,
                   onLongPress: () {
                     if (_selectedNoteIdsNotifier.value.isNotEmpty) return;

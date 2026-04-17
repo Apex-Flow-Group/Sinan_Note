@@ -301,6 +301,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                               }
                             },
                       source: 'archive',
+                      isFiltering: false,
                       selectionMode: _selectionMode,
                       isSelected: isSelected,
                     ),

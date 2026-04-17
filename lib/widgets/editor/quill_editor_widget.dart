@@ -56,8 +56,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   bool _isKeyboardOpening = false;
   bool _isLoading = true; // يمنع _onDocumentChange أثناء تحميل النوتة
   bool _isDirectionFormatting = false;
-
   bool _isHandlingEnter = false;
+  String? _cachedFontFamily;
 
   /// يستخرج اتجاه السطر الذي يقع فيه offset
   TextDirection _getLineDirection(String text, int offset) {
@@ -68,7 +68,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       lineEnd < 0 ? text.length : lineEnd,
     );
     if (line.trim().isEmpty) {
-      // سطر فارغ — ارث اتجاه السطر السابق غير الفارغ
       return _getPrevNonEmptyLineDirection(text, offset);
     }
     return TextDirectionUtils.getDirection(line);
@@ -101,15 +100,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   String _lastPlainText = '';
   StreamSubscription? _docChangeSub;
 
-  // حروف التشكيل العربية (بدون الشدة)
   static const _harakat = {
-    '\u064B', '\u064C', '\u064D', // تنوين فتح/ضم/كسر
-    '\u064E', '\u064F', '\u0650', // فتحة/ضمة/كسرة
-    '\u0652', // سكون
-    '\u0653', '\u0654', '\u0655', // مدة/همزة فوق/همزة تحت
-    '\u0656', '\u0657', '\u0670', // صفحة سفلية/إشارة رفع/ألف خنجرية
+    '\u064B', '\u064C', '\u064D',
+    '\u064E', '\u064F', '\u0650',
+    '\u0652',
+    '\u0653', '\u0654', '\u0655',
+    '\u0656', '\u0657', '\u0670',
   };
-  static const _shadda = '\u0651'; // الشدة تُحذف بعد باقي التشكيل
+  static const _shadda = '\u0651';
 
   static bool _isTashkeel(String ch) => _harakat.contains(ch) || ch == _shadda;
 
@@ -132,7 +130,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     });
   }
 
-  /// يكتشف Enter عبر IME (أندرويد)
   void _onDocumentChange(DocChange change) {
     if (_isFormatting || _isPasting || _isLoading || _isDirectionFormatting) {
       return;
@@ -141,7 +138,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
     final ops = change.change.toList();
 
-    // ── اكتشاف حذف IME ──────────────────────────
     if (ops.any((op) => op.isDelete)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -150,16 +146,13 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       return;
     }
 
-    // ── اكتشاف Enter عبر IME ─────────────────────
     final isOnlyNewline =
         ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
     if (!isOnlyNewline) return;
 
-    // احسب الاتجاه من السطر الذي كان فيه الـ cursor قبل Enter
     final plainText = widget.quillController.document.toPlainText();
     final cursorOffset =
         widget.quillController.selection.baseOffset.clamp(0, plainText.length);
-    // السطر الجديد أُنشئ بالفعل — نرجع خطوة للسطر السابق
     final prevLineOffset = cursorOffset > 0 ? cursorOffset - 1 : 0;
     final dir = _getLineDirection(plainText, prevLineOffset);
 
@@ -172,7 +165,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     });
   }
 
-  /// يفحص النص بعد أي حذف — إذا وُجد تشكيل في بداية المجموعة (بدون حرف أساسي) يحذفه
   void _fixDanglingTashkeel() {
     final ctrl = widget.quillController;
     final sel = ctrl.selection;
@@ -182,15 +174,11 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final pos = sel.baseOffset;
     if (pos == 0 || pos > text.length) return;
 
-    // إذا كان الحرف قبل المؤشر تشكيلاً والحرف قبله أيضاً تشكيل أو بداية النص
-    // → يعني تشكيل معلق بدون حرف أساسي
     final charBefore = text[pos - 1];
     if (!_isTashkeel(charBefore)) return;
 
-    // تحقق: هل قبله حرف أساسي؟
-    if (pos >= 2 && !_isTashkeel(text[pos - 2])) return; // طبيعي — حرف + تشكيل
+    if (pos >= 2 && !_isTashkeel(text[pos - 2])) return;
 
-    // تشكيل معلق — احذفه
     ctrl.replaceText(
       pos - 1,
       1,
@@ -202,13 +190,17 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // عند ظهور الكيبورد (viewInsets تتغير) — نوقف formatSelection مؤقتاً
     final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     if (keyboardVisible && !_isKeyboardOpening) {
       _isKeyboardOpening = true;
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) _isKeyboardOpening = false;
       });
+    }
+    // تحديث الخط فقط عند تغييره — لا نمس customStyles
+    final newFont = Theme.of(context).textTheme.bodyMedium?.fontFamily;
+    if (newFont != _cachedFontFamily) {
+      _cachedFontFamily = newFont;
     }
   }
 
@@ -232,7 +224,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final doc = widget.quillController.document;
     final plainText = doc.toPlainText();
 
-    // ← الجديد: تجاهل إذا لم يتغير النص (مجرد تحريك cursor أو تحديد)
     if (plainText == _lastPlainText) return;
     _lastPlainText = plainText;
 
@@ -262,7 +253,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     );
 
     if (currentLine.isEmpty) {
-      // السطر الفارغ تُعالجه _handleEnterKey — فقط نحدّث الاتجاه المرئي
       final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
       if (_textDirection != prevDir) {
         setState(() => _textDirection = prevDir);
@@ -271,7 +261,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     }
 
     final newDir = TextDirectionUtils.getDirection(currentLine);
-    // إذا كان السطر حرفاً واحداً فقط والحرف محايد (رقم أو رمز) — ارث اتجاه السطر السابق
     final effectiveDir = (currentLine.length == 1 &&
             newDir == TextDirection.rtl &&
             !RegExp(r'[\u0600-\u06FF]').hasMatch(currentLine))
@@ -304,14 +293,11 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     }
   }
 
-  /// يجد اتجاه آخر سطر غير فارغ قبل موضع المؤشر
   TextDirection _getPrevNonEmptyLineDirection(String text, int offset) {
-    // ابحث عن بداية السطر الحالي
     final currentLineStart =
         text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
     if (currentLineStart <= 0) return TextDirection.rtl;
 
-    // ابحث للخلف عن أول سطر غير فارغ
     final before = text.substring(0, currentLineStart);
     final prevLines = before.split('\n');
     for (int i = prevLines.length - 1; i >= 0; i--) {
@@ -322,7 +308,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     return TextDirection.rtl;
   }
 
-  /// يحذف التشكيل أولاً قبل الحرف — يعمل على الموبايل والديسكتوب
   bool _deleteWithTashkeelAwareness() {
     final ctrl = widget.quillController;
     final sel = ctrl.selection;
@@ -332,22 +317,16 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final pos = sel.baseOffset;
     if (pos > text.length) return false;
 
-    // ابحث للخلف عن بداية المجموعة (حرف + تشكيله متراكم)
-    // مثال: "لً" في الذاكرة = [ل][ً] — نجد بداية المجموعة من pos للخلف
     int start = pos - 1;
-    // تخطّ كل تشكيل متراكم للخلف
     while (start > 0 && _isTashkeel(text[start])) {
       start--;
     }
-    // start الآن يشير إلى الحرف الأساسي أو تشكيل إذا كان كل شيء تشكيل
 
     final hasTashkeel =
         (pos - start) > 1 || (pos - start == 1 && _isTashkeel(text[start]));
 
-    if (!hasTashkeel) return false; // لا يوجد تشكيل — اتركه للسلوك الافتراضي
+    if (!hasTashkeel) return false;
 
-    // احذف آخر تشكيل فقط (واحد في كل ضغطة)
-    // ابحث عن آخر تشكيل قبل المؤشر
     int tashkeelPos = pos - 1;
     while (tashkeelPos > start && !_isTashkeel(text[tashkeelPos])) {
       tashkeelPos--;
@@ -365,10 +344,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     return false;
   }
 
-  // محارف التحكم BiDi (محفوظة للاستخدام المستقبلي)
-  // static const _lrm = '\u200E'; // Left-to-Right Mark
-  // static const _rlm = '\u200F'; // Right-to-Left Mark
-
   Future<void> _pastePlainText() async {
     _isPasting = true;
     final ctrl = widget.quillController;
@@ -384,51 +359,52 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
     ctrl.replaceText(offset, deleteLen, text, null);
 
-    ctrl.formatText(offset, text.length, const ColorAttribute(null));
-    ctrl.formatText(offset, text.length, const BackgroundAttribute(null));
-    ctrl.formatText(offset, text.length, Attribute.clone(Attribute.bold, null));
-    ctrl.formatText(
-        offset, text.length, Attribute.clone(Attribute.italic, null));
-    ctrl.formatText(
-        offset, text.length, Attribute.clone(Attribute.underline, null));
-    ctrl.formatText(offset, text.length, const SizeAttribute(null));
-
     final lines = text.split('\n');
     int pos = offset;
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
-      final lineLen = line.length + (i < lines.length - 1 ? 1 : 0);
-      ctrl.formatText(pos, lineLen, const AlignAttribute(null));
-      if (line.isNotEmpty) {
-        final isRtl =
-            TextDirectionUtils.getDirection(line) == TextDirection.rtl;
+      final isLast = i == lines.length - 1;
+      final lineTextLen = line.length;
+
+      // تنظيف تنسيق النص فقط (بدون direction)
+      if (lineTextLen > 0) {
+        ctrl.formatText(pos, lineTextLen, const ColorAttribute(null));
+        ctrl.formatText(pos, lineTextLen, const BackgroundAttribute(null));
+        ctrl.formatText(pos, lineTextLen, Attribute.clone(Attribute.bold, null));
+        ctrl.formatText(pos, lineTextLen, Attribute.clone(Attribute.italic, null));
+        ctrl.formatText(pos, lineTextLen, Attribute.clone(Attribute.underline, null));
+        ctrl.formatText(pos, lineTextLen, const SizeAttribute(null));
+      }
+
+      pos += lineTextLen;
+
+      // طبّق direction على ال\n فقط (1 حرف)
+      if (!isLast) {
+        final isRtl = TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') == TextDirection.rtl;
+        ctrl.formatText(pos, 1, const AlignAttribute(null));
         ctrl.formatText(
           pos,
-          lineLen,
+          1,
           isRtl ? const DirectionAttribute(null) : Attribute.rtl,
         );
+        pos += 1;
       }
-      pos += lineLen;
     }
     _isPasting = false;
-    // تمرير للمؤشر فقط إذا كان خارج نطاق الرؤية
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
       final pos = _scrollController.position;
       final offset = widget.quillController.selection.extentOffset;
-      // نقدّر موضع المؤشر تقريباً — نتجنب القفز إذا كان في المنتصف
       if (pos.pixels < pos.maxScrollExtent - 100) return;
       _scrollController.animateTo(
         pos.maxScrollExtent,
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeOut,
       );
-      // تجنب تحذير unused variable
       offset;
     });
   }
 
-  /// يُمرر الـ scroll لإظهار السطر الحالي — يستخدم آلية Quill الداخلية
   void _scrollToCursor() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
@@ -441,19 +417,16 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
     }
-    // Ctrl+V
     if (event.logicalKey == LogicalKeyboardKey.keyV &&
         HardwareKeyboard.instance.isControlPressed) {
       _pastePlainText();
       return KeyEventResult.handled;
     }
-    // Enter — حقن سمة الاتجاه للسطر الجديد قبل إنشائه
     if (event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.numpadEnter) {
       _handleEnterKey();
-      return KeyEventResult.ignored; // نترك Quill ينشئ السطر بعد تحديث الحالة
+      return KeyEventResult.ignored;
     }
-    // Backspace
     if (event.logicalKey == LogicalKeyboardKey.backspace) {
       return _deleteWithTashkeelAwareness()
           ? KeyEventResult.handled
@@ -462,7 +435,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     return KeyEventResult.ignored;
   }
 
-  /// يحدد اتجاه السطر الحالي ويُطبّقه على السطر الجديد (كيبورد فيزيائي)
   void _handleEnterKey() {
     final ctrl = widget.quillController;
     final plainText = ctrl.document.toPlainText();
@@ -488,9 +460,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         DeleteCharacterIntent: CallbackAction<DeleteCharacterIntent>(
           onInvoke: (intent) {
             if (intent.forward) return Actions.maybeInvoke(context, intent);
-            // تشكيل → احذفه فقط
             if (_deleteWithTashkeelAwareness()) return null;
-            // حرف عادي → احذفه يدوياً
             final ctrl = widget.quillController;
             final sel = ctrl.selection;
             if (sel.isCollapsed && sel.baseOffset > 0) {
@@ -550,6 +520,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           child: Text(
                             l10n.startWriting,
                             style: TextStyle(
+                              fontFamily: _cachedFontFamily,
                               fontSize: widget.fontSize,
                               height: 1.6,
                               color: widget.hintColor,
@@ -559,62 +530,65 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                     ],
                   );
                 },
-                child: QuillEditor(
-                  controller: widget.quillController,
-                  focusNode: widget.focusNode,
-                  scrollController: _scrollController,
-                  config: QuillEditorConfig(
-                    editorKey: _editorKey,
-                    autoFocus: widget.autoFocus,
-                    expands: true,
-                    scrollable: true,
-                    padding: EdgeInsets.zero,
-                    placeholder: '',
-                    paintCursorAboveText: true,
-                    contextMenuBuilder: (context, rawEditorState) {
-                      final anchor = rawEditorState.contextMenuAnchors;
-                      final items =
-                          rawEditorState.contextMenuButtonItems.map((item) {
-                        if (item.type == ContextMenuButtonType.paste) {
-                          return item.copyWith(
-                            onPressed: () {
-                              ContextMenuController.removeAny();
-                              _pastePlainText();
-                            },
-                          );
-                        }
-                        return item;
-                      }).toList();
-                      return AdaptiveTextSelectionToolbar.buttonItems(
-                        anchors: TextSelectionToolbarAnchors(
-                          primaryAnchor: anchor.primaryAnchor,
-                          secondaryAnchor: anchor.secondaryAnchor,
+                child: DefaultTextStyle.merge(
+                  style: TextStyle(fontFamily: _cachedFontFamily),
+                  child: QuillEditor(
+                    controller: widget.quillController,
+                    focusNode: widget.focusNode,
+                    scrollController: _scrollController,
+                    config: QuillEditorConfig(
+                      editorKey: _editorKey,
+                      autoFocus: widget.autoFocus,
+                      expands: true,
+                      scrollable: true,
+                      padding: EdgeInsets.zero,
+                      placeholder: '',
+                      paintCursorAboveText: true,
+                      contextMenuBuilder: (context, rawEditorState) {
+                        final anchor = rawEditorState.contextMenuAnchors;
+                        final items =
+                            rawEditorState.contextMenuButtonItems.map((item) {
+                          if (item.type == ContextMenuButtonType.paste) {
+                            return item.copyWith(
+                              onPressed: () {
+                                ContextMenuController.removeAny();
+                                _pastePlainText();
+                              },
+                            );
+                          }
+                          return item;
+                        }).toList();
+                        return AdaptiveTextSelectionToolbar.buttonItems(
+                          anchors: TextSelectionToolbarAnchors(
+                            primaryAnchor: anchor.primaryAnchor,
+                            secondaryAnchor: anchor.secondaryAnchor,
+                          ),
+                          buttonItems: items,
+                        );
+                      },
+                      quillMagnifierBuilder: (dragPosition) =>
+                          QuillMagnifier(dragPosition: dragPosition),
+                      textSelectionThemeData: TextSelectionThemeData(
+                        cursorColor: widget.textColor,
+                        selectionColor: widget.textColor.withValues(alpha: 0.2),
+                        selectionHandleColor: widget.textColor,
+                      ),
+                      customStyles: DefaultStyles(
+                        paragraph: DefaultTextBlockStyle(
+                          TextStyle(
+                            fontSize: widget.fontSize,
+                            height: 1.6,
+                            color: widget.textColor,
+                            fontFeatures: const [
+                              FontFeature.disable('liga'),
+                              FontFeature.disable('clig'),
+                            ],
+                          ),
+                          HorizontalSpacing.zero,
+                          VerticalSpacing.zero,
+                          VerticalSpacing.zero,
+                          null,
                         ),
-                        buttonItems: items,
-                      );
-                    },
-                    quillMagnifierBuilder: (dragPosition) =>
-                        QuillMagnifier(dragPosition: dragPosition),
-                    textSelectionThemeData: TextSelectionThemeData(
-                      cursorColor: widget.textColor,
-                      selectionColor: widget.textColor.withValues(alpha: 0.2),
-                      selectionHandleColor: widget.textColor,
-                    ),
-                    customStyles: DefaultStyles(
-                      paragraph: DefaultTextBlockStyle(
-                        TextStyle(
-                          fontSize: widget.fontSize,
-                          height: 1.6,
-                          color: widget.textColor,
-                          fontFeatures: const [
-                            FontFeature.disable('liga'),
-                            FontFeature.disable('clig'),
-                          ],
-                        ),
-                        HorizontalSpacing.zero,
-                        VerticalSpacing.zero,
-                        VerticalSpacing.zero,
-                        null,
                       ),
                     ),
                   ),

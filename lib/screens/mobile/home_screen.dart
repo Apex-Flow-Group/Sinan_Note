@@ -60,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearchActive = false;
   ViewType _viewType = ViewType.listCompact;
   Timer? _debounce;
+  final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
 
   @override
   void initState() {
@@ -204,21 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: Text(l10n.simpleNotes),
                         onTap: () {
                           Navigator.pop(ctx);
-                          _searchController.text = 'type:simple';
-                        }),
-                    ListTile(
-                        leading: const Icon(Icons.code, color: Colors.purple),
-                        title: Text(l10n.professionalNotes),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _searchController.text = 'type:pro';
-                        }),
-                    ListTile(
-                        leading: const Icon(Icons.alarm, color: Colors.orange),
-                        title: Text(l10n.reminderNotes),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _searchController.text = 'type:reminder';
+                          _activeFilterNotifier.value = 'type:simple';
                         }),
                     ListTile(
                         leading:
@@ -226,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: Text(l10n.checklists),
                         onTap: () {
                           Navigator.pop(ctx);
-                          _searchController.text = 'type:checklist';
+                          _activeFilterNotifier.value = 'type:checklist';
                         }),
                     const Divider(),
                     Padding(
@@ -243,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: Text(l10n.pinnedOnly),
                         onTap: () {
                           Navigator.pop(ctx);
-                          _searchController.text = 'pinned:true';
+                          _activeFilterNotifier.value = 'pinned:true';
                         }),
                     const Divider(),
                     ListTile(
@@ -251,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: Text(l10n.clearFilter),
                         onTap: () {
                           Navigator.pop(ctx);
-                          _searchController.clear();
+                          _activeFilterNotifier.value = null;
                         }),
                   ],
                 ),
@@ -331,6 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _visibleCountNotifier.dispose();
     _viewTypeNotifier.dispose();
     _selectedNoteIdsNotifier.dispose();
+    _activeFilterNotifier.dispose();
     UnifiedNotificationService().cancelAll();
     super.dispose();
   }
@@ -423,6 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           DateBarHeader(
                             scrollController: _scrollController,
                             filteredNotesNotifier: _filteredNotesNotifier,
+                            activeFilterNotifier: _activeFilterNotifier,
                           ),
                           NotesGridView(
                             viewTypeNotifier: _viewTypeNotifier,
@@ -432,6 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             filteredNotesNotifier: _filteredNotesNotifier,
                             totalCountNotifier: _totalCountNotifier,
                             visibleCountNotifier: _visibleCountNotifier,
+                            activeFilterNotifier: _activeFilterNotifier,
                           ),
                         ],
                       ),

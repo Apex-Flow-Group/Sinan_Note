@@ -46,7 +46,7 @@ class EditorCoordinator {
   NotesProvider? notesProviderRef;
   String? notePassword;
   late bool initialLockState;
-  double fontSize = 18.0;
+  double fontSize = 16.0; // يُحدَّث من context عند التهيئة
   Color textColor = Colors.black87;
   Timer? autosaveTimer;
   String? detectedLanguage;
@@ -234,6 +234,11 @@ class EditorCoordinator {
     }
     stateManager.markDirty();
     return result;
+  }
+
+  /// تحديث حجم الخط من الثيم — يُستدعى من didChangeDependencies
+  void updateFontSize(BuildContext context) {
+    fontSize = Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0;
   }
 
   /// Dispose all resources

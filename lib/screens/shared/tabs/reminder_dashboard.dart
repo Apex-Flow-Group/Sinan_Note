@@ -696,6 +696,7 @@ class _ReminderTabView extends StatelessWidget {
                 isSelected: isSelected,
                 selectionMode: selectionMode,
                 source: 'reminder_$type',
+                isFiltering: false,
                 isCurrentlyOpen: sel.selectedNote?.id == note.id,
                 onLongPress: () {
                   if (selectedNoteIdsNotifier.value.isNotEmpty) return;

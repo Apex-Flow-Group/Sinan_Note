@@ -320,6 +320,42 @@ abstract class AppLocalizations {
   /// **'Font Size'**
   String get fontSize;
 
+  /// No description provided for @fontFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Font Style'**
+  String get fontFamily;
+
+  /// No description provided for @fontFamilySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System Font'**
+  String get fontFamilySystem;
+
+  /// No description provided for @fontFamilySystemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Device default font'**
+  String get fontFamilySystemDesc;
+
+  /// No description provided for @fontFamilyCairoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Modern Arabic & Latin font'**
+  String get fontFamilyCairoDesc;
+
+  /// No description provided for @fontFamilyTajawalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Light & contemporary Arabic font'**
+  String get fontFamilyTajawalDesc;
+
+  /// No description provided for @fontFamilyVazirmatnDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Elegant Persian-Arabic balanced font'**
+  String get fontFamilyVazirmatnDesc;
+
   /// No description provided for @exportBackup.
   ///
   /// In en, this message translates to:

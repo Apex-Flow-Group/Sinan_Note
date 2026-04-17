@@ -50,6 +50,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _l10nRef = AppLocalizations.of(context);
+    _coordinator.updateFontSize(context);
   }
 
   @override

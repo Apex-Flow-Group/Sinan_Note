@@ -20,12 +20,14 @@ class NotesGridView extends StatefulWidget {
   final ValueNotifier<List<Note>>? filteredNotesNotifier;
   final ValueNotifier<int>? totalCountNotifier;
   final ValueNotifier<int>? visibleCountNotifier;
+  final ValueNotifier<String?> activeFilterNotifier;
 
   const NotesGridView({
     super.key,
     required this.viewTypeNotifier,
     required this.selectedNoteIdsNotifier,
     required this.searchController,
+    required this.activeFilterNotifier,
     this.scrollController,
     this.filteredNotesNotifier,
     this.totalCountNotifier,
@@ -53,6 +55,7 @@ class _NotesGridViewState extends State<NotesGridView> {
   final ValueNotifier<bool> _hasMoreNotifier = ValueNotifier(false);
   final ValueNotifier<int> _visibleCountNotifier = ValueNotifier(0);
   final ValueNotifier<int> _totalCountNotifier = ValueNotifier(0);
+  final ValueNotifier<bool> _isFilteringNotifier = ValueNotifier(false);
 
   @override
   void initState() {
@@ -66,6 +69,7 @@ class _NotesGridViewState extends State<NotesGridView> {
       _ownsFilteredNotifier = true;
     }
     widget.searchController.addListener(_onSearchChanged);
+    widget.activeFilterNotifier.addListener(_onFilterChanged);
     _scrollController.addListener(_onScroll);
   }
 
@@ -107,12 +111,14 @@ class _NotesGridViewState extends State<NotesGridView> {
   void dispose() {
     _notesProvider?.removeListener(_onProviderChanged);
     widget.searchController.removeListener(_onSearchChanged);
+    widget.activeFilterNotifier.removeListener(_onFilterChanged);
     _scrollController.removeListener(_onScroll);
     if (widget.scrollController == null) _scrollController.dispose();
     _closeAllSlidables.dispose();
     _hasMoreNotifier.dispose();
     _totalCountNotifier.dispose();
     _visibleCountNotifier.dispose();
+    _isFilteringNotifier.dispose();
     if (_ownsFilteredNotifier) _filteredNotesNotifier.dispose();
     super.dispose();
   }
@@ -185,7 +191,17 @@ class _NotesGridViewState extends State<NotesGridView> {
     _syncFilteredNotes(_notesProvider?.notes ?? []);
   }
 
+  void _onFilterChanged() {
+    _syncFilteredNotes(_notesProvider?.notes ?? []);
+  }
+
   void _syncFilteredNotes(List<Note> notes, {bool force = false}) {
+    final searchQuery = widget.searchController.text.toLowerCase();
+    final isFiltering = searchQuery.isNotEmpty ||
+        _lastSelectedCategoryId != null ||
+        widget.activeFilterNotifier.value != null;
+    _isFilteringNotifier.value = isFiltering;
+
     final newFiltered = _filterNotes(notes);
     _allFiltered = newFiltered;
     _visibleCount = _pageSize.clamp(0, newFiltered.length);
@@ -214,31 +230,40 @@ class _NotesGridViewState extends State<NotesGridView> {
 
   List<Note> _filterNotes(List<Note> notes) {
     final searchQuery = widget.searchController.text.toLowerCase();
+    final activeFilter = widget.activeFilterNotifier.value;
     final selectedCategoryId = _lastSelectedCategoryId;
     final hideProFromHome = _lastHideProFromHome;
+    final isFiltering = searchQuery.isNotEmpty ||
+        selectedCategoryId != null ||
+        activeFilter != null;
+
     return notes.where((note) {
       if (note.isLocked || note.isArchived || note.isTrashed) return false;
-      // إخفاء من الرئيسية
-      if (selectedCategoryId == null && note.isHiddenFromHome) return false;
+
+      // إخفاء من الرئيسية — يظهر فقط عند البحث أو تفعيل فلتر
+      if (!isFiltering && note.isHiddenFromHome) return false;
+
       // فلترة كتالوج المحترف
       if (selectedCategoryId == kProCategoryId) {
         if (!note.isProfessional) return false;
       } else if (selectedCategoryId != null) {
         if (!note.categoryIds.contains(selectedCategoryId)) return false;
       } else {
-        // كل الملاحظات — إخفاء المحترف إذا كان الخيار مفعلاً
-        if (hideProFromHome && note.isProfessional) return false;
-      }
-      if (searchQuery.isEmpty) {
-        return true;
+        // كل الملاحظات — إخفاء المحترف إذا كان الخيار مفعلاً (فقط بدون بحث/فلتر)
+        if (!isFiltering && hideProFromHome && note.isProfessional) return false;
+        // النوتة المحترفة المخفية بـ hideProFromHome تظهر عند البحث مع chip الإخفاء
       }
 
-      if (searchQuery.startsWith('type:')) {
-        return _matchNoteType(note, searchQuery.substring(5));
+      // فلتر نشط من الشريط العلوي
+      if (activeFilter != null) {
+        if (activeFilter.startsWith('type:')) {
+          if (!_matchNoteType(note, activeFilter.substring(5))) return false;
+        } else if (activeFilter == 'pinned:true') {
+          if (!note.isPinned) return false;
+        }
       }
-      if (searchQuery.startsWith('pinned:')) {
-        return note.isPinned;
-      }
+
+      if (searchQuery.isEmpty) return true;
 
       final normalized = Note.normalize(searchQuery);
       if (note.normalizedTitle.contains(normalized) ||
@@ -315,6 +340,7 @@ class _NotesGridViewState extends State<NotesGridView> {
       selectedNoteIdsNotifier: widget.selectedNoteIdsNotifier,
       closeAllSlidables: _closeAllSlidables,
       hasMoreNotifier: _hasMoreNotifier,
+      isFilteringNotifier: _isFilteringNotifier,
     );
   }
 }
@@ -325,6 +351,7 @@ class _NotesSliversView extends StatefulWidget {
   final ValueNotifier<Set<int>> selectedNoteIdsNotifier;
   final ValueNotifier<int> closeAllSlidables;
   final ValueNotifier<bool> hasMoreNotifier;
+  final ValueNotifier<bool> isFilteringNotifier;
 
   const _NotesSliversView({
     required this.viewTypeNotifier,
@@ -332,6 +359,7 @@ class _NotesSliversView extends StatefulWidget {
     required this.selectedNoteIdsNotifier,
     required this.closeAllSlidables,
     required this.hasMoreNotifier,
+    required this.isFilteringNotifier,
   });
 
   @override
@@ -343,6 +371,7 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
   String _viewTypeName = 'listCompact';
   bool _hasMore = false;
   bool _isNavHidden = false;
+  bool _isFiltering = false;
 
   @override
   void initState() {
@@ -351,9 +380,11 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
     _viewTypeName = widget.viewTypeNotifier.value;
     _hasMore = widget.hasMoreNotifier.value;
     _isNavHidden = bottomNavHiddenNotifier.value;
+    _isFiltering = widget.isFilteringNotifier.value;
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
     widget.viewTypeNotifier.addListener(_onViewTypeChanged);
     widget.hasMoreNotifier.addListener(_onHasMoreChanged);
+    widget.isFilteringNotifier.addListener(_onFilteringChanged);
     bottomNavHiddenNotifier.addListener(_onNavHiddenChanged);
     // selectedNoteIdsNotifier لا يُشغّل setState هنا — كل بطاقة تقرأه مباشرة
   }
@@ -363,12 +394,17 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
     widget.filteredNotesNotifier.removeListener(_onNotesChanged);
     widget.viewTypeNotifier.removeListener(_onViewTypeChanged);
     widget.hasMoreNotifier.removeListener(_onHasMoreChanged);
+    widget.isFilteringNotifier.removeListener(_onFilteringChanged);
     bottomNavHiddenNotifier.removeListener(_onNavHiddenChanged);
     super.dispose();
   }
 
   void _onNavHiddenChanged() {
     setState(() => _isNavHidden = bottomNavHiddenNotifier.value);
+  }
+
+  void _onFilteringChanged() {
+    setState(() => _isFiltering = widget.isFilteringNotifier.value);
   }
 
   void _onHasMoreChanged() {
@@ -479,6 +515,7 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
         closeAllSlidables: widget.closeAllSlidables,
         selectedNoteIdsNotifier: widget.selectedNoteIdsNotifier,
         source: source,
+        isFiltering: _isFiltering,
       );
     }
     return RepaintBoundary(
@@ -491,6 +528,7 @@ class _NotesSliversViewState extends State<_NotesSliversView> {
           closeAllSlidables: widget.closeAllSlidables,
           selectedNoteIdsNotifier: widget.selectedNoteIdsNotifier,
           source: source,
+          isFiltering: _isFiltering,
         ),
       ),
     );
@@ -505,6 +543,7 @@ class _NoteCardWrapper extends StatefulWidget {
   final ValueNotifier<int> closeAllSlidables;
   final ValueNotifier<Set<int>> selectedNoteIdsNotifier;
   final String source;
+  final bool isFiltering;
 
   const _NoteCardWrapper({
     required this.note,
@@ -512,6 +551,7 @@ class _NoteCardWrapper extends StatefulWidget {
     required this.closeAllSlidables,
     required this.selectedNoteIdsNotifier,
     required this.source,
+    required this.isFiltering,
   });
 
   @override
@@ -602,6 +642,7 @@ class _NoteCardWrapperState extends State<_NoteCardWrapper> {
               isSelected: _isSelected,
               selectionMode: _selectionMode,
               source: widget.source,
+              isFiltering: widget.isFiltering,
               onLongPress: () {
                 if (widget.selectedNoteIdsNotifier.value.isNotEmpty) return;
                 widget.selectedNoteIdsNotifier.value = {widget.note.id!};

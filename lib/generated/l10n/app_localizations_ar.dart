@@ -120,6 +120,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fontSize => 'حجم الخط';
 
   @override
+  String get fontFamily => 'نوع الخط';
+
+  @override
+  String get fontFamilySystem => 'خط النظام';
+
+  @override
+  String get fontFamilySystemDesc => 'الخط الافتراضي للجهاز';
+
+  @override
+  String get fontFamilyCairoDesc => 'خط عربي حديث وأنيق';
+
+  @override
+  String get fontFamilyTajawalDesc => 'خط عربي خفيف وعصري';
+
+  @override
+  String get fontFamilyVazirmatnDesc => 'خط فارسي-عربي أنيق ومتوازن';
+
+  @override
   String get exportBackup => 'تصدير نسخة احتياطية';
 
   @override

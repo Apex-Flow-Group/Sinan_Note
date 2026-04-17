@@ -21,6 +21,7 @@ import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/screens/shared/note_view_screen.dart';
 import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
 import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
+import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/security/security_gate.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -74,12 +75,13 @@ class ApexNoteApp extends StatefulWidget {
   State<ApexNoteApp> createState() => _ApexNoteAppState();
 }
 
-class _ApexNoteAppState extends State<ApexNoteApp> {
+class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   static const platform = MethodChannel('com.apexflow.app.sinan/widget');
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (Platform.isAndroid || Platform.isIOS) {
       _handleWidgetIntent();
       platform.setMethodCallHandler(_handleMethodCall);
@@ -296,7 +298,16 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // عند العودة من الخلفية — نجدد الجلسة بصمت بدون dialog
+      GoogleDriveAuth.refreshSessionIfNeeded();
+    }
   }
 
   @override
@@ -327,10 +338,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                 colorScheme: lightDynamic ??
                     ColorScheme.fromSeed(seedColor: Colors.blue),
                 useMaterial3: true,
-                textTheme: TextTheme(
-                  bodyMedium:
-                      TextStyle(fontSize: 16.0 * settings.textScaleFactor),
-                ),
+                fontFamily: settings.resolvedFontFamily,
                 pageTransitionsTheme: const PageTransitionsTheme(
                   builders: {
                     TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
@@ -345,10 +353,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
                     ColorScheme.fromSeed(
                         seedColor: Colors.teal, brightness: Brightness.dark),
                 useMaterial3: true,
-                textTheme: TextTheme(
-                  bodyMedium:
-                      TextStyle(fontSize: 16.0 * settings.textScaleFactor),
-                ),
+                fontFamily: settings.resolvedFontFamily,
                 pageTransitionsTheme: const PageTransitionsTheme(
                   builders: {
                     TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
@@ -361,7 +366,12 @@ class _ApexNoteAppState extends State<ApexNoteApp> {
               home: const _AppHome(),
               scrollBehavior: const _AppScrollBehavior(),
               builder: (context, child) {
-                return child ?? const SizedBox.shrink();
+                return MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(settings.textScaleFactor),
+                  ),
+                  child: child ?? const SizedBox.shrink(),
+                );
               },
               routes: {
                 '/settings': (context) => const SettingsScreenResponsive(),

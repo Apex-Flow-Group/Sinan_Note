@@ -60,6 +60,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   late final ValueNotifier<String> _viewTypeNotifier;
   bool _showAddMenu = false;
   final ScrollController _notesScrollController = ScrollController();
+  final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
 
   // Desktop view types (no grid)
   static const List<ViewType> _desktopViewTypes = [
@@ -131,6 +132,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     _isEditModeNotifier.dispose();
     _viewTypeNotifier.dispose();
     _notesScrollController.dispose();
+    _activeFilterNotifier.dispose();
     super.dispose();
   }
 
@@ -187,23 +189,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   title: Text(l10n.simpleNotes),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _searchController.text = 'type:simple';
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.code, color: Colors.purple),
-                  title: Text(l10n.professionalNotes),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _searchController.text = 'type:pro';
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.alarm, color: Colors.orange),
-                  title: Text(l10n.reminderNotes),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _searchController.text = 'type:reminder';
+                    _activeFilterNotifier.value = 'type:simple';
                   },
                 ),
                 ListTile(
@@ -211,7 +197,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   title: Text(l10n.checklists),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _searchController.text = 'type:checklist';
+                    _activeFilterNotifier.value = 'type:checklist';
                   },
                 ),
                 const Divider(),
@@ -229,7 +215,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   title: Text(l10n.pinnedOnly),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _searchController.text = 'pinned:true';
+                    _activeFilterNotifier.value = 'pinned:true';
                   },
                 ),
                 const Divider(),
@@ -238,7 +224,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   title: Text(l10n.clearFilter),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _searchController.clear();
+                    _activeFilterNotifier.value = null;
                   },
                 ),
               ],
@@ -418,6 +404,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                             selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
                             searchController: _searchController,
                             scrollController: _notesScrollController,
+                            activeFilterNotifier: _activeFilterNotifier,
                           ),
                         ],
                       ),

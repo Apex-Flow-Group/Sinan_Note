@@ -9,6 +9,7 @@ class SettingsProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   double _textScaleFactor = 1.0;
   String _languageCode = 'system';
+  String _fontFamily = 'system'; // 'system' | 'Cairo' | 'Tajawal'
   String _swipeRightAction = 'delete';
   String _swipeLeftAction = 'archive';
   bool _swipeEnabled = true;
@@ -36,6 +37,8 @@ class SettingsProvider with ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   double get textScaleFactor => _textScaleFactor;
   String get languageCode => _languageCode;
+  String get fontFamily => _fontFamily;
+  String? get resolvedFontFamily => _fontFamily == 'system' ? null : _fontFamily;
   String get swipeRightAction => _swipeRightAction;
   String get swipeLeftAction => _swipeLeftAction;
   bool get swipeEnabled => _swipeEnabled;
@@ -79,6 +82,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('textScale', scale);
+  }
+
+  Future<void> setFontFamily(String family) async {
+    _fontFamily = family;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('fontFamily', family);
   }
 
   Future<void> setLanguage(String code) async {
@@ -196,6 +206,7 @@ class SettingsProvider with ChangeNotifier {
         _themeMode = ThemeMode.system;
       }
       _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
+      _fontFamily = prefs.getString('fontFamily') ?? 'system';
       _languageCode = prefs.getString('language') ?? 'system';
       _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
       _swipeLeftAction = prefs.getString('swipeLeft') ?? 'archive';

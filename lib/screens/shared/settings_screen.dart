@@ -93,11 +93,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Slider(
                     value: settings.textScaleFactor,
                     min: 0.8,
-                    max: 1.5,
-                    divisions: 7,
+                    max: 1.3,
+                    divisions: 5,
                     onChanged: (value) => settings.setTextScaleFactor(value),
                   ),
                 ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.font_download_outlined),
+                title: Text(l10n.fontFamily),
+                subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
+                onTap: () => _showFontFamilySheet(context, settings, l10n),
               ),
 
               // EDITOR SECTION
@@ -247,6 +253,106 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  String _fontFamilyLabel(String family, AppLocalizations l10n) {
+    switch (family) {
+      case 'Cairo': return 'Cairo';
+      case 'Tajawal': return 'Tajawal';
+      default: return l10n.fontFamilySystem;
+    }
+  }
+
+  void _showFontFamilySheet(BuildContext context, SettingsProvider settings, AppLocalizations l10n) {
+    final fonts = [
+      ('system', l10n.fontFamilySystem, l10n.fontFamilySystemDesc),
+      ('Cairo', 'Cairo', l10n.fontFamilyCairoDesc),
+      ('Tajawal', 'Tajawal', l10n.fontFamilyTajawalDesc),
+      ('Vazirmatn', 'Vazirmatn', l10n.fontFamilyVazirmatnDesc),
+    ];
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.font_download_outlined, size: 20),
+                    const SizedBox(width: 8),
+                    Text(l10n.fontFamily,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              const Divider(),
+              ...fonts.map((f) {
+                final isSelected = settings.fontFamily == f.$1;
+                final cs = Theme.of(context).colorScheme;
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  leading: Container(
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? cs.primary.withValues(alpha: 0.12)
+                          : cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text('أ',
+                        style: TextStyle(
+                          fontFamily: f.$1 == 'system' ? null : f.$1,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? cs.primary : cs.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                  title: Text(f.$2,
+                    style: TextStyle(
+                      fontFamily: f.$1 == 'system' ? null : f.$1,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? cs.primary : null,
+                    ),
+                  ),
+                  subtitle: Text(f.$3,
+                    style: TextStyle(
+                      fontFamily: f.$1 == 'system' ? null : f.$1,
+                      fontSize: 12,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? Icon(Icons.check_circle_rounded, color: cs.primary)
+                      : null,
+                  onTap: () {
+                    settings.setFontFamily(f.$1);
+                    Navigator.pop(ctx);
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDesktopLayout(
     BuildContext context,
     AppLocalizations l10n,
@@ -315,11 +421,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Slider(
                 value: settings.textScaleFactor,
                 min: 0.8,
-                max: 1.5,
-                divisions: 7,
+                max: 1.3,
+                divisions: 5,
                 onChanged: (value) => settings.setTextScaleFactor(value),
               ),
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.font_download_outlined),
+            title: Text(l10n.fontFamily),
+            subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
+            onTap: () => _showFontFamilySheet(context, settings, l10n),
           ),
         ],
       ),

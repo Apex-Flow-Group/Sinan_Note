@@ -49,11 +49,13 @@ class HomeScreenPopScope extends StatelessWidget {
 class DateBarHeader extends StatelessWidget {
   final ScrollController scrollController;
   final ValueNotifier<List<Note>> filteredNotesNotifier;
+  final ValueNotifier<String?> activeFilterNotifier;
 
   const DateBarHeader({
     super.key,
     required this.scrollController,
     required this.filteredNotesNotifier,
+    required this.activeFilterNotifier,
   });
 
   @override
@@ -66,6 +68,7 @@ class DateBarHeader extends StatelessWidget {
           scrollController: scrollController,
           filteredNotesNotifier: filteredNotesNotifier,
           noteHeights: NoteCardKeyRegistry.instance.heights,
+          activeFilterNotifier: activeFilterNotifier,
         ),
       ),
     );

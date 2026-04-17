@@ -26,16 +26,56 @@ class GoogleDriveAuth {
     if (_initialized) return;
     _initialized = true;
     try {
-      currentUser = await googleSignIn.signInSilently();
+      currentUser = await googleSignIn.signInSilently(suppressErrors: true);
       if (currentUser != null) {
         final authClient = await googleSignIn.authenticatedClient();
         if (authClient != null) {
           driveApi = drive.DriveApi(authClient);
           AppLogger.success('Restored session: ${currentUser!.email}', 'GoogleDrive');
+        } else {
+          // token انتهى — نعيد التهيئة بصمت بدون dialog
+          currentUser = null;
+          driveApi = null;
+          _initialized = false;
         }
       }
     } catch (e) {
-      AppLogger.warning('Silent sign-in failed', 'GoogleDrive');
+      // أي خطأ يُسكَّت تماماً — لا dialog للمستخدم
+      currentUser = null;
+      driveApi = null;
+      _initialized = false;
+      AppLogger.warning('Silent sign-in failed silently', 'GoogleDrive');
+    }
+  }
+
+  /// إعادة تهيئة الجلسة عند العودة من الخلفية
+  static Future<void> refreshSessionIfNeeded() async {
+    if (currentUser == null) return;
+    try {
+      final authClient = await googleSignIn.authenticatedClient();
+      if (authClient != null) {
+        driveApi = drive.DriveApi(authClient);
+      } else {
+        // token منتهي — نعيد المحاولة بصمت
+        final refreshed = await googleSignIn.signInSilently(suppressErrors: true);
+        if (refreshed != null) {
+          currentUser = refreshed;
+          final newClient = await googleSignIn.authenticatedClient();
+          if (newClient != null) {
+            driveApi = drive.DriveApi(newClient);
+          } else {
+            currentUser = null;
+            driveApi = null;
+          }
+        } else {
+          currentUser = null;
+          driveApi = null;
+        }
+      }
+    } catch (_) {
+      // صامت تماماً
+      currentUser = null;
+      driveApi = null;
     }
   }
 

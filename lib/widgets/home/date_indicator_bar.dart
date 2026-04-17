@@ -12,13 +12,15 @@ import 'package:provider/provider.dart';
 class DateIndicatorBar extends StatefulWidget {
   final ScrollController scrollController;
   final ValueNotifier<List<Note>> filteredNotesNotifier;
-  final Map<int, double> noteHeights; // من NoteCardKeyRegistry
+  final Map<int, double> noteHeights;
+  final ValueNotifier<String?> activeFilterNotifier;
 
   const DateIndicatorBar({
     super.key,
     required this.scrollController,
     required this.filteredNotesNotifier,
     required this.noteHeights,
+    required this.activeFilterNotifier,
   });
 
   @override
@@ -34,13 +36,19 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     super.initState();
     widget.scrollController.addListener(_onScroll);
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
+    widget.activeFilterNotifier.addListener(_rebuild);
   }
 
   @override
   void dispose() {
     widget.scrollController.removeListener(_onScroll);
     widget.filteredNotesNotifier.removeListener(_onNotesChanged);
+    widget.activeFilterNotifier.removeListener(_rebuild);
     super.dispose();
+  }
+
+  void _rebuild() {
+    if (mounted) setState(() {});
   }
 
   void _onNotesChanged() {
@@ -356,6 +364,19 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     );
   }
 
+  String _filterLabel(String filter, bool isAr) {
+    switch (filter) {
+      case 'type:simple':
+        return isAr ? 'نص بسيط' : 'Simple';
+      case 'type:checklist':
+        return isAr ? 'قائمة مهام' : 'Checklist';
+      case 'pinned:true':
+        return isAr ? 'مثبتة' : 'Pinned';
+      default:
+        return filter;
+    }
+  }
+
   String _formatDateStatic(DateTime date, bool isAr) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -372,6 +393,44 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     final colorScheme = Theme.of(context).colorScheme;
     final categoriesProvider = context.watch<CategoriesProvider>();
     final selectedId = categoriesProvider.selectedCategoryId;
+    final activeFilter = widget.activeFilterNotifier.value;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    // ─── وضع الفلتر النشط ───
+    if (activeFilter != null) {
+      final filterLabel = _filterLabel(activeFilter, isAr);
+      return _BarWithSyncProgress(
+        child: Container(
+          height: 28,
+          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
+          padding: const EdgeInsets.only(left: 16),
+          child: Row(
+            children: [
+              Icon(Icons.filter_list_rounded, size: 13, color: colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                filterLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => widget.activeFilterNotifier.value = null,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.close_rounded,
+                      size: 16,
+                      color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     // ─── وضع التصنيف ───
     if (selectedId != null) {

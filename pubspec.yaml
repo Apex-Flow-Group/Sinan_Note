@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.0.3+3334
+version: 3.0.3+3335
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -75,6 +75,21 @@ flutter:
   generate: true
   assets:
     - assets/images/app_icon.png
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Variable.ttf
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Tajawal-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 700
+    - family: Vazirmatn
+      fonts:
+        - asset: assets/fonts/Vazirmatn-Variable.ttf
 
 dependency_overrides:
   quill_native_bridge_windows:

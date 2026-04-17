@@ -54,6 +54,8 @@ class _CodeEditorState extends State<CodeEditor> {
     final theme = _buildTheme(isDark);
     final textColor = isDark ? Colors.white : Colors.black87;
     final gutterColor = isDark ? Colors.white38 : Colors.black38;
+    final systemFontSize =
+        Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0;
 
     return Directionality(
       textDirection: TextDirection.ltr,
@@ -65,7 +67,7 @@ class _CodeEditorState extends State<CodeEditor> {
           focusNode: widget.focusNode,
           textStyle: TextStyle(
             fontFamily: 'monospace',
-            fontSize: 14,
+            fontSize: systemFontSize,
             height: 1.5,
             color: textColor,
           ),
@@ -75,7 +77,7 @@ class _CodeEditorState extends State<CodeEditor> {
             showErrors: false,
             textStyle: TextStyle(
               fontFamily: 'monospace',
-              fontSize: 14,
+              fontSize: systemFontSize,
               height: 1.5,
               color: gutterColor,
             ),

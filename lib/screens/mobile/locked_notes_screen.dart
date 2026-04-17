@@ -498,6 +498,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           },
           onLongPress: () => setState(() => _selectedNoteIds.add(note.id!)),
           source: 'locked',
+          isFiltering: false,
           selectionMode: _selectedNoteIds.isNotEmpty,
           isSelected: _selectedNoteIds.contains(note.id),
           onTap: () {

@@ -120,6 +120,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontSize => 'Font Size';
 
   @override
+  String get fontFamily => 'Font Style';
+
+  @override
+  String get fontFamilySystem => 'System Font';
+
+  @override
+  String get fontFamilySystemDesc => 'Device default font';
+
+  @override
+  String get fontFamilyCairoDesc => 'Modern Arabic & Latin font';
+
+  @override
+  String get fontFamilyTajawalDesc => 'Light & contemporary Arabic font';
+
+  @override
+  String get fontFamilyVazirmatnDesc => 'Elegant Persian-Arabic balanced font';
+
+  @override
   String get exportBackup => 'Export Backup';
 
   @override
