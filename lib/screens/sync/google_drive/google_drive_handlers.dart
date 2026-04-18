@@ -125,6 +125,10 @@ class GoogleDriveHandlers {
       );
     } catch (e) {
       if (!context.mounted) return;
+      if (e.toString().contains('UPDATE_REQUIRED')) {
+        _showUpdateRequiredDialog(context);
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${l10n.downloadFailed} $e'), backgroundColor: Colors.red),
       );
@@ -146,5 +150,36 @@ class GoogleDriveHandlers {
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
+  }
+
+  static void _showUpdateRequiredDialog(BuildContext context) {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.system_update, color: Colors.orange, size: 48),
+        title: Text(isArabic ? 'تحديث مطلوب' : 'Update Required'),
+        content: Text(
+          isArabic
+              ? 'بياناتك على Drive تم تحديثها بإصدار أحدث من التطبيق.\n\nحدّث التطبيق من Google Play للاستمرار في المزامنة.'
+              : 'Your Drive data was updated by a newer version of the app.\n\nPlease update the app from Google Play to continue syncing.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(isArabic ? 'لاحقاً' : 'Later'),
+          ),
+          FilledButton.icon(
+            icon: const Icon(Icons.open_in_new, size: 18),
+            label: Text(isArabic ? 'تحديث الآن' : 'Update Now'),
+            onPressed: () {
+              Navigator.pop(ctx);
+              // رابط Google Play
+              // ignore: deprecated_member_use
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

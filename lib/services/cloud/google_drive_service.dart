@@ -56,7 +56,10 @@ class GoogleDriveService {
     if (!await _hasInternet()) return;
 
     try {
-      final driveFile = await GoogleDriveAuth.findFile('sinan_backup.gz');
+      // ابحث عن الملف الجديد أولاً ثم القديم
+      var driveFile = await GoogleDriveAuth.findFile('sinan_backup_v2.json');
+      driveFile ??= await GoogleDriveAuth.findFile('sinan_backup.json');
+      driveFile ??= await GoogleDriveAuth.findFile('sinan_backup.gz');
 
       if (driveFile == null) {
         await uploadDatabase(null);
@@ -100,7 +103,13 @@ class GoogleDriveService {
     _isDownloading = true;
     isSyncing.value = true;
     try {
-      final file = await GoogleDriveAuth.findFile('sinan_backup.gz');
+      var file = await GoogleDriveAuth.findFile('sinan_backup_v2.json');
+      bool isCompressed = false;
+      file ??= await GoogleDriveAuth.findFile('sinan_backup.json');
+      if (file == null) {
+        file = await GoogleDriveAuth.findFile('sinan_backup.gz');
+        isCompressed = true;
+      }
       if (file == null) return;
 
       final response = await GoogleDriveAuth.driveApi!.files.get(
@@ -114,7 +123,9 @@ class GoogleDriveService {
       await response.stream.forEach((chunk) => sink.add(chunk));
       await sink.close();
 
-      final json = CompressionService.decompress(await tempFile.readAsBytes());
+      final json = isCompressed
+          ? CompressionService.decompress(await tempFile.readAsBytes())
+          : await tempFile.readAsString();
       final dynamic jsonData = jsonDecode(json);
       await tempFile.delete();
 
@@ -124,6 +135,15 @@ class GoogleDriveService {
       final List<dynamic> driveCats = jsonData is Map<String, dynamic>
           ? (jsonData['categories'] as List? ?? [])
           : [];
+
+      // ── فحص schema — إذا كان الملف من Native (schema >= 2) أوقف الكتابة ──
+      final int driveSchema = jsonData is Map ? (jsonData['schema'] as int? ?? 1) : 1;
+      if (driveSchema >= 2) {
+        AppLogger.warning('Drive backup is from newer app version (schema=$driveSchema). Stopping sync.', 'GoogleDrive');
+        // أعلم المستخدم بصمت — لا نكتب على Drive
+        _lastSyncTime = DateTime.now();
+        return;
+      }
 
       // سجلات الحذف من Drive + المحلي
       final driveDeletedRaw =
@@ -227,6 +247,26 @@ class GoogleDriveService {
       _lastUploadTime = DateTime.now();
       _uploadCount++;
 
+      // ── فحص schema قبل الكتابة — إذا Drive يحتوي schema >= 2 لا تكتب ──
+      try {
+        final existingJson = await GoogleDriveAuth.findFile('sinan_backup_v2.json')
+            ?? await GoogleDriveAuth.findFile('sinan_backup.json');
+        if (existingJson != null) {
+          final resp = await GoogleDriveAuth.driveApi!.files.get(
+            existingJson.id!,
+            downloadOptions: drive.DownloadOptions.fullMedia,
+          ) as drive.Media;
+          final bytes = <int>[];
+          await resp.stream.forEach(bytes.addAll);
+          final dynamic meta = jsonDecode(String.fromCharCodes(bytes));
+          final int remoteSchema = meta is Map ? (meta['schema'] as int? ?? 1) : 1;
+          if (remoteSchema >= 2) {
+            AppLogger.warning('Upload blocked: Drive has schema=$remoteSchema from newer app', 'GoogleDrive');
+            return false;
+          }
+        }
+      } catch (_) { /* إذا فشل الفحص استمر بالرفع العادي */ }
+
       final dbService = IsarDatabaseService();
       final allNotes = await dbService.getAllNotes();
 
@@ -296,8 +336,9 @@ class GoogleDriveService {
     isSyncing.value = true;
 
     try {
-      var file = await GoogleDriveAuth.findFile('sinan_backup.json');
+      var file = await GoogleDriveAuth.findFile('sinan_backup_v2.json');
       bool isCompressed = false;
+      file ??= await GoogleDriveAuth.findFile('sinan_backup.json');
       if (file == null) {
         file = await GoogleDriveAuth.findFile('sinan_backup.gz');
         isCompressed = true;
@@ -328,6 +369,12 @@ class GoogleDriveService {
       final List<dynamic> categoriesList = jsonData is Map<String, dynamic>
           ? (jsonData['categories'] ?? [])
           : [];
+
+      // ── فحص schema — إذا كان الملف من Native أوقف وأعلم ──
+      final int driveSchema = jsonData is Map ? (jsonData['schema'] as int? ?? 1) : 1;
+      if (driveSchema >= 2) {
+        throw Exception('UPDATE_REQUIRED');
+      }
 
       // فقط النوتات غير المشفرة — الخزنة محلية دائماً
       final regularNotes =
