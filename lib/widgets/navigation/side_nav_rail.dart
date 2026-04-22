@@ -43,7 +43,7 @@ class SideNavRail extends StatelessWidget {
             width: 80,
             decoration: BoxDecoration(
               color: Theme.of(context)
-                  .scaffoldBackgroundColor
+                  .colorScheme.surface
                   .withValues(alpha: 0.85),
               boxShadow: [
                 BoxShadow(

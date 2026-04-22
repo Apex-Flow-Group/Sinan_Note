@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
@@ -372,7 +373,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                         : TextAlign.left,
                     textAlignVertical: TextAlignVertical.center,
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: AppFontSize.noteTitle,
                       fontWeight: FontWeight.bold,
                       color: textColor,
                     ),

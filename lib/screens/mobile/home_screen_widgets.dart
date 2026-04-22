@@ -50,18 +50,21 @@ class DateBarHeader extends StatelessWidget {
   final ScrollController scrollController;
   final ValueNotifier<List<Note>> filteredNotesNotifier;
   final ValueNotifier<String?> activeFilterNotifier;
+  final ValueNotifier<bool>? isPullingNotifier;
 
   const DateBarHeader({
     super.key,
     required this.scrollController,
     required this.filteredNotesNotifier,
     required this.activeFilterNotifier,
+    this.isPullingNotifier,
   });
 
   @override
   Widget build(BuildContext context) {
     return SliverPersistentHeader(
       pinned: true,
+      floating: false,
       delegate: _DateBarDelegate(
         height: 40.0,
         child: DateIndicatorBar(
@@ -69,6 +72,7 @@ class DateBarHeader extends StatelessWidget {
           filteredNotesNotifier: filteredNotesNotifier,
           noteHeights: NoteCardKeyRegistry.instance.heights,
           activeFilterNotifier: activeFilterNotifier,
+          isPullingNotifier: isPullingNotifier,
         ),
       ),
     );
@@ -83,7 +87,7 @@ class _DateBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox(height: height, child: child);
+    return _FadeInBar(height: height, child: child);
   }
 
   @override
@@ -95,3 +99,47 @@ class _DateBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_DateBarDelegate oldDelegate) => false;
 }
+
+class _FadeInBar extends StatefulWidget {
+  final double height;
+  final Widget child;
+  const _FadeInBar({required this.height, required this.child});
+
+  @override
+  State<_FadeInBar> createState() => _FadeInBarState();
+}
+
+class _FadeInBarState extends State<_FadeInBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    // تأخير بسيط حتى تنتهي الـ layout ثم fade in
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SizedBox(height: widget.height, child: widget.child),
+    );
+  }
+}
+

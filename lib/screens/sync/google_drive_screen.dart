@@ -27,6 +27,7 @@ class GoogleDriveScreen extends StatefulWidget {
 class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   bool _isLoading = false;
   bool _autoSync = false;
+  bool _pullToRefresh = true;
 
   @override
   void initState() {
@@ -45,6 +46,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     if (!mounted) return;
     setState(() {
       _autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
+      _pullToRefresh = prefs.getBool('google_drive_pull_to_refresh') ?? true;
     });
   }
 
@@ -52,9 +54,14 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('google_drive_auto_sync', value);
     if (!mounted) return;
-    setState(() {
-      _autoSync = value;
-    });
+    setState(() => _autoSync = value);
+  }
+
+  Future<void> _savePullToRefreshSetting(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('google_drive_pull_to_refresh', value);
+    if (!mounted) return;
+    setState(() => _pullToRefresh = value);
   }
 
   Future<void> _handleSignOut() async {
@@ -177,6 +184,15 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     );
   }
 
+  Future<void> _handleRefresh() async {
+    await _restoreSignInState();
+    if (mounted && GoogleDriveService.isSignedIn) {
+      setState(() => _isLoading = true);
+      await GoogleDriveHandlers.handleSync(context);
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Widget _buildMobileLayout(
     BuildContext context,
     AppLocalizations l10n,
@@ -185,7 +201,10 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     String? userEmail,
     String lastSyncTimeStr,
   ) {
-    return ListView(
+    return RefreshIndicator(
+      onRefresh: _pullToRefresh ? _handleRefresh : () async {},
+      semanticsLabel: l10n.pullToRefresh,
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       children: [
         // Account Section with New Sync Button
@@ -198,8 +217,11 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
             context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
         const SizedBox(height: 24),
         GoogleDriveWidgets.buildAutoSyncSection(
-            context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
+            context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting,
+            pullToRefresh: _pullToRefresh,
+            onPullToRefreshChanged: _savePullToRefreshSetting),
       ],
+    ),
     );
   }
 
@@ -365,7 +387,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
             GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
                 isSignedIn, _handleUpload, _handleDownload),
             GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
-                _autoSync, isSignedIn, _saveAutoSyncSetting),
+                _autoSync, isSignedIn, _saveAutoSyncSetting,
+                pullToRefresh: _pullToRefresh,
+                onPullToRefreshChanged: _savePullToRefreshSetting),
           ],
         ),
       ),

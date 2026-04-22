@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
-  double _textScaleFactor = 1.0;
+  double _textScaleFactor = 1.15;
   String _languageCode = 'system';
   String _fontFamily = 'system'; // 'system' | 'Cairo' | 'Tajawal'
   String _swipeRightAction = 'delete';
@@ -205,7 +205,7 @@ class SettingsProvider with ChangeNotifier {
       } else {
         _themeMode = ThemeMode.system;
       }
-      _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
+      _textScaleFactor = prefs.getDouble('textScale') ?? 1.15;
       _fontFamily = prefs.getString('fontFamily') ?? 'system';
       _languageCode = prefs.getString('language') ?? 'system';
       _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';

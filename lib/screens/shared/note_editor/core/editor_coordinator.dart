@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:apex_note/controllers/editor/editor_state_manager.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/utils/apex_smart_controller.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
@@ -46,13 +47,14 @@ class EditorCoordinator {
   NotesProvider? notesProviderRef;
   String? notePassword;
   late bool initialLockState;
-  double fontSize = 16.0; // يُحدَّث من context عند التهيئة
+  double fontSize = 16.0;
   Color textColor = Colors.black87;
   Timer? autosaveTimer;
   String? detectedLanguage;
   bool isLanguageManuallySelected = false;
   Timer? languageDetectionTimer;
   int? savedNoteId;
+  final scrollProgress = ValueNotifier<double>(0.0);
 
   final Note? note;
   final NoteMode mode;
@@ -238,13 +240,14 @@ class EditorCoordinator {
 
   /// تحديث حجم الخط من الثيم — يُستدعى من didChangeDependencies
   void updateFontSize(BuildContext context) {
-    fontSize = Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0;
+    fontSize = AppFontSize.noteBody;
   }
 
   /// Dispose all resources
   void dispose() {
     autosaveTimer?.cancel();
     languageDetectionTimer?.cancel();
+    scrollProgress.dispose();
     contentController.dispose();
     codeController?.dispose();
     quillController?.dispose();

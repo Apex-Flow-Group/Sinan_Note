@@ -14,6 +14,7 @@ class DateIndicatorBar extends StatefulWidget {
   final ValueNotifier<List<Note>> filteredNotesNotifier;
   final Map<int, double> noteHeights;
   final ValueNotifier<String?> activeFilterNotifier;
+  final ValueNotifier<bool>? isPullingNotifier;
 
   const DateIndicatorBar({
     super.key,
@@ -21,6 +22,7 @@ class DateIndicatorBar extends StatefulWidget {
     required this.filteredNotesNotifier,
     required this.noteHeights,
     required this.activeFilterNotifier,
+    this.isPullingNotifier,
   });
 
   @override
@@ -400,9 +402,10 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     if (activeFilter != null) {
       final filterLabel = _filterLabel(activeFilter, isAr);
       return _BarWithSyncProgress(
+        isPullingNotifier: widget.isPullingNotifier,
         child: Container(
           height: 28,
-          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
+          color: colorScheme.surface,
           padding: const EdgeInsets.only(left: 16),
           child: Row(
             children: [
@@ -446,10 +449,10 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
           : (cat?.name ?? '');
 
       return _BarWithSyncProgress(
+        isPullingNotifier: widget.isPullingNotifier,
         child: Container(
           height: 28,
-          color:
-              Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
+          color: colorScheme.surface,
           padding: const EdgeInsets.only(left: 16),
           child: Row(
             children: [
@@ -492,19 +495,20 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
 
     // ─── وضع التاريخ الافتراضي ───
     if (notes.isEmpty || _visibleDate == null) {
-      return const _BarWithSyncProgress(
+      return _BarWithSyncProgress(
         showLabelOnly: true,
-        child: SizedBox.shrink(),
+        isPullingNotifier: widget.isPullingNotifier,
+        child: const SizedBox.shrink(),
       );
     }
 
     return _BarWithSyncProgress(
+      isPullingNotifier: widget.isPullingNotifier,
       child: GestureDetector(
         onTap: _showDatePicker,
         child: Container(
           height: 28,
-          color:
-              Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.97),
+          color: colorScheme.surface,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
@@ -536,7 +540,12 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
 class _BarWithSyncProgress extends StatelessWidget {
   final Widget child;
   final bool showLabelOnly;
-  const _BarWithSyncProgress({required this.child, this.showLabelOnly = false});
+  final ValueNotifier<bool>? isPullingNotifier;
+  const _BarWithSyncProgress({
+    required this.child,
+    this.showLabelOnly = false,
+    this.isPullingNotifier,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -546,49 +555,93 @@ class _BarWithSyncProgress extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: GoogleDriveService.isSyncing,
       builder: (context, syncing, _) {
-        if (!syncing && showLabelOnly) return const SizedBox.shrink();
-        return Stack(
-          children: [
-            if (!showLabelOnly) child,
-            if (syncing) ...[
-              // خلفية الشريط عند showLabelOnly
-              if (showLabelOnly)
-                Container(
-                  height: 28,
-                  color: Theme.of(context)
-                      .scaffoldBackgroundColor
-                      .withValues(alpha: 0.97),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+        // ─── حالة المزامنة: تحل محل الشريط الأصلي بالكامل ───
+        if (syncing) {
+          return Container(
+            height: 40,
+            color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+            child: Stack(
+              children: [
+                Center(
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.sync_rounded,
-                          size: 13,
-                          color: colorScheme.primary.withValues(alpha: 0.7)),
-                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         isAr ? 'جارٍ المزامنة...' : 'Syncing...',
                         style: TextStyle(
                           fontSize: 12,
-                          color: colorScheme.primary.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w500,
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: LinearProgressIndicator(
-                  minHeight: 2,
-                  backgroundColor: Colors.transparent,
-                  color: colorScheme.primary.withValues(alpha: 0.7),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: LinearProgressIndicator(
+                    minHeight: 2,
+                    backgroundColor: Colors.transparent,
+                    color: colorScheme.primary.withValues(alpha: 0.6),
+                  ),
                 ),
-              ),
-            ],
-          ],
-        );
+              ],
+            ),
+          );
+        }
+
+        // ─── حالة السحب: تأثير مختلف في الشريط ───
+        if (isPullingNotifier != null) {
+          return ValueListenableBuilder<bool>(
+            valueListenable: isPullingNotifier!,
+            builder: (context, isPulling, _) {
+              if (isPulling) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 40,
+                  color: colorScheme.surface,
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_downward_rounded,
+                          size: 13,
+                          color: colorScheme.secondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isAr ? 'اسحب للمزامنة' : 'Pull to sync',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.secondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              if (showLabelOnly) return const SizedBox.shrink();
+              return child;
+            },
+          );
+        }
+
+        if (showLabelOnly) return const SizedBox.shrink();
+        return child;
       },
     );
   }

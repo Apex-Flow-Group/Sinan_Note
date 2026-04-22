@@ -174,8 +174,10 @@ class GoogleDriveWidgets {
     bool isDark,
     bool autoSync,
     bool isSignedIn,
-    ValueChanged<bool>? onChanged,
-  ) {
+    ValueChanged<bool>? onChanged, {
+    bool pullToRefresh = true,
+    ValueChanged<bool>? onPullToRefreshChanged,
+  }) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     return Column(
       children: [
@@ -200,6 +202,14 @@ class GoogleDriveWidgets {
                   subtitle: Text(l10n.autoSyncDesc),
                   value: autoSync,
                   onChanged: isSignedIn ? onChanged : null,
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(isArabic ? 'السحب للمزامنة' : 'Pull to Sync'),
+                  subtitle: Text(isArabic ? 'اسحب للأسفل لمزامنة يدوية' : 'Pull down to manually sync'),
+                  value: pullToRefresh,
+                  onChanged: isSignedIn ? onPullToRefreshChanged : null,
                 ),
               ],
             ),

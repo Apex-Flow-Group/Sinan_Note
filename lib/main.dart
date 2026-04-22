@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -334,43 +335,30 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
                 GlobalCupertinoLocalizations.delegate,
               ],
               themeMode: settings.themeMode,
-              theme: ThemeData(
-                colorScheme: lightDynamic ??
-                    ColorScheme.fromSeed(seedColor: Colors.blue),
-                useMaterial3: true,
+              theme: AppTheme.light(
+                dynamicScheme: lightDynamic,
                 fontFamily: settings.resolvedFontFamily,
-                pageTransitionsTheme: const PageTransitionsTheme(
-                  builders: {
-                    TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-                    TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-                    TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-                    TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-                  },
-                ),
               ),
-              darkTheme: ThemeData(
-                colorScheme: darkDynamic ??
-                    ColorScheme.fromSeed(
-                        seedColor: Colors.teal, brightness: Brightness.dark),
-                useMaterial3: true,
+              darkTheme: AppTheme.dark(
+                dynamicScheme: darkDynamic,
                 fontFamily: settings.resolvedFontFamily,
-                pageTransitionsTheme: const PageTransitionsTheme(
-                  builders: {
-                    TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-                    TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-                    TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-                    TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-                  },
-                ),
               ),
               home: const _AppHome(),
               scrollBehavior: const _AppScrollBehavior(),
               builder: (context, child) {
-                return MediaQuery(
+                final scheme = Theme.of(context).colorScheme;
+                final isDark = scheme.brightness == Brightness.dark;
+                return AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: SystemUiOverlayStyle(
+                    systemNavigationBarColor: scheme.surface,
+                    systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+                  ),
+                  child: MediaQuery(
                   data: MediaQuery.of(context).copyWith(
                     textScaler: TextScaler.linear(settings.textScaleFactor),
                   ),
                   child: child ?? const SizedBox.shrink(),
+                ),
                 );
               },
               routes: {

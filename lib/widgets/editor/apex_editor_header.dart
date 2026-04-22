@@ -35,12 +35,7 @@ class ApexEditorHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        border: Border(
-            bottom:
-                BorderSide(color: textColor.withValues(alpha: 0.08), width: 1)),
-      ),
+      color: backgroundColor,
       child: SafeArea(
         bottom: false,
         child: Row(

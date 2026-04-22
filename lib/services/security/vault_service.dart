@@ -26,6 +26,13 @@ class VaultService {
     return masterKey != null;
   }
 
+  /// Validate password strength (English letters, min 8 chars, 1 number, 1 symbol)
+  static bool validatePasswordStrength(String password) {
+    // لا يسمح بالعربية، يتطلب حرف إنجليزي واحد على الأقل، رقم واحد على الأقل، ورمز واحد، والطول 8+
+    final regex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$');
+    return regex.hasMatch(password);
+  }
+
   /// Generate recovery code (format: SN-XXXX-XXXX-XXXX)
   static String generateRecoveryCode() {
     final random = Random.secure();

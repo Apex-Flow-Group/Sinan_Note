@@ -5,6 +5,7 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/editor_page_route.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
@@ -229,8 +230,12 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                     } else {
                       final result = await Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => NoteViewScreen(note: widget.note, showRestore: false),
+                        EditorPageRoute(
+                          builder: (context) => NoteViewScreen(
+                            note: widget.note,
+                            showRestore: false,
+                            heroTag: 'note_card_${widget.source}_${widget.note.id}',
+                          ),
                         ),
                       );
                       if ((result == true || result == null) && mounted) {
@@ -248,12 +253,17 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 baseColor: baseColor,
                 enableMotion: false,
                 isSelected: widget.isSelected,
+                heroTag: 'note_card_${widget.source}_${widget.note.id}',
                 child: Stack(
+                  clipBehavior: Clip.hardEdge,
                   children: [
-                    Padding(
+                    ClipRect(
+                      clipBehavior: Clip.hardEdge,
+                      child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Row(
                             children: [
@@ -441,6 +451,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                         ],
                       ),
                     ),
+                    ),  // ClipRect
                     if (widget.selectionMode)
                       Positioned(
                         top: 8,

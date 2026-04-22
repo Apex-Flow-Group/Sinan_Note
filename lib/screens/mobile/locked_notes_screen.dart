@@ -12,6 +12,7 @@ import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/dialogs/vault_dialogs.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart'
@@ -308,40 +309,102 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           children: [
             Column(
               children: [
-                AppBar(
-                  systemOverlayStyle: SystemUiOverlayStyle(
-                    statusBarColor: Colors.transparent,
-                    statusBarIconBrightness:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Brightness.light
-                            : Brightness.dark,
-                    systemNavigationBarColor:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF1E1E1E)
-                            : Colors.white,
-                    systemNavigationBarIconBrightness:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Brightness.light
-                            : Brightness.dark,
-                  ),
-                  leading: _selectedNoteIds.isEmpty
-                      ? Builder(
-                          builder: (context) => IconButton(
-                            icon: const Icon(Icons.menu),
-                            onPressed: () => Scaffold.of(context).openDrawer(),
+                Builder(builder: (ctx) {
+                  if (_selectedNoteIds.isNotEmpty) {
+                    return SearchableHeader(
+                      title: '${_selectedNoteIds.length} ${l10n.selected}',
+                      isSearching: false,
+                      searchController: searchController,
+                      onToggleSearch: () {},
+                      leading: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => setState(() => _selectedNoteIds.clear()),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.select_all, size: 20),
+                            onPressed: () => setState(() {
+                              for (final note in _decryptedNotes) {
+                                if (!note.isArchived && !note.isTrashed) {
+                                  _selectedNoteIds.add(note.id!);
+                                }
+                              }
+                            }),
                           ),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () =>
-                              setState(() => _selectedNoteIds.clear()),
+                          IconButton(
+                            icon: const Icon(Icons.lock_open, size: 20),
+                            onPressed: () => _confirmAction(
+                              l10n.unlockNote,
+                              l10n.unlockNoteConfirmation,
+                              l10n.unlock,
+                              () async {
+                                for (final id in _selectedNoteIds) {
+                                  await _providerRef?.toggleLockStatus(id, false);
+                                }
+                                setState(() => _selectedNoteIds.clear());
+                                await _loadLockedNotes();
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, size: 20),
+                            onPressed: () => _confirmAction(
+                              l10n.permanentDelete,
+                              l10n.confirmPermanentDelete,
+                              l10n.delete,
+                              () async {
+                                for (final id in _selectedNoteIds) {
+                                  await _providerRef?.trashNote(id);
+                                }
+                                setState(() => _selectedNoteIds.clear());
+                                await _loadLockedNotes();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return SearchableHeader(
+                    title: l10n.locked,
+                    icon: Icons.lock_outline_rounded,
+                    isSearching: searchController.text.isNotEmpty,
+                    searchController: searchController,
+                    onSearchChange: (q) => setState(() {}),
+                    onToggleSearch: () => setState(() {
+                      if (searchController.text.isNotEmpty) {
+                        searchController.clear();
+                      } else {
+                        searchController.text = ' ';
+                      }
+                    }),
+                    leading: Builder(
+                      builder: (ctx) => IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () => Scaffold.of(ctx).openDrawer(),
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.settings),
+                          tooltip: l10n.settings,
+                          onPressed: () => VaultDialogs.showSettings(context),
                         ),
-                  title: _buildAppBarTitle(l10n),
-                  actions: _selectedNoteIds.isEmpty ? _buildActions(l10n) : [],
-                ),
+                        IconButton(
+                          icon: const Icon(Icons.file_download),
+                          tooltip: l10n.import,
+                          onPressed: _showImportSheet,
+                        ),
+                      ],
+                    ),
+                  );
+                }),
                 Expanded(
-                  child:
-                      _isLoading ? _buildLoading(l10n) : _buildNotesList(l10n),
+                  child: _isLoading ? _buildLoading(l10n) : _buildNotesList(l10n),
                 ),
               ],
             ),
@@ -356,97 +419,6 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       ),
     );
   }
-
-  Widget _buildAppBarTitle(AppLocalizations l10n) {
-    if (_selectedNoteIds.isNotEmpty) {
-      return Row(
-        children: [
-          Text('${_selectedNoteIds.length} ${l10n.selected}'),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.select_all, size: 20),
-            onPressed: () => setState(() {
-              for (final note in _decryptedNotes) {
-                if (!note.isArchived && !note.isTrashed) {
-                  _selectedNoteIds.add(note.id!);
-                }
-              }
-            }),
-          ),
-          IconButton(
-            icon: const Icon(Icons.lock_open, size: 20),
-            onPressed: () => _confirmAction(
-              l10n.unlockNote,
-              l10n.unlockNoteConfirmation,
-              l10n.unlock,
-              () async {
-                for (final id in _selectedNoteIds) {
-                  await _providerRef?.toggleLockStatus(id, false);
-                }
-                setState(() => _selectedNoteIds.clear());
-                await _loadLockedNotes();
-              },
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, size: 20),
-            onPressed: () => _confirmAction(
-              l10n.permanentDelete,
-              l10n.confirmPermanentDelete,
-              l10n.delete,
-              () async {
-                for (final id in _selectedNoteIds) {
-                  await _providerRef?.trashNote(id);
-                }
-                setState(() => _selectedNoteIds.clear());
-                await _loadLockedNotes();
-              },
-            ),
-          ),
-        ],
-      );
-    }
-    if (searchController.text.isNotEmpty) {
-      return TextField(
-        controller: searchController,
-        autofocus: true,
-        decoration: InputDecoration(
-            hintText: l10n.searchNotes, border: InputBorder.none),
-      );
-    }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.lock, size: 22),
-        const SizedBox(width: 8),
-        Text(l10n.locked),
-      ],
-    );
-  }
-
-  List<Widget> _buildActions(AppLocalizations l10n) => [
-        IconButton(
-          icon: const Icon(Icons.settings),
-          tooltip: l10n.settings,
-          onPressed: () => VaultDialogs.showSettings(context),
-        ),
-        IconButton(
-          icon: const Icon(Icons.file_download),
-          tooltip: l10n.import,
-          onPressed: _showImportSheet,
-        ),
-        IconButton(
-          icon:
-              Icon(searchController.text.isEmpty ? Icons.search : Icons.close),
-          onPressed: () => setState(() {
-            if (searchController.text.isEmpty) {
-              searchController.text = ' ';
-            } else {
-              searchController.clear();
-            }
-          }),
-        ),
-      ];
 
   Widget _buildLoading(AppLocalizations l10n) => Center(
         child: Column(

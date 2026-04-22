@@ -1,7 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui';
-
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
@@ -46,6 +44,7 @@ class EditorBuildMethods {
     required Function(ChecklistUndoRedoController) onUndoRedoControllerCreated,
     required VoidCallback onUndoRedoChanged,
     required Function(String) onChecklistTitleChanged,
+    ValueChanged<double>? onScroll,
   }) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const toolbarHeight = 60.0;
@@ -93,6 +92,7 @@ class EditorBuildMethods {
         sidePadding: sidePadding,
         totalBottomSpace: totalBottomSpace,
         autoFocus: note == null,
+        onScroll: onScroll,
       );
     }
   }
@@ -112,70 +112,68 @@ class EditorBuildMethods {
     VoidCallback? onBackTap,
     required void Function(List<int>) onCategoryChanged,
     bool originallyLocked = false,
+    ValueNotifier<double>? scrollProgress,
   }) {
-    return Positioned(
+    final base = coordinator.getBackgroundColor(context);
+    final isDark = base.computeLuminance() < 0.5;
+    final scrolled = Color.alphaBlend(
+      isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.06),
+      base,
+    );
+
+    Widget buildWidget(Color bg) => Positioned(
       top: 0,
       left: 0,
       right: 0,
       child: SafeArea(
         bottom: false,
-        child: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-            child: Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ApexEditorHeader(
-                backgroundColor: coordinator
-                    .getBackgroundColor(context)
-                    .withValues(alpha: 0.95),
-                textColor: finalTextColor,
-                title: currentTitle,
-                isLocked: note?.isLocked == true || notePassword != null,
-                hasHistory: note?.id != null,
-                hasReminder: coordinator.stateManager.reminderDateTime != null,
-                onReminderTap: () {
-                  HapticFeedback.mediumImpact();
-                  onReminderTap();
+        child: ApexEditorHeader(
+          backgroundColor: bg,
+          textColor: finalTextColor,
+          title: currentTitle,
+          isLocked: note?.isLocked == true || notePassword != null,
+          hasHistory: note?.id != null,
+          hasReminder: coordinator.stateManager.reminderDateTime != null,
+          onReminderTap: () {
+            HapticFeedback.mediumImpact();
+            onReminderTap();
+          },
+          onHistoryTap: onHistoryTap,
+          onTitleTap: () {
+            HapticFeedback.lightImpact();
+            onTitleTap();
+          },
+          onSaveTap: () async {
+            HapticFeedback.mediumImpact();
+            onSaveTap();
+          },
+          onBackTap: onBackTap,
+          onCategoryTap: originallyLocked
+              ? null
+              : () async {
+                  final current = coordinator.stateManager.categoryIds;
+                  final result = await CategoryPickerSheet.show(
+                    context,
+                    current,
+                    isHiddenFromHome: coordinator.stateManager.isHiddenFromHome,
+                  );
+                  if (result != null) {
+                    onCategoryChanged(result['categoryIds'] as List<int>);
+                    coordinator.stateManager.isHiddenFromHome =
+                        result['isHiddenFromHome'] as bool;
+                  }
                 },
-                onHistoryTap: onHistoryTap,
-                onTitleTap: () {
-                  HapticFeedback.lightImpact();
-                  onTitleTap();
-                },
-                onSaveTap: () async {
-                  HapticFeedback.mediumImpact();
-                  onSaveTap();
-                },
-                onBackTap: onBackTap,
-                onCategoryTap: originallyLocked
-                    ? null
-                    : () async {
-                        final current = coordinator.stateManager.categoryIds;
-                        final result = await CategoryPickerSheet.show(
-                          context,
-                          current,
-                          isHiddenFromHome:
-                              coordinator.stateManager.isHiddenFromHome,
-                        );
-                        if (result != null) {
-                          onCategoryChanged(result['categoryIds'] as List<int>);
-                          coordinator.stateManager.isHiddenFromHome =
-                              result['isHiddenFromHome'] as bool;
-                        }
-                      },
-              ),
-            ),
-          ),
         ),
       ),
+    );
+
+    if (scrollProgress == null) return buildWidget(base);
+    return ValueListenableBuilder<double>(
+      valueListenable: scrollProgress,
+      builder: (_, progress, __) =>
+          buildWidget(Color.lerp(base, scrolled, progress)!),
     );
   }
 
@@ -195,26 +193,31 @@ class EditorBuildMethods {
     required Future<void> Function() saveNote,
     Function(String)? onInsertSymbol,
     VoidCallback? onRebuild,
+    ValueNotifier<double>? scrollProgress,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    final base = coordinator.getBackgroundColor(context);
+    final isDark = base.computeLuminance() < 0.5;
+    final scrolled = Color.alphaBlend(
+      isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.06),
+      base,
+    );
 
-    return AnimatedPositioned(
+    Widget buildWidget(Color bg) => AnimatedPositioned(
       duration: const Duration(milliseconds: 100),
       curve: Curves.easeOut,
       left: 0,
       right: 0,
       bottom: 0,
       child: Container(
-        color: coordinator.getBackgroundColor(context),
+        color: bg,
         child: SafeArea(
           top: false,
-          child: Container(
-            decoration: BoxDecoration(
-              color: coordinator.getBackgroundColor(context),
-            ),
-            child: EditorToolbarFactory.build(
+          child: EditorToolbarFactory.build(
               mode: mode,
-              backgroundColor: coordinator.getBackgroundColor(context),
+              backgroundColor: bg,
               textColor: finalTextColor,
               undoController: coordinator.undoController,
               detectedLanguage: coordinator.detectedLanguage,
@@ -471,9 +474,15 @@ class EditorBuildMethods {
                 }
               },
             ),
-          ),
         ),
       ),
+    );
+
+    if (scrollProgress == null) return buildWidget(base);
+    return ValueListenableBuilder<double>(
+      valueListenable: scrollProgress,
+      builder: (_, progress, __) =>
+          buildWidget(Color.lerp(base, scrolled, progress)!),
     );
   }
 }

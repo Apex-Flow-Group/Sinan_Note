@@ -6,6 +6,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
 import 'package:apex_note/screens/auth/vault_entry_screen.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/widgets/home/categories_panel.dart';
@@ -152,7 +153,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     context,
                     icon: Icons.cloud_sync_rounded,
                     title: l10n.googleDrive,
-                    subtitle: isArabic ? 'مزامنة السحابة' : 'Cloud sync',
+                    subtitle: GoogleDriveAuth.isSignedIn
+                        ? (GoogleDriveAuth.driveApi != null
+                            ? l10n.driveSyncOn
+                            : l10n.driveSyncOff)
+                        : l10n.driveSignIn,
                     iconColor: const Color(0xFF4285F4),
                     scheme: scheme,
                     isDark: isDark,

@@ -35,9 +35,6 @@ class ChecklistBottomBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         color: backgroundColor,
-        border: Border(
-            top:
-                BorderSide(color: textColor.withValues(alpha: 0.08), width: 1)),
       ),
       child: SafeArea(
         top: false,

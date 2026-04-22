@@ -1,8 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/editor_page_route.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -26,30 +28,67 @@ import 'package:provider/provider.dart';
 class NoteViewScreen extends StatefulWidget {
   final Note note;
   final bool showRestore;
+  final String? heroTag;
 
   const NoteViewScreen({
     super.key,
     required this.note,
     this.showRestore = false,
+    this.heroTag,
   });
 
   @override
   State<NoteViewScreen> createState() => _NoteViewScreenState();
 }
 
-class _NoteViewScreenState extends State<NoteViewScreen> {
+class _NoteViewScreenState extends State<NoteViewScreen>
+    with SingleTickerProviderStateMixin {
   bool _isAuthenticated = false;
   late Note _currentNote;
+  final _scrollController = ScrollController();
+  final _scrollProgress = ValueNotifier<double>(0.0);
+  late final AnimationController _contentFadeController;
+  late final Animation<double> _contentFade;
 
   @override
   void initState() {
     super.initState();
     _currentNote = widget.note;
+
+    _contentFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _contentFade = CurvedAnimation(
+      parent: _contentFadeController,
+      curve: Curves.easeOut,
+    );
+
+    // ابدأ الـ fade بعد انتهاء أنيميشن الـ Hero
+    final heroDuration = widget.heroTag != null
+        ? const Duration(milliseconds: 350)
+        : Duration.zero;
+    Future.delayed(heroDuration, () {
+      if (mounted) _contentFadeController.forward();
+    });
+
     if (!widget.note.isLocked) {
       _isAuthenticated = true;
     } else {
       _verifyUser();
     }
+    _scrollController.addListener(() {
+      final offset = _scrollController.offset.clamp(0.0, 120.0);
+      _scrollProgress.value = offset / 120.0;
+    });
+  }
+
+  @override
+  void dispose() {
+    _contentFadeController.dispose();
+    _scrollController.dispose();
+    _scrollProgress.dispose();
+    super.dispose();
   }
 
   Future<void> _verifyUser() async {
@@ -111,15 +150,38 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
       );
     }
     final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
     final bgColor = AppColorPalette.palette[_currentNote.colorIndex]
         .getColor(Theme.of(context).brightness);
     final textColor =
         bgColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-            _currentNote.title.isEmpty ? l10n.viewNote : _currentNote.title),
+    return ValueListenableBuilder<double>(
+      valueListenable: _scrollProgress,
+      builder: (context, progress, child) {
+        final barColor = Color.lerp(
+          AppTheme.bg(scheme),
+          scheme.surface,
+          progress,
+        )!;
+
+        // الأشرطة تظهر بـ fade بعد اكتمال انيميشن الـ Hero
+        final routeAnimation = ModalRoute.of(context)?.animation;
+        final barsFade = routeAnimation == null
+            ? const AlwaysStoppedAnimation(1.0)
+            : CurvedAnimation(
+                parent: routeAnimation,
+                curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
+              );
+
+        return Scaffold(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight),
+            child: FadeTransition(
+              opacity: barsFade,
+              child: AppBar(
+                backgroundColor: barColor,
+                title: Text(_currentNote.title.isEmpty ? l10n.viewNote : _currentNote.title),
         actions: [
           if (!_currentNote.isTrashed)
             IconButton(
@@ -202,8 +264,10 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
               },
             ),
         ],
-      ),
-      body: GestureDetector(
+      ),          // AppBar
+            ),    // FadeTransition
+          ),      // PreferredSize
+          body: GestureDetector(
         onDoubleTap: _editNote,
         onLongPress: () {
           final content = _currentNote.isChecklist
@@ -219,107 +283,128 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
             duration: const Duration(seconds: 2),
           );
         },
-        child: SingleChildScrollView(
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildNoteContent(textColor),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${l10n.created}: ${NoteViewHelpers.formatDate(_currentNote.createdAt)}',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                if (_currentNote.reminderDateTime != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: Colors.orange.withValues(alpha: 0.3),
-                          width: 1),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.alarm, size: 14, color: Colors.orange),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _formatReminderDate(_currentNote.reminderDateTime!),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.orange,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        InkWell(
-                          onTap: () async {
-                            HapticFeedback.lightImpact();
-                            final provider = Provider.of<NotesProvider>(context,
-                                listen: false);
-                            final messenger = UnifiedNotificationService();
-                            final nav = Navigator.of(context);
-                            final reminderRemovedMsg =
-                                AppLocalizations.of(context)!.reminderRemoved;
-                            final noteId = _currentNote.id!;
-                            await NotificationService()
-                                .cancelNotification(noteId);
-                            final updatedNote = _currentNote.copyWith(
-                              reminderDateTime: null,
-                              recurrenceRule: null,
-                            );
-                            await provider.updateNote(updatedNote);
-                            await _refreshNote();
-                            if (!mounted) return;
-                            messenger.show(
-                              context: nav.context,
-                              message: reminderRemovedMsg,
-                              type: NotificationType.info,
-                            );
-                          },
-                          child: Icon(Icons.close,
-                              size: 16,
-                              color: textColor.withValues(alpha: 0.7)),
-                        ),
-                      ],
-                    ),
+          child: SingleChildScrollView(
+          controller: _scrollController,
+          child: widget.heroTag != null
+              ? Hero(
+                  tag: widget.heroTag!,
+                  child: _buildNoteCard(bgColor, textColor, l10n),
+                )
+              : FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: routeAnimation ?? const AlwaysStoppedAnimation(1.0),
+                    curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
                   ),
-                ],
-              ],
-            ),
-          ),
+                  child: _buildNoteCard(bgColor, textColor, l10n),
+                ),
         ),
       ),
-      bottomNavigationBar: _currentNote.isTrashed
-          ? NoteViewBars.buildRestoreBar(
-              context, l10n, _currentNote, _restore, _confirmPermanentDelete)
-          : NoteViewBars.buildActionBar(context, l10n, _currentNote,
-              _onShareTap, _toggleArchive, _confirmDelete, _editNote),
+          bottomNavigationBar: FadeTransition(
+            opacity: barsFade,
+            child: _currentNote.isTrashed
+                ? NoteViewBars.buildRestoreBar(
+                    context, l10n, _currentNote, _restore, _confirmPermanentDelete, barColor: barColor)
+                : NoteViewBars.buildActionBar(context, l10n, _currentNote,
+                    _onShareTap, _toggleArchive, _confirmDelete, _editNote, barColor: barColor),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNoteCard(Color bgColor, Color textColor, AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8, bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FadeTransition(
+            opacity: _contentFade,
+            child: _buildNoteContent(textColor),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                '${l10n.created}: ${NoteViewHelpers.formatDate(_currentNote.createdAt)}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          if (_currentNote.reminderDateTime != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: Colors.orange.withValues(alpha: 0.3), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.alarm, size: 14, color: Colors.orange),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _formatReminderDate(_currentNote.reminderDateTime!),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () async {
+                      HapticFeedback.lightImpact();
+                      final provider =
+                          Provider.of<NotesProvider>(context, listen: false);
+                      final messenger = UnifiedNotificationService();
+                      final nav = Navigator.of(context);
+                      final reminderRemovedMsg =
+                          AppLocalizations.of(context)!.reminderRemoved;
+                      final noteId = _currentNote.id!;
+                      await NotificationService().cancelNotification(noteId);
+                      final updatedNote = _currentNote.copyWith(
+                        reminderDateTime: null,
+                        recurrenceRule: null,
+                      );
+                      await provider.updateNote(updatedNote);
+                      await _refreshNote();
+                      if (!mounted) return;
+                      messenger.show(
+                        context: nav.context,
+                        message: reminderRemovedMsg,
+                        type: NotificationType.info,
+                      );
+                    },
+                    child: Icon(Icons.close,
+                        size: 16, color: textColor.withValues(alpha: 0.7)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -397,7 +482,7 @@ class _NoteViewScreenState extends State<NoteViewScreen> {
     if (!mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      EditorPageRoute(
         builder: (context) =>
             NoteEditorImmersive(note: _currentNote, mode: mode),
       ),

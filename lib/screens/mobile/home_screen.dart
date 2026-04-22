@@ -21,6 +21,8 @@ import 'package:apex_note/widgets/home/note_locator_button.dart';
 import 'package:apex_note/widgets/home/notes_grid_view.dart';
 import 'package:apex_note/widgets/home/smart_header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 export 'package:apex_note/screens/mobile/home_screen_widgets.dart';
@@ -82,6 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     });
+    _scrollController.addListener(_onScrollSnap);
+    _scrollController.addListener(_onScrollChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.sharedText != null) {
@@ -286,8 +290,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   DateTime? _lastSyncTime;
   static const _syncCooldown = Duration(seconds: 45);
+  final ValueNotifier<bool> _isPullingNotifier = ValueNotifier(false);
 
   Future<void> _onRefresh() async {
+    _isPullingNotifier.value = false;
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final now = DateTime.now();
 
@@ -300,7 +306,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _lastSyncTime = now;
     if (GoogleDriveService.isSignedIn) {
       await GoogleDriveService.smartSyncOnStartup();
-      // انتظر حتى تنتهي المزامنة كاملاً قبل تحديث الواجهة
       while (GoogleDriveService.isSyncing.value) {
         await Future.delayed(const Duration(milliseconds: 200));
       }
@@ -308,8 +313,48 @@ class _HomeScreenState extends State<HomeScreen> {
     await notesProvider.refreshAllNotes();
   }
 
+  // تتبع السحب للأسفل عبر ScrollController
+  void _onScrollChanged() {
+    if (!_scrollController.hasClients) return;
+    final offset = _scrollController.offset;
+    // عند الوصول لأعلى القائمة وما فوقها (overscroll)
+    if (offset < -10) {
+      if (!_isPullingNotifier.value) _isPullingNotifier.value = true;
+    } else {
+      if (_isPullingNotifier.value) _isPullingNotifier.value = false;
+    }
+  }
+
+  static const _headerHeight = 68.0;
+  bool _isScrollSnapping = false;
+
+  void _onScrollSnap() {
+    // لا شيء — الـ snap يتم عبر NotificationListener
+  }
+
+  void _handleScrollEnd() {
+    if (_isSearchActive) return;
+    if (_isScrollSnapping) return;
+    if (!_scrollController.hasClients) return;
+
+    final offset = _scrollController.offset;
+    if (offset > 0 && offset < _headerHeight) {
+      _isScrollSnapping = true;
+      final snapTo = offset < _headerHeight / 2 ? 0.0 : _headerHeight;
+      _scrollController
+          .animateTo(
+            snapTo,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          )
+          .then((_) => _isScrollSnapping = false);
+    }
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScrollSnap);
+    _scrollController.removeListener(_onScrollChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
     _scrollController.dispose();
@@ -319,6 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _viewTypeNotifier.dispose();
     _selectedNoteIdsNotifier.dispose();
     _activeFilterNotifier.dispose();
+    _isPullingNotifier.dispose();
     UnifiedNotificationService().cancelAll();
     super.dispose();
   }
@@ -356,21 +402,35 @@ class _HomeScreenState extends State<HomeScreen> {
               }),
               onNotesChanged: () {},
             ),
-            body: Stack(
+            body: AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle(
+                statusBarColor: Theme.of(context).colorScheme.surface,
+                statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
+                    ? Brightness.light
+                    : Brightness.dark,
+              ),
+              child: Stack(
               children: [
-                SafeArea(
-                  child: RefreshIndicator(
-                    onRefresh: _onRefresh,
-                    displacement: 60,
-                    edgeOffset: 68,
-                    color: Theme.of(context).colorScheme.primary,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    strokeWidth: 2.5,
+                NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is ScrollEndNotification &&
+                          _isPullingNotifier.value) {
+                        _isPullingNotifier.value = false;
+                        _onRefresh();
+                      }
+                      return false;
+                    },
                     child: ScrollConfiguration(
                       behavior: ScrollConfiguration.of(context)
                           .copyWith(scrollbars: false),
-                      child: CustomScrollView(
+                      child: NotificationListener<UserScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification.direction == ScrollDirection.idle) {
+                            _handleScrollEnd();
+                          }
+                          return false;
+                        },
+                        child: CustomScrollView(
                         controller: _scrollController,
                         cacheExtent: 1500,
                         physics: const BouncingScrollPhysics(
@@ -412,6 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             scrollController: _scrollController,
                             filteredNotesNotifier: _filteredNotesNotifier,
                             activeFilterNotifier: _activeFilterNotifier,
+                            isPullingNotifier: _isPullingNotifier,
                           ),
                           NotesGridView(
                             viewTypeNotifier: _viewTypeNotifier,
@@ -424,10 +485,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             activeFilterNotifier: _activeFilterNotifier,
                           ),
                         ],
-                      ),
+                      ),        // CustomScrollView
+                      ),        // NotificationListener
                     ),
                   ),
-                ),
                 ListenableBuilder(
                   listenable: _viewTypeNotifier,
                   builder: (context, _) => HomeScrollbar(
@@ -440,6 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 NoteLocatorButton(scrollController: _scrollController),
               ],
+            ),
             ),
           ),
         );

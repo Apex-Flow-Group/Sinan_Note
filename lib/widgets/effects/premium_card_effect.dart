@@ -7,6 +7,7 @@ class PremiumCardEffect extends StatefulWidget {
   final Color baseColor;
   final bool enableMotion;
   final bool isSelected;
+  final String? heroTag;
 
   const PremiumCardEffect({
     super.key,
@@ -14,6 +15,7 @@ class PremiumCardEffect extends StatefulWidget {
     required this.baseColor,
     this.enableMotion = false,
     this.isSelected = false,
+    this.heroTag,
   });
 
   @override
@@ -83,15 +85,39 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         : baseBorderColor;
 
     if (!widget.enableMotion) {
-      return Container(
+      final container = Container(
         decoration: BoxDecoration(
           color: widget.baseColor,
           borderRadius: borderRadius,
-          border: Border.all(color: effectiveBorderColor, width: widget.isSelected ? 2.0 : 0.8),
+          border: widget.isSelected
+              ? Border.all(color: effectiveBorderColor, width: 0.5)
+              : null,
         ),
         clipBehavior: Clip.hardEdge,
         child: widget.child,
       );
+      if (widget.heroTag != null) {
+        return Hero(
+          tag: widget.heroTag!,
+          transitionOnUserGestures: false,
+          flightShuttleBuilder: (flightContext, animation, direction, fromCtx, toCtx) {
+            // عند الفتح: نعرض البطاقة المصدر (الصغيرة) مع fade out
+            // عند الإغلاق: نعرض البطاقة المصدر (الكبيرة) مع fade out
+            // هذا يمنع الـ overflow لأن كل بطاقة تُعرض بحجمها الطبيعي
+            return FadeTransition(
+              opacity: direction == HeroFlightDirection.push
+                  ? animation
+                  : ReverseAnimation(animation),
+              child: Material(
+                color: Colors.transparent,
+                child: container,
+              ),
+            );
+          },
+          child: container,
+        );
+      }
+      return container;
     }
 
     return RepaintBoundary(
@@ -103,12 +129,9 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
               color: widget.baseColor,
               borderRadius: borderRadius,
               // السحر هنا: دمج لون الحافة الأساسي مع لون مضيء بنسبة متغيرة
-              border: Border.all(
-                color: widget.isSelected
-                    ? Theme.of(context).colorScheme.secondary
-                    : Color.lerp(baseBorderColor, glowColor, _glowAnimation!.value * 0.4)!,
-                width: widget.isSelected ? 2.0 : 0.8,
-              ),
+              border: widget.isSelected
+                  ? Border.all(color: Theme.of(context).colorScheme.secondary, width: 0.5)
+                  : null,
               boxShadow: [
                 BoxShadow(
                   color: glowColor.withValues(alpha: _glowAnimation!.value * 0.15),

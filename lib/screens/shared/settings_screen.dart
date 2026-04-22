@@ -49,14 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final systemLocale = View.of(context).platformDispatcher.locale.languageCode;
     final currentLang = settings.languageCode == 'system' ? systemLocale : settings.languageCode;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text(l10n.settings)),
         drawer: HomeDrawerWidget(
           onBackupTap: () {},
@@ -92,8 +85,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 150,
                   child: Slider(
                     value: settings.textScaleFactor,
-                    min: 0.8,
-                    max: 1.3,
+                    min: 0.9,
+                    max: 1.4,
                     divisions: 5,
                     onChanged: (value) => settings.setTextScaleFactor(value),
                   ),
@@ -222,33 +215,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
                 ),
 
-              const SizedBox(height: 24),
-              Center(
-                child: Column(
-                  children: [
-                    Text(l10n.poweredBy,
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.5))),
-                    const SizedBox(height: 4),
-                    Text(l10n.companyName,
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
-                            fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
-      ),
       ),
     );
   }
@@ -420,8 +389,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 150,
               child: Slider(
                 value: settings.textScaleFactor,
-                min: 0.8,
-                max: 1.3,
+                min: 0.9,
+                max: 1.4,
                 divisions: 5,
                 onChanged: (value) => settings.setTextScaleFactor(value),
               ),
@@ -577,29 +546,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: Text(l10n.developersOnly),
               onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
             ),
-          const SizedBox(height: 16),
-          Center(
-            child: Column(
-              children: [
-                Text(l10n.poweredBy,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.5))),
-                const SizedBox(height: 4),
-                Text(l10n.companyName,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
           const SizedBox(height: 16),
         ],
       ),

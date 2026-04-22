@@ -44,17 +44,7 @@ class EditorHeaderWidget extends StatelessWidget {
         child: ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ApexEditorHeader(
+            child: ApexEditorHeader(
                 backgroundColor: backgroundColor.withValues(alpha: 0.7),
                 textColor: textColor,
                 title: title,
@@ -74,7 +64,6 @@ class EditorHeaderWidget extends StatelessWidget {
                   HapticFeedback.mediumImpact();
                   onSaveTap();
                 },
-              ),
             ),
           ),
         ),

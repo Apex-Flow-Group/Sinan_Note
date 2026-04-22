@@ -3554,6 +3554,12 @@ abstract class AppLocalizations {
   /// **'Help'**
   String get help;
 
+  /// No description provided for @pullToRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull to refresh'**
+  String get pullToRefresh;
+
   /// No description provided for @refresh.
   ///
   /// In en, this message translates to:
@@ -3697,6 +3703,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Assign a note to multiple categories at once'**
   String get tourCatAssign;
+
+  /// No description provided for @driveSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to sign in'**
+  String get driveSignIn;
+
+  /// No description provided for @driveSyncOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync is active'**
+  String get driveSyncOn;
+
+  /// No description provided for @driveSyncOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync is off'**
+  String get driveSyncOff;
 }
 
 class _AppLocalizationsDelegate

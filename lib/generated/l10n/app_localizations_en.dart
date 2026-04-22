@@ -1793,6 +1793,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get help => 'Help';
 
   @override
+  String get pullToRefresh => 'Pull to refresh';
+
+  @override
   String get refresh => 'Refresh';
 
   @override
@@ -1866,4 +1869,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourCatAssign => 'Assign a note to multiple categories at once';
+
+  @override
+  String get driveSignIn => 'Tap to sign in';
+
+  @override
+  String get driveSyncOn => 'Sync is active';
+
+  @override
+  String get driveSyncOff => 'Sync is off';
 }

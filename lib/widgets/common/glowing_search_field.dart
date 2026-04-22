@@ -2,6 +2,8 @@
 
 import 'dart:math';
 
+import 'package:apex_note/core/theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 
 class GlowingSearchField extends StatefulWidget {
@@ -12,6 +14,7 @@ class GlowingSearchField extends StatefulWidget {
   final VoidCallback? onViewToggle;
   final VoidCallback? onFilterTap;
   final ValueNotifier<String> viewTypeNotifier;
+  final ValueNotifier<double>? scrollFadeNotifier;
 
   const GlowingSearchField({
     super.key,
@@ -22,6 +25,7 @@ class GlowingSearchField extends StatefulWidget {
     this.onViewToggle,
     this.onFilterTap,
     required this.viewTypeNotifier,
+    this.scrollFadeNotifier,
   });
 
   @override
@@ -67,12 +71,11 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
   Widget build(BuildContext context) {
     // كل شيء داخل AnimatedBuilder لضمان قراءة الثيم الصحيح في كل frame
     return AnimatedBuilder(
-      animation: _waveController,
+      animation: Listenable.merge([_waveController, if (widget.scrollFadeNotifier != null) widget.scrollFadeNotifier!]),
       builder: (context, _) {
+        final iconOpacity = widget.scrollFadeNotifier?.value ?? 1.0;
         final cs = Theme.of(context).colorScheme;
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        final barColor =
-            isDark ? cs.surfaceContainerHighest : cs.surfaceContainer;
+        final barColor = AppTheme.bg(cs);
         final contentColor = cs.onSurface;
 
         return Container(
@@ -112,8 +115,11 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Icon(Icons.search,
-                        color: contentColor.withValues(alpha: 0.6), size: 20),
+                    Opacity(
+                      opacity: iconOpacity,
+                      child: Icon(Icons.search,
+                          color: contentColor.withValues(alpha: 0.6), size: 20),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
@@ -134,46 +140,47 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                       ),
                     ),
                     if (widget.onViewToggle != null || widget.onFilterTap != null)
-                      ClipRect(
-                        child: AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOutCubic,
-                          child: SizedBox(
-                            width: _focusNode.hasFocus ? 0 : null,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const NeverScrollableScrollPhysics(),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (widget.onViewToggle != null)
-                                    ValueListenableBuilder<String>(
-                                      valueListenable: widget.viewTypeNotifier,
-                                      builder: (context, viewType, _) {
-                                        return IconButton(
-                                          icon: Icon(
-                                            viewType == 'listExpanded'
-                                                ? Icons.view_headline
-                                                : viewType == 'listCompact'
-                                                    ? Icons.grid_view
-                                                    : Icons.view_day,
-                                            color: contentColor.withValues(
-                                                alpha: 0.7),
-                                          ),
-                                          onPressed: widget.onViewToggle,
-                                          splashRadius: 24,
-                                        );
-                                      },
-                                    ),
-                                  if (widget.onFilterTap != null)
-                                    IconButton(
-                                      icon: Icon(Icons.filter_list_rounded,
-                                          color: contentColor.withValues(
-                                              alpha: 0.7)),
-                                      onPressed: widget.onFilterTap,
-                                      splashRadius: 24,
-                                    ),
-                                ],
+                      Opacity(
+                        opacity: iconOpacity,
+                        child: ClipRect(
+                          child: AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOutCubic,
+                            child: SizedBox(
+                              width: _focusNode.hasFocus ? 0 : null,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                physics: const NeverScrollableScrollPhysics(),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (widget.onViewToggle != null)
+                                      ValueListenableBuilder<String>(
+                                        valueListenable: widget.viewTypeNotifier,
+                                        builder: (context, viewType, _) {
+                                          return IconButton(
+                                            icon: Icon(
+                                              viewType == 'listExpanded'
+                                                  ? Icons.view_headline
+                                                  : viewType == 'listCompact'
+                                                      ? Icons.grid_view
+                                                      : Icons.view_day,
+                                              color: contentColor.withValues(alpha: 0.7),
+                                            ),
+                                            onPressed: widget.onViewToggle,
+                                            splashRadius: 24,
+                                          );
+                                        },
+                                      ),
+                                    if (widget.onFilterTap != null)
+                                      IconButton(
+                                        icon: Icon(Icons.filter_list_rounded,
+                                            color: contentColor.withValues(alpha: 0.7)),
+                                        onPressed: widget.onFilterTap,
+                                        splashRadius: 24,
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

@@ -1,223 +1,192 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:io';
+
+import 'package:apex_note/services/storage/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 
-class WhatsNewDialog extends StatelessWidget {
+class WhatsNewDialog extends StatefulWidget {
   final String version;
   const WhatsNewDialog({super.key, required this.version});
 
-  static void show(BuildContext context) async {
+  static Future<void> show(BuildContext context) async {
     final info = await PackageInfo.fromPlatform();
     if (!context.mounted) return;
-    showDialog(
+    await showDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder: (_) => WhatsNewDialog(version: info.version),
     );
   }
 
   @override
+  State<WhatsNewDialog> createState() => _WhatsNewDialogState();
+}
+
+class _WhatsNewDialogState extends State<WhatsNewDialog> {
+  bool _confirmed = false;
+  bool _isExporting = false;
+  bool _exported = false;
+  String? _exportMsg;
+
+  Future<void> _exportNow() async {
+    setState(() { _isExporting = true; _exportMsg = null; });
+    try {
+      final dir = await getExternalStorageDirectory() ??
+          await getApplicationDocumentsDirectory();
+      final downloadsPath = Platform.isAndroid
+          ? '/storage/emulated/0/Download'
+          : dir.path;
+      final msg = await StorageService().exportNotesToPath(downloadsPath);
+      setState(() { _exported = true; _exportMsg = msg; });
+    } catch (e) {
+      setState(() { _exportMsg = e.toString().replaceAll('Exception:', '').trim(); });
+    } finally {
+      setState(() => _isExporting = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 600;
-    final dialogWidth = isDesktop ? 520.0 : screenWidth * 0.9;
+    final scheme = Theme.of(context).colorScheme;
 
-    return Dialog(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: dialogWidth,
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return PopScope(
+      canPop: false,
+      child: Dialog(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 480,
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header ──
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.celebration, color: Colors.blue, size: 28),
-                        const SizedBox(width: 12),
-                        Text(
-                          isArabic ? 'ما الجديد؟' : "What's New?",
-                          style: TextStyle(
-                            fontSize: isDesktop ? 22 : 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.orange.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.rocket_launch, color: Colors.blue, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            isArabic ? 'الإصدار $version' : 'Version $version',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isDesktop ? 17 : 15,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ],
-                      ),
+                      child: const Icon(Icons.backup_rounded, color: Colors.orange, size: 26),
                     ),
-                    const SizedBox(height: 16),
-                    _WhatsNewFeature(
-                      icon: Icons.cloud_sync_rounded,
-                      color: Colors.blue,
-                      title: isArabic ? '☁️ مزامنة Google Drive أذكى' : '☁️ Smarter Google Drive Sync',
-                      description: isArabic
-                          ? 'المزامنة الآن تعمل على مستوى كل ملاحظة — لا تضيع تعديلاتك عند فتح التطبيق من جهازين. الكتالوجات تُزامَن أيضاً.'
-                          : 'Sync now works at the note level — your edits won\'t be lost when opening from two devices. Catalogs are synced too.',
-                      isDesktop: isDesktop,
-                    ),
-                    const SizedBox(height: 16),
-                    _WhatsNewFeature(
-                      icon: Icons.lock_rounded,
-                      color: Colors.orange,
-                      title: isArabic ? '🔐 الخزنة محلية بالكامل' : '🔐 Vault is Fully Local',
-                      description: isArabic
-                          ? 'الملاحظات المشفرة لا تُرفع إلى Google Drive أبداً. الخزنة محلية 100% لحماية خصوصيتك.'
-                          : 'Encrypted notes are never uploaded to Google Drive. The vault is 100% local to protect your privacy.',
-                      isDesktop: isDesktop,
-                    ),
-                    const SizedBox(height: 16),
-                    _WhatsNewFeature(
-                      icon: Icons.speed_rounded,
-                      color: Colors.green,
-                      title: isArabic ? '⚡ فتح الخزنة أسرع' : '⚡ Faster Vault Opening',
-                      description: isArabic
-                          ? 'فك تشفير الملاحظات الآن يعمل بشكل متوازٍ — وقت التحميل أقل بكثير مع عدد كبير من الملاحظات.'
-                          : 'Note decryption now runs in parallel — much faster loading with large numbers of notes.',
-                      isDesktop: isDesktop,
-                    ),
-                    const SizedBox(height: 16),
-                    _WhatsNewFeature(
-                      icon: Icons.bug_report_rounded,
-                      color: Colors.purple,
-                      title: isArabic ? '🔧 إصلاحات متعددة' : '🔧 Multiple Fixes',
-                      description: isArabic
-                          ? 'إصلاح حفظ تغيير اللون في الخزنة، إضافة الجيك لست لقائمة الإضافة، وتحسينات في شريط التمرير.'
-                          : 'Fixed color change saving in vault, added checklist to the add menu, and scrollbar improvements.',
-                      isDesktop: isDesktop,
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.favorite, color: Colors.red, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              isArabic
-                                  ? 'شكراً لاستخدامك سنان نوت! نحن نعمل باستمرار لتحسين تجربتك.'
-                                  : "Thank you for using Sinan Note! We're constantly working to improve your experience.",
-                              style: TextStyle(
-                                fontSize: isDesktop ? 13 : 12,
-                                color: Colors.grey[700],
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        isArabic ? 'قبل التحديث — احفظ بياناتك' : 'Before Update — Save Your Data',
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
+                const SizedBox(height: 16),
+
+                // ── Warning box ──
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                  ),
                   child: Text(
-                    isArabic ? 'حسناً' : 'Got it',
-                    style: TextStyle(fontSize: isDesktop ? 16 : 14),
+                    isArabic
+                        ? 'هذا التحديث يتضمن تغييرات في قاعدة البيانات.\nيُنصح بأخذ نسخة احتياطية من ملاحظاتك قبل المتابعة لضمان عدم فقدان أي بيانات.'
+                        : 'This update includes database changes.\nIt is recommended to back up your notes before continuing to ensure no data is lost.',
+                    style: TextStyle(fontSize: 13, height: 1.5, color: scheme.onSurface),
                   ),
                 ),
-              ),
+                const SizedBox(height: 20),
+
+                // ── Export button ──
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _isExporting ? null : _exportNow,
+                    icon: _isExporting
+                        ? const SizedBox(width: 18, height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Icon(_exported ? Icons.check_circle_rounded : Icons.download_rounded),
+                    label: Text(
+                      _isExporting
+                          ? (isArabic ? 'جاري التصدير...' : 'Exporting...')
+                          : _exported
+                              ? (isArabic ? 'تم التصدير ✓' : 'Exported ✓')
+                              : (isArabic ? 'تصدير الملاحظات إلى التنزيلات' : 'Export Notes to Downloads'),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _exported ? Colors.green : scheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+
+                // ── Export result message ──
+                if (_exportMsg != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _exportMsg!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _exported ? Colors.green : scheme.error,
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+
+                // ── Checkbox ──
+                InkWell(
+                  onTap: () => setState(() => _confirmed = !_confirmed),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: _confirmed,
+                        onChanged: (v) => setState(() => _confirmed = v ?? false),
+                        activeColor: scheme.primary,
+                      ),
+                      Expanded(
+                        child: Text(
+                          isArabic
+                              ? 'نعم، أخذت نسخة احتياطية من بياناتي'
+                              : 'Yes, I have backed up my data',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ── Confirm button ──
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _confirmed ? () => Navigator.pop(context) : null,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      isArabic ? 'متابعة' : 'Continue',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _WhatsNewFeature extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String description;
-  final bool isDesktop;
-
-  const _WhatsNewFeature({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.description,
-    this.isDesktop = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: isDesktop ? 24 : 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: isDesktop ? 16 : 14,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: isDesktop ? 14 : 13,
-                  color: Colors.grey[700],
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

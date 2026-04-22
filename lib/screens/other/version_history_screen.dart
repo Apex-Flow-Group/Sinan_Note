@@ -7,6 +7,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/version_history_service.dart';
+import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/editor/versions_bottom_sheet.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
@@ -158,69 +159,65 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       },
       child: Scaffold(
         drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: () {}),
-        appBar: AppBar(
-          leading: Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
-          ),
-          title: _isSearching
-              ? TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                      hintText: l10n.searchNotes, border: InputBorder.none),
-                )
-              : Text(l10n.noteHistory),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: Icon(_isSearching ? Icons.close : Icons.search),
-              onPressed: () => setState(() {
-                _isSearching = !_isSearching;
-                if (!_isSearching) _searchController.clear();
-              }),
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.sort),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              onSelected: (v) => setState(() => _sortBy = v),
-              itemBuilder: (context) => [
-                _sortMenuItem(
-                    context, 'date', Icons.access_time, l10n.sortByDate),
-                _sortMenuItem(
-                    context, 'title', Icons.sort_by_alpha, l10n.sortByTitle),
-              ],
+        body: Column(
+          children: [
+            Builder(builder: (ctx) {
+              return SearchableHeader(
+                title: l10n.noteHistory,
+                icon: Icons.history_rounded,
+                isSearching: _isSearching,
+                searchController: _searchController,
+                onSearchChange: (q) => setState(() => _searchQuery = q.toLowerCase()),
+                onToggleSearch: () => setState(() {
+                  _isSearching = !_isSearching;
+                  if (!_isSearching) _searchController.clear();
+                }),
+                leading: Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.of(ctx).openDrawer(),
+                  ),
+                ),
+                trailing: PopupMenuButton<String>(
+                  icon: const Icon(Icons.sort),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (v) => setState(() => _sortBy = v),
+                  itemBuilder: (context) => [
+                    _sortMenuItem(context, 'date', Icons.access_time, l10n.sortByDate),
+                    _sortMenuItem(context, 'title', Icons.sort_by_alpha, l10n.sortByTitle),
+                  ],
+                ),
+              );
+            }),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredNotes.isEmpty
+                      ? Center(
+                          child: Text(
+                            _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        )
+                      : Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 800),
+                            child: ListView.builder(
+                              padding: EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                top: 16,
+                                bottom: MediaQuery.of(context).padding.bottom + 80,
+                              ),
+                              itemCount: filteredNotes.length,
+                              itemBuilder: (context, index) =>
+                                  _buildNoteCard(context, filteredNotes[index], l10n),
+                            ),
+                          ),
+                        ),
             ),
           ],
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : filteredNotes.isEmpty
-                ? Center(
-                    child: Text(
-                      _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                  )
-                : Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 800),
-                      child: ListView.builder(
-                        padding: EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          top: 16,
-                          bottom: MediaQuery.of(context).padding.bottom + 80,
-                        ),
-                        itemCount: filteredNotes.length,
-                        itemBuilder: (context, index) =>
-                            _buildNoteCard(context, filteredNotes[index], l10n),
-                      ),
-                    ),
-                  ),
       ),
     );
   }

@@ -12,6 +12,7 @@ import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_hand
 import 'package:apex_note/screens/shared/note_editor/state/editor_save_manager.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Import Core Components
 // Import Handlers
@@ -523,15 +524,45 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final screenWidth = MediaQuery.of(context).size.width;
     final sidePadding = screenWidth > 600 ? 16.0 : screenWidth * 0.05;
 
+    final base = _coordinator.getBackgroundColor(context);
+    final isDarkBase = base.computeLuminance() < 0.5;
+    final scrolled = Color.alphaBlend(
+      isDarkBase
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.06),
+      base,
+    );
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) await _handleBack();
       },
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        backgroundColor: _coordinator.getBackgroundColor(context),
-        body: Stack(
+      child: ValueListenableBuilder<double>(
+        valueListenable: _coordinator.scrollProgress,
+        builder: (context, progress, _) {
+          final statusColor = Color.lerp(base, scrolled, progress)!;
+          final statusBrightness = statusColor.computeLuminance() < 0.5
+              ? Brightness.light
+              : Brightness.dark;
+          return Scaffold(
+            resizeToAvoidBottomInset: true,
+            backgroundColor: _coordinator.getBackgroundColor(context),
+            appBar: AppBar(
+              toolbarHeight: 0,
+              backgroundColor: statusColor,
+              systemOverlayStyle: SystemUiOverlayStyle(
+                statusBarColor: statusColor,
+                statusBarIconBrightness: statusBrightness,
+              ),
+            ),
+            body: NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            final offset = n.metrics.pixels.clamp(0.0, 120.0);
+            _coordinator.scrollProgress.value = offset / 120.0;
+            return false;
+          },
+          child: Stack(
           children: [
             // Content Area
             EditorBuildMethods.buildContentArea(
@@ -551,6 +582,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 _updateChecklistUndoRedo();
               },
               onUndoRedoChanged: _updateChecklistUndoRedo,
+              onScroll: (progress) {
+                _coordinator.scrollProgress.value = progress;
+              },
               onChecklistTitleChanged: (title) {
                 if (_coordinator.stateManager.checklistTitle != title) {
                   Future.microtask(() {
@@ -580,6 +614,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 _coordinator.stateManager.markDirty();
               },
               originallyLocked: widget.originallyLocked,
+              scrollProgress: _coordinator.scrollProgress,
               onSaveTap: () async {
                 if (widget.mode == NoteMode.code &&
                     _coordinator.detectedLanguage != null) {
@@ -625,6 +660,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 }
               },
               saveNote: _saveNote,
+              scrollProgress: _coordinator.scrollProgress,
               onInsertSymbol: (symbol) {
                 final ctrl = _coordinator.codeController;
                 if (ctrl == null) return;
@@ -647,8 +683,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               },
             ),
           ],
-        ),
-      ),
-    );
+          ),        // Stack
+            ),      // NotificationListener
+          );        // Scaffold
+        },          // ValueListenableBuilder builder
+      ),            // ValueListenableBuilder
+    );              // PopScope
   }
 }

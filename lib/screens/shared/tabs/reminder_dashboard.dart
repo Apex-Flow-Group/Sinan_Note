@@ -12,8 +12,8 @@ import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/animated_search_bar.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
@@ -44,7 +44,6 @@ class _ReminderDashboardState extends State<ReminderDashboard>
   ViewType _viewType = ViewType.listExpanded;
   final ValueNotifier<Set<int>> _selectedNoteIdsNotifier = ValueNotifier({});
   bool _isSearchMode = false;
-  final GlobalKey<AnimatedSearchBarState> _searchBarKey = GlobalKey();
 
   @override
   void initState() {
@@ -163,55 +162,12 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                         final inSelection =
                             _selectedNoteIdsNotifier.value.isNotEmpty;
                         return [
-                          SliverAppBar(
-                            floating: !inSelection,
-                            snap: !inSelection,
-                            pinned: inSelection,
-                            automaticallyImplyLeading: false,
-                            titleSpacing: inSelection ? 0 : null,
-                            forceElevated: innerBoxIsScrolled,
-                            bottom: inSelection
-                                ? null
-                                : TabBar(
-                                    controller: _tabController,
-                                    indicatorColor:
-                                        Theme.of(context).primaryColor,
-                                    labelColor: isDark
-                                        ? Colors.white
-                                        : Theme.of(context).primaryColor,
-                                    unselectedLabelColor: isDark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                                    labelStyle: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14),
-                                    unselectedLabelStyle: const TextStyle(
-                                        fontWeight: FontWeight.normal,
-                                        fontSize: 14),
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    tabs: [
-                                      Tab(text: strings.upcoming),
-                                      Tab(text: strings.scheduled),
-                                      Tab(text: strings.expired),
-                                    ],
-                                  ),
-                            title: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 250),
-                              transitionBuilder: (child, anim) =>
-                                  FadeTransition(
-                                opacity: anim,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0, -0.2),
-                                    end: Offset.zero,
-                                  ).animate(CurvedAnimation(
-                                      parent: anim, curve: Curves.easeOut)),
-                                  child: child,
-                                ),
-                              ),
-                              child: inSelection
-                                  ? SelectionActionBar(
+                          if (inSelection)
+                            SliverAppBar(
+                              pinned: true,
+                              automaticallyImplyLeading: false,
+                              titleSpacing: 0,
+                              title: SelectionActionBar(
                                       key: const ValueKey('selection'),
                                       selectedIdsNotifier:
                                           _selectedNoteIdsNotifier,
@@ -319,43 +275,28 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                                   note: note);
                                             }
                                           : null,
-                                    )
-                                  : AnimatedSearchBar(
-                                      key: _searchBarKey,
-                                      isSearchMode: _isSearchMode,
-                                      searchController: searchController,
-                                      hintText: strings.searchNotes,
-                                      onClose: () {
-                                        setState(() {
-                                          _isSearchMode = false;
-                                          exitSearch();
-                                        });
-                                      },
-                                      titleWidget: Row(
-                                        key: const ValueKey('normal'),
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.alarm_rounded,
-                                              size: 22),
-                                          const SizedBox(width: 8),
-                                          Flexible(
-                                              child: Text(strings.reminders,
-                                                  overflow:
-                                                      TextOverflow.ellipsis)),
-                                        ],
-                                      ),
                                     ),
-                            ),
-                            actions: inSelection
-                                ? []
-                                : [
-                                    IconButton(
-                                      icon: Icon(_isSearchMode
-                                          ? Icons.close
-                                          : Icons.search),
-                                      onPressed: () {
+                            )
+                          else
+                            SliverAppBar(
+                              floating: true,
+                              snap: true,
+                              automaticallyImplyLeading: false,
+                              toolbarHeight: 0,
+                              bottom: PreferredSize(
+                                preferredSize: const Size.fromHeight(116),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SearchableHeader(
+                                      title: strings.reminders,
+                                      icon: Icons.alarm_rounded,
+                                      isSearching: _isSearchMode,
+                                      searchController: searchController,
+                                      onSearchChange: (q) => setState(() {}),
+                                      includeSafeArea: false,
+                                      onToggleSearch: () {
                                         if (_isSearchMode) {
-                                          _searchBarKey.currentState?.unfocus();
                                           setState(() {
                                             _isSearchMode = false;
                                             exitSearch();
@@ -364,49 +305,76 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                           setState(() => _isSearchMode = true);
                                         }
                                       },
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        _viewType == ViewType.listExpanded
-                                            ? Icons.view_headline
-                                            : Icons.view_day,
-                                      ),
-                                      onPressed: () async {
-                                        setState(() {
-                                          _viewType =
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(
                                               _viewType == ViewType.listExpanded
-                                                  ? ViewType.listCompact
-                                                  : ViewType.listExpanded;
-                                        });
-                                        await Provider.of<SettingsProvider>(
-                                                context,
-                                                listen: false)
-                                            .setViewType(
-                                                'reminder', _viewType.name);
-                                      },
+                                                  ? Icons.view_headline
+                                                  : Icons.view_day,
+                                            ),
+                                            onPressed: () async {
+                                              setState(() {
+                                                _viewType = _viewType ==
+                                                        ViewType.listExpanded
+                                                    ? ViewType.listCompact
+                                                    : ViewType.listExpanded;
+                                              });
+                                              await Provider.of<SettingsProvider>(
+                                                      context,
+                                                      listen: false)
+                                                  .setViewType(
+                                                      'reminder', _viewType.name);
+                                            },
+                                          ),
+                                          PopupMenuButton<String>(
+                                            icon: const Icon(Icons.sort),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12)),
+                                            onSelected: (v) =>
+                                                setState(() => _sortBy = v),
+                                            itemBuilder: (_) => [
+                                              _sortItem(context, 'date',
+                                                  Icons.access_time,
+                                                  strings.sortByDate),
+                                              _sortItem(context, 'title',
+                                                  Icons.sort_by_alpha,
+                                                  strings.sortByTitle),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    PopupMenuButton<String>(
-                                      icon: const Icon(Icons.sort),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                      onSelected: (v) =>
-                                          setState(() => _sortBy = v),
-                                      itemBuilder: (_) => [
-                                        _sortItem(
-                                            context,
-                                            'date',
-                                            Icons.access_time,
-                                            strings.sortByDate),
-                                        _sortItem(
-                                            context,
-                                            'title',
-                                            Icons.sort_by_alpha,
-                                            strings.sortByTitle),
+                                    TabBar(
+                                      controller: _tabController,
+                                      indicatorColor:
+                                          Theme.of(context).primaryColor,
+                                      labelColor: isDark
+                                          ? Colors.white
+                                          : Theme.of(context).primaryColor,
+                                      unselectedLabelColor: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                      labelStyle: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14),
+                                      unselectedLabelStyle: const TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 14),
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      tabs: [
+                                        Tab(text: strings.upcoming),
+                                        Tab(text: strings.scheduled),
+                                        Tab(text: strings.expired),
                                       ],
                                     ),
                                   ],
-                          ),
+                                ),
+                              ),
+                            ),
                         ];
                       },
                       body: Column(
@@ -642,7 +610,7 @@ class _ReminderTabView extends StatelessWidget {
 
     if (viewType == ViewType.grid) {
       return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
+        padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
         itemCount: (notes.length / 2).ceil(),
         itemBuilder: (context, rowIndex) {
           final l = rowIndex * 2;
@@ -664,7 +632,7 @@ class _ReminderTabView extends StatelessWidget {
 
     // listExpanded أو listCompact — NoteCardWidget يتعامل مع viewType داخلياً
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
+      padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
       itemCount: notes.length,
       itemBuilder: (context, index) => Consumer<SelectedNoteProvider>(
         builder: (context, sel, _) {

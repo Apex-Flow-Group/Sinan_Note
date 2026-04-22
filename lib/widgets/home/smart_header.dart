@@ -22,6 +22,7 @@ class SmartHeader extends StatefulWidget {
   final VoidCallback onMenuTap;
   final VoidCallback? onFilterTap;
   final bool isSearchActive;
+  final ValueNotifier<double>? scrollFadeNotifier;
 
   const SmartHeader({
     super.key,
@@ -33,6 +34,7 @@ class SmartHeader extends StatefulWidget {
     required this.onMenuTap,
     required this.isSearchActive,
     this.onFilterTap,
+    this.scrollFadeNotifier,
   });
 
   @override
@@ -49,10 +51,11 @@ class _SmartHeaderState extends State<SmartHeader> {
       valueListenable: widget.selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
         return SliverPersistentHeader(
-          pinned: selectedIds.isNotEmpty,
-          floating: selectedIds.isEmpty,
+          pinned: true,
+          floating: false,
           delegate: SmoothSearchHeaderDelegate(
             expandedHeight: 68.0,
+            statusBarHeight: MediaQuery.of(context).padding.top,
             selectionMode: selectedIds.isNotEmpty,
             isSearchActive: widget.isSearchActive,
             selectionBar: Center(
@@ -232,6 +235,7 @@ class _SmartHeaderState extends State<SmartHeader> {
                           viewTypeNotifier: widget.viewTypeNotifier,
                           onViewToggle: widget.onViewToggle,
                           onFilterTap: widget.onFilterTap,
+                          scrollFadeNotifier: widget.scrollFadeNotifier,
                         ),
                       ),
                     ],

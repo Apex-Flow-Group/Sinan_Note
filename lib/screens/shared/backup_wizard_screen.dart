@@ -34,32 +34,27 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: _flow != null
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => setState(() => _flow = null),
-                )
-              : null,
-        title: Text(_flow == null
-            ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
-            : _flow == 'backup'
-                ? (isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup')
-                : (isArabic ? 'استعادة البيانات' : 'Restore Data')),
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? _buildLoading(isArabic)
-          : AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: KeyedSubtree(
-                key: ValueKey(_flow),
-                child: _flow == null
-                    ? _buildHome(l10n, isArabic, scheme)
-                    : _flow == 'backup'
-                        ? _buildBackupFlow(l10n, isArabic, scheme)
-                        : _buildRestoreFlow(l10n, isArabic, scheme),
-              ),
-            ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _flow != null
+                ? () => setState(() => _flow = null)
+                : () => Navigator.pop(context),
+          ),
+          automaticallyImplyLeading: false,
+          title: Text(_flow == null
+              ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
+              : _flow == 'backup'
+                  ? (isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup')
+                  : (isArabic ? 'استعادة البيانات' : 'Restore Data')),
+          centerTitle: true,
+        ),
+        body: _isLoading
+            ? _buildLoading(isArabic)
+            : _flow == null
+                ? _buildHome(l10n, isArabic, scheme)
+                : _flow == 'backup'
+                    ? _buildBackupFlow(l10n, isArabic, scheme)
+                    : _buildRestoreFlow(l10n, isArabic, scheme),
       ),
     );
   }
@@ -191,28 +186,33 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           _SectionHeader(
             icon: Icons.storage_outlined,
             label: isArabic ? 'تصدير قاعدة البيانات' : 'Database Export',
-            color: Colors.purple,
+            color: Colors.grey,
           ),
           const SizedBox(height: 12),
-          _OptionTile(
-            icon: Icons.storage_outlined,
-            title: isArabic ? 'ملف .sinannote' : '.sinannote File',
-            subtitle: isArabic
-                ? 'نسخة كاملة من قاعدة البيانات — للاستعادة داخل التطبيق فقط'
-                : 'Full database copy — for in-app restore only',
-            color: Colors.purple,
-            actions: [
-              _ActionBtn(
-                icon: Icons.save_alt,
-                label: isArabic ? 'حفظ' : 'Save',
-                onTap: () => _exportDatabase(share: false),
-              ),
-              _ActionBtn(
-                icon: Icons.share,
-                label: isArabic ? 'مشاركة' : 'Share',
-                onTap: () => _exportDatabase(share: true),
-              ),
-            ],
+          Opacity(
+            opacity: 0.45,
+            child: _OptionTile(
+              icon: Icons.storage_outlined,
+              title: isArabic ? 'ملف .sinannote (معطّل)' : '.sinannote File (disabled)',
+              subtitle: isArabic
+                  ? 'التصدير غير متاح في هذا الإصدار — استخدم JSON بدلاً'
+                  : 'Export unavailable in this version — use JSON instead',
+              color: Colors.grey,
+              actions: [
+                _ActionBtn(
+                  icon: Icons.save_alt,
+                  label: isArabic ? 'حفظ' : 'Save',
+                  onTap: () {},
+                  disabled: true,
+                ),
+                _ActionBtn(
+                  icon: Icons.share,
+                  label: isArabic ? 'مشاركة' : 'Share',
+                  onTap: () {},
+                  disabled: true,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -242,6 +242,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          // استعادة .sinannote/.isar — متاحة دائماً لمن عنده نسخة قديمة
           _OptionTile(
             icon: Icons.storage_outlined,
             title: isArabic ? 'استعادة قاعدة البيانات' : 'Restore Database',
@@ -311,36 +312,6 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
         if (mounted) {
           UnifiedNotificationService().show(
               context: context, message: msg, type: NotificationType.success,
-              duration: const Duration(seconds: 4));
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        UnifiedNotificationService().show(
-            context: context,
-            message: e.toString().replaceAll('Exception:', ''),
-            type: NotificationType.error);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _exportDatabase({required bool share}) async {
-    setState(() => _isLoading = true);
-    try {
-      if (share) {
-        await BackupService().shareDatabase();
-      } else {
-        final dir = await FilePicker.platform.getDirectoryPath();
-        if (dir == null) return;
-        final path = await BackupService().exportDatabaseToPath(dir);
-        if (mounted) {
-          final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-          UnifiedNotificationService().show(
-              context: context,
-              message: '${isArabic ? 'تم الحفظ' : 'Saved'}: $path',
-              type: NotificationType.success,
               duration: const Duration(seconds: 4));
         }
       }
@@ -528,13 +499,14 @@ class _ActionBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool disabled;
 
-  const _ActionBtn({required this.icon, required this.label, required this.onTap});
+  const _ActionBtn({required this.icon, required this.label, required this.onTap, this.disabled = false});
 
   @override
   Widget build(BuildContext context) {
     return FilledButton.tonalIcon(
-      onPressed: onTap,
+      onPressed: disabled ? null : onTap,
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 13)),
       style: FilledButton.styleFrom(

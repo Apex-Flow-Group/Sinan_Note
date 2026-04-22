@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/github.dart';
@@ -54,8 +55,7 @@ class _CodeEditorState extends State<CodeEditor> {
     final theme = _buildTheme(isDark);
     final textColor = isDark ? Colors.white : Colors.black87;
     final gutterColor = isDark ? Colors.white38 : Colors.black38;
-    final systemFontSize =
-        Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0;
+    const systemFontSize = AppFontSize.noteBody;
 
     return Directionality(
       textDirection: TextDirection.ltr,

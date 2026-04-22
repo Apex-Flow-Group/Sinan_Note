@@ -17,7 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 class NativeDbMigrationService {
-  static const _doneKey = 'native_db_migration_v1_done';
+  static const _doneKey = 'native_db_migration_v2_done';
   static const _dbName  = 'sinan_notes.db';
 
   /// يُشغَّل مرة واحدة فقط — آمن للاستدعاء في كل مرة
@@ -37,29 +37,52 @@ class NativeDbMigrationService {
   }
 
   static Future<int> _migrate() async {
-    // 1. قراءة كل الملاحظات من Isar
     final isarService = IsarDatabaseService();
-    final notes = await isarService.getAllNotes();
-    if (notes.isEmpty) return 0;
+    final notes      = await isarService.getAllNotes();
+    final categories = await isarService.getAllCategories();
+    final deletedIds = await IsarDatabaseService.getDeletedNoteIds();
 
-    // 2. فتح/إنشاء sinan_notes.db في مسار databases
     final dbPath = await _getDbPath();
     final db = await openDatabase(
       dbPath,
       version: 1,
-      onCreate: (db, version) => db.execute(_createTableSql),
+      onCreate: (db, version) async {
+        await db.execute(_createNotesSql);
+        await db.execute(_createCategoriesSql);
+        await db.execute(_createDeletedNotesSql);
+        await db.execute(_createNoteVersionsSql);
+      },
     );
 
-    // 3. إدراج كل الملاحظات في transaction واحد
+    // تأكد من وجود الجداول حتى لو كانت قاعدة البيانات موجودة مسبقاً
+    await db.execute(_createNotesSql);
+    await db.execute(_createCategoriesSql);
+    await db.execute(_createDeletedNotesSql);
+    await db.execute(_createNoteVersionsSql);
+
     int count = 0;
     await db.transaction((txn) async {
+      // 1. النوتات
       for (final note in notes) {
-        await txn.insert(
-          'notes',
-          _noteToMap(note),
-          conflictAlgorithm: ConflictAlgorithm.ignore, // لا تكرار
-        );
+        await txn.insert('notes', _noteToMap(note),
+            conflictAlgorithm: ConflictAlgorithm.ignore);
         count++;
+      }
+      // 2. الكتالوجات
+      for (final cat in categories) {
+        await txn.insert(
+          'categories',
+          {'id': cat.id, 'name': cat.name, 'sortOrder': cat.sortOrder},
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+      // 3. سجلات الحذف
+      for (final entry in deletedIds.entries) {
+        await txn.insert(
+          'deleted_notes',
+          {'noteId': entry.key, 'deletedAt': entry.value.millisecondsSinceEpoch},
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
       }
     });
 
@@ -79,8 +102,8 @@ class NativeDbMigrationService {
     return p.join(dir.path, _dbName);
   }
 
-  /// نفس CREATE TABLE في DatabaseService.ts
-  static const _createTableSql = '''
+  /// نفس CREATE TABLEs في DatabaseService.ts
+  static const _createNotesSql = '''
     CREATE TABLE IF NOT EXISTS notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL DEFAULT '',
@@ -102,6 +125,32 @@ class NativeDbMigrationService {
       isChecklist INTEGER NOT NULL DEFAULT 0,
       categoryIds TEXT NOT NULL DEFAULT '',
       isHiddenFromHome INTEGER NOT NULL DEFAULT 0
+    )
+  ''';
+
+  static const _createCategoriesSql = '''
+    CREATE TABLE IF NOT EXISTS categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      sortOrder INTEGER NOT NULL DEFAULT 0
+    )
+  ''';
+
+  static const _createDeletedNotesSql = '''
+    CREATE TABLE IF NOT EXISTS deleted_notes (
+      noteId INTEGER PRIMARY KEY,
+      deletedAt INTEGER NOT NULL
+    )
+  ''';
+
+  static const _createNoteVersionsSql = '''
+    CREATE TABLE IF NOT EXISTS note_versions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      noteId INTEGER NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
+      timestamp TEXT NOT NULL,
+      action TEXT NOT NULL DEFAULT 'updated'
     )
   ''';
 

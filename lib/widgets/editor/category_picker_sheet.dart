@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
+import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -39,6 +40,14 @@ class CategoryPickerSheet extends StatefulWidget {
 class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
   late Set<int> _selected;
   bool _hideFromHome = false;
+
+  static const _catColorIndices = [8, 2, 5, 10, 3, 6, 9, 11];
+
+  Color _catColor(int index) {
+    final brightness = Theme.of(context).brightness;
+    final paletteIndex = _catColorIndices[index % _catColorIndices.length];
+    return AppColorPalette.palette[paletteIndex].getColor(brightness);
+  }
 
   @override
   void initState() {
@@ -102,6 +111,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
                       itemBuilder: (_, i) {
                         final cat = cats[i];
                         final checked = _selected.contains(cat.id);
+                        final color = _catColor(i);
                         return CheckboxListTile(
                           value: checked,
                           onChanged: (_) => setState(() {
@@ -112,14 +122,18 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
                             }
                           }),
                           title: Text(cat.name),
-                          secondary: Icon(
-                            Icons.label_rounded,
-                            size: 18,
-                            color: checked
-                                ? scheme.primary
-                                : scheme.onSurfaceVariant,
+                          secondary: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.bookmark_rounded,
+                                size: 16, color: color),
                           ),
-                          activeColor: scheme.primary,
+                          activeColor: color,
+                          checkColor: Colors.white,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                           controlAffinity: ListTileControlAffinity.trailing,

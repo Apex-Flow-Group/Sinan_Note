@@ -110,6 +110,7 @@ class IsarDatabaseService implements NoteDbInterface {
           .isArchivedEqualTo(false)
           .isTrashedEqualTo(false)
           .isLockedEqualTo(false)
+          .isHiddenFromHomeEqualTo(false)
           .sortByIsPinnedDesc()
           .thenByUpdatedAtDesc();
 

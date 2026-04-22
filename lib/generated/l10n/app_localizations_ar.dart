@@ -1788,6 +1788,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get help => 'مساعدة';
 
   @override
+  String get pullToRefresh => 'اسحب للتحديث';
+
+  @override
   String get refresh => 'تحديث';
 
   @override
@@ -1858,4 +1861,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tourCatAssign => 'أضف ملاحظة لأكثر من تصنيف في آنٍ واحد';
+
+  @override
+  String get driveSignIn => 'اضغط لتسجيل الدخول';
+
+  @override
+  String get driveSyncOn => 'المزامنة تعمل';
+
+  @override
+  String get driveSyncOff => 'المزامنة متوقفة';
 }

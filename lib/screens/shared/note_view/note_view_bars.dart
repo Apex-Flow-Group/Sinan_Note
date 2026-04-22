@@ -12,26 +12,13 @@ class NoteViewBars {
     VoidCallback onShare,
     VoidCallback onArchive,
     VoidCallback onDelete,
-    VoidCallback onEdit,
-  ) {
+    VoidCallback onEdit, {
+    Color? barColor,
+  }) {
+    final color = barColor ?? Theme.of(context).colorScheme.surface;
+
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).bottomAppBarTheme.color ??
-            Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: color),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -90,27 +77,13 @@ class NoteViewBars {
     AppLocalizations l10n,
     Note note,
     VoidCallback onRestore,
-    VoidCallback onPermanentDelete,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
+    VoidCallback onPermanentDelete, {
+    Color? barColor,
+  }) {
+    final color = barColor ?? Theme.of(context).colorScheme.surface;
+
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).bottomAppBarTheme.color ??
-            colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: color),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

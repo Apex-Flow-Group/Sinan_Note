@@ -602,6 +602,7 @@
   "edit": "Edit",
   "view": "View",
   "help": "Help",
+  "pullToRefresh": "Pull to refresh",
   "refresh": "Refresh",
   "open": "Open",
   "pin": "Pin",
@@ -625,5 +626,8 @@
   "tourCatCreate": "Create custom categories like Work, Personal, and Ideas",
   "tourCatFilter": "Tap a category to view only its notes",
   "tourCatEdit": "Rename or delete categories easily",
-  "tourCatAssign": "Assign a note to multiple categories at once"
+  "tourCatAssign": "Assign a note to multiple categories at once",
+  "driveSignIn": "Tap to sign in",
+  "driveSyncOn": "Sync is active",
+  "driveSyncOff": "Sync is off"
 }

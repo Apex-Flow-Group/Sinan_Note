@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ class QuillEditorWidget extends StatefulWidget {
   final double sidePadding;
   final double totalBottomSpace;
   final bool autoFocus;
+  final ValueChanged<double>? onScroll;
 
   const QuillEditorWidget({
     super.key,
@@ -41,6 +43,7 @@ class QuillEditorWidget extends StatefulWidget {
     required this.sidePadding,
     required this.totalBottomSpace,
     this.autoFocus = false,
+    this.onScroll,
   });
 
   @override
@@ -127,7 +130,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         widget.quillController.document.changes.listen(_onDocumentChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _isLoading = false;
+      _scrollController.addListener(_onScrollChanged);
     });
+  }
+
+  void _onScrollChanged() {
+    if (!_scrollController.hasClients) return;
+    final offset = _scrollController.offset.clamp(0.0, 120.0);
+    widget.onScroll?.call(offset / 120.0);
   }
 
   void _onDocumentChange(DocChange change) {
@@ -207,6 +217,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   @override
   void dispose() {
     widget.quillController.removeListener(_onChanged);
+    _scrollController.removeListener(_onScrollChanged);
     _docChangeSub?.cancel();
     _scrollController.dispose();
     super.dispose();
@@ -521,7 +532,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                             l10n.startWriting,
                             style: TextStyle(
                               fontFamily: _cachedFontFamily,
-                              fontSize: widget.fontSize,
+                              fontSize: AppFontSize.noteBody,
                               height: 1.6,
                               color: widget.hintColor,
                             ),
@@ -576,7 +587,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       customStyles: DefaultStyles(
                         paragraph: DefaultTextBlockStyle(
                           TextStyle(
-                            fontSize: widget.fontSize,
+                            fontSize: AppFontSize.noteBody,
                             height: 1.6,
                             color: widget.textColor,
                             fontFeatures: const [
