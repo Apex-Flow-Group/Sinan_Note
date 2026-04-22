@@ -15,6 +15,7 @@ import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/native_db_migration_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -57,11 +58,17 @@ class _SplashScreenState extends State<SplashScreen> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     try {
-      // Step 1: Initialize Isar Database (30%)
+      // Step 1: Initialize Isar Database (20%)
       _updateStatus(
           isArabic ? 'تهيئة قاعدة البيانات...' : 'Initializing database...',
-          0.3);
+          0.2);
       await IsarDatabaseService.initialize();
+
+      // Step 2: Migration to Native SQLite — مرة واحدة فقط (50%)
+      _updateStatus(
+          isArabic ? 'ترحيل البيانات...' : 'Migrating data...',
+          0.5);
+      await NativeDbMigrationService.runIfNeeded();
 
       // Step 2: Background services (60%)
       _updateStatus(isArabic ? 'تحميل الخدمات...' : 'Loading services...', 0.6);

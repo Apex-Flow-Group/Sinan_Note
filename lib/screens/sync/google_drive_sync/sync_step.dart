@@ -19,7 +19,4 @@ enum SyncStep {
   
   /// خطأ
   error,
-  
-  // ⚠️ DEPRECATED: vaultWarning - الخزنة لا تُزامن بعد الآن
-  // الكود موجود لكن معطل
 }

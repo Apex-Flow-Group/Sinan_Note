@@ -23,7 +23,7 @@ class GoogleDriveMerge {
     if (GoogleDriveAuth.driveApi == null) throw Exception('Not signed in');
 
     try {
-      final file = await GoogleDriveAuth.findFile('sinan_backup.gz');
+      final file = await GoogleDriveAuth.findFile('sinan_backup.gz'); // Flutter يكتب/يقرأ .gz فقط
       if (file == null) {
         return await uploadFn(context);
       }
@@ -74,7 +74,7 @@ class GoogleDriveMerge {
     ) as drive.Media;
 
     final tempDir = await getTemporaryDirectory();
-    final tempFile = File(join(tempDir.path, 'drive_merge.json'));
+    final tempFile = File(join(tempDir.path, 'drive_merge.gz'));
     final sink = tempFile.openWrite();
     await response.stream.forEach((chunk) => sink.add(chunk));
     await sink.close();
@@ -83,13 +83,9 @@ class GoogleDriveMerge {
     final dynamic jsonData = jsonDecode(json);
     await tempFile.delete();
 
-    List<dynamic> notesList;
-    if (jsonData is Map<String, dynamic>) {
-      notesList = jsonData['notes'] ?? [];
-      // vault_data لا يُستعاد تلقائياً في الدمج أيضاً
-    } else {
-      notesList = jsonData;
-    }
+    final List<dynamic> notesList = jsonData is Map<String, dynamic>
+        ? (jsonData['notes'] ?? [])
+        : jsonData;
 
     return notesList.map((m) => Note.fromMap(m)).toList();
   }
