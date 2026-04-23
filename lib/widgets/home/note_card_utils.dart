@@ -15,6 +15,11 @@ class NoteCardUtils {
       return NoteMode.checklist;
     }
 
+    // دعم النوتات القديمة التي تعتمد على isProfessional
+    if (note.isProfessional == true) {
+      return NoteMode.code;
+    }
+
     final codeTypes = [
       'python',
       'javascript',
@@ -189,6 +194,7 @@ class NoteCardUtils {
         return Padding(
           padding: const EdgeInsets.only(bottom: 4),
           child: Row(
+            textDirection: TextDirection.ltr,
             children: [
               Icon(
                 item.isDone ? Icons.check_box : Icons.check_box_outline_blank,
@@ -198,7 +204,7 @@ class NoteCardUtils {
                     : titleColor.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 8),
-              Expanded(
+              Flexible(
                 child: Text(
                   item.text.isEmpty ? 'Mission...' : item.text,
                   style: TextStyle(

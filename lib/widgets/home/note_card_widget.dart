@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:ui' as ui;
+
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
@@ -16,6 +18,8 @@ import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/desktop/note_context_menu.dart';
 import 'package:apex_note/widgets/effects/premium_card_effect.dart';
+import 'package:apex_note/widgets/home/note_card/hidden_categories_chip.dart';
+import 'package:apex_note/widgets/home/note_card/slidable_auto_closer.dart';
 import 'package:apex_note/widgets/home/note_card_actions.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +69,22 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late Color _baseColor;
   late Color _titleColor;
   late Color _contentColor;
+  late ui.TextDirection _titleDirection;
+  late ui.TextDirection _contentDirection;
+
+  static final _rtlRegex = RegExp(
+    r'[\u0600-\u06FF\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
+  );
+
+  static ui.TextDirection _detectDirection(String text) {
+    if (text.isEmpty) return ui.TextDirection.rtl;
+    for (final char in text.runes) {
+      final c = String.fromCharCode(char);
+      if (_rtlRegex.hasMatch(c)) return ui.TextDirection.rtl;
+      if (RegExp(r'[a-zA-Z]').hasMatch(c)) return ui.TextDirection.ltr;
+    }
+    return ui.TextDirection.rtl;
+  }
 
   @override
   void initState() {
@@ -103,6 +123,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     _fileExtension = _shouldShowExt
         ? NoteCardUtils.getFileExtension(widget.note.content, widget.note.noteType)
         : '';
+    _titleDirection = _detectDirection(_displayTitle);
+    _contentDirection = _detectDirection(_displayContent);
   }
 
   @override
@@ -263,7 +285,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Row(
                             children: [
@@ -271,6 +292,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                 child: widget.viewType == ViewType.listCompact
                                     ? Text(
                                         _displayTitle,
+                                        textDirection: _titleDirection,
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
@@ -278,41 +300,47 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       )
-                                    : Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            _displayTitle,
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                color: titleColor),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          widget.note.isLocked
-                                              ? Text(
-                                                  l10n.protectedContent,
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: contentColor.withValues(alpha: 0.6),
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                )
-                                              : _isChecklist
-                                                  ? NoteCardUtils.buildChecklistPreview(widget.note.content, titleColor)
-                                                  : Text(
-                                                      _displayContent,
-                                                      maxLines: 4,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: contentColor,
-                                                      ),
+                                    : Directionality(
+                                        textDirection: _titleDirection,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _displayTitle,
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: titleColor),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            widget.note.isLocked
+                                                ? Text(
+                                                    l10n.protectedContent,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      color: contentColor.withValues(alpha: 0.6),
+                                                      fontStyle: FontStyle.italic,
                                                     ),
-                                        ],
+                                                  )
+                                                : _isChecklist
+                                                    ? NoteCardUtils.buildChecklistPreview(widget.note.content, titleColor)
+                                                    : Text(
+                                                        _displayContent,
+                                                        textDirection: _contentDirection,
+                                                        maxLines: 4,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          color: contentColor,
+                                                        ),
+                                                      ),
+                                          ],
+                                        ),
                                       ),
                               ),
                               Row(
@@ -350,7 +378,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                   children: [
                                     const Icon(Icons.alarm, size: 14, color: Colors.orange),
                                     const SizedBox(width: 4),
-                                    Expanded(
+                                    Flexible(
                                       child: Text(
                                         '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
                                         style: TextStyle(
@@ -439,7 +467,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                   context
                                       .read<CategoriesProvider>()
                                       .hideProFromHome))
-                            _HiddenCategoriesChip(
+                            HiddenCategoriesChip(
                               note: widget.note,
                               titleColor: titleColor,
                               isProHidden: widget.note.isProfessional &&
@@ -475,204 +503,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class SlidableAutoCloser extends StatefulWidget {
-  final ValueNotifier<int> closerNotifier;
-  final Widget child;
-
-  const SlidableAutoCloser({
-    super.key,
-    required this.closerNotifier,
-    required this.child,
-  });
-
-  @override
-  State<SlidableAutoCloser> createState() => _SlidableAutoCloserState();
-}
-
-class _SlidableAutoCloserState extends State<SlidableAutoCloser> {
-  @override
-  void initState() {
-    super.initState();
-    widget.closerNotifier.addListener(_onGlobalTouch);
-  }
-
-  @override
-  void dispose() {
-    widget.closerNotifier.removeListener(_onGlobalTouch);
-    super.dispose();
-  }
-
-  void _onGlobalTouch() {
-    final slidableController = Slidable.of(context);
-    if (slidableController != null) {
-      slidableController.close();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
-  }
-}
-
-/// Chip يظهر أسفل الكارد عندما تكون النوتة مخفية من الرئيسية
-class _HiddenCategoriesChip extends StatelessWidget {
-  final Note note;
-  final Color titleColor;
-  final bool isProHidden;
-
-  const _HiddenCategoriesChip({
-    required this.note,
-    required this.titleColor,
-    this.isProHidden = false,
-  });
-
-  void _showAllCategories(BuildContext context, List<String> names) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.visibility_off_rounded, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    isAr ? 'مخفي في الكتالوجات' : 'Hidden in catalogs',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            ...names.map((name) => ListTile(
-              dense: true,
-              leading: const Icon(Icons.label_rounded, size: 18),
-              title: Text(name),
-            )),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final catProvider = context.read<CategoriesProvider>();
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-
-    // نوتة محترفة مخفية بإعداد hideProFromHome
-    if (isProHidden) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.visibility_off_rounded, size: 12,
-                color: titleColor.withValues(alpha: 0.5)),
-            const SizedBox(width: 4),
-            Text(
-              isAr ? 'مخفي (محترف)' : 'Hidden (Pro)',
-              style: TextStyle(
-                fontSize: 11,
-                color: titleColor.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final catNames = note.categoryIds
-        .map((id) => catProvider.categories
-            .where((c) => c.id == id)
-            .map((c) => c.name)
-            .firstOrNull)
-        .whereType<String>()
-        .toList();
-
-    final displayNames = catNames.take(2).toList();
-    final extra = catNames.length - displayNames.length;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: GestureDetector(
-        onTap: extra > 0 ? () => _showAllCategories(context, catNames) : null,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.visibility_off_rounded,
-              size: 12,
-              color: titleColor.withValues(alpha: 0.5),
-            ),
-            const SizedBox(width: 4),
-            if (catNames.isEmpty)
-              Text(
-                isAr ? 'مخفي' : 'Hidden',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: titleColor.withValues(alpha: 0.5),
-                ),
-              )
-            else
-              ...displayNames.map((name) => Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: titleColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: titleColor.withValues(alpha: 0.55),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              )),
-            if (extra > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: titleColor.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  '+$extra',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: titleColor.withValues(alpha: 0.55),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-          ],
         ),
       ),
     );

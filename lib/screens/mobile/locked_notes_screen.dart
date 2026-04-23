@@ -19,7 +19,6 @@ import 'package:apex_note/widgets/home/home_drawer_widget.dart'
     show HomeDrawerWidget;
 import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class LockedNotesScreen extends StatefulWidget {

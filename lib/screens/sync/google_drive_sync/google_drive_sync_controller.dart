@@ -6,7 +6,6 @@ import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class GoogleDriveSyncController extends ChangeNotifier {
   SyncStep _currentStep = SyncStep.signIn;
@@ -107,8 +106,7 @@ class GoogleDriveSyncController extends ChangeNotifier {
         return;
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('google_drive_auto_sync', true);
+      await GoogleDriveService.setAutoSync(true);
       _currentStep = SyncStep.success;
       notifyListeners();
     } catch (e) {
@@ -125,8 +123,7 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
       final success = await GoogleDriveService.downloadDatabase(null);
       if (success) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('google_drive_auto_sync', true);
+        await GoogleDriveService.setAutoSync(true);
         _currentStep = SyncStep.success;
         notifyListeners();
       } else {
@@ -148,8 +145,7 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
       final success = await GoogleDriveService.uploadDatabase(null);
       if (success) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('google_drive_auto_sync', true);
+        await GoogleDriveService.setAutoSync(true);
         _currentStep = SyncStep.success;
         notifyListeners();
       } else {

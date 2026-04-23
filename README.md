@@ -1,6 +1,6 @@
 # Sinan Note | سنان نوت
 
-![Version](https://img.shields.io/badge/version-2.2.1-blue.svg)
+![Version](https://img.shields.io/badge/version-3.0.3-blue.svg)
 ![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B.svg?logo=flutter)
 ![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)
 ![License](https://img.shields.io/badge/license-Proprietary-red.svg)
@@ -14,12 +14,17 @@
 | الميزة | التفاصيل |
 |--------|---------|
 | 🔐 خزنة ذكية | تشفير AES-256 + مصادقة بيومترية |
-| 💻 محرر كود | 25+ لغة برمجية مع تلوين تلقائي |
-| 📝 أنواع الملاحظات | نص / كود / قائمة مهام / تذكير |
-| 🌍 ثنائي اللغة | عربي وإنجليزي مع دعم RTL/LTR |
+| 💻 محرر كود | 25+ لغة برمجية مع syntax highlighting تلقائي |
+| 👁️ معاينة الكود | SVG كصورة حقيقية، JSON منسق، preview لكل اللغات |
+| 📥 تحميل الكود | حفظ مباشر في التنزيلات بالامتداد الصحيح |
+| 📝 أنواع الملاحظات | نص / كود / قائمة مهام / تذكير / rich text |
+| 🌍 ثنائي اللغة | عربي وإنجليزي مع دعم RTL/LTR تلقائي |
 | 🎨 Material You | ألوان ديناميكية + وضع ليلي/نهاري |
-| 🔄 نسخ احتياطي | JSON محلي + Google Drive |
-| 🖥️ سطح مكتب | تخطيط Master-Details للشاشات الكبيرة |
+| 🔄 Google Drive | مزامنة تلقائية مع merge ذكي |
+| �️ كتالوجات | تنظيم الملاحظات في مجموعات مع Drawer ذكي |
+| �🖥️ سطح مكتب | تخطيط Master-Details للشاشات الكبيرة |
+| 📱 Home Widget | عرض التذكيرات على الشاشة الرئيسية |
+| 🕐 تاريخ الإصدارات | تتبع تعديلات كل ملاحظة |
 
 ---
 
@@ -27,15 +32,51 @@
 
 ```
 lib/
-├── controllers/     # إدارة الحالة (Provider)
-├── core/            # ثوابت، ثيمات، أدوات مشتركة
-├── models/          # نماذج البيانات (Isar)
-├── screens/         # الشاشات
-├── services/        # منطق الأعمال
-└── widgets/         # مكونات الواجهة
+├── controllers/          # إدارة الحالة (Provider)
+│   ├── categories/
+│   ├── notes/
+│   └── settings/
+├── core/                 # ثوابت، ثيمات، أدوات مشتركة
+│   ├── constants/
+│   ├── theme/
+│   └── utils/
+├── models/               # نماذج البيانات (Isar)
+├── screens/              # الشاشات
+│   ├── mobile/
+│   ├── desktop/
+│   ├── shared/
+│   │   ├── note_editor/  # محرر الملاحظات (مقسّم)
+│   │   ├── note_view/    # عارض الملاحظات
+│   │   ├── settings/     # إعدادات (مقسّمة)
+│   │   └── tabs/
+│   └── other/
+├── services/             # منطق الأعمال
+│   ├── cloud/            # Google Drive
+│   ├── security/         # تشفير + بيومتري
+│   ├── storage/          # Isar + SQLite migration
+│   └── note_services/
+└── widgets/              # مكونات الواجهة
+    ├── editor/
+    ├── home/
+    │   └── note_card/    # كاردات الملاحظات
+    └── common/
 ```
 
-> راجع [`lib/README.md`](lib/README.md) للتفاصيل التقنية.
+---
+
+## قاعدة البيانات
+
+التطبيق يستخدم **Isar** كقاعدة بيانات رئيسية، مع مزامنة تلقائية لـ **SQLite** عند كل تشغيل:
+
+```
+Isar (رئيسية) ──sync──► SQLite (sinan_notes.db)
+                          ├── notes
+                          ├── categories
+                          ├── note_versions
+                          └── deleted_notes
+```
+
+SQLite جاهزة للانتقال لـ React Native بنفس الـ schema.
 
 ---
 
@@ -48,6 +89,11 @@ flutter pub get
 flutter run
 ```
 
+### متطلبات البناء
+- Flutter SDK 3.0+
+- Dart SDK 3.0+
+- Android SDK (للأندرويد)
+
 ---
 
 ## التوثيق
@@ -55,10 +101,9 @@ flutter run
 | الملف | المحتوى |
 |-------|---------|
 | [`lib/README.md`](lib/README.md) | هيكل الكود والمعمارية |
-| [`lib/services/README.md`](lib/services/README.md) | الخدمات والمنطق |
-| [`lib/screens/README.md`](lib/screens/README.md) | الشاشات والتنقل |
 | [`CHANGELOG.md`](CHANGELOG.md) | سجل التغييرات |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | دليل المساهمة |
+| [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) | سياسة الخصوصية |
 
 ---
 

@@ -10,6 +10,7 @@ import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:apex_note/widgets/empty_details_view.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -138,15 +139,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
   Widget _buildEditorView(BuildContext context, Note selectedNote,
       SelectedNoteProvider selectedNoteProvider) {
     // تحديد نوع المحرر حسب نوع الملاحظة
-    NoteMode mode;
-
-    if (selectedNote.isProfessional == true) {
-      mode = NoteMode.code;
-    } else if (selectedNote.isChecklist == true) {
-      mode = NoteMode.checklist;
-    } else {
-      mode = _getNoteMode(selectedNote.noteType);
-    }
+    final NoteMode mode = NoteCardUtils.getNoteMode(selectedNote);
 
     try {
       return NoteEditorImmersive(
@@ -447,25 +440,4 @@ class _DetailsPanelState extends State<DetailsPanel> {
     );
   }
 
-  /// تحويل نوع الملاحظة (String) إلى NoteMode
-  NoteMode _getNoteMode(String noteType) {
-    // تطبيع النوع
-    final normalizedType = noteType.toLowerCase().trim();
-
-    switch (normalizedType) {
-      case 'code':
-      case 'professional':
-      case 'pro':
-        return NoteMode.code;
-      case 'checklist':
-        return NoteMode.checklist;
-      case 'reminder':
-        return NoteMode.reminder;
-      case 'rich':
-        return NoteMode.rich;
-      case 'simple':
-      default:
-        return NoteMode.simple;
-    }
-  }
 }

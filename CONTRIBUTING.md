@@ -8,6 +8,75 @@
 
 ---
 
+## إعداد بيئة التطوير
+
+### المتطلبات:
+- Flutter SDK 3.0.0+
+- Dart SDK 3.0.0+
+- Android Studio / VS Code
+- Git
+
+### خطوات الإعداد:
+
+```bash
+git clone https://github.com/apexflow/sinan-note.git
+cd sinan-note
+flutter pub get
+flutter run
+```
+
+### التحقق من عدم وجود أخطاء:
+```bash
+flutter analyze
+flutter test
+```
+
+---
+
+## معايير الكود
+
+- اتبع [Effective Dart](https://dart.dev/guides/language/effective-dart)
+- استخدم `Theme.of(context).colorScheme` بدل الألوان الثابتة
+- استخدم `EdgeInsetsDirectional` لدعم RTL
+- كل `try/catch` يجب أن يعالج الخطأ أو يعيد رميه — لا ابتلاع صامت
+- الملفات الجديدة لا تتجاوز 400 سطر — قسّم إذا احتجت
+
+### Commit Messages:
+```
+feat: إضافة ميزة جديدة
+fix: إصلاح خطأ
+refactor: إعادة هيكلة
+docs: تحديث توثيق
+```
+
+---
+
+## الإبلاغ عن الأخطاء
+
+افتح Issue مع:
+- خطوات إعادة الإنتاج
+- السلوك المتوقع vs الفعلي
+- الجهاز ونسخة الأندرويد
+- Screenshot إن أمكن
+
+---
+
+## التواصل
+
+- **Email:** contact.apex.flow@gmail.com
+
+---
+
+<div align="center">
+
+**Copyright © 2025 Apex Flow Group**
+
+</div>
+
+</div>
+
+---
+
 ## 📋 جدول المحتويات
 
 1. [قواعد السلوك](#قواعد-السلوك)

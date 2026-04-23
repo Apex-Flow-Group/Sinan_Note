@@ -23,11 +23,29 @@ class GoogleDriveService {
   static DateTime? _lastSyncTime;
   static DateTime? get lastSyncTime => _lastSyncTime;
 
-  static Future<void> initializeSignIn() => GoogleDriveAuth.initializeSignIn();
+  static Future<void> initializeSignIn() async {
+    await GoogleDriveAuth.initializeSignIn();
+    await loadAutoSyncState();
+  }
   static Future<bool> signIn() => GoogleDriveAuth.signIn();
   static Future<void> signOut() async {
     await GoogleDriveAuth.signOut();
     _lastSyncTime = null;
+    await setAutoSync(false);
+  }
+
+  // ── Auto sync state ───────────────────────────────────────────────────────
+  static final ValueNotifier<bool> autoSyncEnabled = ValueNotifier(false);
+
+  static Future<void> loadAutoSyncState() async {
+    final prefs = await SharedPreferences.getInstance();
+    autoSyncEnabled.value = prefs.getBool('google_drive_auto_sync') ?? false;
+  }
+
+  static Future<void> setAutoSync(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('google_drive_auto_sync', value);
+    autoSyncEnabled.value = value;
   }
 
   // ── Rate limiting ─────────────────────────────────────────────────────────
@@ -69,14 +87,30 @@ class GoogleDriveService {
         return;
       }
 
+      // نقارن وقت Drive بأحدث نوتة محلية — أدق من last_upload_timestamp
+      final dbService = IsarDatabaseService();
+      final localNotes = await dbService.getAllNotes();
+      final latestLocal = localNotes.isEmpty
+          ? null
+          : localNotes
+              .map((n) => n.updatedAt)
+              .reduce((a, b) => a.isAfter(b) ? a : b);
+
       final prefs = await _getPrefs();
       final lastUploadMs = prefs.getInt('last_upload_timestamp');
       final lastUpload = lastUploadMs != null
           ? DateTime.fromMillisecondsSinceEpoch(lastUploadMs)
           : null;
 
-      if (lastUpload == null ||
-          driveModified.isAfter(lastUpload.add(const Duration(seconds: 10)))) {
+      // Drive أحدث من آخر رفع محلي → اجلب من Drive
+      final driveIsNewer = lastUpload == null ||
+          driveModified.isAfter(lastUpload.add(const Duration(seconds: 10)));
+
+      // النوتات المحلية أحدث من Drive → ارفع
+      final localIsNewer = latestLocal != null &&
+          latestLocal.isAfter(driveModified.add(const Duration(seconds: 10)));
+
+      if (driveIsNewer && !localIsNewer) {
         AppLogger.info('Drive is newer → silent merge', 'GoogleDrive');
         await _silentMerge();
       } else {

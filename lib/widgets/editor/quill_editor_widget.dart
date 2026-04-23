@@ -211,6 +211,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     final newFont = Theme.of(context).textTheme.bodyMedium?.fontFamily;
     if (newFont != _cachedFontFamily) {
       _cachedFontFamily = newFont;
+      setState(() {});
     }
   }
 
@@ -588,6 +589,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                         paragraph: DefaultTextBlockStyle(
                           TextStyle(
                             fontSize: AppFontSize.noteBody,
+                            fontFamily: _cachedFontFamily,
                             height: 1.6,
                             color: widget.textColor,
                             fontFeatures: const [

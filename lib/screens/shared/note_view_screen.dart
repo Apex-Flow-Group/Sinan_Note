@@ -439,45 +439,7 @@ class _NoteViewScreenState extends State<NoteViewScreen>
     if (_currentNote.isTrashed) return;
 
     // CRITICAL: Check isChecklist flag first
-    NoteMode mode;
-    if (_currentNote.isChecklist) {
-      mode = NoteMode.checklist;
-    } else {
-      // Map noteType to NoteMode
-      final codeTypes = [
-        'python',
-        'javascript',
-        'java',
-        'dart',
-        'html',
-        'css',
-        'sql',
-        'cpp',
-        'c',
-        'csharp',
-        'swift',
-        'kotlin',
-        'go',
-        'rust',
-        'php',
-        'ruby',
-        'bash',
-        'json',
-        'xml',
-        'code',
-        'pro',
-        'professional'
-      ];
-
-      if (codeTypes.contains(_currentNote.noteType)) {
-        mode = NoteMode.code;
-      } else {
-        mode = NoteMode.values.firstWhere(
-          (m) => m.name == _currentNote.noteType,
-          orElse: () => NoteMode.simple,
-        );
-      }
-    }
+    NoteMode mode = NoteCardUtils.getNoteMode(_currentNote);
 
     if (!mounted) return;
     await Navigator.push(

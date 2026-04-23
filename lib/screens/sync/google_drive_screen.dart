@@ -42,17 +42,17 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   }
 
   Future<void> _loadAutoSyncSetting() async {
-    final prefs = await SharedPreferences.getInstance();
+    await GoogleDriveService.loadAutoSyncState();
     if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
+      _autoSync = GoogleDriveService.autoSyncEnabled.value;
       _pullToRefresh = prefs.getBool('google_drive_pull_to_refresh') ?? true;
     });
   }
 
   Future<void> _saveAutoSyncSetting(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('google_drive_auto_sync', value);
+    await GoogleDriveService.setAutoSync(value);
     if (!mounted) return;
     setState(() => _autoSync = value);
   }

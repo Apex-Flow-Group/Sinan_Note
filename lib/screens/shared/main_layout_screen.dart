@@ -95,6 +95,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
     if (autoSync && GoogleDriveService.isSignedIn) {
       await GoogleDriveService.smartSyncOnStartup();
+      // ✅ أعد تحميل الملاحظات بعد المزامنة لتحديث الـ UI
+      if (mounted) {
+        await Provider.of<NotesProvider>(context, listen: false).refreshAllNotes();
+      }
     }
   }
 

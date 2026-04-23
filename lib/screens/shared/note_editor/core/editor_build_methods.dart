@@ -13,6 +13,8 @@ import 'package:apex_note/screens/shared/note_editor/dialogs/editor_dialogs.dart
 import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
+import 'package:apex_note/services/code_export_service.dart';
+import 'package:apex_note/services/code_preview_service.dart';
 import 'package:apex_note/services/svg_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
@@ -261,32 +263,51 @@ class EditorBuildMethods {
                 onRebuild?.call();
               },
               onInsertSymbol: onInsertSymbol,
-              onRunCode: coordinator.detectedLanguage == 'SVG'
+              onRunCode: coordinator.detectedLanguage != null
                   ? () async {
                       HapticFeedback.mediumImpact();
                       try {
-                        await SvgService.previewSvgCode(
-                            coordinator.codeController!.text);
-                      } catch (e) {
-                        if (context.mounted) {
-                          UnifiedNotificationService().show(
-                            context: context,
-                            message: 'Could not open browser: $e',
-                            type: NotificationType.error,
-                          );
+                        final lang = coordinator.detectedLanguage!;
+                        final code = coordinator.codeController!.text;
+                        if (lang == 'SVG') {
+                          await SvgService.previewSvgCode(context, code);
+                        } else {
+                          await CodePreviewService.preview(context, lang, code);
                         }
-                      }
+                      } catch (_) {}
                     }
                   : null,
-              onExportCode: coordinator.detectedLanguage == 'SVG'
-                  ? () async {
-                      HapticFeedback.mediumImpact();
-                      final title = coordinator.getCurrentTitle(
-                          AppLocalizations.of(context)?.newNoteTitle ?? 'svg');
-                      await SvgService.exportSvgFile(
-                          coordinator.codeController!.text, title);
-                    }
-                  : null,
+              onExportCode: () async {
+                HapticFeedback.mediumImpact();
+                final l10nSnap = AppLocalizations.of(context);
+                final title = coordinator.getCurrentTitle(
+                    l10nSnap?.newNoteTitle ?? 'code');
+                final code = coordinator.codeController!.text;
+                final lang = coordinator.detectedLanguage;
+                try {
+                  final path = await CodeExportService.saveToDownloads(
+                    code: code,
+                    language: lang,
+                    fileName: title,
+                  );
+                  if (context.mounted) {
+                    final fileName = path.split('/').last;
+                    UnifiedNotificationService().show(
+                      context: context,
+                      message: '${l10nSnap?.savedToDownloads ?? 'Saved'}: $fileName',
+                      type: NotificationType.success,
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    UnifiedNotificationService().show(
+                      context: context,
+                      message: 'Export failed: $e',
+                      type: NotificationType.error,
+                    );
+                  }
+                }
+              },
               onCalculate: () {
                 HapticFeedback.mediumImpact();
                 final dynamic calcController = coordinator.quillController ??

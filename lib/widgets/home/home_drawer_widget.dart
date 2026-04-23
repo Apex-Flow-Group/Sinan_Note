@@ -7,6 +7,7 @@ import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
 import 'package:apex_note/screens/auth/vault_entry_screen.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/widgets/home/categories_panel.dart';
@@ -149,27 +150,28 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Divider(height: 1, color: scheme.outlineVariant),
                   ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.cloud_sync_rounded,
-                    title: l10n.googleDrive,
-                    subtitle: GoogleDriveAuth.isSignedIn
-                        ? (GoogleDriveAuth.driveApi != null
-                            ? l10n.driveSyncOn
-                            : l10n.driveSyncOff)
-                        : l10n.driveSignIn,
-                    iconColor: const Color(0xFF4285F4),
-                    scheme: scheme,
-                    isDark: isDark,
-                    isActive: currentRoute == '/drive',
-                    onTap: () async {
-                      debugPrint(
-                          '🧭 Drawer → Drive (pop + popUntil + pushNamed)');
-                      Navigator.pop(context);
-                      if (!context.mounted) return;
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      await Navigator.pushNamed(context, '/drive');
-                    },
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GoogleDriveService.autoSyncEnabled,
+                    builder: (context, autoSync, _) => _buildDrawerItem(
+                      context,
+                      icon: Icons.cloud_sync_rounded,
+                      title: l10n.googleDrive,
+                      subtitle: GoogleDriveAuth.isSignedIn
+                          ? (autoSync ? l10n.driveSyncOn : l10n.driveSyncOff)
+                          : l10n.driveSignIn,
+                      iconColor: const Color(0xFF4285F4),
+                      scheme: scheme,
+                      isDark: isDark,
+                      isActive: currentRoute == '/drive',
+                      onTap: () async {
+                        debugPrint(
+                            '🧭 Drawer → Drive (pop + popUntil + pushNamed)');
+                        Navigator.pop(context);
+                        if (!context.mounted) return;
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                        await Navigator.pushNamed(context, '/drive');
+                      },
+                    ),
                   ),
                   _buildDrawerItem(
                     context,

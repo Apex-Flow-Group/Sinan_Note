@@ -15,6 +15,7 @@ class DateIndicatorBar extends StatefulWidget {
   final Map<int, double> noteHeights;
   final ValueNotifier<String?> activeFilterNotifier;
   final ValueNotifier<bool>? isPullingNotifier;
+  final ValueNotifier<double>? pullDistanceNotifier;
 
   const DateIndicatorBar({
     super.key,
@@ -23,6 +24,7 @@ class DateIndicatorBar extends StatefulWidget {
     required this.noteHeights,
     required this.activeFilterNotifier,
     this.isPullingNotifier,
+    this.pullDistanceNotifier,
   });
 
   @override
@@ -403,6 +405,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
       final filterLabel = _filterLabel(activeFilter, isAr);
       return _BarWithSyncProgress(
         isPullingNotifier: widget.isPullingNotifier,
+        pullDistanceNotifier: widget.pullDistanceNotifier,
         child: Container(
           height: 28,
           color: colorScheme.surface,
@@ -450,6 +453,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
 
       return _BarWithSyncProgress(
         isPullingNotifier: widget.isPullingNotifier,
+        pullDistanceNotifier: widget.pullDistanceNotifier,
         child: Container(
           height: 28,
           color: colorScheme.surface,
@@ -498,12 +502,14 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
       return _BarWithSyncProgress(
         showLabelOnly: true,
         isPullingNotifier: widget.isPullingNotifier,
+        pullDistanceNotifier: widget.pullDistanceNotifier,
         child: const SizedBox.shrink(),
       );
     }
 
     return _BarWithSyncProgress(
       isPullingNotifier: widget.isPullingNotifier,
+      pullDistanceNotifier: widget.pullDistanceNotifier,
       child: GestureDetector(
         onTap: _showDatePicker,
         child: Container(
@@ -541,10 +547,15 @@ class _BarWithSyncProgress extends StatelessWidget {
   final Widget child;
   final bool showLabelOnly;
   final ValueNotifier<bool>? isPullingNotifier;
+  final ValueNotifier<double>? pullDistanceNotifier;
+
+  static const double _threshold = 80.0;
+
   const _BarWithSyncProgress({
     required this.child,
     this.showLabelOnly = false,
     this.isPullingNotifier,
+    this.pullDistanceNotifier,
   });
 
   @override
@@ -555,7 +566,7 @@ class _BarWithSyncProgress extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: GoogleDriveService.isSyncing,
       builder: (context, syncing, _) {
-        // ─── حالة المزامنة: تحل محل الشريط الأصلي بالكامل ───
+        // ─── حالة المزامنة ───
         if (syncing) {
           return Container(
             height: 40,
@@ -601,41 +612,76 @@ class _BarWithSyncProgress extends StatelessWidget {
           );
         }
 
-        // ─── حالة السحب: تأثير مختلف في الشريط ───
-        if (isPullingNotifier != null) {
-          return ValueListenableBuilder<bool>(
-            valueListenable: isPullingNotifier!,
-            builder: (context, isPulling, _) {
-              if (isPulling) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 40,
-                  color: colorScheme.surface,
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.arrow_downward_rounded,
-                          size: 13,
-                          color: colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isAr ? 'اسحب للمزامنة' : 'Pull to sync',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colorScheme.secondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+        // ─── حالة السحب: progress تدريجي ───
+        if (pullDistanceNotifier != null) {
+          return ValueListenableBuilder<double>(
+            valueListenable: pullDistanceNotifier!,
+            builder: (context, distance, _) {
+              if (distance <= 0) {
+                if (showLabelOnly) return const SizedBox.shrink();
+                return child;
               }
-              if (showLabelOnly) return const SizedBox.shrink();
-              return child;
+              final progress = (distance / _threshold).clamp(0.0, 1.0);
+              final ready = progress >= 1.0;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                height: 40,
+                color: ready
+                    ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                    : colorScheme.surface,
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedRotation(
+                            turns: progress * 0.5,
+                            duration: const Duration(milliseconds: 100),
+                            child: Icon(
+                              ready
+                                  ? Icons.refresh_rounded
+                                  : Icons.arrow_downward_rounded,
+                              size: 13,
+                              color: ready
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            ready
+                                ? (isAr ? 'أطلق للتحديث' : 'Release to refresh')
+                                : (isAr ? 'اسحب للتحديث' : 'Pull to refresh'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: ready
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
+                              fontWeight: ready
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // شريط progress في الأسفل
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 2,
+                        backgroundColor: Colors.transparent,
+                        color: (ready ? colorScheme.primary : colorScheme.secondary)
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
           );
         }

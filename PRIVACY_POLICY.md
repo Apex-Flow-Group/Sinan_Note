@@ -1,6 +1,6 @@
 # Privacy Policy - Sinan Note
 
-**Last Updated:** January 1, 2026
+**Last Updated:** April 23, 2026
 
 ## 1. Overview
 Sinan Note ("we", "us", "our", or "the Application") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application. We prioritize an offline-first approach, ensuring your data remains in your control.
@@ -71,7 +71,7 @@ If you have any questions or concerns about this Privacy Policy, please contact 
 
 # سياسة الخصوصية - سنان نوت
 
-**آخر تحديث:** 1 يناير 2026
+**آخر تحديث:** 23 أبريل 2026
 
 ## 1. نظرة عامة
 تلتزم Sinan Note ("نحن" أو "التطبيق") بحماية خصوصيتك بشدة. توضح هذه السياسة كيف نتعامل مع بياناتك. نحن نتبع نهج "عدم الاتصال أولاً" (Offline-First)، مما يضمن بقاء بياناتك تحت سيطرتك الكاملة داخل جهازك.

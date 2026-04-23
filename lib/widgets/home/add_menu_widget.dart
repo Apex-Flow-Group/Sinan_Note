@@ -3,7 +3,6 @@
 import 'dart:ui';
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:apex_note/models/note_mode.dart';
 import 'package:flutter/material.dart';
 
@@ -33,13 +32,10 @@ class AddMenuWidget extends StatefulWidget {
 class _AddMenuWidgetState extends State<AddMenuWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  bool _isNavHidden = false;
 
   @override
   void initState() {
     super.initState();
-    _isNavHidden = bottomNavHiddenNotifier.value;
-    bottomNavHiddenNotifier.addListener(_onNavHiddenChanged);
     _controller = AnimationController(
       duration: const Duration(milliseconds: 350),
       vsync: this,
@@ -63,13 +59,8 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
     }
   }
 
-  void _onNavHiddenChanged() {
-    if (mounted) setState(() => _isNavHidden = bottomNavHiddenNotifier.value);
-  }
-
   @override
   void dispose() {
-    bottomNavHiddenNotifier.removeListener(_onNavHiddenChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -124,10 +115,10 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
           ),
           // Menu items without SafeArea
           if (isVisible) Stack(children: _buildAnimatedMenuItems(context)),
-          // FAB outside SafeArea - dynamic position
+          // FAB outside SafeArea - fixed position
           Positioned(
             bottom: MediaQuery.of(context).padding.bottom +
-                (_isNavHidden ? 0.0 : kBottomNavigationBarHeight) +
+                kBottomNavigationBarHeight +
                 16,
             right: 16,
             child: Container(
@@ -196,7 +187,7 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
     ];
 
     final double fabBottom = MediaQuery.of(context).padding.bottom +
-        (_isNavHidden ? 0.0 : kBottomNavigationBarHeight) +
+        kBottomNavigationBarHeight +
         16;
     const double fabSize = 56.0;
     const double itemSpacing = 8.0;

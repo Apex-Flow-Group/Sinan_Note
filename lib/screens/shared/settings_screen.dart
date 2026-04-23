@@ -5,9 +5,11 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/screens/other/support_form_screen.dart';
 import 'package:apex_note/screens/shared/backup_wizard_screen.dart';
+import 'package:apex_note/screens/shared/settings/font_family_sheet.dart';
 import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:apex_note/screens/shared/settings/settings_utils.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/storage/db_inspector_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/foundation.dart';
@@ -214,6 +216,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(l10n.developersOnly),
                   onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
                 ),
+              if (kDebugMode)
+                ListTile(
+                  leading: const Icon(Icons.storage_rounded, color: Colors.orange),
+                  title: const Text('DB Inspector'),
+                  subtitle: const Text('Isar + SQLite report'),
+                  onTap: () => DbInspectorService.showReport(context),
+                ),
 
             ],
           ),
@@ -231,94 +240,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showFontFamilySheet(BuildContext context, SettingsProvider settings, AppLocalizations l10n) {
-    final fonts = [
-      ('system', l10n.fontFamilySystem, l10n.fontFamilySystemDesc),
-      ('Cairo', 'Cairo', l10n.fontFamilyCairoDesc),
-      ('Tajawal', 'Tajawal', l10n.fontFamilyTajawalDesc),
-      ('Vazirmatn', 'Vazirmatn', l10n.fontFamilyVazirmatnDesc),
-    ];
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40, height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                child: Row(
-                  children: [
-                    const Icon(Icons.font_download_outlined, size: 20),
-                    const SizedBox(width: 8),
-                    Text(l10n.fontFamily,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              const Divider(),
-              ...fonts.map((f) {
-                final isSelected = settings.fontFamily == f.$1;
-                final cs = Theme.of(context).colorScheme;
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  leading: Container(
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? cs.primary.withValues(alpha: 0.12)
-                          : cs.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text('أ',
-                        style: TextStyle(
-                          fontFamily: f.$1 == 'system' ? null : f.$1,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: isSelected ? cs.primary : cs.onSurface,
-                        ),
-                      ),
-                    ),
-                  ),
-                  title: Text(f.$2,
-                    style: TextStyle(
-                      fontFamily: f.$1 == 'system' ? null : f.$1,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? cs.primary : null,
-                    ),
-                  ),
-                  subtitle: Text(f.$3,
-                    style: TextStyle(
-                      fontFamily: f.$1 == 'system' ? null : f.$1,
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: isSelected
-                      ? Icon(Icons.check_circle_rounded, color: cs.primary)
-                      : null,
-                  onTap: () {
-                    settings.setFontFamily(f.$1);
-                    Navigator.pop(ctx);
-                  },
-                );
-              }),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
+      builder: (ctx) => FontFamilySheet(settings: settings, l10n: l10n),
     );
   }
 
@@ -546,9 +474,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: Text(l10n.developersOnly),
               onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
             ),
+          if (kDebugMode)
+            ListTile(
+              leading: const Icon(Icons.storage_rounded, color: Colors.orange),
+              title: const Text('DB Inspector'),
+              subtitle: const Text('Isar + SQLite report'),
+              onTap: () => DbInspectorService.showReport(context),
+            ),
           const SizedBox(height: 16),
         ],
       ),
     );
   }
 }
+

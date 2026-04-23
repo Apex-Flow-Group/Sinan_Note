@@ -51,6 +51,7 @@ class DateBarHeader extends StatelessWidget {
   final ValueNotifier<List<Note>> filteredNotesNotifier;
   final ValueNotifier<String?> activeFilterNotifier;
   final ValueNotifier<bool>? isPullingNotifier;
+  final ValueNotifier<double>? pullDistanceNotifier;
 
   const DateBarHeader({
     super.key,
@@ -58,6 +59,7 @@ class DateBarHeader extends StatelessWidget {
     required this.filteredNotesNotifier,
     required this.activeFilterNotifier,
     this.isPullingNotifier,
+    this.pullDistanceNotifier,
   });
 
   @override
@@ -73,6 +75,7 @@ class DateBarHeader extends StatelessWidget {
           noteHeights: NoteCardKeyRegistry.instance.heights,
           activeFilterNotifier: activeFilterNotifier,
           isPullingNotifier: isPullingNotifier,
+          pullDistanceNotifier: pullDistanceNotifier,
         ),
       ),
     );

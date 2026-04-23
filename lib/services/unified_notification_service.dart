@@ -238,23 +238,34 @@ class UnifiedNotificationService {
 
     final position = config.position ?? _getDefaultPosition(isMobile, isTablet, isDesktop);
     final width = config.width ?? _getDefaultWidth(isMobile, isTablet, isDesktop);
-    final margin = config.margin ?? _getDefaultMargin(position, isMobile, isTablet, isDesktop);
+    final margin = config.margin ?? _getDefaultMargin(position, isMobile, isTablet, isDesktop, context);
 
     final messenger = ScaffoldMessenger.of(context);
     messenger.clearSnackBars();
+
+    // نحسب ارتفاع الـ bottom bar من الـ Scaffold لتجنب "off screen" error
+    final viewPadding = MediaQuery.of(context).viewPadding;
+    final bottomNavHeight = viewPadding.bottom;
+    // إذا كان الـ bottom area كبيراً (bottom nav bar موجود) نستخدم fixed
+    final effectiveBehavior = bottomNavHeight > 60
+        ? SnackBarBehavior.fixed
+        : SnackBarBehavior.floating;
+
     messenger.showSnackBar(
       SnackBar(
         content: _buildContent(context, config, messenger),
         backgroundColor: _getBackgroundColor(config.type, context),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        width: width,
-        margin: width == null ? margin : null,
+        behavior: effectiveBehavior,
+        shape: effectiveBehavior == SnackBarBehavior.floating
+            ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+            : null,
+        width: effectiveBehavior == SnackBarBehavior.floating ? width : null,
+        margin: effectiveBehavior == SnackBarBehavior.floating && width == null
+            ? margin
+            : null,
         duration: config.duration,
-        dismissDirection: config.dismissible 
-            ? DismissDirection.horizontal 
+        dismissDirection: config.dismissible
+            ? DismissDirection.horizontal
             : DismissDirection.none,
       ),
     );
@@ -373,18 +384,23 @@ class UnifiedNotificationService {
     bool isMobile,
     bool isTablet,
     bool isDesktop,
+    BuildContext context,
   ) {
+    // نحسب المساحة المحجوزة في الأسفل (bottom nav bar + system insets)
+    final mediaQuery = MediaQuery.of(context);
+    final systemBottom = mediaQuery.padding.bottom;
+    // نضيف هامشاً إضافياً فوق أي bottom bar موجود
+    final bottomOffset = systemBottom + (isMobile ? 16.0 : 32.0);
+
     if (isMobile) {
-      // موبايل: هوامش صغيرة من الجوانب والأسفل
-      return const EdgeInsets.only(
+      return EdgeInsets.only(
         left: 8,
         right: 8,
-        bottom: 16,
+        bottom: bottomOffset,
       );
     } else {
-      // تابلت وديسكتوب: هوامش أكبر من الأسفل
-      return const EdgeInsets.only(
-        bottom: 32,
+      return EdgeInsets.only(
+        bottom: bottomOffset,
       );
     }
   }

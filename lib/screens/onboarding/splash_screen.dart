@@ -9,6 +9,7 @@ import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/main.dart' show navigatorKey;
 import 'package:apex_note/screens/onboarding/whats_new_dialog.dart';
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
+import 'package:apex_note/services/app_update_service.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
@@ -126,6 +127,12 @@ class _SplashScreenState extends State<SplashScreen> {
           },
         ),
       );
+
+      // فحص التحديثات في الخلفية بعد التشغيل
+      unawaited(Future.delayed(
+        const Duration(seconds: 3),
+        AppUpdateService.checkForUpdate,
+      ));
 
       // TODO: أعد تفعيل هذا السطر في الإصدار القادم الذي يتضمن تغييرات في قاعدة البيانات
       // if (mounted) _checkAndShowWhatsNew(); // معطّل مؤقتاً

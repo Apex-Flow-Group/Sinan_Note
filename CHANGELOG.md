@@ -2,114 +2,62 @@
 
 ---
 
-## [2.3.0] - 2025-04 (قيد التطوير)
+## [3.0.3] - 2026-04
 
 ### ✨ ميزات جديدة
-
-#### 🗂️ نظام الكتالوجات
-- اختيار كتالوج من شريط التاريخ مباشرة (bottom sheet)
-- كتالوج افتراضي للملاحظات المحترفة (`kProCategoryId = -1`)
-- عرض اسم الكتالوج المختار مع زر إغلاق سريع
-
-#### 🎨 تحسينات الواجهة
-- إصلاح لون شريط البحث في Dark Mode (كان يظهر داكناً عند أول فتح)
-- إصلاح خلفية `SmoothSearchHeaderDelegate` عند تحميل الثيم
-- تكبير مساحة النقر على زر X في شريط الكتالوج
-- إعادة تصميم شريط الاستعادة في السلة (زران متساويان محترفان)
-- إصلاح عرض النص الخام في السلة (كان يظهر Delta JSON)
-
-#### ⚡ تحسينات الأداء
-- رفع `cacheExtent` من 200 إلى 1500 لتقليل التقطيع مع 600+ نوت
-- `BouncingScrollPhysics` مع `ScrollDecelerationRate.fast`
-- شريط التمرير يعرف الإجمالي الحقيقي للنوتات (بدل الـ pagination فقط)
-- animation ناعم للشريط عند تحميل batch جديد
-
-### 🔧 تحسينات تقنية
-
-#### NoteContentUtils — ملف موحد جديد
-```
-lib/core/utils/note_content_utils.dart
-```
-يحل مشكلة تكرار منطق تحويل Delta JSON في 7 ملفات مختلفة.
-كل الملفات الآن تستخدم:
-```dart
-NoteContentUtils.toDisplayText(content)
-```
-
-#### الملفات المحدّثة:
-- `note_card_utils.dart` — يستخدم NoteContentUtils
-- `note_view_widgets.dart` — يستخدم NoteContentUtils
-- `trash_screen.dart` — إصلاح عرض النص الخام
-- `version_history_screen.dart` — يستخدم NoteContentUtils
-- `note_history_sheet.dart` — يستخدم NoteContentUtils
-- `versions_bottom_sheet.dart` — يستخدم NoteContentUtils
-- `widget_selection_screen.dart` — يستخدم NoteContentUtils
-- `isar_database_service.dart` — يستخدم NoteContentUtils
-
-### 🗑️ إزالة
-- حذف زر "تأثير اللمعة" من الإعدادات (`cardMotionEnabled`)
-- حذف كل الكود المتعلق به من `settings_provider.dart`، `note_card_widget.dart`، `notes_grid.dart`
-
-### 🐛 إصلاحات
-- شريط الأرشيف: الأزرار تبقى ظاهرة عند إلغاء تحديد الكل (تُعطَّل بدل الاختفاء)
-- صفحة التراخيص: تعرض أيقونة التطبيق الصحيحة
-- كتالوج المحترف: يعرض الاسم الصحيح بدل فراغ
-- `note_view_screen.dart`: عرض النوت حسب نوعها (كود/checklist/عادي)
-
----
-
-## [2.2.1] - 2025-03
-
-### ✨ ميزات
-- نظام كتالوجات كامل مع Drawer
-- Home Widget للشاشة الرئيسية
-- تاريخ إصدارات الملاحظة (Version History)
-- شريط تمرير مخصص مع fade animation
-- شريط تاريخ ذكي مع القفز لتاريخ محدد
+- **معاينة الكود** — زر تشغيل في المحرر يعرض SVG كصورة حقيقية، JSON منسق، وكل اللغات كـ preview منسق مع بحث ونسخ
+- **تحميل الكود** — زر تحميل يحفظ الملف مباشرة في مجلد التنزيلات بالامتداد الصحيح لكل لغة
+- **DB Inspector** — أداة فحص قواعد البيانات من داخل التطبيق (debug mode)
+- **اختيار الخط** — sheet جديد مع معاينة فورية للخط قبل التطبيق
+- **عرض اتجاه النص** — الكاردات في الصفحة الرئيسية تكتشف اتجاه النص تلقائياً (RTL/LTR)
 
 ### 🔧 تحسينات
-- Pagination للقائمة الرئيسية (100 نوت/صفحة)
-- بحث ذكي مع Levenshtein distance
-- Master-Details layout للشاشات الكبيرة
+- **Google Drive** — الـ subtitle في القائمة الجانبية يعكس حالة المزامنة التلقائية الفعلية
+- **السحب للتحديث** — threshold أعلى (80px) مع progress bar تدريجي وتغذية بصرية واضحة
+- **المزامنة عند السحب** — تمزامن مع Google Drive أولاً إذا كان المستخدم مسجلاً والإعداد مفعلاً
+- **زر الإضافة** — ثابت في موضعه ولا يتحرك مع إخفاء شريط التنقل
+- **الخط في المحرر** — تغيير الخط من الإعدادات ينعكس فوراً في محرر النصوص
+- **فتح ملفات SVG** — يُفتح في المحرر بدل Rich Text
+- **syntax highlighting** — يُطبق تلقائياً على كل اللغات في المحرر
 
----
+### 🗄️ قاعدة البيانات
+- **SQLite sync كامل** — مزامنة تلقائية عند كل تشغيل تشمل: notes, categories, note_versions, deleted_notes
+- **جاهز للانتقال لـ React Native** — schema متطابق مع المسار الصحيح
 
-## [2.2.0] - 2025-01
-
-### ✨ ميزات
-- نسخ الملاحظة (Make a Copy)
-- حفظ باسم (Save As)
-- فتح ملفات برمجية مباشرة
-- Google Drive sync
-
-### 🔧 تحسينات
-- انتقال كامل لـ Flutter ARB للترجمة
-- نظام Toast موحد (`UnifiedNotificationService`)
-
----
-
-## [2.1.1] - 2025-01 (النسخة الذهبية)
-
-### ✨ ميزات
-- خزنة ذكية AES-256 + بيومتري
-- محرر كود مع Syntax Highlighting (25+ لغة)
-- نظام تذكيرات مع Exact Alarms
-- Material You + ألوان ديناميكية
-- دعم RTL/LTR كامل
+### � إصلاحات
+- إصلاح Floating SnackBar يظهر خارج الشاشة عند وجود bottom navigation bar
+- إصلاح overflow في كاردات الصفحة الرئيسية
+- إصلاح فتح ملفات SVG/YAML/TypeScript كـ Rich Text بدل المحرر
+- إصلاح عدم تطبيق الخط على نص Quill editor
 
 ### 🏗️ إعادة هيكلة
-- من ملف واحد 3000+ سطر إلى 50+ ملف
-- Clean Architecture مع Provider
-- Slivers + Lazy Loading
+- نقل `SlidableAutoCloser` و `HiddenCategoriesChip` لملفات منفصلة
+- نقل `FontFamilySheet` لـ `settings/font_family_sheet.dart`
+- إضافة `CodeExportService`, `CodePreviewService`, `SvgService` كخدمات مستقلة
 
 ---
 
-## [2.0.0] - 2024-12
+## [3.0.2] - 2026-03
 
-- نظام الخزنة الأساسي
-- محرر الكود
-- نظام التذكيرات
-- إعادة تصميم الواجهة
+### ✨ ميزات
+- نظام Google Drive sync كامل مع merge ذكي
+- خزنة محمية بـ AES-256 + بيومتري
+- محرر كود مع 25+ لغة و syntax highlighting
+- نظام تذكيرات مع Exact Alarms
+- كتالوجات مع Drawer ذكي
+- Home Widget للشاشة الرئيسية
+- تاريخ إصدارات الملاحظة
+- Master-Details layout للشاشات الكبيرة
+- Material You + ألوان ديناميكية
+
+---
+
+## [2.x] - 2025
+
+- بناء الأساس: Clean Architecture مع Provider
+- انتقال من ملف واحد 3000+ سطر إلى 50+ ملف
+- نظام Toast موحد، بحث ذكي، Pagination
+- دعم RTL/LTR كامل
 
 ---
 

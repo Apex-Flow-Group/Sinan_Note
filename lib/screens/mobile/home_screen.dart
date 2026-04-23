@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:apex_note/screens/mobile/home_screen_widgets.dart';
 
@@ -288,39 +289,59 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  DateTime? _lastSyncTime;
-  static const _syncCooldown = Duration(seconds: 45);
   final ValueNotifier<bool> _isPullingNotifier = ValueNotifier(false);
+  final ValueNotifier<double> _pullDistanceNotifier = ValueNotifier(0.0);
+  static const double _pullThreshold = 80.0; // المسافة المطلوبة لتفعيل الريفريش
 
   Future<void> _onRefresh() async {
     _isPullingNotifier.value = false;
+    _pullDistanceNotifier.value = 0;
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final now = DateTime.now();
 
-    if (_lastSyncTime != null &&
-        now.difference(_lastSyncTime!) < _syncCooldown) {
-      await notesProvider.refreshAllNotes();
-      return;
-    }
+    // إذا مسجل دخول وإعداد السحب للمزامنة مفعّل → مزامنة أولاً ثم ريفريش
+    final pullToSyncEnabled =
+        (await SharedPreferences.getInstance()).getBool('google_drive_pull_to_refresh') ?? true;
 
-    _lastSyncTime = now;
-    if (GoogleDriveService.isSignedIn) {
+    if (GoogleDriveService.isSignedIn &&
+        GoogleDriveService.autoSyncEnabled.value &&
+        pullToSyncEnabled) {
       await GoogleDriveService.smartSyncOnStartup();
       while (GoogleDriveService.isSyncing.value) {
         await Future.delayed(const Duration(milliseconds: 200));
       }
     }
+
+    // جلب البيانات من قاعدة البيانات وإعادة بناء القائمة
+    // ننتظر إذا كان هناك loading جارٍ
+    while (notesProvider.isLoading) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
     await notesProvider.refreshAllNotes();
+
+    // إعادة الـ scroll للأعلى بعد التحديث
+    if (_scrollController.hasClients && _scrollController.offset != 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   // تتبع السحب للأسفل عبر ScrollController
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
     final offset = _scrollController.offset;
-    // عند الوصول لأعلى القائمة وما فوقها (overscroll)
-    if (offset < -10) {
-      if (!_isPullingNotifier.value) _isPullingNotifier.value = true;
+    if (offset < 0) {
+      final distance = offset.abs();
+      _pullDistanceNotifier.value = distance;
+      if (distance >= _pullThreshold) {
+        if (!_isPullingNotifier.value) _isPullingNotifier.value = true;
+      } else {
+        if (_isPullingNotifier.value) _isPullingNotifier.value = false;
+      }
     } else {
+      if (_pullDistanceNotifier.value != 0) _pullDistanceNotifier.value = 0;
       if (_isPullingNotifier.value) _isPullingNotifier.value = false;
     }
   }
@@ -365,6 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _selectedNoteIdsNotifier.dispose();
     _activeFilterNotifier.dispose();
     _isPullingNotifier.dispose();
+    _pullDistanceNotifier.dispose();
     UnifiedNotificationService().cancelAll();
     super.dispose();
   }
@@ -473,6 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             filteredNotesNotifier: _filteredNotesNotifier,
                             activeFilterNotifier: _activeFilterNotifier,
                             isPullingNotifier: _isPullingNotifier,
+                            pullDistanceNotifier: _pullDistanceNotifier,
                           ),
                           NotesGridView(
                             viewTypeNotifier: _viewTypeNotifier,
