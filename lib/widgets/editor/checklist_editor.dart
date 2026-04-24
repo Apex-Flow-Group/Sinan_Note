@@ -30,6 +30,7 @@ class ChecklistEditor extends StatefulWidget {
   final Color backgroundColor;
   final VoidCallback? onUndoRedoChanged;
   final Function(ChecklistUndoRedoController)? onUndoRedoControllerCreated;
+  final bool readOnly;
 
   const ChecklistEditor({
     super.key,
@@ -38,6 +39,7 @@ class ChecklistEditor extends StatefulWidget {
     required this.backgroundColor,
     this.onUndoRedoChanged,
     this.onUndoRedoControllerCreated,
+    this.readOnly = false,
   });
 
   @override
@@ -470,25 +472,34 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
         SliverReorderableList(
           itemBuilder: (context, index) {
             final item = _items[index];
-            return _buildItemRow(item, index, textColor);
+            return widget.readOnly
+                ? KeyedSubtree(
+                    key: ValueKey(item.id),
+                    child: _buildItemRow(item, index, textColor),
+                  )
+                : _buildItemRow(item, index, textColor);
           },
           itemCount: _items.length,
-          onReorder: (oldIndex, newIndex) {
-            setState(() {
-              if (newIndex > oldIndex) newIndex -= 1;
-              final item = _items.removeAt(oldIndex);
-              _items.insert(newIndex, item);
-            });
-            _notifyParent();
-          },
-          proxyDecorator: (child, index, animation) {
-            return Material(
-              color: Colors.transparent,
-              shadowColor: Colors.black26,
-              elevation: 10,
-              child: ScaleTransition(scale: animation, child: child),
-            );
-          },
+          onReorder: widget.readOnly
+              ? (_, __) {}
+              : (oldIndex, newIndex) {
+                  setState(() {
+                    if (newIndex > oldIndex) newIndex -= 1;
+                    final item = _items.removeAt(oldIndex);
+                    _items.insert(newIndex, item);
+                  });
+                  _notifyParent();
+                },
+          proxyDecorator: widget.readOnly
+              ? null
+              : (child, index, animation) {
+                  return Material(
+                    color: Colors.transparent,
+                    shadowColor: Colors.black26,
+                    elevation: 10,
+                    child: ScaleTransition(scale: animation, child: child),
+                  );
+                },
         ),
         SliverPadding(padding: EdgeInsets.only(bottom: keyboardHeight)),
       ],
@@ -507,12 +518,13 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       focusNode: focusNode,
       textColor: textColor,
       backgroundColor: widget.backgroundColor,
-      showControls: true,
+      showControls: !widget.readOnly,
+      readOnly: widget.readOnly,
       canDelete: _items.length > 1,
-      onToggleDone: () => _toggleDone(item),
-      onDelete: () => _deleteItem(item.id),
-      onAddBelow: () => _addNewItem(insertIndex: index + 1, autoFocus: true),
-      onSubmitted: () => _addNewItem(insertIndex: index + 1, autoFocus: true),
+      onToggleDone: widget.readOnly ? null : () => _toggleDone(item),
+      onDelete: widget.readOnly ? null : () => _deleteItem(item.id),
+      onAddBelow: widget.readOnly ? null : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
+      onSubmitted: widget.readOnly ? null : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
     );
   }
 

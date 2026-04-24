@@ -16,6 +16,7 @@ class ChecklistItemWidget extends StatefulWidget {
   final Color backgroundColor;
   final bool showControls;
   final bool canDelete;
+  final bool readOnly;
   final VoidCallback? onToggleDone;
   final VoidCallback? onDelete;
   final VoidCallback? onAddBelow;
@@ -32,6 +33,7 @@ class ChecklistItemWidget extends StatefulWidget {
     required this.backgroundColor,
     this.showControls = true,
     this.canDelete = true,
+    this.readOnly = false,
     this.onToggleDone,
     this.onDelete,
     this.onAddBelow,
@@ -72,18 +74,24 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
     final isDone = widget.item.isDone;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      decoration: BoxDecoration(
-        color: widget.backgroundColor.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDone ? Colors.transparent : widget.textColor.withValues(alpha: 0.2),
-        ),
-      ),
+      margin: widget.readOnly
+          ? const EdgeInsets.symmetric(vertical: 4)
+          : const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: widget.readOnly
+          ? null
+          : BoxDecoration(
+              color: widget.backgroundColor.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDone
+                    ? Colors.transparent
+                    : widget.textColor.withValues(alpha: 0.2),
+              ),
+            ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (widget.showControls)
+          if (widget.showControls && !widget.readOnly)
             IconButton(
               icon: Icon(Icons.add_circle_outline,
                   color: widget.textColor.withValues(alpha: 0.6), size: 20),
@@ -91,7 +99,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
               padding: const EdgeInsets.all(8),
               constraints: const BoxConstraints(),
             ),
-          if (widget.showControls)
+          if (widget.showControls && !widget.readOnly)
             ReorderableDragStartListener(
               index: widget.index,
               child: Padding(
@@ -131,9 +139,10 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
                   : TextAlign.left,
               textAlignVertical: TextAlignVertical.center,
               maxLines: null,
+              readOnly: widget.readOnly,
               textInputAction: TextInputAction.newline,
-              onSubmitted: (_) => widget.onSubmitted?.call(),
-              onChanged: widget.onTextChanged,
+              onSubmitted: widget.readOnly ? null : (_) => widget.onSubmitted?.call(),
+              onChanged: widget.readOnly ? null : widget.onTextChanged,
               style: TextStyle(
                 fontSize: 16,
                 decoration: isDone
@@ -145,14 +154,16 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: l10n.checklistItemHint,
+                hintText: widget.readOnly ? null : l10n.checklistItemHint,
                 hintStyle: TextStyle(color: widget.textColor.withValues(alpha: 0.4)),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: widget.readOnly ? 4 : 12,
+                ),
               ),
             ),
           ),
-          if (widget.showControls && widget.canDelete)
+          if (widget.showControls && widget.canDelete && !widget.readOnly)
             IconButton(
               icon: Icon(Icons.close,
                   size: 18, color: widget.textColor.withValues(alpha: 0.4)),

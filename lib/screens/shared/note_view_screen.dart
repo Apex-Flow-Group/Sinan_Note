@@ -5,6 +5,8 @@ import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/editor_page_route.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -22,6 +24,7 @@ import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 
 /// Interactive read-only note viewer with markdown rendering
@@ -44,6 +47,8 @@ class NoteViewScreen extends StatefulWidget {
 class _NoteViewScreenState extends State<NoteViewScreen>
     with SingleTickerProviderStateMixin {
   bool _isAuthenticated = false;
+  bool _showMarkdown = false;
+  QuillController? _quillController;
   late Note _currentNote;
   final _scrollController = ScrollController();
   final _scrollProgress = ValueNotifier<double>(0.0);
@@ -54,6 +59,14 @@ class _NoteViewScreenState extends State<NoteViewScreen>
   void initState() {
     super.initState();
     _currentNote = widget.note;
+
+    // هيّئ Quill controller للعرض read-only (للنوتات العادية فقط)
+    if (!widget.note.isChecklist &&
+        widget.note.isProfessional != true &&
+        widget.note.noteType != 'code' &&
+        widget.note.noteType != 'pro') {
+      _quillController = QuillMigration.controllerFromContent(widget.note.content);
+    }
 
     _contentFadeController = AnimationController(
       vsync: this,
@@ -85,6 +98,7 @@ class _NoteViewScreenState extends State<NoteViewScreen>
 
   @override
   void dispose() {
+    _quillController?.dispose();
     _contentFadeController.dispose();
     _scrollController.dispose();
     _scrollProgress.dispose();
@@ -123,7 +137,14 @@ class _NoteViewScreenState extends State<NoteViewScreen>
         .cast<Note?>()
         .firstWhere((n) => n?.id == _currentNote.id, orElse: () => null);
     if (updatedNote != null) {
-      setState(() => _currentNote = updatedNote);
+      setState(() {
+        _currentNote = updatedNote;
+        // أعد بناء Quill controller بالمحتوى الجديد
+        if (_quillController != null) {
+          _quillController!.dispose();
+          _quillController = QuillMigration.controllerFromContent(updatedNote.content);
+        }
+      });
     } else if (mounted) {
       // Note not found in active notes, close view
       Navigator.pop(context, true);
@@ -209,6 +230,20 @@ class _NoteViewScreenState extends State<NoteViewScreen>
                 if (!mounted) return;
                 await _refreshNote();
               },
+            ),
+          if (!_currentNote.isChecklist &&
+              _currentNote.noteType != 'checklist' &&
+              _currentNote.isProfessional != true &&
+              _currentNote.noteType != 'code' &&
+              _currentNote.noteType != 'pro')
+            IconButton(
+              icon: Icon(
+                _showMarkdown
+                    ? Icons.text_fields_rounded
+                    : Icons.auto_awesome_outlined,
+              ),
+              tooltip: _showMarkdown ? 'Plain text' : 'Markdown',
+              onPressed: () => setState(() => _showMarkdown = !_showMarkdown),
             ),
           if (!_currentNote.isTrashed)
             IconButton(
@@ -431,8 +466,49 @@ class _NoteViewScreenState extends State<NoteViewScreen>
       );
     }
 
-    // نوت عادي أو rich — تنظيف Delta إن وجد ثم عرض markdown
-    return NoteViewWidgets.buildDirectionalMarkdown(content, textColor);
+    // نوت عادي أو rich — Quill read-only بنفس تنسيق المحرر، ماركداون عند الطلب
+    if (_showMarkdown) {
+      return NoteViewWidgets.buildDirectionalMarkdown(content, textColor);
+    }
+    if (_quillController != null) {
+      return _buildQuillReadOnly(textColor);
+    }
+    final plainText = NoteContentUtils.toDisplayText(content);
+    return SelectableText(
+      plainText,
+      style: TextStyle(fontSize: 16, height: 1.6, color: textColor),
+    );
+  }
+
+  Widget _buildQuillReadOnly(Color textColor) {
+    final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: QuillEditor.basic(
+        controller: _quillController!,
+        config: QuillEditorConfig(
+          autoFocus: false,
+          expands: false,
+          scrollable: false,
+          padding: EdgeInsets.zero,
+          showCursor: false,
+          customStyles: DefaultStyles(
+            paragraph: DefaultTextBlockStyle(
+              TextStyle(
+                fontSize: 16,
+                fontFamily: fontFamily,
+                height: 1.6,
+                color: textColor,
+              ),
+              HorizontalSpacing.zero,
+              VerticalSpacing.zero,
+              VerticalSpacing.zero,
+              null,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _editNote() async {

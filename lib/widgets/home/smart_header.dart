@@ -41,7 +41,7 @@ class SmartHeader extends StatefulWidget {
   State<SmartHeader> createState() => _SmartHeaderState();
 }
 
-class _SmartHeaderState extends State<SmartHeader> {
+class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -52,12 +52,13 @@ class _SmartHeaderState extends State<SmartHeader> {
       builder: (context, selectedIds, _) {
         return SliverPersistentHeader(
           pinned: true,
-          floating: false,
+          floating: true,
           delegate: SmoothSearchHeaderDelegate(
             expandedHeight: 68.0,
             statusBarHeight: MediaQuery.of(context).padding.top,
             selectionMode: selectedIds.isNotEmpty,
             isSearchActive: widget.isSearchActive,
+            tickerProvider: this,
             selectionBar: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),

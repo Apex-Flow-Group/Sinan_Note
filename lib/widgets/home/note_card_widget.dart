@@ -13,7 +13,6 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/screens/shared/note_view_screen.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/desktop/note_context_menu.dart';
@@ -239,10 +238,12 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
                       final result = await Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        EditorPageRoute(
                           builder: (context) => NoteEditorImmersive(
                             note: widget.note,
                             mode: mode,
+                            readOnly: true,
+                            heroTag: 'note_card_${widget.source}_${widget.note.id}',
                           ),
                         ),
                       );
@@ -250,12 +251,14 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                         widget.onNoteChanged();
                       }
                     } else {
+                      final mode = NoteCardUtils.getNoteMode(widget.note);
                       final result = await Navigator.push(
                         context,
                         EditorPageRoute(
-                          builder: (context) => NoteViewScreen(
+                          builder: (context) => NoteEditorImmersive(
                             note: widget.note,
-                            showRestore: false,
+                            mode: mode,
+                            readOnly: true,
                             heroTag: 'note_card_${widget.source}_${widget.note.id}',
                           ),
                         ),

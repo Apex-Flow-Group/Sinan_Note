@@ -47,6 +47,7 @@ class EditorBuildMethods {
     required VoidCallback onUndoRedoChanged,
     required Function(String) onChecklistTitleChanged,
     ValueChanged<double>? onScroll,
+    bool readOnly = false,
   }) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const toolbarHeight = 60.0;
@@ -74,6 +75,7 @@ class EditorBuildMethods {
         contentController: coordinator.contentController,
         backgroundColor: coordinator.getBackgroundColor(context),
         totalBottomSpace: totalBottomSpace,
+        readOnly: readOnly,
         onUndoRedoControllerCreated: onUndoRedoControllerCreated,
         onUndoRedoChanged: onUndoRedoChanged,
         onChecklistTitleChanged: onChecklistTitleChanged,
@@ -93,7 +95,8 @@ class EditorBuildMethods {
         fontSize: coordinator.fontSize,
         sidePadding: sidePadding,
         totalBottomSpace: totalBottomSpace,
-        autoFocus: note == null,
+        autoFocus: note == null && !readOnly,
+        readOnly: readOnly,
         onScroll: onScroll,
       );
     }
@@ -109,12 +112,14 @@ class EditorBuildMethods {
     required String? notePassword,
     required VoidCallback onReminderTap,
     required VoidCallback onHistoryTap,
-    required VoidCallback onTitleTap,
-    required VoidCallback onSaveTap,
+    VoidCallback? onTitleTap,
+    VoidCallback? onSaveTap,
     VoidCallback? onBackTap,
     required void Function(List<int>) onCategoryChanged,
     bool originallyLocked = false,
     ValueNotifier<double>? scrollProgress,
+    bool isReadOnly = false,
+    VoidCallback? onEditTap,
   }) {
     final base = coordinator.getBackgroundColor(context);
     final isDark = base.computeLuminance() < 0.5;
@@ -129,30 +134,42 @@ class EditorBuildMethods {
       top: 0,
       left: 0,
       right: 0,
-      child: SafeArea(
-        bottom: false,
-        child: ApexEditorHeader(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+        builder: (context, opacity, child) => Opacity(
+          opacity: opacity,
+          child: child,
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: ApexEditorHeader(
           backgroundColor: bg,
           textColor: finalTextColor,
           title: currentTitle,
           isLocked: note?.isLocked == true || notePassword != null,
           hasHistory: note?.id != null,
           hasReminder: coordinator.stateManager.reminderDateTime != null,
-          onReminderTap: () {
+          onReminderTap: isReadOnly ? null : () {
             HapticFeedback.mediumImpact();
             onReminderTap();
           },
           onHistoryTap: onHistoryTap,
-          onTitleTap: () {
+          onTitleTap: isReadOnly ? null : () {
             HapticFeedback.lightImpact();
-            onTitleTap();
+            onTitleTap?.call();
           },
-          onSaveTap: () async {
+          onSaveTap: isReadOnly ? null : () async {
             HapticFeedback.mediumImpact();
-            onSaveTap();
+            onSaveTap?.call();
           },
+          onEditTap: isReadOnly ? () {
+            HapticFeedback.mediumImpact();
+            onEditTap?.call();
+          } : null,
           onBackTap: onBackTap,
-          onCategoryTap: originallyLocked
+          onCategoryTap: (isReadOnly || originallyLocked)
               ? null
               : () async {
                   final current = coordinator.stateManager.categoryIds;
@@ -169,6 +186,7 @@ class EditorBuildMethods {
                 },
         ),
       ),
+    ),
     );
 
     if (scrollProgress == null) return buildWidget(base);
@@ -208,16 +226,27 @@ class EditorBuildMethods {
     );
 
     Widget buildWidget(Color bg) => AnimatedPositioned(
-      duration: const Duration(milliseconds: 100),
-      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
       left: 0,
       right: 0,
       bottom: 0,
-      child: Container(
-        color: bg,
-        child: SafeArea(
-          top: false,
-          child: EditorToolbarFactory.build(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+        builder: (context, t, child) => Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * 16),
+            child: child,
+          ),
+        ),
+        child: Container(
+          color: bg,
+          child: SafeArea(
+            top: false,
+            child: EditorToolbarFactory.build(
               mode: mode,
               backgroundColor: bg,
               textColor: finalTextColor,
@@ -495,6 +524,7 @@ class EditorBuildMethods {
                 }
               },
             ),
+          ),
         ),
       ),
     );

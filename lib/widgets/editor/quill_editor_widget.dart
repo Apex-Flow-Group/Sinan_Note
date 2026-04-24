@@ -31,6 +31,7 @@ class QuillEditorWidget extends StatefulWidget {
   final double sidePadding;
   final double totalBottomSpace;
   final bool autoFocus;
+  final bool readOnly;
   final ValueChanged<double>? onScroll;
 
   const QuillEditorWidget({
@@ -43,6 +44,7 @@ class QuillEditorWidget extends StatefulWidget {
     required this.sidePadding,
     required this.totalBottomSpace,
     this.autoFocus = false,
+    this.readOnly = false,
     this.onScroll,
   });
 
@@ -117,6 +119,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   @override
   void initState() {
     super.initState();
+    widget.quillController.readOnly = widget.readOnly;
     final initialText = widget.quillController.document.toPlainText();
     _lastPlainText = initialText;
     _textDirection = TextDirectionUtils.getDirection(initialText);
@@ -195,6 +198,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       '',
       TextSelection.collapsed(offset: pos - 1),
     );
+  }
+
+  @override
+  void didUpdateWidget(QuillEditorWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.readOnly != widget.readOnly) {
+      widget.quillController.readOnly = widget.readOnly;
+    }
   }
 
   @override
@@ -555,7 +566,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       scrollable: true,
                       padding: EdgeInsets.zero,
                       placeholder: '',
-                      paintCursorAboveText: true,
+                      showCursor: !widget.readOnly,
+                      enableInteractiveSelection: !widget.readOnly,                      paintCursorAboveText: true,
                       contextMenuBuilder: (context, rawEditorState) {
                         final anchor = rawEditorState.contextMenuAnchors;
                         final items =

@@ -19,7 +19,6 @@ import 'package:apex_note/screens/onboarding/splash_screen.dart';
 import 'package:apex_note/screens/other/version_history_screen.dart';
 import 'package:apex_note/screens/other/widget_selection_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/screens/shared/note_view_screen.dart';
 import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
 import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
@@ -27,6 +26,7 @@ import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/security/security_gate.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/widget_service.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
@@ -285,8 +285,11 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       if (note != null) {
         navigatorKey.currentState?.push(
           MaterialPageRoute(
-            builder: (context) =>
-                NoteViewScreen(note: note, showRestore: false),
+            builder: (context) => NoteEditorImmersive(
+              note: note,
+              mode: NoteCardUtils.getNoteMode(note),
+              readOnly: true,
+            ),
           ),
         );
       } else {

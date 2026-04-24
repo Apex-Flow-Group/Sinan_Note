@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double expandedHeight;
@@ -9,11 +10,13 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   final bool selectionMode;
   final Widget? selectionBar;
   final bool isSearchActive;
+  final TickerProvider tickerProvider;
 
   SmoothSearchHeaderDelegate({
     required this.expandedHeight,
     required this.statusBarHeight,
     required this.child,
+    required this.tickerProvider,
     this.selectionMode = false,
     this.selectionBar,
     this.isSearchActive = false,
@@ -64,6 +67,20 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get minExtent =>
       isSearchActive ? expandedHeight + statusBarHeight : statusBarHeight;
+
+  @override
+  TickerProvider get vsync => tickerProvider;
+
+  @override
+  FloatingHeaderSnapConfiguration get snapConfiguration =>
+      FloatingHeaderSnapConfiguration(
+        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 200),
+      );
+
+  @override
+  PersistentHeaderShowOnScreenConfiguration get showOnScreenConfiguration =>
+      const PersistentHeaderShowOnScreenConfiguration();
 
   @override
   bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) {

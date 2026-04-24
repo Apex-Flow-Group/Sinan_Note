@@ -287,6 +287,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+    if (mounted) {
+      await Provider.of<NotesProvider>(context, listen: false).refreshAllNotes();
+    }
   }
 
   final ValueNotifier<bool> _isPullingNotifier = ValueNotifier(false);

@@ -250,104 +250,111 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                   ),
                           );
                         }
-                        return SliverToBoxAdapter(
-                          child: SearchableHeader(
-                            title: strings.professional,
-                            icon: Icons.code_rounded,
-                            isSearching: _isSearchMode,
-                            searchController: searchController,
-                            onSearchChange: (q) {
-                              _syncNotes();
-                            },
-                            onToggleSearch: () {
-                              if (_isSearchMode) {
-                                setState(() {
-                                  _isSearchMode = false;
-                                  exitSearch();
-                                });
-                              } else {
-                                setState(() => _isSearchMode = true);
-                              }
-                            },
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    _viewType == ViewType.listExpanded
-                                        ? Icons.view_headline
-                                        : Icons.view_day,
+                        return SliverAppBar(
+                          pinned: true,
+                          automaticallyImplyLeading: false,
+                          toolbarHeight: 0,
+                          bottom: PreferredSize(
+                            preferredSize: const Size.fromHeight(60),
+                            child: SearchableHeader(
+                              title: strings.professional,
+                              icon: Icons.code_rounded,
+                              isSearching: _isSearchMode,
+                              searchController: searchController,
+                              includeSafeArea: false,
+                              onSearchChange: (q) {
+                                _syncNotes();
+                              },
+                              onToggleSearch: () {
+                                if (_isSearchMode) {
+                                  setState(() {
+                                    _isSearchMode = false;
+                                    exitSearch();
+                                  });
+                                } else {
+                                  setState(() => _isSearchMode = true);
+                                }
+                              },
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      _viewType == ViewType.listExpanded
+                                          ? Icons.view_headline
+                                          : Icons.view_day,
+                                    ),
+                                    onPressed: () async {
+                                      setState(() {
+                                        _viewType =
+                                            _viewType == ViewType.listExpanded
+                                                ? ViewType.listCompact
+                                                : ViewType.listExpanded;
+                                      });
+                                      await Provider.of<SettingsProvider>(
+                                              context,
+                                              listen: false)
+                                          .setViewType(
+                                              'professional', _viewType.name);
+                                    },
                                   ),
-                                  onPressed: () async {
-                                    setState(() {
-                                      _viewType =
-                                          _viewType == ViewType.listExpanded
-                                              ? ViewType.listCompact
-                                              : ViewType.listExpanded;
-                                    });
-                                    await Provider.of<SettingsProvider>(
-                                            context,
-                                            listen: false)
-                                        .setViewType(
-                                            'professional', _viewType.name);
-                                  },
-                                ),
-                                PopupMenuButton<String>(
-                                  icon: const Icon(Icons.sort),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                  onSelected: (value) {
-                                    setState(() => _sortBy = value);
-                                    _syncNotes();
-                                  },
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'date',
-                                      child: Row(children: [
-                                        Icon(Icons.access_time,
-                                            size: 20,
-                                            color: _sortBy == 'date'
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                                : null),
-                                        const SizedBox(width: 12),
-                                        Text(strings.sortByDate),
-                                        if (_sortBy == 'date') ...[
-                                          const Spacer(),
-                                          Icon(Icons.check,
+                                  PopupMenuButton<String>(
+                                    icon: const Icon(Icons.sort),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12)),
+                                    onSelected: (value) {
+                                      setState(() => _sortBy = value);
+                                      _syncNotes();
+                                    },
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 'date',
+                                        child: Row(children: [
+                                          Icon(Icons.access_time,
                                               size: 20,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary)
-                                        ],
-                                      ]),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'title',
-                                      child: Row(children: [
-                                        Icon(Icons.sort_by_alpha,
-                                            size: 20,
-                                            color: _sortBy == 'title'
-                                                ? Theme.of(context)
+                                              color: _sortBy == 'date'
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                  : null),
+                                          const SizedBox(width: 12),
+                                          Text(strings.sortByDate),
+                                          if (_sortBy == 'date') ...[
+                                            const Spacer(),
+                                            Icon(Icons.check,
+                                                size: 20,
+                                                color: Theme.of(context)
                                                     .colorScheme
-                                                    .primary
-                                                : null),
-                                        const SizedBox(width: 12),
-                                        Text(strings.sortByTitle),
-                                        if (_sortBy == 'title') ...[
-                                          const Spacer(),
-                                          Icon(Icons.check,
+                                                    .primary)
+                                          ],
+                                        ]),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'title',
+                                        child: Row(children: [
+                                          Icon(Icons.sort_by_alpha,
                                               size: 20,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary)
-                                        ],
-                                      ]),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                              color: _sortBy == 'title'
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                  : null),
+                                          const SizedBox(width: 12),
+                                          Text(strings.sortByTitle),
+                                          if (_sortBy == 'title') ...[
+                                            const Spacer(),
+                                            Icon(Icons.check,
+                                                size: 20,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary)
+                                          ],
+                                        ]),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

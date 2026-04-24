@@ -14,6 +14,7 @@ class ChecklistEditorWidget extends StatelessWidget {
   final VoidCallback onUndoRedoChanged;
   final Function(String) onChecklistTitleChanged;
   final VoidCallback onContentChanged;
+  final bool readOnly;
 
   const ChecklistEditorWidget({
     super.key,
@@ -24,18 +25,22 @@ class ChecklistEditorWidget extends StatelessWidget {
     required this.onUndoRedoChanged,
     required this.onChecklistTitleChanged,
     required this.onContentChanged,
+    this.readOnly = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 56.0,
-        bottom: totalBottomSpace,
-      ),
+      padding: readOnly
+          ? EdgeInsets.zero
+          : EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 56.0,
+              bottom: totalBottomSpace,
+            ),
       child: ChecklistEditor(
         initialContent: contentController.text,
         backgroundColor: backgroundColor,
+        readOnly: readOnly,
         onUndoRedoControllerCreated: onUndoRedoControllerCreated,
         onUndoRedoChanged: onUndoRedoChanged,
         onChanged: (jsonContent) {

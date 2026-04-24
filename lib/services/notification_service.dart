@@ -4,8 +4,9 @@ import 'dart:io';
 
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/main.dart';
-import 'package:apex_note/screens/shared/note_view_screen.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -269,7 +270,11 @@ class NotificationService {
       if (note != null && navigatorKey.currentState != null) {
         navigatorKey.currentState!.push(
           MaterialPageRoute(
-            builder: (context) => NoteViewScreen(note: note, showRestore: false),
+            builder: (context) => NoteEditorImmersive(
+              note: note,
+              mode: NoteCardUtils.getNoteMode(note),
+              readOnly: true,
+            ),
           ),
         );
       }

@@ -100,6 +100,7 @@ class NotesProvider extends ChangeNotifier {
     _stateService.addNote(noteToInsert.copyWith(id: id));
     await _sideEffectService
         .handleReminderSideEffect(noteToInsert.copyWith(id: id));
+    _refreshStamp++;
     notifyListeners();
     return id;
   }
@@ -124,7 +125,10 @@ class NotesProvider extends ChangeNotifier {
     _stateService.updateNote(noteToUpdate);
     await _sideEffectService.handleReminderSideEffect(note);
     await _sideEffectService.checkAndUpdateIfPinned(note);
-    if (!silent) notifyListeners();
+    if (!silent) {
+      _refreshStamp++;
+      notifyListeners();
+    }
     return result;
   }
 

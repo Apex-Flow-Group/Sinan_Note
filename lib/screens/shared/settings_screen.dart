@@ -65,165 +65,168 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListView(
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
             children: [
-              // GENERAL SECTION
-              SettingsUtils.buildSectionHeader(context, l10n.general),
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: Text(l10n.language),
-                subtitle: Text(SettingsUtils.getLanguageText(settings.languageCode, l10n)),
-                onTap: () => SettingsDialogs.showLanguageDialog(context, settings, l10n),
-              ),
-              ListTile(
-                leading: const Icon(Icons.brightness_6),
-                title: Text(l10n.theme),
-                subtitle: Text(SettingsUtils.getThemeText(settings.themeMode, l10n)),
-                onTap: () => SettingsDialogs.showThemeDialog(context, settings),
-              ),
-              ListTile(
-                leading: const Icon(Icons.format_size),
-                title: Text(l10n.fontSize),
-                subtitle: Text("${(settings.textScaleFactor * 100).round()}%"),
-                trailing: SizedBox(
-                  width: 150,
-                  child: Slider(
-                    value: settings.textScaleFactor,
-                    min: 0.9,
-                    max: 1.4,
-                    divisions: 5,
-                    onChanged: (value) => settings.setTextScaleFactor(value),
+              _buildSection(context, l10n.general, [
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: Text(l10n.language),
+                  subtitle: Text(SettingsUtils.getLanguageText(settings.languageCode, l10n)),
+                  onTap: () => SettingsDialogs.showLanguageDialog(context, settings, l10n),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.brightness_6),
+                  title: Text(l10n.theme),
+                  subtitle: Text(SettingsUtils.getThemeText(settings.themeMode, l10n)),
+                  onTap: () => SettingsDialogs.showThemeDialog(context, settings),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.format_size),
+                  title: Text(l10n.fontSize),
+                  subtitle: Text("${(settings.textScaleFactor * 100).round()}%"),
+                  trailing: SizedBox(
+                    width: 150,
+                    child: Slider(
+                      value: settings.textScaleFactor,
+                      min: 0.9,
+                      max: 1.4,
+                      divisions: 5,
+                      onChanged: (value) => settings.setTextScaleFactor(value),
+                    ),
                   ),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.font_download_outlined),
-                title: Text(l10n.fontFamily),
-                subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
-                onTap: () => _showFontFamilySheet(context, settings, l10n),
-              ),
+                ListTile(
+                  leading: const Icon(Icons.font_download_outlined),
+                  title: Text(l10n.fontFamily),
+                  subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
+                  onTap: () => _showFontFamilySheet(context, settings, l10n),
+                ),
+              ]),
 
               // EDITOR SECTION
-              SettingsUtils.buildSectionHeader(context, l10n.editor),
-              SwitchListTile(
-                secondary: const Icon(Icons.swipe),
-                title: Text(l10n.swipeGestures),
-                subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
-                value: settings.swipeEnabled,
-                onChanged: (val) => settings.setSwipeEnabled(val),
-              ),
-              if (settings.swipeEnabled) ...[
-                ListTile(
-                  contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-                  title: Text(l10n.swipeRight),
-                  subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeRightAction, l10n)),
-                  onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, true, currentLang),
+              _buildSection(context, l10n.editor, [
+                SwitchListTile(
+                  secondary: const Icon(Icons.swipe),
+                  title: Text(l10n.swipeGestures),
+                  subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
+                  value: settings.swipeEnabled,
+                  onChanged: (val) => settings.setSwipeEnabled(val),
                 ),
-                ListTile(
-                  contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-                  title: Text(l10n.swipeLeft),
-                  subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeLeftAction, l10n)),
-                  onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, false, currentLang),
-                ),
-              ],
+                if (settings.swipeEnabled) ...[
+                  ListTile(
+                    contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+                    title: Text(l10n.swipeRight),
+                    subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeRightAction, l10n)),
+                    onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, true, currentLang),
+                  ),
+                  ListTile(
+                    contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+                    title: Text(l10n.swipeLeft),
+                    subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeLeftAction, l10n)),
+                    onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, false, currentLang),
+                  ),
+                ],
+              ]),
 
               // SECURITY SECTION
-              SettingsUtils.buildSectionHeader(context, l10n.security),
-              SwitchListTile(
-                secondary: const Icon(Icons.lock),
-                title: Text(l10n.appLock),
-                subtitle: Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
-                value: settings.isAppLockEnabled,
-                onChanged: (val) async {
-                  final authenticated = await BiometricService.authenticate();
-                  if (authenticated) {
-                    await settings.setAppLockEnabled(val);
-                  } else {
-                    if (mounted) setState(() {});
-                  }
-                },
-              ),
-              if (settings.isAppLockEnabled)
+              _buildSection(context, l10n.security, [
                 SwitchListTile(
-                  contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-                  title: Text(l10n.lockDelay),
-                  subtitle: Text(settings.lockDelayEnabled
-                      ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)
-                      : l10n.immediate),
-                  value: settings.lockDelayEnabled,
+                  secondary: const Icon(Icons.lock),
+                  title: Text(l10n.appLock),
+                  subtitle: Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
+                  value: settings.isAppLockEnabled,
                   onChanged: (val) async {
-                    if (val) {
-                      await SettingsDialogs.showLockDelayDialog(context, settings, l10n);
+                    final authenticated = await BiometricService.authenticate();
+                    if (authenticated) {
+                      await settings.setAppLockEnabled(val);
                     } else {
-                      await settings.setLockDelayEnabled(false);
+                      if (mounted) setState(() {});
                     }
                   },
                 ),
-              SwitchListTile(
-                secondary: const Icon(Icons.visibility_off),
-                title: Text(l10n.hideContentInBackground),
-                subtitle: Text(l10n.applyBlurEffect),
-                value: settings.hideContentInBackground,
-                onChanged: (val) => settings.setHideContentInBackground(val),
-              ),
+                if (settings.isAppLockEnabled)
+                  SwitchListTile(
+                    contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+                    title: Text(l10n.lockDelay),
+                    subtitle: Text(settings.lockDelayEnabled
+                        ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)
+                        : l10n.immediate),
+                    value: settings.lockDelayEnabled,
+                    onChanged: (val) async {
+                      if (val) {
+                        await SettingsDialogs.showLockDelayDialog(context, settings, l10n);
+                      } else {
+                        await settings.setLockDelayEnabled(false);
+                      }
+                    },
+                  ),
+                SwitchListTile(
+                  secondary: const Icon(Icons.visibility_off),
+                  title: Text(l10n.hideContentInBackground),
+                  subtitle: Text(l10n.applyBlurEffect),
+                  value: settings.hideContentInBackground,
+                  onChanged: (val) => settings.setHideContentInBackground(val),
+                ),
+              ]),
 
               // DATA SECTION
-              SettingsUtils.buildSectionHeader(context, l10n.data),
-              ListTile(
-                leading: Icon(Icons.backup_outlined,
-                    color: Theme.of(context).colorScheme.primary),
-                title: Text(currentLang == 'ar' ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore'),
-                subtitle: Text(currentLang == 'ar'
-                    ? 'تصدير واستيراد ملاحظاتك'
-                    : 'Export and import your notes'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const BackupWizardScreen())),
-              ),
+              _buildSection(context, l10n.data, [
+                ListTile(
+                  leading: Icon(Icons.backup_outlined,
+                      color: Theme.of(context).colorScheme.primary),
+                  title: Text(currentLang == 'ar' ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore'),
+                  subtitle: Text(currentLang == 'ar'
+                      ? 'تصدير واستيراد ملاحظاتك'
+                      : 'Export and import your notes'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const BackupWizardScreen())),
+                ),
+              ]),
 
               // ABOUT SECTION
-              SettingsUtils.buildSectionHeader(context, l10n.about),
-              ListTile(
-                leading: const Icon(Icons.mail_outline),
-                title: Text(l10n.feedback),
-                subtitle: Text(l10n.contactUs),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SupportFormScreen()),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.share),
-                title: Text(l10n.shareApp),
-                onTap: () {
-                  final msg = currentLang == 'ar'
-                      ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
-                      : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
-                  CustomShareSheet.show(context, msg, appShare: true);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: Text(l10n.aboutApp),
-                subtitle: Text(_version),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AboutScreen()),
-                ),
-              ),
-              if (kDebugMode)
+              _buildSection(context, l10n.about, [
                 ListTile(
-                  leading: const Icon(Icons.bug_report, color: Colors.red),
-                  title: Text(l10n.diagnostics),
-                  subtitle: Text(l10n.developersOnly),
-                  onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
+                  leading: const Icon(Icons.mail_outline),
+                  title: Text(l10n.feedback),
+                  subtitle: Text(l10n.contactUs),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SupportFormScreen()),
+                  ),
                 ),
-              if (kDebugMode)
                 ListTile(
-                  leading: const Icon(Icons.storage_rounded, color: Colors.orange),
-                  title: const Text('DB Inspector'),
-                  subtitle: const Text('Isar + SQLite report'),
-                  onTap: () => DbInspectorService.showReport(context),
+                  leading: const Icon(Icons.share),
+                  title: Text(l10n.shareApp),
+                  onTap: () {
+                    final msg = currentLang == 'ar'
+                        ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
+                        : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
+                    CustomShareSheet.show(context, msg, appShare: true);
+                  },
                 ),
-
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(l10n.aboutApp),
+                  subtitle: Text(_version),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AboutScreen()),
+                  ),
+                ),
+                if (kDebugMode)
+                  ListTile(
+                    leading: const Icon(Icons.bug_report, color: Colors.red),
+                    title: Text(l10n.diagnostics),
+                    subtitle: Text(l10n.developersOnly),
+                    onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
+                  ),
+                if (kDebugMode)
+                  ListTile(
+                    leading: const Icon(Icons.storage_rounded, color: Colors.orange),
+                    title: const Text('DB Inspector'),
+                    subtitle: const Text('Isar + SQLite report'),
+                    onTap: () => DbInspectorService.showReport(context),
+                  ),
+              ]),
             ],
           ),
         ),
@@ -248,6 +251,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       builder: (ctx) => FontFamilySheet(settings: settings, l10n: l10n),
     );
+  }
+
+  /// نفس نمط صفحة قوقل — Card مع أيقونة وعنوان كبير
+  Widget _buildSection(BuildContext context, String title, List<Widget> children, {IconData? icon}) {
+    // أيقونة افتراضية لكل قسم بناءً على العنوان
+    final l10n = AppLocalizations.of(context)!;
+    final sectionIcon = icon ?? _iconForSection(title, l10n);
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Icon(sectionIcon, size: 28, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 12),
+              Text(title,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            ]),
+            const SizedBox(height: 8),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _iconForSection(String title, AppLocalizations l10n) {
+    if (title == l10n.general) return Icons.tune_rounded;
+    if (title == l10n.editor) return Icons.edit_note_rounded;
+    if (title == l10n.security) return Icons.shield_rounded;
+    if (title == l10n.data) return Icons.storage_rounded;
+    if (title == l10n.about) return Icons.info_outline_rounded;
+    return Icons.settings;
   }
 
   Widget _buildDesktopLayout(
@@ -293,198 +332,172 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildGeneralSection(BuildContext context, AppLocalizations l10n, SettingsProvider settings) {
-    return Card(
-      child: Column(
-        children: [
-          SettingsUtils.buildSectionHeader(context, l10n.general),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: Text(l10n.language),
-            subtitle: Text(SettingsUtils.getLanguageText(settings.languageCode, l10n)),
-            onTap: () => SettingsDialogs.showLanguageDialog(context, settings, l10n),
-          ),
-          ListTile(
-            leading: const Icon(Icons.brightness_6),
-            title: Text(l10n.theme),
-            subtitle: Text(SettingsUtils.getThemeText(settings.themeMode, l10n)),
-            onTap: () => SettingsDialogs.showThemeDialog(context, settings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.format_size),
-            title: Text(l10n.fontSize),
-            subtitle: Text("${(settings.textScaleFactor * 100).round()}%"),
-            trailing: SizedBox(
-              width: 150,
-              child: Slider(
-                value: settings.textScaleFactor,
-                min: 0.9,
-                max: 1.4,
-                divisions: 5,
-                onChanged: (value) => settings.setTextScaleFactor(value),
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.font_download_outlined),
-            title: Text(l10n.fontFamily),
-            subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
-            onTap: () => _showFontFamilySheet(context, settings, l10n),
-          ),
-        ],
+    return _buildSection(context, l10n.general, [
+      ListTile(
+        leading: const Icon(Icons.language),
+        title: Text(l10n.language),
+        subtitle: Text(SettingsUtils.getLanguageText(settings.languageCode, l10n)),
+        onTap: () => SettingsDialogs.showLanguageDialog(context, settings, l10n),
       ),
-    );
+      ListTile(
+        leading: const Icon(Icons.brightness_6),
+        title: Text(l10n.theme),
+        subtitle: Text(SettingsUtils.getThemeText(settings.themeMode, l10n)),
+        onTap: () => SettingsDialogs.showThemeDialog(context, settings),
+      ),
+      ListTile(
+        leading: const Icon(Icons.format_size),
+        title: Text(l10n.fontSize),
+        subtitle: Text("${(settings.textScaleFactor * 100).round()}%"),
+        trailing: SizedBox(
+          width: 150,
+          child: Slider(
+            value: settings.textScaleFactor,
+            min: 0.9,
+            max: 1.4,
+            divisions: 5,
+            onChanged: (value) => settings.setTextScaleFactor(value),
+          ),
+        ),
+      ),
+      ListTile(
+        leading: const Icon(Icons.font_download_outlined),
+        title: Text(l10n.fontFamily),
+        subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
+        onTap: () => _showFontFamilySheet(context, settings, l10n),
+      ),
+    ]);
   }
 
   Widget _buildEditorSection(BuildContext context, AppLocalizations l10n, SettingsProvider settings, String currentLang) {
-    return Card(
-      child: Column(
-        children: [
-          SettingsUtils.buildSectionHeader(context, l10n.editor),
-          SwitchListTile(
-            secondary: const Icon(Icons.swipe),
-            title: Text(l10n.swipeGestures),
-            subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
-            value: settings.swipeEnabled,
-            onChanged: (val) => settings.setSwipeEnabled(val),
-          ),
-          if (settings.swipeEnabled) ...[
-            ListTile(
-              contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-              title: Text(l10n.swipeRight),
-              subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeRightAction, l10n)),
-              onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, true, currentLang),
-            ),
-            ListTile(
-              contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-              title: Text(l10n.swipeLeft),
-              subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeLeftAction, l10n)),
-              onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, false, currentLang),
-            ),
-          ],
-        ],
+    return _buildSection(context, l10n.editor, [
+      SwitchListTile(
+        secondary: const Icon(Icons.swipe),
+        title: Text(l10n.swipeGestures),
+        subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
+        value: settings.swipeEnabled,
+        onChanged: (val) => settings.setSwipeEnabled(val),
       ),
-    );
+      if (settings.swipeEnabled) ...[
+        ListTile(
+          contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+          title: Text(l10n.swipeRight),
+          subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeRightAction, l10n)),
+          onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, true, currentLang),
+        ),
+        ListTile(
+          contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+          title: Text(l10n.swipeLeft),
+          subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeLeftAction, l10n)),
+          onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, false, currentLang),
+        ),
+      ],
+    ]);
   }
 
   Widget _buildSecuritySection(BuildContext context, AppLocalizations l10n, SettingsProvider settings) {
-    return Card(
-      child: Column(
-        children: [
-          SettingsUtils.buildSectionHeader(context, l10n.security),
-          SwitchListTile(
-            secondary: const Icon(Icons.lock),
-            title: Text(l10n.appLock),
-            subtitle: Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
-            value: settings.isAppLockEnabled,
-            onChanged: (val) async {
-              final authenticated = await BiometricService.authenticate();
-              if (authenticated) {
-                await settings.setAppLockEnabled(val);
-              } else {
-                if (mounted) setState(() {});
-              }
-            },
-          ),
-          if (settings.isAppLockEnabled)
-            SwitchListTile(
-              contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-              title: Text(l10n.lockDelay),
-              subtitle: Text(settings.lockDelayEnabled
-                  ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)
-                  : l10n.immediate),
-              value: settings.lockDelayEnabled,
-              onChanged: (val) async {
-                if (val) {
-                  await SettingsDialogs.showLockDelayDialog(context, settings, l10n);
-                } else {
-                  await settings.setLockDelayEnabled(false);
-                }
-              },
-            ),
-          SwitchListTile(
-            secondary: const Icon(Icons.visibility_off),
-            title: Text(l10n.hideContentInBackground),
-            subtitle: Text(l10n.applyBlurEffect),
-            value: settings.hideContentInBackground,
-            onChanged: (val) => settings.setHideContentInBackground(val),
-          ),
-        ],
+    return _buildSection(context, l10n.security, [
+      SwitchListTile(
+        secondary: const Icon(Icons.lock),
+        title: Text(l10n.appLock),
+        subtitle: Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
+        value: settings.isAppLockEnabled,
+        onChanged: (val) async {
+          final authenticated = await BiometricService.authenticate();
+          if (authenticated) {
+            await settings.setAppLockEnabled(val);
+          } else {
+            if (mounted) setState(() {});
+          }
+        },
       ),
-    );
+      if (settings.isAppLockEnabled)
+        SwitchListTile(
+          contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+          title: Text(l10n.lockDelay),
+          subtitle: Text(settings.lockDelayEnabled
+              ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)
+              : l10n.immediate),
+          value: settings.lockDelayEnabled,
+          onChanged: (val) async {
+            if (val) {
+              await SettingsDialogs.showLockDelayDialog(context, settings, l10n);
+            } else {
+              await settings.setLockDelayEnabled(false);
+            }
+          },
+        ),
+      SwitchListTile(
+        secondary: const Icon(Icons.visibility_off),
+        title: Text(l10n.hideContentInBackground),
+        subtitle: Text(l10n.applyBlurEffect),
+        value: settings.hideContentInBackground,
+        onChanged: (val) => settings.setHideContentInBackground(val),
+      ),
+    ]);
   }
 
   Widget _buildDataSection(BuildContext context, AppLocalizations l10n, String currentLang) {
-    return Card(
-      child: Column(
-        children: [
-          SettingsUtils.buildSectionHeader(context, l10n.data),
-          ListTile(
-            leading: Icon(Icons.backup_outlined,
-                color: Theme.of(context).colorScheme.primary),
-            title: Text(currentLang == 'ar' ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore'),
-            subtitle: Text(currentLang == 'ar'
-                ? 'تصدير واستيراد ملاحظاتك'
-                : 'Export and import your notes'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const BackupWizardScreen())),
-          ),
-        ],
+    return _buildSection(context, l10n.data, [
+      ListTile(
+        leading: Icon(Icons.backup_outlined,
+            color: Theme.of(context).colorScheme.primary),
+        title: Text(currentLang == 'ar' ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore'),
+        subtitle: Text(currentLang == 'ar'
+            ? 'تصدير واستيراد ملاحظاتك'
+            : 'Export and import your notes'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const BackupWizardScreen())),
       ),
-    );
+    ]);
   }
 
   Widget _buildAboutSection(BuildContext context, AppLocalizations l10n, String currentLang) {
-    return Card(
-      child: Column(
-        children: [
-          SettingsUtils.buildSectionHeader(context, l10n.about),
-          ListTile(
-            leading: const Icon(Icons.mail_outline),
-            title: Text(l10n.feedback),
-            subtitle: Text(l10n.contactUs),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SupportFormScreen()),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.share),
-            title: Text(l10n.shareApp),
-            onTap: () {
-              final msg = currentLang == 'ar'
-                  ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
-                  : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
-              CustomShareSheet.show(context, msg, appShare: true);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l10n.aboutApp),
-            subtitle: Text(_version),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutScreen()),
-            ),
-          ),
-          if (kDebugMode)
-            ListTile(
-              leading: const Icon(Icons.bug_report, color: Colors.red),
-              title: Text(l10n.diagnostics),
-              subtitle: Text(l10n.developersOnly),
-              onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
-            ),
-          if (kDebugMode)
-            ListTile(
-              leading: const Icon(Icons.storage_rounded, color: Colors.orange),
-              title: const Text('DB Inspector'),
-              subtitle: const Text('Isar + SQLite report'),
-              onTap: () => DbInspectorService.showReport(context),
-            ),
-          const SizedBox(height: 16),
-        ],
+    return _buildSection(context, l10n.about, [
+      ListTile(
+        leading: const Icon(Icons.mail_outline),
+        title: Text(l10n.feedback),
+        subtitle: Text(l10n.contactUs),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SupportFormScreen()),
+        ),
       ),
-    );
+      ListTile(
+        leading: const Icon(Icons.share),
+        title: Text(l10n.shareApp),
+        onTap: () {
+          final msg = currentLang == 'ar'
+              ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
+              : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
+          CustomShareSheet.show(context, msg, appShare: true);
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.info_outline),
+        title: Text(l10n.aboutApp),
+        subtitle: Text(_version),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AboutScreen()),
+        ),
+      ),
+      if (kDebugMode)
+        ListTile(
+          leading: const Icon(Icons.bug_report, color: Colors.red),
+          title: Text(l10n.diagnostics),
+          subtitle: Text(l10n.developersOnly),
+          onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
+        ),
+      if (kDebugMode)
+        ListTile(
+          leading: const Icon(Icons.storage_rounded, color: Colors.orange),
+          title: const Text('DB Inspector'),
+          subtitle: const Text('Isar + SQLite report'),
+          onTap: () => DbInspectorService.showReport(context),
+        ),
+    ]);
   }
 }
 

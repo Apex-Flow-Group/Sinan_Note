@@ -50,7 +50,6 @@ class CodeEditor extends StatefulWidget {
 class _CodeEditorState extends State<CodeEditor> {
   late double _gutterWidth;
 
-  // تحويل اسم اللغة إلى Mode مناسب لـ highlight
   static Mode? _resolveLanguage(String? lang) {
     if (lang == null) return null;
     switch (lang.toLowerCase()) {
@@ -59,9 +58,9 @@ class _CodeEditorState extends State<CodeEditor> {
       case 'typescript':   return typescript;
       case 'java':         return java;
       case 'dart':         return dart;
-      case 'html':         return xml;   // HTML → xml mode
+      case 'html':         return xml;
       case 'xml':          return xml;
-      case 'svg':          return xml;   // SVG → xml mode (same syntax)
+      case 'svg':          return xml;
       case 'css':          return css;
       case 'sql':          return sql;
       case 'cpp':
@@ -83,6 +82,34 @@ class _CodeEditorState extends State<CodeEditor> {
     }
   }
 
+  /// قياس العرض الفعلي للنص باستخدام TextPainter — دقيق 100%
+  static double _measureTextWidth(String text, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return painter.width;
+  }
+
+  double _calculateGutterWidth(String text) {
+    final lineCount = text.split('\n').length;
+    // نقيس أطول رقم محتمل (مثلاً "999" أو "9999")
+    final longestNumber = lineCount.toString().replaceAll(RegExp(r'.'), '9');
+    const fontSize = AppFontSize.noteBody;
+    const style = TextStyle(
+      fontFamily: 'monospace',
+      fontSize: fontSize,
+      height: 1.5,
+    );
+    final textWidth = _measureTextWidth(longestNumber, style);
+    // الـ package يطرح 32px تلقائياً (16 لـ errors + 16 لـ folding)
+    // عندما showErrors=false و showFoldingHandles=false
+    // لذا نضيف 32 + margin (8) + هامش أمان
+    const packageDeduction = 32.0;
+    const safetyBuffer = 12.0;
+    return textWidth + packageDeduction + safetyBuffer;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -100,9 +127,7 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _applyLanguage(String? lang) {
-    final mode = _resolveLanguage(lang);
-    // flutter_code_editor 0.3.x: language property على الـ controller
-    widget.controller.language = mode;
+    widget.controller.language = _resolveLanguage(lang);
   }
 
   @override
@@ -171,14 +196,5 @@ class _CodeEditorState extends State<CodeEditor> {
       color: isDark ? Colors.white : Colors.black87,
     );
     return baseTheme;
-  }
-
-  /// حساب عرض منطقة الأرقام حسب عدد الأسطر
-  double _calculateGutterWidth(String text) {
-    final lineCount = text.split('\n').length;
-    if (lineCount < 10) return 50;        // 1-9: 50px
-    if (lineCount < 100) return 60;       // 10-99: 60px
-    if (lineCount < 1000) return 70;      // 100-999: 70px
-    return 80;                             // 1000+: 80px
   }
 }

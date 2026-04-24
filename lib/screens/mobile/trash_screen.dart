@@ -7,7 +7,7 @@ import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/shared/note_view_screen.dart';
+import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/common/selected_note_indicator.dart';
@@ -400,8 +400,11 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        NoteViewScreen(note: note),
+                                    builder: (context) => NoteEditorImmersive(
+                                      note: note,
+                                      mode: NoteCardUtils.getNoteMode(note),
+                                      readOnly: true,
+                                    ),
                                   ),
                                 );
                               }
