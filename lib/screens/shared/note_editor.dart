@@ -14,6 +14,7 @@ import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dar
 import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:apex_note/screens/shared/note_editor/state/editor_save_manager.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart';
+import 'package:apex_note/screens/shared/note_view/note_view_widgets.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
@@ -56,6 +57,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   AppLocalizations? _l10nRef;
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
+  bool _showMarkdown = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -250,7 +252,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           widget.note?.noteType == 'checklist') {
         contentToSave = EditorSaveManager.prepareChecklistContent(
           contentToSave,
-          _l10nRef?.checklistItemHint ?? 'Task 1',
+          _l10nRef?.checklistItemHint ?? 'Task...',
         );
 
         if (EditorSaveManager.isContentEmpty(
@@ -537,7 +539,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   // ==================== READ-ONLY CONTENT ====================
 
-  Widget _buildReadOnlyChecklist(Color textColor, Color bgColor) {
+  Widget _buildReadOnlyChecklist(Color textColor, Color noteColor) {
     final content = _coordinator.contentController.text;
     final items = ChecklistFormatter.parseJson(content);
     if (items.isEmpty) {
@@ -636,11 +638,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   Widget _buildReadOnlyContent(Color textColor) {
-    final bgColor = _coordinator.getBackgroundColor(context);
+    final noteColor = _coordinator.getBackgroundColor(context);
 
     // checklist
     if (widget.mode == NoteMode.checklist) {
-      return _buildReadOnlyChecklist(textColor, bgColor);
+      return _buildReadOnlyChecklist(textColor, noteColor);
     }
 
     // code — نص monospace بدون أرقام أسطر
@@ -664,6 +666,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // Quill (simple / rich / reminder)
     final qc = _coordinator.quillController;
     if (qc == null) return const SizedBox.shrink();
+
+    // عرض Markdown لما يكون _showMarkdown مفعّل
+    if (_showMarkdown) {
+      final content = qc.document.toPlainText();
+      return NoteViewWidgets.buildDirectionalMarkdown(content, textColor);
+    }
+
     final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
     qc.readOnly = true;
 
@@ -820,13 +829,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     if (_isReadOnly && widget.note != null) {
       final note = widget.note!;
       final scheme = Theme.of(context).colorScheme;
-      final barColor = Color.lerp(
-        AppTheme.bg(scheme),
-        scheme.surface,
-        _coordinator.scrollProgress.value,
-      )!;
-      final bgColor = _coordinator.getBackgroundColor(context);
-      final textColor = bgColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+      final noteColor = _coordinator.getBackgroundColor(context);
+      final textColor = noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+      final appBarColor = AppTheme.secondaryBackground(Theme.of(context).colorScheme);
 
       // الأشرطة تظهر بـ fade بعد اكتمال انيميشن الـ Route
       final routeAnimation = ModalRoute.of(context)?.animation;
@@ -846,7 +851,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             ? const EdgeInsets.fromLTRB(20, 20, 20, 12)
             : const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: noteColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -876,14 +881,20 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AppTheme.scaffoldBackground(scheme),
         appBar: ReadOnlyBars.buildTopBar(
           context: context,
           note: note,
-          barColor: barColor,
+          barColor: appBarColor,
           fadeAnimation: barsFade,
           onEdit: () => setState(() => _isReadOnly = false),
           onRefresh: _refreshCurrentNote,
+          showMarkdown: _showMarkdown,
+          onMarkdownToggle: (widget.mode == NoteMode.simple ||
+                  widget.mode == NoteMode.rich ||
+                  widget.mode == NoteMode.reminder)
+              ? () => setState(() => _showMarkdown = !_showMarkdown)
+              : null,
         ),
         body: NotificationListener<ScrollNotification>(
           onNotification: (n) {
@@ -900,7 +911,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         bottomNavigationBar: note.isTrashed
             ? ReadOnlyBars.buildRestoreBar(
                 context: context,
-                barColor: barColor,
+                barColor: appBarColor,
                 fadeAnimation: barsFade,
                 onRestore: _onReadOnlyRestore,
                 onPermanentDelete: _onReadOnlyPermanentDelete,
@@ -908,7 +919,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             : ReadOnlyBars.buildActionBar(
                 context: context,
                 note: note,
-                barColor: barColor,
+                barColor: appBarColor,
                 fadeAnimation: barsFade,
                 onShare: _onReadOnlyShare,
                 onArchive: _onReadOnlyArchive,

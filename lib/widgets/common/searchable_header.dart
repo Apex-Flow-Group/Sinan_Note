@@ -17,6 +17,8 @@ class SearchableHeader extends StatefulWidget {
   final Widget? leading;
   final double extraBottomPadding;
   final bool includeSafeArea;
+  final bool hideSearchFrame;
+  final int? noteCount;
 
   const SearchableHeader({
     super.key,
@@ -30,6 +32,8 @@ class SearchableHeader extends StatefulWidget {
     this.leading,
     this.extraBottomPadding = 0,
     this.includeSafeArea = true,
+    this.hideSearchFrame = false,
+    this.noteCount,
   });
 
   @override
@@ -79,19 +83,19 @@ class _SearchableHeaderState extends State<SearchableHeader>
     final colorScheme = Theme.of(context).colorScheme;
     final topPadding = widget.includeSafeArea ? MediaQuery.of(context).padding.top : 0.0;
 
-    final bg = colorScheme.surface;
-    final frameBg = AppTheme.bg(colorScheme);
+    final appBarColor = AppTheme.secondaryBackground(colorScheme);
+    final frameBg = AppTheme.scaffoldBackground(colorScheme);
     final hintColor = colorScheme.onSurface.withValues(alpha: 0.45);
     final textColor = colorScheme.onSurface;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
-        statusBarColor: bg,
+        statusBarColor: appBarColor,
         statusBarIconBrightness:
             isDark ? Brightness.light : Brightness.dark,
       ),
       child: Container(
-        color: bg,
+        color: appBarColor,
         padding: EdgeInsets.only(
           top: topPadding + 6,
           bottom: 6 + widget.extraBottomPadding,
@@ -112,24 +116,34 @@ class _SearchableHeaderState extends State<SearchableHeader>
                     },
                     child: Container(
                       height: 40,
-                      decoration: BoxDecoration(
+                      decoration: widget.hideSearchFrame ? null : BoxDecoration(
                         color: frameBg,
                         borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: widget.hideSearchFrame
+                          ? EdgeInsets.zero
+                          : const EdgeInsets.symmetric(horizontal: 10),
                       child: Row(
                         children: [
                           // أيقونة بحث / رجوع
-                          if (widget.isSearching)
-                            GestureDetector(
-                              onTap: widget.onToggleSearch,
-                              child: Icon(Icons.arrow_back_rounded,
+                          if (!widget.hideSearchFrame)
+                            if (widget.isSearching)
+                              GestureDetector(
+                                onTap: widget.onToggleSearch,
+                                child: Icon(Icons.arrow_back_rounded,
+                                    size: 20, color: hintColor),
+                              )
+                            else
+                              Icon(Icons.search_rounded,
                                   size: 20, color: hintColor),
-                            )
-                          else
-                            Icon(Icons.search_rounded,
-                                size: 20, color: hintColor),
-                          const SizedBox(width: 6),
+                          if (!widget.hideSearchFrame) const SizedBox(width: 6),
 
                           // العنوان يختفي / حقل البحث يظهر
                           Expanded(
@@ -139,14 +153,37 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                 // العنوان
                                 Opacity(
                                   opacity: (1.0 - t * 2).clamp(0.0, 1.0),
-                                  child: Text(
-                                    widget.title,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                      color: hintColor,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        widget.title,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                          color: hintColor,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (widget.noteCount != null) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: hintColor.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            '${widget.noteCount}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: hintColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
                                 // حقل البحث

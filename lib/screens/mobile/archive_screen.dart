@@ -146,6 +146,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                   return SearchableHeader(
                     title: '${_selectedNoteIds.length} ${l10n.selected}',
                     isSearching: false,
+                    hideSearchFrame: true,
                     searchController: searchController,
                     onToggleSearch: () {},
                     leading: IconButton(
@@ -191,6 +192,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                   title: l10n.archive,
                   icon: Icons.archive_outlined,
                   isSearching: _isSearchActive,
+                  noteCount: archivedNotes.length,
                   searchController: searchController,
                   onSearchChange: (q) => setState(() {}),
                   onToggleSearch: () {

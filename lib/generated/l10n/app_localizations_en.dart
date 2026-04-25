@@ -1328,7 +1328,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checklistTitle => 'Checklist Title';
 
   @override
-  String get checklistItemHint => 'Mission...';
+  String get checklistItemHint => 'Task...';
 
   @override
   String get sort => 'Sort';

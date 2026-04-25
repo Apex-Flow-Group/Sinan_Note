@@ -7,16 +7,15 @@ class EditorPageRoute<T> extends PageRouteBuilder<T> {
   EditorPageRoute({required WidgetBuilder builder})
       : super(
           transitionDuration: const Duration(milliseconds: 350),
-          reverseTransitionDuration: const Duration(milliseconds: 300),
+          reverseTransitionDuration: const Duration(milliseconds: 450),
           pageBuilder: (context, animation, secondaryAnimation) =>
               builder(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             final fadeCurve = CurvedAnimation(
               parent: animation,
               curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
-              reverseCurve: const Interval(0.0, 0.7, curve: Curves.easeIn),
+              reverseCurve: const Interval(0.0, 1.0, curve: Curves.easeInCubic),
             );
-            // fade فقط للعناصر غير Hero (الأشرطة وخلفية الشاشة)
             return FadeTransition(opacity: fadeCurve, child: child);
           },
         );

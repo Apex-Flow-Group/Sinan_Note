@@ -1,3 +1,4 @@
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class SelectionActionBar extends StatelessWidget {
@@ -23,6 +24,87 @@ class SelectionActionBar extends StatelessWidget {
     required this.isDark,
     this.allPinned = false,
   });
+
+  void _confirmAction(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required Color confirmColor,
+    required VoidCallback onConfirm,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 32),
+              ),
+              const SizedBox(height: 16),
+              Text(title, style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(message, style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6))),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 48),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(AppLocalizations.of(ctx)!.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: confirmColor,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 48),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,12 +154,30 @@ class SelectionActionBar extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.archive_outlined),
-                onPressed: onArchive,
+                onPressed: () => _confirmAction(
+                  context,
+                  icon: Icons.archive_outlined,
+                  iconColor: Colors.orange,
+                  title: AppLocalizations.of(context)!.archive,
+                  message: '${selectedIds.length} ${AppLocalizations.of(context)!.notesArchived}',
+                  confirmLabel: AppLocalizations.of(context)!.archive,
+                  confirmColor: Colors.orange,
+                  onConfirm: onArchive,
+                ),
                 tooltip: 'Archive',
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
-                onPressed: onDelete,
+                onPressed: () => _confirmAction(
+                  context,
+                  icon: Icons.delete_outline_rounded,
+                  iconColor: Colors.red,
+                  title: AppLocalizations.of(context)!.deleteNote,
+                  message: '${selectedIds.length} ${AppLocalizations.of(context)!.notesDeleted}',
+                  confirmLabel: AppLocalizations.of(context)!.delete,
+                  confirmColor: Colors.red,
+                  onConfirm: onDelete,
+                ),
                 tooltip: 'Delete',
               ),
               IconButton(

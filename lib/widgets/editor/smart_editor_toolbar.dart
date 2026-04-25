@@ -70,17 +70,12 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barColor = isDark
-        ? Color.alphaBlend(Colors.white.withValues(alpha: 0.06), widget.backgroundColor)
-        : Color.alphaBlend(Colors.black.withValues(alpha: 0.06), widget.backgroundColor);
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: barColor,
+        color: widget.backgroundColor,
       ),
       child: SafeArea(
         top: false,

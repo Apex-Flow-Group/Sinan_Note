@@ -446,7 +446,7 @@
   "supportSubject": "Subject",
   "supportMessage": "Message",
   "checklistTitle": "Checklist Title",
-  "checklistItemHint": "Mission...",
+  "checklistItemHint": "Task...",
   "sort": "Sort",
   "checklist": "Checklist",
   "checklistMenu": "Checklist",

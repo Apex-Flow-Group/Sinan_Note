@@ -92,6 +92,13 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
           border: widget.isSelected
               ? Border.all(color: effectiveBorderColor, width: 0.5)
               : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: brightness == Brightness.light ? 0.08 : 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         clipBehavior: Clip.hardEdge,
         child: widget.child,
@@ -101,13 +108,15 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
           tag: widget.heroTag!,
           transitionOnUserGestures: false,
           flightShuttleBuilder: (flightContext, animation, direction, fromCtx, toCtx) {
-            // عند الفتح: نعرض البطاقة المصدر (الصغيرة) مع fade out
-            // عند الإغلاق: نعرض البطاقة المصدر (الكبيرة) مع fade out
-            // هذا يمنع الـ overflow لأن كل بطاقة تُعرض بحجمها الطبيعي
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+              reverseCurve: Curves.easeInCubic,
+            );
             return FadeTransition(
               opacity: direction == HeroFlightDirection.push
-                  ? animation
-                  : ReverseAnimation(animation),
+                  ? curved
+                  : ReverseAnimation(curved),
               child: Material(
                 color: Colors.transparent,
                 child: container,

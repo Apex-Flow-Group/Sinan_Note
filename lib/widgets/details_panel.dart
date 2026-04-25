@@ -217,14 +217,14 @@ class _DetailsPanelState extends State<DetailsPanel> {
     final l10n = AppLocalizations.of(context)!;
     final brightness = Theme.of(context).brightness;
 
-    final baseColor =
+    final noteColor =
         AppColorPalette.palette[note.colorIndex].getColor(brightness);
     final textColor =
-        baseColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+        noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
 
     return Scaffold(
       key: const ValueKey('readonly_view'),
-      backgroundColor: baseColor,
+      backgroundColor: noteColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

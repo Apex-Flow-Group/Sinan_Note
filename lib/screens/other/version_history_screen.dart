@@ -255,16 +255,16 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         : displayContent;
 
     final brightness = Theme.of(context).brightness;
-    final baseColor =
+    final noteColor =
         AppColorPalette.palette[note.colorIndex].getColor(brightness);
-    final isLight = baseColor.computeLuminance() > 0.5;
+    final isLight = noteColor.computeLuminance() > 0.5;
     final titleColor = isLight ? Colors.black87 : Colors.white;
     final contentColor = isLight ? Colors.grey[700]! : Colors.grey[300]!;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
-      color: baseColor,
+      color: noteColor,
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         title: Text(

@@ -87,7 +87,7 @@ class EditorToolbarFactory {
       case NoteMode.rich:
       case NoteMode.reminder:
         return SmartEditorToolbar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: backgroundColor,
           textColor: textColor,
           hasReminder: hasReminder,
           hasContent: hasContent,

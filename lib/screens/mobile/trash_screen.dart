@@ -185,6 +185,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                     return SearchableHeader(
                       title: '${_selectedNotes.length} ${l10n.selected}',
                       isSearching: false,
+                      hideSearchFrame: true,
                       searchController: searchController,
                       onToggleSearch: () {},
                       leading: IconButton(
@@ -262,6 +263,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                     title: l10n.trash,
                     icon: Icons.delete_sweep_outlined,
                     isSearching: _isSearchActive,
+                    noteCount: trashedNotes.length,
                     searchController: searchController,
                     onSearchChange: (q) => setState(() {}),
                     onToggleSearch: () {

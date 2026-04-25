@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/screens/other/support_form_screen.dart';
@@ -98,9 +99,7 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
                   width: 220,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF1A1D21)
-                      : colorScheme.surfaceContainerHigh,
+                  color: AppTheme.sidebarBackground(colorScheme),
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     itemCount: sections.length,

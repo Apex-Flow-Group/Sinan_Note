@@ -131,7 +131,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     final l10n = AppLocalizations.of(context)!;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    final baseColor = _baseColor;
+    final noteColor = _baseColor;
     final Color titleColor = _titleColor;
     final Color contentColor = _contentColor;
     final bool enableSwipe = !widget.selectionMode && settings.swipeEnabled && !widget.note.isLocked && widget.source != 'archive';
@@ -275,7 +275,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 widget.onLongPress();
               },
               child: PremiumCardEffect(
-                baseColor: baseColor,
+                baseColor: noteColor,
                 enableMotion: false,
                 isSelected: widget.isSelected,
                 heroTag: 'note_card_${widget.source}_${widget.note.id}',
@@ -489,7 +489,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                         left: 8,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: baseColor,
+                            color: noteColor,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(

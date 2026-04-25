@@ -172,17 +172,17 @@ class _NoteViewScreenState extends State<NoteViewScreen>
     }
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final bgColor = AppColorPalette.palette[_currentNote.colorIndex]
+    final noteColor = AppColorPalette.palette[_currentNote.colorIndex]
         .getColor(Theme.of(context).brightness);
     final textColor =
-        bgColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+        noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
 
     return ValueListenableBuilder<double>(
       valueListenable: _scrollProgress,
       builder: (context, progress, child) {
         final barColor = Color.lerp(
-          AppTheme.bg(scheme),
-          scheme.surface,
+          AppTheme.scaffoldBackground(scheme),
+          AppTheme.secondaryBackground(scheme),
           progress,
         )!;
 
@@ -323,14 +323,14 @@ class _NoteViewScreenState extends State<NoteViewScreen>
           child: widget.heroTag != null
               ? Hero(
                   tag: widget.heroTag!,
-                  child: _buildNoteCard(bgColor, textColor, l10n),
+                  child: _buildNoteCard(noteColor, textColor, l10n),
                 )
               : FadeTransition(
                   opacity: CurvedAnimation(
                     parent: routeAnimation ?? const AlwaysStoppedAnimation(1.0),
                     curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
                   ),
-                  child: _buildNoteCard(bgColor, textColor, l10n),
+                  child: _buildNoteCard(noteColor, textColor, l10n),
                 ),
         ),
       ),
@@ -347,13 +347,13 @@ class _NoteViewScreenState extends State<NoteViewScreen>
     );
   }
 
-  Widget _buildNoteCard(Color bgColor, Color textColor, AppLocalizations l10n) {
+  Widget _buildNoteCard(Color noteColor, Color textColor, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 8, bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: noteColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(

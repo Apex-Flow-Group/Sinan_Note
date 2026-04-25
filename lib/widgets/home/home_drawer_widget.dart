@@ -80,17 +80,15 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       curve: Curves.easeInOut,
                       child: _categoriesExpanded
                           ? Padding(
-                              padding:
-                                  const EdgeInsetsDirectional.only(start: 16),
-                              child: CategoriesPanel(
+                              padding: const EdgeInsetsDirectional.only(start: 16),
+                              child: _CategoriesPanelWrapper(
                                 mode: _catMode == _CatMode.delete
                                     ? CatPanelMode.delete
                                     : _catMode == _CatMode.edit
                                         ? CatPanelMode.edit
                                         : CatPanelMode.normal,
                                 isAdding: _isAdding,
-                                onAddDone: () =>
-                                    setState(() => _isAdding = false),
+                                onAddDone: () => setState(() => _isAdding = false),
                               ),
                             )
                           : const SizedBox.shrink(),
@@ -510,6 +508,85 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
               : null,
           onTap: onTap,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Wrapper يضيف scroll عند تجاوز 6 كتالوجات ────────────────────
+class _CategoriesPanelWrapper extends StatefulWidget {
+  final CatPanelMode mode;
+  final bool isAdding;
+  final VoidCallback onAddDone;
+
+  const _CategoriesPanelWrapper({
+    required this.mode,
+    required this.isAdding,
+    required this.onAddDone,
+  });
+
+  @override
+  State<_CategoriesPanelWrapper> createState() => _CategoriesPanelWrapperState();
+}
+
+class _CategoriesPanelWrapperState extends State<_CategoriesPanelWrapper> {
+  final _scrollController = ScrollController();
+
+  static const double _tileHeight = 52.0;
+  static const int _maxVisible = 6;
+
+  @override
+  void didUpdateWidget(_CategoriesPanelWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // عند فتح مربع الإدخال — اسكرول للأسفل بعد ظهور الكيبورد
+    if (widget.isAdding && !oldWidget.isAdding) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<CategoriesProvider>();
+    final totalItems = provider.categories.length + 2 + (widget.isAdding ? 1 : 0);
+    final needsScroll = totalItems > _maxVisible;
+    const maxHeight = _tileHeight * _maxVisible;
+
+    final panel = CategoriesPanel(
+      mode: widget.mode,
+      isAdding: widget.isAdding,
+      onAddDone: widget.onAddDone,
+    );
+
+    if (!needsScroll) return panel;
+
+    return SizedBox(
+      height: maxHeight,
+      child: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: true,
+        radius: const Radius.circular(4),
+        thickness: 3,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
+          child: panel,
         ),
       ),
     );

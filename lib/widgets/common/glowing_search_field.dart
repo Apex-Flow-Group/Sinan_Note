@@ -75,7 +75,7 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
       builder: (context, _) {
         final iconOpacity = widget.scrollFadeNotifier?.value ?? 1.0;
         final cs = Theme.of(context).colorScheme;
-        final barColor = AppTheme.bg(cs);
+        final barColor = AppTheme.scaffoldBackground(cs);
         final contentColor = cs.onSurface;
 
         return Container(

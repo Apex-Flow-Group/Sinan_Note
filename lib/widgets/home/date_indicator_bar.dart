@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
+import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
@@ -393,6 +394,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
   Widget build(BuildContext context) {
     final notes = widget.filteredNotesNotifier.value;
     final colorScheme = Theme.of(context).colorScheme;
+    final secondaryBg = AppTheme.secondaryBackground(colorScheme);
     final categoriesProvider = context.watch<CategoriesProvider>();
     final selectedId = categoriesProvider.selectedCategoryId;
     final activeFilter = widget.activeFilterNotifier.value;
@@ -406,7 +408,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
         pullDistanceNotifier: widget.pullDistanceNotifier,
         child: Container(
           height: 28,
-          color: colorScheme.surface,
+          color: secondaryBg,
           padding: const EdgeInsets.only(left: 16),
           child: Row(
             children: [
@@ -454,7 +456,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
         pullDistanceNotifier: widget.pullDistanceNotifier,
         child: Container(
           height: 28,
-          color: colorScheme.surface,
+          color: secondaryBg,
           padding: const EdgeInsets.only(left: 16),
           child: Row(
             children: [
@@ -512,7 +514,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
         onTap: _showDatePicker,
         child: Container(
           height: 28,
-          color: colorScheme.surface,
+          color: secondaryBg,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [

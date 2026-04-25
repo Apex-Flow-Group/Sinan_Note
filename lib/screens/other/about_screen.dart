@@ -25,14 +25,8 @@ class _AboutScreenState extends State<AboutScreen> {
   Future<void> _loadInfo() async {
     try {
       final info = await PackageInfo.fromPlatform();
-      if (mounted) {
-        setState(() {
-          _version = 'v${info.version}';
-        });
-      }
-    } catch (e) {
-      // Failed to load info
-    }
+      if (mounted) setState(() => _version = 'v${info.version}');
+    } catch (_) {}
   }
 
   static const _channel = MethodChannel('com.apexflow.app.sinan/launcher');
@@ -52,70 +46,61 @@ class _AboutScreenState extends State<AboutScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.aboutApp)),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // App Info
-                Center(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: ListView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 16,
+            ),
+            children: [
+              // App Info Header Card
+              Card(
+                elevation: 0,
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: Image.asset(
                           'assets/images/app_icon.png',
-                          width: 100,
-                          height: 100,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.note_rounded,
-                                size: 80, color: Colors.blue);
-                          },
+                          width: 88,
+                          height: 88,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.note_rounded, size: 80, color: Colors.blue),
                         ),
                       ),
                       const SizedBox(height: 16),
                       const Text(
                         'Sinan Note | سنان نوت',
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        _version,
-                        style: TextStyle(
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
+                      Text(
+                        _version,
+                        style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: Colors.green.withValues(alpha: 0.3)),
+                          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.verified,
-                                size: 14, color: Colors.green),
+                            const Icon(Icons.verified, size: 14, color: Colors.green),
                             const SizedBox(width: 4),
-                            Text(
-                              l10n.officialVersion,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.green,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            Text(l10n.officialVersion,
+                                style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
@@ -123,246 +108,162 @@ class _AboutScreenState extends State<AboutScreen> {
                       Text(
                         isArabic ? l10n.appTaglineAr : l10n.appTagline,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         isArabic ? l10n.appTagline : l10n.appTaglineAr,
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5)),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+              ),
 
-                // Links Section
-                _buildSection(l10n.importantLinks, [
-                  _buildLink(
-                    l10n.appPageGooglePlay,
-                    'https://play.google.com/store/apps/dev?id=5409981776310932919',
+              // Links Section
+              _buildSection(
+                context,
+                l10n.importantLinks,
+                Icons.link_rounded,
+                [
+                  _buildLinkTile(l10n.appPageGooglePlay, Icons.shop_rounded,
+                      'https://play.google.com/store/apps/dev?id=5409981776310932919'),
+                  _buildLinkTile(l10n.sinanAiNet, Icons.language_rounded, 'https://sinanai.net'),
+                  _buildLinkTile(l10n.githubRepository, Icons.code_rounded,
+                      'https://github.com/apexflow/sinan-note'),
+                  _buildLinkTile(l10n.privacyPolicy, Icons.privacy_tip_outlined,
+                      isArabic
+                          ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
+                          : 'https://apexflow.now/en/projects/sinan-note/privacy'),
+                  _buildLinkTile(l10n.termsOfService, Icons.gavel_rounded,
+                      isArabic
+                          ? 'https://apexflow.now/ar/projects/sinan-note/terms'
+                          : 'https://apexflow.now/en/projects/sinan-note/terms'),
+                  ListTile(
+                    leading: Icon(Icons.article_outlined, color: colorScheme.primary),
+                    title: Text(l10n.licenses),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                    onTap: _showLicenses,
                   ),
-                  _buildLink(
-                    l10n.sinanAiNet,
-                    'https://sinanai.net',
-                  ),
-                  _buildLink(
-                    l10n.githubRepository,
-                    'https://github.com/apexflow/sinan-note',
-                  ),
-                  _buildLink(
-                    l10n.privacyPolicy,
-                    isArabic
-                        ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
-                        : 'https://apexflow.now/en/projects/sinan-note/privacy',
-                  ),
-                  _buildLink(
-                    l10n.termsOfService,
-                    isArabic
-                        ? 'https://apexflow.now/ar/projects/sinan-note/terms'
-                        : 'https://apexflow.now/en/projects/sinan-note/terms',
-                  ),
-                  _buildLink(l10n.licenses, null, onTap: _showLicenses),
-                ]),
-                const SizedBox(height: 24),
+                ],
+              ),
 
-                // Legal Section
-                _buildSection(l10n.legalInfo, [
-                  _buildLegalText(
-                    l10n.copyright,
-                    l10n.copyrightText,
-                  ),
-                  _buildLegalText(
-                    l10n.disclaimerTitle,
-                    l10n.disclaimerText,
-                  ),
-                  _buildLegalText(
-                    l10n.officialVersionTitle,
-                    l10n.officialVersionText,
-                  ),
-                ]),
-                const SizedBox(height: 24),
+              // Legal Section
+              _buildSection(
+                context,
+                l10n.legalInfo,
+                Icons.gavel_rounded,
+                [
+                  _buildInfoTile(l10n.copyright, l10n.copyrightText),
+                  _buildInfoTile(l10n.disclaimerTitle, l10n.disclaimerText),
+                  _buildInfoTile(l10n.officialVersionTitle, l10n.officialVersionText),
+                ],
+              ),
 
-                // Credits Section
-                _buildSection(l10n.librariesUsed, [
-                  _buildCredit('Flutter', l10n.flutterFramework),
-                  _buildCredit('Dart', l10n.dartLanguage),
-                  _buildCredit('Provider', l10n.providerStateManagement),
-                  _buildCredit('Isar', l10n.isarDatabase),
-                ]),
-                const SizedBox(height: 24),
+              // Libraries Section
+              _buildSection(
+                context,
+                l10n.librariesUsed,
+                Icons.widgets_outlined,
+                [
+                  _buildCreditTile('Flutter', l10n.flutterFramework),
+                  _buildCreditTile('Dart', l10n.dartLanguage),
+                  _buildCreditTile('Provider', l10n.providerStateManagement),
+                  _buildCreditTile('Isar', l10n.isarDatabase),
+                ],
+              ),
 
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    border:
-                        Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.verified, color: Colors.green, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          l10n.officialGooglePlay,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green[700],
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Footer
-                Center(
+              // Footer
+              Card(
+                elevation: 0,
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            l10n.madeWithLove,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
+                          Text(l10n.madeWithLove,
+                              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
                           const SizedBox(width: 4),
-                          Icon(Icons.favorite,
-                              size: 14, color: Colors.red[400]),
+                          Icon(Icons.favorite, size: 14, color: Colors.red[400]),
                           const SizedBox(width: 4),
-                          Text(
-                            l10n.inArabWorld,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
+                          Text(l10n.inArabWorld,
+                              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6))),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        l10n.contactEmail,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue,
-                        ),
-                      ),
+                      Text(l10n.contactEmail,
+                          style: TextStyle(fontSize: 12, color: colorScheme.primary)),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...children,
-      ],
-    );
-  }
-
-  Widget _buildLink(String title, String? url, {VoidCallback? onTap}) {
-    final color = Theme.of(context).colorScheme.primary;
-    final effectiveOnTap = onTap ?? (url != null ? () => _launchUrl(url) : null);
-    return InkWell(
-      onTap: _isLaunching ? null : effectiveOnTap,
-      borderRadius: BorderRadius.circular(8),
+  Widget _buildSection(BuildContext context, String title, IconData icon, List<Widget> children) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Row(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.link, size: 18, color: color),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: color,
-                  decoration: TextDecoration.underline,
-                  decorationColor: color,
-                ),
-              ),
-            ),
-            Icon(Icons.arrow_outward, size: 16, color: color),
+            Row(children: [
+              Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 12),
+              Text(title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            ]),
+            const SizedBox(height: 8),
+            ...children,
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLegalText(String title, String content) {
+  Widget _buildLinkTile(String title, IconData icon, String url) {
+    final color = Theme.of(context).colorScheme.primary;
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(title, style: TextStyle(color: color)),
+      trailing: Icon(Icons.arrow_outward, size: 16, color: color),
+      onTap: _isLaunching ? null : () => _launchUrl(url),
+    );
+  }
+
+  Widget _buildInfoTile(String title, String content) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-              height: 1.5,
-            ),
-          ),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 4),
+          Text(content,
+              style: TextStyle(fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  height: 1.5)),
+          const Divider(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildCredit(String name, String description) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, size: 16, color: Colors.green),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  description,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+  Widget _buildCreditTile(String name, String description) {
+    return ListTile(
+      leading: const Icon(Icons.check_circle_outline_rounded, color: Colors.green),
+      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
+      subtitle: Text(description),
     );
   }
 
@@ -373,13 +274,9 @@ class _AboutScreenState extends State<AboutScreen> {
       applicationVersion: _version,
       applicationIcon: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Image.asset(
-          'assets/images/app_icon.png',
-          width: 64,
-          height: 64,
-          errorBuilder: (_, __, ___) =>
-              const Icon(Icons.note_rounded, size: 64, color: Colors.blue),
-        ),
+        child: Image.asset('assets/images/app_icon.png', width: 64, height: 64,
+            errorBuilder: (_, __, ___) =>
+                const Icon(Icons.note_rounded, size: 64, color: Colors.blue)),
       ),
     );
   }

@@ -308,7 +308,7 @@ class _CodeWithLineNumbers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     try {
-      final bgColor =
+      final codePreviewBg =
           isDark ? const Color(0xFF12121F) : const Color(0xFFF6F8FA);
       final borderColor = isDark
           ? Colors.white.withValues(alpha: 0.08)
@@ -347,7 +347,7 @@ class _CodeWithLineNumbers extends StatelessWidget {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: bgColor,
+              color: codePreviewBg,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: borderColor),
             ),

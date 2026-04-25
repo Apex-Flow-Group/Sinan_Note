@@ -114,13 +114,13 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bgColor = isDark ? Colors.grey[900]! : theme.colorScheme.surface;
+    final sheetColor = isDark ? Colors.grey[900]! : theme.colorScheme.surface;
     final textColor = theme.colorScheme.onSurface;
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
       decoration: BoxDecoration(
-        color: bgColor,
+        color: sheetColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(
@@ -224,7 +224,7 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                           return Theme(
                             data: theme.copyWith(
                               colorScheme: theme.colorScheme.copyWith(
-                                surface: bgColor,
+                                surface: sheetColor,
                               ),
                             ),
                             child: child!,
@@ -274,7 +274,7 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                           return Theme(
                             data: theme.copyWith(
                               colorScheme: theme.colorScheme.copyWith(
-                                surface: bgColor,
+                                surface: sheetColor,
                               ),
                             ),
                             child: child!,

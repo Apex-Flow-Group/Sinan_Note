@@ -23,6 +23,7 @@ class SmartHeader extends StatefulWidget {
   final VoidCallback? onFilterTap;
   final bool isSearchActive;
   final ValueNotifier<double>? scrollFadeNotifier;
+  final ScrollController? scrollController;
 
   const SmartHeader({
     super.key,
@@ -35,6 +36,7 @@ class SmartHeader extends StatefulWidget {
     required this.isSearchActive,
     this.onFilterTap,
     this.scrollFadeNotifier,
+    this.scrollController,
   });
 
   @override
@@ -42,6 +44,21 @@ class SmartHeader extends StatefulWidget {
 }
 
 class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin {
+  @override
+  void initState() {
+    super.initState();
+    widget.selectedNoteIdsNotifier.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.selectedNoteIdsNotifier.removeListener(_onSelectionChanged);
+    super.dispose();
+  }
+
+  void _onSelectionChanged() {
+    // لا شيء - الشريط دائماً مثبت
+  }
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;

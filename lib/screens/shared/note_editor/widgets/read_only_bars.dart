@@ -20,6 +20,8 @@ class ReadOnlyBars {
     required Animation<double> fadeAnimation,
     required VoidCallback onEdit,
     required Future<void> Function() onRefresh,
+    VoidCallback? onMarkdownToggle,
+    bool showMarkdown = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -39,6 +41,16 @@ class ReadOnlyBars {
             backgroundColor: barColor,
             title: Text(note.title.isEmpty ? l10n.viewNote : note.title),
             actions: [
+              if (onMarkdownToggle != null)
+                IconButton(
+                  icon: Icon(
+                    showMarkdown
+                        ? Icons.text_fields_rounded
+                        : Icons.auto_awesome_outlined,
+                  ),
+                  tooltip: showMarkdown ? 'Plain text' : 'Markdown',
+                  onPressed: onMarkdownToggle,
+                ),
               if (!note.isTrashed)
                 _CategoryButton(note: note, onRefresh: onRefresh),
               if (!note.isTrashed)

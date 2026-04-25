@@ -44,41 +44,57 @@ class AppTheme {
     return _build(scheme, fontFamily);
   }
 
-  /// فاتح → أغمق درجة | داكن → أفتح درجة
-  /// يُستخدم في كل عناصر الواجهة التي تحتاج نفس لون الخلفية
-  static Color bg(ColorScheme scheme) {
+  /// اللون الثانوي — يُستخدم في AppBar, Drawer, BottomNav, Cards
+  /// فاتح → رمادي واضح يتباين مع الخلفية البيضاء
+  /// داكن → surfaceContainerLow (أفتح قليلاً من الخلفية الداكنة)
+  static Color secondaryBackground(ColorScheme scheme) {
     return scheme.brightness == Brightness.light
-        ? Color.alphaBlend(Colors.white.withValues(alpha: 0.06), scheme.surface)
+        ? Color.alphaBlend(Colors.black.withValues(alpha: 0.04), scheme.surface)
+        : scheme.surfaceContainerLow;
+  }
+
+  /// لون خلفية الـ Scaffold — أبيض/حليب في الفاتح
+  static Color scaffoldBackground(ColorScheme scheme) {
+    return scheme.brightness == Brightness.light
+        ? scheme.surface
         : Color.alphaBlend(Colors.white.withValues(alpha: 0.05), scheme.surface);
   }
 
+  /// لون خلفية الـ Sidebar/Master panel في الـ Desktop layout
+  static Color sidebarBackground(ColorScheme scheme) {
+    return scheme.brightness == Brightness.dark
+        ? const Color(0xFF1A1D21)
+        : scheme.surfaceContainerHigh;
+  }
+
   static ThemeData _build(ColorScheme scheme, String? fontFamily) {
-    final bg = AppTheme.bg(scheme);
+    final scaffoldBg = AppTheme.scaffoldBackground(scheme);
+    final secondaryBg = AppTheme.secondaryBackground(scheme);
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       fontFamily: fontFamily,
-      scaffoldBackgroundColor: AppTheme.bg(scheme),
+      scaffoldBackgroundColor: scaffoldBg,
       appBarTheme: AppBarTheme(
-        backgroundColor: scheme.surface,
+        backgroundColor: secondaryBg,
         foregroundColor: scheme.onSurface,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: scheme.surface,
+          statusBarColor: secondaryBg,
           statusBarIconBrightness: scheme.brightness == Brightness.dark
               ? Brightness.light
               : Brightness.dark,
         ),
       ),
       bottomAppBarTheme: BottomAppBarThemeData(
-        color: bg,
+        color: secondaryBg,
         elevation: 0,
         shadowColor: Colors.transparent,
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: bg,
+        backgroundColor: secondaryBg,
         surfaceTintColor: Colors.transparent,
         indicatorColor: scheme.primaryContainer,
         iconTheme: WidgetStateProperty.resolveWith((states) {
@@ -102,11 +118,11 @@ class AppTheme {
         }),
       ),
       drawerTheme: DrawerThemeData(
-        backgroundColor: bg,
+        backgroundColor: secondaryBg,
         surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
-        color: scheme.surfaceContainerLow,
+        color: secondaryBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),

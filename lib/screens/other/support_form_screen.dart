@@ -306,121 +306,128 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.appDescription,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildTextField(
-                    controller: _nameController,
-                    label: l10n.title,
-                    icon: Icons.person,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.fillAllFields;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDropdown(
-                    label: l10n.supportCategory,
-                    value: _selectedCategory,
-                    items: categories,
-                    onChanged: (value) =>
-                        setState(() => _selectedCategory = value),
-                    validator: (value) {
-                      if (value == null) {
-                        return l10n.fillAllFields;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _subjectController,
-                    label: l10n.supportSubject,
-                    icon: Icons.subject,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.fillAllFields;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _bodyController,
-                    label: l10n.supportMessage,
-                    icon: Icons.description,
-                    maxLines: 6,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.fillAllFields;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.privacyAndData,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.privacyDescription,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      const SizedBox(height: 12),
-                      GestureDetector(
-                        onTap: _showPrivacyDialog,
-                        child: Text(
-                          l10n.readPrivacyPolicy,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colorScheme.primary,
-                            decoration: TextDecoration.underline,
+                  // Header Card
+                  Card(
+                    elevation: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(children: [
+                        Icon(Icons.support_agent_rounded, size: 28, color: colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.contactUs,
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(l10n.appDescription,
+                                  style: TextStyle(fontSize: 13,
+                                      color: colorScheme.onSurface.withValues(alpha: 0.7))),
+                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        value: _privacyAccepted,
-                        onChanged: (val) {
-                          if (val != null) _savePrivacyConsent(val);
-                        },
-                        title: Text(l10n.agreeToPolicy),
-                        activeColor: colorScheme.primary,
-                      ),
-                    ],
+                      ]),
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
+
+                  // Form Card
+                  Card(
+                    elevation: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            Icon(Icons.edit_note_rounded, size: 28, color: colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Text(l10n.supportSubject,
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                          ]),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _nameController,
+                            label: l10n.title,
+                            icon: Icons.person,
+                            validator: (v) => (v == null || v.isEmpty) ? l10n.fillAllFields : null,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildDropdown(
+                            label: l10n.supportCategory,
+                            value: _selectedCategory,
+                            items: categories,
+                            onChanged: (v) => setState(() => _selectedCategory = v),
+                            validator: (v) => v == null ? l10n.fillAllFields : null,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _subjectController,
+                            label: l10n.supportSubject,
+                            icon: Icons.subject,
+                            validator: (v) => (v == null || v.isEmpty) ? l10n.fillAllFields : null,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _bodyController,
+                            label: l10n.supportMessage,
+                            icon: Icons.description,
+                            maxLines: 6,
+                            validator: (v) => (v == null || v.isEmpty) ? l10n.fillAllFields : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Privacy Card
+                  Card(
+                    elevation: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            Icon(Icons.privacy_tip_outlined, size: 28, color: colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Text(l10n.privacyAndData,
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                          ]),
+                          const SizedBox(height: 12),
+                          Text(l10n.privacyDescription, style: const TextStyle(fontSize: 13)),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: _showPrivacyDialog,
+                            child: Text(l10n.readPrivacyPolicy,
+                                style: TextStyle(fontSize: 13, color: colorScheme.primary,
+                                    decoration: TextDecoration.underline)),
+                          ),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            value: _privacyAccepted,
+                            onChanged: (val) { if (val != null) _savePrivacyConsent(val); },
+                            title: Text(l10n.agreeToPolicy),
+                            activeColor: colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: _canSend ? _submitFeedback : null,
                       icon: _isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  colorScheme.onPrimary,
-                                ),
-                              ),
-                            )
+                          ? SizedBox(width: 20, height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(colorScheme.onPrimary)))
                           : const Icon(Icons.send),
-                      label: Text(
-                        _isLoading ? l10n.autoSaved : l10n.send,
-                      ),
+                      label: Text(_isLoading ? l10n.autoSaved : l10n.send),
                     ),
                   ),
                 ],

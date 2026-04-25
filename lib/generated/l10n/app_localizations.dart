@@ -2681,7 +2681,7 @@ abstract class AppLocalizations {
   /// No description provided for @checklistItemHint.
   ///
   /// In en, this message translates to:
-  /// **'Mission...'**
+  /// **'Task...'**
   String get checklistItemHint;
 
   /// No description provided for @sort.

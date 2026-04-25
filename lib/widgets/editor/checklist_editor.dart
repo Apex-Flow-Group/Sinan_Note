@@ -124,6 +124,11 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     for (var item in _items) {
       _initializeController(item);
     }
+
+    // حفظ snapshot أولي في الـ history
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _notifyParent();
+    });
   }
 
   void _initializeController(ChecklistItem item) {
@@ -250,8 +255,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     final hasContent = title.isNotEmpty || 
         realItems.any((item) => item.text.trim().isNotEmpty);
     
-    if (!hasContent) {
-      // Empty checklist - don't save garbage
+    if (!hasContent && !_isUndoRedoAction) {
+      // Empty checklist - don't save garbage, but don't block undo/redo
       widget.onChanged(jsonEncode({'title': '', 'items': []}));
       return;
     }
@@ -336,8 +341,13 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
           .map((e) => ChecklistItem.fromJson(e))
           .toList();
 
-      for (var item in _items) {
-        _initializeController(item);
+      // إذا لم تكن هناك items، أضف ghost item للـ UX
+      if (_items.isEmpty) {
+        _addNewItem(isGhostItem: true);
+      } else {
+        for (var item in _items) {
+          _initializeController(item);
+        }
       }
 
       setState(() {});

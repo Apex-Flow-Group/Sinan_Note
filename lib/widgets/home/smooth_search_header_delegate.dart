@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -25,12 +26,12 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final t = isSearchActive
+    final t = (isSearchActive || selectionMode)
         ? 1.0
         : (1.0 - (shrinkOffset / expandedHeight)).clamp(0.0, 1.0);
 
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: AppTheme.secondaryBackground(Theme.of(context).colorScheme),
       elevation: 0,
       shadowColor: Colors.transparent,
       child: Padding(
@@ -66,7 +67,7 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   // عند البحث: مثبت بالكامل — عند التمرير: يتقلص حتى statusBarHeight فقط
   @override
   double get minExtent =>
-      isSearchActive ? expandedHeight + statusBarHeight : statusBarHeight;
+      (isSearchActive || selectionMode) ? expandedHeight + statusBarHeight : statusBarHeight;
 
   @override
   TickerProvider get vsync => tickerProvider;

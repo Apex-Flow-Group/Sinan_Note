@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -429,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             body: AnnotatedRegion<SystemUiOverlayStyle>(
               value: SystemUiOverlayStyle(
-                statusBarColor: Theme.of(context).colorScheme.surface,
+                statusBarColor: AppTheme.secondaryBackground(Theme.of(context).colorScheme),
                 statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
                     ? Brightness.light
                     : Brightness.dark,
@@ -492,6 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               _showFilterDialog(context);
                             },
                             isSearchActive: _isSearchActive,
+                            scrollController: _scrollController,
                           ),
                           DateBarHeader(
                             scrollController: _scrollController,
