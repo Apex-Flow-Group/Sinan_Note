@@ -537,12 +537,7 @@ class _ReminderTabView extends StatelessWidget {
     return ListView.builder(
       padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
       itemCount: notes.length,
-      itemBuilder: (context, index) => Consumer<SelectedNoteProvider>(
-        builder: (context, sel, _) => Opacity(
-          opacity: type == 'expired' ? 0.6 : 1.0,
-          child: _buildCard(context, notes[index]),
-        ),
-      ),
+      itemBuilder: (context, index) => _buildCard(context, notes[index]),
     );
   }
 
@@ -553,9 +548,7 @@ class _ReminderTabView extends StatelessWidget {
         final isSelected = selectedIds.contains(note.id);
         final selectionMode = selectedIds.isNotEmpty;
         return Consumer<SelectedNoteProvider>(
-          builder: (context, sel, _) => Opacity(
-            opacity: type == 'expired' ? 0.6 : 1.0,
-            child: SelectedNoteIndicator(
+          builder: (context, sel, _) => SelectedNoteIndicator(
               note: note,
               child: NoteCardWidget(
                 note: note,
@@ -585,9 +578,8 @@ class _ReminderTabView extends StatelessWidget {
                 },
               ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
   }
 }

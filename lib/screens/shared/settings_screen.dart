@@ -101,6 +101,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ]),
 
+              // BETA SECTION
+              _buildSection(context, 'Beta', [
+                SwitchListTile(
+                  secondary: const Icon(Icons.auto_awesome_outlined),
+                  title: Text(l10n.heroAnimation),
+                  subtitle: Text(settings.heroAnimationEnabled ? l10n.enabled : l10n.disabled),
+                  value: settings.heroAnimationEnabled,
+                  onChanged: (val) => settings.setHeroAnimationEnabled(val),
+                ),
+              ], icon: Icons.science_outlined),
+
               // EDITOR SECTION
               _buildSection(context, l10n.editor, [
                 SwitchListTile(
@@ -365,6 +376,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text(l10n.fontFamily),
         subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
         onTap: () => _showFontFamilySheet(context, settings, l10n),
+      ),
+      SwitchListTile(
+        secondary: const Icon(Icons.auto_awesome_outlined),
+        title: Row(
+          children: [
+            Text(l10n.heroAnimation),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+              ),
+              child: const Text('Beta', style: TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w600)),
+            ),
+          ],
+        ),
+        subtitle: Text(settings.heroAnimationEnabled ? l10n.enabled : l10n.disabled),
+        value: settings.heroAnimationEnabled,
+        onChanged: (val) => settings.setHeroAnimationEnabled(val),
       ),
     ]);
   }

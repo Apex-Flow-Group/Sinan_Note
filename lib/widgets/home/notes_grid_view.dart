@@ -166,7 +166,8 @@ class _NotesGridViewState extends State<NotesGridView> {
           (n) => n.id == _allFiltered[i].id,
           orElse: () => _allFiltered[i],
         );
-        if (updated.updatedAt != _allFiltered[i].updatedAt) {
+        if (updated.updatedAt != _allFiltered[i].updatedAt ||
+            updated.colorIndex != _allFiltered[i].colorIndex) {
           _allFiltered[i] = updated;
           anyUpdated = true;
         }

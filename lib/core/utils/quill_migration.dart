@@ -146,6 +146,24 @@ class QuillMigration {
     return jsonEncode(controller.document.toDelta().toJson());
   }
 
+  /// يرجع أول [maxLines] سطر من المحتوى كنص عادي
+  /// يُستخدم لبناء QuillController خفيف للانيميشن
+  static String previewContent(String content, {int maxLines = 20}) {
+    if (content.isEmpty) return '';
+    // Delta JSON — استخرج النص العادي أولاً
+    String text = content;
+    if (content.trimLeft().startsWith('[')) {
+      try {
+        final ctrl = controllerFromContent(content);
+        text = toPlainText(ctrl);
+        ctrl.dispose();
+      } catch (_) {}
+    }
+    final lines = text.split('\n');
+    if (lines.length <= maxLines) return content; // قصير — أرجع الأصل
+    return lines.take(maxLines).join('\n');
+  }
+
   /// Checks if content is already Delta JSON
   static bool isDelta(String content) {
     if (!content.trimLeft().startsWith('[')) return false;

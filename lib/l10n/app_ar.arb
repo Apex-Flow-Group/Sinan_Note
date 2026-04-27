@@ -304,6 +304,7 @@
   "swipeGestures": "السحب",
   "enabled": "مفعّل",
   "disabled": "معطّل",
+  "heroAnimation": "انيميشن الفتح",
   "appLock": "قفل التطبيق",
   "data": "البيانات",
   "localNetworkTransfer": "نقل عبر الشبكة المحلية",

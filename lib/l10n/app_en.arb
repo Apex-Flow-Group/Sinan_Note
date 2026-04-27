@@ -304,6 +304,7 @@
   "swipeGestures": "Swipe Gestures",
   "enabled": "Enabled",
   "disabled": "Disabled",
+  "heroAnimation": "Hero Animation",
   "appLock": "App Lock",
   "data": "Data",
   "localNetworkTransfer": "Local network transfer",

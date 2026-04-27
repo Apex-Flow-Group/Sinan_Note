@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
@@ -58,6 +59,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
   bool _showMarkdown = false;
+  final ScrollController _readOnlyScrollController = ScrollController();
+  bool _isQuillReady = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -72,6 +75,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   @override
   void initState() {
     super.initState();
+    debugPrint('⏱️ [Editor] initState start: ${DateTime.now().millisecondsSinceEpoch}ms');
     WidgetsBinding.instance.addObserver(this);
 
     _coordinator = EditorCoordinator(
@@ -82,7 +86,35 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     );
 
     _coordinator.initialize(context);
+    debugPrint('⏱️ [Editor] initialize() done: ${DateTime.now().millisecondsSinceEpoch}ms');
     _isReadOnly = widget.readOnly;
+
+    // للنوتات الطويلة: أعد بناء QuillController في isolate بعد أول frame
+    // هذا يمنع التجمد عند فتح نوتات > 5000 حرف
+    if (widget.mode == NoteMode.simple ||
+        widget.mode == NoteMode.reminder ||
+        widget.mode == NoteMode.rich) {
+      // أول 20 سطر جاهزة فوراً — المحرر يفتح بدون تجمد
+      _isQuillReady = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        debugPrint('⏱️ [Editor] first frame rendered: ${DateTime.now().millisecondsSinceEpoch}ms');
+        await _coordinator.initializeQuillAsync();
+        if (mounted) {
+          debugPrint('⏱️ [Editor] initializeQuillAsync done (isolate): ${DateTime.now().millisecondsSinceEpoch}ms');
+          // أعد ربط الـ listener بعد استبدال الـ controller بالكامل
+          _quillChangesSubscription?.cancel();
+          _quillChangesSubscription =
+              _coordinator.quillController!.document.changes.listen((_) {
+            _onQuillContentChanged();
+            _updateUndoRedoState();
+          });
+          // تحديث صامت — بدون loading indicator
+          setState(() {});
+        }
+      });
+    } else {
+      _isQuillReady = true;
+    }
 
     // Rebuild after init so detectedLanguage is reflected in toolbar
     if (widget.mode == NoteMode.code && widget.note != null) {
@@ -136,6 +168,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   @override
   void dispose() {
     _quillChangesSubscription?.cancel();
+    _readOnlyScrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _coordinator.dispose();
     super.dispose();
@@ -546,94 +579,145 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       return Text(content, style: TextStyle(fontSize: 16, color: textColor));
     }
 
-    // حساب التقدم
-    final total = items.length;
-    final done = items.where((e) => e.isDone).length;
-    final progress = total > 0 ? done / total : 0.0;
+    // حساب التقدم — يُعاد حسابه داخل StatefulBuilder
 
-    return ListView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: [
-        // شريط التقدم
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    void saveItems(List<ChecklistItem> updated) {
+      _coordinator.contentController.text = ChecklistFormatter.toJson(updated);
+      _saveNoteToDatabase(isManualSave: false);
+    }
+
+    return StatefulBuilder(
+      builder: (context, setLocal) {
+        final currentItems = ChecklistFormatter.parseJson(
+          _coordinator.contentController.text,
+        );
+        final currentDone = currentItems.where((e) => e.isDone).length;
+        final currentProgress =
+            currentItems.isNotEmpty ? currentDone / currentItems.length : 0.0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${(progress * 100).toInt()}%',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: textColor.withValues(alpha: 0.7),
+            // شريط التقدم
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${(currentProgress * 100).toInt()}%',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: textColor.withValues(alpha: 0.7),
+                  ),
+                ),
+                Text(
+                  '$currentDone / ${currentItems.length}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: textColor.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: currentProgress,
+                backgroundColor: textColor.withValues(alpha: 0.1),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  currentProgress == 1.0 ? Colors.green : Colors.blue,
+                ),
+                minHeight: 6,
               ),
             ),
-            Text(
-              '$done / $total',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: textColor.withValues(alpha: 0.7),
-              ),
+            const SizedBox(height: 12),
+            // القائمة القابلة للسحب
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              onReorder: (oldIndex, newIndex) {
+                if (newIndex > oldIndex) newIndex--;
+                final reordered = List<ChecklistItem>.from(currentItems);
+                final moved = reordered.removeAt(oldIndex);
+                reordered.insert(newIndex, moved);
+                setLocal(() {});
+                saveItems(reordered);
+              },
+              itemCount: currentItems.length,
+              itemBuilder: (context, index) {
+                final item = currentItems[index];
+                return Padding(
+                  key: ValueKey(item.id),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Checkbox
+                      GestureDetector(
+                        onTap: () {
+                          currentItems[index].isDone = !item.isDone;
+                          setLocal(() {});
+                          saveItems(currentItems);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.only(right: 12),
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: item.isDone
+                                ? Colors.green
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: item.isDone
+                                  ? Colors.green
+                                  : textColor.withValues(alpha: 0.5),
+                              width: 2,
+                            ),
+                          ),
+                          child: item.isDone
+                              ? const Icon(Icons.check,
+                                  size: 16, color: Colors.white)
+                              : null,
+                        ),
+                      ),
+                      // النص
+                      Expanded(
+                        child: Text(
+                          item.text.isEmpty ? '...' : item.text,
+                          style: TextStyle(
+                            fontSize: 16,
+                            height: 1.5,
+                            color: item.isDone
+                                ? textColor.withValues(alpha: 0.5)
+                                : textColor,
+                            decoration: item.isDone
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                          ),
+                        ),
+                      ),
+                      // مقبض السحب
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: Icon(
+                          Icons.drag_handle_rounded,
+                          color: textColor.withValues(alpha: 0.35),
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: textColor.withValues(alpha: 0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              progress == 1.0 ? Colors.green : Colors.blue,
-            ),
-            minHeight: 6,
-          ),
-        ),
-        const SizedBox(height: 12),
-        // العناصر
-        ...items.map((item) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(top: 2, right: 12),
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: item.isDone ? Colors.green : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: item.isDone
-                        ? Colors.green
-                        : textColor.withValues(alpha: 0.5),
-                    width: 2,
-                  ),
-                ),
-                child: item.isDone
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
-                    : null,
-              ),
-              Expanded(
-                child: Text(
-                  item.text.isEmpty ? '...' : item.text,
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.5,
-                    color: item.isDone
-                        ? textColor.withValues(alpha: 0.5)
-                        : textColor,
-                    decoration: item.isDone
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        )),
-      ],
+        );
+      },
     );
   }
 
@@ -676,18 +760,19 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
     qc.readOnly = true;
 
-    return Directionality(
+    return RepaintBoundary(
+      child: Directionality(
       textDirection: TextDirection.rtl,
       child: DefaultTextStyle.merge(
         style: TextStyle(fontFamily: fontFamily),
         child: QuillEditor(
           controller: qc,
           focusNode: _coordinator.textFieldFocusNode,
-          scrollController: ScrollController(),
+          scrollController: _readOnlyScrollController,
           config: QuillEditorConfig(
             autoFocus: false,
-            expands: false,
-            scrollable: false,
+            expands: true,
+            scrollable: true,
             padding: EdgeInsets.zero,
             showCursor: false,
             enableInteractiveSelection: false,
@@ -708,6 +793,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -865,19 +951,24 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       );
 
       // Hero يلف البطاقة فقط — لا الـ Scaffold
-      final heroTag = widget.heroTag ?? 'note_card_${note.id}';
-      final heroCard = Hero(
-        tag: heroTag,
-        transitionOnUserGestures: false,
-        flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) =>
-            FadeTransition(
-              opacity: direction == HeroFlightDirection.push
-                  ? animation
-                  : ReverseAnimation(animation),
-              child: Material(color: Colors.transparent, child: noteCard),
-            ),
-        child: noteCard,
-      );
+      final heroCard = () {
+        final heroEnabled = Provider.of<SettingsProvider>(context, listen: false).heroAnimationEnabled;
+        if (!heroEnabled) return noteCard;
+        final heroTag = widget.heroTag ?? 'note_card_${note.id}';
+        return Hero(
+          tag: heroTag,
+          transitionOnUserGestures: false,
+          createRectTween: (begin, end) => RectTween(begin: begin, end: end),
+          flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) =>
+              FadeTransition(
+                opacity: direction == HeroFlightDirection.push
+                    ? animation
+                    : ReverseAnimation(animation),
+                child: Material(color: Colors.transparent, child: noteCard),
+              ),
+          child: noteCard,
+        );
+      }();
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
@@ -902,10 +993,14 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             _coordinator.scrollProgress.value = offset / 120.0;
             return false;
           },
-          child: SingleChildScrollView(
-            controller: ScrollController(),
-            padding: EdgeInsets.symmetric(horizontal: sidePadding),
-            child: heroCard,
+          child: GestureDetector(
+            onDoubleTap: note.isTrashed
+                ? null
+                : () => setState(() => _isReadOnly = false),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: sidePadding),
+              child: heroCard,
+            ),
           ),
         ),
         bottomNavigationBar: note.isTrashed
@@ -930,6 +1025,21 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
 
     // وضع التعديل — المحرر الكامل
+    // إذا لم يكتمل بناء QuillController بعد — نعرض skeleton بسيط
+    if (!_isQuillReady && !_isReadOnly) {
+      return Scaffold(
+        backgroundColor: _coordinator.getBackgroundColor(context),
+        body: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: _coordinator.getBackgroundColor(context).computeLuminance() > 0.5
+                ? Colors.black38
+                : Colors.white38,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: _coordinator.getBackgroundColor(context),

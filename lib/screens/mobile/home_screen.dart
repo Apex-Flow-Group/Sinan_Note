@@ -298,8 +298,6 @@ class _HomeScreenState extends State<HomeScreen> {
   static const double _pullThreshold = 80.0; // المسافة المطلوبة لتفعيل الريفريش
 
   Future<void> _onRefresh() async {
-    _isPullingNotifier.value = false;
-    _pullDistanceNotifier.value = 0;
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
     // إذا مسجل دخول وإعداد السحب للمزامنة مفعّل → مزامنة أولاً ثم ريفريش
@@ -315,21 +313,10 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    // جلب البيانات من قاعدة البيانات وإعادة بناء القائمة
-    // ننتظر إذا كان هناك loading جارٍ
     while (notesProvider.isLoading) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     await notesProvider.refreshAllNotes();
-
-    // إعادة الـ scroll للأعلى بعد التحديث
-    if (_scrollController.hasClients && _scrollController.offset != 0) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
   }
 
   // تتبع السحب للأسفل عبر ScrollController
@@ -340,7 +327,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final distance = offset.abs();
       _pullDistanceNotifier.value = distance;
       if (distance >= _pullThreshold) {
-        if (!_isPullingNotifier.value) _isPullingNotifier.value = true;
+        if (!_isPullingNotifier.value) {
+          _isPullingNotifier.value = true;
+        }
       } else {
         if (_isPullingNotifier.value) _isPullingNotifier.value = false;
       }
@@ -437,26 +426,25 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Stack(
               children: [
-                NotificationListener<ScrollNotification>(
+                ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context)
+                      .copyWith(scrollbars: false),
+                  child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
+                      if (notification is UserScrollNotification &&
+                          notification.direction == ScrollDirection.idle) {
+                        _handleScrollEnd();
+                      }
+                      // تشغيل الريفريش عند الإفراج بعد سحب كافٍ
                       if (notification is ScrollEndNotification &&
                           _isPullingNotifier.value) {
                         _isPullingNotifier.value = false;
+                        _pullDistanceNotifier.value = 0;
                         _onRefresh();
                       }
                       return false;
                     },
-                    child: ScrollConfiguration(
-                      behavior: ScrollConfiguration.of(context)
-                          .copyWith(scrollbars: false),
-                      child: NotificationListener<UserScrollNotification>(
-                        onNotification: (notification) {
-                          if (notification.direction == ScrollDirection.idle) {
-                            _handleScrollEnd();
-                          }
-                          return false;
-                        },
-                        child: CustomScrollView(
+                    child: CustomScrollView(
                         controller: _scrollController,
                         cacheExtent: 1500,
                         physics: const BouncingScrollPhysics(
@@ -514,9 +502,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),        // CustomScrollView
-                      ),        // NotificationListener
-                    ),
-                  ),
+                    ),        // NotificationListener
+                  ),        // ScrollConfiguration
                 ListenableBuilder(
                   listenable: _viewTypeNotifier,
                   builder: (context, _) => HomeScrollbar(

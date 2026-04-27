@@ -897,6 +897,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disabled => 'Disabled';
 
   @override
+  String get heroAnimation => 'Hero Animation';
+
+  @override
   String get appLock => 'App Lock';
 
   @override

@@ -1,6 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class PremiumCardEffect extends StatefulWidget {
   final Widget child;
@@ -104,9 +106,12 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         child: widget.child,
       );
       if (widget.heroTag != null) {
+        final heroEnabled = Provider.of<SettingsProvider>(context, listen: false).heroAnimationEnabled;
+        if (!heroEnabled) return container;
         return Hero(
           tag: widget.heroTag!,
           transitionOnUserGestures: false,
+          createRectTween: (begin, end) => RectTween(begin: begin, end: end),
           flightShuttleBuilder: (flightContext, animation, direction, fromCtx, toCtx) {
             final curved = CurvedAnimation(
               parent: animation,

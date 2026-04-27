@@ -1832,6 +1832,12 @@ abstract class AppLocalizations {
   /// **'Disabled'**
   String get disabled;
 
+  /// No description provided for @heroAnimation.
+  ///
+  /// In en, this message translates to:
+  /// **'Hero Animation'**
+  String get heroAnimation;
+
   /// No description provided for @appLock.
   ///
   /// In en, this message translates to:

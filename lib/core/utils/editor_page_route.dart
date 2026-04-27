@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-/// انيميشن فتح العارض/المحرر: توسع + fade مع Hero animation للبطاقة
+/// انيميشن فتح العارض/المحرر: fade مع Hero animation للبطاقة
 class EditorPageRoute<T> extends PageRouteBuilder<T> {
   EditorPageRoute({required WidgetBuilder builder})
       : super(

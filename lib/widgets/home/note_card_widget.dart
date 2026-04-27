@@ -96,7 +96,12 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.note.updatedAt != widget.note.updatedAt ||
         oldWidget.note.id != widget.note.id) {
-      _cacheNoteData();
+      setState(() {
+        _cacheNoteData();
+        _cacheColors();
+      });
+    } else if (oldWidget.note.colorIndex != widget.note.colorIndex) {
+      setState(() => _cacheColors());
     }
   }
 
@@ -236,8 +241,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       }
                     } else if (widget.source == 'archive') {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final result = await Navigator.push(
-                        context,
+                      final result = await Navigator.of(context, rootNavigator: false).push(
                         EditorPageRoute(
                           builder: (context) => NoteEditorImmersive(
                             note: widget.note,
@@ -252,8 +256,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       }
                     } else {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final result = await Navigator.push(
-                        context,
+                      final tapTime = DateTime.now();
+                      debugPrint('⏱️ [Editor] tap: ${tapTime.toIso8601String()}');
+                      final result = await Navigator.of(context, rootNavigator: false).push(
                         EditorPageRoute(
                           builder: (context) => NoteEditorImmersive(
                             note: widget.note,
@@ -370,24 +375,28 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           if (widget.note.reminderDateTime != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 8),
-                              child: Container(
+                              child: Builder(builder: (context) {
+                                final isExpired = widget.note.reminderDateTime!.isBefore(DateTime.now());
+                                final badgeColor = isExpired ? Colors.red : Colors.orange;
+                                return Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(alpha: 0.2),
+                                  color: badgeColor.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 0.8),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.alarm, size: 14, color: Colors.orange),
+                                    Icon(isExpired ? Icons.alarm_off : Icons.alarm, size: 14, color: badgeColor),
                                     const SizedBox(width: 4),
                                     Flexible(
                                       child: Text(
                                         '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: titleColor,
-                                          fontWeight: FontWeight.w500,
+                                          color: badgeColor,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
@@ -395,7 +404,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                     ),
                                     if (widget.note.recurrenceRule != null) ...[
                                       const SizedBox(width: 4),
-                                      const Icon(Icons.repeat, size: 12, color: Colors.orange),
+                                      Icon(Icons.repeat, size: 12, color: badgeColor),
                                     ],
                                     const SizedBox(width: 4),
                                     InkWell(
@@ -417,11 +426,12 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                           );
                                         }
                                       },
-                                      child: Icon(Icons.close, size: 14, color: titleColor.withValues(alpha: 0.7)),
+                                      child: Icon(Icons.close, size: 14, color: badgeColor.withValues(alpha: 0.8)),
                                     ),
                                   ],
                                 ),
-                              ),
+                              );
+                              }),
                             ),
                           if (_shouldShowExt)
                             Padding(

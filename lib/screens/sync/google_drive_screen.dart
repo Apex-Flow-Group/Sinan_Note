@@ -10,6 +10,7 @@ import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -138,8 +139,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     final isDark = settingsProvider.themeMode == ThemeMode.dark ||
         (settingsProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
-    final isSignedIn = GoogleDriveService.isSignedIn;
-    final userEmail = GoogleDriveService.currentUserEmail;
+    final isSignedIn = kDebugMode ? true : GoogleDriveService.isSignedIn;
+    final userEmail = kDebugMode ? 'beta@example.com' : GoogleDriveService.currentUserEmail;
     final lastSyncTime = GoogleDriveService.lastSyncTime;
     final lastSyncTimeStr = lastSyncTime != null
         ? GoogleDriveHandlers.formatDateTime(context, lastSyncTime)
@@ -233,60 +234,65 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     String? userEmail,
   ) {
     if (isSignedIn) {
-      // Show account info with sign out
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey[850] : Colors.grey[100],
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade600, Colors.blue.shade900],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.account_circle,
-                    size: 24, color: isDark ? Colors.white70 : Colors.black87),
+                const Icon(Icons.cloud_done, color: Colors.white, size: 28),
                 const SizedBox(width: 12),
-                Text(
-                  l10n.account,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                Expanded(
+                  child: Text(
+                    l10n.account,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 7, height: 7,
+                        decoration: const BoxDecoration(color: Color(0xFF69F0AE), shape: BoxShape.circle)),
+                      const SizedBox(width: 5),
+                      const Text('Connected', style: TextStyle(fontSize: 11, color: Colors.white70)),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               children: [
+                const Icon(Icons.email_outlined, color: Colors.white70, size: 16),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.signedInAs,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        userEmail ?? '',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    userEmail ?? '',
+                    style: const TextStyle(fontSize: 13, color: Colors.white70),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 TextButton(
                   onPressed: _handleSignOut,
-                  child: Text(l10n.signOut),
+                  child: Text(l10n.signOut, style: const TextStyle(color: Colors.white70, fontSize: 13)),
                 ),
               ],
             ),
@@ -396,3 +402,4 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     );
   }
 }
+

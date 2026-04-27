@@ -204,8 +204,9 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       _listeners.remove(id);
     });
 
-    // Safe focus: Check bounds before accessing
-    if (index > 0 && _items.isNotEmpty && index - 1 < _items.length) {
+    // نقل الـ focus للعنصر السابق فقط إذا كان الكيبورد مفتوحاً
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    if (isKeyboardOpen && index > 0 && _items.isNotEmpty && index - 1 < _items.length) {
       _focusNodes[_items[index - 1].id]?.requestFocus();
     }
     _notifyParent();

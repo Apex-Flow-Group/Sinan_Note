@@ -14,6 +14,7 @@ class SettingsProvider with ChangeNotifier {
   String _swipeLeftAction = 'archive';
   bool _swipeEnabled = true;
   String _viewType = 'listCompact';
+  bool _heroAnimationEnabled = false;
   bool _isAppLockEnabled = false;
   bool _hideContentInBackground = false;
   bool _lockDelayEnabled = false;
@@ -43,6 +44,7 @@ class SettingsProvider with ChangeNotifier {
   String get swipeLeftAction => _swipeLeftAction;
   bool get swipeEnabled => _swipeEnabled;
   String get viewType => _viewType;
+  bool get heroAnimationEnabled => _heroAnimationEnabled;
   bool get isAppLockEnabled => _isAppLockEnabled;
   bool get hideContentInBackground => _hideContentInBackground;
   bool get lockDelayEnabled => _lockDelayEnabled;
@@ -117,6 +119,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('swipeEnabled', enabled);
+  }
+
+  Future<void> setHeroAnimationEnabled(bool enabled) async {
+    _heroAnimationEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('heroAnimationEnabled', enabled);
   }
 
   Future<void> setViewType(String key, String type) async {
@@ -211,6 +220,7 @@ class SettingsProvider with ChangeNotifier {
       _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
       _swipeLeftAction = prefs.getString('swipeLeft') ?? 'archive';
       _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
+      _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');
       if (homeViewType != null) {

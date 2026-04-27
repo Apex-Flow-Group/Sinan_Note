@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:apex_note/controllers/editor/editor_state_manager.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
@@ -18,13 +19,105 @@ import 'package:apex_note/services/clipboard_guard.dart';
 import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/language_detector.dart';
 import 'package:apex_note/widgets/editor/checklist_editor.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
 import 'package:provider/provider.dart';
 
+/// دالة تعمل في isolate منفصل — تبني Delta JSON من النص
+/// لا تعتمد على أي Flutter widgets أو BuildContext
+String _buildDeltaJsonInIsolate(String content) {
+  if (content.isEmpty) {
+    final delta = Delta()..insert('\n');
+    return jsonEncode(delta.toJson());
+  }
+
+  // Delta JSON موجود مسبقاً — أصلح الاتجاهات فقط
+  if (content.trimLeft().startsWith('[')) {
+    try {
+      final rawDelta = Delta.fromJson(jsonDecode(content) as List);
+      final fixed = _fixDeltaDirectionsIsolate(rawDelta);
+      return jsonEncode(fixed.toJson());
+    } catch (_) {
+      // fall through
+    }
+  }
+
+  // نص عادي → Delta
+  final delta = _buildDeltaWithDirectionsIsolate(content);
+  return jsonEncode(delta.toJson());
+}
+
+/// نسخة من _fixDeltaDirections تعمل في isolate (بدون Flutter imports)
+Delta _fixDeltaDirectionsIsolate(Delta original) {
+  final ops = original.toList();
+  final fixed = Delta();
+  String paragraphText = '';
+  String lastNonEmptyDir = '';
+
+  for (final op in ops) {
+    if (!op.isInsert) {
+      if (op.isDelete) fixed.delete(op.length!);
+      if (op.isRetain) fixed.retain(op.length!, op.attributes);
+      continue;
+    }
+    final data = op.data;
+    if (data is! String) {
+      fixed.insert(data, op.attributes);
+      continue;
+    }
+    Map<String, dynamic>? cleanAttrs;
+    if (op.attributes != null) {
+      cleanAttrs = Map<String, dynamic>.from(op.attributes!);
+      if (cleanAttrs['align'] == 'right') cleanAttrs.remove('align');
+      if (cleanAttrs.isEmpty) cleanAttrs = null;
+    }
+    final segments = data.split('\n');
+    for (int i = 0; i < segments.length; i++) {
+      final seg = segments[i];
+      if (seg.isNotEmpty) {
+        paragraphText += seg;
+        fixed.insert(seg, cleanAttrs);
+      }
+      if (i < segments.length - 1) {
+        final dirText =
+            paragraphText.isNotEmpty ? paragraphText : lastNonEmptyDir;
+        final isRtl =
+            TextDirectionUtils.getDirection(dirText) == TextDirection.rtl;
+        final attrs = Map<String, dynamic>.from(op.attributes ?? {});
+        if (isRtl) {
+          attrs.remove('direction');
+          attrs.remove('align');
+        } else {
+          attrs['direction'] = 'rtl';
+          attrs.remove('align');
+        }
+        fixed.insert('\n', attrs.isEmpty ? null : attrs);
+        if (paragraphText.isNotEmpty) lastNonEmptyDir = paragraphText;
+        paragraphText = '';
+      }
+    }
+  }
+  return fixed;
+}
+
+/// نسخة من _buildDeltaWithDirections تعمل في isolate
+Delta _buildDeltaWithDirectionsIsolate(String content) {
+  final delta = Delta();
+  final paragraphs = content.split('\n');
+  for (int i = 0; i < paragraphs.length; i++) {
+    final paragraph = paragraphs[i];
+    final isRtl =
+        TextDirectionUtils.getDirection(paragraph) == TextDirection.rtl;
+    if (paragraph.isNotEmpty) delta.insert(paragraph);
+    delta.insert('\n', isRtl ? null : {'direction': 'rtl'});
+  }
+  return delta;
+}
+
 /// Central coordinator for all editor operations
-/// Manages state, controllers, and orchestrates all editor functionality
 class EditorCoordinator {
   // Controllers
   late TextEditingController contentController;
@@ -70,12 +163,11 @@ class EditorCoordinator {
 
   /// Initialize all controllers and state
   void initialize(BuildContext context) {
+    debugPrint('⏱️ [Coordinator] initialize() start: ${DateTime.now().millisecondsSinceEpoch}ms');
     notesProviderRef = Provider.of<NotesProvider>(context, listen: false);
     stateManager.isAuthenticated = true;
 
-    if (note?.id != null) {
-      savedNoteId = note!.id;
-    }
+    if (note?.id != null) savedNoteId = note!.id;
 
     initialLockState = originallyLocked || (note?.isLocked ?? false);
 
@@ -89,15 +181,12 @@ class EditorCoordinator {
             LanguageDetector.getLanguageFromExtension(note!.noteType);
         restoredLanguage ??=
             NoteEditorUtils.mapNoteTypeToLanguage(note!.noteType);
-
-        // For generic types, detect from content once
         if (restoredLanguage == null &&
             (note!.noteType == 'code' ||
                 note!.noteType == 'pro' ||
                 note!.noteType == 'professional')) {
           restoredLanguage = LanguageDetector.detectLanguage(note!.content);
         }
-
         if (restoredLanguage != null) {
           detectedLanguage = restoredLanguage;
           isLanguageManuallySelected = true;
@@ -105,13 +194,18 @@ class EditorCoordinator {
       }
     }
 
-    String initialText = note?.content ?? '';
+    final String initialText = note?.content ?? '';
     contentController = ApexSmartController(text: initialText);
 
+    // بناء QuillController بأول 20 سطر فقط — سريع جداً للانيميشن
+    // initializeQuillAsync() سيستبدله بالمحتوى الكامل من isolate
     if (mode == NoteMode.simple ||
         mode == NoteMode.reminder ||
         mode == NoteMode.rich) {
-      quillController = QuillMigration.controllerFromContent(initialText);
+      final t0 = DateTime.now().millisecondsSinceEpoch;
+      final preview = QuillMigration.previewContent(initialText, maxLines: 20);
+      quillController = QuillMigration.controllerFromContent(preview);
+      debugPrint('⏱️ [Coordinator] QuillController built (preview 20 lines, ${preview.length} chars): ${DateTime.now().millisecondsSinceEpoch - t0}ms');
     }
 
     if (mode == NoteMode.code) {
@@ -138,9 +232,46 @@ class EditorCoordinator {
       }
     }
 
-    // التحميل انتهى — نسمح بالـ autosave بعد frame واحد
     WidgetsBinding.instance.addPostFrameCallback((_) {
       stateManager.isLoading = false;
+    });
+  }
+
+  /// بناء QuillController في isolate للنوتات الطويلة (> 5000 حرف)
+  /// يُستدعى من note_editor.dart بعد initialize() ويُعيد بناء quillController
+  /// بدون تجميد الـ UI
+  Future<void> initializeQuillAsync() async {
+    if (mode != NoteMode.simple &&
+        mode != NoteMode.reminder &&
+        mode != NoteMode.rich) {
+      return;
+    }
+
+    final String initialText = note?.content ?? '';
+    // نوتة فارغة — لا شيء لبناؤه
+    if (initialText.isEmpty) return;
+
+    debugPrint('⏱️ [Coordinator] initializeQuillAsync start (${initialText.length} chars): ${DateTime.now().millisecondsSinceEpoch}ms');
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+
+    final deltaJson = await compute(_buildDeltaJsonInIsolate, initialText);
+
+    debugPrint('⏱️ [Coordinator] isolate done: ${DateTime.now().millisecondsSinceEpoch - t0}ms');
+
+    final delta = Delta.fromJson(jsonDecode(deltaJson) as List);
+    final doc = Document.fromDelta(delta);
+    quillController?.dispose();
+    quillController = QuillController(
+      document: doc,
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    _attachQuillGuard();
+    debugPrint('⏱️ [Coordinator] initializeQuillAsync total: ${DateTime.now().millisecondsSinceEpoch - t0}ms');
+  }
+
+  void _attachQuillGuard() {
+    quillController?.document.changes.listen((_) {
+      ContentGuard.guardQuill(quillController!);
     });
   }
 
@@ -168,7 +299,6 @@ class EditorCoordinator {
     );
   }
 
-  /// يربط صمامات الأمان على جميع الـ controllers بعد التهيئة
   void _attachContentGuards() {
     contentController.addListener(() {
       ContentGuard.guardText(contentController);
@@ -181,8 +311,6 @@ class EditorCoordinator {
     });
   }
 
-  /// لصق آمن من الحافظة مع حد أقصى
-  /// يُرجع [ClipboardResult] لإظهار تحذير عند الاقتطاع
   Future<ClipboardResult> safePaste() async {
     final result = await ClipboardGuard.getSafeText();
     if (result.text == null) return result;
@@ -200,11 +328,8 @@ class EditorCoordinator {
       final sel = ctrl.selection;
       final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
       final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
-      // replaceText يحافظ على style الحالي (لون، حجم، إلخ)
       ctrl.replaceText(offset, deleteLen, result.text!, null);
-      // إزالة أي color attribute من النص الملصوق لإرثه من customStyles
       ctrl.formatText(offset, result.text!.length, const ColorAttribute(null));
-      // تطبيق اتجاه كل فقرة
       final lines = result.text!.split('\n');
       int pos = offset;
       for (final line in lines) {
@@ -238,12 +363,10 @@ class EditorCoordinator {
     return result;
   }
 
-  /// تحديث حجم الخط من الثيم — يُستدعى من didChangeDependencies
   void updateFontSize(BuildContext context) {
     fontSize = AppFontSize.noteBody;
   }
 
-  /// Dispose all resources
   void dispose() {
     autosaveTimer?.cancel();
     languageDetectionTimer?.cancel();
