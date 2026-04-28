@@ -1,11 +1,7 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
@@ -14,14 +10,10 @@ import 'package:apex_note/screens/shared/note_editor/core/editor_build_methods.d
 import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:apex_note/screens/shared/note_editor/state/editor_save_manager.dart';
-import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart';
+import 'package:apex_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:provider/provider.dart';
 
 // Import Core Components
 // Import Handlers
@@ -57,8 +49,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   AppLocalizations? _l10nRef;
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
-  bool _showMarkdown = false;
-  final ScrollController _readOnlyScrollController = ScrollController();
   bool _isQuillReady = false;
 
   @override
@@ -86,24 +76,24 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _coordinator.initialize(context);
     _coordinator.initialize(context);
     _isReadOnly = widget.readOnly;
-    // للنوتات الطويلة: أعد بناء QuillController في isolate بعد أول frame
-    // هذا يمنع التجمد عند فتح نوتات > 5000 حرف
+    // ظ„ظ„ظ†ظˆطھط§طھ ط§ظ„ط·ظˆظٹظ„ط©: ط£ط¹ط¯ ط¨ظ†ط§ط، QuillController ظپظٹ isolate ط¨ط¹ط¯ ط£ظˆظ„ frame
+    // ظ‡ط°ط§ ظٹظ…ظ†ط¹ ط§ظ„طھط¬ظ…ط¯ ط¹ظ†ط¯ ظپطھط­ ظ†ظˆطھط§طھ > 5000 ط­ط±ظپ
     if (widget.mode == NoteMode.simple ||
         widget.mode == NoteMode.reminder ||
         widget.mode == NoteMode.rich) {
-      // أول 20 سطر جاهزة فوراً — المحرر يفتح بدون تجمد
+      // ط£ظˆظ„ 20 ط³ط·ط± ط¬ط§ظ‡ط²ط© ظپظˆط±ط§ظ‹ â€” ط§ظ„ظ…ط­ط±ط± ظٹظپطھط­ ط¨ط¯ظˆظ† طھط¬ظ…ط¯
       _isQuillReady = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await _coordinator.initializeQuillAsync();
         if (mounted) {
-          // أعد ربط الـ listener بعد استبدال الـ controller بالكامل
+          // ط£ط¹ط¯ ط±ط¨ط· ط§ظ„ظ€ listener ط¨ط¹ط¯ ط§ط³طھط¨ط¯ط§ظ„ ط§ظ„ظ€ controller ط¨ط§ظ„ظƒط§ظ…ظ„
           _quillChangesSubscription?.cancel();
           _quillChangesSubscription =
               _coordinator.quillController!.document.changes.listen((_) {
             _onQuillContentChanged();
             _updateUndoRedoState();
           });
-          // تحديث صامت — بدون loading indicator
+          // طھط­ط¯ظٹط« طµط§ظ…طھ â€” ط¨ط¯ظˆظ† loading indicator
           setState(() {});
         }
       });
@@ -163,7 +153,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   @override
   void dispose() {
     _quillChangesSubscription?.cancel();
-    _readOnlyScrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _coordinator.dispose();
     super.dispose();
@@ -430,7 +419,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   // ==================== LIFECYCLE METHODS ====================
 
   void _onQuillContentChanged() {
-    // لا نحفظ أثناء تحميل النوتة — تغييرات _fixDeltaDirections ليست من المستخدم
+    // ظ„ط§ ظ†ط­ظپط¸ ط£ط«ظ†ط§ط، طھط­ظ…ظٹظ„ ط§ظ„ظ†ظˆطھط© â€” طھط؛ظٹظٹط±ط§طھ _fixDeltaDirections ظ„ظٹط³طھ ظ…ظ† ط§ظ„ظ…ط³طھط®ط¯ظ…
     if (_coordinator.stateManager.isLoading) return;
     _coordinator.stateManager.markDirty();
     final newHasContent =
@@ -518,7 +507,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   Future<void> _handleBack() async {
-    // وضع القراءة — اخرج مباشرة بدون حفظ أو رسالة
+    // ظˆط¶ط¹ ط§ظ„ظ‚ط±ط§ط،ط© â€” ط§ط®ط±ط¬ ظ…ط¨ط§ط´ط±ط© ط¨ط¯ظˆظ† ط­ظپط¸ ط£ظˆ ط±ط³ط§ظ„ط©
     if (_isReadOnly) {
       if (!mounted) return;
       if (widget.onClose != null) {
@@ -565,469 +554,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
   }
 
-  // ==================== READ-ONLY CONTENT ====================
-
-  TextDirection _detectDirection(String text) {
-    for (final char in text.runes) {
-      if ((char >= 0x0600 && char <= 0x06FF) ||
-          (char >= 0x0750 && char <= 0x077F)) {
-        return TextDirection.rtl;
-      }
-      if ((char >= 0x0041 && char <= 0x007A)) return TextDirection.ltr;
-    }
-    return TextDirection.rtl;
-  }
-
-  Widget _buildReadOnlyChecklist(Color textColor, Color noteColor) {
-    final content = _coordinator.contentController.text;
-    final items = ChecklistFormatter.parseJson(content);
-    if (items.isEmpty) {
-      return Text(content, style: TextStyle(fontSize: 16, color: textColor));
-    }
-
-    // حساب التقدم — يُعاد حسابه داخل StatefulBuilder
-
-    void saveItems(List<ChecklistItem> updated) {
-      _coordinator.contentController.text = ChecklistFormatter.toJson(updated);
-      _coordinator.stateManager.markDirty();
-      _saveNoteToDatabase(isManualSave: true);
-    }
-
-    return StatefulBuilder(
-      builder: (context, setLocal) {
-        final currentItems = ChecklistFormatter.parseJson(
-          _coordinator.contentController.text,
-        );
-        final currentDone = currentItems.where((e) => e.isDone).length;
-        final currentProgress =
-            currentItems.isNotEmpty ? currentDone / currentItems.length : 0.0;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // شريط التقدم
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${(currentProgress * 100).toInt()}%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: textColor.withValues(alpha: 0.7),
-                  ),
-                ),
-                Text(
-                  '$currentDone / ${currentItems.length}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: textColor.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: currentProgress,
-                backgroundColor: textColor.withValues(alpha: 0.1),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  currentProgress == 1.0 ? Colors.green : Colors.blue,
-                ),
-                minHeight: 6,
-              ),
-            ),
-            const SizedBox(height: 12),
-            // القائمة القابلة للسحب
-            ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: false,
-              proxyDecorator: (child, index, animation) {
-                return AnimatedBuilder(
-                  animation: animation,
-                  builder: (context, _) {
-                    final scale = 1.0 + 0.02 * animation.value;
-                    return Transform.scale(
-                      scale: scale,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: noteColor.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: child,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              onReorder: (oldIndex, newIndex) {
-                if (newIndex > oldIndex) newIndex--;
-                final reordered = List<ChecklistItem>.from(currentItems);
-                final moved = reordered.removeAt(oldIndex);
-                reordered.insert(newIndex, moved);
-                setLocal(() {});
-                saveItems(reordered);
-              },
-              itemCount: currentItems.length,
-              itemBuilder: (context, index) {
-                final item = currentItems[index];
-                return Padding(
-                  key: ValueKey(item.id),
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Checkbox
-                      GestureDetector(
-                        onTap: () {
-                          currentItems[index].isDone = !item.isDone;
-                          setLocal(() {});
-                          saveItems(currentItems);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.only(right: 12),
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: item.isDone
-                                ? Colors.green
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: item.isDone
-                                  ? Colors.green
-                                  : textColor.withValues(alpha: 0.5),
-                              width: 2,
-                            ),
-                          ),
-                          child: item.isDone
-                              ? const Icon(Icons.check,
-                                  size: 16, color: Colors.white)
-                              : null,
-                        ),
-                      ),
-                      // النص
-                      Expanded(
-                        child: Text(
-                          item.text.isEmpty ? '...' : item.text,
-                          style: TextStyle(
-                            fontSize: 16,
-                            height: 1.5,
-                            color: item.isDone
-                                ? textColor.withValues(alpha: 0.5)
-                                : textColor,
-                            decoration: item.isDone
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                          ),
-                        ),
-                      ),
-                      // مقبض السحب
-                      ReorderableDragStartListener(
-                        index: index,
-                        child: Icon(
-                          Icons.drag_handle_rounded,
-                          color: textColor.withValues(alpha: 0.35),
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildReadOnlyContent(Color textColor) {
-    final noteColor = _coordinator.getBackgroundColor(context);
-
-    // checklist
-    if (widget.mode == NoteMode.checklist) {
-      return _buildReadOnlyChecklist(textColor, noteColor);
-    }
-
-    // code — نص monospace بدون أرقام أسطر
-    if (widget.mode == NoteMode.code) {
-      final content = _coordinator.codeController?.text ??
-          _coordinator.contentController.text;
-      return Directionality(
-        textDirection: TextDirection.ltr,
-        child: SelectableText(
-          content,
-          style: TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 14,
-            height: 1.6,
-            color: textColor,
-          ),
-        ),
-      );
-    }
-
-    // Quill (simple / rich / reminder)
-    final qc = _coordinator.quillController;
-    if (qc == null) return const SizedBox.shrink();
-
-    // عرض Markdown لما يكون _showMarkdown مفعّل
-    if (_showMarkdown) {
-      final content = qc.document.toPlainText();
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final codeBg = isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.06);
-
-      // كل فقرة تأخذ اتجاهها بناءً على أول حرف — مثل المحرر
-      final paragraphs = content.split('\n');
-
-      return ListView.builder(
-        padding: EdgeInsets.zero,
-        itemCount: paragraphs.length,
-        itemBuilder: (context, i) {
-          final line = paragraphs[i];
-          if (line.trim().isEmpty) return const SizedBox(height: 8);
-
-          final dir = _detectDirection(line);
-          final isCode = line.trimLeft().startsWith('```') || line.trimLeft().startsWith('    ');
-          final isHeading = RegExp(r'^#{1,6}\s').hasMatch(line);
-          final isBullet = RegExp(r'^\s*[-*+]\s').hasMatch(line);
-          final isBlockquote = line.trimLeft().startsWith('>');
-
-          TextStyle style;
-          if (isHeading) {
-            final level = line.indexOf(' ');
-            final size = [26.0, 22.0, 18.0, 16.0, 15.0, 14.0][level.clamp(0, 5)];
-            style = TextStyle(fontSize: size, fontWeight: FontWeight.bold, color: textColor, height: 1.4);
-          } else if (isCode) {
-            style = TextStyle(fontFamily: 'monospace', fontSize: 14, color: textColor, backgroundColor: codeBg);
-          } else {
-            style = TextStyle(fontSize: 16, height: 1.6, color: textColor);
-          }
-
-          final displayText = isHeading ? line.replaceFirst(RegExp(r'^#{1,6}\s'), '') : line;
-
-          Widget child = SelectableText(
-            displayText,
-            style: style,
-            textDirection: dir,
-          );
-
-          if (isBlockquote) {
-            child = Container(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(color: textColor.withValues(alpha: 0.3), width: 4),
-                ),
-              ),
-              child: SelectableText(
-                line.replaceFirst(RegExp(r'^\s*>\s?'), ''),
-                style: TextStyle(fontSize: 16, color: textColor.withValues(alpha: 0.75), fontStyle: FontStyle.italic, height: 1.6),
-                textDirection: dir,
-              ),
-            );
-          }
-
-          if (isBullet) {
-            child = Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                textDirection: dir,
-                children: [
-                  Text('•  ', style: TextStyle(fontSize: 16, color: textColor)),
-                  Expanded(
-                    child: SelectableText(
-                      line.replaceFirst(RegExp(r'^\s*[-*+]\s'), ''),
-                      style: style,
-                      textDirection: dir,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Directionality(
-            textDirection: dir,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: child,
-            ),
-          );
-        },
-      );
-    }
-
-    final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
-    qc.readOnly = true;
-
-    return RepaintBoundary(
-      child: Directionality(
-      textDirection: TextDirection.rtl,
-      child: DefaultTextStyle.merge(
-        style: TextStyle(fontFamily: fontFamily),
-        child: QuillEditor(
-          controller: qc,
-          focusNode: _coordinator.textFieldFocusNode,
-          scrollController: _readOnlyScrollController,
-          config: QuillEditorConfig(
-            autoFocus: false,
-            expands: false,
-            scrollable: true,
-            padding: EdgeInsets.zero,
-            showCursor: false,
-            enableInteractiveSelection: false,
-            customStyles: DefaultStyles(
-              paragraph: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: 16,
-                  fontFamily: fontFamily,
-                  height: 1.6,
-                  color: textColor,
-                ),
-                HorizontalSpacing.zero,
-                VerticalSpacing.zero,
-                VerticalSpacing.zero,
-                null,
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-    );
-  }
-
-  // ==================== READ-ONLY ACTIONS ====================
-
-  Future<void> _refreshCurrentNote() async {
-    if (widget.note?.id == null) return;
-    final provider = Provider.of<NotesProvider>(context, listen: false);
-    await provider.refreshAllNotes();
-    if (!mounted) return;
-    final updated = provider.activeNotes
-        .cast<Note?>()
-        .firstWhere((n) => n?.id == widget.note!.id, orElse: () => null);
-    if (updated != null) {
-      setState(() => _coordinator.stateManager.colorIndex = updated.colorIndex);
-    }
-  }
-
-  void _onReadOnlyShare() {
-    final note = widget.note;
-    if (note == null) return;
-    final content = note.isChecklist
-        ? ChecklistFormatter.formatForSharing(note.title, note.content)
-        : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length)}';
-    CustomShareSheet.show(context, content, subject: note.title, note: note);
-  }
-
-  void _closeOrPop({bool result = true}) {
-    if (widget.onClose != null) {
-      widget.onClose!();
-    } else if (mounted && Navigator.canPop(context)) {
-      Navigator.pop(context, result);
-    }
-  }
-
-  Future<void> _onReadOnlyArchive() async {
-    final note = widget.note;
-    if (note?.id == null) return;
-    final provider = Provider.of<NotesProvider>(context, listen: false);
-    if (note!.isArchived) {
-      await provider.unarchiveNote(note.id!);
-    } else {
-      await provider.archiveNote(note.id!);
-    }
-    if (!mounted) return;
-    _closeOrPop();
-  }
-
-  Future<void> _onReadOnlyDelete() async {
-    final note = widget.note;
-    if (note?.id == null || !mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteNote),
-        content: Text(l10n.deleteConfirm),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true && mounted) {
-      final provider = Provider.of<NotesProvider>(context, listen: false);
-      await provider.trashNote(note!.id!);
-      if (!mounted) return;
-      _closeOrPop();
-    }
-  }
-
-  Future<void> _onReadOnlyRestore() async {
-    final note = widget.note;
-    if (note?.id == null) return;
-    final provider = Provider.of<NotesProvider>(context, listen: false);
-    if (note!.isTrashed) {
-      await provider.restoreNote(note.id!);
-    } else if (note.isArchived) {
-      await provider.unarchiveNote(note.id!);
-    }
-    if (!mounted) return;
-    _closeOrPop();
-  }
-
-  Future<void> _onReadOnlyPermanentDelete() async {
-    final note = widget.note;
-    if (note?.id == null || !mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.permanentDelete),
-        content: Text(l10n.confirmPermanentDelete),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true && mounted) {
-      final provider = Provider.of<NotesProvider>(context, listen: false);
-      await provider.deleteNote(note!.id!);
-      if (!mounted) return;
-      _closeOrPop();
-    }
-  }
-
   // ==================== BUILD METHOD ====================
 
   Widget _buildScaffold(
@@ -1040,126 +566,29 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     AppLocalizations l10n,
   ) {
     if (_isReadOnly && widget.note != null) {
-      final note = widget.note!;
-      final scheme = Theme.of(context).colorScheme;
-      final noteColor = _coordinator.getBackgroundColor(context);
-      final textColor = noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
-      final appBarColor = AppTheme.secondaryBackground(Theme.of(context).colorScheme);
-
-      // الأشرطة تظهر بـ fade بعد اكتمال انيميشن الـ Route
-      final routeAnimation = ModalRoute.of(context)?.animation;
-      final barsFade = routeAnimation == null
-          ? const AlwaysStoppedAnimation(1.0)
-          : CurvedAnimation(
-              parent: routeAnimation,
-              curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
-            );
-
-      // البطاقة — نفس شكل العارض القديم
-      final isChecklist = widget.mode == NoteMode.checklist;
-      final noteCard = Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(top: 8, bottom: 16),
-        padding: isChecklist
-            ? const EdgeInsets.fromLTRB(20, 20, 20, 12)
-            : const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: noteColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: _buildReadOnlyContent(textColor),
-      );
-
-      // Hero يلف البطاقة فقط — لا الـ Scaffold
-      final heroCard = () {
-        final heroEnabled = Provider.of<SettingsProvider>(context, listen: false).heroAnimationEnabled;
-        if (!heroEnabled) return noteCard;
-        final heroTag = widget.heroTag ?? 'note_card_${note.id}';
-        return Hero(
-          tag: heroTag,
-          transitionOnUserGestures: false,
-          createRectTween: (begin, end) => RectTween(begin: begin, end: end),
-          flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) =>
-              FadeTransition(
-                opacity: direction == HeroFlightDirection.push
-                    ? animation
-                    : ReverseAnimation(animation),
-                child: Material(color: Colors.transparent, child: noteCard),
-              ),
-          child: noteCard,
-        );
-      }();
-
-      return Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: AppTheme.scaffoldBackground(scheme),
-        appBar: ReadOnlyBars.buildTopBar(
-          context: context,
-          note: note,
-          barColor: appBarColor,
-          fadeAnimation: barsFade,
-          onEdit: () => setState(() => _isReadOnly = false),
-          onRefresh: _refreshCurrentNote,
-          showMarkdown: _showMarkdown,
-          onMarkdownToggle: (widget.mode == NoteMode.simple ||
-                  widget.mode == NoteMode.rich ||
-                  widget.mode == NoteMode.reminder)
-              ? () => setState(() => _showMarkdown = !_showMarkdown)
-              : null,
-        ),
-        body: NotificationListener<ScrollNotification>(
-          onNotification: (n) {
-            final offset = n.metrics.pixels.clamp(0.0, 120.0);
-            _coordinator.scrollProgress.value = offset / 120.0;
-            return false;
-          },
-          child: GestureDetector(
-            onDoubleTap: note.isTrashed
-                ? null
-                : () => setState(() => _isReadOnly = false),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: sidePadding),
-              child: heroCard,
-            ),
-          ),
-        ),
-        bottomNavigationBar: note.isTrashed
-            ? ReadOnlyBars.buildRestoreBar(
-                context: context,
-                barColor: appBarColor,
-                fadeAnimation: barsFade,
-                onRestore: _onReadOnlyRestore,
-                onPermanentDelete: _onReadOnlyPermanentDelete,
-              )
-            : ReadOnlyBars.buildActionBar(
-                context: context,
-                note: note,
-                barColor: appBarColor,
-                fadeAnimation: barsFade,
-                onShare: _onReadOnlyShare,
-                onArchive: _onReadOnlyArchive,
-                onDelete: _onReadOnlyDelete,
-                onEdit: () => setState(() => _isReadOnly = false),
-              ),
+      return NoteReadOnlyView(
+        note: widget.note!,
+        mode: widget.mode,
+        coordinator: _coordinator,
+        sidePadding: sidePadding,
+        heroTag: widget.heroTag,
+        onClose: widget.onClose,
+        onEnterEdit: () => setState(() => _isReadOnly = false),
+        onSave: ({bool isManualSave = false}) =>
+            _saveNoteToDatabase(isManualSave: isManualSave),
       );
     }
 
-    // وضع التعديل — المحرر الكامل
-    // إذا لم يكتمل بناء QuillController بعد — نعرض skeleton بسيط
+    // ظˆط¶ط¹ ط§ظ„طھط¹ط¯ظٹظ„ â€” ط§ظ„ظ…ط­ط±ط± ط§ظ„ظƒط§ظ…ظ„
+    // ط¥ط°ط§ ظ„ظ… ظٹظƒطھظ…ظ„ ط¨ظ†ط§ط، QuillController ط¨ط¹ط¯ â€” ظ†ط¹ط±ط¶ skeleton ط¨ط³ظٹط·
     if (!_isQuillReady && !_isReadOnly) {
       return Scaffold(
         backgroundColor: _coordinator.getBackgroundColor(context),
         body: Center(
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: _coordinator.getBackgroundColor(context).computeLuminance() > 0.5
+            color: _coordinator.getBackgroundColor(context).computeLuminance() >
+                    0.5
                 ? Colors.black38
                 : Colors.white38,
           ),
@@ -1249,8 +678,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   if (widget.onClose != null) {
                     widget.onClose!();
                   } else {
-                    Navigator.pop(context,
-                        _coordinator.savedNoteId != null || widget.note != null);
+                    Navigator.pop(
+                        context,
+                        _coordinator.savedNoteId != null ||
+                            widget.note != null);
                   }
                 }
               },
@@ -1266,7 +697,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               formattingController: _coordinator.formattingController,
               onReminderTap: _showReminderDialog,
               onColorPaletteTap: _showColorPalette,
-              onRebuild: () { if (mounted) setState(() {}); },
+              onRebuild: () {
+                if (mounted) setState(() {});
+              },
               onSmartSaveDialog: () async {
                 if (_coordinator.detectedLanguage != null) {
                   final ext = _coordinator.smartController
@@ -1285,10 +718,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   ctrl.text = text.replaceRange(sel.start, sel.end, symbol);
                 } else if (sel.isValid) {
                   final pos = sel.baseOffset;
-                  final newText = text.substring(0, pos) + symbol + text.substring(pos);
+                  final newText =
+                      text.substring(0, pos) + symbol + text.substring(pos);
                   ctrl.value = ctrl.value.copyWith(
                     text: newText,
-                    selection: TextSelection.collapsed(offset: pos + symbol.length ~/ 2),
+                    selection: TextSelection.collapsed(
+                        offset: pos + symbol.length ~/ 2),
                   );
                 } else {
                   ctrl.text = text + symbol;
@@ -1335,8 +770,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               ? Brightness.light
               : Brightness.dark;
           final scaffold = _buildScaffold(
-            context, statusColor, statusBrightness,
-            finalTextColor, finalHintColor, sidePadding, l10n,
+            context,
+            statusColor,
+            statusBrightness,
+            finalTextColor,
+            finalHintColor,
+            sidePadding,
+            l10n,
           );
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),

@@ -1873,4 +1873,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get driveSyncOff => 'المزامنة متوقفة';
+
+  @override
+  String get selectNoteToViewHistory => 'اختر ملاحظة لعرض سجل تعديلاتها';
+
+  @override
+  String get selectVersionToViewDiff => 'اختر نسخة لعرض التغييرات';
+
+  @override
+  String get selectNoteToViewHistoryHint => 'اختر ملاحظة من القائمة';
 }

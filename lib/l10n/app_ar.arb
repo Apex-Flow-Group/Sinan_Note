@@ -630,5 +630,8 @@
   "tourCatAssign": "أضف ملاحظة لأكثر من تصنيف في آنٍ واحد",
   "driveSignIn": "اضغط لتسجيل الدخول",
   "driveSyncOn": "المزامنة تعمل",
-  "driveSyncOff": "المزامنة متوقفة"
+  "driveSyncOff": "المزامنة متوقفة",
+  "selectNoteToViewHistory": "اختر ملاحظة لعرض سجل تعديلاتها",
+  "selectVersionToViewDiff": "اختر نسخة لعرض التغييرات",
+  "selectNoteToViewHistoryHint": "اختر ملاحظة من القائمة"
 }

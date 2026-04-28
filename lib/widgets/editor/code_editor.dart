@@ -53,32 +53,55 @@ class _CodeEditorState extends State<CodeEditor> {
   static Mode? _resolveLanguage(String? lang) {
     if (lang == null) return null;
     switch (lang.toLowerCase()) {
-      case 'python':       return python;
-      case 'javascript':   return javascript;
-      case 'typescript':   return typescript;
-      case 'java':         return java;
-      case 'dart':         return dart;
-      case 'html':         return xml;
-      case 'xml':          return xml;
-      case 'svg':          return xml;
-      case 'css':          return css;
-      case 'sql':          return sql;
+      case 'python':
+        return python;
+      case 'javascript':
+        return javascript;
+      case 'typescript':
+        return typescript;
+      case 'java':
+        return java;
+      case 'dart':
+        return dart;
+      case 'html':
+        return xml;
+      case 'xml':
+        return xml;
+      case 'svg':
+        return xml;
+      case 'css':
+        return css;
+      case 'sql':
+        return sql;
       case 'cpp':
       case 'c++':
-      case 'c':            return cpp;
-      case 'go':           return go;
-      case 'rust':         return rust;
-      case 'kotlin':       return kotlin;
-      case 'swift':        return swift;
-      case 'php':          return php;
-      case 'ruby':         return ruby;
+      case 'c':
+        return cpp;
+      case 'go':
+        return go;
+      case 'rust':
+        return rust;
+      case 'kotlin':
+        return kotlin;
+      case 'swift':
+        return swift;
+      case 'php':
+        return php;
+      case 'ruby':
+        return ruby;
       case 'bash':
-      case 'shell':        return bash;
-      case 'json':         return json;
-      case 'yaml':         return yaml;
-      case 'lua':          return lua;
-      case 'dockerfile':   return dockerfile;
-      default:             return null;
+      case 'shell':
+        return bash;
+      case 'json':
+        return json;
+      case 'yaml':
+        return yaml;
+      case 'lua':
+        return lua;
+      case 'dockerfile':
+        return dockerfile;
+      default:
+        return null;
     }
   }
 
@@ -93,18 +116,16 @@ class _CodeEditorState extends State<CodeEditor> {
 
   double _calculateGutterWidth(String text) {
     final lineCount = text.split('\n').length;
-    // نقيس أطول رقم محتمل (مثلاً "999" أو "9999")
-    final longestNumber = lineCount.toString().replaceAll(RegExp(r'.'), '9');
+    // نضيف هامش للتوقع — نحسب للرقم التالي في المرتبة (مثلاً 100 بدل 99)
+    final digits = lineCount.toString().length;
+    final nextOrderOfMagnitude = '9' * (digits + 1);
     const fontSize = AppFontSize.noteBody;
     const style = TextStyle(
       fontFamily: 'monospace',
       fontSize: fontSize,
       height: 1.5,
     );
-    final textWidth = _measureTextWidth(longestNumber, style);
-    // الـ package يطرح 32px تلقائياً (16 لـ errors + 16 لـ folding)
-    // عندما showErrors=false و showFoldingHandles=false
-    // لذا نضيف 32 + margin (8) + هامش أمان
+    final textWidth = _measureTextWidth(nextOrderOfMagnitude, style);
     const packageDeduction = 32.0;
     const safetyBuffer = 12.0;
     return textWidth + packageDeduction + safetyBuffer;

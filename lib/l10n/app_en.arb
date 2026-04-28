@@ -630,5 +630,8 @@
   "tourCatAssign": "Assign a note to multiple categories at once",
   "driveSignIn": "Tap to sign in",
   "driveSyncOn": "Sync is active",
-  "driveSyncOff": "Sync is off"
+  "driveSyncOff": "Sync is off",
+  "selectNoteToViewHistory": "Select a note to view its history",
+  "selectVersionToViewDiff": "Select a version to view changes",
+  "selectNoteToViewHistoryHint": "Choose a note from the list"
 }

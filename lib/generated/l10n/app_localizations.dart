@@ -3727,6 +3727,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync is off'**
   String get driveSyncOff;
+
+  /// No description provided for @selectNoteToViewHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a note to view its history'**
+  String get selectNoteToViewHistory;
+
+  /// No description provided for @selectVersionToViewDiff.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a version to view changes'**
+  String get selectVersionToViewDiff;
+
+  /// No description provided for @selectNoteToViewHistoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a note from the list'**
+  String get selectNoteToViewHistoryHint;
 }
 
 class _AppLocalizationsDelegate

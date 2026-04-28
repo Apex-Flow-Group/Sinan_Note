@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:io' show Platform;
+
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
@@ -69,7 +71,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isActive: currentRoute == '/' && activeExtra == null,
                     onTap: () {
                       Navigator.of(context, rootNavigator: true).pop();
-                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+                      Navigator.of(context, rootNavigator: true)
+                          .popUntil((route) => route.isFirst);
                     },
                   ),
                   // ─── زر التصنيفات ───
@@ -80,7 +83,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       curve: Curves.easeInOut,
                       child: _categoriesExpanded
                           ? Padding(
-                              padding: const EdgeInsetsDirectional.only(start: 16),
+                              padding:
+                                  const EdgeInsetsDirectional.only(start: 16),
                               child: _CategoriesPanelWrapper(
                                 mode: _catMode == _CatMode.delete
                                     ? CatPanelMode.delete
@@ -88,7 +92,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                                         ? CatPanelMode.edit
                                         : CatPanelMode.normal,
                                 isAdding: _isAdding,
-                                onAddDone: () => setState(() => _isAdding = false),
+                                onAddDone: () =>
+                                    setState(() => _isAdding = false),
                               ),
                             )
                           : const SizedBox.shrink(),
@@ -102,11 +107,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/archive',
                     onTap: () async {
-                      debugPrint('🧭 Drawer → Archive (pop + popUntil + pushNamed)');
+                      debugPrint(
+                          '🧭 Drawer → Archive (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true).pushNamed('/archive');
+                      Navigator.of(context, rootNavigator: true)
+                          .popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true)
+                          .pushNamed('/archive');
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },
@@ -119,11 +127,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/trash',
                     onTap: () async {
-                      debugPrint('🧭 Drawer → Trash (pop + popUntil + pushNamed)');
+                      debugPrint(
+                          '🧭 Drawer → Trash (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true).pushNamed('/trash');
+                      Navigator.of(context, rootNavigator: true)
+                          .popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true)
+                          .pushNamed('/trash');
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },
@@ -146,28 +157,34 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Divider(height: 1, color: scheme.outlineVariant),
                   ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: GoogleDriveService.autoSyncEnabled,
-                    builder: (context, autoSync, _) => _buildDrawerItem(
-                      context,
-                      icon: Icons.cloud_sync_rounded,
-                      title: l10n.googleDrive,
-                      subtitle: GoogleDriveAuth.isSignedIn
-                          ? (autoSync ? l10n.driveSyncOn : l10n.driveSyncOff)
-                          : l10n.driveSignIn,
-                      iconColor: const Color(0xFF4285F4),
-                      scheme: scheme,
-                      isDark: isDark,
-                      isActive: currentRoute == '/drive',
-                      onTap: () async {
-                        debugPrint('🧭 Drawer → Drive (pop + popUntil + pushNamed)');
-                        Navigator.of(context, rootNavigator: true).pop();
-                        if (!context.mounted) return;
-                        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-                        await Navigator.of(context, rootNavigator: true).pushNamed('/drive');
-                      },
+                  if (!Platform.isWindows &&
+                      !Platform.isLinux &&
+                      !Platform.isMacOS)
+                    ValueListenableBuilder<bool>(
+                      valueListenable: GoogleDriveService.autoSyncEnabled,
+                      builder: (context, autoSync, _) => _buildDrawerItem(
+                        context,
+                        icon: Icons.cloud_sync_rounded,
+                        title: l10n.googleDrive,
+                        subtitle: GoogleDriveAuth.isSignedIn
+                            ? (autoSync ? l10n.driveSyncOn : l10n.driveSyncOff)
+                            : l10n.driveSignIn,
+                        iconColor: const Color(0xFF4285F4),
+                        scheme: scheme,
+                        isDark: isDark,
+                        isActive: currentRoute == '/drive',
+                        onTap: () async {
+                          debugPrint(
+                              '🧭 Drawer → Drive (pop + popUntil + pushNamed)');
+                          Navigator.of(context, rootNavigator: true).pop();
+                          if (!context.mounted) return;
+                          Navigator.of(context, rootNavigator: true)
+                              .popUntil((route) => route.isFirst);
+                          await Navigator.of(context, rootNavigator: true)
+                              .pushNamed('/drive');
+                        },
+                      ),
                     ),
-                  ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.manage_history_rounded,
@@ -178,11 +195,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/history',
                     onTap: () async {
-                      debugPrint('🧭 Drawer → History (pop + popUntil + pushNamed)');
+                      debugPrint(
+                          '🧭 Drawer → History (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true).pushNamed('/history');
+                      Navigator.of(context, rootNavigator: true)
+                          .popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true)
+                          .pushNamed('/history');
                     },
                   ),
                   _buildDrawerItem(
@@ -193,11 +213,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/settings',
                     onTap: () async {
-                      debugPrint('🧭 Drawer → Settings (pop + popUntil + pushNamed)');
+                      debugPrint(
+                          '🧭 Drawer → Settings (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true).pushNamed('/settings');
+                      Navigator.of(context, rootNavigator: true)
+                          .popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true)
+                          .pushNamed('/settings');
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },
@@ -522,7 +545,8 @@ class _CategoriesPanelWrapper extends StatefulWidget {
   });
 
   @override
-  State<_CategoriesPanelWrapper> createState() => _CategoriesPanelWrapperState();
+  State<_CategoriesPanelWrapper> createState() =>
+      _CategoriesPanelWrapperState();
 }
 
 class _CategoriesPanelWrapperState extends State<_CategoriesPanelWrapper> {
@@ -559,7 +583,8 @@ class _CategoriesPanelWrapperState extends State<_CategoriesPanelWrapper> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CategoriesProvider>();
-    final totalItems = provider.categories.length + 2 + (widget.isAdding ? 1 : 0);
+    final totalItems =
+        provider.categories.length + 2 + (widget.isAdding ? 1 : 0);
     final needsScroll = totalItems > _maxVisible;
     const maxHeight = _tileHeight * _maxVisible;
 

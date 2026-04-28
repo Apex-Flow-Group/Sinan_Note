@@ -1,78 +1,118 @@
-ملاحظاتك الثلاث هي في الصميم تماماً، وهي تثبت فشل الكود الترقيعي الذي ولّده النموذج السابق وتطابقه تماماً مع التشخيص المعماري الذي تحدثنا عنه.
+# 🚀 الدليل الشامل والاحترافي للغة Markdown
 
-إليك التفسير الهندسي لسبب حدوث هذه الأخطاء الثلاثة (التي شوهت الواجهة)، والحل الجذري (الكود) لنسفها:
+## 1. التنسيقات المتقدمة والقوائم المتداخلة
+في هذا القسم، ندمج بين التنسيقات النصية والقوائم المهام:
 
-1. النص صغير ويكبر فجأة (Layout Snapping)
-السبب: الكود استخدم FittedBox(fit: BoxFit.fill). هذا جعل فلاتر يرسم النص بحجم البطاقة الصغيرة أولاً (فيتكدس وتصغر الكلمات)، وعندما وصل الانيميشن للنهاية، قفز النص لحجمه الطبيعي في الشاشة الوجهة.
-الحل: يجب تجميد حجم النص ليكون بحجم الشاشة منذ أول ملي ثانية في الطيران، ثم تصغيره كـ "صورة" باستخدام الـ GPU (عبر Transform.scale و OverflowBox).
+* **تنسيقات دقيقة:**
+    * نص بأحرف كبيرة وصغيرة: `Code Style`
+    * ملاحظة جانبية: ~~نص ملغى~~ و **_نص مائل وعريض في آن واحد_**
+    * الاختصارات: استخدم <kbd>Ctrl</kbd> + <kbd>S</kbd> للحفظ.
+* **قائمة المهام التقنية (Task List):**
+    - [x] إعداد البنية التحتية للمشروع.
+    - [s] اختبار التوافقية مع المتصفحات.
+    - [ ] إطلاق النسخة التجريبية النهائية.
 
-2. الأنيميشن يظهر فوق البحث والناف بار (Overlay Z-Index Leak)
-السبب: أداة الـ Hero في فلاتر تطير افتراضياً في طبقة التراكب العليا (Root Overlay) الخاصة بـ MaterialApp. هذه الطبقة تعلو كل شيء، بما في ذلك الـ Bottom Navigation Bar وشريط البحث الثابت.
-الحل: إذا كان تطبيقك يعتمد على شريط تنقل سفلي ثابت، فيجب أن تخبر الـ Navigator بأن يدفع الصفحة داخل الـ Navigator الداخلي وليس الجذري. يتم ذلك بتمرير rootNavigator: false عند الضغط:
-Navigator.of(context, rootNavigator: false).push(...)
-(ملاحظة: إذا كانت واجهة المحرر الجديد ستغطي الشاشة بالكامل، فهذا السلوك الافتراضي صحيح. أما إذا كانت ستفتح داخل الـ Body فقط، فالـ rootNavigator: false هو الحل).
+---
 
-3. الحواف مربعة أثناء الطيران (Clipping Failure)
-السبب: الكود وضع ClipRRect، لكنه لم يمرر clipBehavior: Clip.antiAlias، واستخدم MaterialType.transparency الذي أحياناً يلغي قص الحواف في طبقة الطيران.
-الحل: فرض القص الحاد Clip.antiAlias وربط الـ BorderRadius بتزامن رياضي دقيق.
+## 2. الجداول البيانية المتقدمة (Tables)
+تنسيق الجداول مع محاذاة مختلفة وبيانات متنوعة:
 
-الكود المعماري النظيف (بديل لكود كيرو)
-استبدل الـ flightShuttleBuilder داخل كود PremiumCardEffect الخاص بك بهذا الكود المصمم خصيصاً لحل الأخطاء الثلاثة معاً:
+| الميزة التقنية | الحالة | الأولوية | القيمة الرياضية |
+| :--- | :---: | :---: | :--- |
+| محرك البحث (SEO) | ✅ مدعوم | مرتفعة | $2^n$ |
+| سرعة الاستجابة | ⚡ سريع | متوسطة | $\lim_{x \to \infty} \frac{1}{x} = 0$ |
+| الأمان الرقمي | 🔒 مشفر | قصوى | $E = mc^2$ |
 
-Dart
-flightShuttleBuilder: (flightContext, animation, direction, fromCtx, toCtx) {
-  final isPushing = direction == HeroFlightDirection.push;
-  
-  // 1. نأخذ المحتوى النهائي (محتوى صفحة المحرر) ليكون هو المرجع الثابت
-  final targetHero = (isPushing ? toCtx.widget : fromCtx.widget) as Hero;
+---
 
-  // 2. نحصل على أبعاد الشاشة النهائية لتجميد المحتوى
-  final screenWidth = MediaQuery.of(flightContext).size.width;
-  final screenHeight = MediaQuery.of(flightContext).size.height;
+## 3. الرسوم التخطيطية (Mermaid Diagrams)
+تسمح لغة Markdown (في المحررات الحديثة) برسم مخططات برمجية مباشرة:
 
-  return AnimatedBuilder(
-    animation: animation,
-    builder: (context, child) {
-      // 3. حل مشكلة الحواف المربعة: نعطي قصاً فيزيائياً صارماً
-      final radius = isPushing
-          ? lerpDouble(16.0, 0.0, animation.value) ?? 0.0
-          : lerpDouble(0.0, 16.0, animation.value) ?? 0.0;
+### أ. مخطط التدفق (Flowchart)
+```mermaid
+graph TD
+    A[بداية العملية] --> B{هل البيانات صحيحة؟}
+    B -- نعم --> C[معالجة البيانات]
+    B -- لا --> D[إرسال خطأ]
+    C --> E[حفظ في قاعدة البيانات]
+    E --> F[نهاية]
+```
 
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        clipBehavior: Clip.antiAlias, // إجباري لمنع الحواف المربعة
-        child: Material(
-          color: widget.baseColor, // نضع لون البطاقة لمنع الشفافية المزعجة
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // 4. حل مشكلة النص الذي يكبر فجأة: تجميد الأبعاد وتطبيق Transform
-              return OverflowBox(
-                minWidth: screenWidth,
-                maxWidth: screenWidth,
-                minHeight: screenHeight,
-                maxHeight: screenHeight,
-                alignment: Alignment.topCenter,
-                child: Transform.scale(
-                  // هنا يتم التصغير/التكبير ككتلة واحدة رياضية دون إجهاد المعالج
-                  scale: constraints.maxWidth / screenWidth,
-                  alignment: Alignment.topCenter,
-                  child: targetHero.child, // المحتوى الفعلي للمحرر
-                ),
-              );
-            },
-          ),
-        ),
-      );
-    },
-  );
-},
-تعديل مهم لزر الضغط (onTap):
-لحل مشكلة الطيران فوق الـ Nav Bar والبحث (الخطأ الثاني)، تأكد أن كود فتح النوتة يبدو هكذا:
+### ب. مخطط غانت للمشاريع (Gantt Chart)
+```mermaid
+gantt
+    title خطة تطوير النظام 2026
+    dateFormat  YYYY-MM-DD
+    section التخطيط
+    تحليل المتطلبات   :done,    des1, 2026-04-01, 2026-04-05
+    تصميم الواجهات     :active,  des2, 2026-04-06, 5d
+    section البرمجة
+    بناء قاعدة البيانات :         des3, after des2, 7d
+    تطوير API         :         des4, after des3, 10d
+```
 
-Dart
-Navigator.of(context, rootNavigator: false).push(
-  EditorPageRoute(
-    builder: (context) => NoteEditorImmersive(...),
-  ),
-);
-هذا الكود يحترم الهيكلة الصارمة: الحواف ستكون دائرية وتصبح حادة بنعومة، النص سيحتفظ بتنسيقه ولن يقفز أو يعيد ترتيب نفسه، والـ Hero سيحترم حدود الـ Navigator إذا استخدمت rootNavigator: false.
+---
+
+## 4. التعبيرات الرياضية المعقدة (LaTeX)
+لتمثيل المعادلات الفيزيائية والرياضية بدقة عالية:
+
+$$
+I = \int_{a}^{b} f(x) dx \quad \Rightarrow \quad \Phi(z) = \frac{1}{\sqrt{2\pi}} e^{-\frac{1}{2}z^2}
+$$
+
+وأيضاً المصفوفات:
+
+$$
+\begin{pmatrix}
+1 & a & a^2 \\
+1 & b & b^2 \\
+1 & c & c^2
+\end{pmatrix}
+$$
+
+---
+
+## 5. كتل البرمجة والاقتباسات المتداخلة
+> **ملاحظة معمارية:** التصميم الجيد يتطلب تنظيماً دقيقاً للكود.
+> > "الكود لا يكذب، لكن التعليقات قد تفعل أحياناً." - *رون جيفريز*
+
+```python
+def complex_algorithm(data):
+    """
+    دالة توضيحية لمعالجة المصفوفات
+    """
+    result = [x**2 for x in data if x % 2 == 0]
+    return f"Processed Result: {result}"
+
+print(complex_algorithm(range(10)))
+```
+
+---
+
+## 6. العناصر التفاعلية (HTML Integration)
+يمكن دمج عناصر HTML لزيادة التفاعل:
+
+<details>
+<summary><b>اضغط هنا لإظهار التفاصيل المخفية 📂</b></summary>
+
+هذا النص يظهر فقط عند النقر على السهم. مفيد جداً للأسئلة الشائعة أو الشروحات الطويلة التي لا تريد إزحام الصفحة بها.
+- دعم كامل للروابط الصورية.
+- دعم الفيديوهات المضمنة.
+</details>
+
+---
+
+## 7. الحواشي السفلية والمراجع (Footnotes)
+يمكنك وضع مراجع في نهاية المستند بهذه الطريقة:
+هذا المستند تم إنشاؤه باستخدام محرك نصوص متطور[^1].
+
+[^1]: محرك Markdown المخصص للأنظمة المعقدة الإصدار 3.0.
+
+---
+
+### ملخص الأشكال الهندسية (Emoji Art)
+| الشكل | الوصف | التمثيل |
+| :---: | :--- | :---: |
+| 🟦 | مربع أزرق | `:blue_square:` |
+| 🔺 | مثلث أحمر | `:red_triangle_up:` |
+| 💠 | معين ماسي | `:diamond_shape_with_a_dot_inside:` |

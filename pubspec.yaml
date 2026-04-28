@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.0.3+3345
+version: 3.0.3+3346
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -74,6 +74,7 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -95,6 +96,18 @@ flutter:
     - family: Vazirmatn
       fonts:
         - asset: assets/fonts/Vazirmatn-Variable.ttf
+
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  android: true
+  ios: false
+  windows:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    icon_size: 48
+  linux:
+    generate: true
+    image_path: "assets/icon/icon.png"
 
 dependency_overrides:
   quill_native_bridge_windows:

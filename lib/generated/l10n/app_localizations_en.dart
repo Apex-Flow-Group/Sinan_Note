@@ -1881,4 +1881,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveSyncOff => 'Sync is off';
+
+  @override
+  String get selectNoteToViewHistory => 'Select a note to view its history';
+
+  @override
+  String get selectVersionToViewDiff => 'Select a version to view changes';
+
+  @override
+  String get selectNoteToViewHistoryHint => 'Choose a note from the list';
 }
