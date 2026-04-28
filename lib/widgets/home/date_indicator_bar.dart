@@ -628,7 +628,7 @@ class _BarWithSyncProgress extends StatelessWidget {
                 height: 40,
                 color: ready
                     ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                    : colorScheme.surface,
+                    : AppTheme.secondaryBackground(colorScheme),
                 child: Stack(
                   children: [
                     Center(

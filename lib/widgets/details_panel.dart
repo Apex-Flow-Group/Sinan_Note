@@ -1,14 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:apex_note/widgets/empty_details_view.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
@@ -35,17 +32,7 @@ class DetailsPanel extends StatefulWidget {
 
 class _DetailsPanelState extends State<DetailsPanel> {
   NotesProvider? _notesProvider;
-  bool _isEditMode = false;
-  bool _isReadOnly = false;
   int? _currentNoteId;
-
-  void setEditMode(bool value) {
-    if (mounted) {
-      setState(() {
-        _isEditMode = value;
-      });
-    }
-  }
 
   @override
   void initState() {
@@ -109,20 +96,10 @@ class _DetailsPanelState extends State<DetailsPanel> {
           return const EmptyDetailsView();
         }
 
-        // 🔥 إعادة تعيين وضع التعديل فقط عند تغيير الملاحظة
+        // 🔥 إعادة تعيين عند تغيير الملاحظة
         if (_currentNoteId != selectedNote.id) {
           _currentNoteId = selectedNote.id;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() {
-                _isEditMode = false;
-                _isReadOnly = false;
-              });
-            }
-          });
         }
-
-        final isDesktop = MediaQuery.of(context).size.width >= 600;
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 350),
@@ -146,11 +123,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
               ),
             );
           },
-          child: (isDesktop &&
-                  !widget.forceEditMode &&
-                  (!_isEditMode || _isReadOnly))
-              ? _buildReadOnlyView(context, selectedNote, selectedNoteProvider)
-              : _buildEditorView(context, selectedNote, selectedNoteProvider),
+          child: _buildEditorView(context, selectedNote, selectedNoteProvider),
         );
       },
     );
@@ -166,6 +139,8 @@ class _DetailsPanelState extends State<DetailsPanel> {
         key: ValueKey('editor_${selectedNote.id}'),
         mode: mode,
         note: selectedNote,
+        readOnly: selectedNote.id != null &&
+            (selectedNote.title.isNotEmpty || selectedNote.content.isNotEmpty),
         onClose: () {
           selectedNoteProvider.clearSelection();
         },
@@ -209,255 +184,6 @@ class _DetailsPanelState extends State<DetailsPanel> {
         ),
       );
     }
-  }
-
-  /// وضع العرض لسطح المكتب - بنفس خلفية النوت
-  Widget _buildReadOnlyView(
-      BuildContext context, Note note, SelectedNoteProvider provider) {
-    final l10n = AppLocalizations.of(context)!;
-    final brightness = Theme.of(context).brightness;
-
-    final noteColor =
-        AppColorPalette.palette[note.colorIndex].getColor(brightness);
-    final textColor =
-        noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
-
-    return Scaffold(
-      key: const ValueKey('readonly_view'),
-      backgroundColor: noteColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const SizedBox.shrink(),
-        actions: [
-          // زر الكتالوج
-          IconButton(
-            icon: Icon(
-              note.categoryIds.isEmpty
-                  ? Icons.label_outline_rounded
-                  : Icons.label_rounded,
-              color: note.categoryIds.isEmpty
-                  ? null
-                  : Theme.of(context).colorScheme.primary,
-            ),
-            tooltip: AppLocalizations.of(context)!.categories,
-            onPressed: () async {
-              final provider = Provider.of<NotesProvider>(context, listen: false);
-              final result = await CategoryPickerSheet.show(
-                context, note.categoryIds,
-                isHiddenFromHome: note.isHiddenFromHome,
-              );
-              if (result == null || !mounted) return;
-              final updated = note.copyWith(
-                categoryIds: result['categoryIds'] as List<int>,
-                isHiddenFromHome: result['isHiddenFromHome'] as bool,
-              );
-              await provider.updateNote(updated);
-            },
-          ),
-          if (!note.isTrashed) ...[
-            IconButton(
-              icon: Icon(
-                  _isReadOnly ? Icons.lock_rounded : Icons.lock_open_rounded),
-              tooltip: _isReadOnly ? l10n.edit : 'Read Only',
-              onPressed: () => setState(() => _isReadOnly = !_isReadOnly),
-            ),
-            if (!_isReadOnly)
-              IconButton(
-                icon: const Icon(Icons.edit_rounded),
-                tooltip: l10n.edit,
-                onPressed: () => setState(() => _isEditMode = true),
-              ),
-          ],
-          IconButton(
-            icon: const Icon(Icons.close_rounded),
-            tooltip: l10n.close,
-            onPressed: () => provider.clearSelection(),
-          ),
-          if (note.isArchived) ...[
-            IconButton(
-              icon: const Icon(Icons.unarchive_rounded),
-              tooltip: l10n.unarchive,
-              onPressed: () async {
-                final notesProvider =
-                    Provider.of<NotesProvider>(context, listen: false);
-                if (note.id != null) {
-                  await notesProvider.unarchiveNote(note.id!);
-                  if (!mounted) return;
-                  provider.clearSelection();
-                }
-              },
-            ),
-          ] else if (note.isTrashed) ...[
-            IconButton(
-              icon: const Icon(Icons.restore_rounded, color: Colors.green),
-              tooltip: l10n.restore,
-              onPressed: () async {
-                final notesProvider =
-                    Provider.of<NotesProvider>(context, listen: false);
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: Text(l10n.restore),
-                    content: Text('${l10n.restore}?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: Text(l10n.cancel),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style:
-                            TextButton.styleFrom(foregroundColor: Colors.green),
-                        child: Text(l10n.restore),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmed == true && note.id != null) {
-                  if (!mounted) return;
-                  final noteId = note.id!;
-                  await notesProvider.restoreNote(noteId);
-                  if (!mounted) return;
-                  provider.clearSelection();
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
-              tooltip: l10n.permanentDelete,
-              onPressed: () async {
-                final notesProvider =
-                    Provider.of<NotesProvider>(context, listen: false);
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: Text(l10n.permanentDelete),
-                    content: Text(l10n.confirmPermanentDelete),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: Text(l10n.cancel),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style:
-                            TextButton.styleFrom(foregroundColor: Colors.red),
-                        child: Text(l10n.delete),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmed == true && note.id != null) {
-                  if (!mounted) return;
-                  final noteId = note.id!;
-                  await notesProvider.deleteNote(noteId);
-                  if (!mounted) return;
-                  provider.clearSelection();
-                }
-              },
-            ),
-          ],
-        ],
-      ),
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onDoubleTap: () {
-          if (!note.isTrashed && !_isReadOnly) {
-            setState(() {
-              _isEditMode = true;
-            });
-          }
-        },
-        child: Scrollbar(
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top -
-                    kToolbarHeight,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (note.title.isNotEmpty) ...[
-                      Text(
-                        note.title,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Divider(color: textColor.withValues(alpha: 0.3)),
-                      const SizedBox(height: 16),
-                    ],
-                    note.isChecklist
-                        ? _buildChecklistView(note.content, textColor)
-                        : SelectableText(
-                            note.content.isEmpty ? l10n.noNotes : note.content,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: textColor,
-                              height: 1.5,
-                            ),
-                          ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// عرض Checklist منسق - نفس تنسيق الموبايل
-  Widget _buildChecklistView(String content, Color textColor) {
-    final items = ChecklistFormatter.parseJson(content);
-
-    if (items.isEmpty) {
-      return Text(
-        'Empty checklist',
-        style: TextStyle(color: textColor.withValues(alpha: 0.6)),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: items.map<Widget>((item) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.isDone ? '☑' : '☐', // ☑ ☐
-                style: TextStyle(
-                  fontSize: 20,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  item.text,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: textColor,
-                    decoration: item.isDone ? TextDecoration.lineThrough : null,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
   }
 
 }

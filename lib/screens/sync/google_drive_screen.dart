@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
@@ -12,7 +12,6 @@ import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -71,48 +70,6 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     if (mounted) setState(() => _isLoading = false);
   }
 
-  Future<void> _handleSignIn() async {
-    try {
-      final success = await GoogleDriveService.signIn();
-      if (mounted && success) {
-        final l10n = AppLocalizations.of(context)!;
-        if (mounted) setState(() => _isLoading = true);
-        if (!mounted) return;
-        await GoogleDriveService.mergeWithDrive(context);
-        await _saveAutoSyncSetting(true);
-        if (mounted) {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.signInSuccess), backgroundColor: Colors.green),
-          );
-        }
-      } else if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.signInFailed), backgroundColor: Colors.red),
-        );
-      }
-    } on MissingPluginException {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google Sign In is not supported on ${Platform.operatingSystem}.'),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.signInFailed}: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   Future<void> _handleSync() async {
     setState(() => _isLoading = true);
@@ -376,30 +333,125 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     String? userEmail,
     String lastSyncTimeStr,
   ) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1200),
-        child: GridView.count(
-          crossAxisCount: 2,
-          padding: const EdgeInsets.all(24),
-          mainAxisSpacing: 24,
-          crossAxisSpacing: 24,
-          childAspectRatio: 1.5,
-          children: [
-            GoogleDriveWidgets.buildAccountSection(context, l10n, isDark,
-                isSignedIn, userEmail, _handleSignOut, _handleSignIn),
-            GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark,
-                lastSyncTimeStr, isSignedIn, _handleSync),
-            GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
-                isSignedIn, _handleUpload, _handleDownload),
-            GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
-                _autoSync, isSignedIn, _saveAutoSyncSetting,
-                pullToRefresh: _pullToRefresh,
-                onPullToRefreshChanged: _savePullToRefreshSetting),
-          ],
-        ),
-      ),
+    final colorScheme = Theme.of(context).colorScheme;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    final sections = [
+      (icon: Icons.account_circle_outlined, label: isAr ? 'الحساب والمزامنة' : 'Account & Sync'),
+      (icon: Icons.settings_outlined,       label: isAr ? 'الإعدادات' : 'Settings'),
+    ];
+
+    return _GoogleDriveDesktopMasterDetails(
+      sections: sections,
+      colorScheme: colorScheme,
+      buildContent: (index) => switch (index) {
+        0 => ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              _buildAccountSectionWithNewSync(context, l10n, isDark, isSignedIn, userEmail),
+              const SizedBox(height: 24),
+              GoogleDriveWidgets.buildSyncStatusSection(
+                  context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
+              const SizedBox(height: 24),
+              GoogleDriveWidgets.buildSyncActionsSection(
+                  context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
+            ],
+          ),
+        1 => ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              GoogleDriveWidgets.buildAutoSyncSection(
+                  context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting,
+                  pullToRefresh: _pullToRefresh,
+                  onPullToRefreshChanged: _savePullToRefreshSetting),
+            ],
+          ),
+        _ => const SizedBox(),
+      },
     );
   }
 }
 
+class _GoogleDriveDesktopMasterDetails extends StatefulWidget {
+  final List<({IconData icon, String label})> sections;
+  final ColorScheme colorScheme;
+  final Widget Function(int index) buildContent;
+
+  const _GoogleDriveDesktopMasterDetails({
+    required this.sections,
+    required this.colorScheme,
+    required this.buildContent,
+  });
+
+  @override
+  State<_GoogleDriveDesktopMasterDetails> createState() =>
+      _GoogleDriveDesktopMasterDetailsState();
+}
+
+class _GoogleDriveDesktopMasterDetailsState
+    extends State<_GoogleDriveDesktopMasterDetails> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = widget.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          // Master — قائمة الأقسام (نفس شكل الإعدادات)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: 220,
+              color: AppTheme.sidebarBackground(colorScheme),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemCount: widget.sections.length,
+                itemBuilder: (_, i) {
+                  final selected = i == _selectedIndex;
+                  return ListTile(
+                    leading: Icon(
+                      widget.sections[i].icon,
+                      color: selected ? colorScheme.primary : null,
+                    ),
+                    title: Text(
+                      widget.sections[i].label,
+                      style: TextStyle(
+                        color: selected ? colorScheme.primary : null,
+                        fontWeight: selected ? FontWeight.w600 : null,
+                      ),
+                    ),
+                    selected: selected,
+                    selectedTileColor:
+                        colorScheme.primaryContainer.withValues(alpha: 0.4),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16),
+                    onTap: () => setState(() => _selectedIndex = i),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Details — محتوى القسم
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: KeyedSubtree(
+                key: ValueKey(_selectedIndex),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: widget.buildContent(_selectedIndex),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

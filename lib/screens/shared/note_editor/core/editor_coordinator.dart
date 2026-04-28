@@ -163,7 +163,6 @@ class EditorCoordinator {
 
   /// Initialize all controllers and state
   void initialize(BuildContext context) {
-    debugPrint('⏱️ [Coordinator] initialize() start: ${DateTime.now().millisecondsSinceEpoch}ms');
     notesProviderRef = Provider.of<NotesProvider>(context, listen: false);
     stateManager.isAuthenticated = true;
 
@@ -202,10 +201,8 @@ class EditorCoordinator {
     if (mode == NoteMode.simple ||
         mode == NoteMode.reminder ||
         mode == NoteMode.rich) {
-      final t0 = DateTime.now().millisecondsSinceEpoch;
       final preview = QuillMigration.previewContent(initialText, maxLines: 20);
       quillController = QuillMigration.controllerFromContent(preview);
-      debugPrint('⏱️ [Coordinator] QuillController built (preview 20 lines, ${preview.length} chars): ${DateTime.now().millisecondsSinceEpoch - t0}ms');
     }
 
     if (mode == NoteMode.code) {
@@ -251,12 +248,7 @@ class EditorCoordinator {
     // نوتة فارغة — لا شيء لبناؤه
     if (initialText.isEmpty) return;
 
-    debugPrint('⏱️ [Coordinator] initializeQuillAsync start (${initialText.length} chars): ${DateTime.now().millisecondsSinceEpoch}ms');
-    final t0 = DateTime.now().millisecondsSinceEpoch;
-
     final deltaJson = await compute(_buildDeltaJsonInIsolate, initialText);
-
-    debugPrint('⏱️ [Coordinator] isolate done: ${DateTime.now().millisecondsSinceEpoch - t0}ms');
 
     final delta = Delta.fromJson(jsonDecode(deltaJson) as List);
     final doc = Document.fromDelta(delta);
@@ -266,7 +258,6 @@ class EditorCoordinator {
       selection: const TextSelection.collapsed(offset: 0),
     );
     _attachQuillGuard();
-    debugPrint('⏱️ [Coordinator] initializeQuillAsync total: ${DateTime.now().millisecondsSinceEpoch - t0}ms');
   }
 
   void _attachQuillGuard() {

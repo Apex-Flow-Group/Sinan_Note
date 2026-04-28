@@ -9,7 +9,6 @@ import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-/// نسخة Responsive من TrashScreen تدعم نمط Master-Details
 class TrashScreenResponsive extends StatefulWidget {
   const TrashScreenResponsive({super.key});
 
@@ -18,51 +17,40 @@ class TrashScreenResponsive extends StatefulWidget {
 }
 
 class _TrashScreenResponsiveState extends State<TrashScreenResponsive> {
-  final TextEditingController _searchController = TextEditingController();
+  SelectedNoteProvider? _selectedNoteProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
+  }
 
   @override
   void initState() {
     super.initState();
-    // مسح الاختيار عند فتح الشاشة
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final selectedNoteProvider = Provider.of<SelectedNoteProvider>(
-        context,
-        listen: false,
-      );
-      selectedNoteProvider.clearSelection();
+      if (mounted) _selectedNoteProvider?.clearSelection();
     });
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _selectedNoteProvider?.clearSelection();
+    });
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveLayoutWrapper(
-      // Mobile Layout - الشاشة التقليدية
       mobileLayout: const TrashScreen(),
-      
-      // Master-Details Layout - للشاشات الكبيرة
-      masterDetailsLayout: _buildMasterDetailsLayout(context),
-    );
-  }
-
-  Widget _buildMasterDetailsLayout(BuildContext context) {
-    return Scaffold(
-      drawer: HomeDrawerWidget(
-        onBackupTap: () {},
-        onNotesChanged: () {
-          if (mounted) {
-            setState(() {});
-          }
-        },
-      ),
-      body: const MasterDetailsLayout(
-        masterPanel: TrashScreen(),
-        detailsPanel: DetailsPanel(),
+      masterDetailsLayout: Scaffold(
+        drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: () {}),
+        body: const MasterDetailsLayout(
+          masterPanel: TrashScreen(),
+          detailsPanel: DetailsPanel(),
+        ),
       ),
     );
   }

@@ -40,7 +40,7 @@ class SideNavRail extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            width: 80,
+            width: 100,
             decoration: BoxDecoration(
               color: Theme.of(context)
                   .colorScheme.surface

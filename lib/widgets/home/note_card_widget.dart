@@ -241,7 +241,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       }
                     } else if (widget.source == 'archive') {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final result = await Navigator.of(context, rootNavigator: false).push(
+                      final result = await Navigator.push(
+                        context,
                         EditorPageRoute(
                           builder: (context) => NoteEditorImmersive(
                             note: widget.note,
@@ -258,7 +259,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
                       final tapTime = DateTime.now();
                       debugPrint('⏱️ [Editor] tap: ${tapTime.toIso8601String()}');
-                      final result = await Navigator.of(context, rootNavigator: false).push(
+                      final result = await Navigator.push(
+                        context,
                         EditorPageRoute(
                           builder: (context) => NoteEditorImmersive(
                             note: widget.note,
@@ -293,6 +295,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Row(
                             children: [
@@ -474,12 +477,13 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                 ],
                               ),
                             ),
-                          if (widget.note.isHiddenFromHome ||
+                          if (widget.viewType != ViewType.listCompact &&
+                              (widget.note.isHiddenFromHome ||
                               (widget.isFiltering &&
                                   widget.note.isProfessional &&
                                   context
                                       .read<CategoriesProvider>()
-                                      .hideProFromHome))
+                                      .hideProFromHome)))
                             HiddenCategoriesChip(
                               note: widget.note,
                               titleColor: titleColor,

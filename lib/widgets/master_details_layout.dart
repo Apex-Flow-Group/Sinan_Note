@@ -58,8 +58,8 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final masterPanelColor = isDark
-        ? Theme.of(context).colorScheme.surface
-        : Theme.of(context).colorScheme.surfaceContainerHighest;
+        ? Theme.of(context).colorScheme.surfaceContainerLow
+        : Theme.of(context).colorScheme.surfaceContainerLowest;
     final detailsPanelColor = isDark
         ? Theme.of(context).colorScheme.surfaceContainerLow
         : Theme.of(context).colorScheme.surface;

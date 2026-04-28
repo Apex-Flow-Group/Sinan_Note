@@ -59,6 +59,7 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
   void _onSelectionChanged() {
     // لا شيء - الشريط دائماً مثبت
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -96,9 +97,7 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                             final noteId = selectedIds.first;
                             final note = provider.notes
                                 .firstWhere((n) => n.id == noteId);
-
                             widget.selectedNoteIdsNotifier.value = {};
-
                             NoteConversionSheet.show(context, note, () {});
                           }
                         : null,
@@ -108,7 +107,6 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                       final ids = List<int>.from(selectedIds);
                       final count = ids.length;
                       final notesToRestore = <Note>[];
-
                       for (final id in ids) {
                         final note =
                             provider.notes.firstWhere((n) => n.id == id);
@@ -133,9 +131,7 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                         );
                         await provider.updateNote(updatedNote);
                       }
-
                       widget.selectedNoteIdsNotifier.value = {};
-
                       if (context.mounted) {
                         UnifiedNotificationService().showWithUndo(
                           context: context,
@@ -157,10 +153,8 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                           Provider.of<NotesProvider>(context, listen: false);
                       final ids = List<int>.from(selectedIds);
                       final count = ids.length;
-
                       await provider.archiveNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
-
                       if (context.mounted) {
                         UnifiedNotificationService().showWithUndo(
                           context: context,
@@ -180,10 +174,8 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                           Provider.of<NotesProvider>(context, listen: false);
                       final ids = List<int>.from(selectedIds);
                       final count = ids.length;
-
                       await provider.trashNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
-
                       if (context.mounted) {
                         UnifiedNotificationService().showWithUndo(
                           context: context,
@@ -205,9 +197,7 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                             final noteId = selectedIds.first;
                             final note = provider.notes
                                 .firstWhere((n) => n.id == noteId);
-
                             widget.selectedNoteIdsNotifier.value = {};
-
                             final plainContent = NoteCardUtils.fixNoteContent(
                                 note.content,
                                 maxChars: note.content.length);

@@ -341,10 +341,47 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   ),
             title: hasSelection
                 ? Text('${selectedIds.length} ${l10n.selected}')
-                : _SearchField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    hint: l10n.searchNotes,
+                : Consumer<CategoriesProvider>(
+                    builder: (context, cats, _) {
+                      final selectedId = cats.selectedCategoryId;
+                      if (selectedId == null) {
+                        return _SearchField(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          hint: l10n.searchNotes,
+                        );
+                      }
+                      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                      final catName = selectedId == kProCategoryId
+                          ? (isAr ? 'المحترف' : 'Professional')
+                          : (cats.categories
+                                  .where((c) => c.id == selectedId)
+                                  .firstOrNull
+                                  ?.name ??
+                              '');
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: _SearchField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              hint: l10n.searchNotes,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Chip(
+                            avatar: const Icon(Icons.label_rounded, size: 16),
+                            label: Text(catName,
+                                style: const TextStyle(fontSize: 13)),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: () => cats.selectCategory(null),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ],
+                      );
+                    },
                   ),
             actions: hasSelection
                 ? _buildSelectionActions(context, selectedIds)

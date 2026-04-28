@@ -26,7 +26,8 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final t = (isSearchActive || selectionMode)
+    final locked = isSearchActive || selectionMode;
+    final t = locked
         ? 1.0
         : (1.0 - (shrinkOffset / expandedHeight)).clamp(0.0, 1.0);
 

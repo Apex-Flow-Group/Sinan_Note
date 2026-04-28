@@ -1,9 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
+
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/screens/shared/note_view/note_view_helpers.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
@@ -11,6 +12,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 /// أشرطة وضع القراءة — نفس شكل العارض القديم
+Map<String, int> _parseChecklistStats(String content) {
+  try {
+    final decoded = jsonDecode(content);
+    if (decoded is Map && decoded['items'] is List) {
+      final items = decoded['items'] as List;
+      final total = items.length;
+      final completed = items.where((i) => i['isDone'] == true).length;
+      return {'total': total, 'completed': completed};
+    }
+  } catch (_) {}
+  return {'total': 0, 'completed': 0};
+}
+
 class ReadOnlyBars {
   // ─── AppBar العلوي ───────────────────────────────────────────────
   static PreferredSizeWidget buildTopBar({
@@ -275,7 +289,7 @@ class _WidgetPinButton extends StatelessWidget {
             note.isChecklist || note.noteType == 'checklist';
 
         if (isChecklistNote) {
-          final stats = NoteViewHelpers.parseChecklistStats(note.content);
+          final stats = _parseChecklistStats(note.content);
           await WidgetService().updateChecklistWidget(
             note.id!,
             note.title.isEmpty ? 'Checklist' : note.title,

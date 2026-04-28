@@ -15,7 +15,6 @@ import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dar
 import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:apex_note/screens/shared/note_editor/state/editor_save_manager.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart';
-import 'package:apex_note/screens/shared/note_view/note_view_widgets.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
@@ -75,7 +74,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   @override
   void initState() {
     super.initState();
-    debugPrint('⏱️ [Editor] initState start: ${DateTime.now().millisecondsSinceEpoch}ms');
     WidgetsBinding.instance.addObserver(this);
 
     _coordinator = EditorCoordinator(
@@ -86,9 +84,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     );
 
     _coordinator.initialize(context);
-    debugPrint('⏱️ [Editor] initialize() done: ${DateTime.now().millisecondsSinceEpoch}ms');
+    _coordinator.initialize(context);
     _isReadOnly = widget.readOnly;
-
     // للنوتات الطويلة: أعد بناء QuillController في isolate بعد أول frame
     // هذا يمنع التجمد عند فتح نوتات > 5000 حرف
     if (widget.mode == NoteMode.simple ||
@@ -97,10 +94,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       // أول 20 سطر جاهزة فوراً — المحرر يفتح بدون تجمد
       _isQuillReady = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        debugPrint('⏱️ [Editor] first frame rendered: ${DateTime.now().millisecondsSinceEpoch}ms');
         await _coordinator.initializeQuillAsync();
         if (mounted) {
-          debugPrint('⏱️ [Editor] initializeQuillAsync done (isolate): ${DateTime.now().millisecondsSinceEpoch}ms');
           // أعد ربط الـ listener بعد استبدال الـ controller بالكامل
           _quillChangesSubscription?.cancel();
           _quillChangesSubscription =
@@ -476,7 +471,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _coordinator.autosaveTimer?.cancel();
     _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted &&
-          _coordinator.codeController!.text.trim().isNotEmpty &&
+          (_coordinator.codeController?.text.trim().isNotEmpty ?? false) &&
           !_coordinator.stateManager.isSaving) {
         _saveNoteToDatabase();
       }
@@ -572,6 +567,17 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   // ==================== READ-ONLY CONTENT ====================
 
+  TextDirection _detectDirection(String text) {
+    for (final char in text.runes) {
+      if ((char >= 0x0600 && char <= 0x06FF) ||
+          (char >= 0x0750 && char <= 0x077F)) {
+        return TextDirection.rtl;
+      }
+      if ((char >= 0x0041 && char <= 0x007A)) return TextDirection.ltr;
+    }
+    return TextDirection.rtl;
+  }
+
   Widget _buildReadOnlyChecklist(Color textColor, Color noteColor) {
     final content = _coordinator.contentController.text;
     final items = ChecklistFormatter.parseJson(content);
@@ -583,7 +589,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     void saveItems(List<ChecklistItem> updated) {
       _coordinator.contentController.text = ChecklistFormatter.toJson(updated);
-      _saveNoteToDatabase(isManualSave: false);
+      _coordinator.stateManager.markDirty();
+      _saveNoteToDatabase(isManualSave: true);
     }
 
     return StatefulBuilder(
@@ -638,6 +645,34 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               buildDefaultDragHandles: false,
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, _) {
+                    final scale = 1.0 + 0.02 * animation.value;
+                    return Transform.scale(
+                      scale: scale,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: noteColor.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: child,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
               onReorder: (oldIndex, newIndex) {
                 if (newIndex > oldIndex) newIndex--;
                 final reordered = List<ChecklistItem>.from(currentItems);
@@ -754,7 +789,91 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // عرض Markdown لما يكون _showMarkdown مفعّل
     if (_showMarkdown) {
       final content = qc.document.toPlainText();
-      return NoteViewWidgets.buildDirectionalMarkdown(content, textColor);
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final codeBg = isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.06);
+
+      // كل فقرة تأخذ اتجاهها بناءً على أول حرف — مثل المحرر
+      final paragraphs = content.split('\n');
+
+      return ListView.builder(
+        padding: EdgeInsets.zero,
+        itemCount: paragraphs.length,
+        itemBuilder: (context, i) {
+          final line = paragraphs[i];
+          if (line.trim().isEmpty) return const SizedBox(height: 8);
+
+          final dir = _detectDirection(line);
+          final isCode = line.trimLeft().startsWith('```') || line.trimLeft().startsWith('    ');
+          final isHeading = RegExp(r'^#{1,6}\s').hasMatch(line);
+          final isBullet = RegExp(r'^\s*[-*+]\s').hasMatch(line);
+          final isBlockquote = line.trimLeft().startsWith('>');
+
+          TextStyle style;
+          if (isHeading) {
+            final level = line.indexOf(' ');
+            final size = [26.0, 22.0, 18.0, 16.0, 15.0, 14.0][level.clamp(0, 5)];
+            style = TextStyle(fontSize: size, fontWeight: FontWeight.bold, color: textColor, height: 1.4);
+          } else if (isCode) {
+            style = TextStyle(fontFamily: 'monospace', fontSize: 14, color: textColor, backgroundColor: codeBg);
+          } else {
+            style = TextStyle(fontSize: 16, height: 1.6, color: textColor);
+          }
+
+          final displayText = isHeading ? line.replaceFirst(RegExp(r'^#{1,6}\s'), '') : line;
+
+          Widget child = SelectableText(
+            displayText,
+            style: style,
+            textDirection: dir,
+          );
+
+          if (isBlockquote) {
+            child = Container(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: textColor.withValues(alpha: 0.3), width: 4),
+                ),
+              ),
+              child: SelectableText(
+                line.replaceFirst(RegExp(r'^\s*>\s?'), ''),
+                style: TextStyle(fontSize: 16, color: textColor.withValues(alpha: 0.75), fontStyle: FontStyle.italic, height: 1.6),
+                textDirection: dir,
+              ),
+            );
+          }
+
+          if (isBullet) {
+            child = Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                textDirection: dir,
+                children: [
+                  Text('•  ', style: TextStyle(fontSize: 16, color: textColor)),
+                  Expanded(
+                    child: SelectableText(
+                      line.replaceFirst(RegExp(r'^\s*[-*+]\s'), ''),
+                      style: style,
+                      textDirection: dir,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Directionality(
+            textDirection: dir,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: child,
+            ),
+          );
+        },
+      );
     }
 
     final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
@@ -771,7 +890,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           scrollController: _readOnlyScrollController,
           config: QuillEditorConfig(
             autoFocus: false,
-            expands: true,
+            expands: false,
             scrollable: true,
             padding: EdgeInsets.zero,
             showCursor: false,
@@ -821,6 +940,14 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     CustomShareSheet.show(context, content, subject: note.title, note: note);
   }
 
+  void _closeOrPop({bool result = true}) {
+    if (widget.onClose != null) {
+      widget.onClose!();
+    } else if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context, result);
+    }
+  }
+
   Future<void> _onReadOnlyArchive() async {
     final note = widget.note;
     if (note?.id == null) return;
@@ -831,7 +958,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       await provider.archiveNote(note.id!);
     }
     if (!mounted) return;
-    Navigator.pop(context, true);
+    _closeOrPop();
   }
 
   Future<void> _onReadOnlyDelete() async {
@@ -857,7 +984,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       final provider = Provider.of<NotesProvider>(context, listen: false);
       await provider.trashNote(note!.id!);
       if (!mounted) return;
-      Navigator.pop(context, true);
+      _closeOrPop();
     }
   }
 
@@ -871,7 +998,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       await provider.unarchiveNote(note.id!);
     }
     if (!mounted) return;
-    Navigator.pop(context, true);
+    _closeOrPop();
   }
 
   Future<void> _onReadOnlyPermanentDelete() async {
@@ -897,7 +1024,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       final provider = Provider.of<NotesProvider>(context, listen: false);
       await provider.deleteNote(note!.id!);
       if (!mounted) return;
-      Navigator.pop(context, true);
+      _closeOrPop();
     }
   }
 

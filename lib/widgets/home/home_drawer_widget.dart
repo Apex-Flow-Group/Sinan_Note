@@ -68,8 +68,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/' && activeExtra == null,
                     onTap: () {
-                      Navigator.pop(context);
-                      Navigator.popUntil(context, (route) => route.isFirst);
+                      Navigator.of(context, rootNavigator: true).pop();
+                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
                     },
                   ),
                   // ─── زر التصنيفات ───
@@ -102,12 +102,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/archive',
                     onTap: () async {
-                      debugPrint(
-                          '🧭 Drawer → Archive (pop + popUntil + pushNamed)');
-                      Navigator.pop(context);
+                      debugPrint('🧭 Drawer → Archive (pop + popUntil + pushNamed)');
+                      Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      await Navigator.pushNamed(context, '/archive');
+                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true).pushNamed('/archive');
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },
@@ -120,12 +119,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/trash',
                     onTap: () async {
-                      debugPrint(
-                          '🧭 Drawer → Trash (pop + popUntil + pushNamed)');
-                      Navigator.pop(context);
+                      debugPrint('🧭 Drawer → Trash (pop + popUntil + pushNamed)');
+                      Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      await Navigator.pushNamed(context, '/trash');
+                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true).pushNamed('/trash');
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },
@@ -162,12 +160,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       isDark: isDark,
                       isActive: currentRoute == '/drive',
                       onTap: () async {
-                        debugPrint(
-                            '🧭 Drawer → Drive (pop + popUntil + pushNamed)');
-                        Navigator.pop(context);
+                        debugPrint('🧭 Drawer → Drive (pop + popUntil + pushNamed)');
+                        Navigator.of(context, rootNavigator: true).pop();
                         if (!context.mounted) return;
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                        await Navigator.pushNamed(context, '/drive');
+                        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+                        await Navigator.of(context, rootNavigator: true).pushNamed('/drive');
                       },
                     ),
                   ),
@@ -181,12 +178,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/history',
                     onTap: () async {
-                      debugPrint(
-                          '🧭 Drawer → History (pop + popUntil + pushNamed)');
-                      Navigator.pop(context);
+                      debugPrint('🧭 Drawer → History (pop + popUntil + pushNamed)');
+                      Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      await Navigator.pushNamed(context, '/history');
+                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true).pushNamed('/history');
                     },
                   ),
                   _buildDrawerItem(
@@ -197,12 +193,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/settings',
                     onTap: () async {
-                      debugPrint(
-                          '🧭 Drawer → Settings (pop + popUntil + pushNamed)');
-                      Navigator.pop(context);
+                      debugPrint('🧭 Drawer → Settings (pop + popUntil + pushNamed)');
+                      Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      await Navigator.pushNamed(context, '/settings');
+                      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+                      await Navigator.of(context, rootNavigator: true).pushNamed('/settings');
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },

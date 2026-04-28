@@ -68,7 +68,6 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
       (icon: Icons.edit_note, label: l10n.editor),
       (icon: Icons.lock_outline, label: l10n.security),
       (icon: Icons.storage_outlined, label: l10n.data),
-      (icon: Icons.science_outlined, label: 'Beta'),
       (icon: Icons.info_outline, label: l10n.about),
     ];
 
@@ -167,8 +166,7 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
       1 => _buildEditor(context, l10n, settings, currentLang),
       2 => _buildSecurity(context, l10n, settings),
       3 => _buildData(context, l10n, currentLang),
-      4 => _buildBeta(context, l10n, settings),
-      5 => _buildAbout(context, l10n, currentLang),
+      4 => _buildAbout(context, l10n, currentLang),
       _ => const SizedBox(),
     };
   }
@@ -212,17 +210,6 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
         ),
       ]);
 
-  Widget _buildBeta(BuildContext context, AppLocalizations l10n,
-          SettingsProvider settings) =>
-      _sectionList([
-        SwitchListTile(
-          secondary: const Icon(Icons.auto_awesome_outlined),
-          title: Text(l10n.heroAnimation),
-          subtitle: Text(settings.heroAnimationEnabled ? l10n.enabled : l10n.disabled),
-          value: settings.heroAnimationEnabled,
-          onChanged: settings.setHeroAnimationEnabled,
-        ),
-      ]);
 
   Widget _buildEditor(BuildContext context, AppLocalizations l10n,
           SettingsProvider settings, String currentLang) =>

@@ -86,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     });
-    _scrollController.addListener(_onScrollSnap);
     _scrollController.addListener(_onScrollChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -295,15 +294,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final ValueNotifier<bool> _isPullingNotifier = ValueNotifier(false);
   final ValueNotifier<double> _pullDistanceNotifier = ValueNotifier(0.0);
-  static const double _pullThreshold = 80.0; // المسافة المطلوبة لتفعيل الريفريش
+  static const double _pullThreshold = 80.0;
 
   Future<void> _onRefresh() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-
-    // إذا مسجل دخول وإعداد السحب للمزامنة مفعّل → مزامنة أولاً ثم ريفريش
     final pullToSyncEnabled =
         (await SharedPreferences.getInstance()).getBool('google_drive_pull_to_refresh') ?? true;
-
     if (GoogleDriveService.isSignedIn &&
         GoogleDriveService.autoSyncEnabled.value &&
         pullToSyncEnabled) {
@@ -312,14 +308,12 @@ class _HomeScreenState extends State<HomeScreen> {
         await Future.delayed(const Duration(milliseconds: 200));
       }
     }
-
     while (notesProvider.isLoading) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     await notesProvider.refreshAllNotes();
   }
 
-  // تتبع السحب للأسفل عبر ScrollController
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
     final offset = _scrollController.offset;
@@ -327,9 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final distance = offset.abs();
       _pullDistanceNotifier.value = distance;
       if (distance >= _pullThreshold) {
-        if (!_isPullingNotifier.value) {
-          _isPullingNotifier.value = true;
-        }
+        if (!_isPullingNotifier.value) _isPullingNotifier.value = true;
       } else {
         if (_isPullingNotifier.value) _isPullingNotifier.value = false;
       }
@@ -339,35 +331,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  static const _headerHeight = 68.0;
-  bool _isScrollSnapping = false;
-
-  void _onScrollSnap() {
-    // لا شيء — الـ snap يتم عبر NotificationListener
-  }
-
-  void _handleScrollEnd() {
-    if (_isSearchActive) return;
-    if (_isScrollSnapping) return;
-    if (!_scrollController.hasClients) return;
-
-    final offset = _scrollController.offset;
-    if (offset > 0 && offset < _headerHeight) {
-      _isScrollSnapping = true;
-      final snapTo = offset < _headerHeight / 2 ? 0.0 : _headerHeight;
-      _scrollController
-          .animateTo(
-            snapTo,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          )
-          .then((_) => _isScrollSnapping = false);
-    }
-  }
-
   @override
   void dispose() {
-    _scrollController.removeListener(_onScrollSnap);
     _scrollController.removeListener(_onScrollChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -425,26 +390,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     : Brightness.dark,
               ),
               child: Stack(
-              children: [
-                ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context)
-                      .copyWith(scrollbars: false),
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification is UserScrollNotification &&
-                          notification.direction == ScrollDirection.idle) {
-                        _handleScrollEnd();
-                      }
-                      // تشغيل الريفريش عند الإفراج بعد سحب كافٍ
-                      if (notification is ScrollEndNotification &&
-                          _isPullingNotifier.value) {
-                        _isPullingNotifier.value = false;
-                        _pullDistanceNotifier.value = 0;
-                        _onRefresh();
-                      }
-                      return false;
-                    },
-                    child: CustomScrollView(
+                children: [
+                  ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context)
+                        .copyWith(scrollbars: false),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (notification is UserScrollNotification &&
+                            notification.direction == ScrollDirection.idle) {
+                          _handleScrollEnd();
+                        }
+                        if (notification is ScrollEndNotification &&
+                            _isPullingNotifier.value) {
+                          _isPullingNotifier.value = false;
+                          _pullDistanceNotifier.value = 0;
+                          _onRefresh();
+                        }
+                        return false;
+                      },
+                      child: CustomScrollView(
                         controller: _scrollController,
                         cacheExtent: 1500,
                         physics: const BouncingScrollPhysics(
@@ -501,26 +465,47 @@ class _HomeScreenState extends State<HomeScreen> {
                             activeFilterNotifier: _activeFilterNotifier,
                           ),
                         ],
-                      ),        // CustomScrollView
-                    ),        // NotificationListener
-                  ),        // ScrollConfiguration
-                ListenableBuilder(
-                  listenable: _viewTypeNotifier,
-                  builder: (context, _) => HomeScrollbar(
-                    scrollController: _scrollController,
-                    notesNotifier: _filteredNotesNotifier,
-                    interactive: _viewTypeNotifier.value == 'listCompact',
-                    totalCountNotifier: _totalCountNotifier,
-                    viewTypeNotifier: _viewTypeNotifier,
+                      ),
+                    ),
                   ),
-                ),
-                NoteLocatorButton(scrollController: _scrollController),
-              ],
-            ),
+                  ListenableBuilder(
+                    listenable: _viewTypeNotifier,
+                    builder: (context, _) => HomeScrollbar(
+                      scrollController: _scrollController,
+                      notesNotifier: _filteredNotesNotifier,
+                      interactive: _viewTypeNotifier.value == 'listCompact',
+                      totalCountNotifier: _totalCountNotifier,
+                      viewTypeNotifier: _viewTypeNotifier,
+                    ),
+                  ),
+                  NoteLocatorButton(scrollController: _scrollController),
+                ],
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  static const _headerHeight = 68.0;
+  bool _isScrollSnapping = false;
+
+  void _handleScrollEnd() {
+    if (_isSearchActive) return;
+    if (_isScrollSnapping) return;
+    if (!_scrollController.hasClients) return;
+    final offset = _scrollController.offset;
+    if (offset > 0 && offset < _headerHeight) {
+      _isScrollSnapping = true;
+      final snapTo = offset < _headerHeight / 2 ? 0.0 : _headerHeight;
+      _scrollController
+          .animateTo(
+            snapTo,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          )
+          .then((_) => _isScrollSnapping = false);
+    }
   }
 }

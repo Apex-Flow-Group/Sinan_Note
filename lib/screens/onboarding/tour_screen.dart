@@ -211,115 +211,104 @@ class _TourScreenState extends State<TourScreen> {
         : settings.languageCode;
     final isArabic = currentLang == 'ar';
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.rocket_launch,
-                          size: 80, color: Color(0xFFFFD700)),
-                      const SizedBox(height: 32),
-                      Text(
-                        l10n.startNow,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 48),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Checkbox(
-                            value: _isAgreed,
-                            onChanged: (val) =>
-                                setState(() => _isAgreed = val ?? false),
-                            activeColor: const Color(0xFFFFD700),
-                          ),
-                          Flexible(
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: isArabic
-                                        ? 'أوافق على '
-                                        : 'I agree to the ',
-                                    style:
-                                        const TextStyle(color: Colors.white70),
-                                  ),
-                                  WidgetSpan(
-                                    child: GestureDetector(
-                                      onTap: _openTerms,
-                                      child: Text(
-                                        isArabic
-                                            ? 'شروط الخدمة'
-                                            : 'Terms of Service',
-                                        style: const TextStyle(
-                                          color: Colors.blue,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed: _isAgreed ? _navigateToHome : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _isAgreed ? const Color(0xFFFFD700) : Colors.grey,
-                          foregroundColor: const Color(0xFF0A1929),
-                          minimumSize: const Size(double.infinity, 52),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(26)),
-                        ),
-                        child: Text(
-                          l10n.startNow,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Image.asset(
+                  'assets/images/app_icon.png',
+                  width: 100,
+                  height: 100,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.rocket_launch,
+                    size: 80,
+                    color: Color(0xFFFFD700),
                   ),
                 ),
               ),
-            ),
+              const SizedBox(height: 32),
+              Text(
+                l10n.startNow,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+              GestureDetector(
+                onTap: () => setState(() => _isAgreed = !_isAgreed),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isAgreed ? Icons.check_box : Icons.check_box_outline_blank,
+                      color: const Color(0xFFFFD700),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: isArabic ? 'أوافق على ' : 'I agree to the ',
+                              style: const TextStyle(color: Colors.white70, fontSize: 15),
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: _openTerms,
+                                child: Text(
+                                  isArabic ? 'شروط الخدمة' : 'Terms of Service',
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    decoration: TextDecoration.underline,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   Widget _buildBottomBar(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final systemLocale =
+        View.of(context).platformDispatcher.locale.languageCode;
+    final currentLang = settings.languageCode == 'system'
+        ? systemLocale
+        : settings.languageCode;
+    final isArabic = currentLang == 'ar';
     final isLastPage = _currentPage == _totalPages - 1;
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Dots
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
@@ -338,7 +327,36 @@ class _TourScreenState extends State<TourScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (!isLastPage) ...[
+              if (isLastPage) ...[
+                // زر ابدأ الآن
+                ElevatedButton(
+                  onPressed: _isAgreed ? _navigateToHome : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD700),
+                    disabledBackgroundColor: const Color(0xFF444444),
+                    foregroundColor: const Color(0xFF0A1929),
+                    disabledForegroundColor: Colors.grey[600],
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(26)),
+                  ),
+                  child: Text(
+                    l10n.startNow,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                // زر ابدأ من جديد
+                TextButton(
+                  onPressed: () => _pageController.jumpToPage(0),
+                  child: Text(
+                    isArabic ? 'ابدأ من جديد' : 'Start Over',
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                ),
+              ] else ...[
                 ElevatedButton(
                   onPressed: _nextPage,
                   style: ElevatedButton.styleFrom(
@@ -356,9 +374,7 @@ class _TourScreenState extends State<TourScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                    _pageController.jumpToPage(_totalPages - 1);
-                  },
+                  onPressed: () => _pageController.jumpToPage(_totalPages - 1),
                   child: Text(
                     l10n.skip,
                     style: const TextStyle(color: Colors.white70, fontSize: 16),
