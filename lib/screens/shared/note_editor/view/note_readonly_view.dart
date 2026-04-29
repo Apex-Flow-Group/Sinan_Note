@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
+
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
@@ -394,8 +396,32 @@ class _ChecklistView extends StatefulWidget {
 
 class _ChecklistViewState extends State<_ChecklistView> {
   void _save(List<ChecklistItem> updated) {
-    widget.coordinator.contentController.text =
-        ChecklistFormatter.toJson(updated);
+    // ── حافظ على العنوان الموجود في JSON عند الحفظ ──────────────────────
+    // ChecklistFormatter.toJson() يكتب array فقط ويفقد العنوان
+    // نقرأ العنوان الحالي من المحتوى أو من stateManager ونُعيد دمجه
+    final currentContent = widget.coordinator.contentController.text;
+    String existingTitle = '';
+    try {
+      final decoded = jsonDecode(currentContent);
+      if (decoded is Map && decoded.containsKey('title')) {
+        existingTitle = (decoded['title'] as String?) ?? '';
+      }
+    } catch (_) {}
+
+    // إذا لم يكن في المحتوى، خذه من stateManager
+    if (existingTitle.isEmpty) {
+      existingTitle = widget.coordinator.stateManager.customTitle ??
+          widget.coordinator.stateManager.checklistTitle ??
+          '';
+    }
+
+    // أعد بناء JSON مع الحفاظ على العنوان
+    final newJson = jsonEncode({
+      'title': existingTitle,
+      'items': updated.map((item) => item.toJson()).toList(),
+    });
+
+    widget.coordinator.contentController.text = newJson;
     widget.coordinator.stateManager.markDirty();
     widget.onSave(isManualSave: true);
   }

@@ -213,7 +213,8 @@ class EditorCoordinator {
 
     stateManager.loadFromNote(
       noteContent: initialText,
-      noteTitle: note?.title != 'Untitled' ? note?.title : null,
+      noteTitle:
+          (note?.title != null && note!.title.isNotEmpty) ? note!.title : null,
       noteColorIndex: stateManager.colorIndex,
       noteReminderDateTime: note?.reminderDateTime,
       noteRecurrenceRule: note?.recurrenceRule,
@@ -281,9 +282,22 @@ class EditorCoordinator {
             ? QuillMigration.toPlainText(quillController!)
             : contentController.text);
 
+    // للـ checklist: إذا لم يكن customTitle موجوداً، اقرأ العنوان من JSON مباشرة
+    String? resolvedChecklistTitle = stateManager.checklistTitle;
+    if (resolvedChecklistTitle == null &&
+        (mode == NoteMode.checklist || note?.noteType == 'checklist')) {
+      try {
+        final decoded = jsonDecode(contentController.text);
+        if (decoded is Map && decoded.containsKey('title')) {
+          final t = (decoded['title'] as String?)?.trim();
+          if (t != null && t.isNotEmpty) resolvedChecklistTitle = t;
+        }
+      } catch (_) {}
+    }
+
     return NoteEditorUtils.generateTitle(
       customTitle: stateManager.customTitle,
-      checklistTitle: stateManager.checklistTitle,
+      checklistTitle: resolvedChecklistTitle,
       content: text,
       isChecklist: mode == NoteMode.checklist || note?.noteType == 'checklist',
       fallback: fallback,

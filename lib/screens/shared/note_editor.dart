@@ -573,7 +573,18 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         sidePadding: sidePadding,
         heroTag: widget.heroTag,
         onClose: widget.onClose,
-        onEnterEdit: () => setState(() => _isReadOnly = false),
+        onEnterEdit: () {
+          // ── ضمان تحميل العنوان قبل دخول وضع التعديل ──────────────────
+          // في وضع العرض customTitle قد يكون null (مشتق من المحتوى)
+          // نحمّله صراحةً من note.title حتى لا يُعتبر محذوفاً عند الحفظ
+          if (_coordinator.stateManager.customTitle == null &&
+              widget.note != null &&
+              widget.note!.title.isNotEmpty &&
+              widget.note!.title != 'Untitled') {
+            _coordinator.stateManager.customTitle = widget.note!.title;
+          }
+          setState(() => _isReadOnly = false);
+        },
         onSave: ({bool isManualSave = false}) =>
             _saveNoteToDatabase(isManualSave: isManualSave),
       );

@@ -15,6 +15,7 @@ class ChecklistEditorWidget extends StatelessWidget {
   final Function(String) onChecklistTitleChanged;
   final VoidCallback onContentChanged;
   final bool readOnly;
+  final String? noteTitle; // ← العنوان الأصلي للنوتة
 
   const ChecklistEditorWidget({
     super.key,
@@ -26,6 +27,7 @@ class ChecklistEditorWidget extends StatelessWidget {
     required this.onChecklistTitleChanged,
     required this.onContentChanged,
     this.readOnly = false,
+    this.noteTitle,
   });
 
   @override
@@ -39,6 +41,7 @@ class ChecklistEditorWidget extends StatelessWidget {
             ),
       child: ChecklistEditor(
         initialContent: contentController.text,
+        initialTitle: noteTitle,
         backgroundColor: backgroundColor,
         readOnly: readOnly,
         onUndoRedoControllerCreated: onUndoRedoControllerCreated,
@@ -46,7 +49,7 @@ class ChecklistEditorWidget extends StatelessWidget {
         onChanged: (jsonContent) {
           contentController.text = jsonContent;
           onContentChanged();
-          
+
           try {
             final decoded = jsonDecode(jsonContent);
             if (decoded is Map && decoded['title'] != null) {

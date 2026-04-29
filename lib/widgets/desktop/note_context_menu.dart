@@ -4,6 +4,7 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/widgets/common/color_picker_sheet.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,8 @@ class NoteContextMenu extends StatelessWidget {
     required this.onNoteChanged,
   });
 
-  static Future<void> show(BuildContext context, Note note, VoidCallback onNoteChanged) async {
+  static Future<void> show(
+      BuildContext context, Note note, VoidCallback onNoteChanged) async {
     final result = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -40,9 +42,23 @@ class NoteContextMenu extends StatelessWidget {
     VoidCallback onNoteChanged,
   ) async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
+    final selectedNoteProvider =
+        Provider.of<SelectedNoteProvider>(context, listen: false);
 
     switch (value) {
+      case 'color':
+        if (context.mounted) {
+          final index = await ColorPickerSheet.show(
+            context,
+            currentIndex: note.colorIndex,
+          );
+          if (index != null && context.mounted) {
+            final notesProvider =
+                Provider.of<NotesProvider>(context, listen: false);
+            await notesProvider.updateNote(note.copyWith(colorIndex: index));
+            onNoteChanged();
+          }
+        }
       case 'open':
         selectedNoteProvider.selectNote(note);
       case 'pin':
@@ -57,7 +73,8 @@ class NoteContextMenu extends StatelessWidget {
         }
       case 'share':
         if (context.mounted) {
-          final plainContent = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
+          final plainContent = NoteCardUtils.fixNoteContent(note.content,
+              maxChars: note.content.length);
           CustomShareSheet.show(
             context,
             '${note.title}\n\n$plainContent',
@@ -110,7 +127,8 @@ class _ContextSheet extends StatelessWidget {
         children: [
           const SizedBox(height: 8),
           Container(
-            width: 40, height: 4,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.outlineVariant,
               borderRadius: BorderRadius.circular(2),
@@ -124,7 +142,13 @@ class _ContextSheet extends StatelessWidget {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: Icon(note.isPinned ? Icons.push_pin_outlined : Icons.push_pin),
+            leading: const Icon(Icons.palette_outlined),
+            title: Text(l10n.chooseColor),
+            onTap: () => Navigator.pop(context, 'color'),
+          ),
+          ListTile(
+            leading:
+                Icon(note.isPinned ? Icons.push_pin_outlined : Icons.push_pin),
             title: Text(note.isPinned ? l10n.unpin : l10n.pin),
             onTap: () => Navigator.pop(context, 'pin'),
           ),

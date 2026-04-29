@@ -1,6 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/widgets/common/color_picker_sheet.dart';
 import 'package:flutter/material.dart';
 
 class WidgetEditorDialogs {
@@ -104,61 +106,17 @@ class WidgetEditorDialogs {
     Color currentColor,
     Function(Color) onColorSelected,
   ) {
-    final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sheetColor = isDark ? const Color(0xFF2D2D2D) : Colors.white;
-    final textColor = isDark ? Colors.white : Colors.black87;
+    // ── محوّل للمكون المشترك ColorPickerSheet ──────────────────────────
+    // نحوّل currentColor إلى index ثم نستخدم ColorPickerSheet
+    final brightness = Theme.of(context).brightness;
+    final currentIndex =
+        colors.indexOf(currentColor).clamp(0, colors.length - 1);
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding:
-            const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 100),
-        decoration: BoxDecoration(
-          color: sheetColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.chooseColor,
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: textColor)),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: colors.map((color) {
-                return GestureDetector(
-                  onTap: () {
-                    onColorSelected(color);
-                    Navigator.pop(ctx);
-                  },
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: currentColor == color
-                            ? Colors.blue
-                            : (isDark
-                                ? Colors.grey.shade600
-                                : Colors.grey.shade300),
-                        width: currentColor == color ? 3 : 1,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
+    ColorPickerSheet.show(context, currentIndex: currentIndex).then((index) {
+      if (index != null) {
+        final color = AppColorPalette.palette[index].getColor(brightness);
+        onColorSelected(color);
+      }
+    });
   }
 }

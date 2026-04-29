@@ -77,16 +77,16 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         ? Color.lerp(widget.baseColor, Colors.black, 0.15)!
         : Color.lerp(widget.baseColor, Colors.white, 0.25)!;
 
-    // لون الإضاءة الذي سيندمج مع الحافة أثناء الحركة
-    final Color glowColor = brightness == Brightness.light
-        ? Colors.white.withValues(alpha: 0.9)
-        : Colors.white.withValues(alpha: 0.5);
-
     final Color effectiveBorderColor = widget.isSelected
         ? Theme.of(context).colorScheme.secondary
         : baseBorderColor;
 
     if (!widget.enableMotion) {
+      // Ambient glow: ظل بلون النوتة نفسها يعطي إضاءة خلفية خفيفة
+      final Color ambientColor = widget.baseColor.withValues(
+        alpha: brightness == Brightness.light ? 0.55 : 0.40,
+      );
+
       final container = Container(
         decoration: BoxDecoration(
           color: widget.baseColor,
@@ -95,10 +95,19 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
               ? Border.all(color: effectiveBorderColor, width: 0.5)
               : null,
           boxShadow: [
+            // الظل الأساسي (عمق)
             BoxShadow(
-              color: Colors.black.withValues(alpha: brightness == Brightness.light ? 0.08 : 0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(
+                  alpha: brightness == Brightness.light ? 0.10 : 0.30),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+            // الإضاءة الخلفية بلون النوتة
+            BoxShadow(
+              color: ambientColor,
+              blurRadius: brightness == Brightness.light ? 18 : 22,
+              spreadRadius: brightness == Brightness.light ? -2 : -1,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -106,13 +115,16 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         child: widget.child,
       );
       if (widget.heroTag != null) {
-        final heroEnabled = Provider.of<SettingsProvider>(context, listen: false).heroAnimationEnabled;
+        final heroEnabled =
+            Provider.of<SettingsProvider>(context, listen: false)
+                .heroAnimationEnabled;
         if (!heroEnabled) return container;
         return Hero(
           tag: widget.heroTag!,
           transitionOnUserGestures: false,
           createRectTween: (begin, end) => RectTween(begin: begin, end: end),
-          flightShuttleBuilder: (flightContext, animation, direction, fromCtx, toCtx) {
+          flightShuttleBuilder:
+              (flightContext, animation, direction, fromCtx, toCtx) {
             final curved = CurvedAnimation(
               parent: animation,
               curve: Curves.easeOut,
@@ -138,24 +150,39 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
       child: AnimatedBuilder(
         animation: _glowAnimation!,
         builder: (context, child) {
+          final br = Theme.of(context).brightness;
+          final Color ambientColor = widget.baseColor.withValues(
+            alpha: (br == Brightness.light ? 0.45 : 0.35) +
+                _glowAnimation!.value * 0.20,
+          );
           return Container(
             decoration: BoxDecoration(
               color: widget.baseColor,
               borderRadius: borderRadius,
-              // السحر هنا: دمج لون الحافة الأساسي مع لون مضيء بنسبة متغيرة
               border: widget.isSelected
-                  ? Border.all(color: Theme.of(context).colorScheme.secondary, width: 0.5)
+                  ? Border.all(
+                      color: Theme.of(context).colorScheme.secondary,
+                      width: 0.5)
                   : null,
               boxShadow: [
+                // الظل الأساسي
                 BoxShadow(
-                  color: glowColor.withValues(alpha: _glowAnimation!.value * 0.15),
-                  blurRadius: 6 * _glowAnimation!.value,
-                  spreadRadius: 0,
+                  color: Colors.black
+                      .withValues(alpha: br == Brightness.light ? 0.10 : 0.30),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+                // الإضاءة الخلفية تتنفس مع الحركة
+                BoxShadow(
+                  color: ambientColor,
+                  blurRadius: 18 + _glowAnimation!.value * 10,
+                  spreadRadius: -2 + _glowAnimation!.value * 2,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
             clipBehavior: Clip.hardEdge,
-            child: widget.child, // المحتوى بدون أي Padding يكسر التصميم
+            child: widget.child,
           );
         },
       ),

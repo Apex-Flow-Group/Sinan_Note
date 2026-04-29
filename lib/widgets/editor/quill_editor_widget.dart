@@ -59,10 +59,43 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   bool _isFormatting = false;
   bool _isPasting = false;
   bool _isKeyboardOpening = false;
-  bool _isLoading = true; // يمنع _onDocumentChange أثناء تحميل النوتة
+  bool _isLoading = true;
   bool _isDirectionFormatting = false;
   bool _isHandlingEnter = false;
   String? _cachedFontFamily;
+
+  // ── Overlay للشريط العائم ─────────────────────────────────────────────────
+  OverlayEntry? _selectionBarOverlay;
+  bool _suppressBar = false; // يمنع إعادة الظهور بعد الإغلاق المتعمد
+
+  void _showSelectionBar() {
+    if (_suppressBar) return; // مُغلق بشكل متعمد — لا تُعد الفتح
+    if (_selectionBarOverlay != null) {
+      _selectionBarOverlay!.markNeedsBuild();
+      return;
+    }
+    final topOffset = MediaQuery.of(context).padding.top + kToolbarHeight;
+    _selectionBarOverlay = OverlayEntry(
+      builder: (_) => _FloatingSelectionBar(
+        topOffset: topOffset,
+        ctrl: widget.quillController,
+        noteColor: widget.textColor,
+        onPaste: _pastePlainText,
+        onDismiss: _hideSelectionBar,
+      ),
+    );
+    Overlay.of(context).insert(_selectionBarOverlay!);
+  }
+
+  void _hideSelectionBar() {
+    _suppressBar = true;
+    _selectionBarOverlay?.remove();
+    _selectionBarOverlay = null;
+    // بعد frame واحد نُعيد تفعيل الشريط للضغطات المستقبلية
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _suppressBar = false;
+    });
+  }
 
   /// يستخرج اتجاه السطر الذي يقع فيه offset
   TextDirection _getLineDirection(String text, int offset) {
@@ -106,11 +139,19 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   StreamSubscription? _docChangeSub;
 
   static const _harakat = {
-    '\u064B', '\u064C', '\u064D',
-    '\u064E', '\u064F', '\u0650',
+    '\u064B',
+    '\u064C',
+    '\u064D',
+    '\u064E',
+    '\u064F',
+    '\u0650',
     '\u0652',
-    '\u0653', '\u0654', '\u0655',
-    '\u0656', '\u0657', '\u0670',
+    '\u0653',
+    '\u0654',
+    '\u0655',
+    '\u0656',
+    '\u0657',
+    '\u0670',
   };
   static const _shadda = '\u0651';
 
@@ -228,6 +269,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
   @override
   void dispose() {
+    _hideSelectionBar();
     widget.quillController.removeListener(_onChanged);
     _scrollController.removeListener(_onScrollChanged);
     _docChangeSub?.cancel();
@@ -393,9 +435,12 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       if (lineTextLen > 0) {
         ctrl.formatText(pos, lineTextLen, const ColorAttribute(null));
         ctrl.formatText(pos, lineTextLen, const BackgroundAttribute(null));
-        ctrl.formatText(pos, lineTextLen, Attribute.clone(Attribute.bold, null));
-        ctrl.formatText(pos, lineTextLen, Attribute.clone(Attribute.italic, null));
-        ctrl.formatText(pos, lineTextLen, Attribute.clone(Attribute.underline, null));
+        ctrl.formatText(
+            pos, lineTextLen, Attribute.clone(Attribute.bold, null));
+        ctrl.formatText(
+            pos, lineTextLen, Attribute.clone(Attribute.italic, null));
+        ctrl.formatText(
+            pos, lineTextLen, Attribute.clone(Attribute.underline, null));
         ctrl.formatText(pos, lineTextLen, const SizeAttribute(null));
       }
 
@@ -403,7 +448,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
       // طبّق direction على ال\n فقط (1 حرف)
       if (!isLast) {
-        final isRtl = TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') == TextDirection.rtl;
+        final isRtl =
+            TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') ==
+                TextDirection.rtl;
         ctrl.formatText(pos, 1, const AlignAttribute(null));
         ctrl.formatText(
           pos,
@@ -427,7 +474,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       offset;
     });
   }
-
 
   void _scrollToCursor() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -568,88 +614,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       padding: EdgeInsets.zero,
                       placeholder: '',
                       showCursor: !widget.readOnly,
-                      enableInteractiveSelection: !widget.readOnly,                      paintCursorAboveText: true,
+                      enableInteractiveSelection: !widget.readOnly,
+                      paintCursorAboveText: true,
                       contextMenuBuilder: (context, rawEditorState) {
-                        final anchor = rawEditorState.contextMenuAnchors;
-                        final ctrl = widget.quillController;
-                        final sel = ctrl.selection;
-                        final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                        final scheme = Theme.of(context).colorScheme;
-                        final isDark = Theme.of(context).brightness == Brightness.dark;
-                        final menuBg = isDark ? scheme.surfaceContainerHigh : scheme.surface;
-                        final textClr = scheme.onSurface;
-
-                        // الأوامر مباشرة على الـ controller — لا تعتمد على الـ focus
-                        void doCut() {
-                          ContextMenuController.removeAny();
-                          if (sel.isCollapsed) return;
-                          final text = ctrl.document.toPlainText();
-                          final selected = text.substring(sel.start, sel.end);
-                          Clipboard.setData(ClipboardData(text: selected));
-                          ctrl.replaceText(sel.start, sel.end - sel.start, '',
-                              TextSelection.collapsed(offset: sel.start));
-                        }
-
-                        void doCopy() {
-                          ContextMenuController.removeAny();
-                          if (sel.isCollapsed) return;
-                          final text = ctrl.document.toPlainText();
-                          Clipboard.setData(ClipboardData(
-                              text: text.substring(sel.start, sel.end)));
-                        }
-
-                        void doPaste() {
-                          ContextMenuController.removeAny();
-                          _pastePlainText();
-                        }
-
-                        void doSelectAll() {
-                          ContextMenuController.removeAny();
-                          final len = ctrl.document.length;
-                          ctrl.updateSelection(
-                            TextSelection(baseOffset: 0, extentOffset: len - 1),
-                            ChangeSource.local,
-                          );
-                        }
-
-                        final entries = <({String label, VoidCallback action})>[
-                          if (!sel.isCollapsed) (label: isAr ? 'قص' : 'Cut', action: doCut),
-                          if (!sel.isCollapsed) (label: isAr ? 'نسخ' : 'Copy', action: doCopy),
-                          (label: isAr ? 'لصق' : 'Paste', action: doPaste),
-                          (label: isAr ? 'تحديد الكل' : 'Select all', action: doSelectAll),
-                        ];
-
-                        return Positioned(
-                          left: anchor.primaryAnchor.dx,
-                          top: anchor.primaryAnchor.dy,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: menuBg,
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.18),
-                                    blurRadius: 14,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: IntrinsicWidth(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: entries.map((e) => _ContextMenuItem(
-                                    label: e.label,
-                                    onAction: e.action,
-                                    textColor: textClr,
-                                  )).toList(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
+                        // جميع المنصات → شريط عائم تحت الهيدر
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _showSelectionBar();
+                        });
+                        return const SizedBox.shrink();
                       },
                       quillMagnifierBuilder: (dragPosition) =>
                           QuillMagnifier(dragPosition: dragPosition),
@@ -688,46 +660,391 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   }
 }
 
-/// زر في قائمة السياق — يستخدم onTapDown لضمان التنفيذ قبل فقدان الـ focus
-class _ContextMenuItem extends StatefulWidget {
+/// بيانات زر واحد في الشريط العائم
+class _BarEntry {
   final String label;
-  final VoidCallback onAction;
-  final Color textColor;
-
-  const _ContextMenuItem({
+  final IconData icon;
+  final VoidCallback action;
+  final bool enabled;
+  const _BarEntry({
     required this.label,
-    required this.onAction,
-    required this.textColor,
+    required this.icon,
+    required this.action,
+    this.enabled = true,
   });
-
-  @override
-  State<_ContextMenuItem> createState() => _ContextMenuItemState();
 }
 
-class _ContextMenuItemState extends State<_ContextMenuItem> {
-  bool _hovered = false;
+// ── حالات الشريط ──────────────────────────────────────────────────────────────
+enum _BarState {
+  /// لا يوجد تحديد
+  noSelection,
+
+  /// يوجد تحديد جزئي
+  hasSelection,
+
+  /// كل النص محدد
+  allSelected,
+}
+
+/// شريط تحديد النص العائم — يظهر بـ slide من الأعلى تحت الهيدر مباشرة
+/// يتكيف ذكياً مع حالة التحديد والـ clipboard
+class _FloatingSelectionBar extends StatefulWidget {
+  final double topOffset;
+  final QuillController ctrl;
+  final Color noteColor;
+  final Future<void> Function() onPaste;
+  final VoidCallback onDismiss;
+
+  const _FloatingSelectionBar({
+    required this.topOffset,
+    required this.ctrl,
+    required this.noteColor,
+    required this.onPaste,
+    required this.onDismiss,
+  });
+  @override
+  State<_FloatingSelectionBar> createState() => _FloatingSelectionBarState();
+}
+
+class _FloatingSelectionBarState extends State<_FloatingSelectionBar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animCtrl;
+  late Animation<Offset> _slide;
+  late Animation<double> _fade;
+  bool _hasClipboard = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _slide = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
+    _fade = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _animCtrl.forward();
+    _checkClipboard();
+    widget.ctrl.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_onSelectionChanged);
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSelectionChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _checkClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (mounted) {
+      setState(() => _hasClipboard = (data?.text?.isNotEmpty ?? false));
+    }
+  }
+
+  _BarState _getBarState() {
+    final sel = widget.ctrl.selection;
+    if (sel.isCollapsed) return _BarState.noSelection;
+    final docLen = widget.ctrl.document.length;
+    // كل النص محدد إذا كان التحديد يغطي كل المحتوى (مع مراعاة \n الأخير)
+    if (sel.start == 0 && sel.end >= docLen - 1) return _BarState.allSelected;
+    return _BarState.hasSelection;
+  }
+
+  List<_BarEntry> _buildEntries(_BarState state, bool isAr) {
+    final ctrl = widget.ctrl;
+
+    void doCut() {
+      widget.onDismiss();
+      ContextMenuController.removeAny();
+      final sel = ctrl.selection;
+      if (sel.isCollapsed) return;
+      final text = ctrl.document.toPlainText();
+      Clipboard.setData(
+          ClipboardData(text: text.substring(sel.start, sel.end)));
+      ctrl.replaceText(sel.start, sel.end - sel.start, '',
+          TextSelection.collapsed(offset: sel.start));
+    }
+
+    void doCopy() {
+      widget.onDismiss();
+      ContextMenuController.removeAny();
+      final sel = ctrl.selection;
+      if (sel.isCollapsed) return;
+      final text = ctrl.document.toPlainText();
+      Clipboard.setData(
+          ClipboardData(text: text.substring(sel.start, sel.end)));
+    }
+
+    void doPaste() {
+      // اللصق أولاً قبل الإغلاق — حتى لا يُفقد التحديد
+      widget.onPaste();
+      widget.onDismiss();
+      ContextMenuController.removeAny();
+    }
+
+    void doSelectAll() {
+      // لا نُغلق الشريط — يتحول لحالة allSelected عبر _onSelectionChanged
+      final len = ctrl.document.length;
+      ctrl.updateSelection(
+        TextSelection(baseOffset: 0, extentOffset: len - 1),
+        ChangeSource.local,
+      );
+      _checkClipboard();
+    }
+
+    void doDeselect() {
+      widget.onDismiss();
+      ContextMenuController.removeAny();
+      final offset = ctrl.selection.start;
+      ctrl.updateSelection(
+        TextSelection.collapsed(offset: offset),
+        ChangeSource.local,
+      );
+    }
+
+    // ── بناء الأزرار حسب الحالة ────────────────────────────────────────────
+    switch (state) {
+      case _BarState.noSelection:
+        // لا تحديد: لصق (إذا clipboard فيه شيء) + تحديد الكل
+        return [
+          _BarEntry(
+            label: isAr ? 'لصق' : 'Paste',
+            icon: Icons.content_paste_rounded,
+            action: doPaste,
+            enabled: _hasClipboard,
+          ),
+          _BarEntry(
+            label: isAr ? 'تحديد الكل' : 'Select all',
+            icon: Icons.select_all_rounded,
+            action: doSelectAll,
+          ),
+        ];
+
+      case _BarState.hasSelection:
+        // تحديد جزئي: قص + نسخ + لصق (إذا clipboard) + تحديد الكل + إلغاء
+        return [
+          _BarEntry(
+            label: isAr ? 'قص' : 'Cut',
+            icon: Icons.content_cut_rounded,
+            action: doCut,
+          ),
+          _BarEntry(
+            label: isAr ? 'نسخ' : 'Copy',
+            icon: Icons.content_copy_rounded,
+            action: doCopy,
+          ),
+          if (_hasClipboard)
+            _BarEntry(
+              label: isAr ? 'لصق' : 'Paste',
+              icon: Icons.content_paste_rounded,
+              action: doPaste,
+            ),
+          _BarEntry(
+            label: isAr ? 'تحديد الكل' : 'All',
+            icon: Icons.select_all_rounded,
+            action: doSelectAll,
+          ),
+          _BarEntry(
+            label: isAr ? 'إلغاء' : 'Deselect',
+            icon: Icons.deselect_rounded,
+            action: doDeselect,
+          ),
+        ];
+
+      case _BarState.allSelected:
+        // كل النص محدد: قص + نسخ + لصق (إذا clipboard) + إلغاء التحديد
+        return [
+          _BarEntry(
+            label: isAr ? 'قص' : 'Cut',
+            icon: Icons.content_cut_rounded,
+            action: doCut,
+          ),
+          _BarEntry(
+            label: isAr ? 'نسخ' : 'Copy',
+            icon: Icons.content_copy_rounded,
+            action: doCopy,
+          ),
+          if (_hasClipboard)
+            _BarEntry(
+              label: isAr ? 'لصق' : 'Paste',
+              icon: Icons.content_paste_rounded,
+              action: doPaste,
+            ),
+          _BarEntry(
+            label: isAr ? 'إلغاء التحديد' : 'Deselect',
+            icon: Icons.deselect_rounded,
+            action: doDeselect,
+          ),
+        ];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        // onTapDown يُنفَّذ قبل أن يفقد المحرر الـ focus
-        onTapDown: (_) => widget.onAction(),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          color: _hovered
-              ? scheme.onSurface.withValues(alpha: 0.08)
-              : Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Text(
-              widget.label,
-              style: TextStyle(fontSize: 14, color: widget.textColor),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final isNoteLight = widget.noteColor.computeLuminance() > 0.5;
+
+    final barBg = isNoteLight
+        ? (isDark ? const Color(0xFF2A2A2A) : const Color(0xFF1C1C1E))
+        : (isDark ? const Color(0xFFF2F2F7) : Colors.white);
+    final barText = isNoteLight ? Colors.white : Colors.black87;
+    final disabledText = barText.withValues(alpha: 0.3);
+    final dividerColor = barText.withValues(alpha: 0.12);
+
+    final state = _getBarState();
+    final entries = _buildEntries(state, isAr);
+
+    return Positioned(
+      top: widget.topOffset + 6,
+      left: 12,
+      right: 12,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: FadeTransition(
+            opacity: _fade,
+            child: SlideTransition(
+              position: _slide,
+              child: Material(
+                color: Colors.transparent,
+                child: TapRegion(
+                  onTapOutside: (_) {
+                    widget.onDismiss();
+                    ContextMenuController.removeAny();
+                  },
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: barBg,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black
+                              .withValues(alpha: isDark ? 0.4 : 0.15),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    // AnimatedSwitcher على الـ Row فقط — الـ slide/fade لا تُعاد
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 160),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: child,
+                      ),
+                      child: Row(
+                        // key يُخبر AnimatedSwitcher أن المحتوى تغيّر
+                        key: ValueKey(state),
+                        children: entries.asMap().entries.map((entry) {
+                          final i = entry.key;
+                          final e = entry.value;
+                          final isLast = i == entries.length - 1;
+                          return Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _BarButton(
+                                    label: e.label,
+                                    icon: e.icon,
+                                    textColor:
+                                        e.enabled ? barText : disabledText,
+                                    enabled: e.enabled,
+                                    onAction: e.action,
+                                  ),
+                                ),
+                                if (!isLast)
+                                  Container(
+                                    width: 1,
+                                    height: 24,
+                                    color: dividerColor,
+                                  ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
+        ), // ConstrainedBox
+      ), // Align
+    );
+  }
+}
+
+/// زر داخل الشريط العائم
+class _BarButton extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final Color textColor;
+  final bool enabled;
+  final VoidCallback onAction;
+
+  const _BarButton({
+    required this.label,
+    required this.icon,
+    required this.textColor,
+    required this.onAction,
+    this.enabled = true,
+  });
+
+  @override
+  State<_BarButton> createState() => _BarButtonState();
+}
+
+class _BarButtonState extends State<_BarButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.enabled
+          ? (_) {
+              setState(() => _pressed = true);
+              widget.onAction();
+            }
+          : null,
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        decoration: BoxDecoration(
+          color: _pressed && widget.enabled
+              ? widget.textColor.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(widget.icon, size: 17, color: widget.textColor),
+            const SizedBox(height: 2),
+            Text(
+              widget.label,
+              style: TextStyle(
+                fontSize: 10,
+                color: widget.textColor,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

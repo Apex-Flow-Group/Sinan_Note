@@ -9,6 +9,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/color_picker_sheet.dart';
 import 'package:apex_note/widgets/common/rename_dialog.dart';
 import 'package:apex_note/widgets/editor/note_history_sheet.dart';
 import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
@@ -90,76 +91,42 @@ class EditorDialogHandlers {
     }
   }
 
-  /// Show color palette dialog
+  /// Show color palette bottom sheet
   static Future<void> showColorPalette({
     required BuildContext context,
     required EditorStateManager stateManager,
     required NoteMode mode,
     required Function(int colorIndex, Color textColor) onColorSelected,
   }) async {
-    final brightness = Theme.of(context).brightness;
-
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.chooseColor),
-        content: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: List.generate(AppColorPalette.palette.length, (index) {
-            final adaptiveColor = AppColorPalette.palette[index];
-            final color = adaptiveColor.getColor(brightness);
-
-            return GestureDetector(
-              key: ValueKey('color_$index'),
-              onTap: () async {
-                final isDarkBg = color.computeLuminance() < 0.5;
-                final textColor = isDarkBg ? Colors.white : Colors.black87;
-
-                stateManager.colorIndex = index;
-                stateManager.markDirty();
-                onColorSelected(index, textColor);
-
-                // Save last used color for this note type
-                if (context.mounted) {
-                  final settings =
-                      Provider.of<SettingsProvider>(context, listen: false);
-                  String colorMode = 'simple';
-                  if (mode == NoteMode.reminder) {
-                    colorMode = 'reminder';
-                  } else if (mode == NoteMode.code) {
-                    colorMode = 'professional';
-                  } else if (mode == NoteMode.checklist) {
-                    colorMode = 'checklist';
-                  } else if (mode == NoteMode.rich) {
-                    colorMode = 'rich';
-                  }
-                  await settings.setDefaultColorIndex(colorMode, index);
-                }
-
-                if (ctx.mounted) {
-                  Navigator.pop(ctx);
-                }
-              },
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: stateManager.colorIndex == index
-                        ? Theme.of(context).colorScheme.onSurface
-                        : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
+    final selectedIndex = await ColorPickerSheet.show(
+      context,
+      currentIndex: stateManager.colorIndex,
     );
+
+    if (selectedIndex == null || !context.mounted) return;
+
+    final brightness = Theme.of(context).brightness;
+    final color = AppColorPalette.palette[selectedIndex].getColor(brightness);
+    final isDarkBg = color.computeLuminance() < 0.5;
+    final textColor = isDarkBg ? Colors.white : Colors.black87;
+
+    stateManager.colorIndex = selectedIndex;
+    stateManager.markDirty();
+    onColorSelected(selectedIndex, textColor);
+
+    // حفظ آخر لون مستخدم لهذا النوع
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    String colorMode = 'simple';
+    if (mode == NoteMode.reminder) {
+      colorMode = 'reminder';
+    } else if (mode == NoteMode.code) {
+      colorMode = 'professional';
+    } else if (mode == NoteMode.checklist) {
+      colorMode = 'checklist';
+    } else if (mode == NoteMode.rich) {
+      colorMode = 'rich';
+    }
+    await settings.setDefaultColorIndex(colorMode, selectedIndex);
   }
 
   /// Show inline text color picker and apply to Quill selection

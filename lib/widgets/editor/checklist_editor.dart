@@ -26,6 +26,7 @@ class ChecklistUndoRedoController {
 
 class ChecklistEditor extends StatefulWidget {
   final String initialContent;
+  final String? initialTitle; // ← العنوان الأصلي للنوتة كـ fallback
   final Function(String jsonContent) onChanged;
   final Color backgroundColor;
   final VoidCallback? onUndoRedoChanged;
@@ -37,6 +38,7 @@ class ChecklistEditor extends StatefulWidget {
     required this.initialContent,
     required this.onChanged,
     required this.backgroundColor,
+    this.initialTitle,
     this.onUndoRedoChanged,
     this.onUndoRedoControllerCreated,
     this.readOnly = false,
@@ -94,6 +96,11 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
               .toList();
         }
       } else if (decoded is List) {
+        // ── صيغة قديمة: array بدون title ──────────────────────────────
+        // نستخدم initialTitle (note.title) كـ fallback إذا كان موجوداً
+        if (widget.initialTitle != null && widget.initialTitle!.isNotEmpty) {
+          _titleController.text = widget.initialTitle!;
+        }
         _items = decoded
             .whereType<Map>()
             .map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>))
@@ -140,6 +147,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       item.text = _controllers[item.id]!.text;
       _notifyParent();
     }
+
     _listeners[item.id] = listener;
     _controllers[item.id]!.addListener(listener);
 
@@ -160,7 +168,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     });
   }
 
-  void _addNewItem({int? insertIndex, bool autoFocus = false, bool isGhostItem = false}) {
+  void _addNewItem(
+      {int? insertIndex, bool autoFocus = false, bool isGhostItem = false}) {
     final newItem = ChecklistItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       isGhost: isGhostItem, // Mark as ghost for smart filtering
@@ -180,7 +189,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
         _focusNodes[newItem.id]?.requestFocus();
       });
     }
-    
+
     // Only notify parent if not a ghost item or if ghost item gets content
     if (!isGhostItem) {
       _notifyParent();
@@ -206,7 +215,10 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
     // نقل الـ focus للعنصر السابق فقط إذا كان الكيبورد مفتوحاً
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    if (isKeyboardOpen && index > 0 && _items.isNotEmpty && index - 1 < _items.length) {
+    if (isKeyboardOpen &&
+        index > 0 &&
+        _items.isNotEmpty &&
+        index - 1 < _items.length) {
       _focusNodes[_items[index - 1].id]?.requestFocus();
     }
     _notifyParent();
@@ -235,7 +247,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
   void _notifyParent() {
     if (!mounted) return;
-    
+
     // 🛡️ Force sync all controllers to models
     for (var item in _items) {
       if (_controllers.containsKey(item.id)) {
@@ -245,23 +257,23 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
         }
       }
     }
-    
+
     // 🎯 Filter empty ghost items
-    final realItems = _items.where((item) => 
-      !item.isGhost || item.text.trim().isNotEmpty
-    ).toList();
-    
+    final realItems = _items
+        .where((item) => !item.isGhost || item.text.trim().isNotEmpty)
+        .toList();
+
     // ✅ VALIDATION: Prevent saving completely empty checklists
     final title = _titleController.text.trim();
-    final hasContent = title.isNotEmpty || 
+    final hasContent = title.isNotEmpty ||
         realItems.any((item) => item.text.trim().isNotEmpty);
-    
+
     if (!hasContent && !_isUndoRedoAction) {
       // Empty checklist - don't save garbage, but don't block undo/redo
       widget.onChanged(jsonEncode({'title': '', 'items': []}));
       return;
     }
-    
+
     final data = {
       'title': title,
       'items': realItems.map((e) => e.toJson()).toList(),
@@ -281,7 +293,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     }
 
     widget.onChanged(jsonData);
-    
+
     // 🔧 FIX: Defer state updates to avoid build-phase conflicts
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -411,7 +423,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                       child: Row(children: [
                         const Icon(Icons.arrow_downward, size: 18),
                         const SizedBox(width: 8),
-                        Text(l10n.sortDoneToBottom, textDirection: Directionality.of(context)),
+                        Text(l10n.sortDoneToBottom,
+                            textDirection: Directionality.of(context)),
                       ]),
                     ),
                     PopupMenuItem(
@@ -419,7 +432,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                       child: Row(children: [
                         const Icon(Icons.arrow_upward, size: 18),
                         const SizedBox(width: 8),
-                        Text(l10n.sortDoneToTop, textDirection: Directionality.of(context)),
+                        Text(l10n.sortDoneToTop,
+                            textDirection: Directionality.of(context)),
                       ]),
                     ),
                     PopupMenuItem(
@@ -427,7 +441,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                       child: Row(children: [
                         const Icon(Icons.restore, size: 18),
                         const SizedBox(width: 8),
-                        Text(l10n.sortOriginal, textDirection: Directionality.of(context)),
+                        Text(l10n.sortOriginal,
+                            textDirection: Directionality.of(context)),
                       ]),
                     ),
                   ],
@@ -534,8 +549,12 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       canDelete: _items.length > 1,
       onToggleDone: widget.readOnly ? null : () => _toggleDone(item),
       onDelete: widget.readOnly ? null : () => _deleteItem(item.id),
-      onAddBelow: widget.readOnly ? null : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
-      onSubmitted: widget.readOnly ? null : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
+      onAddBelow: widget.readOnly
+          ? null
+          : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
+      onSubmitted: widget.readOnly
+          ? null
+          : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
     );
   }
 
@@ -556,35 +575,36 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     _titleController.removeListener(_onTitleChanged);
     _titleController.clear();
     _titleController.dispose();
-    
+
     // 🛑 CRITICAL: Remove ALL item listeners BEFORE clearing to prevent empty save
     for (var item in _items) {
-      if (_controllers.containsKey(item.id) && _listeners.containsKey(item.id)) {
+      if (_controllers.containsKey(item.id) &&
+          _listeners.containsKey(item.id)) {
         _controllers[item.id]!.removeListener(_listeners[item.id]!);
       }
     }
     _listeners.clear();
-    
+
     // Now safe to clear and dispose
     for (var controller in _controllers.values) {
       controller.clear();
       controller.dispose();
     }
     _controllers.clear();
-    
+
     // Dispose focus nodes
     for (var node in _focusNodes.values) {
       node.dispose();
     }
     _focusNodes.clear();
-    
+
     // CRITICAL: Clear undo/redo history to free memory
     _history.clear();
     _historyIndex = -1;
-    
+
     // Clear items list
     _items.clear();
-    
+
     super.dispose();
   }
 }

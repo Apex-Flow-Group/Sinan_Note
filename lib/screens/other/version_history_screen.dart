@@ -2,23 +2,27 @@
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
+import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
+import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/services/version_history_service.dart';
 import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/editor/diff_view.dart';
+import 'package:apex_note/widgets/effects/premium_card_effect.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Column width constraints ──────────────────────────────────────────────
-const double _kColMin = 160.0;
-const double _kColMax = 420.0;
-const double _kColDefaultNotes = 220.0;
-const double _kColDefaultVersions = 200.0;
+const double _kColMin = 200.0;
+const double _kColMax = 480.0;
+const double _kColDefaultNotes = 280.0;
+const double _kColDefaultVersions = 240.0;
 const String _kPrefNotesWidth = 'vh_notes_col_width';
 const String _kPrefVersionsWidth = 'vh_versions_col_width';
 
@@ -43,6 +47,9 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   bool _loadingVersions = false;
   NoteVersion? _selectedVersion;
 
+  // Expanded/collapsed state for notes list
+  ViewType _viewType = ViewType.listExpanded;
+
   // Resizable column widths (wide layout only)
   double _notesColWidth = _kColDefaultNotes;
   double _versionsColWidth = _kColDefaultVersions;
@@ -59,6 +66,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -112,6 +120,10 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       _selectedNoteVersions = [];
       _loadingVersions = true;
     });
+    // Slide to versions page on mobile
+    final isWide = MediaQuery.of(context).size.width >= 700;
+    if (!isWide) _animateToPage(1);
+
     final versions = await _versionService.getNoteVersions(note.id!);
     setState(() {
       _selectedNoteVersions = versions;
@@ -119,8 +131,12 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     });
   }
 
-  void _selectVersion(NoteVersion version) =>
-      setState(() => _selectedVersion = version);
+  void _selectVersion(NoteVersion version) {
+    setState(() => _selectedVersion = version);
+    // Slide to diff page on mobile
+    final isWide = MediaQuery.of(context).size.width >= 700;
+    if (!isWide) _animateToPage(2);
+  }
 
   Future<void> _onRestoreVersion(NoteVersion version, Note note) async {
     final l10n = AppLocalizations.of(context)!;
@@ -207,13 +223,16 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
+          final isWide = MediaQuery.of(context).size.width >= 700;
           if (_selectedVersion != null) {
             setState(() => _selectedVersion = null);
+            if (!isWide) _animateToPage(1);
           } else if (_selectedNote != null && !isWide) {
             setState(() {
               _selectedNote = null;
               _selectedNoteVersions = [];
             });
+            _animateToPage(0);
           } else {
             Navigator.of(context).popUntil((r) => r.isFirst);
           }
@@ -241,16 +260,38 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                     onPressed: () => Scaffold.of(ctx).openDrawer(),
                   ),
                 ),
-                trailing: PopupMenuButton<String>(
-                  icon: const Icon(Icons.sort),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  onSelected: (v) => setState(() => _sortBy = v),
-                  itemBuilder: (_) => [
-                    _sortMenuItem(
-                        context, 'date', Icons.access_time, l10n.sortByDate),
-                    _sortMenuItem(context, 'title', Icons.sort_by_alpha,
-                        l10n.sortByTitle),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Toggle expanded/compact view
+                    IconButton(
+                      icon: Icon(
+                        _viewType == ViewType.listExpanded
+                            ? Icons.view_headline
+                            : Icons.view_agenda_outlined,
+                        size: 22,
+                      ),
+                      tooltip: _viewType == ViewType.listExpanded
+                          ? 'Compact view'
+                          : 'Expanded view',
+                      onPressed: () => setState(() {
+                        _viewType = _viewType == ViewType.listExpanded
+                            ? ViewType.listCompact
+                            : ViewType.listExpanded;
+                      }),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.sort),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      onSelected: (v) => setState(() => _sortBy = v),
+                      itemBuilder: (_) => [
+                        _sortMenuItem(context, 'date', Icons.access_time,
+                            l10n.sortByDate),
+                        _sortMenuItem(context, 'title', Icons.sort_by_alpha,
+                            l10n.sortByTitle),
+                      ],
+                    ),
                   ],
                 ),
               );
@@ -275,12 +316,10 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     final showDiff = _selectedVersion != null;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // نفس ألوان MasterDetailsLayout
     final panelColor = isDark
         ? Theme.of(context).colorScheme.surfaceContainerLow
         : Theme.of(context).colorScheme.surfaceContainerLowest;
 
-    // لون الـ diff panel يعكس لون النوتة المختارة
     final Color diffPanelColor = _selectedNote != null
         ? AppColorPalette.palette[_selectedNote!.colorIndex]
             .getColor(Theme.of(context).brightness)
@@ -378,29 +417,64 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     );
   }
 
-  // ── Narrow: stack navigation ──────────────────────────────────────────────
-  Widget _buildNarrowLayout(
-      BuildContext context, List<Note> notes, AppLocalizations l10n) {
-    if (_selectedNote != null && _selectedVersion != null) {
-      return _buildDiffPanel(context, l10n);
-    }
-    if (_selectedNote != null) return _buildVersionsList(context, l10n);
-    return _buildNotesList(context, notes, l10n);
+  // ── Narrow: PageView with slide animation ────────────────────────────────
+  final PageController _pageController = PageController();
+
+  /// Current page index: 0=notes, 1=versions, 2=diff
+  void _animateToPage(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
-  // ── Notes list ────────────────────────────────────────────────────────────
+  Widget _buildNarrowLayout(
+      BuildContext context, List<Note> notes, AppLocalizations l10n) {
+    return PageView(
+      controller: _pageController,
+      physics: const NeverScrollableScrollPhysics(), // نتحكم بالتنقل برمجياً
+      children: [
+        // Page 0: Notes list
+        _buildNotesList(context, notes, l10n),
+
+        // Page 1: Versions list
+        _selectedNote != null
+            ? _buildVersionsList(context, l10n)
+            : const SizedBox.shrink(),
+
+        // Page 2: Diff panel
+        _selectedNote != null && _selectedVersion != null
+            ? _buildDiffPanel(context, l10n)
+            : const SizedBox.shrink(),
+      ],
+    );
+  }
+
+  // ── Notes list using NoteCardWidget ──────────────────────────────────────
   Widget _buildNotesList(
       BuildContext context, List<Note> notes, AppLocalizations l10n) {
     if (notes.isEmpty) {
       return Center(
-        child: Text(
-          _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
-          style: Theme.of(context).textTheme.bodyLarge,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.history_rounded, size: 56, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(color: Colors.grey[500]),
+            ),
+          ],
         ),
       );
     }
+
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 80),
       itemCount: notes.length,
       itemBuilder: (_, i) => _buildNoteItem(context, notes[i], l10n),
     );
@@ -408,63 +482,102 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
 
   Widget _buildNoteItem(
       BuildContext context, Note note, AppLocalizations l10n) {
+    final isSelected = _selectedNote?.id == note.id;
     final brightness = Theme.of(context).brightness;
     final noteColor =
         AppColorPalette.palette[note.colorIndex].getColor(brightness);
     final isLight = noteColor.computeLuminance() > 0.5;
     final titleColor = isLight ? Colors.black87 : Colors.white;
-    final isSelected = _selectedNote?.id == note.id;
+    final contentColor = isLight ? Colors.grey[700]! : Colors.grey[300]!;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      elevation: isSelected ? 2 : 0,
-      color: isSelected ? noteColor : noteColor.withValues(alpha: 0.6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: isSelected
-            ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
-            : BorderSide.none,
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+    final displayTitle = NoteCardUtils.getDisplayTitle(note);
+    final displayContent =
+        NoteContentUtils.toDisplayText(note.content, maxChars: 200);
+    final isChecklist = ChecklistFormatter.isValidChecklist(note.content);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: GestureDetector(
         onTap: () => _selectNote(note),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  note.title.isEmpty ? l10n.untitled : note.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: titleColor),
-                ),
-              ),
-              FutureBuilder<int>(
-                future: _versionService.getVersionCount(note.id!),
-                builder: (_, snap) => snap.hasData
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+        child: PremiumCardEffect(
+          baseColor: noteColor,
+          enableMotion: false,
+          isSelected: isSelected,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Title row + badge ──────────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        displayTitle,
+                        maxLines: _viewType == ViewType.listCompact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: titleColor,
                         ),
-                        child: Text(
-                          '${snap.data}',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Version count badge
+                    FutureBuilder<int>(
+                      future: _versionService.getVersionCount(note.id!),
+                      builder: (_, snap) => snap.hasData
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.blue.withValues(alpha: 0.80),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.history,
+                                      size: 12, color: Colors.white),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '${snap.data}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+                // ── Content preview (expanded only) ───────────────────
+                if (_viewType == ViewType.listExpanded) ...[
+                  const SizedBox(height: 8),
+                  isChecklist
+                      ? NoteCardUtils.buildChecklistPreview(
+                          note.content, titleColor)
+                      : Text(
+                          displayContent,
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: isLight ? Colors.black54 : Colors.white70,
+                            fontSize: 14,
+                            color: contentColor,
                           ),
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -477,19 +590,47 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_selectedNoteVersions.isEmpty) {
-      return Center(child: Text(l10n.noHistory));
+      return Center(
+          child: Text(l10n.noHistory,
+              style: Theme.of(context).textTheme.bodyLarge));
     }
+
+    final isWide = MediaQuery.of(context).size.width >= 700;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header with back button on mobile
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-          child: Text(
-            _selectedNote!.title.isEmpty ? l10n.untitled : _selectedNote!.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          padding: EdgeInsets.fromLTRB(isWide ? 16 : 4, 10, 16, 6),
+          child: Row(
+            children: [
+              if (!isWide)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                  onPressed: () {
+                    setState(() {
+                      _selectedNote = null;
+                      _selectedNoteVersions = [];
+                      _selectedVersion = null;
+                    });
+                    _animateToPage(0);
+                  },
+                ),
+              Expanded(
+                child: Text(
+                  _selectedNote!.title.isEmpty
+                      ? l10n.untitled
+                      : _selectedNote!.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                ),
+              ),
+            ],
           ),
         ),
         const Divider(height: 1),
@@ -504,36 +645,36 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
               final actionIcon = _getActionIcon(version.action);
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 6),
-                elevation: isSelected ? 2 : 0,
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: isSelected ? 3 : 0.5,
                 color: isSelected
                     ? Theme.of(context).colorScheme.primaryContainer
                     : null,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   side: isSelected
                       ? BorderSide(
                           color: Theme.of(context).colorScheme.primary,
-                          width: 1.5)
+                          width: 2)
                       : BorderSide.none,
                 ),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   onTap: () => _selectVersion(version),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 10),
+                        horizontal: 12, vertical: 12),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: actionColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(actionIcon, color: actionColor, size: 16),
+                          child: Icon(actionIcon, color: actionColor, size: 20),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,17 +686,21 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.w500),
+                                    fontSize: 14, fontWeight: FontWeight.w600),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 3),
                               Text(
                                 _formatTimeAgo(context, version.timestamp),
-                                style: const TextStyle(
-                                    fontSize: 11, color: Colors.grey),
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey[600]),
                               ),
                             ],
                           ),
                         ),
+                        if (isSelected)
+                          Icon(Icons.chevron_right,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20),
                       ],
                     ),
                   ),
@@ -580,24 +725,33 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     final newText = _toPlainText(version.content);
     final oldText = older != null ? _toPlainText(older.content) : '';
     final spans = older != null ? computeDiff(oldText, newText) : null;
+    final isWide = MediaQuery.of(context).size.width >= 700;
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(isWide ? 16 : 4, 14, 8, 10),
           child: Row(
             children: [
+              if (!isWide)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                  onPressed: () {
+                    setState(() => _selectedVersion = null);
+                    _animateToPage(1);
+                  },
+                ),
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color:
                       _getActionColor(version.action).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(_getActionIcon(version.action),
-                    color: _getActionColor(version.action), size: 18),
+                    color: _getActionColor(version.action), size: 20),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,17 +759,18 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                     Text(
                       version.title.isEmpty ? l10n.untitled : version.title,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15),
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       _formatTimeAgo(context, version.timestamp),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.restore, size: 20),
+                icon: const Icon(Icons.restore, size: 22),
                 tooltip: l10n.restore,
                 onPressed: () => _onRestoreVersion(version, note),
               ),
@@ -629,11 +784,11 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
               children: [
                 _legendDot(const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
                 const SizedBox(width: 4),
-                Text(l10n.added, style: const TextStyle(fontSize: 12)),
+                Text(l10n.added, style: const TextStyle(fontSize: 13)),
                 const SizedBox(width: 12),
                 _legendDot(const Color(0xFFC62828), const Color(0xFFFFEBEE)),
                 const SizedBox(width: 4),
-                Text(l10n.deleted, style: const TextStyle(fontSize: 12)),
+                Text(l10n.deleted, style: const TextStyle(fontSize: 13)),
               ],
             ),
           ),
@@ -647,7 +802,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                   ? DiffView(spans: spans)
                   : Text(
                       newText.isEmpty ? l10n.noHistory : newText,
-                      style: const TextStyle(fontSize: 14, height: 1.6),
+                      style: const TextStyle(fontSize: 15, height: 1.6),
                     ),
             ),
           ),
@@ -671,12 +826,12 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 48, color: Colors.grey[400]),
-          const SizedBox(height: 12),
+          Icon(icon, size: 56, color: Colors.grey[400]),
+          const SizedBox(height: 16),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+            style: TextStyle(color: Colors.grey[500], fontSize: 15),
           ),
         ],
       ),
