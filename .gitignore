@@ -78,6 +78,9 @@ android/.gradle/
 # Linux ephemeral files
 linux/flutter/ephemeral/
 
+# Windows ephemeral files
+windows/flutter/ephemeral/
+
 # Archives and compressed files
 *.tar.gz
 *.tar

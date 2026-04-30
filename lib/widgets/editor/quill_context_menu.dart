@@ -225,8 +225,9 @@ class _DesktopContextMenuState extends State<_DesktopContextMenu> {
 
     if (dx + menuWidth > screen.width - 8) dx = screen.width - menuWidth - 8;
     if (dx < 8) dx = 8;
-    if (dy + menuHeight > screen.height - safeBottom - 8)
+    if (dy + menuHeight > screen.height - safeBottom - 8) {
       dy = dy - menuHeight - 8;
+    }
     if (dy < 8) dy = 8;
 
     return Positioned(
