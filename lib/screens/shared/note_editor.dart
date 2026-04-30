@@ -50,6 +50,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
   bool _isQuillReady = false;
+  final ValueNotifier<bool> _selectionBarActive = ValueNotifier(false);
 
   @override
   bool get wantKeepAlive => true;
@@ -153,6 +154,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   @override
   void dispose() {
     _quillChangesSubscription?.cancel();
+    _selectionBarActive.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _coordinator.dispose();
     super.dispose();
@@ -657,6 +659,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 }
               },
               readOnly: false,
+              selectionBarActive: _selectionBarActive,
             ),
             EditorBuildMethods.buildHeader(
               context: context,
@@ -676,6 +679,22 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               originallyLocked: widget.originallyLocked,
               scrollProgress: _coordinator.scrollProgress,
               isReadOnly: false,
+              selectionBarActive: _selectionBarActive,
+              quillController: _coordinator.quillController,
+              onPaste: () async {
+                if (_coordinator.quillController != null) {
+                  final data = await Clipboard.getData(Clipboard.kTextPlain);
+                  final text = data?.text;
+                  if (text != null && text.isNotEmpty) {
+                    final ctrl = _coordinator.quillController!;
+                    final sel = ctrl.selection;
+                    final offset =
+                        sel.isCollapsed ? sel.extentOffset : sel.start;
+                    final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
+                    ctrl.replaceText(offset, deleteLen, text, null);
+                  }
+                }
+              },
               onSaveTap: () async {
                 if (widget.mode == NoteMode.code &&
                     _coordinator.detectedLanguage != null) {

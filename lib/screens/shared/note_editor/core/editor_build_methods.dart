@@ -21,6 +21,7 @@ import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/editor/apex_editor_header.dart';
 import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:apex_note/widgets/editor/checklist_editor.dart';
+import 'package:apex_note/widgets/editor/editor_selection_panel.dart';
 import 'package:apex_note/widgets/editor/quill_editor_widget.dart';
 import 'package:apex_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +49,7 @@ class EditorBuildMethods {
     required Function(String) onChecklistTitleChanged,
     ValueChanged<double>? onScroll,
     bool readOnly = false,
+    ValueNotifier<bool>? selectionBarActive,
   }) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const toolbarHeight = 60.0;
@@ -99,11 +101,12 @@ class EditorBuildMethods {
         autoFocus: note == null && !readOnly,
         readOnly: readOnly,
         onScroll: onScroll,
+        selectionBarActive: selectionBarActive ?? ValueNotifier(false),
       );
     }
   }
 
-  /// Build header widget
+  /// Build header widget — حاوية واحدة تعرض الهيدر أو شريط التحديد
   static Widget buildHeader({
     required BuildContext context,
     required EditorCoordinator coordinator,
@@ -121,6 +124,9 @@ class EditorBuildMethods {
     ValueNotifier<double>? scrollProgress,
     bool isReadOnly = false,
     VoidCallback? onEditTap,
+    ValueNotifier<bool>? selectionBarActive,
+    QuillController? quillController,
+    Future<void> Function()? onPaste,
   }) {
     final base = coordinator.getBackgroundColor(context);
     final isDark = base.computeLuminance() < 0.5;
@@ -131,79 +137,109 @@ class EditorBuildMethods {
       base,
     );
 
-    Widget buildWidget(Color bg) => Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOut,
-            builder: (context, opacity, child) => Opacity(
-              opacity: opacity,
-              child: child,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: ApexEditorHeader(
-                backgroundColor: bg,
-                textColor: finalTextColor,
-                title: currentTitle,
-                isLocked: note?.isLocked == true || notePassword != null,
-                hasHistory: note?.id != null,
-                hasReminder: coordinator.stateManager.reminderDateTime != null,
-                onReminderTap: isReadOnly
-                    ? null
-                    : () {
-                        HapticFeedback.mediumImpact();
-                        onReminderTap();
-                      },
-                onHistoryTap: onHistoryTap,
-                onTitleTap: isReadOnly
-                    ? null
-                    : () {
-                        HapticFeedback.lightImpact();
-                        onTitleTap?.call();
-                      },
-                onSaveTap: isReadOnly
-                    ? null
-                    : () async {
-                        HapticFeedback.mediumImpact();
-                        onSaveTap?.call();
-                      },
-                onEditTap: isReadOnly
-                    ? () {
-                        HapticFeedback.mediumImpact();
-                        onEditTap?.call();
-                      }
-                    : null,
-                onBackTap: onBackTap,
-                onCategoryTap: (isReadOnly || originallyLocked)
-                    ? null
-                    : () async {
-                        final current = coordinator.stateManager.categoryIds;
-                        final result = await CategoryPickerSheet.show(
-                          context,
-                          current,
-                          isHiddenFromHome:
-                              coordinator.stateManager.isHiddenFromHome,
-                        );
-                        if (result != null) {
-                          onCategoryChanged(result['categoryIds'] as List<int>);
-                          coordinator.stateManager.isHiddenFromHome =
-                              result['isHiddenFromHome'] as bool;
-                        }
-                      },
-              ),
-            ),
+    Widget buildHeaderWidget(Color bg) => SafeArea(
+          bottom: false,
+          child: ApexEditorHeader(
+            backgroundColor: bg,
+            textColor: finalTextColor,
+            title: currentTitle,
+            isLocked: note?.isLocked == true || notePassword != null,
+            hasHistory: note?.id != null,
+            hasReminder: coordinator.stateManager.reminderDateTime != null,
+            onReminderTap: isReadOnly
+                ? null
+                : () {
+                    HapticFeedback.mediumImpact();
+                    onReminderTap();
+                  },
+            onHistoryTap: onHistoryTap,
+            onTitleTap: isReadOnly
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    onTitleTap?.call();
+                  },
+            onSaveTap: isReadOnly
+                ? null
+                : () async {
+                    HapticFeedback.mediumImpact();
+                    onSaveTap?.call();
+                  },
+            onEditTap: isReadOnly
+                ? () {
+                    HapticFeedback.mediumImpact();
+                    onEditTap?.call();
+                  }
+                : null,
+            onBackTap: onBackTap,
+            onCategoryTap: (isReadOnly || originallyLocked)
+                ? null
+                : () async {
+                    final current = coordinator.stateManager.categoryIds;
+                    final result = await CategoryPickerSheet.show(
+                      context,
+                      current,
+                      isHiddenFromHome:
+                          coordinator.stateManager.isHiddenFromHome,
+                    );
+                    if (result != null) {
+                      onCategoryChanged(result['categoryIds'] as List<int>);
+                      coordinator.stateManager.isHiddenFromHome =
+                          result['isHiddenFromHome'] as bool;
+                    }
+                  },
           ),
         );
 
-    if (scrollProgress == null) return buildWidget(base);
+    Widget buildSelectionBar(Color bg) => (selectionBarActive != null &&
+            quillController != null &&
+            onPaste != null)
+        ? SafeArea(
+            bottom: false,
+            child: EditorSelectionPanel(
+              ctrl: quillController,
+              backgroundColor: bg,
+              textColor: finalTextColor,
+              onPaste: onPaste,
+              onDismiss: () => selectionBarActive.value = false,
+            ),
+          )
+        : buildHeaderWidget(bg);
+
+    Widget buildContainer(Color bg) => Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: selectionBarActive != null
+              ? ValueListenableBuilder<bool>(
+                  valueListenable: selectionBarActive,
+                  builder: (_, isBarActive, __) => AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, anim) => SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, -1),
+                        end: Offset.zero,
+                      ).animate(anim),
+                      child: child,
+                    ),
+                    child: KeyedSubtree(
+                      key: ValueKey(isBarActive),
+                      child: isBarActive
+                          ? buildSelectionBar(bg)
+                          : buildHeaderWidget(bg),
+                    ),
+                  ),
+                )
+              : buildHeaderWidget(bg),
+        );
+
+    if (scrollProgress == null) return buildContainer(base);
     return ValueListenableBuilder<double>(
       valueListenable: scrollProgress,
       builder: (_, progress, __) =>
-          buildWidget(Color.lerp(base, scrolled, progress)!),
+          buildContainer(Color.lerp(base, scrolled, progress)!),
     );
   }
 
