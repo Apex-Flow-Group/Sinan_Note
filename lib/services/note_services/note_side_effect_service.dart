@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/widget_service.dart';
@@ -67,7 +68,7 @@ class NoteSideEffectService {
           return false;
         }
 
-        // Format notification body
+        // Format notification body — convert Delta/Checklist to plain text
         String notificationBody;
         if (note.isChecklist) {
           // Special formatting for checklists
@@ -77,10 +78,11 @@ class NoteSideEffectService {
             notificationBody = '${notificationBody.substring(0, 100)}...';
           }
         } else {
-          // Regular note content
-          notificationBody = note.content.length > 100
-              ? '${note.content.substring(0, 100)}...'
-              : note.content;
+          // Convert Delta JSON (or plain text) to readable plain text
+          notificationBody = NoteContentUtils.toDisplayText(
+            note.content,
+            maxChars: 100,
+          );
         }
 
         // Schedule notification
