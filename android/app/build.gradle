@@ -54,6 +54,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    // Workaround for Flutter Gradle Plugin + AGP 8.x race condition
+    // libs.jar must exist before JetifyTransform runs
+    applicationVariants.configureEach { variant ->
+        variant.preBuildProvider.configure {
+            doFirst {
+                def libsJar = file("${rootProject.buildDir}/app/intermediates/flutter/${variant.name}/libs.jar")
+                if (!libsJar.exists()) {
+                    libsJar.parentFile.mkdirs()
+                    new java.util.zip.ZipOutputStream(new FileOutputStream(libsJar)).close()
+                }
+            }
+        }
+    }
 }
 
 dependencies {
