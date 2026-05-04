@@ -17,6 +17,7 @@
 | File | Description |
 |------|-------------|
 | [`docs/technical/animation_and_editor_performance.md`](docs/technical/animation_and_editor_performance.md) | Editor & animation performance notes |
+| [`docs/technical/refactoring_may_2026.md`](docs/technical/refactoring_may_2026.md) | Refactoring session — 5 files + tear handle |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution guide |
 

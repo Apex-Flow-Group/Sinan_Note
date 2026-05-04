@@ -1,15 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
 import 'package:apex_note/core/constants/app_text_styles.dart';
-import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/widgets/editor/apex_magnifier.dart';
-import 'package:apex_note/widgets/editor/quill_editor_state_mixin.dart';
-import 'package:apex_note/widgets/editor/tear/tear.dart';
+import 'package:apex_note/widgets/editor/quill_editor_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
 class QuillEditorWidget extends StatefulWidget {
@@ -47,167 +42,28 @@ class QuillEditorWidget extends StatefulWidget {
 }
 
 class _QuillEditorWidgetState extends State<QuillEditorWidget> {
-  TextDirection _textDirection = TextDirection.rtl;
-  final StableScrollController _scrollController = StableScrollController();
-  final GlobalKey<EditorState> _editorKey = GlobalKey<EditorState>();
-  bool _isFormatting = false;
-  bool _isPasting = false;
-  bool _isKeyboardOpening = false;
-  bool _isLoading = true;
-  bool _isDirectionFormatting = false;
-  bool _isHandlingEnter = false;
-  bool _isDraggingSelection = false;
+  late final QuillEditorController _ctrl;
   String? _cachedFontFamily;
-  late CursorTearHandle _tearHandle;
 
-  // ── selection bar ─────────────────────────────────────────────────────────
-  bool _suppressBar = false;
-
-  void _showSelectionBar() {
-    if (_suppressBar) return;
-    if (widget.selectionBarActive.value) return;
-    widget.selectionBarActive.value = true;
-  }
-
-  void _hideSelectionBar() {
-    _suppressBar = true;
-    widget.selectionBarActive.value = false;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _suppressBar = false;
-    });
-  }
-
-  void _onSelectionChangedForBar() {
-    if (!widget.selectionBarActive.value) return;
-    if (_isDraggingSelection) return;
-    final sel = widget.quillController.selection;
-    if (sel.isCollapsed) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && widget.selectionBarActive.value) {
-          final current = widget.quillController.selection;
-          if (current.isCollapsed) {
-            widget.selectionBarActive.value = false;
-          }
-        }
-      });
-    }
-  }
-
-  // ── direction helpers ─────────────────────────────────────────────────────
-  TextDirection _getLineDirection(String text, int offset) {
-    final lineStart = text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
-    final lineEnd = text.indexOf('\n', offset);
-    final line = text.substring(
-      lineStart < 0 ? 0 : lineStart + 1,
-      lineEnd < 0 ? text.length : lineEnd,
-    );
-    if (line.trim().isEmpty) return _getPrevNonEmptyLineDirection(text, offset);
-    return TextDirectionUtils.getDirection(line);
-  }
-
-  void _applyEnterDirection(TextDirection dir) {
-    _applyDirectionFormat(() {
-      if (dir == TextDirection.ltr) {
-        widget.quillController.formatSelection(Attribute.rtl);
-      } else {
-        widget.quillController.formatSelection(const DirectionAttribute(null));
-      }
-      widget.quillController.formatSelection(const AlignAttribute(null));
-    });
-  }
-
-  void _applyDirectionFormat(VoidCallback applyFn) {
-    if (_isFormatting || _isDirectionFormatting) return;
-    _isFormatting = true;
-    _isDirectionFormatting = true;
-    _scrollController.freezed = true;
-    applyFn();
-    _isFormatting = false;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.freezed = false;
-      _isDirectionFormatting = false;
-    });
-  }
-
-  TextDirection _getPrevNonEmptyLineDirection(String text, int offset) {
-    final currentLineStart =
-        text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
-    if (currentLineStart <= 0) return TextDirection.rtl;
-    final before = text.substring(0, currentLineStart);
-    final prevLines = before.split('\n');
-    for (int i = prevLines.length - 1; i >= 0; i--) {
-      if (prevLines[i].trim().isNotEmpty) {
-        return TextDirectionUtils.getDirection(prevLines[i]);
-      }
-    }
-    return TextDirection.rtl;
-  }
-
-  // ── tashkeel ──────────────────────────────────────────────────────────────
-  String _lastPlainText = '';
-  StreamSubscription? _docChangeSub;
-
-  static const _harakat = {
-    '\u064B',
-    '\u064C',
-    '\u064D',
-    '\u064E',
-    '\u064F',
-    '\u0650',
-    '\u0652',
-    '\u0653',
-    '\u0654',
-    '\u0655',
-    '\u0656',
-    '\u0657',
-    '\u0670',
-  };
-  static const _shadda = '\u0651';
-  static bool _isTashkeel(String ch) => _harakat.contains(ch) || ch == _shadda;
-
-  void _fixDanglingTashkeel() {
-    final ctrl = widget.quillController;
-    final sel = ctrl.selection;
-    if (!sel.isCollapsed) return;
-    final text = ctrl.document.toPlainText();
-    final pos = sel.baseOffset;
-    if (pos == 0 || pos > text.length) return;
-    final charBefore = text[pos - 1];
-    if (!_isTashkeel(charBefore)) return;
-    if (pos >= 2 && !_isTashkeel(text[pos - 2])) return;
-    ctrl.replaceText(pos - 1, 1, '', TextSelection.collapsed(offset: pos - 1));
-  }
-
-  // ── lifecycle ─────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    widget.quillController.readOnly = widget.readOnly;
-    final initialText = widget.quillController.document.toPlainText();
-    _lastPlainText = initialText;
-    _textDirection = TextDirectionUtils.getDirection(initialText);
-    _tearHandle = CursorTearHandle(
-      controller: widget.quillController,
-      editorKey: _editorKey,
-      getMagnifierBgColor: () => widget.noteColor,
+    _ctrl = QuillEditorController(
+      quillController: widget.quillController,
+      focusNode: widget.focusNode,
+      selectionBarActive: widget.selectionBarActive,
+      getNoteColor: () => widget.noteColor,
+      onScroll: widget.onScroll,
+      rebuild: () { if (mounted) setState(() {}); },
     );
-    widget.quillController.addListener(_onChanged);
-    widget.quillController.addListener(_onSelectionChangedForBar);
-    widget.quillController.addListener(_tearHandle.onSelectionChanged);
-    widget.focusNode.addListener(_onFocusChanged);
-    _docChangeSub =
-        widget.quillController.document.changes.listen(_onDocumentChange);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _isLoading = false;
-      _scrollController.addListener(_onScrollChanged);
-    });
+    _ctrl.init(widget.readOnly);
   }
 
   @override
   void didUpdateWidget(QuillEditorWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.readOnly != widget.readOnly) {
-      widget.quillController.readOnly = widget.readOnly;
+      _ctrl.updateReadOnly(widget.readOnly);
     }
   }
 
@@ -215,10 +71,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
-    if (keyboardVisible && !_isKeyboardOpening) {
-      _isKeyboardOpening = true;
+    if (keyboardVisible && !_ctrl.isKeyboardOpening) {
+      _ctrl.isKeyboardOpening = true;
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) _isKeyboardOpening = false;
+        if (mounted) _ctrl.isKeyboardOpening = false;
       });
     }
     final newFont = Theme.of(context).textTheme.bodyMedium?.fontFamily;
@@ -230,313 +86,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
   @override
   void dispose() {
-    _hideSelectionBar();
-    _tearHandle.dispose();
-    widget.focusNode.removeListener(_onFocusChanged);
-    widget.quillController.removeListener(_onChanged);
-    widget.quillController.removeListener(_onSelectionChangedForBar);
-    widget.quillController.removeListener(_tearHandle.onSelectionChanged);
-    _scrollController.removeListener(_onScrollChanged);
-    _docChangeSub?.cancel();
-    _scrollController.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
-  // ── listeners ─────────────────────────────────────────────────────────────
-  void _onScrollChanged() {
-    if (!_scrollController.hasClients) return;
-    // أخفِ الدمعة عند السكرول — إحداثياتها تصير غلط
-    if (!_tearHandle.isDragging) _tearHandle.hide();
-    final offset = _scrollController.offset.clamp(0.0, 120.0);
-    widget.onScroll?.call(offset / 120.0);
-  }
-
-  void _onFocusChanged() {
-    if (!widget.focusNode.hasFocus) {
-      _tearHandle.forceHide();
-    }
-  }
-
-  void _onDocumentChange(DocChange change) {
-    if (_isFormatting ||
-        _isPasting ||
-        _isLoading ||
-        _isDirectionFormatting ||
-        _isDraggingSelection) {
-      return;
-    }
-    if (change.source != ChangeSource.local) return;
-
-    // أخفِ الدمعة عند أي تغيير في النص (كتابة أو حذف) — لكن ليس أثناء السحب
-    if (!_tearHandle.isDragging) _tearHandle.onTextChanged();
-
-    final ops = change.change.toList();
-
-    if (ops.any((op) => op.isDelete)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _fixDanglingTashkeel();
-      });
-      return;
-    }
-
-    final isOnlyNewline =
-        ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
-    if (!isOnlyNewline) return;
-
-    final plainText = widget.quillController.document.toPlainText();
-    final cursorOffset =
-        widget.quillController.selection.baseOffset.clamp(0, plainText.length);
-    final prevLineOffset = cursorOffset > 0 ? cursorOffset - 1 : 0;
-    final dir = _getLineDirection(plainText, prevLineOffset);
-
-    _isHandlingEnter = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _isHandlingEnter = false;
-      if (!mounted ||
-          _isFormatting ||
-          _isDirectionFormatting ||
-          _isDraggingSelection) {
-        return;
-      }
-      _applyEnterDirection(dir);
-      _scrollToCursor();
-    });
-  }
-
-  void _onChanged() {
-    if (_isFormatting ||
-        _isPasting ||
-        _isKeyboardOpening ||
-        _isDirectionFormatting ||
-        _isHandlingEnter) {
-      return;
-    }
-
-    final sel = widget.quillController.selection;
-
-    if (!sel.isCollapsed) {
-      _isDraggingSelection = true;
-      final re = _editorKey.currentState?.renderEditor;
-      if (re != null) {
-        try {
-          final sR = re.getLocalRectForCaret(TextPosition(offset: sel.start));
-          final eR = re.getLocalRectForCaret(TextPosition(offset: sel.end));
-          final sG = re.localToGlobal(sR.bottomLeft);
-          final eG = re.localToGlobal(eR.bottomRight);
-          debugPrint(
-              '🟢 sel=[${sel.start}-${sel.end}] start=(${sG.dx.toStringAsFixed(0)},${sG.dy.toStringAsFixed(0)}) end=(${eG.dx.toStringAsFixed(0)},${eG.dy.toStringAsFixed(0)})');
-        } catch (_) {}
-      }
-      return;
-    }
-    if (_isDraggingSelection) {
-      _isDraggingSelection = false;
-      final re = _editorKey.currentState?.renderEditor;
-      if (re != null) {
-        try {
-          final cR =
-              re.getLocalRectForCaret(TextPosition(offset: sel.baseOffset));
-          final cG = re.localToGlobal(cR.bottomCenter);
-          debugPrint(
-              '🔴 dragEnd offset=${sel.baseOffset} cursor=(${cG.dx.toStringAsFixed(0)},${cG.dy.toStringAsFixed(0)})');
-        } catch (_) {}
-      }
-      return;
-    }
-
-    final plainText = widget.quillController.document.toPlainText();
-    if (plainText == _lastPlainText) return;
-    _lastPlainText = plainText;
-
-    final selection = widget.quillController.selection;
-    if (!selection.isValid) return;
-    if (plainText.trim().isEmpty) return;
-
-    final docLength = plainText.length;
-    if (!selection.isCollapsed &&
-        selection.start == 0 &&
-        selection.end >= docLength - 1) {
-      return;
-    }
-
-    final offset = selection.baseOffset.clamp(0, plainText.length);
-    final lineStart = plainText.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
-    final lineEnd = plainText.indexOf('\n', offset);
-    final currentLine = plainText.substring(
-      lineStart < 0 ? 0 : lineStart + 1,
-      lineEnd < 0 ? plainText.length : lineEnd,
-    );
-
-    if (currentLine.isEmpty) {
-      final prevDir = _getPrevNonEmptyLineDirection(plainText, offset);
-      if (_textDirection != prevDir) setState(() => _textDirection = prevDir);
-      return;
-    }
-
-    final newDir = TextDirectionUtils.getDirection(currentLine);
-    final hasExplicitDir = RegExp(r'[\u0600-\u06FF]').hasMatch(currentLine) ||
-        RegExp(r'[a-zA-Z]').hasMatch(currentLine);
-    final effectiveDir = !hasExplicitDir
-        ? _getPrevNonEmptyLineDirection(plainText, offset)
-        : newDir;
-    final isRtl = effectiveDir == TextDirection.rtl;
-    final currentAttr =
-        widget.quillController.getSelectionStyle().attributes['direction'];
-    final currentIsRtl = currentAttr?.value == 'rtl';
-
-    if (hasExplicitDir && currentIsRtl != !isRtl) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted ||
-            _isFormatting ||
-            _isDirectionFormatting ||
-            _isDraggingSelection) {
-          return;
-        }
-        _applyDirectionFormat(() {
-          if (isRtl) {
-            widget.quillController
-                .formatSelection(const DirectionAttribute(null));
-            widget.quillController.formatSelection(const AlignAttribute(null));
-          } else {
-            widget.quillController.formatSelection(Attribute.rtl);
-            widget.quillController.formatSelection(const AlignAttribute(null));
-          }
-        });
-      });
-    }
-
-    if (effectiveDir != _textDirection) {
-      setState(() => _textDirection = effectiveDir);
-    }
-  }
-
-  // ── keyboard & paste ──────────────────────────────────────────────────────
-  bool _deleteWithTashkeelAwareness() {
-    final ctrl = widget.quillController;
-    final sel = ctrl.selection;
-    if (!sel.isCollapsed || sel.baseOffset == 0) return false;
-    final text = ctrl.document.toPlainText();
-    final pos = sel.baseOffset;
-    if (pos > text.length) return false;
-    int start = pos - 1;
-    while (start > 0 && _isTashkeel(text[start])) {
-      start--;
-    }
-    final hasTashkeel =
-        (pos - start) > 1 || (pos - start == 1 && _isTashkeel(text[start]));
-    if (!hasTashkeel) return false;
-    int tashkeelPos = pos - 1;
-    while (tashkeelPos > start && !_isTashkeel(text[tashkeelPos])) {
-      tashkeelPos--;
-    }
-    if (_isTashkeel(text[tashkeelPos])) {
-      ctrl.replaceText(
-          tashkeelPos, 1, '', TextSelection.collapsed(offset: tashkeelPos));
-      return true;
-    }
-    return false;
-  }
-
-  Future<void> _pastePlainText() async {
-    _isPasting = true;
-    final ctrl = widget.quillController;
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    final text = data?.text;
-    if (text == null || text.isEmpty) return;
-
-    final sel = ctrl.selection;
-    final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
-    final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
-    ctrl.replaceText(offset, deleteLen, text, null);
-
-    final lines = text.split('\n');
-    int pos = offset;
-    for (int i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      final isLast = i == lines.length - 1;
-      final lineTextLen = line.length;
-      if (lineTextLen > 0) {
-        ctrl.formatText(pos, lineTextLen, const ColorAttribute(null));
-        ctrl.formatText(pos, lineTextLen, const BackgroundAttribute(null));
-        ctrl.formatText(
-            pos, lineTextLen, Attribute.clone(Attribute.bold, null));
-        ctrl.formatText(
-            pos, lineTextLen, Attribute.clone(Attribute.italic, null));
-        ctrl.formatText(
-            pos, lineTextLen, Attribute.clone(Attribute.underline, null));
-        ctrl.formatText(pos, lineTextLen, const SizeAttribute(null));
-      }
-      pos += lineTextLen;
-      if (!isLast) {
-        final isRtl =
-            TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') ==
-                TextDirection.rtl;
-        ctrl.formatText(pos, 1, const AlignAttribute(null));
-        ctrl.formatText(
-            pos, 1, isRtl ? const DirectionAttribute(null) : Attribute.rtl);
-        pos += 1;
-      }
-    }
-    _isPasting = false;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      final p = _scrollController.position;
-      if (p.pixels < p.maxScrollExtent - 100) return;
-      _scrollController.animateTo(p.maxScrollExtent,
-          duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
-    });
-  }
-
-  void _scrollToCursor() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      _editorKey.currentState?.requestKeyboard();
-    });
-  }
-
-  KeyEventResult _handleKeyEvent(KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.keyV &&
-        HardwareKeyboard.instance.isControlPressed) {
-      _pastePlainText();
-      return KeyEventResult.handled;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.enter ||
-        event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-      _handleEnterKey();
-      return KeyEventResult.ignored;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.backspace) {
-      return _deleteWithTashkeelAwareness()
-          ? KeyEventResult.handled
-          : KeyEventResult.ignored;
-    }
-    return KeyEventResult.ignored;
-  }
-
-  void _handleEnterKey() {
-    final ctrl = widget.quillController;
-    final plainText = ctrl.document.toPlainText();
-    final offset = ctrl.selection.baseOffset.clamp(0, plainText.length);
-    final dir = _getLineDirection(plainText, offset);
-    _isHandlingEnter = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _isHandlingEnter = false;
-      if (!mounted ||
-          _isFormatting ||
-          _isDirectionFormatting ||
-          _isDraggingSelection) {
-        return;
-      }
-      _applyEnterDirection(dir);
-      _scrollToCursor();
-    });
-  }
-
-  // ── build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -547,7 +100,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         DeleteCharacterIntent: CallbackAction<DeleteCharacterIntent>(
           onInvoke: (intent) {
             if (intent.forward) return Actions.maybeInvoke(context, intent);
-            if (_deleteWithTashkeelAwareness()) return null;
+            if (_ctrl.deleteWithTashkeelAwareness()) return null;
             final ctrl = widget.quillController;
             final sel = ctrl.selection;
             if (sel.isCollapsed && sel.baseOffset > 0) {
@@ -561,14 +114,11 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
           },
         ),
         PasteTextIntent: CallbackAction<PasteTextIntent>(
-          onInvoke: (_) {
-            _pastePlainText();
-            return null;
-          },
+          onInvoke: (_) { _ctrl.pastePlainText(); return null; },
         ),
       },
       child: Focus(
-        onKeyEvent: (_, event) => _handleKeyEvent(event),
+        onKeyEvent: (_, event) => _ctrl.handleKeyEvent(event),
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () {
@@ -612,9 +162,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                   child: QuillEditor(
                     controller: widget.quillController,
                     focusNode: widget.focusNode,
-                    scrollController: _scrollController,
+                    scrollController: _ctrl.scrollController,
                     config: QuillEditorConfig(
-                      editorKey: _editorKey,
+                      editorKey: _ctrl.editorKey,
                       autoFocus: widget.autoFocus,
                       expands: true,
                       scrollable: true,
@@ -625,7 +175,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       paintCursorAboveText: true,
                       contextMenuBuilder: (context, rawEditorState) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) _showSelectionBar();
+                          if (mounted) _ctrl.showSelectionBar();
                         });
                         return const SizedBox.shrink();
                       },

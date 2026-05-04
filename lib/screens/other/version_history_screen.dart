@@ -2,27 +2,21 @@
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/services/version_history_service.dart';
+import 'package:apex_note/screens/other/version_history/panels/diff_panel.dart';
+import 'package:apex_note/screens/other/version_history/panels/notes_panel.dart';
+import 'package:apex_note/screens/other/version_history/panels/versions_panel.dart';
+import 'package:apex_note/screens/other/version_history/version_history_controller.dart';
+import 'package:apex_note/screens/other/version_history/widgets/resizable_divider.dart';
 import 'package:apex_note/widgets/common/searchable_header.dart';
-import 'package:apex_note/widgets/editor/diff_view.dart';
-import 'package:apex_note/widgets/effects/premium_card_effect.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// ── Column width constraints ──────────────────────────────────────────────
-const double _kColMin = 200.0;
-const double _kColMax = 480.0;
-const double _kColDefaultNotes = 280.0;
-const double _kColDefaultVersions = 240.0;
 const String _kPrefNotesWidth = 'vh_notes_col_width';
 const String _kPrefVersionsWidth = 'vh_versions_col_width';
 
@@ -34,37 +28,30 @@ class VersionHistoryScreen extends StatefulWidget {
 }
 
 class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
-  final _versionService = VersionHistoryService();
-  List<Note> _notesWithHistory = [];
-  bool _isLoading = true;
+  final _ctrl = VersionHistoryController();
   final _searchController = TextEditingController();
-  String _searchQuery = '';
-  bool _isSearching = false;
-  String _sortBy = 'date';
+  final _pageController = PageController();
 
-  Note? _selectedNote;
-  List<NoteVersion> _selectedNoteVersions = [];
-  bool _loadingVersions = false;
-  NoteVersion? _selectedVersion;
-
-  // Expanded/collapsed state for notes list
   ViewType _viewType = ViewType.listExpanded;
+  bool _isSearching = false;
 
-  // Resizable column widths (wide layout only)
-  double _notesColWidth = _kColDefaultNotes;
-  double _versionsColWidth = _kColDefaultVersions;
+  double _notesColWidth = kColDefaultNotes;
+  double _versionsColWidth = kColDefaultVersions;
 
   @override
   void initState() {
     super.initState();
-    _loadNotesWithHistory();
+    _ctrl.addListener(() { if (mounted) setState(() {}); });
+    _ctrl.loadNotes();
     _loadColWidths();
-    _searchController.addListener(() =>
-        setState(() => _searchQuery = _searchController.text.toLowerCase()));
+    _searchController.addListener(() {
+      _ctrl.searchQuery = _searchController.text.toLowerCase();
+    });
   }
 
   @override
   void dispose() {
+    _ctrl.dispose();
     _searchController.dispose();
     _pageController.dispose();
     super.dispose();
@@ -73,11 +60,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   Future<void> _loadColWidths() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _notesColWidth = (prefs.getDouble(_kPrefNotesWidth) ?? _kColDefaultNotes)
-          .clamp(_kColMin, _kColMax);
-      _versionsColWidth =
-          (prefs.getDouble(_kPrefVersionsWidth) ?? _kColDefaultVersions)
-              .clamp(_kColMin, _kColMax);
+      _notesColWidth = (prefs.getDouble(_kPrefNotesWidth) ?? kColDefaultNotes).clamp(kColMin, kColMax);
+      _versionsColWidth = (prefs.getDouble(_kPrefVersionsWidth) ?? kColDefaultVersions).clamp(kColMin, kColMax);
     });
   }
 
@@ -87,55 +71,9 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     await prefs.setDouble(_kPrefVersionsWidth, _versionsColWidth);
   }
 
-  List<Note> _filterAndSortNotes() {
-    var notes = _notesWithHistory;
-    if (_searchQuery.trim().isNotEmpty) {
-      notes = notes
-          .where((n) =>
-              n.title.toLowerCase().contains(_searchQuery) ||
-              n.content.toLowerCase().contains(_searchQuery))
-          .toList();
-    }
-    if (_sortBy == 'title') {
-      notes.sort((a, b) => a.title.compareTo(b.title));
-    } else {
-      notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    }
-    return notes;
-  }
-
-  Future<void> _loadNotesWithHistory() async {
-    setState(() => _isLoading = true);
-    final notes = await _versionService.getNotesWithHistory();
-    setState(() {
-      _notesWithHistory = notes.where((n) => !n.isLocked).toList();
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _selectNote(Note note) async {
-    setState(() {
-      _selectedNote = note;
-      _selectedVersion = null;
-      _selectedNoteVersions = [];
-      _loadingVersions = true;
-    });
-    // Slide to versions page on mobile
-    final isWide = MediaQuery.of(context).size.width >= 700;
-    if (!isWide) _animateToPage(1);
-
-    final versions = await _versionService.getNoteVersions(note.id!);
-    setState(() {
-      _selectedNoteVersions = versions;
-      _loadingVersions = false;
-    });
-  }
-
-  void _selectVersion(NoteVersion version) {
-    setState(() => _selectedVersion = version);
-    // Slide to diff page on mobile
-    final isWide = MediaQuery.of(context).size.width >= 700;
-    if (!isWide) _animateToPage(2);
+  void _animateToPage(int page) {
+    _pageController.animateToPage(page,
+        duration: const Duration(milliseconds: 320), curve: Curves.easeInOutCubic);
   }
 
   Future<void> _onRestoreVersion(NoteVersion version, Note note) async {
@@ -146,162 +84,91 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         title: Text(l10n.confirmRestore),
         content: Text(l10n.restoreWarning),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cancel)),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.restore)),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.restore)),
         ],
       ),
     );
     if (!mounted || confirmed != true) return;
-    await _versionService.restoreVersion(note.id!, version);
+    await _ctrl.restoreVersion(version, note);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(l10n.noteRestored),
-      backgroundColor: Colors.green,
-    ));
-    _loadNotesWithHistory();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.noteRestored), backgroundColor: Colors.green),
+    );
   }
 
-  String _toPlainText(String c) => NoteContentUtils.toDisplayText(c);
-
-  String _formatTimeAgo(BuildContext context, DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    final l10n = AppLocalizations.of(context)!;
-    if (diff.inMinutes < 1) return l10n.justNow;
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${dt.day}/${dt.month}/${dt.year}';
-  }
-
-  IconData _getActionIcon(String a) {
-    switch (a) {
-      case 'manual_save':
-        return Icons.save;
-      case 'auto_save':
-        return Icons.update;
-      case 'created':
-        return Icons.add_circle;
-      case 'archived':
-        return Icons.archive;
-      case 'restored':
-        return Icons.restore;
-      default:
-        return Icons.edit;
-    }
-  }
-
-  Color _getActionColor(String a) {
-    switch (a) {
-      case 'manual_save':
-        return Colors.green;
-      case 'auto_save':
-        return Colors.blue;
-      case 'created':
-        return Colors.purple;
-      case 'archived':
-        return Colors.orange;
-      case 'restored':
-        return Colors.teal;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     Provider.of<SettingsProvider>(context);
-    final filteredNotes = _filterAndSortNotes();
     final isWide = MediaQuery.of(context).size.width >= 700;
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          final isWide = MediaQuery.of(context).size.width >= 700;
-          if (_selectedVersion != null) {
-            setState(() => _selectedVersion = null);
-            if (!isWide) _animateToPage(1);
-          } else if (_selectedNote != null && !isWide) {
-            setState(() {
-              _selectedNote = null;
-              _selectedNoteVersions = [];
-            });
-            _animateToPage(0);
-          } else {
-            Navigator.of(context).popUntil((r) => r.isFirst);
-          }
+        if (didPop) return;
+        final wide = MediaQuery.of(context).size.width >= 700;
+        if (_ctrl.selectedVersion != null) {
+          _ctrl.clearVersion();
+          if (!wide) _animateToPage(1);
+        } else if (_ctrl.selectedNote != null && !wide) {
+          _ctrl.clearNote();
+          _animateToPage(0);
+        } else {
+          Navigator.of(context).popUntil((r) => r.isFirst);
         }
       },
       child: Scaffold(
         drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: () {}),
         body: Column(
           children: [
-            Builder(builder: (ctx) {
-              return SearchableHeader(
-                title: l10n.noteHistory,
-                icon: Icons.history_rounded,
-                isSearching: _isSearching,
-                searchController: _searchController,
-                onSearchChange: (q) =>
-                    setState(() => _searchQuery = q.toLowerCase()),
-                onToggleSearch: () => setState(() {
-                  _isSearching = !_isSearching;
-                  if (!_isSearching) _searchController.clear();
-                }),
-                leading: Builder(
-                  builder: (ctx) => IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: () => Scaffold.of(ctx).openDrawer(),
+            Builder(builder: (ctx) => SearchableHeader(
+              title: l10n.noteHistory,
+              icon: Icons.history_rounded,
+              isSearching: _isSearching,
+              searchController: _searchController,
+              onSearchChange: (q) => setState(() => _ctrl.searchQuery = q.toLowerCase()),
+              onToggleSearch: () => setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) _searchController.clear();
+              }),
+              leading: Builder(
+                builder: (ctx) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(ctx).openDrawer(),
+                ),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(_viewType == ViewType.listExpanded
+                        ? Icons.view_headline
+                        : Icons.view_agenda_outlined, size: 22),
+                    onPressed: () => setState(() {
+                      _viewType = _viewType == ViewType.listExpanded
+                          ? ViewType.listCompact
+                          : ViewType.listExpanded;
+                    }),
                   ),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Toggle expanded/compact view
-                    IconButton(
-                      icon: Icon(
-                        _viewType == ViewType.listExpanded
-                            ? Icons.view_headline
-                            : Icons.view_agenda_outlined,
-                        size: 22,
-                      ),
-                      tooltip: _viewType == ViewType.listExpanded
-                          ? 'Compact view'
-                          : 'Expanded view',
-                      onPressed: () => setState(() {
-                        _viewType = _viewType == ViewType.listExpanded
-                            ? ViewType.listCompact
-                            : ViewType.listExpanded;
-                      }),
-                    ),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.sort),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      onSelected: (v) => setState(() => _sortBy = v),
-                      itemBuilder: (_) => [
-                        _sortMenuItem(context, 'date', Icons.access_time,
-                            l10n.sortByDate),
-                        _sortMenuItem(context, 'title', Icons.sort_by_alpha,
-                            l10n.sortByTitle),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.sort),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    onSelected: (v) => setState(() => _ctrl.sortBy = v),
+                    itemBuilder: (_) => [
+                      _sortMenuItem(context, 'date', Icons.access_time, l10n.sortByDate),
+                      _sortMenuItem(context, 'title', Icons.sort_by_alpha, l10n.sortByTitle),
+                    ],
+                  ),
+                ],
+              ),
+            )),
             Expanded(
-              child: _isLoading
+              child: _ctrl.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : isWide
-                      ? _buildWideLayout(context, filteredNotes, l10n)
-                      : _buildNarrowLayout(context, filteredNotes, l10n),
+                      ? _buildWideLayout(context)
+                      : _buildNarrowLayout(context),
             ),
           ],
         ),
@@ -309,105 +176,76 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     );
   }
 
-  // ── Wide: progressive columns with resizable dividers ────────────────────
-  Widget _buildWideLayout(
-      BuildContext context, List<Note> notes, AppLocalizations l10n) {
-    final showVersions = _selectedNote != null;
-    final showDiff = _selectedVersion != null;
+  Widget _buildWideLayout(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final panelColor = isDark
         ? Theme.of(context).colorScheme.surfaceContainerLow
         : Theme.of(context).colorScheme.surfaceContainerLowest;
-
-    final Color diffPanelColor = _selectedNote != null
-        ? AppColorPalette.palette[_selectedNote!.colorIndex]
-            .getColor(Theme.of(context).brightness)
+    final diffPanelColor = _ctrl.selectedNote != null
+        ? AppColorPalette.palette[_ctrl.selectedNote!.colorIndex].getColor(Theme.of(context).brightness)
         : panelColor;
 
-    BoxDecoration panelDecoration(Color color) => BoxDecoration(
+    BoxDecoration panelDeco(Color color) => BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: [BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+            blurRadius: 6, offset: const Offset(0, 2),
+          )],
         );
 
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
         children: [
-          // ── Column 1: Notes ────────────────────────────────────────────
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
               width: _notesColWidth,
-              decoration: panelDecoration(panelColor),
-              child: _buildNotesList(context, notes, l10n),
+              decoration: panelDeco(panelColor),
+              child: _buildNotesPanel(isWide: true),
             ),
           ),
-
-          // ── Divider 1 ──────────────────────────────────────────────────
-          _ResizableDivider(
-            onDrag: (dx) => setState(() {
-              _notesColWidth = (_notesColWidth + dx).clamp(_kColMin, _kColMax);
-            }),
+          ResizableDivider(
+            onDrag: (dx) => setState(() => _notesColWidth = (_notesColWidth + dx).clamp(kColMin, kColMax)),
             onDragEnd: _saveColWidths,
           ),
-
-          // ── Column 2: Versions (animated) ──────────────────────────────
           AnimatedSize(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeInOut,
-            child: showVersions
+            child: _ctrl.selectedNote != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       width: _versionsColWidth,
-                      decoration: panelDecoration(panelColor),
-                      child: _buildVersionsList(context, l10n),
+                      decoration: panelDeco(panelColor),
+                      child: _buildVersionsPanel(isWide: true),
                     ),
                   )
                 : const SizedBox.shrink(),
           ),
-
-          // ── Divider 2 ──────────────────────────────────────────────────
-          if (showVersions)
-            _ResizableDivider(
-              onDrag: (dx) => setState(() {
-                _versionsColWidth =
-                    (_versionsColWidth + dx).clamp(_kColMin, _kColMax);
-              }),
+          if (_ctrl.selectedNote != null)
+            ResizableDivider(
+              onDrag: (dx) => setState(() => _versionsColWidth = (_versionsColWidth + dx).clamp(kColMin, kColMax)),
               onDragEnd: _saveColWidths,
             ),
-
-          // ── Column 3: Diff ─────────────────────────────────────────────
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               child: ClipRRect(
-                key: ValueKey(showDiff
-                    ? 'diff_${_selectedVersion?.id}'
-                    : 'hint_$showVersions'),
+                key: ValueKey(_ctrl.selectedVersion != null
+                    ? 'diff_${_ctrl.selectedVersion?.id}'
+                    : 'hint_${_ctrl.selectedNote != null}'),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  decoration:
-                      panelDecoration(showDiff ? diffPanelColor : panelColor),
-                  child: showDiff
-                      ? _buildDiffPanel(context, l10n)
-                      : _buildEmptyHint(
-                          context,
-                          showVersions
-                              ? Icons.compare_arrows_outlined
-                              : Icons.touch_app_outlined,
-                          showVersions
-                              ? l10n.selectVersionToViewDiff
-                              : l10n.selectNoteToViewHistory,
-                        ),
+                  decoration: panelDeco(_ctrl.selectedVersion != null ? diffPanelColor : panelColor),
+                  child: _ctrl.selectedVersion != null
+                      ? _buildDiffPanel(isWide: true)
+                      : _buildEmptyHint(context,
+                          _ctrl.selectedNote != null ? Icons.compare_arrows_outlined : Icons.touch_app_outlined,
+                          _ctrl.selectedNote != null
+                              ? AppLocalizations.of(context)!.selectVersionToViewDiff
+                              : AppLocalizations.of(context)!.selectNoteToViewHistory),
                 ),
               ),
             ),
@@ -417,497 +255,85 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     );
   }
 
-  // ── Narrow: PageView with slide animation ────────────────────────────────
-  final PageController _pageController = PageController();
-
-  /// Current page index: 0=notes, 1=versions, 2=diff
-  void _animateToPage(int page) {
-    _pageController.animateToPage(
-      page,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeInOutCubic,
-    );
-  }
-
-  Widget _buildNarrowLayout(
-      BuildContext context, List<Note> notes, AppLocalizations l10n) {
+  Widget _buildNarrowLayout(BuildContext context) {
     return PageView(
       controller: _pageController,
-      physics: const NeverScrollableScrollPhysics(), // نتحكم بالتنقل برمجياً
+      physics: const NeverScrollableScrollPhysics(),
       children: [
-        // Page 0: Notes list
-        _buildNotesList(context, notes, l10n),
-
-        // Page 1: Versions list
-        _selectedNote != null
-            ? _buildVersionsList(context, l10n)
-            : const SizedBox.shrink(),
-
-        // Page 2: Diff panel
-        _selectedNote != null && _selectedVersion != null
-            ? _buildDiffPanel(context, l10n)
+        _buildNotesPanel(isWide: false),
+        _ctrl.selectedNote != null ? _buildVersionsPanel(isWide: false) : const SizedBox.shrink(),
+        _ctrl.selectedNote != null && _ctrl.selectedVersion != null
+            ? _buildDiffPanel(isWide: false)
             : const SizedBox.shrink(),
       ],
     );
   }
 
-  // ── Notes list using NoteCardWidget ──────────────────────────────────────
-  Widget _buildNotesList(
-      BuildContext context, List<Note> notes, AppLocalizations l10n) {
-    if (notes.isEmpty) {
-      return Center(
+  Widget _buildNotesPanel({required bool isWide}) => NotesPanel(
+        notes: _ctrl.filteredNotes,
+        selectedNote: _ctrl.selectedNote,
+        viewType: _viewType,
+        searchQuery: _ctrl.searchQuery,
+        getVersionCount: _ctrl.getVersionCount,
+        onSelectNote: (note) async {
+          await _ctrl.selectNote(note);
+          if (!isWide) _animateToPage(1);
+        },
+      );
+
+  Widget _buildVersionsPanel({required bool isWide}) => VersionsPanel(
+        selectedNote: _ctrl.selectedNote!,
+        versions: _ctrl.selectedNoteVersions,
+        loading: _ctrl.loadingVersions,
+        selectedVersion: _ctrl.selectedVersion,
+        isWide: isWide,
+        onSelectVersion: (v) {
+          _ctrl.selectVersion(v);
+          if (!isWide) _animateToPage(2);
+        },
+        onBack: () {
+          _ctrl.clearNote();
+          _animateToPage(0);
+        },
+      );
+
+  Widget _buildDiffPanel({required bool isWide}) => DiffPanel(
+        version: _ctrl.selectedVersion!,
+        note: _ctrl.selectedNote!,
+        allVersions: _ctrl.selectedNoteVersions,
+        isWide: isWide,
+        onRestore: _onRestoreVersion,
+        onBack: () {
+          _ctrl.clearVersion();
+          _animateToPage(1);
+        },
+      );
+
+  Widget _buildEmptyHint(BuildContext context, IconData icon, String message) => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.history_rounded, size: 56, color: Colors.grey[400]),
+            Icon(icon, size: 56, color: Colors.grey[400]),
             const SizedBox(height: 16),
-            Text(
-              _searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: Colors.grey[500]),
-            ),
+            Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500], fontSize: 15)),
           ],
         ),
       );
-    }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 80),
-      itemCount: notes.length,
-      itemBuilder: (_, i) => _buildNoteItem(context, notes[i], l10n),
-    );
-  }
-
-  Widget _buildNoteItem(
-      BuildContext context, Note note, AppLocalizations l10n) {
-    final isSelected = _selectedNote?.id == note.id;
-    final brightness = Theme.of(context).brightness;
-    final noteColor =
-        AppColorPalette.palette[note.colorIndex].getColor(brightness);
-    final isLight = noteColor.computeLuminance() > 0.5;
-    final titleColor = isLight ? Colors.black87 : Colors.white;
-    final contentColor = isLight ? Colors.grey[700]! : Colors.grey[300]!;
-
-    final displayTitle = NoteCardUtils.getDisplayTitle(note);
-    final displayContent =
-        NoteContentUtils.toDisplayText(note.content, maxChars: 200);
-    final isChecklist = ChecklistFormatter.isValidChecklist(note.content);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: GestureDetector(
-        onTap: () => _selectNote(note),
-        child: PremiumCardEffect(
-          baseColor: noteColor,
-          enableMotion: false,
-          isSelected: isSelected,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ── Title row + badge ──────────────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        displayTitle,
-                        maxLines: _viewType == ViewType.listCompact ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: titleColor,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Version count badge
-                    FutureBuilder<int>(
-                      future: _versionService.getVersionCount(note.id!),
-                      builder: (_, snap) => snap.hasData
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.blue.withValues(alpha: 0.80),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.history,
-                                      size: 12, color: Colors.white),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    '${snap.data}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-                // ── Content preview (expanded only) ───────────────────
-                if (_viewType == ViewType.listExpanded) ...[
-                  const SizedBox(height: 8),
-                  isChecklist
-                      ? NoteCardUtils.buildChecklistPreview(
-                          note.content, titleColor)
-                      : Text(
-                          displayContent,
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: contentColor,
-                          ),
-                        ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Versions list ─────────────────────────────────────────────────────────
-  Widget _buildVersionsList(BuildContext context, AppLocalizations l10n) {
-    if (_loadingVersions) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_selectedNoteVersions.isEmpty) {
-      return Center(
-          child: Text(l10n.noHistory,
-              style: Theme.of(context).textTheme.bodyLarge));
-    }
-
-    final isWide = MediaQuery.of(context).size.width >= 700;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header with back button on mobile
-        Padding(
-          padding: EdgeInsets.fromLTRB(isWide ? 16 : 4, 10, 16, 6),
-          child: Row(
-            children: [
-              if (!isWide)
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                  onPressed: () {
-                    setState(() {
-                      _selectedNote = null;
-                      _selectedNoteVersions = [];
-                      _selectedVersion = null;
-                    });
-                    _animateToPage(0);
-                  },
-                ),
-              Expanded(
-                child: Text(
-                  _selectedNote!.title.isEmpty
-                      ? l10n.untitled
-                      : _selectedNote!.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-            itemCount: _selectedNoteVersions.length,
-            itemBuilder: (_, i) {
-              final version = _selectedNoteVersions[i];
-              final isSelected = _selectedVersion?.id == version.id;
-              final actionColor = _getActionColor(version.action);
-              final actionIcon = _getActionIcon(version.action);
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                elevation: isSelected ? 3 : 0.5,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : null,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: isSelected
-                      ? BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 2)
-                      : BorderSide.none,
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _selectVersion(version),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: actionColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(actionIcon, color: actionColor, size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                version.title.isEmpty
-                                    ? l10n.untitled
-                                    : version.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                _formatTimeAgo(context, version.timestamp),
-                                style: TextStyle(
-                                    fontSize: 13, color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(Icons.chevron_right,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Diff panel ────────────────────────────────────────────────────────────
-  Widget _buildDiffPanel(BuildContext context, AppLocalizations l10n) {
-    final version = _selectedVersion!;
-    final note = _selectedNote!;
-    final idx = _selectedNoteVersions.indexWhere((v) => v.id == version.id);
-    final older = idx < _selectedNoteVersions.length - 1
-        ? _selectedNoteVersions[idx + 1]
-        : null;
-
-    final newText = _toPlainText(version.content);
-    final oldText = older != null ? _toPlainText(older.content) : '';
-    final spans = older != null ? computeDiff(oldText, newText) : null;
-    final isWide = MediaQuery.of(context).size.width >= 700;
-
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(isWide ? 16 : 4, 14, 8, 10),
-          child: Row(
-            children: [
-              if (!isWide)
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                  onPressed: () {
-                    setState(() => _selectedVersion = null);
-                    _animateToPage(1);
-                  },
-                ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color:
-                      _getActionColor(version.action).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(_getActionIcon(version.action),
-                    color: _getActionColor(version.action), size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      version.title.isEmpty ? l10n.untitled : version.title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatTimeAgo(context, version.timestamp),
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.restore, size: 22),
-                tooltip: l10n.restore,
-                onPressed: () => _onRestoreVersion(version, note),
-              ),
-            ],
-          ),
-        ),
-        if (spans != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: [
-                _legendDot(const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
-                const SizedBox(width: 4),
-                Text(l10n.added, style: const TextStyle(fontSize: 13)),
-                const SizedBox(width: 12),
-                _legendDot(const Color(0xFFC62828), const Color(0xFFFFEBEE)),
-                const SizedBox(width: 4),
-                Text(l10n.deleted, style: const TextStyle(fontSize: 13)),
-              ],
-            ),
-          ),
-        const Divider(height: 1),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.maxFinite,
-              child: spans != null
-                  ? DiffView(spans: spans)
-                  : Text(
-                      newText.isEmpty ? l10n.noHistory : newText,
-                      style: const TextStyle(fontSize: 15, height: 1.6),
-                    ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _legendDot(Color fg, Color bg) => Container(
-        width: 14,
-        height: 14,
-        decoration: BoxDecoration(
-          color: bg,
-          shape: BoxShape.circle,
-          border: Border.all(color: fg, width: 1.5),
-        ),
-      );
-
-  Widget _buildEmptyHint(BuildContext context, IconData icon, String message) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 56, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500], fontSize: 15),
-          ),
-        ],
-      ),
-    );
-  }
-
-  PopupMenuItem<String> _sortMenuItem(
-      BuildContext context, String value, IconData icon, String label) {
-    final isSelected = _sortBy == value;
+  PopupMenuItem<String> _sortMenuItem(BuildContext context, String value, IconData icon, String label) {
+    final isSelected = _ctrl.sortBy == value;
     return PopupMenuItem(
       value: value,
       child: Row(
         children: [
-          Icon(icon,
-              size: 20,
-              color: isSelected ? Theme.of(context).colorScheme.primary : null),
+          Icon(icon, size: 20, color: isSelected ? Theme.of(context).colorScheme.primary : null),
           const SizedBox(width: 12),
           Text(label),
           if (isSelected) ...[
             const Spacer(),
-            Icon(Icons.check,
-                size: 20, color: Theme.of(context).colorScheme.primary),
+            Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
           ],
         ],
-      ),
-    );
-  }
-}
-
-// ── Resizable divider widget ──────────────────────────────────────────────────
-class _ResizableDivider extends StatefulWidget {
-  final ValueChanged<double> onDrag;
-  final VoidCallback onDragEnd;
-
-  const _ResizableDivider({
-    required this.onDrag,
-    required this.onDragEnd,
-  });
-
-  @override
-  State<_ResizableDivider> createState() => _ResizableDividerState();
-}
-
-class _ResizableDividerState extends State<_ResizableDivider> {
-  bool _dragging = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onHorizontalDragStart: (_) => setState(() => _dragging = true),
-      onHorizontalDragUpdate: (d) => widget.onDrag(d.delta.dx),
-      onHorizontalDragEnd: (_) {
-        setState(() => _dragging = false);
-        widget.onDragEnd();
-      },
-      child: MouseRegion(
-        cursor: SystemMouseCursors.resizeColumn,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 20,
-          color: _dragging
-              ? Theme.of(context)
-                  .colorScheme
-                  .primaryContainer
-                  .withValues(alpha: 0.3)
-              : Colors.transparent,
-          child: Center(
-            child: Icon(
-              Icons.drag_indicator,
-              size: 20,
-              color: _dragging
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
-        ),
       ),
     );
   }

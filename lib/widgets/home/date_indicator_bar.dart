@@ -2,15 +2,18 @@
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/widgets/home/date_indicator/date_bar_category_picker.dart';
+import 'package:apex_note/widgets/home/date_indicator/date_picker_sheet.dart';
+import 'package:apex_note/widgets/home/date_indicator/sync_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-/// شريط التاريخ الذكي — يظهر تاريخ أول نوت مرئي أثناء التمرير
-/// ويتيح الضغط لاختيار تاريخ والقفز إليه
+export 'date_indicator/date_bar_category_picker.dart';
+export 'date_indicator/date_picker_sheet.dart';
+export 'date_indicator/sync_progress_bar.dart';
+
 class DateIndicatorBar extends StatefulWidget {
   final ScrollController scrollController;
   final ValueNotifier<List<Note>> filteredNotesNotifier;
@@ -43,16 +46,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     widget.scrollController.addListener(_onScroll);
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
     widget.activeFilterNotifier.addListener(_rebuild);
-    // حساب التاريخ الأولي من أول نوت بدون انتظار السكرول
     _initVisibleDate();
-  }
-
-  void _initVisibleDate() {
-    final notes = widget.filteredNotesNotifier.value;
-    if (notes.isNotEmpty && _visibleDate == null) {
-      final date = notes.first.updatedAt;
-      _visibleDate = DateTime(date.year, date.month, date.day);
-    }
   }
 
   @override
@@ -63,9 +57,15 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     super.dispose();
   }
 
-  void _rebuild() {
-    if (mounted) setState(() {});
+  void _initVisibleDate() {
+    final notes = widget.filteredNotesNotifier.value;
+    if (notes.isNotEmpty && _visibleDate == null) {
+      final date = notes.first.updatedAt;
+      _visibleDate = DateTime(date.year, date.month, date.day);
+    }
   }
+
+  void _rebuild() { if (mounted) setState(() {}); }
 
   void _onNotesChanged() {
     _lastScrollOffset = -1;
@@ -78,7 +78,6 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     final notes = widget.filteredNotesNotifier.value;
     if (notes.isEmpty) return;
 
-    // Throttle: تجاهل إذا لم يتغير الموضع بما يكفي (60px)
     final offset = widget.scrollController.offset.toInt();
     if ((_lastScrollOffset - offset).abs() < 60) return;
     _lastScrollOffset = offset;
@@ -90,18 +89,13 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     Note? topNote;
     for (final note in notes) {
       final h = widget.noteHeights[note.id] ?? fallback;
-      if (accumulated + h > scrollOffset) {
-        topNote = note;
-        break;
-      }
+      if (accumulated + h > scrollOffset) { topNote = note; break; }
       accumulated += h;
     }
 
     final date = (topNote ?? notes.first).updatedAt;
     final newDate = DateTime(date.year, date.month, date.day);
-    if (newDate != _visibleDate) {
-      setState(() => _visibleDate = newDate);
-    }
+    if (newDate != _visibleDate) setState(() => _visibleDate = newDate);
   }
 
   String _formatDate(DateTime date) {
@@ -109,304 +103,44 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-
     if (date == today) return isAr ? 'اليوم' : 'Today';
     if (date == yesterday) return isAr ? 'أمس' : 'Yesterday';
     if (now.difference(date).inDays < 7) {
-      return DateFormat(isAr ? 'EEEE' : 'EEEE', isAr ? 'ar' : 'en')
-          .format(date);
+      return DateFormat(isAr ? 'EEEE' : 'EEEE', isAr ? 'ar' : 'en').format(date);
     }
-    return DateFormat(isAr ? 'd MMM yyyy' : 'MMM d, yyyy', isAr ? 'ar' : 'en')
-        .format(date);
+    return DateFormat(isAr ? 'd MMM yyyy' : 'MMM d, yyyy', isAr ? 'ar' : 'en').format(date);
+  }
+
+  String _filterLabel(String filter, bool isAr) {
+    switch (filter) {
+      case 'type:simple': return isAr ? 'نص بسيط' : 'Simple';
+      case 'type:checklist': return isAr ? 'قائمة مهام' : 'Checklist';
+      case 'pinned:true': return isAr ? 'مثبتة' : 'Pinned';
+      default: return filter;
+    }
   }
 
   Future<void> _showDatePicker() async {
     final notes = widget.filteredNotesNotifier.value;
-    if (notes.isEmpty) return;
-
-    // جمع التواريخ الفريدة المتاحة
-    final uniqueDates = notes
-        .map((n) =>
-            DateTime(n.updatedAt.year, n.updatedAt.month, n.updatedAt.day))
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
-
-    if (!mounted) return;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-
-    final selected = await showModalBottomSheet<DateTime>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_month_outlined, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  isAr ? 'انتقل إلى تاريخ' : 'Jump to date',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(ctx).size.height * 0.4,
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: uniqueDates.length,
-              itemBuilder: (ctx, i) {
-                final date = uniqueDates[i];
-                final isSelected = date == _visibleDate;
-                final count = notes
-                    .where((n) =>
-                        n.updatedAt.year == date.year &&
-                        n.updatedAt.month == date.month &&
-                        n.updatedAt.day == date.day)
-                    .length;
-                return ListTile(
-                  leading: Icon(
-                    Icons.circle,
-                    size: 10,
-                    color: isSelected
-                        ? Theme.of(ctx).colorScheme.primary
-                        : Colors.transparent,
-                  ),
-                  title: Text(
-                    _formatDateStatic(date, isAr),
-                    style: TextStyle(
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                      color:
-                          isSelected ? Theme.of(ctx).colorScheme.primary : null,
-                    ),
-                  ),
-                  trailing: Text(
-                    '$count',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 13),
-                  ),
-                  onTap: () => Navigator.pop(ctx, date),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
-        ],
-      ),
-    );
-
+    if (notes.isEmpty || !mounted) return;
+    final selected = await DatePickerSheet.show(context, notes: notes, currentDate: _visibleDate);
     if (selected == null || !mounted) return;
     _scrollToDate(selected, notes);
   }
 
   void _scrollToDate(DateTime date, List<Note> notes) {
     if (!widget.scrollController.hasClients) return;
-    const fallback = 80.0;
     double target = 0;
-
     for (final note in notes) {
-      final noteDate = DateTime(
-          note.updatedAt.year, note.updatedAt.month, note.updatedAt.day);
-      if (noteDate == date) {
-        break;
-      }
-      target += widget.noteHeights[note.id] ?? fallback;
+      final noteDate = DateTime(note.updatedAt.year, note.updatedAt.month, note.updatedAt.day);
+      if (noteDate == date) break;
+      target += widget.noteHeights[note.id] ?? 80.0;
     }
-
     widget.scrollController.animateTo(
       target.clamp(0.0, widget.scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOut,
     );
-  }
-
-  void _showCategoryPicker(CategoriesProvider categoriesProvider) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final categories = categoriesProvider.categories;
-    final selectedId = categoriesProvider.selectedCategoryId;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // نفس ألوان القائمة الجانبية
-    const catColorIndices = [8, 2, 5, 10, 3, 6, 9, 11];
-    Color catColor(int index) {
-      final brightness = Theme.of(context).brightness;
-      return AppColorPalette
-          .palette[catColorIndices[index % catColorIndices.length]]
-          .getColor(brightness);
-    }
-
-    final proColor =
-        AppColorPalette.palette[6].getColor(Theme.of(context).brightness);
-
-    Widget catTile({
-      required String label,
-      required IconData icon,
-      required Color accent,
-      required bool isSelected,
-      required VoidCallback onTap,
-    }) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? accent.withValues(alpha: isDark ? 0.15 : 0.08)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            onTap: onTap,
-            leading: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: isDark ? 0.2 : 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: accent, size: 18),
-            ),
-            title: Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? accent : scheme.onSurface,
-              ),
-            ),
-            trailing: isSelected
-                ? Icon(Icons.check_rounded, color: accent, size: 18)
-                : null,
-          ),
-        ),
-      );
-    }
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(children: [
-                  const Icon(Icons.label_outline_rounded, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    isAr ? 'اختر كتالوج' : 'Select Catalog',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ]),
-              ),
-              const Divider(height: 1),
-              Flexible(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(ctx).size.height * 0.45,
-                  ),
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      catTile(
-                        label: isAr ? 'الكل' : 'All',
-                        icon: Icons.all_inbox_rounded,
-                        accent: scheme.primary,
-                        isSelected: selectedId == null,
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          categoriesProvider.selectCategory(null);
-                        },
-                      ),
-                      catTile(
-                        label: isAr ? 'المحترف' : 'Professional',
-                        icon: Icons.workspace_premium_rounded,
-                        accent: proColor,
-                        isSelected: selectedId == kProCategoryId,
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          categoriesProvider.selectCategory(kProCategoryId);
-                        },
-                      ),
-                      ...categories.asMap().entries.map((e) => catTile(
-                            label: e.value.name,
-                            icon: Icons.bookmark_rounded,
-                            accent: catColor(e.key),
-                            isSelected: selectedId == e.value.id,
-                            onTap: () {
-                              Navigator.pop(ctx);
-                              categoriesProvider.selectCategory(e.value.id);
-                            },
-                          )),
-                    ],
-                  ),
-                ),
-              ), // Flexible
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  String _filterLabel(String filter, bool isAr) {
-    switch (filter) {
-      case 'type:simple':
-        return isAr ? 'نص بسيط' : 'Simple';
-      case 'type:checklist':
-        return isAr ? 'قائمة مهام' : 'Checklist';
-      case 'pinned:true':
-        return isAr ? 'مثبتة' : 'Pinned';
-      default:
-        return filter;
-    }
-  }
-
-  String _formatDateStatic(DateTime date, bool isAr) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    if (date == today) return isAr ? 'اليوم' : 'Today';
-    if (date == yesterday) return isAr ? 'أمس' : 'Yesterday';
-    return DateFormat(isAr ? 'd MMMM yyyy' : 'MMMM d, yyyy', isAr ? 'ar' : 'en')
-        .format(date);
   }
 
   @override
@@ -419,297 +153,83 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     final activeFilter = widget.activeFilterNotifier.value;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
-    // ─── وضع الفلتر النشط ───
+    Widget barChild;
+
     if (activeFilter != null) {
-      final filterLabel = _filterLabel(activeFilter, isAr);
-      return _BarWithSyncProgress(
-        isPullingNotifier: widget.isPullingNotifier,
-        pullDistanceNotifier: widget.pullDistanceNotifier,
-        child: Container(
-          height: 28,
-          color: secondaryBg,
-          padding: const EdgeInsets.only(left: 16),
-          child: Row(
-            children: [
-              Icon(Icons.filter_list_rounded,
-                  size: 13, color: colorScheme.primary),
-              const SizedBox(width: 6),
-              Text(
-                filterLabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => widget.activeFilterNotifier.value = null,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(Icons.close_rounded,
-                      size: 16,
-                      color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                ),
-              ),
-            ],
+      barChild = Container(
+        height: 28, color: secondaryBg,
+        padding: const EdgeInsets.only(left: 16),
+        child: Row(children: [
+          Icon(Icons.filter_list_rounded, size: 13, color: colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(_filterLabel(activeFilter, isAr),
+              style: TextStyle(fontSize: 12, color: colorScheme.primary, fontWeight: FontWeight.w600)),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => widget.activeFilterNotifier.value = null,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(Icons.close_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+            ),
           ),
-        ),
+        ]),
       );
-    }
-
-    // ─── وضع التصنيف ───
-    if (selectedId != null) {
+    } else if (selectedId != null) {
       final isProCategory = selectedId == kProCategoryId;
-      final cat = isProCategory
-          ? null
-          : categoriesProvider.categories
-              .where((c) => c.id == selectedId)
-              .firstOrNull;
-      final isAr = Localizations.localeOf(context).languageCode == 'ar';
-      final catName = isProCategory
-          ? (isAr ? 'المحترف' : 'Professional')
-          : (cat?.name ?? '');
+      final cat = isProCategory ? null : categoriesProvider.categories.where((c) => c.id == selectedId).firstOrNull;
+      final catName = isProCategory ? (isAr ? 'المحترف' : 'Professional') : (cat?.name ?? '');
 
-      return _BarWithSyncProgress(
-        isPullingNotifier: widget.isPullingNotifier,
-        pullDistanceNotifier: widget.pullDistanceNotifier,
-        child: Container(
-          height: 28,
-          color: secondaryBg,
-          padding: const EdgeInsets.only(left: 16),
-          child: Row(
-            children: [
-              Icon(Icons.label_rounded, size: 13, color: colorScheme.primary),
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: () => _showCategoryPicker(categoriesProvider),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      catName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Icon(Icons.expand_more_rounded,
-                        size: 14, color: colorScheme.primary),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => categoriesProvider.selectCategory(null),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(Icons.close_rounded,
-                      size: 16,
-                      color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                ),
-              ),
-            ],
+      barChild = Container(
+        height: 28, color: secondaryBg,
+        padding: const EdgeInsets.only(left: 16),
+        child: Row(children: [
+          Icon(Icons.label_rounded, size: 13, color: colorScheme.primary),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () => DateBarCategoryPickerSheet.show(context, categoriesProvider),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(catName, style: TextStyle(fontSize: 12, color: colorScheme.primary, fontWeight: FontWeight.w600)),
+              const SizedBox(width: 2),
+              Icon(Icons.expand_more_rounded, size: 14, color: colorScheme.primary),
+            ]),
           ),
-        ),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => categoriesProvider.selectCategory(null),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(Icons.close_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+            ),
+          ),
+        ]),
       );
-    }
-
-    // ─── وضع التاريخ الافتراضي ───
-    if (notes.isEmpty || _visibleDate == null) {
-      return _BarWithSyncProgress(
+    } else if (notes.isEmpty || _visibleDate == null) {
+      return SyncProgressBar(
         showLabelOnly: true,
-        isPullingNotifier: widget.isPullingNotifier,
         pullDistanceNotifier: widget.pullDistanceNotifier,
         child: const SizedBox.shrink(),
       );
-    }
-
-    return _BarWithSyncProgress(
-      isPullingNotifier: widget.isPullingNotifier,
-      pullDistanceNotifier: widget.pullDistanceNotifier,
-      child: GestureDetector(
+    } else {
+      barChild = GestureDetector(
         onTap: _showDatePicker,
         child: Container(
-          height: 28,
-          color: secondaryBg,
+          height: 28, color: secondaryBg,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Icon(Icons.calendar_today_outlined,
-                  size: 13,
-                  color: colorScheme.onSurface.withValues(alpha: 0.5)),
-              const SizedBox(width: 6),
-              Text(
-                _formatDate(_visibleDate!),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
-              Icon(Icons.expand_more_rounded,
-                  size: 16,
-                  color: colorScheme.onSurface.withValues(alpha: 0.4)),
-            ],
-          ),
+          child: Row(children: [
+            Icon(Icons.calendar_today_outlined, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+            const SizedBox(width: 6),
+            Text(_formatDate(_visibleDate!),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w500)),
+            const Spacer(),
+            Icon(Icons.expand_more_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.4)),
+          ]),
         ),
-      ),
-    );
-  }
-}
+      );
+    }
 
-/// يُغلّف أي شريط ويضيف LinearProgressIndicator + نص المزامنة أسفله
-class _BarWithSyncProgress extends StatelessWidget {
-  final Widget child;
-  final bool showLabelOnly;
-  final ValueNotifier<bool>? isPullingNotifier;
-  final ValueNotifier<double>? pullDistanceNotifier;
-
-  static const double _threshold = 80.0;
-
-  const _BarWithSyncProgress({
-    required this.child,
-    this.showLabelOnly = false,
-    this.isPullingNotifier,
-    this.pullDistanceNotifier,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return ValueListenableBuilder<bool>(
-      valueListenable: GoogleDriveService.isSyncing,
-      builder: (context, syncing, _) {
-        // ─── حالة المزامنة ───
-        if (syncing) {
-          return Container(
-            height: 40,
-            color: colorScheme.primaryContainer.withValues(alpha: 0.35),
-            child: Stack(
-              children: [
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isAr ? 'جارٍ المزامنة...' : 'Syncing...',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: LinearProgressIndicator(
-                    minHeight: 2,
-                    backgroundColor: Colors.transparent,
-                    color: colorScheme.primary.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        // ─── حالة السحب: progress تدريجي ───
-        if (pullDistanceNotifier != null) {
-          return ValueListenableBuilder<double>(
-            valueListenable: pullDistanceNotifier!,
-            builder: (context, distance, _) {
-              if (distance <= 0) {
-                if (showLabelOnly) return const SizedBox.shrink();
-                return child;
-              }
-              final progress = (distance / _threshold).clamp(0.0, 1.0);
-              final ready = progress >= 1.0;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                height: 40,
-                color: ready
-                    ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                    : AppTheme.secondaryBackground(colorScheme),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedRotation(
-                            turns: progress * 0.5,
-                            duration: const Duration(milliseconds: 100),
-                            child: Icon(
-                              ready
-                                  ? Icons.refresh_rounded
-                                  : Icons.arrow_downward_rounded,
-                              size: 13,
-                              color: ready
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            ready
-                                ? (isAr ? 'أطلق للتحديث' : 'Release to refresh')
-                                : (isAr ? 'اسحب للتحديث' : 'Pull to refresh'),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: ready
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurfaceVariant,
-                              fontWeight:
-                                  ready ? FontWeight.w600 : FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // شريط progress في الأسفل
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 2,
-                        backgroundColor: Colors.transparent,
-                        color: (ready
-                                ? colorScheme.primary
-                                : colorScheme.secondary)
-                            .withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        }
-
-        if (showLabelOnly) return const SizedBox.shrink();
-        return child;
-      },
+    return SyncProgressBar(
+      pullDistanceNotifier: widget.pullDistanceNotifier,
+      child: barChild,
     );
   }
 }
@@ -717,14 +237,10 @@ class _BarWithSyncProgress extends StatelessWidget {
 /// SliverPersistentHeaderDelegate للشريط
 class DateIndicatorDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
-
   const DateIndicatorDelegate({required this.child});
 
   @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return child;
-  }
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => child;
 
   @override
   double get maxExtent => 28;
