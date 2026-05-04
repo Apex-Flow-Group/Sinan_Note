@@ -46,8 +46,7 @@ class NoteEditorDialogs {
       final provider = Provider.of<NotesProvider>(context, listen: false);
       await provider.trashNote(noteId);
       if (!context.mounted) return;
-      Navigator.of(context).pop();
-      if (!context.mounted) return;
+      // pop المحرر فقط — الـ dialog أُغلق بالفعل بـ Navigator.pop(ctx, true)
       Navigator.of(context).pop();
     }
   }

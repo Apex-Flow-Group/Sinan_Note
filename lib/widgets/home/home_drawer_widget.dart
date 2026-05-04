@@ -8,6 +8,8 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
 import 'package:apex_note/screens/auth/vault_entry_screen.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/screens/other/about_screen.dart';
+import 'package:apex_note/screens/other/support_form_screen.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
@@ -18,10 +20,10 @@ import 'package:provider/provider.dart';
 
 enum _CatMode { normal, delete, edit }
 
-/// يبقى حياً طول عمر التطبيق — لا يضيع عند إغلاق الـ Drawer
+/// ظٹط¨ظ‚ظ‰ ط­ظٹط§ظ‹ ط·ظˆظ„ ط¹ظ…ط± ط§ظ„طھط·ط¨ظٹظ‚ â€” ظ„ط§ ظٹط¶ظٹط¹ ط¹ظ†ط¯ ط¥ط؛ظ„ط§ظ‚ ط§ظ„ظ€ Drawer
 final _activeExtraNotifier = ValueNotifier<String?>(null);
 
-/// حالة الخزنة — مرئية لكل الـ widgets
+/// ط­ط§ظ„ط© ط§ظ„ط®ط²ظ†ط© â€” ظ…ط±ط¦ظٹط© ظ„ظƒظ„ ط§ظ„ظ€ widgets
 final vaultOpenNotifier = ValueNotifier<bool>(false);
 
 class HomeDrawerWidget extends StatefulWidget {
@@ -75,7 +77,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                           .popUntil((route) => route.isFirst);
                     },
                   ),
-                  // ─── زر التصنيفات ───
+                  // â”€â”€â”€ ط²ط± ط§ظ„طھطµظ†ظٹظپط§طھ â”€â”€â”€
                   _buildCategoriesItem(context, l10n, scheme, isDark),
                   ClipRect(
                     child: AnimatedSize(
@@ -108,7 +110,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isActive: currentRoute == '/archive',
                     onTap: () async {
                       debugPrint(
-                          '🧭 Drawer → Archive (pop + popUntil + pushNamed)');
+                          'ًں§­ Drawer â†’ Archive (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)
@@ -128,7 +130,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isActive: currentRoute == '/trash',
                     onTap: () async {
                       debugPrint(
-                          '🧭 Drawer → Trash (pop + popUntil + pushNamed)');
+                          'ًں§­ Drawer â†’ Trash (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)
@@ -175,7 +177,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         isActive: currentRoute == '/drive',
                         onTap: () async {
                           debugPrint(
-                              '🧭 Drawer → Drive (pop + popUntil + pushNamed)');
+                              'ًں§­ Drawer â†’ Drive (pop + popUntil + pushNamed)');
                           Navigator.of(context, rootNavigator: true).pop();
                           if (!context.mounted) return;
                           Navigator.of(context, rootNavigator: true)
@@ -189,14 +191,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     context,
                     icon: Icons.manage_history_rounded,
                     title: l10n.noteHistory,
-                    subtitle: isArabic ? 'سجل التعديلات' : 'Version history',
+                    subtitle: isArabic ? 'ط³ط¬ظ„ ط§ظ„طھط¹ط¯ظٹظ„ط§طھ' : 'Version history',
                     iconColor: Colors.orange,
                     scheme: scheme,
                     isDark: isDark,
                     isActive: currentRoute == '/history',
                     onTap: () async {
                       debugPrint(
-                          '🧭 Drawer → History (pop + popUntil + pushNamed)');
+                          'ًں§­ Drawer â†’ History (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)
@@ -214,7 +216,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isActive: currentRoute == '/settings',
                     onTap: () async {
                       debugPrint(
-                          '🧭 Drawer → Settings (pop + popUntil + pushNamed)');
+                          'ًں§­ Drawer â†’ Settings (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)
@@ -235,10 +237,39 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 top: 12,
                 bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
-              child: Text(
-                '© 2025 Apex Flow Group',
-                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '© 2025 Apex Flow Group',
+                    style:
+                        TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const SupportFormScreen()));
+                    },
+                    child: Icon(Icons.support_agent_rounded,
+                        size: 18, color: scheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const AboutScreen()));
+                    },
+                    child: Icon(Icons.info_outline_rounded,
+                        size: 18, color: scheme.onSurfaceVariant),
+                  ),
+                ],
               ),
             ),
           ],
@@ -261,7 +292,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 .firstOrNull)
         : null;
 
-    // نفس الحاوية لكليهما لتثبيت الحجم
+    // ظ†ظپط³ ط§ظ„ط­ط§ظˆظٹط© ظ„ظƒظ„ظٹظ‡ظ…ط§ ظ„طھط«ط¨ظٹطھ ط§ظ„ط­ط¬ظ…
     final iconBox = Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -290,14 +321,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 children: [
                   iconBox,
                   const SizedBox(width: 16),
-                  // ─── المحتوى يتغيّر بانيميشن ───
+                  // â”€â”€â”€ ط§ظ„ظ…ط­طھظˆظ‰ ظٹطھط؛ظٹظ‘ط± ط¨ط§ظ†ظٹظ…ظٹط´ظ† â”€â”€â”€
                   Expanded(
                     child: AnimatedCrossFade(
                       duration: const Duration(milliseconds: 220),
                       crossFadeState: _categoriesExpanded
                           ? CrossFadeState.showSecond
                           : CrossFadeState.showFirst,
-                      // ─── وضع النص ───
+                      // â”€â”€â”€ ظˆط¶ط¹ ط§ظ„ظ†طµ â”€â”€â”€
                       firstChild: Row(
                         children: [
                           Expanded(
@@ -338,7 +369,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                               size: 20, color: scheme.onSurfaceVariant),
                         ],
                       ),
-                      // ─── وضع الأدوات ───
+                      // â”€â”€â”€ ظˆط¶ط¹ ط§ظ„ط£ط¯ظˆط§طھ â”€â”€â”€
                       secondChild: Row(
                         children: [
                           _ModeBtn(
@@ -364,8 +395,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                                     .showSnackBar(SnackBar(
                                   content: Text(
                                     isArabic
-                                        ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
-                                        : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
+                                        ? 'ًںژ¯ ظˆطµظ„طھ ظ„ظ„ط­ط¯ ط§ظ„ط£ظ‚طµظ‰! 20 ظƒطھط§ظ„ظˆط¬ ظٹظƒظپظٹ ظ„طھظ†ط¸ظٹظ… ط§ظ„ط¹ط§ظ„ظ… ظƒظ„ظ‡ ًںک„'
+                                        : 'ًںژ¯ Max reached! 20 catalogs is enough to organize the whole world ًںک„',
                                     style: const TextStyle(fontSize: 13),
                                   ),
                                   behavior: SnackBarBehavior.floating,
@@ -430,7 +461,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
   Future<void> _openLockedNotes(BuildContext context) async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    // فور الضغط → أوقف تظليل الرئيسية
+    // ظپظˆط± ط§ظ„ط¶ط؛ط· â†’ ط£ظˆظ‚ظپ طھط¸ظ„ظٹظ„ ط§ظ„ط±ط¦ظٹط³ظٹط©
     _activeExtraNotifier.value = 'vault';
 
     if (!settings.hasSeenLockedIntro) {
@@ -532,7 +563,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
   }
 }
 
-// ── Wrapper يضيف scroll عند تجاوز 6 كتالوجات ────────────────────
+// â”€â”€ Wrapper ظٹط¶ظٹظپ scroll ط¹ظ†ط¯ طھط¬ط§ظˆط² 6 ظƒطھط§ظ„ظˆط¬ط§طھ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _CategoriesPanelWrapper extends StatefulWidget {
   final CatPanelMode mode;
   final bool isAdding;
@@ -558,7 +589,7 @@ class _CategoriesPanelWrapperState extends State<_CategoriesPanelWrapper> {
   @override
   void didUpdateWidget(_CategoriesPanelWrapper oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // عند فتح مربع الإدخال — اسكرول للأسفل بعد ظهور الكيبورد
+    // ط¹ظ†ط¯ ظپطھط­ ظ…ط±ط¨ط¹ ط§ظ„ط¥ط¯ط®ط§ظ„ â€” ط§ط³ظƒط±ظˆظ„ ظ„ظ„ط£ط³ظپظ„ ط¨ط¹ط¯ ط¸ظ‡ظˆط± ط§ظ„ظƒظٹط¨ظˆط±ط¯
     if (widget.isAdding && !oldWidget.isAdding) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Future.delayed(const Duration(milliseconds: 350), () {

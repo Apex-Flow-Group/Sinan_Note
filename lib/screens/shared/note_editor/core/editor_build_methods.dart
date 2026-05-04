@@ -454,6 +454,9 @@ class EditorBuildMethods {
                   onArchiveTap: () async {
                     HapticFeedback.mediumImpact();
                     if (note?.id != null) {
+                      // انتظر إغلاق الـ bottom sheet بالكامل
+                      await Future.delayed(const Duration(milliseconds: 150));
+                      if (!context.mounted) return;
                       final provider =
                           Provider.of<NotesProvider>(context, listen: false);
                       await provider.archiveNote(note!.id!);

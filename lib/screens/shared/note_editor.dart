@@ -9,7 +9,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor/core/editor_build_methods.dart';
 import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
-import 'package:apex_note/screens/shared/note_editor/state/editor_save_manager.dart';
+import 'package:apex_note/screens/shared/note_editor/state/editor_save_operations.dart';
 import 'package:apex_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
@@ -231,192 +231,50 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   // ==================== SAVE METHODS ====================
 
   Future<bool> _saveNoteToDatabase(
-      {bool forceUpdate = false, bool isManualSave = false}) async {
-    if (_coordinator.stateManager.isSaving) {
-      return false;
-    }
-
-    final isNewLockedNote =
-        (_coordinator.initialLockState || widget.note?.isLocked == true) &&
-            widget.note?.id == null &&
-            _coordinator.savedNoteId == null;
-
-    if (!forceUpdate &&
-        !isNewLockedNote &&
-        (_coordinator.savedNoteId != null || widget.note != null)) {
-      if (!_coordinator.stateManager.hasChanges()) {
-        return false;
-      }
-    }
-
-    _coordinator.stateManager.isSaving = true;
-
-    try {
-      String contentToSave = widget.mode == NoteMode.code
-          ? _coordinator.codeController!.text
-          : (widget.mode == NoteMode.checklist
-              ? _coordinator.contentController.text
-              : QuillMigration.toDeltaJson(_coordinator.quillController!));
-
-      // Handle code note empty validation
-      if (widget.mode == NoteMode.code) {
-        if (contentToSave.trim().isEmpty && !isNewLockedNote) {
-          _coordinator.stateManager.isSaving = false;
-          return false;
-        }
-      }
-
-      // Handle checklist validation
-      if (widget.mode == NoteMode.checklist ||
-          widget.note?.noteType == 'checklist') {
-        contentToSave = EditorSaveManager.prepareChecklistContent(
-          contentToSave,
-          _l10nRef?.checklistItemHint ?? 'Task...',
-        );
-
-        if (EditorSaveManager.isContentEmpty(
-            contentToSave, NoteMode.checklist)) {
-          _coordinator.stateManager.isSaving = false;
-          return false;
-        }
-      }
-
-      bool isContentEmpty = contentToSave.trim().isEmpty;
-
-      if (isContentEmpty && !isNewLockedNote) {
-        final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) {
-          await _coordinator.notesProviderRef!.trashNote(noteId);
-        }
-        _coordinator.stateManager.isSaving = false;
-        return false;
-      }
-
-      String noteType = EditorSaveManager.determineNoteType(
-        mode: widget.mode,
-        detectedLanguage: _coordinator.detectedLanguage,
-        isLanguageManuallySelected: _coordinator.isLanguageManuallySelected,
-        existingNoteType: widget.note?.noteType,
-        smartController: _coordinator.smartController,
-      );
-
-      final newId = await EditorSaveManager.saveNote(
-        provider: _coordinator.notesProviderRef!,
-        existingNote: widget.note,
-        savedNoteId: _coordinator.savedNoteId,
-        content: contentToSave,
-        title:
-            _coordinator.getCurrentTitle(_l10nRef?.newNoteTitle ?? 'New Note'),
-        colorIndex: _coordinator.stateManager.colorIndex,
-        initialLockState: _coordinator.initialLockState,
-        noteType: noteType,
-        isChecklist: widget.mode == NoteMode.checklist,
-        reminderDateTime: _coordinator.stateManager.reminderDateTime,
-        recurrenceRule: _coordinator.stateManager.recurrenceRule,
-        categoryIds: _coordinator.stateManager.categoryIds,
-        isHiddenFromHome: _coordinator.stateManager.isHiddenFromHome,
-        mode: widget.mode,
-        silent: !isManualSave,
-        isAutoSave: !isManualSave, // FIXED: Pass auto-save flag
-      );
-
-      // REMOVED: Unnecessary loadNotes() that causes race condition
-      // The provider already updates state via notifyListeners()
-
-      if (_coordinator.savedNoteId == null) {
-        if (mounted) setState(() => _coordinator.savedNoteId = newId);
-      }
-
-      if (isManualSave) {
-        _coordinator.stateManager.updateSnapshot();
-      }
-
-      return true; // Successfully saved
-    } catch (e) {
-      // Ignore save errors
-      return false;
-    } finally {
-      _coordinator.stateManager.isSaving = false;
-    }
+      {bool forceUpdate = false, bool isManualSave = false}) {
+    return EditorSaveOperations.saveToDatabase(
+      coordinator: _coordinator,
+      mode: widget.mode,
+      existingNote: widget.note,
+      l10n: _l10nRef,
+      isMounted: () => mounted,
+      onSavedNewId: () {
+        if (mounted) setState(() {});
+      },
+      forceUpdate: forceUpdate,
+      isManualSave: isManualSave,
+    );
   }
 
-  Future<void> _saveNote() async {
-    _coordinator.autosaveTimer?.cancel();
-
-    // Check if content is empty before saving
-    final content = widget.mode == NoteMode.code
-        ? _coordinator.codeController!.text
-        : widget.mode == NoteMode.checklist
-            ? _coordinator.contentController.text
-            : QuillMigration.toPlainText(_coordinator.quillController!);
-    final title = _coordinator.stateManager.customTitle ?? '';
-
-    if (content.trim().isEmpty && title.trim().isEmpty) {
-      // Don't save or show message for empty notes
-      return;
-    }
-
-    final savedSuccessfully = await _saveNoteToDatabase(isManualSave: true);
-
-    // Only show message if actually saved
-    if (savedSuccessfully && mounted) {
-      final l10n = AppLocalizations.of(context);
-      UnifiedNotificationService().show(
+  Future<void> _saveNote() => EditorSaveOperations.saveManually(
         context: context,
-        message: l10n!.noteSaved,
-        type: NotificationType.success,
-        duration: const Duration(seconds: 1),
+        coordinator: _coordinator,
+        mode: widget.mode,
+        existingNote: widget.note,
+        l10n: _l10nRef,
+        isMounted: () => mounted,
+        onSavedNewId: () {
+          if (mounted) setState(() {});
+        },
       );
-    }
-  }
 
-  Future<void> _saveAsMarkdown() async {
-    if (!mounted) return;
-    final content = widget.mode == NoteMode.code
-        ? _coordinator.codeController!.text
-        : _coordinator.contentController.text;
+  Future<void> _saveAsMarkdown() => EditorSaveOperations.saveAsMarkdown(
+        context: context,
+        coordinator: _coordinator,
+        mode: widget.mode,
+        existingNote: widget.note,
+        l10n: _l10nRef,
+      );
 
-    await EditorSaveManager.saveAsMarkdown(
-      context: context,
-      provider: _coordinator.notesProviderRef!,
-      existingNote: widget.note,
-      savedNoteId: _coordinator.savedNoteId,
-      content: content,
-      title: _coordinator.getCurrentTitle(_l10nRef?.newNoteTitle ?? 'New Note'),
-      colorIndex: _coordinator.stateManager.colorIndex,
-      isLocked: _coordinator.initialLockState,
-      reminderDateTime: _coordinator.stateManager.reminderDateTime,
-      recurrenceRule: _coordinator.stateManager.recurrenceRule,
-      mode: widget.mode,
-    );
-
-    _coordinator.stateManager.markClean();
-  }
-
-  Future<void> _saveWithExtension(String extension) async {
-    if (!mounted) return;
-    final content = widget.mode == NoteMode.code
-        ? _coordinator.codeController!.text
-        : _coordinator.contentController.text;
-
-    await EditorSaveManager.saveWithExtension(
-      context: context,
-      provider: _coordinator.notesProviderRef!,
-      existingNote: widget.note,
-      savedNoteId: _coordinator.savedNoteId,
-      content: content,
-      title: _coordinator.getCurrentTitle(_l10nRef?.newNoteTitle ?? 'New Note'),
-      colorIndex: _coordinator.stateManager.colorIndex,
-      isLocked: _coordinator.initialLockState,
-      reminderDateTime: _coordinator.stateManager.reminderDateTime,
-      recurrenceRule: _coordinator.stateManager.recurrenceRule,
-      mode: widget.mode,
-      detectedLanguage: _coordinator.detectedLanguage,
-      smartController: _coordinator.smartController,
-    );
-
-    _coordinator.stateManager.markClean();
-  }
+  Future<void> _saveWithExtension(String extension) =>
+      EditorSaveOperations.saveWithExtension(
+        context: context,
+        coordinator: _coordinator,
+        mode: widget.mode,
+        existingNote: widget.note,
+        l10n: _l10nRef,
+        extension: extension,
+      );
 
   // ==================== LIFECYCLE METHODS ====================
 
