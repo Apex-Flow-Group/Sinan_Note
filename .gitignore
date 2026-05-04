@@ -103,3 +103,7 @@ windows/flutter/ephemeral/
 android/.gradle/
 android/app/build/
 android/build/
+
+# Local flutter_quill patch — نرفع الكود لكن نستثني ملفات البناء
+packages/flutter_quill/.dart_tool/
+packages/flutter_quill/build/

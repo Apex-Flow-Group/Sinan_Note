@@ -95,6 +95,7 @@ class EditorBuildMethods {
         focusNode: coordinator.textFieldFocusNode,
         textColor: finalTextColor,
         hintColor: finalHintColor,
+        noteColor: coordinator.getBackgroundColor(context),
         fontSize: coordinator.fontSize,
         sidePadding: sidePadding,
         totalBottomSpace: totalBottomSpace,
@@ -213,23 +214,17 @@ class EditorBuildMethods {
           child: selectionBarActive != null
               ? ValueListenableBuilder<bool>(
                   valueListenable: selectionBarActive,
-                  builder: (_, isBarActive, __) => AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, anim) => SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, -1),
-                        end: Offset.zero,
-                      ).animate(anim),
-                      child: child,
-                    ),
-                    child: KeyedSubtree(
-                      key: ValueKey(isBarActive),
-                      child: isBarActive
-                          ? buildSelectionBar(bg)
-                          : buildHeaderWidget(bg),
-                    ),
+                  builder: (_, isBarActive, __) => Stack(
+                    children: [
+                      // Header always present as base layer
+                      AnimatedOpacity(
+                        opacity: isBarActive ? 0.0 : 1.0,
+                        duration: const Duration(milliseconds: 120),
+                        child: buildHeaderWidget(bg),
+                      ),
+                      // Selection bar overlays on top
+                      if (isBarActive) buildSelectionBar(bg),
+                    ],
                   ),
                 )
               : buildHeaderWidget(bg),
@@ -257,6 +252,7 @@ class EditorBuildMethods {
     required VoidCallback onColorPaletteTap,
     required VoidCallback onSmartSaveDialog,
     required Future<void> Function() saveNote,
+    ValueNotifier<bool>? selectionBarActive,
     Function(String)? onInsertSymbol,
     VoidCallback? onRebuild,
     ValueNotifier<double>? scrollProgress,
@@ -298,6 +294,7 @@ class EditorBuildMethods {
                   textColor: finalTextColor,
                   undoController: coordinator.undoController,
                   detectedLanguage: coordinator.detectedLanguage,
+                  selectionBarActive: selectionBarActive,
                   hasReminder:
                       coordinator.stateManager.reminderDateTime != null,
                   hasContent: coordinator.stateManager.hasContent,
@@ -398,26 +395,31 @@ class EditorBuildMethods {
                       l10n,
                     );
                   },
-                  onPaste: () async {
-                    HapticFeedback.lightImpact();
-                    final result = await coordinator.safePaste();
-                    if (!context.mounted) return;
-                    if (result.isEmpty) {
-                      UnifiedNotificationService().show(
-                        context: context,
-                        message: l10n.clipboardEmpty,
-                        type: NotificationType.info,
-                        duration: const Duration(seconds: 2),
-                      );
-                    } else if (result.isTruncated) {
-                      UnifiedNotificationService().show(
-                        context: context,
-                        message: l10n.clipboardTruncated,
-                        type: NotificationType.warning,
-                        duration: const Duration(seconds: 3),
-                      );
-                    }
-                  },
+                  onPaste: selectionBarActive != null
+                      ? () {
+                          HapticFeedback.lightImpact();
+                          selectionBarActive.value = !selectionBarActive.value;
+                        }
+                      : () async {
+                          HapticFeedback.lightImpact();
+                          final result = await coordinator.safePaste();
+                          if (!context.mounted) return;
+                          if (result.isEmpty) {
+                            UnifiedNotificationService().show(
+                              context: context,
+                              message: l10n.clipboardEmpty,
+                              type: NotificationType.info,
+                              duration: const Duration(seconds: 2),
+                            );
+                          } else if (result.isTruncated) {
+                            UnifiedNotificationService().show(
+                              context: context,
+                              message: l10n.clipboardTruncated,
+                              type: NotificationType.warning,
+                              duration: const Duration(seconds: 3),
+                            );
+                          }
+                        },
                   onBackgroundColorTap: () {
                     HapticFeedback.mediumImpact();
                     onColorPaletteTap();

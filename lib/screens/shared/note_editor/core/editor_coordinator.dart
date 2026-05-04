@@ -7,6 +7,7 @@ import 'package:apex_note/controllers/editor/editor_state_manager.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/utils/apex_smart_controller.dart';
+import 'package:apex_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/models/note.dart';
@@ -123,6 +124,7 @@ class EditorCoordinator {
   late TextEditingController contentController;
   CodeController? codeController;
   QuillController? quillController;
+  BiDiCursorCorrectionMiddleware? _bidiMiddleware;
   final UndoHistoryController undoController = UndoHistoryController();
   final UndoHistoryController codeUndoController = UndoHistoryController();
   ChecklistUndoRedoController? checklistUndoRedo;
@@ -265,6 +267,12 @@ class EditorCoordinator {
     quillController?.document.changes.listen((_) {
       ContentGuard.guardQuill(quillController!);
     });
+    if (quillController != null) {
+      _bidiMiddleware?.dispose();
+      _bidiMiddleware = BiDiCursorCorrectionMiddleware(
+        controller: quillController!,
+      );
+    }
   }
 
   /// Get background color based on current state
@@ -376,6 +384,7 @@ class EditorCoordinator {
     autosaveTimer?.cancel();
     languageDetectionTimer?.cancel();
     scrollProgress.dispose();
+    _bidiMiddleware?.dispose();
     contentController.dispose();
     codeController?.dispose();
     quillController?.dispose();

@@ -9,6 +9,7 @@ analyzer:
     - "**/*.freezed.dart"
     - "**/*.mocks.dart"
     - "**/generated/**"
+    - "packages/**"
 
 linter:
   rules:

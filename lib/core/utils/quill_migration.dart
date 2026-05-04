@@ -140,8 +140,6 @@ class QuillMigration {
     return controller.document.toPlainText().trimRight();
   }
 
-  /// Converts a Quill document to Delta JSON string for storage
-  /// يحتفظ بالأسطر الفارغة من نهاية النص
   static String toDeltaJson(QuillController controller) {
     return jsonEncode(controller.document.toDelta().toJson());
   }

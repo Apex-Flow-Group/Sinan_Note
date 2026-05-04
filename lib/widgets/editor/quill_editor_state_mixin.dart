@@ -20,7 +20,7 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
   ValueChanged<double>? get onScroll;
 
   // ── الـ scroll controller يُعرَّف هنا ─────────────────────
-  final stableScrollController = _StableScrollController();
+  final stableScrollController = StableScrollController();
   final editorKey = GlobalKey<EditorState>();
 
   // ── flags ──────────────────────────────────────────────────
@@ -389,7 +389,7 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
 }
 
 /// ScrollController يتجاهل animateTo أثناء تغيير الاتجاه
-class _StableScrollController extends ScrollController {
+class StableScrollController extends ScrollController {
   bool freezed = false;
 
   @override

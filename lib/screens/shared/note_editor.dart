@@ -725,6 +725,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               savedNoteId: _coordinator.savedNoteId,
               smartController: _coordinator.smartController,
               formattingController: _coordinator.formattingController,
+              selectionBarActive: _selectionBarActive,
               onReminderTap: _showReminderDialog,
               onColorPaletteTap: _showColorPalette,
               onRebuild: () {

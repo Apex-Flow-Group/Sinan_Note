@@ -21,6 +21,7 @@ class EditorToolbarFactory {
     VoidCallback? onCalculate,
     VoidCallback? onPaste,
     VoidCallback? onBackgroundColorTap,
+    ValueNotifier<bool>? selectionBarActive,
     VoidCallback? onReminderTap,
     VoidCallback? onShareTap,
     VoidCallback? onArchiveTap,
@@ -82,6 +83,7 @@ class EditorToolbarFactory {
           onShareTap: onShareTap ?? () {},
           onArchiveTap: onArchiveTap ?? () {},
           onDeleteTap: onDeleteTap ?? () {},
+          selectionBarActive: selectionBarActive,
         );
 
       case NoteMode.rich:
@@ -128,6 +130,7 @@ class _SimpleToolbar extends StatelessWidget {
   final VoidCallback onShareTap;
   final VoidCallback onArchiveTap;
   final VoidCallback onDeleteTap;
+  final ValueNotifier<bool>? selectionBarActive;
 
   const _SimpleToolbar({
     required this.backgroundColor,
@@ -143,6 +146,7 @@ class _SimpleToolbar extends StatelessWidget {
     required this.onShareTap,
     required this.onArchiveTap,
     required this.onDeleteTap,
+    this.selectionBarActive,
   });
 
   @override
@@ -160,7 +164,17 @@ class _SimpleToolbar extends StatelessWidget {
             Row(
               children: [
                 _buildIconBtn(Icons.calculate_outlined, onCalculate),
-                _buildIconBtn(Icons.content_paste_rounded, onPaste),
+                selectionBarActive != null
+                    ? ValueListenableBuilder<bool>(
+                        valueListenable: selectionBarActive!,
+                        builder: (_, isActive, __) => _buildIconBtn(
+                          isActive
+                              ? Icons.close_rounded
+                              : Icons.content_paste_rounded,
+                          onPaste,
+                        ),
+                      )
+                    : _buildIconBtn(Icons.content_paste_rounded, onPaste),
                 _buildIconBtn(Icons.palette_outlined, onBackgroundColorTap),
                 _buildIconBtn(Icons.undo_rounded, onUndo),
                 _buildIconBtn(Icons.redo_rounded, onRedo),

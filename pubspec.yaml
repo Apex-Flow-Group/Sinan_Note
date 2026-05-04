@@ -55,8 +55,9 @@ dependencies:
   highlight: ^0.7.0
   flutter_svg: ^2.0.0
 
-  # Rich Text Editor
-  flutter_quill: ">=11.0.0-dev.15 <12.0.0"
+  # Rich Text Editor — نسخة محلية معدّلة (إصلاح مقابض التحديد في النص المختلط)
+  flutter_quill:
+    path: packages/flutter_quill
   
   # Other
   home_widget: ^0.6.0

@@ -43,6 +43,16 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     widget.scrollController.addListener(_onScroll);
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
     widget.activeFilterNotifier.addListener(_rebuild);
+    // حساب التاريخ الأولي من أول نوت بدون انتظار السكرول
+    _initVisibleDate();
+  }
+
+  void _initVisibleDate() {
+    final notes = widget.filteredNotesNotifier.value;
+    if (notes.isNotEmpty && _visibleDate == null) {
+      final date = notes.first.updatedAt;
+      _visibleDate = DateTime(date.year, date.month, date.day);
+    }
   }
 
   @override
@@ -59,6 +69,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
 
   void _onNotesChanged() {
     _lastScrollOffset = -1;
+    _initVisibleDate();
     _onScroll();
   }
 
@@ -239,9 +250,13 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     const catColorIndices = [8, 2, 5, 10, 3, 6, 9, 11];
     Color catColor(int index) {
       final brightness = Theme.of(context).brightness;
-      return AppColorPalette.palette[catColorIndices[index % catColorIndices.length]].getColor(brightness);
+      return AppColorPalette
+          .palette[catColorIndices[index % catColorIndices.length]]
+          .getColor(brightness);
     }
-    final proColor = AppColorPalette.palette[6].getColor(Theme.of(context).brightness);
+
+    final proColor =
+        AppColorPalette.palette[6].getColor(Theme.of(context).brightness);
 
     Widget catTile({
       required String label,
@@ -262,7 +277,8 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onTap: onTap,
             leading: Container(
               width: 36,
@@ -300,20 +316,23 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
             children: [
               const SizedBox(height: 8),
               Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: Colors.grey[400],
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Row(children: [
                   const Icon(Icons.label_outline_rounded, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     isAr ? 'اختر كتالوج' : 'Select Catalog',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ]),
               ),
@@ -324,42 +343,42 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
                     maxHeight: MediaQuery.of(ctx).size.height * 0.45,
                   ),
                   child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    catTile(
-                      label: isAr ? 'الكل' : 'All',
-                      icon: Icons.all_inbox_rounded,
-                      accent: scheme.primary,
-                      isSelected: selectedId == null,
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        categoriesProvider.selectCategory(null);
-                      },
-                    ),
-                    catTile(
-                      label: isAr ? 'المحترف' : 'Professional',
-                      icon: Icons.workspace_premium_rounded,
-                      accent: proColor,
-                      isSelected: selectedId == kProCategoryId,
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        categoriesProvider.selectCategory(kProCategoryId);
-                      },
-                    ),
-                    ...categories.asMap().entries.map((e) => catTile(
-                      label: e.value.name,
-                      icon: Icons.bookmark_rounded,
-                      accent: catColor(e.key),
-                      isSelected: selectedId == e.value.id,
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        categoriesProvider.selectCategory(e.value.id);
-                      },
-                    )),
-                  ],
+                    shrinkWrap: true,
+                    children: [
+                      catTile(
+                        label: isAr ? 'الكل' : 'All',
+                        icon: Icons.all_inbox_rounded,
+                        accent: scheme.primary,
+                        isSelected: selectedId == null,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          categoriesProvider.selectCategory(null);
+                        },
+                      ),
+                      catTile(
+                        label: isAr ? 'المحترف' : 'Professional',
+                        icon: Icons.workspace_premium_rounded,
+                        accent: proColor,
+                        isSelected: selectedId == kProCategoryId,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          categoriesProvider.selectCategory(kProCategoryId);
+                        },
+                      ),
+                      ...categories.asMap().entries.map((e) => catTile(
+                            label: e.value.name,
+                            icon: Icons.bookmark_rounded,
+                            accent: catColor(e.key),
+                            isSelected: selectedId == e.value.id,
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              categoriesProvider.selectCategory(e.value.id);
+                            },
+                          )),
+                    ],
+                  ),
                 ),
-              ),
-              ),  // Flexible
+              ), // Flexible
             ],
           ),
         );
@@ -412,7 +431,8 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
           padding: const EdgeInsets.only(left: 16),
           child: Row(
             children: [
-              Icon(Icons.filter_list_rounded, size: 13, color: colorScheme.primary),
+              Icon(Icons.filter_list_rounded,
+                  size: 13, color: colorScheme.primary),
               const SizedBox(width: 6),
               Text(
                 filterLabel,
@@ -658,9 +678,8 @@ class _BarWithSyncProgress extends StatelessWidget {
                               color: ready
                                   ? colorScheme.primary
                                   : colorScheme.onSurfaceVariant,
-                              fontWeight: ready
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
+                              fontWeight:
+                                  ready ? FontWeight.w600 : FontWeight.w400,
                             ),
                           ),
                         ],
@@ -675,7 +694,9 @@ class _BarWithSyncProgress extends StatelessWidget {
                         value: progress,
                         minHeight: 2,
                         backgroundColor: Colors.transparent,
-                        color: (ready ? colorScheme.primary : colorScheme.secondary)
+                        color: (ready
+                                ? colorScheme.primary
+                                : colorScheme.secondary)
                             .withValues(alpha: 0.5),
                       ),
                     ),
