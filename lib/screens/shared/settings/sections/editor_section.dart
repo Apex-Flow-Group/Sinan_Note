@@ -32,16 +32,29 @@ class EditorSection extends StatelessWidget {
         if (settings.swipeEnabled) ...[
           ListTile(
             contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+            leading: const Icon(Icons.swipe_right_rounded),
             title: Text(l10n.swipeRight),
             subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeRightAction, l10n)),
+            trailing: Icon(SettingsUtils.getSwipeActionIcon(settings.swipeRightAction)),
             onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, true, currentLang),
           ),
           ListTile(
             contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+            leading: const Icon(Icons.swipe_left_rounded),
             title: Text(l10n.swipeLeft),
             subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeLeftAction, l10n)),
+            trailing: Icon(SettingsUtils.getSwipeActionIcon(settings.swipeLeftAction)),
             onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, false, currentLang),
           ),
+          if (settings.swipeRightAction == 'custom' || settings.swipeLeftAction == 'custom')
+            ListTile(
+              contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+              leading: const Icon(Icons.bolt_rounded),
+              title: Text(l10n.custom),
+              subtitle: Text('${settings.swipeCustomActions.length} ${l10n.selected}'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => SettingsDialogs.showCustomActionsDialog(context, settings, l10n),
+            ),
         ],
       ],
     );

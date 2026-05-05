@@ -8,22 +8,10 @@ import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:apex_note/widgets/editor/checklist_item_widget.dart';
+import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class ChecklistUndoRedoController {
-  final VoidCallback undo;
-  final VoidCallback redo;
-  final bool canUndo;
-  final bool canRedo;
-
-  ChecklistUndoRedoController({
-    required this.undo,
-    required this.redo,
-    required this.canUndo,
-    required this.canRedo,
-  });
-}
 
 class ChecklistEditor extends StatefulWidget {
   final String initialContent;

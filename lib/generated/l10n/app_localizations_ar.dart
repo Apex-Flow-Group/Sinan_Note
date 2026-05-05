@@ -90,6 +90,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get copyCreated => 'تم إنشاء نسخة';
 
   @override
+  String get custom => 'مخصص';
+
+  @override
   String get movedToArchive => 'تم نقل الملاحظة إلى الأرشيف';
 
   @override
@@ -679,6 +682,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinnedOnly => 'المثبتة فقط';
+
+  @override
+  String get noCategory => 'بدون تصنيف';
 
   @override
   String get decryptingVault => 'جاري فك التشفير...';

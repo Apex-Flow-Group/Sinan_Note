@@ -62,6 +62,14 @@ class FilterSheet {
                 activeFilterNotifier.value = 'pinned:true';
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.label_off_outlined, color: Colors.grey),
+              title: Text(l10n.noCategory),
+              onTap: () {
+                Navigator.pop(context);
+                activeFilterNotifier.value = 'category:none';
+              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.clear_all, color: Colors.red),

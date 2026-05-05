@@ -15,6 +15,7 @@ import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/widgets/home/categories_panel.dart';
+import 'package:apex_note/widgets/home/drawer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -87,7 +88,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                           ? Padding(
                               padding:
                                   const EdgeInsetsDirectional.only(start: 16),
-                              child: _CategoriesPanelWrapper(
+                              child: CategoriesPanelWrapper(
                                 mode: _catMode == _CatMode.delete
                                     ? CatPanelMode.delete
                                     : _catMode == _CatMode.edit
@@ -374,7 +375,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       // â”€â”€â”€ ظˆط¶ط¹ ط§ظ„ط£ط¯ظˆط§طھ â”€â”€â”€
                       secondChild: Row(
                         children: [
-                          _ModeBtn(
+                          DrawerModeBtn(
                             icon: Icons.add_rounded,
                             active: _isAdding,
                             color: context
@@ -414,7 +415,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                               });
                             },
                           ),
-                          _ModeBtn(
+                          DrawerModeBtn(
                             icon: Icons.delete_outline_rounded,
                             active: _catMode == _CatMode.delete,
                             color: scheme.error,
@@ -425,7 +426,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                               _isAdding = false;
                             }),
                           ),
-                          _ModeBtn(
+                          DrawerModeBtn(
                             icon: Icons.edit_outlined,
                             active: _catMode == _CatMode.edit,
                             color: scheme.primary,
@@ -437,7 +438,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                             }),
                           ),
                           const Spacer(),
-                          _ModeBtn(
+                          DrawerModeBtn(
                             icon: Icons.close_rounded,
                             active: false,
                             color: scheme.onSurfaceVariant,
@@ -565,120 +566,3 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
   }
 }
 
-// â”€â”€ Wrapper ظٹط¶ظٹظپ scroll ط¹ظ†ط¯ طھط¬ط§ظˆط² 6 ظƒطھط§ظ„ظˆط¬ط§طھ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-class _CategoriesPanelWrapper extends StatefulWidget {
-  final CatPanelMode mode;
-  final bool isAdding;
-  final VoidCallback onAddDone;
-
-  const _CategoriesPanelWrapper({
-    required this.mode,
-    required this.isAdding,
-    required this.onAddDone,
-  });
-
-  @override
-  State<_CategoriesPanelWrapper> createState() =>
-      _CategoriesPanelWrapperState();
-}
-
-class _CategoriesPanelWrapperState extends State<_CategoriesPanelWrapper> {
-  final _scrollController = ScrollController();
-
-  static const double _tileHeight = 52.0;
-  static const int _maxVisible = 6;
-
-  @override
-  void didUpdateWidget(_CategoriesPanelWrapper oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // ط¹ظ†ط¯ ظپطھط­ ظ…ط±ط¨ط¹ ط§ظ„ط¥ط¯ط®ط§ظ„ â€” ط§ط³ظƒط±ظˆظ„ ظ„ظ„ط£ط³ظپظ„ ط¨ط¹ط¯ ط¸ظ‡ظˆط± ط§ظ„ظƒظٹط¨ظˆط±ط¯
-    if (widget.isAdding && !oldWidget.isAdding) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Future.delayed(const Duration(milliseconds: 350), () {
-          if (_scrollController.hasClients) {
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          }
-        });
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<CategoriesProvider>();
-    final totalItems =
-        provider.categories.length + 2 + (widget.isAdding ? 1 : 0);
-    final needsScroll = totalItems > _maxVisible;
-    const maxHeight = _tileHeight * _maxVisible;
-
-    final panel = CategoriesPanel(
-      mode: widget.mode,
-      isAdding: widget.isAdding,
-      onAddDone: widget.onAddDone,
-    );
-
-    if (!needsScroll) return panel;
-
-    return SizedBox(
-      height: maxHeight,
-      child: Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: true,
-        radius: const Radius.circular(4),
-        thickness: 3,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
-          child: panel,
-        ),
-      ),
-    );
-  }
-}
-
-class _ModeBtn extends StatelessWidget {
-  final IconData icon;
-  final bool active;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ModeBtn(
-      {required this.icon,
-      required this.active,
-      required this.color,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: active ? color.withValues(alpha: 0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color:
-              active ? color : scheme.onSurfaceVariant.withValues(alpha: 0.6),
-        ),
-      ),
-    );
-  }
-}

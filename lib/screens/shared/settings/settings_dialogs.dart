@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
 class SettingsDialogs {
@@ -14,6 +15,7 @@ class SettingsDialogs {
   }) {
     return showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -24,7 +26,6 @@ class SettingsDialogs {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              // مقبض
               Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
@@ -33,7 +34,6 @@ class SettingsDialogs {
                 ),
               ),
               const SizedBox(height: 20),
-              // عنوان مع أيقونة
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -49,8 +49,17 @@ class SettingsDialogs {
               ),
               const SizedBox(height: 12),
               const Divider(height: 1),
-              ...options.map((o) => _OptionTile(option: o, cs: cs)),
-              const SizedBox(height: 12),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ...options.map((o) => _OptionTile(option: o, cs: cs)),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -80,17 +89,51 @@ class SettingsDialogs {
       SettingsProvider settings, bool isRight, String lang) {
     final l10n = AppLocalizations.of(context)!;
     final currentValue = isRight ? settings.swipeRightAction : settings.swipeLeftAction;
-    void set(String val) => isRight ? settings.setSwipeRightAction(val) : settings.setSwipeLeftAction(val);
+    final otherValue = isRight ? settings.swipeLeftAction : settings.swipeRightAction;
+    void set(String val) {
+      if (val == 'custom' && otherValue == 'custom') {
+        isRight
+            ? settings.setSwipeLeftAction('archive')
+            : settings.setSwipeRightAction('delete');
+      }
+      isRight ? settings.setSwipeRightAction(val) : settings.setSwipeLeftAction(val);
+    }
 
     _showSheet(
       context,
       title: isRight ? l10n.swipeRight : l10n.swipeLeft,
       titleIcon: isRight ? Icons.swipe_right_rounded : Icons.swipe_left_rounded,
       options: [
-        _SheetOption(label: l10n.delete,  icon: Icons.delete_outline_rounded,  selected: currentValue == 'delete',  onTap: () => set('delete')),
-        _SheetOption(label: l10n.archive, icon: Icons.archive_outlined,         selected: currentValue == 'archive', onTap: () => set('archive')),
-        _SheetOption(label: l10n.share,   icon: Icons.share_outlined,           selected: currentValue == 'share',   onTap: () => set('share')),
+        _SheetOption(label: l10n.delete,   icon: Icons.delete_outline_rounded, selected: currentValue == 'delete',    onTap: () => set('delete')),
+        _SheetOption(label: l10n.archive,  icon: Icons.archive_outlined,        selected: currentValue == 'archive',   onTap: () => set('archive')),
+        _SheetOption(label: l10n.share,    icon: Icons.share_outlined,          selected: currentValue == 'share',     onTap: () => set('share')),
+        _SheetOption(label: l10n.reminder, icon: Icons.alarm_rounded,           selected: currentValue == 'reminder',  onTap: () => set('reminder')),
+        _SheetOption(label: l10n.categories, icon: Icons.label_outlined,        selected: currentValue == 'category',  onTap: () => set('category')),
+        _SheetOption(label: l10n.noteCopy, icon: Icons.copy_all_rounded,        selected: currentValue == 'duplicate', onTap: () => set('duplicate')),
+        _SheetOption(label: l10n.custom,   icon: Icons.bolt_rounded,            selected: currentValue == 'custom',    onTap: () => set('custom')),
       ],
+    );
+  }
+
+  static void showCustomActionsDialog(
+      BuildContext context, SettingsProvider settings, AppLocalizations l10n) {
+    final allActions = [
+      ('delete',    l10n.delete,      Icons.delete_outline_rounded),
+      ('archive',   l10n.archive,     Icons.archive_outlined),
+      ('share',     l10n.share,       Icons.share_outlined),
+      ('reminder',  l10n.reminder,    Icons.alarm_rounded),
+      ('category',  l10n.categories,  Icons.label_outlined),
+      ('duplicate', l10n.noteCopy,    Icons.copy_all_rounded),
+    ];
+
+    AppBottomSheet.show(
+      context,
+      isScrollControlled: true,
+      child: _CustomActionsSelector(
+        allActions: allActions,
+        settings: settings,
+        l10n: l10n,
+      ),
     );
   }
 
@@ -156,6 +199,94 @@ class SettingsDialogs {
           ),
         );
       },
+    );
+  }
+}
+
+// ── Custom Actions Selector ──────────────────────────────────────────────────
+class _CustomActionsSelector extends StatefulWidget {
+  final List<(String, String, IconData)> allActions;
+  final SettingsProvider settings;
+  final AppLocalizations l10n;
+
+  const _CustomActionsSelector({
+    required this.allActions,
+    required this.settings,
+    required this.l10n,
+  });
+
+  @override
+  State<_CustomActionsSelector> createState() => _CustomActionsSelectorState();
+}
+
+class _CustomActionsSelectorState extends State<_CustomActionsSelector> {
+  late Set<String> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = Set.from(widget.settings.swipeCustomActions);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = widget.l10n;
+
+    return AppBottomSheet(
+      title: l10n.custom,
+      titleIcon: Icons.bolt_rounded,
+      scrollable: true,
+      actions: [
+        IconButton.filled(
+          onPressed: () {
+            widget.settings.setSwipeCustomActions(_selected.toList());
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.check_rounded),
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 4),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: widget.allActions.map((entry) {
+          final (key, label, icon) = entry;
+          final checked = _selected.contains(key);
+          return CheckboxListTile(
+            value: checked,
+            onChanged: (_) => setState(() {
+              if (checked) {
+                _selected.remove(key);
+              } else {
+                _selected.add(key);
+              }
+            }),
+            secondary: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: checked
+                    ? scheme.primaryContainer
+                    : scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon,
+                  size: 18,
+                  color: checked
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurfaceVariant),
+            ),
+            title: Text(label),
+            activeColor: scheme.primary,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+            controlAffinity: ListTileControlAffinity.trailing,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+          );
+        }).toList(),
+      ),
     );
   }
 }

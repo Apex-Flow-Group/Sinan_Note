@@ -9,6 +9,8 @@
 | 1 | [BiDi Cursor — Arabic Text with Numbers](docs/known-issues/BIDI_CURSOR_FIX.md) | High | ✅ Fixed |
 | 2 | [Cursor Tear Handle — Drag Position Offset](docs/known-issues/TEAR_HANDLE_DRAG_FIX.md) | High | ✅ Fixed |
 | 3 | [Selection Handle Direction — Mixed RTL/LTR](docs/known-issues/SELECTION_HANDLE_DIRECTION_FIX.md) | High | ✅ Fixed |
+| 4 | [Hero Animation — Overlaps Search Bar & NavBar](docs/known-issues/HERO_OVERLAY_ISSUE.md) | Medium | 🔒 Key Debug Only |
+| 5 | [Cursor Drift — Tear Handle on Mixed Text & Empty Lines](docs/known-issues/TEAR_HANDLE_MIXED_DRIFT.md) | High | ⏳ Open |
 
 ---
 

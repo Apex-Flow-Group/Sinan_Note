@@ -7,6 +7,7 @@ import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/screens/mobile/trash_empty_sheet.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/searchable_header.dart';
@@ -66,53 +67,6 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
       filtered.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     }
     return filtered;
-  }
-
-  Widget _buildChecklistPreview(String content, Color textColor) {
-    final items = ChecklistFormatter.parseJson(content).take(3).toList();
-    if (items.isEmpty) {
-      return Text(
-        content,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 13, color: textColor.withValues(alpha: 0.7)),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: items.map((item) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 2),
-          child: Row(
-            children: [
-              Icon(
-                item.isDone ? Icons.check_box : Icons.check_box_outline_blank,
-                size: 16,
-                color: item.isDone
-                    ? Colors.green.withValues(alpha: 0.7)
-                    : textColor.withValues(alpha: 0.6),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  item.text.isEmpty ? 'Mission...' : item.text,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: item.isDone
-                        ? textColor.withValues(alpha: 0.5)
-                        : textColor.withValues(alpha: 0.7),
-                    decoration: item.isDone ? TextDecoration.lineThrough : null,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
   }
 
   void _restoreSelectedNotes(NotesProvider notesProvider,
@@ -178,8 +132,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
               onBackupTap: () {},
               onNotesChanged: () {},
             ),
-            body: SafeArea(
-              child: Column(
+            body: Column(
                 children: [
                   Builder(builder: (ctx) {
                     if (_selectionMode) {
@@ -353,38 +306,18 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                           if (trashedNotes.isNotEmpty)
                             IconButton(
                               icon: const Icon(Icons.delete_forever),
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: Text(l10n.permanentDelete),
-                                    content: Text(l10n.confirmDeleteAll),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(ctx, false),
-                                          child: Text(l10n.cancel)),
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(ctx, true),
-                                          child: Text(l10n.delete,
-                                              style: const TextStyle(
-                                                  color: Colors.red))),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  for (var note in trashedNotes) {
-                                    await notesProvider.deleteNote(note.id!);
-                                  }
-                                }
-                              },
+                              onPressed: () => TrashEmptySheet.show(
+                                  context,
+                                  trashedNotes: trashedNotes,
+                                  notesProvider: notesProvider),
                             ),
                         ],
                       ),
                     );
                   }),
                   Expanded(
+                    child: SafeArea(
+                    top: false,
                     child: trashedNotes.isEmpty
                         ? Center(
                             child: Column(
@@ -502,7 +435,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                                                 ChecklistFormatter
                                                         .isValidChecklist(
                                                             note.content)
-                                                    ? _buildChecklistPreview(
+                                                    ? NoteCardUtils.buildChecklistPreview(
                                                         note.content,
                                                         _getTextColor(
                                                             note.colorIndex))
@@ -533,11 +466,11 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                               );
                             },
                           ),
+                  ), // SafeArea
                   ), // Expanded
                 ],
               ), // Column
-            ), // SafeArea
-          ),
+            ),
         );
       },
     );

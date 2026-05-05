@@ -126,6 +126,8 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
         return isAr ? 'قائمة مهام' : 'Checklist';
       case 'pinned:true':
         return isAr ? 'مثبتة' : 'Pinned';
+      case 'category:none':
+        return isAr ? 'بدون تصنيف' : 'No category';
       default:
         return filter;
     }

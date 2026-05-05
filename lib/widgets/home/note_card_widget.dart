@@ -84,7 +84,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     }
     return ui.TextDirection.rtl;
   }
-
   @override
   void initState() {
     super.initState();

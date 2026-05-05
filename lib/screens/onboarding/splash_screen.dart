@@ -134,8 +134,8 @@ class _SplashScreenState extends State<SplashScreen> {
         AppUpdateService.checkForUpdate,
       ));
 
-      // TODO: أعد تفعيل هذا السطر في الإصدار القادم الذي يتضمن تغييرات في قاعدة البيانات
-      // if (mounted) _checkAndShowWhatsNew(); // معطّل مؤقتاً
+      // تشويق النسخة النهائية
+      if (mounted) _checkAndShowWhatsNew();
     } catch (e) {
       AppLogger.error('Splash initialization error', 'SplashScreen', e);
       _updateStatus(isArabic ? 'حدث خطأ...' : 'Error occurred...', 0.0);

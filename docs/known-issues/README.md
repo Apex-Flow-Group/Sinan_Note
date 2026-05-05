@@ -11,6 +11,8 @@
 | 1 | [BiDi Cursor — Arabic Text with Numbers](#1-bidi-cursor--arabic-text-with-numbers) | High | ✅ Fixed | `bidi_cursor_middleware.dart` |
 | 2 | [Cursor Tear Handle — Drag Position Offset](TEAR_HANDLE_DRAG_FIX.md) | High | ✅ Fixed | `tear/` |
 | 3 | [Selection Handle Direction — Mixed RTL/LTR Text](SELECTION_HANDLE_DIRECTION_FIX.md) | High | ✅ Fixed | `flutter_quill` patch |
+| 4 | [Hero Animation — Overlaps Search Bar & NavBar](HERO_OVERLAY_ISSUE.md) | Medium | 🔒 Key Debug Only | `hero_animation` |
+| 5 | [Cursor Drift — Tear Handle on Mixed Text & Empty Lines](TEAR_HANDLE_MIXED_DRIFT.md) | High | ⏳ Open | `tear/` |
 
 ---
 

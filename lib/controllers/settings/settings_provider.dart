@@ -7,12 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
-  double _textScaleFactor = 1.15;
+  double _textScaleFactor = 1.0;
   String _languageCode = 'system';
   String _fontFamily = 'system'; // 'system' | 'Cairo' | 'Tajawal'
   String _swipeRightAction = 'delete';
   String _swipeLeftAction = 'archive';
   bool _swipeEnabled = true;
+  List<String> _swipeCustomActions = ['delete', 'archive', 'share'];
   String _viewType = 'listCompact';
   bool _heroAnimationEnabled = false;
   bool _isAppLockEnabled = false;
@@ -43,6 +44,7 @@ class SettingsProvider with ChangeNotifier {
   String get swipeRightAction => _swipeRightAction;
   String get swipeLeftAction => _swipeLeftAction;
   bool get swipeEnabled => _swipeEnabled;
+  List<String> get swipeCustomActions => _swipeCustomActions;
   String get viewType => _viewType;
   bool get heroAnimationEnabled => _heroAnimationEnabled;
   bool get isAppLockEnabled => _isAppLockEnabled;
@@ -112,6 +114,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('swipeLeft', action);
+  }
+
+  Future<void> setSwipeCustomActions(List<String> actions) async {
+    _swipeCustomActions = actions;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('swipeCustomActions', actions);
   }
 
   Future<void> setSwipeEnabled(bool enabled) async {
@@ -214,12 +223,13 @@ class SettingsProvider with ChangeNotifier {
       } else {
         _themeMode = ThemeMode.system;
       }
-      _textScaleFactor = prefs.getDouble('textScale') ?? 1.15;
+      _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
       _fontFamily = prefs.getString('fontFamily') ?? 'system';
       _languageCode = prefs.getString('language') ?? 'system';
       _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
       _swipeLeftAction = prefs.getString('swipeLeft') ?? 'archive';
       _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
+      _swipeCustomActions = prefs.getStringList('swipeCustomActions') ?? ['delete', 'archive', 'share'];
       _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');

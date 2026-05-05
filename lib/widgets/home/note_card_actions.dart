@@ -1,11 +1,16 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
+import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
+import 'package:apex_note/widgets/home/swipe_custom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -185,8 +190,111 @@ class NoteCardActions {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
           final plainContent = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
-          CustomShareSheet.show(context, '${note.title}\n\n$plainContent',
-              subject: note.title);
+          CustomShareSheet.show(
+            context,
+            '${note.title}\n\n$plainContent',
+            subject: note.title,
+            note: note,
+            onNoteCopied: () async {
+              await notesProvider.duplicateNote(note.id!);
+              onNoteChanged();
+              if (!context.mounted) return;
+              UnifiedNotificationService().show(
+                context: context,
+                message: l10n.copyCreated,
+                type: NotificationType.success,
+              );
+            },
+          );
+        };
+        break;
+      case 'reminder':
+        icon = Icons.alarm_rounded;
+        color = Colors.orange.shade600;
+        onTap = () async {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          await Future.delayed(const Duration(milliseconds: 200));
+          if (!context.mounted) return;
+          final result = await ReminderPickerSheet.show(
+            context,
+            note.reminderDateTime,
+            note.recurrenceRule,
+            Theme.of(context).colorScheme.surface,
+          );
+          if (!context.mounted || result == null) return;
+          if (result['remove'] == true) {
+            await NotificationService().cancelNotification(note.id!);
+            final updated = note.copyWith(reminderDateTime: null, recurrenceRule: null);
+            await notesProvider.updateNote(updated);
+          } else {
+            final updated = note.copyWith(
+              reminderDateTime: result['dateTime'] as DateTime,
+              recurrenceRule: result['recurrence'] == 'none' ? null : result['recurrence'] as String,
+            );
+            await notesProvider.updateNote(updated);
+            await NotificationService().scheduleNotification(
+              id: note.id!,
+              title: note.title,
+              body: NoteCardUtils.fixNoteContent(note.content, maxChars: 100),
+              scheduledTime: result['dateTime'] as DateTime,
+              recurrenceRule: result['recurrence'] == 'none' ? null : result['recurrence'] as String,
+            );
+          }
+          onNoteChanged();
+        };
+        break;
+      case 'category':
+        icon = Icons.label_outlined;
+        color = Colors.teal.shade600;
+        onTap = () async {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          await Future.delayed(const Duration(milliseconds: 200));
+          if (!context.mounted) return;
+          final result = await CategoryPickerSheet.show(
+            context,
+            note.categoryIds,
+            isHiddenFromHome: note.isHiddenFromHome,
+          );
+          if (!context.mounted || result == null) return;
+          final updated = note.copyWith(
+            categoryIds: (result['categoryIds'] as List).cast<int>(),
+            isHiddenFromHome: result['isHiddenFromHome'] as bool,
+          );
+          await notesProvider.updateNote(updated);
+          onNoteChanged();
+        };
+        break;
+      case 'duplicate':
+        icon = Icons.copy_all_rounded;
+        color = Colors.purple.shade600;
+        onTap = () async {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          await notesProvider.duplicateNote(note.id!);
+          onNoteChanged();
+          if (!context.mounted) return;
+          UnifiedNotificationService().show(
+            context: context,
+            message: l10n.copyCreated,
+            type: NotificationType.success,
+          );
+        };
+        break;
+      case 'custom':
+        icon = Icons.bolt_rounded;
+        color = Colors.indigo.shade600;
+        onTap = () {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          SwipeCustomSheet.show(
+            context,
+            note: note,
+            actions: settings.swipeCustomActions,
+            onNoteChanged: onNoteChanged,
+          );
         };
         break;
       default:

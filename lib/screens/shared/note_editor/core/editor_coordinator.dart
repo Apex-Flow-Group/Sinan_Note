@@ -19,7 +19,7 @@ import 'package:apex_note/screens/shared/note_editor/utils/note_editor_utils.dar
 import 'package:apex_note/services/clipboard_guard.dart';
 import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/language_detector.dart';
-import 'package:apex_note/widgets/editor/checklist_editor.dart';
+import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';

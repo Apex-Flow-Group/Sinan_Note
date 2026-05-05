@@ -30,14 +30,27 @@ class SettingsUtils {
 
   static String getSwipeActionText(String action, AppLocalizations l10n) {
     switch (action) {
-      case 'delete':
-        return l10n.delete;
-      case 'archive':
-        return l10n.archive;
-      case 'share':
-        return l10n.share;
-      default:
-        return l10n.delete;
+      case 'delete':    return l10n.delete;
+      case 'archive':   return l10n.archive;
+      case 'share':     return l10n.share;
+      case 'reminder':  return l10n.reminder;
+      case 'category':  return l10n.categories;
+      case 'duplicate': return l10n.noteCopy;
+      case 'custom':    return l10n.custom;
+      default:          return l10n.delete;
+    }
+  }
+
+  static IconData getSwipeActionIcon(String action) {
+    switch (action) {
+      case 'delete':    return Icons.delete_outline_rounded;
+      case 'archive':   return Icons.archive_outlined;
+      case 'share':     return Icons.share_outlined;
+      case 'reminder':  return Icons.alarm_rounded;
+      case 'category':  return Icons.label_outlined;
+      case 'duplicate': return Icons.copy_all_rounded;
+      case 'custom':    return Icons.bolt_rounded;
+      default:          return Icons.delete_outline_rounded;
     }
   }
 

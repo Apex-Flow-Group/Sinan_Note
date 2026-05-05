@@ -90,6 +90,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyCreated => 'Copy created';
 
   @override
+  String get custom => 'Custom';
+
+  @override
   String get movedToArchive => 'Note moved to archive';
 
   @override
@@ -681,6 +684,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinnedOnly => 'Pinned Only';
+
+  @override
+  String get noCategory => 'No category';
 
   @override
   String get decryptingVault => 'Decrypting Vault...';

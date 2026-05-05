@@ -1,13 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:apex_note/services/storage/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
 
-class WhatsNewDialog extends StatefulWidget {
+class WhatsNewDialog extends StatelessWidget {
   final String version;
   const WhatsNewDialog({super.key, required this.version});
 
@@ -16,176 +12,203 @@ class WhatsNewDialog extends StatefulWidget {
     if (!context.mounted) return;
     await showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (_) => WhatsNewDialog(version: info.version),
     );
   }
 
   @override
-  State<WhatsNewDialog> createState() => _WhatsNewDialogState();
-}
-
-class _WhatsNewDialogState extends State<WhatsNewDialog> {
-  bool _confirmed = false;
-  bool _isExporting = false;
-  bool _exported = false;
-  String? _exportMsg;
-
-  Future<void> _exportNow() async {
-    setState(() { _isExporting = true; _exportMsg = null; });
-    try {
-      final dir = await getExternalStorageDirectory() ??
-          await getApplicationDocumentsDirectory();
-      final downloadsPath = Platform.isAndroid
-          ? '/storage/emulated/0/Download'
-          : dir.path;
-      final msg = await StorageService().exportNotesToPath(downloadsPath);
-      setState(() { _exported = true; _exportMsg = msg; });
-    } catch (e) {
-      setState(() { _exportMsg = e.toString().replaceAll('Exception:', '').trim(); });
-    } finally {
-      setState(() => _isExporting = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
 
-    return PopScope(
-      canPop: false,
-      child: Dialog(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 480,
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Header ──
-                Row(
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 480,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── أيقونة ──
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      scheme.primary.withValues(alpha: 0.15),
+                      Colors.purple.withValues(alpha: 0.15),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.rocket_launch_rounded,
+                    size: 40, color: scheme.primary),
+              ),
+              const SizedBox(height: 16),
+
+              // ── العنوان ──
+              Text(
+                isAr ? '🎉 قريباً — النسخة النهائية' : '🎉 Coming Soon — Final Release',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                isAr
+                    ? 'الوصول المبكر · الإصدار $version'
+                    : 'Early Access · Version $version',
+                style: TextStyle(
+                    fontSize: 13,
+                    color: scheme.onSurface.withValues(alpha: 0.5)),
+              ),
+              const SizedBox(height: 20),
+
+              // ── الرسالة ──
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: scheme.primary.withValues(alpha: 0.2)),
+                ),
+                child: Text(
+                  isAr
+                      ? 'شكراً لكونك جزءاً من رحلة Sinan Note منذ البداية.\n\nهذا آخر تحديث في مرحلة الوصول المبكر — النسخة النهائية في الطريق، وستحمل معها تجربة مصقولة بالكامل بناءً على ملاحظاتكم.\n\nاستمر في استخدام التطبيق، كل ملاحظة تكتبها الآن ستنتقل معك إلى النسخة النهائية.'
+                      : 'Thank you for being part of the Sinan Note journey from the start.\n\nThis is the last update in the Early Access phase — the Final Release is on its way, fully polished based on your feedback.\n\nKeep using the app, every note you write now will carry over to the final version.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 14,
+                      height: 1.7,
+                      color: scheme.onSurface.withValues(alpha: 0.85)),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── ما الجديد ──
+              _FeatureRow(
+                icon: Icons.auto_awesome_rounded,
+                color: Colors.amber,
+                text: isAr
+                    ? 'خيارات سحب مخصصة بالكامل'
+                    : 'Fully customizable swipe actions',
+              ),
+              _FeatureRow(
+                icon: Icons.alarm_rounded,
+                color: Colors.orange,
+                text: isAr
+                    ? 'تذكير وكتالوج مباشرة من السحب'
+                    : 'Reminder & category directly from swipe',
+              ),
+              _FeatureRow(
+                icon: Icons.sync_rounded,
+                color: Colors.blue,
+                text: isAr
+                    ? 'مزامنة ذكية بعد كل حفظ'
+                    : 'Smart sync after every save',
+              ),
+              _FeatureRow(
+                icon: Icons.rocket_launch_rounded,
+                color: scheme.primary,
+                text: isAr
+                    ? 'النسخة النهائية قادمة قريباً 🚀'
+                    : 'Final version coming soon 🚀',
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── شكر المجتمع ──
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.pink.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: Colors.pink.withValues(alpha: 0.2)),
+                ),
+                child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.backup_rounded, color: Colors.orange, size: 26),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        isArabic ? 'قبل التحديث — احفظ بياناتك' : 'Before Update — Save Your Data',
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                      ),
+                    const Text('💙', style: TextStyle(fontSize: 28)),
+                    const SizedBox(height: 8),
+                    Text(
+                      isAr
+                          ? 'شكر خاص لكل من جرّب التطبيق، أرسل ملاحظة، أو أبلغ عن مشكلة — أنتم من شكّل هذا التطبيق وجعله أفضل يوماً بعد يوم.'
+                          : 'A special thank you to everyone who tried the app, sent feedback, or reported an issue — you shaped this app and made it better day by day.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 13,
+                          height: 1.7,
+                          color: scheme.onSurface.withValues(alpha: 0.75)),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+              ),
 
-                // ── Warning box ──
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+              const SizedBox(height: 20),
+
+              // ── زر الإغلاق ──
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                   child: Text(
-                    isArabic
-                        ? 'هذا التحديث يتضمن تغييرات في قاعدة البيانات.\nيُنصح بأخذ نسخة احتياطية من ملاحظاتك قبل المتابعة لضمان عدم فقدان أي بيانات.'
-                        : 'This update includes database changes.\nIt is recommended to back up your notes before continuing to ensure no data is lost.',
-                    style: TextStyle(fontSize: 13, height: 1.5, color: scheme.onSurface),
+                    isAr ? 'لا يسعدني الانتظار! 🎯' : "Can't wait! 🎯",
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // ── Export button ──
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _isExporting ? null : _exportNow,
-                    icon: _isExporting
-                        ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Icon(_exported ? Icons.check_circle_rounded : Icons.download_rounded),
-                    label: Text(
-                      _isExporting
-                          ? (isArabic ? 'جاري التصدير...' : 'Exporting...')
-                          : _exported
-                              ? (isArabic ? 'تم التصدير ✓' : 'Exported ✓')
-                              : (isArabic ? 'تصدير الملاحظات إلى التنزيلات' : 'Export Notes to Downloads'),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _exported ? Colors.green : scheme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                  ),
-                ),
-
-                // ── Export result message ──
-                if (_exportMsg != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _exportMsg!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _exported ? Colors.green : scheme.error,
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 20),
-
-                // ── Checkbox ──
-                InkWell(
-                  onTap: () => setState(() => _confirmed = !_confirmed),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: _confirmed,
-                        onChanged: (v) => setState(() => _confirmed = v ?? false),
-                        activeColor: scheme.primary,
-                      ),
-                      Expanded(
-                        child: Text(
-                          isArabic
-                              ? 'نعم، أخذت نسخة احتياطية من بياناتي'
-                              : 'Yes, I have backed up my data',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ── Confirm button ──
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _confirmed ? () => Navigator.pop(context) : null,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(
-                      isArabic ? 'متابعة' : 'Continue',
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FeatureRow extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  const _FeatureRow({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(text,
+                style: const TextStyle(fontSize: 13, height: 1.4)),
+          ),
+        ],
       ),
     );
   }

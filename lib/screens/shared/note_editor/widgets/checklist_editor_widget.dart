@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:apex_note/widgets/editor/checklist_editor.dart';
+import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
 import 'package:flutter/material.dart';
 
 /// Checklist editor widget with JSON-based task management

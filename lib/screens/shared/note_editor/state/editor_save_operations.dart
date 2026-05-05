@@ -149,6 +149,7 @@ class EditorSaveOperations {
 
     if (saved && isMounted()) {
       UnifiedNotificationService().show(
+        // ignore: use_build_context_synchronously
         context: context,
         message: l10n!.noteSaved,
         type: NotificationType.success,

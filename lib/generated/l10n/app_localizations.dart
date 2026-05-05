@@ -260,6 +260,12 @@ abstract class AppLocalizations {
   /// **'Copy created'**
   String get copyCreated;
 
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
+
   /// No description provided for @movedToArchive.
   ///
   /// In en, this message translates to:
@@ -1435,6 +1441,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pinned Only'**
   String get pinnedOnly;
+
+  /// No description provided for @noCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'No category'**
+  String get noCategory;
 
   /// No description provided for @decryptingVault.
   ///

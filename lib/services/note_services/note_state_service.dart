@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class NoteStateService {
   List<Note> _allNotes = [];
@@ -169,19 +168,15 @@ class NoteStateService {
   Timer? _syncDebounce;
   
   void _silentSync() {
-    // Debounce: wait 5 seconds of inactivity before syncing
     _syncDebounce?.cancel();
     _syncDebounce = Timer(const Duration(seconds: 5), () async {
       if (_isSyncing) return;
-      
+      if (!GoogleDriveService.isSignedIn) return;
+      if (!GoogleDriveService.autoSyncEnabled.value) return;
+
       try {
         _isSyncing = true;
-        final prefs = await SharedPreferences.getInstance();
-        final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
-        
-        if (autoSync && GoogleDriveService.isSignedIn) {
-          await GoogleDriveService.uploadDatabase(null);
-        }
+        await GoogleDriveService.smartSyncOnStartup();
       } catch (_) {
       } finally {
         _isSyncing = false;

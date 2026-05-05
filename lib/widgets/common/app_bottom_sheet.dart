@@ -122,7 +122,7 @@ class AppBottomSheet extends StatelessWidget {
             if (scrollable)
               Flexible(child: SingleChildScrollView(child: child))
             else
-              Flexible(child: child),
+              child,
           ],
         ),
       ),

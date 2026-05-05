@@ -202,6 +202,8 @@ class NotesFilterController extends ChangeNotifier {
           }
         } else if (activeFilter == 'pinned:true') {
           if (!note.isPinned) return false;
+        } else if (activeFilter == 'category:none') {
+          if (note.categoryIds.isNotEmpty) return false;
         }
       }
 

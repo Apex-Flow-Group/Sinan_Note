@@ -7,6 +7,7 @@ import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:apex_note/screens/shared/settings/settings_utils.dart';
 import 'package:apex_note/screens/shared/settings/widgets/hero_animation_info_sheet.dart';
 import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -40,8 +41,8 @@ class GeneralSection extends StatelessWidget {
           width: 150,
           child: Slider(
             value: settings.textScaleFactor,
-            min: 0.9,
-            max: 1.4,
+            min: 0.8,
+            max: 1.3,
             divisions: 5,
             onChanged: settings.setTextScaleFactor,
           ),
@@ -105,11 +106,12 @@ class BetaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!kDebugMode) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
     return SettingsSectionCard(
-      title: 'Beta',
-      icon: Icons.science_outlined,
+      title: 'Key Debug',
+      icon: Icons.developer_mode_outlined,
       children: [
         SwitchListTile(
           title: Text(l10n.heroAnimation),
