@@ -148,9 +148,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     await settings.setLockedIntroSeen(true);
     if (!mounted) return;
-    Navigator.pop(context);
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const LockedNotesScreen()));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LockedNotesScreen()),
+    );
   }
 
   void _nextPage() {
@@ -186,7 +187,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         elevation: 0,
         leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context)),
+            onPressed: () {
+              debugPrint('🔙 [VaultIntro] Back button pressed');
+              Navigator.pop(context);
+            }),
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),

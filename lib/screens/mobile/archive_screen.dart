@@ -38,7 +38,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
 
   @override
   void dispose() {
-    UnifiedNotificationService().cancelAll();
+    UnifiedNotificationService().commitAll();
     super.dispose();
   }
 
@@ -64,16 +64,16 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
   void _restoreSelected() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
-    
+
     await notesProvider.unarchiveNotes(ids);
-    
+
     setState(() {
       _selectedNoteIds.clear();
       _selectionMode = false;
     });
-    
+
     if (!mounted) return;
-    
+
     UnifiedNotificationService().showWithUndo(
       context: context,
       message: '${ids.length} notes restored',
@@ -90,16 +90,16 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
   void _deleteSelected() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final ids = List<int>.from(_selectedNoteIds);
-    
+
     await notesProvider.trashNotes(ids);
-    
+
     setState(() {
       _selectedNoteIds.clear();
       _selectionMode = false;
     });
-    
+
     if (!mounted) return;
-    
+
     UnifiedNotificationService().showWithUndo(
       context: context,
       message: '${ids.length} notes moved to trash',
@@ -135,183 +135,217 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
             }
           },
           child: Scaffold(
-          drawer: HomeDrawerWidget(
-            onBackupTap: () {},
-            onNotesChanged: () {},
-          ),
-          body: Column(
-            children: [
-              Builder(builder: (ctx) {
-                if (_selectionMode) {
+            drawer: HomeDrawerWidget(
+              onBackupTap: () {},
+              onNotesChanged: () {},
+            ),
+            body: Column(
+              children: [
+                Builder(builder: (ctx) {
+                  if (_selectionMode) {
+                    return SearchableHeader(
+                      title: '${_selectedNoteIds.length} ${l10n.selected}',
+                      isSearching: false,
+                      hideSearchFrame: true,
+                      searchController: searchController,
+                      onToggleSearch: () {},
+                      leading: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => setState(() {
+                          _selectionMode = false;
+                          _selectedNoteIds.clear();
+                        }),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              _selectedNoteIds.length == archivedNotes.length
+                                  ? Icons.deselect
+                                  : Icons.select_all,
+                            ),
+                            onPressed: () => setState(() {
+                              if (_selectedNoteIds.length ==
+                                  archivedNotes.length) {
+                                _selectedNoteIds.clear();
+                              } else {
+                                _selectedNoteIds.clear();
+                                _selectedNoteIds
+                                    .addAll(archivedNotes.map((n) => n.id!));
+                              }
+                            }),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.unarchive,
+                                color: _selectedNoteIds.isNotEmpty
+                                    ? Colors.green
+                                    : Colors.grey),
+                            onPressed: _selectedNoteIds.isNotEmpty
+                                ? _restoreSelected
+                                : null,
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete,
+                                color: _selectedNoteIds.isNotEmpty
+                                    ? Colors.red
+                                    : Colors.grey),
+                            onPressed: _selectedNoteIds.isNotEmpty
+                                ? _deleteSelected
+                                : null,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
                   return SearchableHeader(
-                    title: '${_selectedNoteIds.length} ${l10n.selected}',
-                    isSearching: false,
-                    hideSearchFrame: true,
+                    title: l10n.archive,
+                    icon: Icons.archive_outlined,
+                    isSearching: _isSearchActive,
+                    noteCount: archivedNotes.length,
                     searchController: searchController,
-                    onToggleSearch: () {},
-                    leading: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => setState(() {
-                        _selectionMode = false;
-                        _selectedNoteIds.clear();
-                      }),
-                    ),
+                    onSearchChange: (q) => setState(() {}),
+                    onToggleSearch: () {
+                      if (_isSearchActive) {
+                        _exitSearch();
+                      } else {
+                        setState(() => searchController.text = '');
+                        toggleSearch();
+                      }
+                    },
+                    leading: !_isSearchActive
+                        ? Builder(
+                            builder: (ctx) => IconButton(
+                              icon: const Icon(Icons.menu),
+                              onPressed: () => Scaffold.of(ctx).openDrawer(),
+                            ),
+                          )
+                        : null,
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            _selectedNoteIds.length == archivedNotes.length
-                                ? Icons.deselect
-                                : Icons.select_all,
-                          ),
-                          onPressed: () => setState(() {
-                            if (_selectedNoteIds.length == archivedNotes.length) {
-                              _selectedNoteIds.clear();
-                            } else {
-                              _selectedNoteIds.clear();
-                              _selectedNoteIds.addAll(archivedNotes.map((n) => n.id!));
-                            }
-                          }),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.unarchive,
-                              color: _selectedNoteIds.isNotEmpty ? Colors.green : Colors.grey),
-                          onPressed: _selectedNoteIds.isNotEmpty ? _restoreSelected : null,
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete,
-                              color: _selectedNoteIds.isNotEmpty ? Colors.red : Colors.grey),
-                          onPressed: _selectedNoteIds.isNotEmpty ? _deleteSelected : null,
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.sort),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          onSelected: (value) =>
+                              setState(() => _sortBy = value),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'date',
+                              child: Row(children: [
+                                Icon(Icons.access_time,
+                                    size: 20,
+                                    color: _sortBy == 'date'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null),
+                                const SizedBox(width: 12),
+                                Text(l10n.sortByDate),
+                                if (_sortBy == 'date') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check,
+                                      size: 20,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ],
+                              ]),
+                            ),
+                            PopupMenuItem(
+                              value: 'title',
+                              child: Row(children: [
+                                Icon(Icons.sort_by_alpha,
+                                    size: 20,
+                                    color: _sortBy == 'title'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null),
+                                const SizedBox(width: 12),
+                                Text(l10n.sortByTitle),
+                                if (_sortBy == 'title') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check,
+                                      size: 20,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ],
+                              ]),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   );
-                }
-                return SearchableHeader(
-                  title: l10n.archive,
-                  icon: Icons.archive_outlined,
-                  isSearching: _isSearchActive,
-                  noteCount: archivedNotes.length,
-                  searchController: searchController,
-                  onSearchChange: (q) => setState(() {}),
-                  onToggleSearch: () {
-                    if (_isSearchActive) {
-                      _exitSearch();
-                    } else {
-                      setState(() => searchController.text = '');
-                      toggleSearch();
-                    }
-                  },
-                  leading: !_isSearchActive
-                      ? Builder(
-                          builder: (ctx) => IconButton(
-                            icon: const Icon(Icons.menu),
-                            onPressed: () => Scaffold.of(ctx).openDrawer(),
-                          ),
-                        )
-                      : null,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.sort),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        onSelected: (value) => setState(() => _sortBy = value),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'date',
-                            child: Row(children: [
-                              Icon(Icons.access_time, size: 20,
-                                  color: _sortBy == 'date' ? Theme.of(context).colorScheme.primary : null),
-                              const SizedBox(width: 12),
-                              Text(l10n.sortByDate),
-                              if (_sortBy == 'date') ...[
-                                const Spacer(),
-                                Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
-                              ],
-                            ]),
-                          ),
-                          PopupMenuItem(
-                            value: 'title',
-                            child: Row(children: [
-                              Icon(Icons.sort_by_alpha, size: 20,
-                                  color: _sortBy == 'title' ? Theme.of(context).colorScheme.primary : null),
-                              const SizedBox(width: 12),
-                              Text(l10n.sortByTitle),
-                              if (_sortBy == 'title') ...[
-                                const Spacer(),
-                                Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
-                              ],
-                            ]),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }),
-              Expanded(
-                child: archivedNotes.isEmpty
-                    ? Center(child: Text(l10n.noArchivedNotes))
-                    : ListView.builder(
-                        padding: EdgeInsets.only(
-                            left: 8,
-                            right: 8,
-                            top: 8,
-                            bottom: MediaQuery.of(context).padding.bottom + 80),
-                        itemCount: archivedNotes.length,
-                        itemBuilder: (context, index) {
-                          final note = archivedNotes[index];
-                          final isSelected = _selectedNoteIds.contains(note.id);
-                          return SelectedNoteIndicator(
-                            note: note,
-                            child: NoteCardWidget(
+                }),
+                Expanded(
+                  child: archivedNotes.isEmpty
+                      ? Center(child: Text(l10n.noArchivedNotes))
+                      : ListView.builder(
+                          padding: EdgeInsets.only(
+                              left: 8,
+                              right: 8,
+                              top: 8,
+                              bottom:
+                                  MediaQuery.of(context).padding.bottom + 80),
+                          itemCount: archivedNotes.length,
+                          itemBuilder: (context, index) {
+                            final note = archivedNotes[index];
+                            final isSelected =
+                                _selectedNoteIds.contains(note.id);
+                            return SelectedNoteIndicator(
                               note: note,
-                              viewType: _viewType,
-                              closeAllSlidables: ValueNotifier<int>(0),
-                              onNoteChanged: () {
-                                Provider.of<NotesProvider>(context, listen: false)
-                                    .fetchArchivedNotes();
-                              },
-                              onLongPress: () {
-                                setState(() {
-                                  _selectionMode = true;
-                                  if (_selectedNoteIds.contains(note.id)) {
-                                    _selectedNoteIds.remove(note.id);
-                                  } else {
-                                    _selectedNoteIds.add(note.id!);
-                                  }
-                                });
-                              },
-                              onTap: _selectionMode
-                                  ? () {
-                                      setState(() {
-                                        if (_selectedNoteIds.contains(note.id)) {
-                                          _selectedNoteIds.remove(note.id);
-                                        } else {
-                                          _selectedNoteIds.add(note.id!);
-                                        }
-                                      });
+                              child: NoteCardWidget(
+                                note: note,
+                                viewType: _viewType,
+                                closeAllSlidables: ValueNotifier<int>(0),
+                                onNoteChanged: () {
+                                  Provider.of<NotesProvider>(context,
+                                          listen: false)
+                                      .fetchArchivedNotes();
+                                },
+                                onLongPress: () {
+                                  setState(() {
+                                    _selectionMode = true;
+                                    if (_selectedNoteIds.contains(note.id)) {
+                                      _selectedNoteIds.remove(note.id);
+                                    } else {
+                                      _selectedNoteIds.add(note.id!);
                                     }
-                                  : () {
-                                      final isDesktop = MediaQuery.of(context).size.width >= 600;
-                                      if (isDesktop) {
-                                        Provider.of<SelectedNoteProvider>(context, listen: false)
-                                            .selectNote(note);
+                                  });
+                                },
+                                onTap: _selectionMode
+                                    ? () {
+                                        setState(() {
+                                          if (_selectedNoteIds
+                                              .contains(note.id)) {
+                                            _selectedNoteIds.remove(note.id);
+                                          } else {
+                                            _selectedNoteIds.add(note.id!);
+                                          }
+                                        });
                                       }
-                                    },
-                              source: 'archive',
-                              isFiltering: false,
-                              selectionMode: _selectionMode,
-                              isSelected: isSelected,
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+                                    : () {
+                                        final isDesktop =
+                                            MediaQuery.of(context).size.width >=
+                                                600;
+                                        if (isDesktop) {
+                                          Provider.of<SelectedNoteProvider>(
+                                                  context,
+                                                  listen: false)
+                                              .selectNote(note);
+                                        }
+                                      },
+                                source: 'archive',
+                                isFiltering: false,
+                                selectionMode: _selectionMode,
+                                isSelected: isSelected,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
         );
       },

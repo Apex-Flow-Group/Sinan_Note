@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
@@ -10,7 +9,6 @@ import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,7 +68,6 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     if (mounted) setState(() => _isLoading = false);
   }
 
-
   Future<void> _handleSync() async {
     setState(() => _isLoading = true);
     await GoogleDriveHandlers.handleSync(context);
@@ -96,8 +93,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     final isDark = settingsProvider.themeMode == ThemeMode.dark ||
         (settingsProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
-    final isSignedIn = kDebugMode ? true : GoogleDriveService.isSignedIn;
-    final userEmail = kDebugMode ? 'beta@example.com' : GoogleDriveService.currentUserEmail;
+    final isSignedIn = GoogleDriveService.isSignedIn;
+    final userEmail = GoogleDriveService.currentUserEmail;
     final lastSyncTime = GoogleDriveService.lastSyncTime;
     final lastSyncTimeStr = lastSyncTime != null
         ? GoogleDriveHandlers.formatDateTime(context, lastSyncTime)
@@ -163,23 +160,24 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       onRefresh: _pullToRefresh ? _handleRefresh : () async {},
       semanticsLabel: l10n.pullToRefresh,
       child: ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-      children: [
-        // Account Section with New Sync Button
-        _buildAccountSectionWithNewSync(context, l10n, isDark, isSignedIn, userEmail),
-        const SizedBox(height: 24),
-        GoogleDriveWidgets.buildSyncStatusSection(
-            context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
-        const SizedBox(height: 24),
-        GoogleDriveWidgets.buildSyncActionsSection(
-            context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
-        const SizedBox(height: 24),
-        GoogleDriveWidgets.buildAutoSyncSection(
-            context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting,
-            pullToRefresh: _pullToRefresh,
-            onPullToRefreshChanged: _savePullToRefreshSetting),
-      ],
-    ),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+        children: [
+          // Account Section with New Sync Button
+          _buildAccountSectionWithNewSync(
+              context, l10n, isDark, isSignedIn, userEmail),
+          const SizedBox(height: 24),
+          GoogleDriveWidgets.buildSyncStatusSection(
+              context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
+          const SizedBox(height: 24),
+          GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
+              isSignedIn, _handleUpload, _handleDownload),
+          const SizedBox(height: 24),
+          GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
+              _autoSync, isSignedIn, _saveAutoSyncSetting,
+              pullToRefresh: _pullToRefresh,
+              onPullToRefreshChanged: _savePullToRefreshSetting),
+        ],
+      ),
     );
   }
 
@@ -218,7 +216,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
@@ -226,10 +225,16 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(width: 7, height: 7,
-                        decoration: const BoxDecoration(color: Color(0xFF69F0AE), shape: BoxShape.circle)),
+                      Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                              color: Color(0xFF69F0AE),
+                              shape: BoxShape.circle)),
                       const SizedBox(width: 5),
-                      const Text('Connected', style: TextStyle(fontSize: 11, color: Colors.white70)),
+                      const Text('Connected',
+                          style:
+                              TextStyle(fontSize: 11, color: Colors.white70)),
                     ],
                   ),
                 ),
@@ -238,7 +243,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.email_outlined, color: Colors.white70, size: 16),
+                const Icon(Icons.email_outlined,
+                    color: Colors.white70, size: 16),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -249,7 +255,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                 ),
                 TextButton(
                   onPressed: _handleSignOut,
-                  child: Text(l10n.signOut, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  child: Text(l10n.signOut,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 13)),
                 ),
               ],
             ),
@@ -292,7 +300,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           FilledButton.icon(
             onPressed: () async {
               final scaffoldMessenger = ScaffoldMessenger.of(context);
-              final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+              final notesProvider =
+                  Provider.of<NotesProvider>(context, listen: false);
               final result = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
@@ -337,8 +346,11 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     final sections = [
-      (icon: Icons.account_circle_outlined, label: isAr ? 'الحساب والمزامنة' : 'Account & Sync'),
-      (icon: Icons.settings_outlined,       label: isAr ? 'الإعدادات' : 'Settings'),
+      (
+        icon: Icons.account_circle_outlined,
+        label: isAr ? 'الحساب والمزامنة' : 'Account & Sync'
+      ),
+      (icon: Icons.settings_outlined, label: isAr ? 'الإعدادات' : 'Settings'),
     ];
 
     return _GoogleDriveDesktopMasterDetails(
@@ -348,20 +360,21 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
         0 => ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              _buildAccountSectionWithNewSync(context, l10n, isDark, isSignedIn, userEmail),
+              _buildAccountSectionWithNewSync(
+                  context, l10n, isDark, isSignedIn, userEmail),
               const SizedBox(height: 24),
-              GoogleDriveWidgets.buildSyncStatusSection(
-                  context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
+              GoogleDriveWidgets.buildSyncStatusSection(context, l10n, isDark,
+                  lastSyncTimeStr, isSignedIn, _handleSync),
               const SizedBox(height: 24),
-              GoogleDriveWidgets.buildSyncActionsSection(
-                  context, l10n, isDark, isSignedIn, _handleUpload, _handleDownload),
+              GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
+                  isSignedIn, _handleUpload, _handleDownload),
             ],
           ),
         1 => ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              GoogleDriveWidgets.buildAutoSyncSection(
-                  context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting,
+              GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
+                  _autoSync, isSignedIn, _saveAutoSyncSetting,
                   pullToRefresh: _pullToRefresh,
                   onPullToRefreshChanged: _savePullToRefreshSetting),
             ],
@@ -428,8 +441,7 @@ class _GoogleDriveDesktopMasterDetailsState
                         colorScheme.primaryContainer.withValues(alpha: 0.4),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     onTap: () => setState(() => _selectedIndex = i),
                   );
                 },

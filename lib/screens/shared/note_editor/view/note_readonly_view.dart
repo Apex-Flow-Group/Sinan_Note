@@ -12,8 +12,10 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/editor/markdown_viewer.dart';
+import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -63,6 +65,27 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     }
   }
 
+  Future<void> _onReminder() async {
+    final note = widget.note;
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final noteColor = widget.coordinator.getBackgroundColor(context);
+
+    final result = await ReminderPickerSheet.show(
+      context,
+      note.reminderDateTime,
+      null,
+      noteColor,
+    );
+    if (result == null || !mounted) return;
+
+    final updatedNote = note.copyWith(
+      reminderDateTime:
+          result['remove'] == true ? null : result['dateTime'] as DateTime?,
+    );
+    await provider.updateNote(updatedNote);
+    await _onRefresh();
+  }
+
   Future<void> _onShare() async {
     final note = widget.note;
     final content = note.isChecklist
@@ -72,39 +95,54 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   }
 
   Future<void> _onArchive() async {
-    if (widget.note.id == null) return;
+    if (widget.note.id == null || !mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    widget.note.isArchived
-        ? await provider.unarchiveNote(widget.note.id!)
-        : await provider.archiveNote(widget.note.id!);
-    if (mounted) _closeOrPop();
+    final note = widget.note;
+    final wasArchived = note.isArchived;
+
+    wasArchived
+        ? await provider.unarchiveNote(note.id!)
+        : await provider.archiveNote(note.id!);
+
+    if (!mounted) return;
+    _closeOrPop();
+
+    UnifiedNotificationService().showWithUndo(
+      context: context,
+      message: wasArchived ? l10n.noteRestored : l10n.movedToArchive,
+      type: NotificationType.success,
+      actionKey: 'note_archive_${note.id}',
+      onExecute: () {},
+      onUndo: () async {
+        wasArchived
+            ? await provider.archiveNote(note.id!)
+            : await provider.unarchiveNote(note.id!);
+      },
+      undoLabel: l10n.undo,
+    );
   }
 
   Future<void> _onDelete() async {
     if (widget.note.id == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final note = widget.note;
+
+    await provider.trashNote(note.id!);
+
+    if (!mounted) return;
+    _closeOrPop();
+
+    UnifiedNotificationService().showWithUndo(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteNote),
-        content: Text(l10n.deleteConfirm),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cancel)),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child:
-                  Text(l10n.delete, style: const TextStyle(color: Colors.red))),
-        ],
-      ),
+      message: l10n.movedToTrash,
+      type: NotificationType.info,
+      actionKey: 'note_delete_${note.id}',
+      onExecute: () {},
+      onUndo: () async => await provider.restoreNote(note.id!),
+      undoLabel: l10n.undo,
     );
-    if (confirm == true && mounted) {
-      await Provider.of<NotesProvider>(context, listen: false)
-          .trashNote(widget.note.id!);
-      if (mounted) _closeOrPop();
-    }
   }
 
   Future<void> _onRestore() async {
@@ -322,6 +360,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         onEdit: widget.onEnterEdit,
         onRefresh: _onRefresh,
         showMarkdown: _showMarkdown,
+        onReminder: note.isTrashed ? null : _onReminder,
         onMarkdownToggle: canMarkdown
             ? () => setState(() => _showMarkdown = !_showMarkdown)
             : null,

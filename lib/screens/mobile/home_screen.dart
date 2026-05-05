@@ -17,6 +17,7 @@ import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;
 import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:apex_note/widgets/home/dialogs/filter_sheet.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:apex_note/widgets/home/note_locator_button.dart';
 import 'package:apex_note/widgets/home/notes_grid_view.dart';
@@ -147,112 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showFilterDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.filter_list_rounded, size: 22),
-                        const SizedBox(width: 8),
-                        Text(l10n.filter,
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      child: Text(l10n.noteType,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey)),
-                    ),
-                    ListTile(
-                        leading: const Icon(Icons.note, color: Colors.blue),
-                        title: Text(l10n.simpleNotes),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _activeFilterNotifier.value = 'type:simple';
-                        }),
-                    ListTile(
-                        leading:
-                            const Icon(Icons.checklist, color: Colors.green),
-                        title: Text(l10n.checklists),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _activeFilterNotifier.value = 'type:checklist';
-                        }),
-                    const Divider(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      child: Text(l10n.noteStatus,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey)),
-                    ),
-                    ListTile(
-                        leading: const Icon(Icons.push_pin, color: Colors.red),
-                        title: Text(l10n.pinnedOnly),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _activeFilterNotifier.value = 'pinned:true';
-                        }),
-                    const Divider(),
-                    ListTile(
-                        leading: const Icon(Icons.clear_all, color: Colors.red),
-                        title: Text(l10n.clearFilter),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _activeFilterNotifier.value = null;
-                        }),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    FilterSheet.show(context, activeFilterNotifier: _activeFilterNotifier);
   }
 
   void _navigateToEditor(NoteMode mode) async {
@@ -288,7 +184,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
     if (mounted) {
-      await Provider.of<NotesProvider>(context, listen: false).refreshAllNotes();
+      await Provider.of<NotesProvider>(context, listen: false)
+          .refreshAllNotes();
     }
   }
 
@@ -298,8 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onRefresh() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final pullToSyncEnabled =
-        (await SharedPreferences.getInstance()).getBool('google_drive_pull_to_refresh') ?? true;
+    final pullToSyncEnabled = (await SharedPreferences.getInstance())
+            .getBool('google_drive_pull_to_refresh') ??
+        true;
     if (GoogleDriveService.isSignedIn &&
         GoogleDriveService.autoSyncEnabled.value &&
         pullToSyncEnabled) {
@@ -345,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _activeFilterNotifier.dispose();
     _isPullingNotifier.dispose();
     _pullDistanceNotifier.dispose();
-    UnifiedNotificationService().cancelAll();
+    UnifiedNotificationService().commitAll();
     super.dispose();
   }
 
@@ -384,10 +282,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             body: AnnotatedRegion<SystemUiOverlayStyle>(
               value: SystemUiOverlayStyle(
-                statusBarColor: AppTheme.secondaryBackground(Theme.of(context).colorScheme),
-                statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
-                    ? Brightness.light
-                    : Brightness.dark,
+                statusBarColor:
+                    AppTheme.secondaryBackground(Theme.of(context).colorScheme),
+                statusBarIconBrightness:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Brightness.light
+                        : Brightness.dark,
               ),
               child: Stack(
                 children: [

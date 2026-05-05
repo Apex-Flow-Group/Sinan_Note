@@ -2,7 +2,7 @@
 
 /// Unified Notification Service
 /// نظام إشعارات موحد وشامل لجميع أنواع الإشعارات
-/// 
+///
 /// Features:
 /// - Responsive positioning (mobile, tablet, desktop)
 /// - Multiple notification types (success, error, info, warning)
@@ -17,7 +17,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-
 /// نوع الإشعار
 enum NotificationType {
   success,
@@ -30,13 +29,13 @@ enum NotificationType {
 enum NotificationPosition {
   /// أسفل الشاشة (افتراضي للموبايل)
   bottom,
-  
+
   /// أسفل الوسط (للتابلت والديسكتوب)
   bottomCenter,
-  
+
   /// أعلى الشاشة
   top,
-  
+
   /// أعلى الوسط
   topCenter,
 }
@@ -53,7 +52,10 @@ class NotificationConfig {
   final bool showProgress;
   final double? width;
   final EdgeInsets? margin;
-  
+
+  /// يُشعر الـ widget بأن الإجراء نُفِّذ مبكراً
+  final ValueNotifier<bool>? executedEarlyNotifier;
+
   const NotificationConfig({
     required this.message,
     this.type = NotificationType.info,
@@ -65,6 +67,7 @@ class NotificationConfig {
     this.showProgress = false,
     this.width,
     this.margin,
+    this.executedEarlyNotifier,
   });
 }
 
@@ -74,6 +77,9 @@ class _PendingAction {
   final VoidCallback onExecute;
   final VoidCallback onCancel;
   Timer? timer;
+
+  /// يُشعر الـ snackbar بأن الإجراء نُفِّذ مبكراً → يُخفي زر التراجع
+  final ValueNotifier<bool> executedEarly = ValueNotifier(false);
 
   _PendingAction({
     required this.key,
@@ -90,20 +96,33 @@ class _PendingAction {
     timer?.cancel();
     onExecute();
   }
+
+  void executeEarly() {
+    timer?.cancel();
+    executedEarly.value = true;
+    onExecute();
+  }
+
+  /// يُلغي الـ timer ويُخفي زر التراجع بدون تنفيذ أي callback
+  /// للحالات التي نُفِّذت فيها العملية مسبقاً
+  void commit() {
+    timer?.cancel();
+    executedEarly.value = true;
+  }
 }
 
 /// خدمة الإشعارات الموحدة
 class UnifiedNotificationService {
-  static final UnifiedNotificationService _instance = 
+  static final UnifiedNotificationService _instance =
       UnifiedNotificationService._internal();
-  
+
   factory UnifiedNotificationService() => _instance;
   UnifiedNotificationService._internal();
 
   final Map<String, _PendingAction> _pendingActions = {};
 
   /// عرض إشعار بسيط
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// UnifiedNotificationService().show(
@@ -132,7 +151,7 @@ class UnifiedNotificationService {
   }
 
   /// عرض إشعار مع زر تراجع (Undo)
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// UnifiedNotificationService().showWithUndo(
@@ -188,6 +207,7 @@ class UnifiedNotificationService {
         _pendingActions.remove(actionKey);
       },
       showProgress: true,
+      executedEarlyNotifier: pendingAction.executedEarly,
     );
 
     _showNotification(context, config);
@@ -223,6 +243,30 @@ class UnifiedNotificationService {
     _pendingActions.clear();
   }
 
+  /// تنفيذ جميع الإجراءات المعلقة فوراً (عند الخروج من الشاشة)
+  /// الـ snackbar يبقى لكن يُسرَّع ويُخفى زر التراجع
+  void executeAll() {
+    for (final action in _pendingActions.values) {
+      action.executeEarly();
+    }
+    _pendingActions.clear();
+  }
+
+  /// تنفيذ إجراء معين فوراً
+  void execute(String actionKey) {
+    _pendingActions[actionKey]?.executeEarly();
+    _pendingActions.remove(actionKey);
+  }
+
+  /// إلغاء جميع الإجراءات المعلقة بدون تنفيذ onUndo (للشاشات التي نفّذت العملية مسبقاً)
+  /// يُلغي الـ timer فقط ويُخفي زر التراجع
+  void commitAll() {
+    for (final action in _pendingActions.values) {
+      action.commit();
+    }
+    _pendingActions.clear();
+  }
+
   /// إلغاء إجراء معين
   void cancel(String actionKey) {
     _pendingActions[actionKey]?.cancel();
@@ -236,9 +280,12 @@ class UnifiedNotificationService {
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
     final isMobile = screenWidth < 600;
 
-    final position = config.position ?? _getDefaultPosition(isMobile, isTablet, isDesktop);
-    final width = config.width ?? _getDefaultWidth(isMobile, isTablet, isDesktop);
-    final margin = config.margin ?? _getDefaultMargin(position, isMobile, isTablet, isDesktop, context);
+    final position =
+        config.position ?? _getDefaultPosition(isMobile, isTablet, isDesktop);
+    final width =
+        config.width ?? _getDefaultWidth(isMobile, isTablet, isDesktop);
+    final margin = config.margin ??
+        _getDefaultMargin(position, isMobile, isTablet, isDesktop, context);
 
     final messenger = ScaffoldMessenger.of(context);
     messenger.clearSnackBars();
@@ -272,7 +319,8 @@ class UnifiedNotificationService {
   }
 
   /// بناء محتوى الإشعار
-  Widget _buildContent(BuildContext context, NotificationConfig config, ScaffoldMessengerState messenger) {
+  Widget _buildContent(BuildContext context, NotificationConfig config,
+      ScaffoldMessengerState messenger) {
     return Row(
       children: [
         Icon(
@@ -305,38 +353,38 @@ class UnifiedNotificationService {
   }
 
   /// بناء زر الإجراء مع المؤقت الدائري
-  Widget _buildActionButton(NotificationConfig config, ScaffoldMessengerState messenger) {
+  Widget _buildActionButton(
+      NotificationConfig config, ScaffoldMessengerState messenger) {
     if (config.showProgress) {
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: config.duration,
-            builder: (context, value, _) {
+      // إذا كان هناك notifier للتنفيذ المبكر، نستخدم ValueListenableBuilder
+      if (config.executedEarlyNotifier != null) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: config.executedEarlyNotifier!,
+          builder: (context, executedEarly, _) {
+            if (executedEarly) {
+              // تم التنفيذ مبكراً: أظهر progress يكتمل بسرعة بدون زر تراجع
               return SizedBox(
                 width: 40,
                 height: 40,
-                child: CircularProgressIndicator(
-                  value: 1.0 - value,
-                  strokeWidth: 2.5,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 1.0, end: 0.0),
+                  duration: const Duration(milliseconds: 600),
+                  builder: (_, v, __) => CircularProgressIndicator(
+                    value: v,
+                    strokeWidth: 2.5,
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
                 ),
               );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.undo, color: Colors.white, size: 20),
-            onPressed: () {
-              messenger.hideCurrentSnackBar();
-              config.onAction?.call();
-            },
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
-      );
+            }
+            // الحالة الطبيعية: progress + زر تراجع
+            return _buildProgressWithUndo(config, messenger);
+          },
+        );
+      }
+      return _buildProgressWithUndo(config, messenger);
     } else {
       return TextButton(
         onPressed: () {
@@ -358,8 +406,44 @@ class UnifiedNotificationService {
     }
   }
 
+  /// progress دائري مع زر تراجع (الحالة الطبيعية)
+  Widget _buildProgressWithUndo(
+      NotificationConfig config, ScaffoldMessengerState messenger) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: config.duration,
+          builder: (context, value, _) {
+            return SizedBox(
+              width: 40,
+              height: 40,
+              child: CircularProgressIndicator(
+                value: 1.0 - value,
+                strokeWidth: 2.5,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.undo, color: Colors.white, size: 20),
+          onPressed: () {
+            messenger.hideCurrentSnackBar();
+            config.onAction?.call();
+          },
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
+    );
+  }
+
   /// تحديد الموضع الافتراضي بناءً على حجم الشاشة
-  NotificationPosition _getDefaultPosition(bool isMobile, bool isTablet, bool isDesktop) {
+  NotificationPosition _getDefaultPosition(
+      bool isMobile, bool isTablet, bool isDesktop) {
     if (isMobile) {
       return NotificationPosition.bottom; // أسفل الشاشة على امتداد الجوال
     } else {
@@ -408,7 +492,7 @@ class UnifiedNotificationService {
   /// الحصول على لون الخلفية بناءً على النوع
   Color _getBackgroundColor(NotificationType type, BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     switch (type) {
       case NotificationType.success:
         return isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);

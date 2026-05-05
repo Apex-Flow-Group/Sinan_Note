@@ -156,6 +156,35 @@ class CursorCont extends ChangeNotifier {
   /// getting set.
   bool _isDisposed = false;
 
+  /// عند التفعيل، يمنع الوميض ويبقي المؤشر ظاهراً ثابتاً.
+  bool _suspended = false;
+  bool get suspended => _suspended;
+  set suspended(bool value) {
+    _suspended = value;
+    if (value) {
+      _cursorTimer?.cancel();
+      _cursorTimer = null;
+      _targetCursorVisibility = true;
+      _blinkOpacityController.value = 1.0;
+      color.value = _style.color;
+      blink.value = true;
+    } else {
+      // إعادة تشغيل الوميض الطبيعي
+      _overrideCursorOffset = null;
+      startCursorTimer();
+    }
+  }
+
+  /// موقع بصري يُفرض على الكرسر أثناء السحب (إحداثيات محلية X للسطر).
+  /// عند null يُستخدم الموقع الافتراضي من getOffsetForCaret.
+  Offset? _overrideCursorOffset;
+  Offset? get overrideCursorOffset => _overrideCursorOffset;
+  set overrideCursorOffset(Offset? value) {
+    if (_overrideCursorOffset == value) return;
+    _overrideCursorOffset = value;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _blinkOpacityController.removeListener(_onColorTick);
@@ -193,7 +222,7 @@ class CursorCont extends ChangeNotifier {
   }
 
   void startCursorTimer() {
-    if (_isDisposed) {
+    if (_isDisposed || _suspended) {
       return;
     }
 
@@ -208,6 +237,7 @@ class CursorCont extends ChangeNotifier {
   }
 
   void stopCursorTimer({bool resetCharTicks = true}) {
+    if (_suspended) return; // لا نوقف الكرسر أثناء التعليق
     _cursorTimer?.cancel();
     _cursorTimer = null;
     _targetCursorVisibility = false;

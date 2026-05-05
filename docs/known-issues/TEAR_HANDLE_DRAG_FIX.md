@@ -100,3 +100,77 @@ void _endDrag() {
 ## ملاحظة مهمة
 
 `re.offset` في Quill هو `ViewportOffset?` — يمثل موضع السكرول. `getPositionForOffset` يتوقع دائماً إحداثيات الـ viewport وليس المستند الكامل.
+
+
+---
+
+### 7. وميض المؤشر أثناء السحب
+
+**المشكلة:** المؤشر يومض بسرعة جنونية بعد الانتهاء من السحب، ولا يتوقف.
+
+**السبب:** أثناء السحب، كل `updateSelection` يُشغّل `_onChangeTextEditingValue` في Quill الذي يستدعي `stopCursorTimer` + `startCursorTimer` — فتتراكم timers متعددة وتسبب وميض سريع غير طبيعي.
+
+**الحل:** إضافة `suspended` flag في `CursorCont` يمنع أي timer من العمل أثناء السحب:
+
+```dart
+// في packages/flutter_quill/.../cursor.dart
+bool _suspended = false;
+set suspended(bool value) {
+  _suspended = value;
+  if (value) {
+    _cursorTimer?.cancel();
+    _cursorTimer = null;
+    _targetCursorVisibility = true;
+    _blinkOpacityController.value = 1.0;
+    color.value = _style.color;
+    blink.value = true;
+  } else {
+    startCursorTimer(); // إعادة الوميض الطبيعي
+  }
+}
+
+void startCursorTimer() {
+  if (_isDisposed || _suspended) return; // ← الحماية
+  // ...
+}
+```
+
+```dart
+// في cursor_tear_handle.dart
+onDragStart: () {
+  state.cursorCont.suspended = true;  // تثبيت المؤشر
+},
+onDragEnd: () {
+  state.cursorCont.suspended = false; // إعادة الوميض
+},
+```
+
+**النتيجة:** المؤشر ثابت ومرئي أثناء السحب، يعود للوميض الطبيعي بعد رفع الإصبع.
+
+**الملفات المتأثرة:**
+- `packages/flutter_quill/lib/src/editor/widgets/cursor.dart` ← إضافة `suspended`
+- `packages/flutter_quill/lib/src/editor/raw_editor/raw_editor.dart` ← إضافة `cursorCont` getter في `EditorState`
+- `packages/flutter_quill/lib/src/editor/raw_editor/raw_editor_state.dart` ← override الـ getter
+- `lib/widgets/editor/tear/cursor_tear_handle.dart` ← استخدام `suspended`
+
+---
+
+### 8. إزاحة الدمعة عن الإصبع أثناء السحب
+
+**المشكلة:** عند بدء السحب، الكرسر والدمعة يظهران فوق الإصبع بمقدار 6-10 بكسل.
+
+**السبب:** الإصبع يكون على مركز الدمعة (أسفل الكرسر)، لكن `_updateDrag` يحسب السطر من موضع الإصبع مباشرة بدون تعويض — فيضع الكرسر على سطر أعلى من المتوقع.
+
+**الحل:** إضافة إزاحة `+8` بكسل للأسفل في حساب `viewportDy`:
+
+```dart
+final scrollOffset = re.offset?.pixels ?? 0.0;
+// إزاحة لتعويض أن الإصبع على الدمعة (أسفل الكرسر)
+final viewportDy = local.dy - scrollOffset + 8;
+final lineIndex = (viewportDy / lineH).floor();
+```
+
+**النتيجة:** الكرسر يتبع الإصبع بدقة أكبر أثناء السحب.
+
+**الملفات المتأثرة:**
+- `lib/widgets/editor/tear/tear_handle_widget.dart` ← إزاحة في `_updateDrag`

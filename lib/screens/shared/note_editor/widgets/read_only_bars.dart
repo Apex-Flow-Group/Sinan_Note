@@ -35,6 +35,7 @@ class ReadOnlyBars {
     required VoidCallback onEdit,
     required Future<void> Function() onRefresh,
     VoidCallback? onMarkdownToggle,
+    VoidCallback? onReminder,
     bool showMarkdown = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -53,7 +54,11 @@ class ReadOnlyBars {
           )),
           child: AppBar(
             backgroundColor: barColor,
-            title: Text(note.title.isEmpty ? l10n.viewNote : note.title),
+            title: Text(
+              note.title.isEmpty ? l10n.viewNote : note.title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
             actions: [
               if (onMarkdownToggle != null)
                 IconButton(
@@ -65,10 +70,20 @@ class ReadOnlyBars {
                   tooltip: showMarkdown ? 'Plain text' : 'Markdown',
                   onPressed: onMarkdownToggle,
                 ),
+              if (!note.isTrashed && onReminder != null)
+                IconButton(
+                  icon: Icon(
+                    note.reminderDateTime != null
+                        ? Icons.alarm_on_rounded
+                        : Icons.alarm_add_rounded,
+                    color: note.reminderDateTime != null ? Colors.orange : null,
+                  ),
+                  tooltip: l10n.reminder,
+                  onPressed: onReminder,
+                ),
               if (!note.isTrashed)
                 _CategoryButton(note: note, onRefresh: onRefresh),
-              if (!note.isTrashed)
-                _WidgetPinButton(note: note),
+              if (!note.isTrashed) _WidgetPinButton(note: note),
             ],
           ),
         ),
@@ -99,59 +114,60 @@ class ReadOnlyBars {
           curve: Curves.easeOutCubic,
         )),
         child: Container(
-        decoration: BoxDecoration(color: barColor),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  tooltip: l10n.share,
-                  onPressed: onShare,
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(note.isArchived
-                      ? Icons.unarchive_outlined
-                      : Icons.archive_outlined),
-                  tooltip: note.isArchived ? l10n.unarchive : l10n.archive,
-                  onPressed: onArchive,
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  tooltip: l10n.delete,
-                  onPressed: onDelete,
-                ),
-                const Spacer(),
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: onEdit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+          decoration: BoxDecoration(color: barColor),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    tooltip: l10n.share,
+                    onPressed: onShare,
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(note.isArchived
+                        ? Icons.unarchive_outlined
+                        : Icons.archive_outlined),
+                    tooltip: note.isArchived ? l10n.unarchive : l10n.archive,
+                    onPressed: onArchive,
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.redAccent),
+                    tooltip: l10n.delete,
+                    onPressed: onDelete,
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: onEdit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit, size: 20),
+                      label: Text(
+                        l10n.edit,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    icon: const Icon(Icons.edit, size: 20),
-                    label: Text(
-                      l10n.edit,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -176,50 +192,50 @@ class ReadOnlyBars {
         )),
         child: Container(
           decoration: BoxDecoration(color: barColor),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.delete_forever_outlined, size: 20),
-                    label: Text(l10n.permanentDelete),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      minimumSize: const Size(0, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.delete_forever_outlined, size: 20),
+                      label: Text(l10n.permanentDelete),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        minimumSize: const Size(0, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
+                      onPressed: onPermanentDelete,
                     ),
-                    onPressed: onPermanentDelete,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.restore_rounded, size: 20),
-                    label: Text(l10n.restore),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(0, 48),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.restore_rounded, size: 20),
+                      label: Text(l10n.restore),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 48),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
+                      onPressed: onRestore,
                     ),
-                    onPressed: onRestore,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }

@@ -65,7 +65,9 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     }
   }
 
-  void _rebuild() { if (mounted) setState(() {}); }
+  void _rebuild() {
+    if (mounted) setState(() {});
+  }
 
   void _onNotesChanged() {
     _lastScrollOffset = -1;
@@ -89,7 +91,10 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     Note? topNote;
     for (final note in notes) {
       final h = widget.noteHeights[note.id] ?? fallback;
-      if (accumulated + h > scrollOffset) { topNote = note; break; }
+      if (accumulated + h > scrollOffset) {
+        topNote = note;
+        break;
+      }
       accumulated += h;
     }
 
@@ -106,24 +111,31 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     if (date == today) return isAr ? 'اليوم' : 'Today';
     if (date == yesterday) return isAr ? 'أمس' : 'Yesterday';
     if (now.difference(date).inDays < 7) {
-      return DateFormat(isAr ? 'EEEE' : 'EEEE', isAr ? 'ar' : 'en').format(date);
+      return DateFormat(isAr ? 'EEEE' : 'EEEE', isAr ? 'ar' : 'en')
+          .format(date);
     }
-    return DateFormat(isAr ? 'd MMM yyyy' : 'MMM d, yyyy', isAr ? 'ar' : 'en').format(date);
+    return DateFormat(isAr ? 'd MMM yyyy' : 'MMM d, yyyy', isAr ? 'ar' : 'en')
+        .format(date);
   }
 
   String _filterLabel(String filter, bool isAr) {
     switch (filter) {
-      case 'type:simple': return isAr ? 'نص بسيط' : 'Simple';
-      case 'type:checklist': return isAr ? 'قائمة مهام' : 'Checklist';
-      case 'pinned:true': return isAr ? 'مثبتة' : 'Pinned';
-      default: return filter;
+      case 'type:simple':
+        return isAr ? 'نص بسيط' : 'Simple';
+      case 'type:checklist':
+        return isAr ? 'قائمة مهام' : 'Checklist';
+      case 'pinned:true':
+        return isAr ? 'مثبتة' : 'Pinned';
+      default:
+        return filter;
     }
   }
 
   Future<void> _showDatePicker() async {
     final notes = widget.filteredNotesNotifier.value;
     if (notes.isEmpty || !mounted) return;
-    final selected = await DatePickerSheet.show(context, notes: notes, currentDate: _visibleDate);
+    final selected = await DatePickerSheet.show(context,
+        notes: notes, currentDate: _visibleDate);
     if (selected == null || !mounted) return;
     _scrollToDate(selected, notes);
   }
@@ -132,7 +144,8 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     if (!widget.scrollController.hasClients) return;
     double target = 0;
     for (final note in notes) {
-      final noteDate = DateTime(note.updatedAt.year, note.updatedAt.month, note.updatedAt.day);
+      final noteDate = DateTime(
+          note.updatedAt.year, note.updatedAt.month, note.updatedAt.day);
       if (noteDate == date) break;
       target += widget.noteHeights[note.id] ?? 80.0;
     }
@@ -157,48 +170,73 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
 
     if (activeFilter != null) {
       barChild = Container(
-        height: 28, color: secondaryBg,
+        height: 28,
+        color: secondaryBg,
         padding: const EdgeInsets.only(left: 16),
         child: Row(children: [
           Icon(Icons.filter_list_rounded, size: 13, color: colorScheme.primary),
           const SizedBox(width: 6),
           Text(_filterLabel(activeFilter, isAr),
-              style: TextStyle(fontSize: 12, color: colorScheme.primary, fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600)),
           const Spacer(),
           GestureDetector(
-            onTap: () => widget.activeFilterNotifier.value = null,
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              widget.activeFilterNotifier.value = null;
+            },
             child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Icon(Icons.close_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Icon(Icons.close_rounded,
+                  size: 16,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5)),
             ),
           ),
         ]),
       );
     } else if (selectedId != null) {
       final isProCategory = selectedId == kProCategoryId;
-      final cat = isProCategory ? null : categoriesProvider.categories.where((c) => c.id == selectedId).firstOrNull;
-      final catName = isProCategory ? (isAr ? 'المحترف' : 'Professional') : (cat?.name ?? '');
+      final cat = isProCategory
+          ? null
+          : categoriesProvider.categories
+              .where((c) => c.id == selectedId)
+              .firstOrNull;
+      final catName = isProCategory
+          ? (isAr ? 'المحترف' : 'Professional')
+          : (cat?.name ?? '');
 
       barChild = Container(
-        height: 28, color: secondaryBg,
+        height: 28,
+        color: secondaryBg,
         padding: const EdgeInsets.only(left: 16),
         child: Row(children: [
           Icon(Icons.label_rounded, size: 13, color: colorScheme.primary),
           const SizedBox(width: 6),
           GestureDetector(
-            onTap: () => DateBarCategoryPickerSheet.show(context, categoriesProvider),
+            onTap: () =>
+                DateBarCategoryPickerSheet.show(context, categoriesProvider),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text(catName, style: TextStyle(fontSize: 12, color: colorScheme.primary, fontWeight: FontWeight.w600)),
+              Text(catName,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600)),
               const SizedBox(width: 2),
-              Icon(Icons.expand_more_rounded, size: 14, color: colorScheme.primary),
+              Icon(Icons.expand_more_rounded,
+                  size: 14, color: colorScheme.primary),
             ]),
           ),
           const Spacer(),
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => categoriesProvider.selectCategory(null),
             child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Icon(Icons.close_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Icon(Icons.close_rounded,
+                  size: 16,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5)),
             ),
           ),
         ]),
@@ -213,15 +251,21 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
       barChild = GestureDetector(
         onTap: _showDatePicker,
         child: Container(
-          height: 28, color: secondaryBg,
+          height: 28,
+          color: secondaryBg,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(children: [
-            Icon(Icons.calendar_today_outlined, size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+            Icon(Icons.calendar_today_outlined,
+                size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
             const SizedBox(width: 6),
             Text(_formatDate(_visibleDate!),
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w500)),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w500)),
             const Spacer(),
-            Icon(Icons.expand_more_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.4)),
+            Icon(Icons.expand_more_rounded,
+                size: 16, color: colorScheme.onSurface.withValues(alpha: 0.4)),
           ]),
         ),
       );
@@ -240,7 +284,9 @@ class DateIndicatorDelegate extends SliverPersistentHeaderDelegate {
   const DateIndicatorDelegate({required this.child});
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => child;
+  Widget build(
+          BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      child;
 
   @override
   double get maxExtent => 28;

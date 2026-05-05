@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.0.4+3350
+version: 3.0.4+3351
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -73,42 +74,20 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
 
   void _showAllCategories(BuildContext context, List<String> names) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
+    AppBottomSheet.show(
+      context,
+      child: AppBottomSheet(
+        title: isAr ? 'مخفي في الكتالوجات' : 'Hidden in catalogs',
+        titleIcon: Icons.visibility_off_rounded,
+        scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.visibility_off_rounded, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    isAr ? 'مخفي في الكتالوجات' : 'Hidden in catalogs',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
             ...names.map((name) => ListTile(
-              dense: true,
-              leading: const Icon(Icons.label_rounded, size: 18),
-              title: Text(name),
-            )),
+                  dense: true,
+                  leading: const Icon(Icons.label_rounded, size: 18),
+                  title: Text(name),
+                )),
             const SizedBox(height: 8),
           ],
         ),
@@ -127,8 +106,8 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
       content = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.visibility_off_rounded, size: 12,
-              color: widget.titleColor.withValues(alpha: 0.5)),
+          Icon(Icons.visibility_off_rounded,
+              size: 12, color: widget.titleColor.withValues(alpha: 0.5)),
           const SizedBox(width: 4),
           Text(
             isAr ? 'مخفي (محترف)' : 'Hidden (Pro)',
@@ -156,33 +135,36 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.visibility_off_rounded, size: 12,
-                color: widget.titleColor.withValues(alpha: 0.5)),
+            Icon(Icons.visibility_off_rounded,
+                size: 12, color: widget.titleColor.withValues(alpha: 0.5)),
             const SizedBox(width: 4),
             if (catNames.isEmpty)
               Text(
                 isAr ? 'مخفي' : 'Hidden',
-                style: TextStyle(fontSize: 11, color: widget.titleColor.withValues(alpha: 0.5)),
+                style: TextStyle(
+                    fontSize: 11,
+                    color: widget.titleColor.withValues(alpha: 0.5)),
               )
             else
               ...displayNames.map((name) => Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: widget.titleColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: widget.titleColor.withValues(alpha: 0.55),
-                      fontWeight: FontWeight.w500,
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: widget.titleColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: widget.titleColor.withValues(alpha: 0.55),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )),
+                  )),
             if (extra > 0)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

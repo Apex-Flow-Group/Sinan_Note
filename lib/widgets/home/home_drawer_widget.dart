@@ -191,7 +191,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     context,
                     icon: Icons.manage_history_rounded,
                     title: l10n.noteHistory,
-                    subtitle: isArabic ? 'ط³ط¬ظ„ ط§ظ„طھط¹ط¯ظٹظ„ط§طھ' : 'Version history',
+                    subtitle: isArabic
+                        ? 'ط³ط¬ظ„ ط§ظ„طھط¹ط¯ظٹظ„ط§طھ'
+                        : 'Version history',
                     iconColor: Colors.orange,
                     scheme: scheme,
                     isDark: isDark,
@@ -466,7 +468,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
 
     if (!settings.hasSeenLockedIntro) {
       Navigator.pop(context);
-      await Navigator.pushReplacement(
+      await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const LockedNotesIntroScreen()),
       );
@@ -494,7 +496,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
       } else {
         Navigator.pop(context);
 
-        await Navigator.pushReplacement(
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const VaultEntryScreen()),
         );

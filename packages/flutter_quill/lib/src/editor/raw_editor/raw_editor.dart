@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../common/structs/offset_value.dart';
 import '../../controller/quill_controller.dart';
 import '../editor.dart';
+import '../widgets/cursor.dart';
 import '../widgets/text/text_selection.dart';
 import 'config/raw_editor_config.dart';
 import 'raw_editor_state.dart';
@@ -84,6 +85,9 @@ abstract class EditorState extends State<QuillRawEditor>
   RenderEditor get renderEditor;
 
   EditorTextSelectionOverlay? get selectionOverlay;
+
+  /// Provides access to the cursor controller for external cursor management.
+  CursorCont get cursorCont;
 
   List<OffsetValue> get pasteStyleAndEmbed;
 

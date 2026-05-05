@@ -66,6 +66,9 @@ class QuillRawEditorState extends EditorState
   // Cursors
   late CursorCont _cursorCont;
 
+  @override
+  CursorCont get cursorCont => _cursorCont;
+
   QuillController get controller => widget.controller;
 
   // Focus

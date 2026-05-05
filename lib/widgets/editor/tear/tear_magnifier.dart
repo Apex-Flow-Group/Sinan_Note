@@ -18,7 +18,7 @@ class TearMagnifier extends StatelessWidget {
   final Color bgColor;
 
   static const double kMw = 160.0;
-  static const double kMh = 46.0;
+  static const double kMh = 44.0;
   static const double kMTear = 8.0;
 
   @override
@@ -44,6 +44,7 @@ class TearMagnifier extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
+              // الإطار + الذيل (نفس لون النوت ليتطابق مع الصورة الحية)
               Positioned.fill(
                 child: CustomPaint(
                   painter: MagBgPainter(
@@ -55,26 +56,24 @@ class TearMagnifier extends StatelessWidget {
                   ),
                 ),
               ),
+              // الصورة الحية للنص
               Positioned(
                 top: 0,
                 left: 0,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: ColoredBox(
-                    color: bgColor,
-                    child: RawMagnifier(
-                      clipBehavior: Clip.hardEdge,
-                      decoration: const MagnifierDecoration(
-                        shape: RoundedRectangleBorder(),
-                        shadows: [],
-                      ),
-                      size: const Size(kMw, kMh),
-                      focalPointOffset: Offset(
-                        pos.dx - (left + kMw / 2),
-                        lineMid - (top + kMh / 2),
-                      ),
-                      magnificationScale: 1.0,
+                  child: RawMagnifier(
+                    clipBehavior: Clip.hardEdge,
+                    decoration: const MagnifierDecoration(
+                      shape: RoundedRectangleBorder(),
+                      shadows: [],
                     ),
+                    size: const Size(kMw, kMh),
+                    focalPointOffset: Offset(
+                      pos.dx - (left + kMw / 2),
+                      lineMid - (top + kMh / 2),
+                    ),
+                    magnificationScale: 1.0,
                   ),
                 ),
               ),

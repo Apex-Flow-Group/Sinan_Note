@@ -4,6 +4,7 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
+import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:apex_note/widgets/common/color_picker_sheet.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
@@ -24,12 +25,9 @@ class NoteContextMenu extends StatelessWidget {
 
   static Future<void> show(
       BuildContext context, Note note, VoidCallback onNoteChanged) async {
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => _ContextSheet(note: note),
+    final result = await AppBottomSheet.show<String>(
+      context,
+      child: _ContextSheet(note: note),
     );
     if (result == null || !context.mounted) return;
     await _handleAction(context, result, note, onNoteChanged);
@@ -121,20 +119,11 @@ class _ContextSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return SafeArea(
+    return AppBottomSheet(
+      scrollable: false,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 8),
           ListTile(
             leading: const Icon(Icons.open_in_new),
             title: Text(l10n.open),

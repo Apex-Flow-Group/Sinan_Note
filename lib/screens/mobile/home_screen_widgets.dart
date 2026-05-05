@@ -89,7 +89,8 @@ class _DateBarDelegate extends SliverPersistentHeaderDelegate {
   _DateBarDelegate({required this.height, required this.child});
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return _FadeInBar(height: height, child: child);
   }
 
@@ -100,7 +101,8 @@ class _DateBarDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => height;
 
   @override
-  bool shouldRebuild(_DateBarDelegate oldDelegate) => false;
+  bool shouldRebuild(_DateBarDelegate oldDelegate) =>
+      oldDelegate.height != height || oldDelegate.child != child;
 }
 
 class _FadeInBar extends StatefulWidget {
@@ -145,4 +147,3 @@ class _FadeInBarState extends State<_FadeInBar>
     );
   }
 }
-

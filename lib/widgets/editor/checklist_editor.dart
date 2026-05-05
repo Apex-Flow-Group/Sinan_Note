@@ -6,6 +6,7 @@ import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:apex_note/widgets/editor/checklist_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -245,6 +246,51 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     _notifyParent();
   }
 
+  void _showSortSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    AppBottomSheet.show(
+      context,
+      child: AppBottomSheet(
+        title: l10n.sort,
+        titleIcon: Icons.swap_vert_rounded,
+        scrollable: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading:
+                  const Icon(Icons.arrow_downward_rounded, color: Colors.blue),
+              title: Text(l10n.sortDoneToBottom),
+              onTap: () {
+                Navigator.pop(context);
+                sortItems('doneBottom');
+              },
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.arrow_upward_rounded, color: Colors.green),
+              title: Text(l10n.sortDoneToTop),
+              onTap: () {
+                Navigator.pop(context);
+                sortItems('doneTop');
+              },
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.restore_rounded, color: Colors.grey),
+              title: Text(l10n.sortOriginal),
+              onTap: () {
+                Navigator.pop(context);
+                sortItems('original');
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _notifyParent() {
     if (!mounted) return;
 
@@ -412,40 +458,11 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                     maxLines: null,
                   ),
                 ),
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.sort_rounded,
+                IconButton(
+                  icon: Icon(Icons.swap_vert_rounded,
                       color: textColor.withValues(alpha: 0.6)),
                   tooltip: l10n.sort,
-                  onSelected: sortItems,
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'doneBottom',
-                      child: Row(children: [
-                        const Icon(Icons.arrow_downward, size: 18),
-                        const SizedBox(width: 8),
-                        Text(l10n.sortDoneToBottom,
-                            textDirection: Directionality.of(context)),
-                      ]),
-                    ),
-                    PopupMenuItem(
-                      value: 'doneTop',
-                      child: Row(children: [
-                        const Icon(Icons.arrow_upward, size: 18),
-                        const SizedBox(width: 8),
-                        Text(l10n.sortDoneToTop,
-                            textDirection: Directionality.of(context)),
-                      ]),
-                    ),
-                    PopupMenuItem(
-                      value: 'original',
-                      child: Row(children: [
-                        const Icon(Icons.restore, size: 18),
-                        const SizedBox(width: 8),
-                        Text(l10n.sortOriginal,
-                            textDirection: Directionality.of(context)),
-                      ]),
-                    ),
-                  ],
+                  onPressed: () => _showSortSheet(context),
                 ),
               ],
             ),

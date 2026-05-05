@@ -5,54 +5,35 @@ import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class NoteConversionSheet {
   static void show(BuildContext context, Note note, VoidCallback onConverted) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final currentType = note.noteType;
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
+    AppBottomSheet.show(
+      context,
+      child: AppBottomSheet(
+        title: l10n.convertTo,
+        scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.convertTo,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             if (currentType != 'simple')
-              _buildOption(ctx, Icons.note, l10n.simpleNotes, 'simple', note,
-                  onConverted),
+              _buildOption(context, Icons.note, l10n.simpleNotes, 'simple',
+                  note, onConverted),
             if (currentType != 'code' &&
                 currentType != 'pro' &&
                 !note.isProfessional)
-              _buildOption(ctx, Icons.code, l10n.professionalNotes, 'code',
+              _buildOption(context, Icons.code, l10n.professionalNotes, 'code',
                   note, onConverted),
             if (currentType != 'rich')
-              _buildOption(ctx, Icons.text_fields, l10n.richText, 'rich', note,
-                  onConverted),
-            SizedBox(height: MediaQuery.of(ctx).padding.bottom + 16),
+              _buildOption(context, Icons.text_fields, l10n.richText, 'rich',
+                  note, onConverted),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
           ],
         ),
       ),

@@ -22,24 +22,29 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🔐 [VaultEntry] initState');
     _checkVaultStatus();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void dispose() {
+    debugPrint('🔐 [VaultEntry] dispose');
+    super.dispose();
   }
 
   Future<void> _checkVaultStatus() async {
-    // التحقق من وجود ملاحظات مقفلة
+    debugPrint('🔐 [VaultEntry] _checkVaultStatus START');
+
     final dbService = IsarDatabaseService();
     final lockedNotes = await dbService.getLockedNotes();
-
-    // التحقق من وجود خزنة جديدة
     final hasNewVault = await VaultService.isVaultSetup();
 
-    // إذا كانت هناك ملاحظات مقفلة ولا توجد خزنة → إنشاء خزنة جديدة
+    debugPrint(
+        '🔐 [VaultEntry] lockedNotes=${lockedNotes.length}, hasNewVault=$hasNewVault');
+
     if (lockedNotes.isNotEmpty && !hasNewVault) {
+      debugPrint(
+          '🔐 [VaultEntry] → pushReplacement LockedNotesIntroScreen (locked notes exist)');
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -52,7 +57,8 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     }
 
     if (!hasNewVault) {
-      // الحالة 1: لا توجد خزنة → Wizard إنشاء جديدة
+      debugPrint(
+          '🔐 [VaultEntry] → pushReplacement LockedNotesIntroScreen (no vault)');
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -64,14 +70,14 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
       return;
     }
 
-    // توجد خزنة، التحقق من البصمة
     final biometricEnabled = await VaultService.isBiometricEnabled();
+    debugPrint('🔐 [VaultEntry] biometricEnabled=$biometricEnabled');
 
     if (biometricEnabled) {
-      // الحالة 2: خزنة + بصمة → طلب البصمة
+      debugPrint('🔐 [VaultEntry] → authenticateWithBiometric');
       await _authenticateWithBiometric();
     } else {
-      // الحالة 3: خزنة بدون بصمة → شاشة Password
+      debugPrint('🔐 [VaultEntry] → pushReplacement VaultUnlockScreen');
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -85,8 +91,10 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
 
   Future<void> _authenticateWithBiometric() async {
     final authenticated = await BiometricService.authenticate();
+    debugPrint('🔐 [VaultEntry] biometric result=$authenticated');
 
     if (authenticated && mounted) {
+      debugPrint('🔐 [VaultEntry] → pushReplacement LockedNotesScreen');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -94,7 +102,8 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
         ),
       );
     } else if (mounted) {
-      // فشلت البصمة → شاشة Password
+      debugPrint(
+          '🔐 [VaultEntry] → pushReplacement VaultUnlockScreen (biometric failed)');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -112,8 +121,8 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        body: Center(
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

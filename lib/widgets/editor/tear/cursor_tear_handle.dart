@@ -115,10 +115,20 @@ class CursorTearHandle {
           _dragging = true;
           _suppressRebuild = true;
           _hideTimer?.cancel();
+          // تعليق وميض المؤشر وإبقائه ظاهراً ثابتاً أثناء السحب
+          final state = editorKey.currentState;
+          if (state != null) {
+            state.cursorCont.suspended = true;
+          }
         },
         onDragEnd: () {
           _dragging = false;
           _suppressRebuild = false;
+          // إلغاء التعليق — يعود الوميض الطبيعي
+          final state = editorKey.currentState;
+          if (state != null) {
+            state.cursorCont.suspended = false;
+          }
           WidgetsBinding.instance.addPostFrameCallback((_) => _showAtCaret());
         },
         onDismiss: _forceHide,

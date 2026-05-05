@@ -87,8 +87,8 @@ class ApexEditorHeader extends StatelessWidget {
                 child: IconButton(
                   icon: Icon(
                     hasReminder
-                        ? Icons.notifications_active
-                        : Icons.notifications_none,
+                        ? Icons.alarm_on_rounded
+                        : Icons.alarm_add_rounded,
                     color: hasReminder
                         ? Colors.orange
                         : textColor.withValues(alpha: 0.7),

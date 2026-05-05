@@ -15,6 +15,7 @@ import 'package:apex_note/widgets/desktop/desktop_selection_actions.dart';
 import 'package:apex_note/widgets/details_panel.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:apex_note/widgets/home/dialogs/filter_sheet.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:apex_note/widgets/home/note_locator_button.dart';
 import 'package:apex_note/widgets/home/notes_grid_view.dart';
@@ -137,102 +138,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   }
 
   void _showFilterDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.filter_list_rounded, size: 22),
-                      const SizedBox(width: 8),
-                      Text(l10n.filter,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: Text(l10n.noteType,
-                      style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey)),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.note, color: Colors.blue),
-                  title: Text(l10n.simpleNotes),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _activeFilterNotifier.value = 'type:simple';
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.checklist, color: Colors.green),
-                  title: Text(l10n.checklists),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _activeFilterNotifier.value = 'type:checklist';
-                  },
-                ),
-                const Divider(),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: Text(l10n.noteStatus,
-                      style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey)),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.push_pin, color: Colors.red),
-                  title: Text(l10n.pinnedOnly),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _activeFilterNotifier.value = 'pinned:true';
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.clear_all, color: Colors.red),
-                  title: Text(l10n.clearFilter),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _activeFilterNotifier.value = null;
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    FilterSheet.show(context, activeFilterNotifier: _activeFilterNotifier);
   }
 
   @override
@@ -351,7 +257,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                           hint: l10n.searchNotes,
                         );
                       }
-                      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                      final isAr =
+                          Localizations.localeOf(context).languageCode == 'ar';
                       final catName = selectedId == kProCategoryId
                           ? (isAr ? 'المحترف' : 'Professional')
                           : (cats.categories

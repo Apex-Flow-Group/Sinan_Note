@@ -22,6 +22,7 @@ class NotesFilterController extends ChangeNotifier {
   final ValueNotifier<int> totalCountNotifier = ValueNotifier(0);
   final ValueNotifier<bool> isFilteringNotifier = ValueNotifier(false);
 
+  List<Note> _sourceNotes = [];
   List<Note> _allFiltered = [];
   int _visibleCount = _pageSize;
   int? _lastSelectedCategoryId;
@@ -68,7 +69,8 @@ class NotesFilterController extends ChangeNotifier {
     }
 
     if (forceRefresh || categoryChanged) {
-      _syncFilteredNotes(provider.notes, force: true);
+      _sourceNotes = List.of(provider.notes);
+      _syncFilteredNotes(_sourceNotes, force: true);
       return;
     }
 
@@ -81,6 +83,7 @@ class NotesFilterController extends ChangeNotifier {
 
     final removedIds = currentIds.difference(newIds);
     if (removedIds.isNotEmpty) {
+      _sourceNotes = List.of(newNotes);
       _allFiltered.removeWhere((n) => removedIds.contains(n.id));
       _visibleCount = _visibleCount.clamp(0, _allFiltered.length);
       _updateNotifiers();
@@ -91,7 +94,8 @@ class NotesFilterController extends ChangeNotifier {
 
     final addedIds = newIds.difference(currentIds);
     if (addedIds.isNotEmpty) {
-      _syncFilteredNotes(newNotes, force: true);
+      _sourceNotes = List.of(newNotes);
+      _syncFilteredNotes(_sourceNotes, force: true);
       return;
     }
 
@@ -107,6 +111,14 @@ class NotesFilterController extends ChangeNotifier {
         anyUpdated = true;
       }
     }
+    // Also update _sourceNotes to reflect latest note data
+    for (int i = 0; i < _sourceNotes.length; i++) {
+      final updated = newNotes.firstWhere(
+        (n) => n.id == _sourceNotes[i].id,
+        orElse: () => _sourceNotes[i],
+      );
+      _sourceNotes[i] = updated;
+    }
     if (anyUpdated) {
       filteredNotesNotifier.value =
           List.of(_allFiltered.sublist(0, _visibleCount));
@@ -117,10 +129,10 @@ class NotesFilterController extends ChangeNotifier {
     final query = searchController.text;
     if (query == _lastSearchQuery) return;
     _lastSearchQuery = query;
-    _syncFilteredNotes(_allFiltered);
+    _syncFilteredNotes(_sourceNotes);
   }
 
-  void _onFilterChanged() => _syncFilteredNotes(_allFiltered);
+  void _onFilterChanged() => _syncFilteredNotes(_sourceNotes, force: true);
 
   void _syncFilteredNotes(List<Note> notes, {bool force = false}) {
     final searchQuery = searchController.text.toLowerCase();
