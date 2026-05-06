@@ -1,17 +1,16 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Widget يعرض Master Panel و Details Panel جنباً إلى جنب مع إمكانية تغيير الحجم
-/// 
+///
 /// يقسم الشاشة إلى جزئين:
 /// - Master Panel (اليسار): قائمة الملاحظات
 /// - Details Panel (اليمين): محتوى الملاحظة المختارة
-/// 
+///
 /// يمكن سحب المقبض بين اللوحتين لتغيير النسبة
-/// 
+///
 /// ✅ OPTIMIZED: يستخدم RepaintBoundary لعزل إعادة الرسم
 class MasterDetailsLayout extends StatefulWidget {
   final Widget masterPanel;
@@ -79,14 +78,19 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
           if (!_initialized) {
             _initialized = true;
             if (_masterWidth == 0) {
-              setState(() => _masterWidth = width * widget.initialMasterWidthRatio);
+              setState(
+                  () => _masterWidth = width * widget.initialMasterWidthRatio);
             }
           }
         },
         onDragStart: () => setState(() => _isDragging = true),
         onDragUpdate: (dx, totalWidth) {
           setState(() {
-            _masterWidth = (_masterWidth + dx)
+            // في RTL، الـ Row ينعكس فيصبح Master على اليمين
+            // لذلك نعكس اتجاه السحب ليتوافق مع الاتجاه المنطقي
+            final isRtl = Directionality.of(context) == TextDirection.rtl;
+            final effectiveDx = isRtl ? -dx : dx;
+            _masterWidth = (_masterWidth + effectiveDx)
                 .clamp(totalWidth * 0.2, totalWidth * 0.6);
           });
         },
@@ -137,11 +141,11 @@ class _MasterDetailsRow extends StatelessWidget {
         final totalWidth = constraints.maxWidth;
         // نُخبر الـ parent بالعرض الكلي مرة واحدة فقط
         if (!initialized) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => onInit(totalWidth));
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => onInit(totalWidth));
         }
-        final effectiveWidth = masterWidth == 0
-            ? totalWidth * initialRatio
-            : masterWidth;
+        final effectiveWidth =
+            masterWidth == 0 ? totalWidth * initialRatio : masterWidth;
 
         return Row(
           children: [
@@ -172,7 +176,8 @@ class _MasterDetailsRow extends StatelessWidget {
             // Divider قابل للسحب
             GestureDetector(
               onHorizontalDragStart: (_) => onDragStart(),
-              onHorizontalDragUpdate: (d) => onDragUpdate(d.delta.dx, totalWidth),
+              onHorizontalDragUpdate: (d) =>
+                  onDragUpdate(d.delta.dx, totalWidth),
               onHorizontalDragEnd: (_) => onDragEnd(),
               child: MouseRegion(
                 cursor: SystemMouseCursors.resizeColumn,
@@ -180,7 +185,10 @@ class _MasterDetailsRow extends StatelessWidget {
                   duration: const Duration(milliseconds: 150),
                   width: 20,
                   color: isDragging
-                      ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                      ? Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withValues(alpha: 0.3)
                       : Colors.transparent,
                   child: Center(
                     child: Icon(

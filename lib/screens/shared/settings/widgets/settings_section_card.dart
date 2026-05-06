@@ -18,14 +18,15 @@ class SettingsSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
+              Icon(icon,
+                  size: 28, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 12),
               Text(title,
                   style: Theme.of(context)

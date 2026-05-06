@@ -160,7 +160,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       onRefresh: _pullToRefresh ? _handleRefresh : () async {},
       semanticsLabel: l10n.pullToRefresh,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 80),
         children: [
           // Account Section with New Sync Button
           _buildAccountSectionWithNewSync(

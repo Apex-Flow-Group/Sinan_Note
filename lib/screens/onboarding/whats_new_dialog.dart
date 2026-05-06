@@ -34,7 +34,7 @@ class WhatsNewDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── أيقونة ──
+              // ── Icon ──
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -51,17 +51,19 @@ class WhatsNewDialog extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // ── العنوان ──
+              // ── Title ──
               Text(
-                isAr ? '🎉 قريباً — النسخة النهائية' : '🎉 Coming Soon — Final Release',
+                isAr
+                    ? 'الإصدار النهائي على الأبواب'
+                    : 'Final Release is Coming',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
               Text(
                 isAr
-                    ? 'الوصول المبكر · الإصدار $version'
+                    ? 'وصول مبكر · الإصدار $version'
                     : 'Early Access · Version $version',
                 style: TextStyle(
                     fontSize: 13,
@@ -69,19 +71,19 @@ class WhatsNewDialog extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // ── الرسالة ──
+              // ── Message ──
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: scheme.primary.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: scheme.primary.withValues(alpha: 0.2)),
+                  border:
+                      Border.all(color: scheme.primary.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   isAr
-                      ? 'شكراً لكونك جزءاً من رحلة Sinan Note منذ البداية.\n\nهذا آخر تحديث في مرحلة الوصول المبكر — النسخة النهائية في الطريق، وستحمل معها تجربة مصقولة بالكامل بناءً على ملاحظاتكم.\n\nاستمر في استخدام التطبيق، كل ملاحظة تكتبها الآن ستنتقل معك إلى النسخة النهائية.'
-                      : 'Thank you for being part of the Sinan Note journey from the start.\n\nThis is the last update in the Early Access phase — the Final Release is on its way, fully polished based on your feedback.\n\nKeep using the app, every note you write now will carry over to the final version.',
+                      ? 'شكراً لمشاركتك في رحلة سنان منذ البداية.\n\nهذا آخر تحديث في مرحلة الوصول المبكر — الإصدار النهائي قيد التجهيز، وسيأتي بتجربة مصقولة بُنيت على ملاحظاتكم.\n\nجميع ملاحظاتك الحالية ستنتقل معك تلقائياً إلى الإصدار النهائي.'
+                      : 'Thank you for being part of the Sinan Note journey from the start.\n\nThis is the last update in the Early Access phase — the Final Release is on its way, fully polished based on your feedback.\n\nEvery note you write now will carry over seamlessly to the final version.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 14,
@@ -91,46 +93,45 @@ class WhatsNewDialog extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // ── ما الجديد ──
+              // ── What's New ──
               _FeatureRow(
                 icon: Icons.auto_awesome_rounded,
                 color: Colors.amber,
                 text: isAr
-                    ? 'خيارات سحب مخصصة بالكامل'
+                    ? 'إجراءات سحب قابلة للتخصيص بالكامل'
                     : 'Fully customizable swipe actions',
               ),
               _FeatureRow(
                 icon: Icons.alarm_rounded,
                 color: Colors.orange,
                 text: isAr
-                    ? 'تذكير وكتالوج مباشرة من السحب'
+                    ? 'تذكير وتصنيف مباشرة عبر السحب'
                     : 'Reminder & category directly from swipe',
               ),
               _FeatureRow(
                 icon: Icons.sync_rounded,
                 color: Colors.blue,
                 text: isAr
-                    ? 'مزامنة ذكية بعد كل حفظ'
+                    ? 'مزامنة تلقائية بعد كل حفظ'
                     : 'Smart sync after every save',
               ),
               _FeatureRow(
                 icon: Icons.rocket_launch_rounded,
                 color: scheme.primary,
                 text: isAr
-                    ? 'النسخة النهائية قادمة قريباً 🚀'
-                    : 'Final version coming soon 🚀',
+                    ? 'الإصدار النهائي قريباً'
+                    : 'Final version coming soon',
               ),
 
               const SizedBox(height: 20),
 
-              // ── شكر المجتمع ──
+              // ── Community Thanks ──
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.pink.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: Colors.pink.withValues(alpha: 0.2)),
+                  border: Border.all(color: Colors.pink.withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   children: [
@@ -138,8 +139,8 @@ class WhatsNewDialog extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       isAr
-                          ? 'شكر خاص لكل من جرّب التطبيق، أرسل ملاحظة، أو أبلغ عن مشكلة — أنتم من شكّل هذا التطبيق وجعله أفضل يوماً بعد يوم.'
-                          : 'A special thank you to everyone who tried the app, sent feedback, or reported an issue — you shaped this app and made it better day by day.',
+                          ? 'شكر خاص لكل من جرّب التطبيق أو أرسل ملاحظاته — مساهمتكم هي ما جعلت سنان أفضل.'
+                          : 'Special thanks to everyone who tried the app or shared feedback — your contributions made Sinan better.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 13,
@@ -152,7 +153,7 @@ class WhatsNewDialog extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // ── زر الإغلاق ──
+              // ── Close Button ──
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -163,7 +164,7 @@ class WhatsNewDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14)),
                   ),
                   child: Text(
-                    isAr ? 'لا يسعدني الانتظار! 🎯' : "Can't wait! 🎯",
+                    isAr ? 'حسناً' : 'Got it',
                     style: const TextStyle(
                         fontSize: 15, fontWeight: FontWeight.bold),
                   ),
@@ -205,8 +206,8 @@ class _FeatureRow extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(text,
-                style: const TextStyle(fontSize: 13, height: 1.4)),
+            child:
+                Text(text, style: const TextStyle(fontSize: 13, height: 1.4)),
           ),
         ],
       ),

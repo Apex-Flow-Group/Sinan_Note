@@ -49,7 +49,6 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
@@ -192,9 +191,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     context,
                     icon: Icons.manage_history_rounded,
                     title: l10n.noteHistory,
-                    subtitle: isArabic
-                        ? 'ط³ط¬ظ„ ط§ظ„طھط¹ط¯ظٹظ„ط§طھ'
-                        : 'Version history',
+                    subtitle: l10n.noteHistory,
                     iconColor: Colors.orange,
                     scheme: scheme,
                     isDark: isDark,
@@ -565,4 +562,3 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     );
   }
 }
-

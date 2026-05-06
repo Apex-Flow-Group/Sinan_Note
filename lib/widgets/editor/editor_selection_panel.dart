@@ -192,30 +192,38 @@ class _EditorSelectionPanelState extends State<EditorSelectionPanel> {
 
     return Container(
       color: widget.backgroundColor,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 160),
-        child: Row(
-          key: ValueKey(state),
-          children: entries.asMap().entries.map((e) {
-            final isLast = e.key == entries.length - 1;
-            return Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _BarButton(
-                      label: e.value.label,
-                      icon: e.value.icon,
-                      textColor: e.value.enabled ? barText : disabledText,
-                      enabled: e.value.enabled,
-                      onAction: e.value.action,
+      child: SafeArea(
+        bottom: false,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 160),
+          child: Row(
+            key: ValueKey(state),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: entries.asMap().entries.map((e) {
+              final isLast = e.key == entries.length - 1;
+              return Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _BarButton(
+                        label: e.value.label,
+                        icon: e.value.icon,
+                        textColor: e.value.enabled ? barText : disabledText,
+                        enabled: e.value.enabled,
+                        onAction: e.value.action,
+                      ),
                     ),
-                  ),
-                  if (!isLast)
-                    Container(width: 1, height: 24, color: dividerColor),
-                ],
-              ),
-            );
-          }).toList(),
+                    if (!isLast)
+                      Center(
+                        child: Container(
+                            width: 1, height: 24, color: dividerColor),
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

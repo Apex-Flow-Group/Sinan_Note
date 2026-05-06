@@ -17,7 +17,8 @@ class StorageService {
 
   /// [includeVault] = false → ملاحظات عادية فقط (نص قابل للقراءة)
   /// [includeVault] = true  → كامل مع المشفرة كـ ciphertext
-  Future<Map<String, dynamic>> _buildExportData({bool includeVault = false}) async {
+  Future<Map<String, dynamic>> _buildExportData(
+      {bool includeVault = false}) async {
     final dbService = IsarDatabaseService();
     final allNotes = await dbService.getAllNotes();
 
@@ -61,7 +62,8 @@ class StorageService {
     }
   }
 
-  Future<String> exportNotesToPath(String directoryPath, {bool includeVault = false}) async {
+  Future<String> exportNotesToPath(String directoryPath,
+      {bool includeVault = false}) async {
     try {
       final data = await _buildExportData(includeVault: includeVault);
       final notes = data['notes'] as List;
@@ -92,16 +94,14 @@ class StorageService {
       [XFile(file.path)],
       subject: 'نسخة احتياطية من Sinan Note',
       text: includeVault
-          ? 'ملف النسخ الاحتياطي الكامل (يحتوي ملاحظات مشفرة)'
+          ? 'ملف النسخ الاحتياطي الكامل (يتضمن ملاحظات مشفرة)'
           : 'ملف النسخ الاحتياطي للملاحظات العادية',
     );
   }
 
   String _fileName(bool includeVault) {
     final ts = DateTime.now().millisecondsSinceEpoch;
-    return includeVault
-        ? 'sinan_notes_full_$ts.json'
-        : 'sinan_notes_$ts.json';
+    return includeVault ? 'sinan_notes_full_$ts.json' : 'sinan_notes_$ts.json';
   }
 
   // ── Import ────────────────────────────────────────────────────────────────
@@ -138,7 +138,8 @@ class StorageService {
       if (note.isLocked && hasKey && VaultService.isEncrypted(note.content)) {
         try {
           final decTitle = await VaultService.decryptWithMasterKey(note.title);
-          final decContent = await VaultService.decryptWithMasterKey(note.content);
+          final decContent =
+              await VaultService.decryptWithMasterKey(note.content);
           notes.add(note.copyWith(title: decTitle, content: decContent));
         } catch (_) {
           notes.add(note); // يستعيدها مشفرة لو فشل الفك

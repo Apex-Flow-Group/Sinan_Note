@@ -28,7 +28,7 @@ class CodeEditorWidget extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final statusBarHeight = MediaQuery.of(context).padding.top;
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final topPadding = statusBarHeight + 56.0;
+    final topPadding = statusBarHeight + 52.0;
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,

@@ -54,7 +54,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
       selectionBarActive: widget.selectionBarActive,
       getNoteColor: () => widget.noteColor,
       onScroll: widget.onScroll,
-      rebuild: () { if (mounted) setState(() {}); },
+      rebuild: () {
+        if (mounted) setState(() {});
+      },
     );
     _ctrl.init(widget.readOnly);
   }
@@ -93,7 +95,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final topPadding = MediaQuery.of(context).padding.top + 56.0;
+    final topPadding = MediaQuery.of(context).padding.top + 52.0;
 
     return Actions(
       actions: {
@@ -114,7 +116,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
           },
         ),
         PasteTextIntent: CallbackAction<PasteTextIntent>(
-          onInvoke: (_) { _ctrl.pastePlainText(); return null; },
+          onInvoke: (_) {
+            _ctrl.pastePlainText();
+            return null;
+          },
         ),
       },
       child: Focus(

@@ -37,7 +37,7 @@ class ChecklistEditorWidget extends StatelessWidget {
       padding: readOnly
           ? EdgeInsets.zero
           : EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 56.0,
+              top: MediaQuery.of(context).padding.top + 52.0,
               bottom: totalBottomSpace,
             ),
       child: ChecklistEditor(

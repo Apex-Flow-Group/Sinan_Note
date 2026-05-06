@@ -31,7 +31,7 @@ class SettingsUtils {
   static String getSwipeActionText(String action, AppLocalizations l10n) {
     switch (action) {
       case 'delete':    return l10n.delete;
-      case 'archive':   return l10n.archive;
+      case 'archive':   return l10n.actionArchive;
       case 'share':     return l10n.share;
       case 'reminder':  return l10n.reminder;
       case 'category':  return l10n.categories;

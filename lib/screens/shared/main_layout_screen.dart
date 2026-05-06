@@ -235,7 +235,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                           isDrawerOpen: _isDrawerOpen,
                         ),
                       ),
-                    if (!isLargeScreen)
+                    if (!isLargeScreen && !_isDrawerOpen)
                       AddMenuWidget(
                         showMenu: _showAddMenu,
                         onToggle: _toggleMenu,

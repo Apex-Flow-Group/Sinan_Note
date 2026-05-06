@@ -219,7 +219,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                 'importBackup': l10n.importBackup,
                 'googleDrive': l10n.googleDrive,
                 'share': l10n.share,
-                'soon': 'قريباً',
+                'soon': l10n.soon,
               };
               BackupOptionsDialog.show(context, tempStrings);
             },
@@ -257,10 +257,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                           hint: l10n.searchNotes,
                         );
                       }
-                      final isAr =
-                          Localizations.localeOf(context).languageCode == 'ar';
                       final catName = selectedId == kProCategoryId
-                          ? (isAr ? 'المحترف' : 'Professional')
+                          ? l10n.professional
                           : (cats.categories
                                   .where((c) => c.id == selectedId)
                                   .firstOrNull
@@ -312,7 +310,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                     'importBackup': l10n.importBackup,
                     'googleDrive': l10n.googleDrive,
                     'share': l10n.share,
-                    'soon': 'قريباً',
+                    'soon': l10n.soon,
                   };
                   BackupOptionsDialog.show(context, tempStrings);
                 },
@@ -322,7 +320,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                     'importBackup': l10n.importBackup,
                     'googleDrive': l10n.googleDrive,
                     'share': l10n.share,
-                    'soon': 'قريباً',
+                    'soon': l10n.soon,
                   };
                   BackupOptionsDialog.show(context, tempStrings);
                 },

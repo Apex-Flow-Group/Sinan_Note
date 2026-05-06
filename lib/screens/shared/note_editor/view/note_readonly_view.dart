@@ -216,13 +216,16 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           controller: _scrollController,
           child: Directionality(
             textDirection: TextDirection.ltr,
-            child: SelectableText(
-              content,
-              style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 14,
-                  height: 1.6,
-                  color: textColor),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: SelectableText(
+                content,
+                style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                    height: 1.6,
+                    color: textColor),
+              ),
             ),
           ),
         ),
@@ -264,7 +267,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               autoFocus: false,
               expands: true,
               scrollable: true,
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(vertical: 20),
               showCursor: false,
               enableInteractiveSelection: false,
               customStyles: DefaultStyles(
@@ -310,8 +313,8 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       height: isMarkdown ? null : double.infinity,
       margin: const EdgeInsets.only(top: 8, bottom: 16),
       padding: isChecklist
-          ? const EdgeInsets.fromLTRB(20, 20, 20, 12)
-          : const EdgeInsets.all(20),
+          ? const EdgeInsets.fromLTRB(12, 20, 12, 12)
+          : const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: noteColor,
         borderRadius: BorderRadius.circular(16),
@@ -410,4 +413,3 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
   }
 }
-

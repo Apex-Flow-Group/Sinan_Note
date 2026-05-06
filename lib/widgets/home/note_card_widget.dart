@@ -84,6 +84,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     }
     return ui.TextDirection.rtl;
   }
+
   @override
   void initState() {
     super.initState();
@@ -112,7 +113,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
 
   void _cacheColors() {
     final brightness = Theme.of(context).brightness;
-    _baseColor = AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
+    _baseColor =
+        AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
     final isLight = _baseColor.computeLuminance() > 0.5;
     _titleColor = isLight ? Colors.black87 : Colors.white;
     _contentColor = isLight ? Colors.grey[700]! : Colors.grey[300]!;
@@ -124,7 +126,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     _isChecklist = ChecklistFormatter.isValidChecklist(widget.note.content);
     _shouldShowExt = NoteCardUtils.shouldShowExtension(widget.note.noteType);
     _fileExtension = _shouldShowExt
-        ? NoteCardUtils.getFileExtension(widget.note.content, widget.note.noteType)
+        ? NoteCardUtils.getFileExtension(
+            widget.note.content, widget.note.noteType)
         : '';
     _titleDirection = _detectDirection(_displayTitle);
     _contentDirection = _detectDirection(_displayContent);
@@ -138,10 +141,13 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     final noteColor = _baseColor;
     final Color titleColor = _titleColor;
     final Color contentColor = _contentColor;
-    final bool enableSwipe = !widget.selectionMode && settings.swipeEnabled && !widget.note.isLocked && widget.source != 'archive';
+    final bool enableSwipe = !widget.selectionMode &&
+        settings.swipeEnabled &&
+        !widget.note.isLocked &&
+        widget.source != 'archive';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Slidable(
         key: Key(widget.note.id.toString()),
         groupTag: 'notes_group',
@@ -156,7 +162,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   NoteCardActions.buildCustomSlidableAction(
                     action: settings.swipeRightAction,
                     context: context,
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                    borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(16)),
                     note: widget.note,
                     onNoteChanged: widget.onNoteChanged,
                   ),
@@ -172,7 +179,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   NoteCardActions.buildCustomSlidableAction(
                     action: settings.swipeLeftAction,
                     context: context,
-                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(16)),
+                    borderRadius: const BorderRadius.horizontal(
+                        right: Radius.circular(16)),
                     note: widget.note,
                     onNoteChanged: widget.onNoteChanged,
                   ),
@@ -190,7 +198,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
               onSecondaryTapDown: (details) {
                 final isDesktop = MediaQuery.of(context).size.width >= 600;
                 if (isDesktop && !widget.selectionMode) {
-                  NoteContextMenu.show(context, widget.note, widget.onNoteChanged);
+                  NoteContextMenu.show(
+                      context, widget.note, widget.onNoteChanged);
                 }
               },
               onTap: () async {
@@ -199,7 +208,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 } else if (!widget.selectionMode) {
                   final isDesktop = MediaQuery.of(context).size.width >= 600;
                   if (isDesktop) {
-                    final selectedNoteProvider = Provider.of<SelectedNoteProvider>(context, listen: false);
+                    final selectedNoteProvider =
+                        Provider.of<SelectedNoteProvider>(context,
+                            listen: false);
                     selectedNoteProvider.selectNote(widget.note);
                   } else {
                     if (widget.note.isLocked && widget.source == 'locked') {
@@ -247,7 +258,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                             note: widget.note,
                             mode: mode,
                             readOnly: true,
-                            heroTag: 'note_card_${widget.source}_${widget.note.id}',
+                            heroTag:
+                                'note_card_${widget.source}_${widget.note.id}',
                           ),
                         ),
                       );
@@ -257,7 +269,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                     } else {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
                       final tapTime = DateTime.now();
-                      debugPrint('⏱️ [Editor] tap: ${tapTime.toIso8601String()}');
+                      debugPrint(
+                          '⏱️ [Editor] tap: ${tapTime.toIso8601String()}');
                       final result = await Navigator.push(
                         context,
                         EditorPageRoute(
@@ -265,7 +278,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                             note: widget.note,
                             mode: mode,
                             readOnly: true,
-                            heroTag: 'note_card_${widget.source}_${widget.note.id}',
+                            heroTag:
+                                'note_card_${widget.source}_${widget.note.id}',
                           ),
                         ),
                       );
@@ -291,211 +305,260 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                     ClipRect(
                       clipBehavior: Clip.hardEdge,
                       child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: widget.viewType == ViewType.listCompact
-                                    ? Text(
-                                        _displayTitle,
-                                        textDirection: _titleDirection,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: titleColor),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      )
-                                    : Directionality(
-                                        textDirection: _titleDirection,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _displayTitle,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  color: titleColor),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            widget.note.isLocked
-                                                ? Text(
-                                                    l10n.protectedContent,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      color: contentColor.withValues(alpha: 0.6),
-                                                      fontStyle: FontStyle.italic,
-                                                    ),
-                                                  )
-                                                : _isChecklist
-                                                    ? NoteCardUtils.buildChecklistPreview(widget.note.content, titleColor)
-                                                    : Text(
-                                                        _displayContent,
-                                                        textDirection: _contentDirection,
-                                                        maxLines: 4,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                          color: contentColor,
-                                                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: widget.viewType == ViewType.listCompact
+                                      ? Text(
+                                          _displayTitle,
+                                          textDirection: _titleDirection,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: titleColor),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        )
+                                      : Directionality(
+                                          textDirection: _titleDirection,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                _displayTitle,
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: titleColor),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              widget.note.isLocked
+                                                  ? Text(
+                                                      l10n.protectedContent,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: contentColor
+                                                            .withValues(
+                                                                alpha: 0.6),
+                                                        fontStyle:
+                                                            FontStyle.italic,
                                                       ),
-                                          ],
+                                                    )
+                                                  : _isChecklist
+                                                      ? NoteCardUtils
+                                                          .buildChecklistPreview(
+                                                              widget
+                                                                  .note.content,
+                                                              titleColor)
+                                                      : Text(
+                                                          _displayContent,
+                                                          textDirection:
+                                                              _contentDirection,
+                                                          maxLines: 4,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            color: contentColor,
+                                                          ),
+                                                        ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (widget.note.isPinned)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 4),
-                                      child: Icon(Icons.push_pin,
-                                          size: 18,
-                                          color: titleColor.withValues(alpha: 0.7)),
-                                    ),
-                                  if (widget.note.isLocked)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 4),
-                                      child: Icon(Icons.lock, size: 20, color: titleColor),
-                                    ),
-                                  if (widget.note.isLocked && !widget.selectionMode)
-                                    NoteCardActions.buildLockedNoteMenu(context, widget.note, titleColor, widget.onNoteChanged),
-                                ],
-                              ),
-                            ],
-                          ),
-                          if (widget.note.reminderDateTime != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Builder(builder: (context) {
-                                final isExpired = widget.note.reminderDateTime!.isBefore(DateTime.now());
-                                final badgeColor = isExpired ? Colors.red : Colors.orange;
-                                return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: badgeColor.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 0.8),
                                 ),
-                                child: Row(
+                                Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(isExpired ? Icons.alarm_off : Icons.alarm, size: 14, color: badgeColor),
-                                    const SizedBox(width: 4),
-                                    Flexible(
-                                      child: Text(
-                                        '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: badgeColor,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
+                                    if (widget.note.isPinned)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Icon(Icons.push_pin,
+                                            size: 18,
+                                            color: titleColor.withValues(
+                                                alpha: 0.7)),
                                       ),
-                                    ),
-                                    if (widget.note.recurrenceRule != null) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(Icons.repeat, size: 12, color: badgeColor),
-                                    ],
-                                    const SizedBox(width: 4),
-                                    InkWell(
-                                      onTap: () async {
-                                        HapticFeedback.lightImpact();
-                                        final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-                                        await NotificationService().cancelNotification(widget.note.id!);
-                                        final updatedNote = widget.note.copyWith(
-                                          reminderDateTime: null,
-                                          recurrenceRule: null,
-                                        );
-                                        await notesProvider.updateNote(updatedNote);
-                                        widget.onNoteChanged();
-                                        if (context.mounted) {
-                                          UnifiedNotificationService().show(
-                                            context: context,
-                                            message: l10n.reminderRemoved,
-                                            type: NotificationType.info,
-                                          );
-                                        }
-                                      },
-                                      child: Icon(Icons.close, size: 14, color: badgeColor.withValues(alpha: 0.8)),
-                                    ),
+                                    if (widget.note.isLocked)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Icon(Icons.lock,
+                                            size: 20, color: titleColor),
+                                      ),
+                                    if (widget.note.isLocked &&
+                                        !widget.selectionMode)
+                                      NoteCardActions.buildLockedNoteMenu(
+                                          context,
+                                          widget.note,
+                                          titleColor,
+                                          widget.onNoteChanged),
                                   ],
                                 ),
-                              );
-                              }),
+                              ],
                             ),
-                          if (_shouldShowExt)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            if (widget.note.reminderDateTime != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Builder(builder: (context) {
+                                  final isExpired = widget
+                                      .note.reminderDateTime!
+                                      .isBefore(DateTime.now());
+                                  final badgeColor =
+                                      isExpired ? Colors.red : Colors.orange;
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: widget.note.noteType == 'markdown'
-                                          ? Colors.orange.withValues(alpha: 0.15)
-                                          : Colors.blue.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(6),
+                                      color: badgeColor.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color:
+                                              badgeColor.withValues(alpha: 0.4),
+                                          width: 0.8),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.code,
-                                          size: 12,
-                                          color: widget.note.noteType == 'markdown'
-                                              ? Colors.orange.shade700
-                                              : Colors.blue.shade700,
-                                        ),
+                                            isExpired
+                                                ? Icons.alarm_off
+                                                : Icons.alarm,
+                                            size: 14,
+                                            color: badgeColor),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          _fileExtension,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: widget.note.noteType == 'markdown'
-                                                ? Colors.orange.shade700
-                                                : Colors.blue.shade700,
-                                            fontWeight: FontWeight.w600,
-                                            fontFamily: 'monospace',
+                                        Flexible(
+                                          child: Text(
+                                            '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: badgeColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
                                           ),
+                                        ),
+                                        if (widget.note.recurrenceRule !=
+                                            null) ...[
+                                          const SizedBox(width: 4),
+                                          Icon(Icons.repeat,
+                                              size: 12, color: badgeColor),
+                                        ],
+                                        const SizedBox(width: 4),
+                                        InkWell(
+                                          onTap: () async {
+                                            HapticFeedback.lightImpact();
+                                            final notesProvider =
+                                                Provider.of<NotesProvider>(
+                                                    context,
+                                                    listen: false);
+                                            await NotificationService()
+                                                .cancelNotification(
+                                                    widget.note.id!);
+                                            final updatedNote =
+                                                widget.note.copyWith(
+                                              reminderDateTime: null,
+                                              recurrenceRule: null,
+                                            );
+                                            await notesProvider
+                                                .updateNote(updatedNote);
+                                            widget.onNoteChanged();
+                                            if (context.mounted) {
+                                              UnifiedNotificationService().show(
+                                                context: context,
+                                                message: l10n.reminderRemoved,
+                                                type: NotificationType.info,
+                                              );
+                                            }
+                                          },
+                                          child: Icon(Icons.close,
+                                              size: 14,
+                                              color: badgeColor.withValues(
+                                                  alpha: 0.8)),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ],
+                                  );
+                                }),
                               ),
-                            ),
-                          if (widget.viewType != ViewType.listCompact &&
-                              (widget.note.isHiddenFromHome ||
-                              (widget.isFiltering &&
-                                  widget.note.isProfessional &&
-                                  context
-                                      .read<CategoriesProvider>()
-                                      .hideProFromHome)))
-                            HiddenCategoriesChip(
-                              note: widget.note,
-                              titleColor: titleColor,
-                              isProHidden: widget.note.isProfessional &&
-                                  context
-                                      .read<CategoriesProvider>()
-                                      .hideProFromHome &&
-                                  !widget.note.isHiddenFromHome,
-                            ),
-                        ],
+                            if (_shouldShowExt)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            widget.note.noteType == 'markdown'
+                                                ? Colors.orange
+                                                    .withValues(alpha: 0.15)
+                                                : Colors.blue
+                                                    .withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.code,
+                                            size: 12,
+                                            color: widget.note.noteType ==
+                                                    'markdown'
+                                                ? Colors.orange.shade700
+                                                : Colors.blue.shade700,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _fileExtension,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: widget.note.noteType ==
+                                                      'markdown'
+                                                  ? Colors.orange.shade700
+                                                  : Colors.blue.shade700,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (widget.viewType != ViewType.listCompact &&
+                                (widget.note.isHiddenFromHome ||
+                                    (widget.isFiltering &&
+                                        widget.note.isProfessional &&
+                                        context
+                                            .read<CategoriesProvider>()
+                                            .hideProFromHome)))
+                              HiddenCategoriesChip(
+                                note: widget.note,
+                                titleColor: titleColor,
+                                isProHidden: widget.note.isProfessional &&
+                                    context
+                                        .read<CategoriesProvider>()
+                                        .hideProFromHome &&
+                                    !widget.note.isHiddenFromHome,
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    ),  // ClipRect
+                    ), // ClipRect
                     if (widget.selectionMode)
                       Positioned(
                         top: 8,
@@ -506,7 +569,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            widget.isSelected ? Icons.check_circle : Icons.circle_outlined,
+                            widget.isSelected
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
                             color: widget.isSelected
                                 ? Theme.of(context).primaryColor
                                 : titleColor.withValues(alpha: 0.5),

@@ -165,22 +165,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get allRightsReserved => '© 2025 جميع الحقوق محفوظة.';
 
   @override
-  String get swipeGestures => 'السحب';
+  String get swipeGestures => 'إيماءات السحب';
 
   @override
-  String get swipeGesturesDesc => 'السحب لتنفيذ الإجراءات';
+  String get swipeGesturesDesc => 'استخدام السحب للإجراءات';
 
   @override
-  String get swipeRight => 'السحب لليمين';
+  String get swipeRight => 'إجراء اليمين';
 
   @override
-  String get swipeLeft => 'السحب لليسار';
+  String get swipeLeft => 'إجراء اليسار';
 
   @override
   String get actionDelete => 'حذف';
 
   @override
-  String get actionArchive => 'أرشيف';
+  String get actionArchive => 'أرشفة';
 
   @override
   String get actionShare => 'مشاركة';

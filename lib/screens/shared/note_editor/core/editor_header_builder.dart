@@ -40,75 +40,67 @@ class EditorHeaderBuilder {
       base,
     );
 
-    Widget buildHeaderWidget(Color bg) => SafeArea(
-          bottom: false,
-          child: ApexEditorHeader(
-            backgroundColor: bg,
-            textColor: finalTextColor,
-            title: currentTitle,
-            isLocked: note?.isLocked == true || notePassword != null,
-            hasHistory: note?.id != null,
-            hasReminder: coordinator.stateManager.reminderDateTime != null,
-            onReminderTap: isReadOnly
-                ? null
-                : () {
-                    HapticFeedback.mediumImpact();
-                    onReminderTap();
-                  },
-            onHistoryTap: onHistoryTap,
-            onTitleTap: isReadOnly
-                ? null
-                : () {
-                    HapticFeedback.lightImpact();
-                    onTitleTap?.call();
-                  },
-            onSaveTap: isReadOnly
-                ? null
-                : () async {
-                    HapticFeedback.mediumImpact();
-                    onSaveTap?.call();
-                  },
-            onEditTap: isReadOnly
-                ? () {
-                    HapticFeedback.mediumImpact();
-                    onEditTap?.call();
+    Widget buildHeaderWidget(Color bg) => ApexEditorHeader(
+          backgroundColor: bg,
+          textColor: finalTextColor,
+          title: currentTitle,
+          isLocked: note?.isLocked == true || notePassword != null,
+          hasHistory: note?.id != null,
+          hasReminder: coordinator.stateManager.reminderDateTime != null,
+          onReminderTap: isReadOnly
+              ? null
+              : () {
+                  HapticFeedback.mediumImpact();
+                  onReminderTap();
+                },
+          onHistoryTap: onHistoryTap,
+          onTitleTap: isReadOnly
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  onTitleTap?.call();
+                },
+          onSaveTap: isReadOnly
+              ? null
+              : () async {
+                  HapticFeedback.mediumImpact();
+                  onSaveTap?.call();
+                },
+          onEditTap: isReadOnly
+              ? () {
+                  HapticFeedback.mediumImpact();
+                  onEditTap?.call();
+                }
+              : null,
+          onBackTap: onBackTap,
+          onCategoryTap: (isReadOnly || originallyLocked)
+              ? null
+              : () async {
+                  final current = coordinator.stateManager.categoryIds;
+                  final result = await CategoryPickerSheet.show(
+                    context,
+                    current,
+                    isHiddenFromHome: coordinator.stateManager.isHiddenFromHome,
+                  );
+                  if (result != null) {
+                    onCategoryChanged(result['categoryIds'] as List<int>);
+                    coordinator.stateManager.isHiddenFromHome =
+                        result['isHiddenFromHome'] as bool;
                   }
-                : null,
-            onBackTap: onBackTap,
-            onCategoryTap: (isReadOnly || originallyLocked)
-                ? null
-                : () async {
-                    final current = coordinator.stateManager.categoryIds;
-                    final result = await CategoryPickerSheet.show(
-                      context,
-                      current,
-                      isHiddenFromHome:
-                          coordinator.stateManager.isHiddenFromHome,
-                    );
-                    if (result != null) {
-                      onCategoryChanged(result['categoryIds'] as List<int>);
-                      coordinator.stateManager.isHiddenFromHome =
-                          result['isHiddenFromHome'] as bool;
-                    }
-                  },
-          ),
+                },
         );
 
-    Widget buildSelectionBar(Color bg) =>
-        (selectionBarActive != null &&
-                quillController != null &&
-                onPaste != null)
-            ? SafeArea(
-                bottom: false,
-                child: EditorSelectionPanel(
-                  ctrl: quillController,
-                  backgroundColor: bg,
-                  textColor: finalTextColor,
-                  onPaste: onPaste,
-                  onDismiss: () => selectionBarActive.value = false,
-                ),
-              )
-            : buildHeaderWidget(bg);
+    Widget buildSelectionBar(Color bg) => (selectionBarActive != null &&
+            quillController != null &&
+            onPaste != null)
+        ? EditorSelectionPanel(
+            ctrl: quillController,
+            backgroundColor: bg,
+            textColor: finalTextColor,
+            onPaste: onPaste,
+            onDismiss: () => selectionBarActive.value = false,
+          )
+        : buildHeaderWidget(bg);
 
     Widget buildContainer(Color bg) => Positioned(
           top: 0,
@@ -119,12 +111,15 @@ class EditorHeaderBuilder {
                   valueListenable: selectionBarActive,
                   builder: (_, isBarActive, __) => Stack(
                     children: [
+                      // الهيدر يحدد الارتفاع الطبيعي للـ Stack
                       AnimatedOpacity(
                         opacity: isBarActive ? 0.0 : 1.0,
                         duration: const Duration(milliseconds: 120),
                         child: buildHeaderWidget(bg),
                       ),
-                      if (isBarActive) buildSelectionBar(bg),
+                      // بانل التحديد يملأ كامل مساحة الهيدر
+                      if (isBarActive)
+                        Positioned.fill(child: buildSelectionBar(bg)),
                     ],
                   ),
                 )

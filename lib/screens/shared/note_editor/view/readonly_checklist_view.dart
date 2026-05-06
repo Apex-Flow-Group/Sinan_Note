@@ -134,7 +134,7 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                   contentPadding: EdgeInsets.zero,
                   leading: ReorderableDragStartListener(
                     index: index,
-                    child: Icon(Icons.drag_handle,
+                    child: Icon(Icons.drag_indicator,
                         color: widget.textColor.withValues(alpha: 0.3)),
                   ),
                   title: Row(
@@ -150,9 +150,8 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: item.isDone
-                                ? Colors.green
-                                : Colors.transparent,
+                            color:
+                                item.isDone ? Colors.green : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: item.isDone

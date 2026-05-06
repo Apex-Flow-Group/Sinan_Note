@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/screens/onboarding/whats_new_dialog.dart';
 import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/screens/other/support_form_screen.dart';
 import 'package:apex_note/screens/shared/backup_wizard_screen.dart';
@@ -23,11 +24,17 @@ class DataSection extends StatelessWidget {
       icon: Icons.storage_rounded,
       children: [
         ListTile(
-          leading: Icon(Icons.backup_outlined, color: Theme.of(context).colorScheme.primary),
-          title: Text(currentLang == 'ar' ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore'),
-          subtitle: Text(currentLang == 'ar' ? 'تصدير واستيراد ملاحظاتك' : 'Export and import your notes'),
+          leading: Icon(Icons.backup_outlined,
+              color: Theme.of(context).colorScheme.primary),
+          title: Text(currentLang == 'ar'
+              ? 'النسخ الاحتياطي والاستعادة'
+              : 'Backup & Restore'),
+          subtitle: Text(currentLang == 'ar'
+              ? 'تصدير واستيراد ملاحظاتك'
+              : 'Export and import your notes'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupWizardScreen())),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const BackupWizardScreen())),
         ),
       ],
     );
@@ -37,7 +44,8 @@ class DataSection extends StatelessWidget {
 class AboutSection extends StatelessWidget {
   final String version;
   final String currentLang;
-  const AboutSection({super.key, required this.version, required this.currentLang});
+  const AboutSection(
+      {super.key, required this.version, required this.currentLang});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +58,8 @@ class AboutSection extends StatelessWidget {
           leading: const Icon(Icons.mail_outline),
           title: Text(l10n.feedback),
           subtitle: Text(l10n.contactUs),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportFormScreen())),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const SupportFormScreen())),
         ),
         ListTile(
           leading: const Icon(Icons.share),
@@ -66,14 +75,16 @@ class AboutSection extends StatelessWidget {
           leading: const Icon(Icons.info_outline),
           title: Text(l10n.aboutApp),
           subtitle: Text(version),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen())),
+          onTap: () => Navigator.push(
+              context, MaterialPageRoute(builder: (_) => const AboutScreen())),
         ),
         if (kDebugMode)
           ListTile(
             leading: const Icon(Icons.bug_report, color: Colors.red),
             title: Text(l10n.diagnostics),
             subtitle: Text(l10n.developersOnly),
-            onTap: () => SettingsUtils.showDiagnostics(context, l10n, currentLang),
+            onTap: () =>
+                SettingsUtils.showDiagnostics(context, l10n, currentLang),
           ),
         if (kDebugMode)
           ListTile(
@@ -81,6 +92,14 @@ class AboutSection extends StatelessWidget {
             title: const Text('DB Inspector'),
             subtitle: const Text('Isar + SQLite report'),
             onTap: () => DbInspectorService.showReport(context),
+          ),
+        if (kDebugMode)
+          ListTile(
+            leading:
+                const Icon(Icons.celebration_rounded, color: Colors.purple),
+            title: const Text('What\'s New Dialog'),
+            subtitle: const Text('Preview the dialog'),
+            onTap: () => WhatsNewDialog.show(context),
           ),
       ],
     );

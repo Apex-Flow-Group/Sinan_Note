@@ -110,14 +110,16 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.lock_outline, size: 18, color: scheme.onSurfaceVariant),
+                Icon(Icons.lock_outline,
+                    size: 18, color: scheme.onSurfaceVariant),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     isArabic
                         ? 'الملاحظات المشفرة في الخزنة لا تُصدَّر تلقائياً — اختر "تصدير كامل" لتضمينها'
                         : 'Encrypted vault notes are not exported by default — choose "Full Export" to include them',
-                    style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                    style:
+                        TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -129,7 +131,8 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   }
 
   // ── Backup Flow ───────────────────────────────────────────────────────────
-  Widget _buildBackupFlow(AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
+  Widget _buildBackupFlow(
+      AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -164,7 +167,9 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           const SizedBox(height: 12),
           _OptionTile(
             icon: Icons.lock_outlined,
-            title: isArabic ? 'تصدير كامل (مع المشفرة)' : 'Full Export (with encrypted)',
+            title: isArabic
+                ? 'تصدير كامل (مع المشفرة)'
+                : 'Full Export (with encrypted)',
             subtitle: isArabic
                 ? 'يشمل الملاحظات المشفرة كـ ciphertext — تحتاج مفتاح الخزنة للاستعادة'
                 : 'Includes encrypted notes as ciphertext — vault key needed to restore',
@@ -193,7 +198,9 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
             opacity: 0.45,
             child: _OptionTile(
               icon: Icons.storage_outlined,
-              title: isArabic ? 'ملف .sinannote (معطّل)' : '.sinannote File (disabled)',
+              title: isArabic
+                  ? 'ملف .sinannote (معطّل)'
+                  : '.sinannote File (disabled)',
               subtitle: isArabic
                   ? 'التصدير غير متاح في هذا الإصدار — استخدم JSON بدلاً'
                   : 'Export unavailable in this version — use JSON instead',
@@ -220,7 +227,8 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   }
 
   // ── Restore Flow ──────────────────────────────────────────────────────────
-  Widget _buildRestoreFlow(AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
+  Widget _buildRestoreFlow(
+      AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -274,7 +282,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
                 Expanded(
                   child: Text(
                     isArabic
-                        ? 'لو الملف يحتوي ملاحظات مشفرة وعندك مفتاح الخزنة — سيُفك التشفير تلقائياً'
+                        ? 'الملاحظات المشفرة تُفك تلقائياً عند توفر مفتاح الخزنة'
                         : 'If the file contains encrypted notes and you have the vault key — they will be decrypted automatically',
                     style: const TextStyle(fontSize: 12, color: Colors.green),
                   ),
@@ -300,7 +308,8 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  Future<void> _exportJson({required bool includeVault, required bool share}) async {
+  Future<void> _exportJson(
+      {required bool includeVault, required bool share}) async {
     setState(() => _isLoading = true);
     try {
       if (share) {
@@ -308,10 +317,13 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
       } else {
         final dir = await FilePicker.platform.getDirectoryPath();
         if (dir == null) return;
-        final msg = await StorageService().exportNotesToPath(dir, includeVault: includeVault);
+        final msg = await StorageService()
+            .exportNotesToPath(dir, includeVault: includeVault);
         if (mounted) {
           UnifiedNotificationService().show(
-              context: context, message: msg, type: NotificationType.success,
+              context: context,
+              message: msg,
+              type: NotificationType.success,
               duration: const Duration(seconds: 4));
         }
       }
@@ -328,13 +340,14 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   }
 
   Future<void> _restoreJson() async {
-    final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom, allowedExtensions: ['json']);
+    final result = await FilePicker.platform
+        .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
     if (result == null || result.files.single.path == null) return;
     if (!mounted) return;
     final lang = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
-    await JsonImportHandler.handle(context, lang, l10n, result.files.single.path!);
+    await JsonImportHandler.handle(
+        context, lang, l10n, result.files.single.path!);
   }
 
   Future<void> _restoreDatabase() async {
@@ -415,7 +428,8 @@ class _SectionHeader extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _SectionHeader({required this.icon, required this.label, required this.color});
+  const _SectionHeader(
+      {required this.icon, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -425,9 +439,7 @@ class _SectionHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Text(label,
             style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color)),
+                fontSize: 13, fontWeight: FontWeight.w600, color: color)),
       ],
     );
   }
@@ -501,7 +513,11 @@ class _ActionBtn extends StatelessWidget {
   final VoidCallback onTap;
   final bool disabled;
 
-  const _ActionBtn({required this.icon, required this.label, required this.onTap, this.disabled = false});
+  const _ActionBtn(
+      {required this.icon,
+      required this.label,
+      required this.onTap,
+      this.disabled = false});
 
   @override
   Widget build(BuildContext context) {

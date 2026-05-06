@@ -116,14 +116,16 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
 
         if (canLaunch) {
           try {
-            launched = await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+            launched =
+                await launchUrl(emailUri, mode: LaunchMode.externalApplication);
           } catch (e) {
             lastError = e.toString();
           }
 
           if (!launched) {
             try {
-              launched = await launchUrl(emailUri, mode: LaunchMode.platformDefault);
+              launched =
+                  await launchUrl(emailUri, mode: LaunchMode.platformDefault);
             } catch (e) {
               lastError = e.toString();
             }
@@ -296,9 +298,9 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
           constraints: const BoxConstraints(maxWidth: 600),
           child: SingleChildScrollView(
             padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 16,
+              left: 8,
+              right: 8,
+              top: 8,
               bottom: MediaQuery.of(context).padding.bottom + 80,
             ),
             child: Form(
@@ -310,20 +312,27 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                   Card(
                     elevation: 0,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
                       child: Row(children: [
-                        Icon(Icons.support_agent_rounded, size: 28, color: colorScheme.primary),
+                        Icon(Icons.support_agent_rounded,
+                            size: 28, color: colorScheme.primary),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(l10n.contactUs,
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
                               Text(l10n.appDescription,
-                                  style: TextStyle(fontSize: 13,
-                                      color: colorScheme.onSurface.withValues(alpha: 0.7))),
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: colorScheme.onSurface
+                                          .withValues(alpha: 0.7))),
                             ],
                           ),
                         ),
@@ -336,37 +345,70 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                   Card(
                     elevation: 0,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(children: [
-                            Icon(Icons.edit_note_rounded, size: 28, color: colorScheme.primary),
+                            Icon(Icons.edit_note_rounded,
+                                size: 28, color: colorScheme.primary),
                             const SizedBox(width: 12),
                             Text(l10n.supportSubject,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
                           ]),
                           const SizedBox(height: 16),
                           _buildTextField(
                             controller: _nameController,
                             label: l10n.title,
                             icon: Icons.person,
-                            validator: (v) => (v == null || v.isEmpty) ? l10n.fillAllFields : null,
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? l10n.fillAllFields
+                                : null,
                           ),
                           const SizedBox(height: 16),
-                          _buildDropdown(
-                            label: l10n.supportCategory,
-                            value: _selectedCategory,
-                            items: categories,
-                            onChanged: (v) => setState(() => _selectedCategory = v),
-                            validator: (v) => v == null ? l10n.fillAllFields : null,
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: categories.map((cat) {
+                              final isSelected = _selectedCategory == cat;
+                              return ChoiceChip(
+                                label: Text(cat),
+                                selected: isSelected,
+                                showCheckmark: false,
+                                onSelected: (_) =>
+                                    setState(() => _selectedCategory = cat),
+                                selectedColor:
+                                    colorScheme.primary.withValues(alpha: 0.2),
+                                labelStyle: TextStyle(
+                                  color:
+                                      isSelected ? colorScheme.primary : null,
+                                  fontWeight:
+                                      isSelected ? FontWeight.w600 : null,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? colorScheme.primary
+                                        : colorScheme.outline
+                                            .withValues(alpha: 0.3),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ),
                           const SizedBox(height: 16),
                           _buildTextField(
                             controller: _subjectController,
                             label: l10n.supportSubject,
                             icon: Icons.subject,
-                            validator: (v) => (v == null || v.isEmpty) ? l10n.fillAllFields : null,
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? l10n.fillAllFields
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           _buildTextField(
@@ -374,7 +416,9 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                             label: l10n.supportMessage,
                             icon: Icons.description,
                             maxLines: 6,
-                            validator: (v) => (v == null || v.isEmpty) ? l10n.fillAllFields : null,
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? l10n.fillAllFields
+                                : null,
                           ),
                         ],
                       ),
@@ -386,29 +430,39 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                   Card(
                     elevation: 0,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(children: [
-                            Icon(Icons.privacy_tip_outlined, size: 28, color: colorScheme.primary),
+                            Icon(Icons.privacy_tip_outlined,
+                                size: 28, color: colorScheme.primary),
                             const SizedBox(width: 12),
                             Text(l10n.privacyAndData,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
                           ]),
                           const SizedBox(height: 12),
-                          Text(l10n.privacyDescription, style: const TextStyle(fontSize: 13)),
+                          Text(l10n.privacyDescription,
+                              style: const TextStyle(fontSize: 13)),
                           const SizedBox(height: 8),
                           GestureDetector(
                             onTap: _showPrivacyDialog,
                             child: Text(l10n.readPrivacyPolicy,
-                                style: TextStyle(fontSize: 13, color: colorScheme.primary,
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.primary,
                                     decoration: TextDecoration.underline)),
                           ),
                           CheckboxListTile(
                             contentPadding: EdgeInsets.zero,
                             value: _privacyAccepted,
-                            onChanged: (val) { if (val != null) _savePrivacyConsent(val); },
+                            onChanged: (val) {
+                              if (val != null) _savePrivacyConsent(val);
+                            },
                             title: Text(l10n.agreeToPolicy),
                             activeColor: colorScheme.primary,
                           ),
@@ -423,9 +477,13 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                     child: FilledButton.icon(
                       onPressed: _canSend ? _submitFeedback : null,
                       icon: _isLoading
-                          ? SizedBox(width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation(colorScheme.onPrimary)))
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                      colorScheme.onPrimary)))
                           : const Icon(Icons.send),
                       label: Text(_isLoading ? l10n.autoSaved : l10n.send),
                     ),
@@ -472,44 +530,6 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       ),
       keyboardType: keyboardType,
       maxLines: maxLines,
-      validator: validator,
-    );
-  }
-
-  Widget _buildDropdown({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required Function(String?) onChanged,
-    String? Function(String?)? validator,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: const Icon(Icons.category),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.5),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: colorScheme.primary,
-            width: 2,
-          ),
-        ),
-      ),
-      items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-          .toList(),
-      onChanged: onChanged,
       validator: validator,
     );
   }

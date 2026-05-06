@@ -65,7 +65,7 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
 
     final sections = [
       (icon: Icons.tune, label: l10n.general),
-      (icon: Icons.edit_note, label: l10n.editor),
+      (icon: Icons.swipe_rounded, label: l10n.swipeGestures),
       (icon: Icons.lock_outline, label: l10n.security),
       (icon: Icons.storage_outlined, label: l10n.data),
       (icon: Icons.info_outline, label: l10n.about),

@@ -23,7 +23,12 @@ class _ResizableDividerState extends State<ResizableDivider> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onHorizontalDragStart: (_) => setState(() => _dragging = true),
-      onHorizontalDragUpdate: (d) => widget.onDrag(d.delta.dx),
+      onHorizontalDragUpdate: (d) {
+        // عكس اتجاه السحب في RTL ليتوافق مع الاتجاه المنطقي
+        final isRtl = Directionality.of(context) == TextDirection.rtl;
+        final dx = isRtl ? -d.delta.dx : d.delta.dx;
+        widget.onDrag(dx);
+      },
       onHorizontalDragEnd: (_) {
         setState(() => _dragging = false);
         widget.onDragEnd();
@@ -34,7 +39,10 @@ class _ResizableDividerState extends State<ResizableDivider> {
           duration: const Duration(milliseconds: 150),
           width: 20,
           color: _dragging
-              ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+              ? Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.3)
               : Colors.transparent,
           child: Center(
             child: Icon(

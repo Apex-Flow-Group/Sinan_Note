@@ -15,32 +15,45 @@ class GoogleDriveWidgets {
   ) {
     return Card(
       elevation: 0,
-      
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.account_circle, size: 28, color: Theme.of(context).colorScheme.primary),
+                Icon(Icons.account_circle,
+                    size: 28, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
-                Text(l10n.account, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Text(l10n.account,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
             if (isSignedIn) ...[
               Row(
                 children: [
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                  Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                          color: Colors.green, shape: BoxShape.circle)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.signedInAs, style: Theme.of(context).textTheme.bodySmall),
+                        Text(l10n.signedInAs,
+                            style: Theme.of(context).textTheme.bodySmall),
                         const SizedBox(height: 4),
-                        Text(userEmail ?? '', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
+                        Text(userEmail ?? '',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
@@ -49,20 +62,31 @@ class GoogleDriveWidgets {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(onPressed: onSignOut, icon: const Icon(Icons.logout), label: Text(l10n.signOut)),
+                child: OutlinedButton.icon(
+                    onPressed: onSignOut,
+                    icon: const Icon(Icons.logout),
+                    label: Text(l10n.signOut)),
               ),
             ] else ...[
               Row(
                 children: [
-                  Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.grey[400], shape: BoxShape.circle)),
+                  Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                          color: Colors.grey[400], shape: BoxShape.circle)),
                   const SizedBox(width: 8),
-                  Text(l10n.notSignedIn, style: Theme.of(context).textTheme.bodyLarge),
+                  Text(l10n.notSignedIn,
+                      style: Theme.of(context).textTheme.bodyLarge),
                 ],
               ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(onPressed: onSignIn, icon: const Icon(Icons.login), label: Text(l10n.signIn)),
+                child: FilledButton.icon(
+                    onPressed: onSignIn,
+                    icon: const Icon(Icons.login),
+                    label: Text(l10n.signIn)),
               ),
             ],
           ],
@@ -81,31 +105,43 @@ class GoogleDriveWidgets {
   ) {
     return Card(
       elevation: 0,
-      
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.sync, size: 28, color: Theme.of(context).colorScheme.primary),
+                Icon(Icons.sync,
+                    size: 28, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
-                Text(l10n.syncStatus, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Text(l10n.syncStatus,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(l10n.lastSync, style: Theme.of(context).textTheme.bodyLarge),
-                Text(lastSyncTimeStr, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
+                Text(l10n.lastSync,
+                    style: Theme.of(context).textTheme.bodyLarge),
+                Text(lastSyncTimeStr,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w500)),
               ],
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: FilledButton.icon(onPressed: isSignedIn ? onSync : null, icon: const Icon(Icons.sync), label: Text(l10n.syncNow)),
+              child: FilledButton.icon(
+                  onPressed: isSignedIn ? onSync : null,
+                  icon: const Icon(Icons.sync),
+                  label: Text(l10n.syncNow)),
             ),
           ],
         ),
@@ -123,17 +159,21 @@ class GoogleDriveWidgets {
   ) {
     return Card(
       elevation: 0,
-      
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.cloud_sync, size: 28, color: Theme.of(context).colorScheme.primary),
+                Icon(Icons.cloud_sync,
+                    size: 28, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
-                Text(l10n.syncActions, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Text(l10n.syncActions,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
@@ -141,12 +181,16 @@ class GoogleDriveWidgets {
               contentPadding: EdgeInsets.zero,
               leading: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
                 child: const Icon(Icons.cloud_upload, color: Colors.blue),
               ),
               title: Text(l10n.uploadDatabase),
               subtitle: Text(l10n.uploadDatabaseDesc),
-              trailing: IconButton(onPressed: isSignedIn ? onUpload : null, icon: const Icon(Icons.arrow_forward)),
+              trailing: IconButton(
+                  onPressed: isSignedIn ? onUpload : null,
+                  icon: const Icon(Icons.arrow_forward)),
               onTap: isSignedIn ? onUpload : null,
             ),
             const Divider(),
@@ -154,12 +198,16 @@ class GoogleDriveWidgets {
               contentPadding: EdgeInsets.zero,
               leading: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
                 child: const Icon(Icons.cloud_download, color: Colors.green),
               ),
               title: Text(l10n.downloadDatabase),
               subtitle: Text(l10n.downloadDatabaseDesc),
-              trailing: IconButton(onPressed: isSignedIn ? onDownload : null, icon: const Icon(Icons.arrow_forward)),
+              trailing: IconButton(
+                  onPressed: isSignedIn ? onDownload : null,
+                  icon: const Icon(Icons.arrow_forward)),
               onTap: isSignedIn ? onDownload : null,
             ),
           ],
@@ -184,15 +232,20 @@ class GoogleDriveWidgets {
         Card(
           elevation: 0,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.settings, size: 28, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.settings,
+                        size: 28, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 12),
-                    Text(l10n.settings, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(l10n.settings,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -207,7 +260,9 @@ class GoogleDriveWidgets {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(isArabic ? 'السحب للمزامنة' : 'Pull to Sync'),
-                  subtitle: Text(isArabic ? 'اسحب للأسفل لمزامنة يدوية' : 'Pull down to manually sync'),
+                  subtitle: Text(isArabic
+                      ? 'اسحب للأسفل لمزامنة يدوية'
+                      : 'Pull down to manually sync'),
                   value: pullToRefresh,
                   onChanged: isSignedIn ? onPullToRefreshChanged : null,
                 ),
@@ -219,7 +274,7 @@ class GoogleDriveWidgets {
         // ── بطاقة تعليمية ثابتة ──
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.orange.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
@@ -234,7 +289,8 @@ class GoogleDriveWidgets {
                   const SizedBox(width: 8),
                   Text(
                     isArabic ? 'الخزنة المشفرة' : 'Encrypted Vault',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.orange),
                   ),
                 ],
               ),

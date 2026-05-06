@@ -36,7 +36,7 @@ class EditorContentBuilder {
     final totalBottomSpace =
         (mode == NoteMode.code ? codeToolbarHeight : toolbarHeight) +
             bottomPadding +
-            16;
+            12;
 
     if (mode == NoteMode.code) {
       coordinator.codeController ??= CodeController(
@@ -65,8 +65,8 @@ class EditorContentBuilder {
         },
       );
     } else {
-      coordinator.quillController ??=
-          QuillMigration.controllerFromContent(coordinator.contentController.text);
+      coordinator.quillController ??= QuillMigration.controllerFromContent(
+          coordinator.contentController.text);
       return QuillEditorWidget(
         quillController: coordinator.quillController!,
         focusNode: coordinator.textFieldFocusNode,

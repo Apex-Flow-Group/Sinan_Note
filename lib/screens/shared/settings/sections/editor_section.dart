@@ -19,12 +19,12 @@ class EditorSection extends StatelessWidget {
     final currentLang = settings.languageCode == 'system' ? systemLocale : settings.languageCode;
 
     return SettingsSectionCard(
-      title: l10n.editor,
-      icon: Icons.edit_note_rounded,
+      title: l10n.swipeGestures,
+      icon: Icons.swipe_rounded,
       children: [
         SwitchListTile(
           secondary: const Icon(Icons.swipe),
-          title: Text(l10n.swipeGestures),
+          title: Text(l10n.swipeGesturesDesc),
           subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
           value: settings.swipeEnabled,
           onChanged: settings.setSwipeEnabled,

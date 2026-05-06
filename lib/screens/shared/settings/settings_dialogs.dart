@@ -104,13 +104,13 @@ class SettingsDialogs {
       title: isRight ? l10n.swipeRight : l10n.swipeLeft,
       titleIcon: isRight ? Icons.swipe_right_rounded : Icons.swipe_left_rounded,
       options: [
-        _SheetOption(label: l10n.delete,   icon: Icons.delete_outline_rounded, selected: currentValue == 'delete',    onTap: () => set('delete')),
-        _SheetOption(label: l10n.archive,  icon: Icons.archive_outlined,        selected: currentValue == 'archive',   onTap: () => set('archive')),
-        _SheetOption(label: l10n.share,    icon: Icons.share_outlined,          selected: currentValue == 'share',     onTap: () => set('share')),
-        _SheetOption(label: l10n.reminder, icon: Icons.alarm_rounded,           selected: currentValue == 'reminder',  onTap: () => set('reminder')),
-        _SheetOption(label: l10n.categories, icon: Icons.label_outlined,        selected: currentValue == 'category',  onTap: () => set('category')),
-        _SheetOption(label: l10n.noteCopy, icon: Icons.copy_all_rounded,        selected: currentValue == 'duplicate', onTap: () => set('duplicate')),
-        _SheetOption(label: l10n.custom,   icon: Icons.bolt_rounded,            selected: currentValue == 'custom',    onTap: () => set('custom')),
+        _SheetOption(label: l10n.delete,       icon: Icons.delete_outline_rounded, selected: currentValue == 'delete',    onTap: () => set('delete')),
+        _SheetOption(label: l10n.actionArchive,  icon: Icons.archive_outlined,        selected: currentValue == 'archive',   onTap: () => set('archive')),
+        _SheetOption(label: l10n.share,          icon: Icons.share_outlined,          selected: currentValue == 'share',     onTap: () => set('share')),
+        _SheetOption(label: l10n.reminder,       icon: Icons.alarm_rounded,           selected: currentValue == 'reminder',  onTap: () => set('reminder')),
+        _SheetOption(label: l10n.categories,     icon: Icons.label_outlined,          selected: currentValue == 'category',  onTap: () => set('category')),
+        _SheetOption(label: l10n.noteCopy,       icon: Icons.copy_all_rounded,        selected: currentValue == 'duplicate', onTap: () => set('duplicate')),
+        _SheetOption(label: l10n.custom,         icon: Icons.bolt_rounded,            selected: currentValue == 'custom',    onTap: () => set('custom')),
       ],
     );
   }
@@ -119,7 +119,7 @@ class SettingsDialogs {
       BuildContext context, SettingsProvider settings, AppLocalizations l10n) {
     final allActions = [
       ('delete',    l10n.delete,      Icons.delete_outline_rounded),
-      ('archive',   l10n.archive,     Icons.archive_outlined),
+      ('archive',   l10n.actionArchive,  Icons.archive_outlined),
       ('share',     l10n.share,       Icons.share_outlined),
       ('reminder',  l10n.reminder,    Icons.alarm_rounded),
       ('category',  l10n.categories,  Icons.label_outlined),

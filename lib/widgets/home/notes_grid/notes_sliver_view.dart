@@ -62,17 +62,25 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     super.dispose();
   }
 
-  void _onNavHiddenChanged() => setState(() => _isNavHidden = bottomNavHiddenNotifier.value);
-  void _onFilteringChanged() => setState(() => _isFiltering = widget.isFilteringNotifier.value);
-  void _onHasMoreChanged() => setState(() => _hasMore = widget.hasMoreNotifier.value);
-  void _onNotesChanged() => setState(() => _filteredNotes = widget.filteredNotesNotifier.value);
-  void _onViewTypeChanged() => setState(() => _viewTypeName = widget.viewTypeNotifier.value);
+  void _onNavHiddenChanged() =>
+      setState(() => _isNavHidden = bottomNavHiddenNotifier.value);
+  void _onFilteringChanged() =>
+      setState(() => _isFiltering = widget.isFilteringNotifier.value);
+  void _onHasMoreChanged() =>
+      setState(() => _hasMore = widget.hasMoreNotifier.value);
+  void _onNotesChanged() =>
+      setState(() => _filteredNotes = widget.filteredNotesNotifier.value);
+  void _onViewTypeChanged() =>
+      setState(() => _viewTypeName = widget.viewTypeNotifier.value);
 
   ViewType get _viewType {
     switch (_viewTypeName) {
-      case 'grid': return ViewType.grid;
-      case 'listExpanded': return ViewType.listExpanded;
-      default: return ViewType.listCompact;
+      case 'grid':
+        return ViewType.grid;
+      case 'listExpanded':
+        return ViewType.listExpanded;
+      default:
+        return ViewType.listCompact;
     }
   }
 
@@ -87,7 +95,8 @@ class _NotesSliverViewState extends State<NotesSliverView> {
             children: [
               Icon(Icons.note_add_outlined, size: 80, color: Colors.grey[400]),
               const SizedBox(height: 16),
-              Text('No notes', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+              Text('No notes',
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600])),
             ],
           ),
         ),
@@ -95,19 +104,27 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     }
 
     final navBarHeight = _isNavHidden ? 0.0 : kBottomNavigationBarHeight;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + navBarHeight + 16 + 56 + 8;
+    final bottomPadding =
+        MediaQuery.of(context).padding.bottom + navBarHeight + 16 + 56 + 8;
 
     if (_viewType == ViewType.grid) {
       return SliverPadding(
-        padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
+        padding:
+            EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding),
         sliver: SliverMasonryGrid.count(
-          crossAxisCount: MediaQuery.of(context).size.width >= 1200 ? 4 : MediaQuery.of(context).size.width >= 600 ? 3 : 2,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
+          crossAxisCount: MediaQuery.of(context).size.width >= 1200
+              ? 4
+              : MediaQuery.of(context).size.width >= 600
+                  ? 3
+                  : 2,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
           childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
           itemBuilder: (context, index) {
             if (index == _filteredNotes.length) {
-              return const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()));
+              return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()));
             }
             return _buildCard(_filteredNotes[index], 'home_grid');
           },
@@ -116,12 +133,15 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     }
 
     return SliverPadding(
-      padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomPadding),
+      padding:
+          EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             if (index == _filteredNotes.length) {
-              return const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()));
+              return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()));
             }
             return _buildCard(_filteredNotes[index], 'home_list');
           },
