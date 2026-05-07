@@ -7,7 +7,6 @@ import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/common/glowing_search_field.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
-import 'package:apex_note/widgets/home/note_conversion_sheet.dart';
 import 'package:apex_note/widgets/home/selection_action_bar.dart';
 import 'package:apex_note/widgets/home/smooth_search_header_delegate.dart';
 import 'package:flutter/material.dart';
@@ -90,17 +89,6 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                     onClear: () {
                       widget.selectedNoteIdsNotifier.value = {};
                     },
-                    onConvert: selectedIds.length == 1
-                        ? () {
-                            final provider = Provider.of<NotesProvider>(context,
-                                listen: false);
-                            final noteId = selectedIds.first;
-                            final note = provider.notes
-                                .firstWhere((n) => n.id == noteId);
-                            widget.selectedNoteIdsNotifier.value = {};
-                            NoteConversionSheet.show(context, note, () {});
-                          }
-                        : null,
                     onPin: () async {
                       final provider =
                           Provider.of<NotesProvider>(context, listen: false);
@@ -243,7 +231,6 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                           viewTypeNotifier: widget.viewTypeNotifier,
                           onViewToggle: widget.onViewToggle,
                           onFilterTap: widget.onFilterTap,
-                          scrollFadeNotifier: widget.scrollFadeNotifier,
                         ),
                       ),
                     ],

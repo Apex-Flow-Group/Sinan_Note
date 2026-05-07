@@ -906,6 +906,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heroAnimation => 'Hero Animation';
 
   @override
+  String get editorSettings => 'Editor Settings';
+
+  @override
+  String get doubleTapToEdit => 'Double Tap to Edit';
+
+  @override
+  String get doubleTapToEditDesc => 'Double tap on note to open editor';
+
+  @override
   String get appLock => 'App Lock';
 
   @override
@@ -1459,6 +1468,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetPinned => 'Widget pinned:';
 
   @override
+  String get pinToWidget => 'Pin to Widget';
+
+  @override
   String get note => 'Note';
 
   @override
@@ -1788,6 +1800,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get richText => 'Rich Text';
+
+  @override
+  String get convertToChecklist => 'Convert to Checklist';
+
+  @override
+  String get convertToPlain => 'Convert to Plain Text';
+
+  @override
+  String get convertConfirmChecklist =>
+      'Each line will become a checklist item. Continue?';
+
+  @override
+  String get convertConfirmPlain =>
+      'Checklist will become plain text. Continue?';
 
   @override
   String get noteConverted => 'Note converted successfully';

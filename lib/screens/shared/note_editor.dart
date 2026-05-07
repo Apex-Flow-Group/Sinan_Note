@@ -49,6 +49,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   AppLocalizations? _l10nRef;
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
+  late NoteMode _currentMode;
+  Note? _currentNote;
   bool _isQuillReady = false;
   final ValueNotifier<bool> _selectionBarActive = ValueNotifier(false);
 
@@ -67,9 +69,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    _currentMode = widget.mode;
     _coordinator = EditorCoordinator(
       note: widget.note,
-      mode: widget.mode,
+      mode: _currentMode,
       skipAuthentication: widget.skipAuthentication,
       originallyLocked: widget.originallyLocked,
     );
@@ -114,7 +117,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _coordinator.contentController.addListener(_onContentChanged);
     _coordinator.undoController.addListener(_updateUndoRedoState);
 
-    if (widget.mode == NoteMode.code) {
+    if (_currentMode == NoteMode.code) {
       _coordinator.codeController!.addListener(_onContentChanged);
       _coordinator.codeUndoController.addListener(_updateUndoRedoState);
     }
@@ -172,7 +175,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     await EditorDialogHandlers.showColorPalette(
       context: context,
       stateManager: _coordinator.stateManager,
-      mode: widget.mode,
+      mode: _currentMode,
       onColorSelected: (colorIndex, textColor) {
         if (mounted) {
           setState(() {
@@ -226,7 +229,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       {bool forceUpdate = false, bool isManualSave = false}) {
     return EditorSaveOperations.saveToDatabase(
       coordinator: _coordinator,
-      mode: widget.mode,
+      mode: _currentMode,
       existingNote: widget.note,
       l10n: _l10nRef,
       isMounted: () => mounted,
@@ -241,7 +244,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   Future<void> _saveNote() => EditorSaveOperations.saveManually(
         context: context,
         coordinator: _coordinator,
-        mode: widget.mode,
+        mode: _currentMode,
         existingNote: widget.note,
         l10n: _l10nRef,
         isMounted: () => mounted,
@@ -253,7 +256,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   Future<void> _saveAsMarkdown() => EditorSaveOperations.saveAsMarkdown(
         context: context,
         coordinator: _coordinator,
-        mode: widget.mode,
+        mode: _currentMode,
         existingNote: widget.note,
         l10n: _l10nRef,
       );
@@ -262,7 +265,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       EditorSaveOperations.saveWithExtension(
         context: context,
         coordinator: _coordinator,
-        mode: widget.mode,
+        mode: _currentMode,
         existingNote: widget.note,
         l10n: _l10nRef,
         extension: extension,
@@ -296,7 +299,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void _onContentChanged() {
     _coordinator.stateManager.markDirty();
 
-    final currentText = widget.mode == NoteMode.code
+    final currentText = _currentMode == NoteMode.code
         ? _coordinator.codeController!.text
         : _coordinator.contentController.text;
     final newHasContent = currentText.trim().isNotEmpty;
@@ -326,18 +329,18 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   void _updateUndoRedoState() {
-    if (widget.mode == NoteMode.checklist) return;
+    if (_currentMode == NoteMode.checklist) return;
 
-    if (widget.mode == NoteMode.code) {
+    if (_currentMode == NoteMode.code) {
       setState(() {
         _coordinator.stateManager.canUndo =
             _coordinator.codeUndoController.value.canUndo;
         _coordinator.stateManager.canRedo =
             _coordinator.codeUndoController.value.canRedo;
       });
-    } else if (widget.mode == NoteMode.simple ||
-        widget.mode == NoteMode.rich ||
-        widget.mode == NoteMode.reminder) {
+    } else if (_currentMode == NoteMode.simple ||
+        _currentMode == NoteMode.rich ||
+        _currentMode == NoteMode.reminder) {
       final quill = _coordinator.quillController;
       if (quill == null) return;
       setState(() {
@@ -376,9 +379,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       return;
     }
 
-    final content = widget.mode == NoteMode.code
+    final content = _currentMode == NoteMode.code
         ? _coordinator.codeController!.text
-        : (widget.mode == NoteMode.checklist
+        : (_currentMode == NoteMode.checklist
             ? _coordinator.contentController.text
             : QuillMigration.toPlainText(_coordinator.quillController!));
     final title = _coordinator.stateManager.customTitle ??
@@ -426,20 +429,32 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     if (_isReadOnly && widget.note != null) {
       return NoteReadOnlyView(
         note: widget.note!,
-        mode: widget.mode,
+        mode: _currentMode,
         coordinator: _coordinator,
         sidePadding: sidePadding,
         heroTag: widget.heroTag,
         onClose: widget.onClose,
+        onModeChanged: (newMode, newNote) => setState(() {
+          _currentMode = newMode;
+          _currentNote = newNote;
+        }),
         onEnterEdit: () {
-          // ── ضمان تحميل العنوان قبل دخول وضع التعديل ──────────────────
-          // في وضع العرض customTitle قد يكون null (مشتق من المحتوى)
-          // نحمّله صراحةً من note.title حتى لا يُعتبر محذوفاً عند الحفظ
-          if (_coordinator.stateManager.customTitle == null &&
-              widget.note != null &&
-              widget.note!.title.isNotEmpty &&
-              widget.note!.title != 'Untitled') {
-            _coordinator.stateManager.customTitle = widget.note!.title;
+          if (_currentMode != widget.mode) {
+            _coordinator.dispose();
+            _coordinator = EditorCoordinator(
+              note: _currentNote ?? widget.note,
+              mode: _currentMode,
+              skipAuthentication: widget.skipAuthentication,
+              originallyLocked: widget.originallyLocked,
+            );
+            _coordinator.initialize(context);
+          } else {
+            if (_coordinator.stateManager.customTitle == null &&
+                widget.note != null &&
+                widget.note!.title.isNotEmpty &&
+                widget.note!.title != 'Untitled') {
+              _coordinator.stateManager.customTitle = widget.note!.title;
+            }
           }
           setState(() => _isReadOnly = false);
         },
@@ -491,7 +506,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 sidePadding: sidePadding,
                 finalTextColor: finalTextColor,
                 finalHintColor: finalHintColor,
-                mode: widget.mode,
+                mode: _currentMode,
                 note: widget.note,
                 savedNoteId: _coordinator.savedNoteId,
                 onReminderTap: _showReminderDialog,
@@ -550,7 +565,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 }
               },
               onSaveTap: () async {
-                if (widget.mode == NoteMode.code &&
+                if (_currentMode == NoteMode.code &&
                     _coordinator.detectedLanguage != null) {
                   final ext = _coordinator.smartController
                       .getExtensionForLanguage(_coordinator.detectedLanguage!);
@@ -574,7 +589,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               context: context,
               coordinator: _coordinator,
               finalTextColor: finalTextColor,
-              mode: widget.mode,
+              mode: _currentMode,
               note: widget.note,
               savedNoteId: _coordinator.savedNoteId,
               smartController: _coordinator.smartController,

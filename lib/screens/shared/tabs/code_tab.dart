@@ -17,7 +17,6 @@ import 'package:apex_note/widgets/common/selected_note_indicator.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:apex_note/widgets/home/note_card_widget.dart';
-import 'package:apex_note/widgets/home/note_conversion_sheet.dart';
 import 'package:apex_note/widgets/home/selection_action_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -161,20 +160,6 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                     allPinned: false,
                                     onClear: () =>
                                         _selectedNoteIdsNotifier.value = {},
-                                    onConvert: selectedIds.length == 1
-                                        ? () {
-                                            final provider =
-                                                Provider.of<NotesProvider>(
-                                                    context,
-                                                    listen: false);
-                                            final note = provider.notes
-                                                .firstWhere((n) =>
-                                                    n.id == selectedIds.first);
-                                            _selectedNoteIdsNotifier.value = {};
-                                            NoteConversionSheet.show(
-                                                context, note, () {});
-                                          }
-                                        : null,
                                     onPin: () async {
                                       final provider =
                                           Provider.of<NotesProvider>(context,

@@ -42,18 +42,13 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
             alignment: Alignment.bottomCenter,
             child: SizedBox(
               height: expandedHeight,
-              child: Opacity(
+              child: AnimatedOpacity(
                 opacity: t,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
-                  child: selectionMode && selectionBar != null
-                      ? selectionBar!
-                      : child,
-                ),
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeOut,
+                child: selectionMode && selectionBar != null
+                    ? selectionBar!
+                    : child,
               ),
             ),
           ),

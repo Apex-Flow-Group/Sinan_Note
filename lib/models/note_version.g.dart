@@ -32,13 +32,18 @@ const NoteVersionSchema = CollectionSchema(
       name: r'noteId',
       type: IsarType.long,
     ),
-    r'timestamp': PropertySchema(
+    r'noteType': PropertySchema(
       id: 3,
+      name: r'noteType',
+      type: IsarType.string,
+    ),
+    r'timestamp': PropertySchema(
+      id: 4,
       name: r'timestamp',
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'title',
       type: IsarType.string,
     )
@@ -79,6 +84,7 @@ int _noteVersionEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.action.length * 3;
   bytesCount += 3 + object.content.length * 3;
+  bytesCount += 3 + object.noteType.length * 3;
   bytesCount += 3 + object.title.length * 3;
   return bytesCount;
 }
@@ -92,8 +98,9 @@ void _noteVersionSerialize(
   writer.writeString(offsets[0], object.action);
   writer.writeString(offsets[1], object.content);
   writer.writeLong(offsets[2], object.noteId);
-  writer.writeDateTime(offsets[3], object.timestamp);
-  writer.writeString(offsets[4], object.title);
+  writer.writeString(offsets[3], object.noteType);
+  writer.writeDateTime(offsets[4], object.timestamp);
+  writer.writeString(offsets[5], object.title);
 }
 
 NoteVersion _noteVersionDeserialize(
@@ -107,8 +114,9 @@ NoteVersion _noteVersionDeserialize(
   object.content = reader.readString(offsets[1]);
   object.id = id;
   object.noteId = reader.readLong(offsets[2]);
-  object.timestamp = reader.readDateTime(offsets[3]);
-  object.title = reader.readString(offsets[4]);
+  object.noteType = reader.readString(offsets[3]);
+  object.timestamp = reader.readDateTime(offsets[4]);
+  object.title = reader.readString(offsets[5]);
   return object;
 }
 
@@ -126,8 +134,10 @@ P _noteVersionDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 4:
+      return (reader.readDateTime(offset)) as P;
+    case 5:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -700,6 +710,141 @@ extension NoteVersionQueryFilter
     });
   }
 
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition> noteTypeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'noteType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
+      noteTypeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'noteType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
+      noteTypeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'noteType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition> noteTypeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'noteType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
+      noteTypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'noteType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
+      noteTypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'noteType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
+      noteTypeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'noteType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition> noteTypeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'noteType',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
+      noteTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'noteType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
+      noteTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'noteType',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<NoteVersion, NoteVersion, QAfterFilterCondition>
       timestampEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -933,6 +1078,18 @@ extension NoteVersionQuerySortBy
     });
   }
 
+  QueryBuilder<NoteVersion, NoteVersion, QAfterSortBy> sortByNoteType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'noteType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterSortBy> sortByNoteTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'noteType', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteVersion, NoteVersion, QAfterSortBy> sortByTimestamp() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timestamp', Sort.asc);
@@ -1008,6 +1165,18 @@ extension NoteVersionQuerySortThenBy
     });
   }
 
+  QueryBuilder<NoteVersion, NoteVersion, QAfterSortBy> thenByNoteType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'noteType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteVersion, NoteVersion, QAfterSortBy> thenByNoteTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'noteType', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteVersion, NoteVersion, QAfterSortBy> thenByTimestamp() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timestamp', Sort.asc);
@@ -1055,6 +1224,13 @@ extension NoteVersionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NoteVersion, NoteVersion, QDistinct> distinctByNoteType(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'noteType', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<NoteVersion, NoteVersion, QDistinct> distinctByTimestamp() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'timestamp');
@@ -1092,6 +1268,12 @@ extension NoteVersionQueryProperty
   QueryBuilder<NoteVersion, int, QQueryOperations> noteIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'noteId');
+    });
+  }
+
+  QueryBuilder<NoteVersion, String, QQueryOperations> noteTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'noteType');
     });
   }
 

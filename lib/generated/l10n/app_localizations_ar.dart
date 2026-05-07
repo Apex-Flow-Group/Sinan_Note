@@ -903,6 +903,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get heroAnimation => 'انيميشن الفتح';
 
   @override
+  String get editorSettings => 'إعدادات المحرر';
+
+  @override
+  String get doubleTapToEdit => 'الضغط المزدوج للتعديل';
+
+  @override
+  String get doubleTapToEditDesc => 'اضغط مرتين على الملاحظة لفتح المحرر';
+
+  @override
   String get appLock => 'قفل التطبيق';
 
   @override
@@ -1454,6 +1463,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get widgetPinned => 'تم تثبيت الويدجت:';
 
   @override
+  String get pinToWidget => 'تثبيت في الويدجت';
+
+  @override
   String get note => 'ملاحظة';
 
   @override
@@ -1783,6 +1795,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get richText => 'نص منسق';
+
+  @override
+  String get convertToChecklist => 'تحويل إلى قائمة مهام';
+
+  @override
+  String get convertToPlain => 'تحويل إلى نص عادي';
+
+  @override
+  String get convertConfirmChecklist =>
+      'كل سطر سيصبح عنصراً في القائمة. هل تريد المتابعة؟';
+
+  @override
+  String get convertConfirmPlain =>
+      'ستتحول القائمة إلى نص عادي. هل تريد المتابعة؟';
 
   @override
   String get noteConverted => 'تم تحويل الملاحظة';

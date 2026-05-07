@@ -7,11 +7,11 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/services/widget_service.dart';
+import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-/// أشرطة وضع القراءة — نفس شكل العارض القديم
 Map<String, int> _parseChecklistStats(String content) {
   try {
     final decoded = jsonDecode(content);
@@ -84,7 +84,6 @@ class ReadOnlyBars {
                 ),
               if (!note.isTrashed)
                 _CategoryButton(note: note, onRefresh: onRefresh),
-              if (!note.isTrashed) _WidgetPinButton(note: note),
             ],
           ),
         ),
@@ -92,7 +91,7 @@ class ReadOnlyBars {
     );
   }
 
-  // ─── Bottom bar العادي (مشاركة / أرشفة / حذف / تعديل) ──────────
+  // ─── Bottom bar: تحويل + more + تعديل ───────────────────────────
   static Widget buildActionBar({
     required BuildContext context,
     required Note note,
@@ -102,6 +101,9 @@ class ReadOnlyBars {
     required VoidCallback onArchive,
     required VoidCallback onDelete,
     required VoidCallback onEdit,
+    void Function(String)? onConvert,
+    String currentNoteType = 'simple',
+    bool isChecklist = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
     return FadeTransition(
@@ -122,33 +124,6 @@ class ReadOnlyBars {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.share_outlined),
-                    tooltip: l10n.share,
-                    onPressed: onShare,
-                    padding: const EdgeInsets.all(6),
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: Icon(note.isArchived
-                        ? Icons.unarchive_outlined
-                        : Icons.archive_outlined),
-                    tooltip: note.isArchived ? l10n.unarchive : l10n.archive,
-                    onPressed: onArchive,
-                    padding: const EdgeInsets.all(6),
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline,
-                        color: Colors.redAccent),
-                    tooltip: l10n.delete,
-                    onPressed: onDelete,
-                    padding: const EdgeInsets.all(6),
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                  ),
-                  const Spacer(),
                   SizedBox(
                     height: 40,
                     child: ElevatedButton.icon(
@@ -157,15 +132,66 @@ class ReadOnlyBars {
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
                         elevation: 2,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      icon: const Icon(Icons.edit, size: 20),
+                      icon: const Icon(Icons.edit, size: 18),
                       label: Text(
                         l10n.edit,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (onConvert != null)
+                    IconButton(
+                      icon: const Icon(Icons.swap_horiz_rounded),
+                      tooltip: l10n.convertTo,
+                      onPressed: () => _showConvertSheet(
+                        context,
+                        currentNoteType: currentNoteType,
+                        isChecklist: isChecklist,
+                        onConvert: onConvert,
+                        l10n: l10n,
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  if (onConvert != null) const SizedBox(width: 4),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => _showMoreSheet(
+                        context,
+                        note: note,
+                        onShare: onShare,
+                        onArchive: onArchive,
+                        onDelete: onDelete,
+                        l10n: l10n,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.15),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(Icons.more_vert_rounded, size: 22),
                       ),
                     ),
                   ),
@@ -178,7 +204,111 @@ class ReadOnlyBars {
     );
   }
 
-  // ─── Bottom bar المهملات (استعادة / حذف نهائي) ──────────────────
+  static void _showMoreSheet(
+    BuildContext context, {
+    required Note note,
+    required VoidCallback onShare,
+    required VoidCallback onArchive,
+    required VoidCallback onDelete,
+    required AppLocalizations l10n,
+  }) {
+    AppBottomSheet.show(
+      context,
+      child: AppBottomSheet(
+        scrollable: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.share_rounded, color: Colors.blue),
+              title: Text(l10n.actionShare),
+              onTap: () { Navigator.pop(context); onShare(); },
+            ),
+            ListTile(
+              leading: Icon(
+                note.isArchived
+                    ? Icons.unarchive_rounded
+                    : Icons.archive_rounded,
+                color: Colors.green,
+              ),
+              title: Text(note.isArchived ? l10n.unarchive : l10n.actionArchive),
+              onTap: () { Navigator.pop(context); onArchive(); },
+            ),
+            _WidgetPinTile(note: note),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.delete_rounded, color: Colors.red),
+              title: Text(l10n.actionDelete,
+                  style: const TextStyle(color: Colors.red)),
+              onTap: () { Navigator.pop(context); onDelete(); },
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static void _showConvertSheet(
+    BuildContext context, {
+    required String currentNoteType,
+    required bool isChecklist,
+    required void Function(String) onConvert,
+    required AppLocalizations l10n,
+  }) {
+    final options = <_ConvertOption>[];
+    if (isChecklist) {
+      options.add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
+      options.add(_ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
+    } else if (currentNoteType == 'simple') {
+      options.add(_ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
+      options.add(_ConvertOption(Icons.code_rounded, l10n.professionalNotes, 'code'));
+      options.add(_ConvertOption(Icons.checklist_rounded, l10n.checklist, 'checklist'));
+    } else if (currentNoteType == 'rich') {
+      options.add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
+      options.add(_ConvertOption(Icons.code_rounded, l10n.professionalNotes, 'code'));
+      options.add(_ConvertOption(Icons.checklist_rounded, l10n.checklist, 'checklist'));
+    } else if (currentNoteType == 'code' || currentNoteType == 'pro' || currentNoteType == 'professional') {
+      options.add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
+      options.add(_ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
+    }
+    if (options.isEmpty) return;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 4),
+            ...options.map((opt) => ListTile(
+                  leading: Icon(opt.icon, color: Colors.teal),
+                  title: Text(opt.label),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    onConvert(opt.type);
+                  },
+                )),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Bottom bar المهملات ─────────────────────────────────────────
   static Widget buildRestoreBar({
     required BuildContext context,
     required Color barColor,
@@ -284,33 +414,22 @@ class _CategoryButton extends StatelessWidget {
   }
 }
 
-// ─── زر تثبيت الويدجت ────────────────────────────────────────────
-class _WidgetPinButton extends StatelessWidget {
+// ─── عنصر تثبيت الويدجت في القائمة ──────────────────────────────
+class _WidgetPinTile extends StatelessWidget {
   final Note note;
-  const _WidgetPinButton({required this.note});
+  const _WidgetPinTile({required this.note});
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.widgets_outlined),
-      tooltip: 'Pin to Widget',
-      onPressed: () async {
-        final messenger = UnifiedNotificationService();
-        final l10n = AppLocalizations.of(context)!;
-        Navigator.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return ListTile(
+      leading: const Icon(Icons.widgets_outlined, color: Colors.purple),
+      title: Text(l10n.pinToWidget),
+      onTap: () async {
+        Navigator.pop(context);
+        if (note.id == null) return;
 
-        if (note.id == null) {
-          messenger.show(
-            context: context,
-            message: 'Cannot pin unsaved note',
-            type: NotificationType.error,
-          );
-          return;
-        }
-
-        final isChecklistNote =
-            note.isChecklist || note.noteType == 'checklist';
-
+        final isChecklistNote = note.isChecklist || note.noteType == 'checklist';
         if (isChecklistNote) {
           final stats = _parseChecklistStats(note.content);
           await WidgetService().updateChecklistWidget(
@@ -326,7 +445,7 @@ class _WidgetPinButton extends StatelessWidget {
         }
 
         if (!context.mounted) return;
-        messenger.show(
+        UnifiedNotificationService().show(
           context: context,
           message:
               '${l10n.widgetPinned} ${isChecklistNote ? l10n.checklists : l10n.note}',
@@ -336,4 +455,11 @@ class _WidgetPinButton extends StatelessWidget {
       },
     );
   }
+}
+
+class _ConvertOption {
+  final IconData icon;
+  final String label;
+  final String type;
+  const _ConvertOption(this.icon, this.label, this.type);
 }

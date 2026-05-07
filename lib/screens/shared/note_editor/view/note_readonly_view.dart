@@ -1,23 +1,29 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
+
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/note_content_utils.dart';
+import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:apex_note/screens/shared/note_editor/view/readonly_checklist_view.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/services/version_control_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/editor/markdown_viewer.dart';
 import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 
@@ -29,6 +35,7 @@ class NoteReadOnlyView extends StatefulWidget {
   final String? heroTag;
   final VoidCallback? onClose;
   final VoidCallback onEnterEdit;
+  final void Function(NoteMode newMode, Note newNote)? onModeChanged;
   final Future<void> Function({bool isManualSave}) onSave;
 
   const NoteReadOnlyView({
@@ -41,6 +48,7 @@ class NoteReadOnlyView extends StatefulWidget {
     required this.onSave,
     this.heroTag,
     this.onClose,
+    this.onModeChanged,
   });
 
   @override
@@ -50,11 +58,104 @@ class NoteReadOnlyView extends StatefulWidget {
 class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   final _scrollController = ScrollController();
   bool _showMarkdown = false;
+  late Note _currentNote;
+  late NoteMode _currentMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentNote = widget.note;
+    _currentMode = widget.mode;
+  }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onConvert(String targetType) async {
+    final noteId = _currentNote.id;
+    if (noteId == null || !mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    final dbNote = await IsarDatabaseService().getNoteById(noteId);
+    if (dbNote == null || !mounted) return;
+
+    String newContent = dbNote.content;
+    if (targetType == 'checklist') {
+      if (newContent.trimLeft().startsWith('[')) {
+        try {
+          final ops = jsonDecode(newContent) as List;
+          newContent = ops
+              .where((op) => op is Map && op['insert'] is String)
+              .map((op) => op['insert'] as String)
+              .join().trimRight();
+        } catch (_) {}
+      }
+      newContent = ChecklistFormatter.fromPlainText(newContent, title: dbNote.title);
+    } else if (dbNote.isChecklist) {
+      newContent = ChecklistFormatter.toPlainText(dbNote.content);
+    } else if (newContent.trimLeft().startsWith('[')) {
+      try {
+        final ops = jsonDecode(newContent) as List;
+        newContent = ops
+            .where((op) => op is Map && op['insert'] is String)
+            .map((op) => op['insert'] as String)
+            .join().trimRight();
+      } catch (_) {}
+    }
+
+    await VersionControlService().smartLogVersion(
+      noteId: noteId,
+      title: dbNote.title,
+      content: dbNote.content,
+      isManualAction: true,
+      noteType: dbNote.noteType,
+      forceLog: true,
+    );
+
+    if (!mounted) return;
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    await provider.convertNoteType(
+      noteId,
+      newContent: newContent,
+      newNoteType: targetType,
+      isChecklist: targetType == 'checklist',
+    );
+
+    final updated = await IsarDatabaseService().getNoteById(noteId);
+    if (updated == null || !mounted) return;
+
+    // تحديث coordinator بالمحتوى الجديد
+    widget.coordinator.contentController.text = updated.content;
+
+    final newMode = NoteCardUtils.getNoteMode(updated);
+
+    if (newMode == NoteMode.code) {
+      // تحويل إلى كود — أنشئ codeController جديد
+      widget.coordinator.codeController?.dispose();
+      widget.coordinator.codeController = CodeController(text: updated.content);
+      widget.coordinator.quillController?.dispose();
+      widget.coordinator.quillController = null;
+    } else {
+      // تحويل من كود أو إلى rich/simple — أنشئ quillController جديد
+      final newQc = QuillMigration.controllerFromContent(updated.content);
+      widget.coordinator.quillController?.dispose();
+      widget.coordinator.quillController = newQc;
+    }
+
+    setState(() {
+      _currentNote = updated;
+      _currentMode = newMode;
+    });
+    widget.onModeChanged?.call(_currentMode, _currentNote);
+
+    UnifiedNotificationService().show(
+      context: context,
+      message: l10n.noteConverted,
+      type: NotificationType.success,
+    );
   }
 
   void _closeOrPop() {
@@ -66,7 +167,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   }
 
   Future<void> _onReminder() async {
-    final note = widget.note;
+    final note = _currentNote;
     final provider = Provider.of<NotesProvider>(context, listen: false);
     final noteColor = widget.coordinator.getBackgroundColor(context);
 
@@ -87,7 +188,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   }
 
   Future<void> _onShare() async {
-    final note = widget.note;
+    final note = _currentNote;
     final content = note.isChecklist
         ? ChecklistFormatter.formatForSharing(note.title, note.content)
         : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length)}';
@@ -95,10 +196,10 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   }
 
   Future<void> _onArchive() async {
-    if (widget.note.id == null || !mounted) return;
+    if (_currentNote.id == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    final note = widget.note;
+    final note = _currentNote;
     final wasArchived = note.isArchived;
 
     wasArchived
@@ -124,10 +225,10 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   }
 
   Future<void> _onDelete() async {
-    if (widget.note.id == null || !mounted) return;
+    if (_currentNote.id == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    final note = widget.note;
+    final note = _currentNote;
 
     await provider.trashNote(note.id!);
 
@@ -146,16 +247,28 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   }
 
   Future<void> _onRestore() async {
-    if (widget.note.id == null) return;
+    if (_currentNote.id == null) return;
+    final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    widget.note.isTrashed
-        ? await provider.restoreNote(widget.note.id!)
-        : await provider.unarchiveNote(widget.note.id!);
-    if (mounted) _closeOrPop();
+    final note = _currentNote;
+    note.isTrashed
+        ? await provider.restoreNote(note.id!)
+        : await provider.unarchiveNote(note.id!);
+    if (!mounted) return;
+    _closeOrPop();
+    UnifiedNotificationService().showWithUndo(
+      context: context,
+      message: l10n.noteRestored,
+      type: NotificationType.success,
+      actionKey: 'note_restore_${note.id}',
+      onExecute: () {},
+      onUndo: () async => await provider.trashNote(note.id!),
+      undoLabel: l10n.undo,
+    );
   }
 
   Future<void> _onPermanentDelete() async {
-    if (widget.note.id == null || !mounted) return;
+    if (_currentNote.id == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
@@ -176,19 +289,19 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
     if (confirm == true && mounted) {
       await Provider.of<NotesProvider>(context, listen: false)
-          .deleteNote(widget.note.id!);
+          .deleteNote(_currentNote.id!);
       if (mounted) _closeOrPop();
     }
   }
 
   Future<void> _onRefresh() async {
-    if (widget.note.id == null) return;
+    if (_currentNote.id == null) return;
     final provider = Provider.of<NotesProvider>(context, listen: false);
     await provider.refreshAllNotes();
     if (!mounted) return;
     final updated = provider.activeNotes
         .cast<Note?>()
-        .firstWhere((n) => n?.id == widget.note.id, orElse: () => null);
+        .firstWhere((n) => n?.id == _currentNote.id, orElse: () => null);
     if (updated != null) {
       setState(() =>
           widget.coordinator.stateManager.colorIndex = updated.colorIndex);
@@ -196,8 +309,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   }
 
   Widget _buildContent(Color textColor, Color noteColor) {
-    // Checklist
-    if (widget.mode == NoteMode.checklist) {
+    if (_currentMode == NoteMode.checklist) {
       return ReadOnlyChecklistView(
         coordinator: widget.coordinator,
         textColor: textColor,
@@ -208,7 +320,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     }
 
     // Code
-    if (widget.mode == NoteMode.code) {
+    if (_currentMode == NoteMode.code) {
       final content = widget.coordinator.codeController?.text ??
           widget.coordinator.contentController.text;
       return ScrollbarTheme(
@@ -366,7 +478,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
 
   @override
   Widget build(BuildContext context) {
-    final note = widget.note;
+    final note = _currentNote;
     final scheme = Theme.of(context).colorScheme;
     final noteColor = widget.coordinator.getBackgroundColor(context);
     final textColor =
@@ -380,7 +492,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
             parent: routeAnimation,
             curve: const Interval(0.6, 1.0, curve: Curves.easeOut));
 
-    final isChecklist = widget.mode == NoteMode.checklist;
+    final isChecklist = _currentMode == NoteMode.checklist;
     final isMarkdown = _showMarkdown;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
@@ -426,9 +538,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           )
         : noteCard;
 
-    final canMarkdown = widget.mode == NoteMode.simple ||
-        widget.mode == NoteMode.rich ||
-        widget.mode == NoteMode.reminder;
+    final canMarkdown = _currentMode == NoteMode.simple ||
+        _currentMode == NoteMode.rich ||
+        _currentMode == NoteMode.reminder;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -451,25 +563,30 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         thumbVisibility: true,
         thickness: 4,
         radius: const Radius.circular(4),
-        child: isMarkdown
-            ? SingleChildScrollView(
-                controller: _scrollController,
-                child: GestureDetector(
-                  onDoubleTap: note.isTrashed ? null : widget.onEnterEdit,
+        child: Builder(builder: (ctx) {
+          final canDoubleTap = !note.isTrashed &&
+              Provider.of<SettingsProvider>(ctx, listen: false).doubleTapToEdit;
+          return isMarkdown
+              ? SingleChildScrollView(
+                  controller: _scrollController,
+                  child: GestureDetector(
+                    onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: widget.sidePadding),
+                      child: heroCard,
+                    ),
+                  ),
+                )
+              : GestureDetector(
+                  onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
                   child: Padding(
                     padding:
                         EdgeInsets.symmetric(horizontal: widget.sidePadding),
                     child: heroCard,
                   ),
-                ),
-              )
-            : GestureDetector(
-                onDoubleTap: note.isTrashed ? null : widget.onEnterEdit,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: widget.sidePadding),
-                  child: heroCard,
-                ),
-              ),
+                );
+        }),
       ),
       bottomNavigationBar: note.isTrashed
           ? ReadOnlyBars.buildRestoreBar(
@@ -488,6 +605,11 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               onArchive: _onArchive,
               onDelete: _onDelete,
               onEdit: widget.onEnterEdit,
+              onConvert: (targetType) => _onConvert(targetType),
+              currentNoteType: _currentNote.isProfessional
+                  ? 'code'
+                  : _currentNote.noteType,
+              isChecklist: _currentNote.isChecklist,
             ),
     );
   }

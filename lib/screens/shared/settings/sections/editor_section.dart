@@ -15,47 +15,83 @@ class EditorSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
-    final systemLocale = View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system' ? systemLocale : settings.languageCode;
+    final systemLocale =
+        View.of(context).platformDispatcher.locale.languageCode;
+    final currentLang = settings.languageCode == 'system'
+        ? systemLocale
+        : settings.languageCode;
 
-    return SettingsSectionCard(
-      title: l10n.swipeGestures,
-      icon: Icons.swipe_rounded,
+    return Column(
       children: [
-        SwitchListTile(
-          secondary: const Icon(Icons.swipe),
-          title: Text(l10n.swipeGesturesDesc),
-          subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
-          value: settings.swipeEnabled,
-          onChanged: settings.setSwipeEnabled,
-        ),
-        if (settings.swipeEnabled) ...[
-          ListTile(
-            contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-            leading: const Icon(Icons.swipe_right_rounded),
-            title: Text(l10n.swipeRight),
-            subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeRightAction, l10n)),
-            trailing: Icon(SettingsUtils.getSwipeActionIcon(settings.swipeRightAction)),
-            onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, true, currentLang),
-          ),
-          ListTile(
-            contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-            leading: const Icon(Icons.swipe_left_rounded),
-            title: Text(l10n.swipeLeft),
-            subtitle: Text(SettingsUtils.getSwipeActionText(settings.swipeLeftAction, l10n)),
-            trailing: Icon(SettingsUtils.getSwipeActionIcon(settings.swipeLeftAction)),
-            onTap: () => SettingsDialogs.showSwipeActionDialog(context, settings, false, currentLang),
-          ),
-          if (settings.swipeRightAction == 'custom' || settings.swipeLeftAction == 'custom')
-            ListTile(
-              contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
-              leading: const Icon(Icons.bolt_rounded),
-              title: Text(l10n.custom),
-              subtitle: Text('${settings.swipeCustomActions.length} ${l10n.selected}'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => SettingsDialogs.showCustomActionsDialog(context, settings, l10n),
+        // ── إعدادات المحرر ──────────────────────────────────────────
+        SettingsSectionCard(
+          title: l10n.editorSettings,
+          icon: Icons.edit_note_rounded,
+          children: [
+            SwitchListTile(
+              secondary: const Icon(Icons.touch_app_rounded),
+              title: Text(l10n.doubleTapToEdit),
+              subtitle: Text(l10n.doubleTapToEditDesc),
+              value: settings.doubleTapToEdit,
+              onChanged: settings.setDoubleTapToEdit,
             ),
-        ],
+          ],
+        ),
+        const SizedBox(height: 12),
+        // ── إيماءات السحب ───────────────────────────────────────────
+        SettingsSectionCard(
+          title: l10n.swipeGestures,
+          icon: Icons.swipe_rounded,
+          children: [
+            SwitchListTile(
+              secondary: const Icon(Icons.swipe),
+              title: Text(l10n.swipeGesturesDesc),
+              subtitle:
+                  Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
+              value: settings.swipeEnabled,
+              onChanged: settings.setSwipeEnabled,
+            ),
+            if (settings.swipeEnabled) ...[
+              ListTile(
+                contentPadding:
+                    const EdgeInsetsDirectional.only(start: 72, end: 16),
+                leading: const Icon(Icons.swipe_right_rounded),
+                title: Text(l10n.swipeRight),
+                subtitle: Text(SettingsUtils.getSwipeActionText(
+                    settings.swipeRightAction, l10n)),
+                trailing: Icon(SettingsUtils.getSwipeActionIcon(
+                    settings.swipeRightAction)),
+                onTap: () => SettingsDialogs.showSwipeActionDialog(
+                    context, settings, true, currentLang),
+              ),
+              ListTile(
+                contentPadding:
+                    const EdgeInsetsDirectional.only(start: 72, end: 16),
+                leading: const Icon(Icons.swipe_left_rounded),
+                title: Text(l10n.swipeLeft),
+                subtitle: Text(SettingsUtils.getSwipeActionText(
+                    settings.swipeLeftAction, l10n)),
+                trailing: Icon(
+                    SettingsUtils.getSwipeActionIcon(settings.swipeLeftAction)),
+                onTap: () => SettingsDialogs.showSwipeActionDialog(
+                    context, settings, false, currentLang),
+              ),
+              if (settings.swipeRightAction == 'custom' ||
+                  settings.swipeLeftAction == 'custom')
+                ListTile(
+                  contentPadding:
+                      const EdgeInsetsDirectional.only(start: 72, end: 16),
+                  leading: const Icon(Icons.bolt_rounded),
+                  title: Text(l10n.custom),
+                  subtitle: Text(
+                      '${settings.swipeCustomActions.length} ${l10n.selected}'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => SettingsDialogs.showCustomActionsDialog(
+                      context, settings, l10n),
+                ),
+            ],
+          ],
+        ),
       ],
     );
   }

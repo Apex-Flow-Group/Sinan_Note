@@ -52,6 +52,11 @@ class EditorToolbarFactory {
     bool isOrderedListActive = false,
     bool isBlockquoteActive = false,
     bool isChecklistActive = false,
+    VoidCallback? onConvertToChecklist,
+    VoidCallback? onConvertToPlain,
+    VoidCallback? onConvertToRich,
+    VoidCallback? onConvertToCode,
+    VoidCallback? onConvertToSimple,
   }) {
     switch (mode) {
       case NoteMode.code:
@@ -66,6 +71,8 @@ class EditorToolbarFactory {
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
           detectedLanguage: detectedLanguage,
           onLanguageChanged: onLanguageChanged,
+          onConvertToSimple: onConvertToSimple,
+          onConvertToRich: onConvertToRich,
         );
 
       case NoteMode.checklist:
@@ -80,6 +87,8 @@ class EditorToolbarFactory {
           onShareTap: onShareTap ?? () {},
           onArchiveTap: onArchiveTap ?? () {},
           onDeleteTap: onDeleteTap ?? () {},
+          onConvertToSimple: onConvertToSimple,
+          onConvertToRich: onConvertToRich,
         );
 
       case NoteMode.simple:
@@ -98,6 +107,9 @@ class EditorToolbarFactory {
           onArchiveTap: onArchiveTap ?? () {},
           onDeleteTap: onDeleteTap ?? () {},
           selectionBarActive: selectionBarActive,
+          onConvertToChecklist: onConvertToChecklist,
+          onConvertToRich: onConvertToRich,
+          onConvertToCode: onConvertToCode,
         );
 
       case NoteMode.rich:
@@ -138,6 +150,9 @@ class EditorToolbarFactory {
           isOrderedListActive: isOrderedListActive,
           isBlockquoteActive: isBlockquoteActive,
           isChecklistActive: isChecklistActive,
+          onConvertToSimple: onConvertToSimple,
+          onConvertToCode: onConvertToCode,
+          onConvertToChecklist: onConvertToChecklist,
         );
     }
   }
@@ -159,6 +174,9 @@ class _SimpleToolbar extends StatelessWidget {
   final VoidCallback onArchiveTap;
   final VoidCallback onDeleteTap;
   final ValueNotifier<bool>? selectionBarActive;
+  final VoidCallback? onConvertToChecklist;
+  final VoidCallback? onConvertToRich;
+  final VoidCallback? onConvertToCode;
 
   const _SimpleToolbar({
     required this.backgroundColor,
@@ -175,6 +193,9 @@ class _SimpleToolbar extends StatelessWidget {
     required this.onArchiveTap,
     required this.onDeleteTap,
     this.selectionBarActive,
+    this.onConvertToChecklist,
+    this.onConvertToRich,
+    this.onConvertToCode,
   });
 
   @override
@@ -218,6 +239,9 @@ class _SimpleToolbar extends StatelessWidget {
                       context: context,
                       hasContent: hasContent,
                       showReminder: true,
+                      showConvertToChecklist: onConvertToChecklist != null,
+                      showConvertToRich: onConvertToRich != null,
+                      showConvertToCode: onConvertToCode != null,
                     ).then((value) {
                       if (value == 'reminder') {
                         onReminderTap();
@@ -227,6 +251,12 @@ class _SimpleToolbar extends StatelessWidget {
                         onArchiveTap();
                       } else if (value == 'delete') {
                         onDeleteTap();
+                      } else if (value == 'convertToChecklist') {
+                        onConvertToChecklist?.call();
+                      } else if (value == 'convertToRich') {
+                        onConvertToRich?.call();
+                      } else if (value == 'convertToCode') {
+                        onConvertToCode?.call();
                       }
                     });
                   },

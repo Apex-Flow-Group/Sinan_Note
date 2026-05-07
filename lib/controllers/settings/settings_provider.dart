@@ -13,6 +13,7 @@ class SettingsProvider with ChangeNotifier {
   String _swipeRightAction = 'category';
   String _swipeLeftAction = 'share';
   bool _swipeEnabled = true;
+  bool _doubleTapToEdit = true;
   List<String> _swipeCustomActions = ['delete', 'archive', 'share'];
   String _viewType = 'listCompact';
   bool _heroAnimationEnabled = false;
@@ -45,6 +46,7 @@ class SettingsProvider with ChangeNotifier {
   String get swipeRightAction => _swipeRightAction;
   String get swipeLeftAction => _swipeLeftAction;
   bool get swipeEnabled => _swipeEnabled;
+  bool get doubleTapToEdit => _doubleTapToEdit;
   List<String> get swipeCustomActions => _swipeCustomActions;
   String get viewType => _viewType;
   bool get heroAnimationEnabled => _heroAnimationEnabled;
@@ -129,6 +131,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('swipeEnabled', enabled);
+  }
+
+  Future<void> setDoubleTapToEdit(bool enabled) async {
+    _doubleTapToEdit = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('doubleTapToEdit', enabled);
   }
 
   Future<void> setHeroAnimationEnabled(bool enabled) async {
@@ -230,6 +239,7 @@ class SettingsProvider with ChangeNotifier {
       _swipeRightAction = prefs.getString('swipeRight') ?? 'category';
       _swipeLeftAction = prefs.getString('swipeLeft') ?? 'share';
       _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
+      _doubleTapToEdit = prefs.getBool('doubleTapToEdit') ?? true;
       _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
           ['delete', 'archive', 'share'];
       _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;

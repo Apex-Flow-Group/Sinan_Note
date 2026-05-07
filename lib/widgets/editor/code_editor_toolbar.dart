@@ -15,6 +15,8 @@ class CodeEditorToolbar extends StatelessWidget {
   final VoidCallback? onBackgroundColorTap;
   final String? detectedLanguage;
   final Function(String)? onLanguageChanged;
+  final VoidCallback? onConvertToSimple;
+  final VoidCallback? onConvertToRich;
 
   const CodeEditorToolbar({
     super.key,
@@ -28,6 +30,8 @@ class CodeEditorToolbar extends StatelessWidget {
     this.onBackgroundColorTap,
     this.detectedLanguage,
     this.onLanguageChanged,
+    this.onConvertToSimple,
+    this.onConvertToRich,
   });
 
   @override
@@ -94,6 +98,11 @@ class CodeEditorToolbar extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
+                  if (onConvertToSimple != null || onConvertToRich != null)
+                    _buildIconBtn(
+                        Icons.swap_horiz_rounded,
+                        () => _showConvertMenu(context),
+                        Colors.teal),
                   if (onBackgroundColorTap != null)
                     _buildIconBtn(
                         Icons.color_lens, onBackgroundColorTap, Colors.purple),
@@ -200,6 +209,45 @@ class CodeEditorToolbar extends StatelessWidget {
       _buildSymbolBtn('//', () => onInsertSymbol('//')),
       _buildSymbolBtn('/*', () => onInsertSymbol('/**/')),
     ];
+  }
+
+  void _showConvertMenu(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (onConvertToSimple != null)
+              ListTile(
+                leading: const Icon(Icons.note_rounded, color: Colors.teal),
+                title: Text(l10n.simpleNotes),
+                onTap: () { Navigator.pop(ctx); onConvertToSimple!(); },
+              ),
+            if (onConvertToRich != null)
+              ListTile(
+                leading: const Icon(Icons.text_fields_rounded, color: Colors.teal),
+                title: Text(l10n.richText),
+                onTap: () { Navigator.pop(ctx); onConvertToRich!(); },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showLanguageSelector(BuildContext context) {

@@ -187,26 +187,21 @@ class VersionControlService {
     required String content,
     required bool isManualAction,
     bool isLocked = false,
+    String noteType = 'simple',
+    bool forceLog = false,
   }) async {
     // 🔒 SECURITY: Skip locked notes
-    if (isLocked) {
-      return;
-    }
+    if (isLocked) return;
 
     // Only save manual actions (user explicitly saved)
-    if (!isManualAction) {
-      return;
-    }
+    if (!isManualAction) return;
 
     // Check if different from last version
     final lastVersion = await _db.getLastNoteVersion(noteId);
-    if (lastVersion != null) {
+    if (lastVersion != null && !forceLog) {
       final currentHash = _generateHash(title + content);
       final lastHash = _generateHash(lastVersion.title + lastVersion.content);
-
-      if (currentHash == lastHash) {
-        return;
-      }
+      if (currentHash == lastHash) return;
     }
 
     // ✅ Save manual version
@@ -216,6 +211,7 @@ class VersionControlService {
       content: content,
       timestamp: DateTime.now(),
       action: 'manual_save',
+      noteType: noteType,
     );
 
     await _db.logNoteVersion(newVersion);

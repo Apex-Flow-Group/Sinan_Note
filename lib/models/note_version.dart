@@ -15,6 +15,7 @@ class NoteVersion {
   late String content;
   late DateTime timestamp;
   late String action; // 'created', 'updated', 'archived', 'restored'
+  String noteType = 'simple'; // نوع الملاحظة وقت التسجيل
 
   NoteVersion();
 
@@ -24,5 +25,6 @@ class NoteVersion {
     required this.content,
     required this.timestamp,
     this.action = 'update',
+    this.noteType = 'simple',
   });
 }

@@ -8,19 +8,17 @@ class SelectionActionBar extends StatelessWidget {
   final VoidCallback onArchive;
   final VoidCallback onDelete;
   final VoidCallback? onShare;
-  final VoidCallback? onConvert;
   final bool isDark;
   final bool allPinned;
 
   const SelectionActionBar({
     super.key,
-    required this.selectedIdsNotifier,  // 🔥 Changed parameter
+    required this.selectedIdsNotifier,
     required this.onClear,
     required this.onPin,
     required this.onArchive,
     required this.onDelete,
     required this.onShare,
-    this.onConvert,
     required this.isDark,
     this.allPinned = false,
   });
@@ -140,12 +138,6 @@ class SelectionActionBar extends StatelessWidget {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.swap_horiz_rounded),
-                onPressed: onConvert,
-                tooltip: 'Convert',
-                color: onConvert == null ? Colors.grey : null,
               ),
               IconButton(
                 icon: Icon(allPinned ? Icons.push_pin : Icons.push_pin_outlined),

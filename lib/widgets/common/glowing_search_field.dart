@@ -14,7 +14,6 @@ class GlowingSearchField extends StatefulWidget {
   final VoidCallback? onViewToggle;
   final VoidCallback? onFilterTap;
   final ValueNotifier<String> viewTypeNotifier;
-  final ValueNotifier<double>? scrollFadeNotifier;
 
   const GlowingSearchField({
     super.key,
@@ -25,7 +24,6 @@ class GlowingSearchField extends StatefulWidget {
     this.onViewToggle,
     this.onFilterTap,
     required this.viewTypeNotifier,
-    this.scrollFadeNotifier,
   });
 
   @override
@@ -71,9 +69,8 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
   Widget build(BuildContext context) {
     // كل شيء داخل AnimatedBuilder لضمان قراءة الثيم الصحيح في كل frame
     return AnimatedBuilder(
-      animation: Listenable.merge([_waveController, if (widget.scrollFadeNotifier != null) widget.scrollFadeNotifier!]),
+      animation: _waveController,
       builder: (context, _) {
-        final iconOpacity = widget.scrollFadeNotifier?.value ?? 1.0;
         final cs = Theme.of(context).colorScheme;
         final barColor = AppTheme.scaffoldBackground(cs);
         final contentColor = cs.onSurface;
@@ -115,11 +112,8 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Opacity(
-                      opacity: iconOpacity,
-                      child: Icon(Icons.search,
-                          color: contentColor.withValues(alpha: 0.6), size: 20),
-                    ),
+                    Icon(Icons.search,
+                        color: contentColor.withValues(alpha: 0.6), size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
@@ -140,9 +134,7 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                       ),
                     ),
                     if (widget.onViewToggle != null || widget.onFilterTap != null)
-                      Opacity(
-                        opacity: iconOpacity,
-                        child: ClipRect(
+                      ClipRect(
                           child: AnimatedSize(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOutCubic,
@@ -185,7 +177,6 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                             ),
                           ),
                         ),
-                      ),
                   ],
                 ),
               ),

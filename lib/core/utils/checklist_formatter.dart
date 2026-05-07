@@ -104,6 +104,31 @@ class ChecklistFormatter {
     }
   }
 
+  /// Convert checklist JSON to plain text (each item = one line)
+  static String toPlainText(String jsonContent) {
+    final items = parseJson(jsonContent);
+    if (items.isEmpty) return '';
+    return items
+        .where((item) => item.text.isNotEmpty)
+        .map((item) => item.text)
+        .join('\n');
+  }
+
+  /// Convert plain text to checklist JSON (each \n = one item)
+  static String fromPlainText(String plainText, {String title = ''}) {
+    final lines = plainText.split('\n');
+    final items = lines
+        .where((line) => line.trim().isNotEmpty)
+        .map((line) => {
+              'id': DateTime.now().microsecondsSinceEpoch.toString() +
+                  line.hashCode.toString(),
+              'text': line.trim(),
+              'isDone': false,
+            })
+        .toList();
+    return jsonEncode({'title': title, 'items': items});
+  }
+
   /// Format checklist for sharing (Unicode format)
   static String formatForSharing(String title, String jsonContent) {
     try {

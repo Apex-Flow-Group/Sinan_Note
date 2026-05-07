@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
@@ -11,6 +12,7 @@ import 'package:apex_note/screens/other/version_history/panels/notes_panel.dart'
 import 'package:apex_note/screens/other/version_history/panels/versions_panel.dart';
 import 'package:apex_note/screens/other/version_history/version_history_controller.dart';
 import 'package:apex_note/screens/other/version_history/widgets/resizable_divider.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
@@ -90,10 +92,16 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       ),
     );
     if (!mounted || confirmed != true) return;
-    await _ctrl.restoreVersion(version, note);
+    await _ctrl.restoreVersion(
+      version,
+      note,
+      Provider.of<NotesProvider>(context, listen: false),
+    );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.noteRestored), backgroundColor: Colors.green),
+    UnifiedNotificationService().show(
+      context: context,
+      message: l10n.noteRestored,
+      type: NotificationType.success,
     );
   }
 

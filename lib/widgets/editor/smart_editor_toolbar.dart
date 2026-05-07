@@ -51,6 +51,11 @@ class SmartEditorToolbar extends StatefulWidget {
   final VoidCallback onColorTap;
   final VoidCallback? onBackgroundColorTap;
 
+  // Convert Callbacks (rich → simple + code + checklist)
+  final VoidCallback? onConvertToSimple;
+  final VoidCallback? onConvertToCode;
+  final VoidCallback? onConvertToChecklist;
+
   const SmartEditorToolbar({
     super.key,
     required this.backgroundColor,
@@ -89,6 +94,9 @@ class SmartEditorToolbar extends StatefulWidget {
     this.isOrderedListActive = false,
     this.isBlockquoteActive = false,
     this.isChecklistActive = false,
+    this.onConvertToSimple,
+    this.onConvertToCode,
+    this.onConvertToChecklist,
   });
 
   @override
@@ -205,6 +213,9 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
       context: context,
       hasContent: widget.hasContent,
       showReminder: true,
+      showConvertToSimple: widget.onConvertToSimple != null,
+      showConvertToCode: widget.onConvertToCode != null,
+      showConvertToChecklist: widget.onConvertToChecklist != null,
     ).then((value) {
       if (value == 'reminder') {
         widget.onReminderTap();
@@ -214,6 +225,12 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
         widget.onArchiveTap();
       } else if (value == 'delete') {
         widget.onDeleteTap();
+      } else if (value == 'convertToSimple') {
+        widget.onConvertToSimple?.call();
+      } else if (value == 'convertToCode') {
+        widget.onConvertToCode?.call();
+      } else if (value == 'convertToChecklist') {
+        widget.onConvertToChecklist?.call();
       }
     });
   }

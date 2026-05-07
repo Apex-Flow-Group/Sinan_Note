@@ -36,26 +36,32 @@ class VersionHistoryService {
 
   Future<void> restoreVersion(int noteId, NoteVersion version) async {
     final isar = await _dbService.database;
-    
+
+    final note = await isar.notes.get(noteId);
+    if (note == null) return;
+
+    await _versionControl.smartLogVersion(
+      noteId: noteId,
+      title: note.title,
+      content: note.content,
+      isManualAction: true,
+      noteType: note.noteType,
+      forceLog: true,
+    );
+
+    final restoredNoteType = version.noteType.isNotEmpty
+        ? version.noteType
+        : note.noteType;
+    final restored = note.copyWith(
+      title: version.title,
+      content: version.content,
+      noteType: restoredNoteType,
+      isChecklist: restoredNoteType == 'checklist',
+      updatedAt: DateTime.now(),
+    );
+
     await isar.writeTxn(() async {
-      final note = await isar.notes.get(noteId);
-      if (note != null) {
-        // Save current state before restore
-        await _versionControl.smartLogVersion(
-          noteId: noteId,
-          title: note.title,
-          content: note.content,
-          isManualAction: true,
-        );
-        
-        // Restore version
-        final restored = note.copyWith(
-          title: version.title,
-          content: version.content,
-          updatedAt: DateTime.now(),
-        );
-        await isar.notes.put(restored);
-      }
+      await isar.notes.put(restored);
     });
   }
 

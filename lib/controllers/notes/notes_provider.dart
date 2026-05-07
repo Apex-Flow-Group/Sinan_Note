@@ -9,6 +9,7 @@ import 'package:apex_note/services/note_services/note_side_effect_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/version_control_service.dart';
 import 'package:flutter/widgets.dart';
 
 class NotesProvider extends ChangeNotifier {
@@ -185,6 +186,39 @@ class NotesProvider extends ChangeNotifier {
     } else {
       return await addNote(note);
     }
+  }
+
+  Future<void> convertNoteType(
+    int id, {
+    required String newContent,
+    required String newNoteType,
+    required bool isChecklist,
+  }) async {
+    final note = await _dbService.getNoteById(id);
+    if (note == null) return;
+
+    // حفظ نسخة من الحالة الحالية قبل التحويل
+    await VersionControlService().smartLogVersion(
+      noteId: id,
+      title: note.title,
+      content: note.content,
+      isManualAction: true,
+      noteType: note.noteType,
+      forceLog: true,
+    );
+
+    final updated = note.copyWith(
+      content: newContent,
+      noteType: newNoteType,
+      isChecklist: isChecklist,
+      isProfessional: newNoteType == 'code' || newNoteType == 'pro',
+      updatedAt: DateTime.now(),
+    );
+    await _dbService.updateNote(updated);
+    _stateService.updateNote(updated);
+    _refreshStamp++;
+    notifyListeners();
+    await refreshAllNotes();
   }
 
   Future<int> duplicateNote(int id) async {

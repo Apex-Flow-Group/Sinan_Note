@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/version_history_service.dart';
@@ -62,8 +63,10 @@ class VersionHistoryController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> restoreVersion(NoteVersion version, Note note) async {
+  Future<void> restoreVersion(NoteVersion version, Note note, NotesProvider notesProvider) async {
     await _service.restoreVersion(note.id!, version);
+    // أخبر NotesProvider بالتغيير حتى تتحدث الشاشة الرئيسية
+    await notesProvider.refreshAllNotes();
     await loadNotes();
   }
 

@@ -42,6 +42,7 @@ class EditorToolbarBuilder {
     ValueNotifier<double>? scrollProgress,
   }) {
     final l10n = AppLocalizations.of(context)!;
+
     final base = coordinator.getBackgroundColor(context);
     final isDark = base.computeLuminance() < 0.5;
     final scrolled = Color.alphaBlend(

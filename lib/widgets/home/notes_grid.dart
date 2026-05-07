@@ -8,6 +8,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/widgets/effects/premium_card_effect.dart';
+import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
@@ -101,10 +102,11 @@ class _NotesGridState extends State<NotesGrid> {
 
         return GestureDetector(
           onTap: () async {
+            final mode = NoteCardUtils.getNoteMode(note);
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => NoteEditorImmersive(note: note),
+                builder: (context) => NoteEditorImmersive(note: note, mode: mode),
               ),
             );
             if (mounted) {

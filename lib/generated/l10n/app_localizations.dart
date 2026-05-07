@@ -1850,6 +1850,24 @@ abstract class AppLocalizations {
   /// **'Hero Animation'**
   String get heroAnimation;
 
+  /// No description provided for @editorSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Editor Settings'**
+  String get editorSettings;
+
+  /// No description provided for @doubleTapToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Double Tap to Edit'**
+  String get doubleTapToEdit;
+
+  /// No description provided for @doubleTapToEditDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Double tap on note to open editor'**
+  String get doubleTapToEditDesc;
+
   /// No description provided for @appLock.
   ///
   /// In en, this message translates to:
@@ -2930,6 +2948,12 @@ abstract class AppLocalizations {
   /// **'Widget pinned:'**
   String get widgetPinned;
 
+  /// No description provided for @pinToWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to Widget'**
+  String get pinToWidget;
+
   /// No description provided for @note.
   ///
   /// In en, this message translates to:
@@ -3547,6 +3571,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rich Text'**
   String get richText;
+
+  /// No description provided for @convertToChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to Checklist'**
+  String get convertToChecklist;
+
+  /// No description provided for @convertToPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to Plain Text'**
+  String get convertToPlain;
+
+  /// No description provided for @convertConfirmChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Each line will become a checklist item. Continue?'**
+  String get convertConfirmChecklist;
+
+  /// No description provided for @convertConfirmPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist will become plain text. Continue?'**
+  String get convertConfirmPlain;
 
   /// No description provided for @noteConverted.
   ///
