@@ -12,7 +12,6 @@ import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 class ChecklistEditor extends StatefulWidget {
   final String initialContent;
   final String? initialTitle; // ← العنوان الأصلي للنوتة كـ fallback
@@ -48,6 +47,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   final List<String> _history = [];
   int _historyIndex = -1;
   bool _isUndoRedoAction = false;
+  bool _lastCanUndo = false;
+  bool _lastCanRedo = false;
 
   TextDirection _titleDirection = TextDirection.rtl;
 
@@ -328,11 +329,18 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
     widget.onChanged(jsonData);
 
-    // 🔧 FIX: Defer state updates to avoid build-phase conflicts
+    // 🔧 FIX: أطلق onUndoRedoChanged فقط إذا تغيرت الحالة فعلاً
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _updateUndoRedoController();
-        widget.onUndoRedoChanged?.call();
+        // لا نُطلق onUndoRedoChanged إلا إذا تغيرت حالة undo/redo
+        final newCanUndo = canUndo;
+        final newCanRedo = canRedo;
+        if (newCanUndo != _lastCanUndo || newCanRedo != _lastCanRedo) {
+          _lastCanUndo = newCanUndo;
+          _lastCanRedo = newCanRedo;
+          widget.onUndoRedoChanged?.call();
+        }
       }
     });
   }
@@ -409,6 +417,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     return done / _items.length;
   }
 
+  double _lastProgress = 0.0;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -417,98 +427,117 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      physics: const ClampingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _titleController,
-                    textDirection: _titleDirection,
-                    textAlign: _titleDirection == TextDirection.rtl
-                        ? TextAlign.right
-                        : TextAlign.left,
-                    textAlignVertical: TextAlignVertical.center,
-                    style: TextStyle(
-                      fontSize: AppFontSize.noteTitle,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
+          child: RepaintBoundary(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _titleController,
+                      textDirection: _titleDirection,
+                      textAlign: _titleDirection == TextDirection.rtl
+                          ? TextAlign.right
+                          : TextAlign.left,
+                      textAlignVertical: TextAlignVertical.center,
+                      style: TextStyle(
+                        fontSize: AppFontSize.noteTitle,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l10n.checklistTitle,
+                        hintStyle:
+                            TextStyle(color: textColor.withValues(alpha: 0.4)),
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                      maxLines: null,
                     ),
-                    decoration: InputDecoration(
-                      hintText: l10n.checklistTitle,
-                      hintStyle:
-                          TextStyle(color: textColor.withValues(alpha: 0.4)),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                    maxLines: null,
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.swap_vert_rounded,
-                      color: textColor.withValues(alpha: 0.6)),
-                  tooltip: l10n.sort,
-                  onPressed: () => _showSortSheet(context),
-                ),
-              ],
+                  IconButton(
+                    icon: Icon(Icons.swap_vert_rounded,
+                        color: textColor.withValues(alpha: 0.6)),
+                    tooltip: l10n.sort,
+                    onPressed: () => _showSortSheet(context),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
         if (_items.isNotEmpty)
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${(_progress * 100).toInt()}%',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: textColor.withValues(alpha: 0.7),
+            child: RepaintBoundary(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${(_progress * 100).toInt()}%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textColor.withValues(alpha: 0.7),
+                          ),
                         ),
-                      ),
-                      Text(
-                        '${_items.where((e) => e.isDone).length} / ${_items.length}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: textColor.withValues(alpha: 0.7),
+                        Text(
+                          '${_items.where((e) => e.isDone).length} / ${_items.length}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textColor.withValues(alpha: 0.7),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: _progress,
-                      backgroundColor: textColor.withValues(alpha: 0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _progress == 1.0 ? Colors.green : Colors.blue,
-                      ),
-                      minHeight: 6,
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: _lastProgress, end: _progress),
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, value, __) {
+                          _lastProgress = value;
+                          return LinearProgressIndicator(
+                            value: value,
+                            backgroundColor: textColor.withValues(alpha: 0.1),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              value >= 1.0 ? Colors.green : Colors.blue,
+                            ),
+                            minHeight: 6,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         SliverReorderableList(
           itemBuilder: (context, index) {
             final item = _items[index];
+            final row = _buildItemRow(item, index, textColor);
             return widget.readOnly
                 ? KeyedSubtree(
                     key: ValueKey(item.id),
-                    child: _buildItemRow(item, index, textColor),
+                    child: row,
                   )
-                : _buildItemRow(item, index, textColor);
+                : RepaintBoundary(
+                    key: ValueKey(item.id),
+                    child: row,
+                  );
           },
           itemCount: _items.length,
           onReorder: widget.readOnly

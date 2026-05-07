@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/note_content_utils.dart';
@@ -270,12 +271,20 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               padding: const EdgeInsets.symmetric(vertical: 20),
               showCursor: false,
               enableInteractiveSelection: false,
+              checkBoxReadOnly: true,
+              // ignore: experimental_member_use
+              customLeadingBlockBuilder: (node, config) =>
+                  _buildCheckboxLeading(config, textColor),
               customStyles: DefaultStyles(
                 paragraph: DefaultTextBlockStyle(
                   TextStyle(
                       fontSize: 16,
                       fontFamily: fontFamily,
-                      height: 1.6,
+                      height: AppLineHeight.body(
+                        Provider.of<SettingsProvider>(context, listen: false)
+                            .textScaleFactor,
+                        fontFamily,
+                      ),
                       color: textColor),
                   HorizontalSpacing.zero,
                   VerticalSpacing.zero,
@@ -286,6 +295,37 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Checkbox بألوان النوتة — نفس شكل المحرر
+  Widget? _buildCheckboxLeading(LeadingConfig config, Color textColor) {
+    final isCheck = config.attribute == Attribute.checked ||
+        config.attribute == Attribute.unchecked;
+    if (!isCheck) return null;
+
+    final isChecked = config.value;
+    final size = config.lineSize ?? 16.0;
+
+    return Container(
+      alignment: AlignmentDirectional.centerEnd,
+      padding: EdgeInsetsDirectional.only(end: size / 2),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: isChecked ? Colors.green : Colors.transparent,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isChecked ? Colors.green : textColor.withValues(alpha: 0.5),
+            width: 1.5,
+          ),
+        ),
+        child: isChecked
+            ? Icon(Icons.check, size: size * 0.75, color: Colors.white)
+            : null,
       ),
     );
   }
@@ -308,12 +348,17 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
 
     final isChecklist = widget.mode == NoteMode.checklist;
     final isMarkdown = _showMarkdown;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
     final noteCard = Container(
       width: double.infinity,
       height: isMarkdown ? null : double.infinity,
-      margin: const EdgeInsets.only(top: 8, bottom: 16),
+      margin: isLandscape
+          ? const EdgeInsets.only(top: 4, bottom: 4)
+          : const EdgeInsets.only(top: 8, bottom: 16),
       padding: isChecklist
-          ? const EdgeInsets.fromLTRB(12, 20, 12, 12)
+          ? EdgeInsets.fromLTRB(12, isLandscape ? 8 : 16, 12, 8)
           : const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: noteColor,

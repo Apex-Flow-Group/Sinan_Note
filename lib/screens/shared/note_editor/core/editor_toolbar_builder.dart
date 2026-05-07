@@ -79,9 +79,40 @@ class EditorToolbarBuilder {
                   undoController: coordinator.undoController,
                   detectedLanguage: coordinator.detectedLanguage,
                   selectionBarActive: selectionBarActive,
-                  hasReminder: coordinator.stateManager.reminderDateTime != null,
+                  hasReminder:
+                      coordinator.stateManager.reminderDateTime != null,
                   hasContent: coordinator.stateManager.hasContent,
                   showChecklist: note?.isLocked != true,
+                  isBoldActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['bold']
+                          ?.value ==
+                      true,
+                  isItalicActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['italic']
+                          ?.value ==
+                      true,
+                  isH1Active: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['header']
+                          ?.value ==
+                      1,
+                  isH2Active: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['header']
+                          ?.value ==
+                      2,
+                  isListActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['list']
+                          ?.value ==
+                      'bullet',
+                  isChecklistActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['list']
+                          ?.value ==
+                      'unchecked',
                   onUndo: coordinator.stateManager.canUndo
                       ? () {
                           HapticFeedback.lightImpact();
@@ -109,8 +140,7 @@ class EditorToolbarBuilder {
                   onLanguageChanged: (newLang) async {
                     coordinator.detectedLanguage =
                         newLang == 'Auto' ? null : newLang;
-                    coordinator.isLanguageManuallySelected =
-                        newLang != 'Auto';
+                    coordinator.isLanguageManuallySelected = newLang != 'Auto';
                     coordinator.stateManager.markDirty();
                     onRebuild?.call();
                   },
@@ -176,8 +206,7 @@ class EditorToolbarBuilder {
                   onPaste: selectionBarActive != null
                       ? () {
                           HapticFeedback.lightImpact();
-                          selectionBarActive.value =
-                              !selectionBarActive.value;
+                          selectionBarActive.value = !selectionBarActive.value;
                         }
                       : () async {
                           HapticFeedback.lightImpact();

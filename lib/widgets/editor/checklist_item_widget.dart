@@ -45,8 +45,12 @@ class ChecklistItemWidget extends StatefulWidget {
   State<ChecklistItemWidget> createState() => _ChecklistItemWidgetState();
 }
 
-class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
+class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
+    with AutomaticKeepAliveClientMixin {
   late TextDirection _textDirection;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -70,6 +74,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // مطلوب لـ AutomaticKeepAliveClientMixin
     final l10n = AppLocalizations.of(context)!;
     final isDone = widget.item.isDone;
 
@@ -120,7 +125,9 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
                 color: isDone ? Colors.green : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isDone ? Colors.green : widget.textColor.withValues(alpha: 0.5),
+                  color: isDone
+                      ? Colors.green
+                      : widget.textColor.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -141,13 +148,13 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
               maxLines: null,
               readOnly: widget.readOnly,
               textInputAction: TextInputAction.newline,
-              onSubmitted: widget.readOnly ? null : (_) => widget.onSubmitted?.call(),
+              onSubmitted:
+                  widget.readOnly ? null : (_) => widget.onSubmitted?.call(),
               onChanged: widget.readOnly ? null : widget.onTextChanged,
               style: TextStyle(
                 fontSize: 16,
-                decoration: isDone
-                    ? TextDecoration.lineThrough
-                    : TextDecoration.none,
+                decoration:
+                    isDone ? TextDecoration.lineThrough : TextDecoration.none,
                 color: isDone
                     ? widget.textColor.withValues(alpha: 0.5)
                     : widget.textColor,
@@ -155,7 +162,8 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> {
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: widget.readOnly ? null : l10n.checklistItemHint,
-                hintStyle: TextStyle(color: widget.textColor.withValues(alpha: 0.4)),
+                hintStyle:
+                    TextStyle(color: widget.textColor.withValues(alpha: 0.4)),
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(
                   vertical: widget.readOnly ? 4 : 12,

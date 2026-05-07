@@ -31,6 +31,14 @@ class SmartEditorToolbar extends StatefulWidget {
   final VoidCallback onChecklist;
   final bool showChecklist;
 
+  // Format Active States
+  final bool isBoldActive;
+  final bool isItalicActive;
+  final bool isH1Active;
+  final bool isH2Active;
+  final bool isListActive;
+  final bool isChecklistActive;
+
   // Style Callbacks
   final VoidCallback onColorTap;
   final VoidCallback? onBackgroundColorTap;
@@ -59,6 +67,12 @@ class SmartEditorToolbar extends StatefulWidget {
     this.mode = ToolbarMode.main,
     this.hasReminder = false,
     this.hasContent = false,
+    this.isBoldActive = false,
+    this.isItalicActive = false,
+    this.isH1Active = false,
+    this.isH2Active = false,
+    this.isListActive = false,
+    this.isChecklistActive = false,
   });
 
   @override
@@ -193,19 +207,28 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
       key: const ValueKey('format'),
       children: [
         _buildCloseBtn(),
-        Container(height: 24, width: 1, color: widget.textColor.withValues(alpha: 0.2)),
+        Container(
+            height: 24,
+            width: 1,
+            color: widget.textColor.withValues(alpha: 0.2)),
         Flexible(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildIconBtn(Icons.format_bold_rounded, widget.onBold),
-                _buildIconBtn(Icons.format_italic_rounded, widget.onItalic),
-                _buildIconBtn(Icons.title_rounded, widget.onH1),
-                _buildIconBtn(Icons.format_size_rounded, widget.onH2),
-                _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList),
+                _buildIconBtn(Icons.format_bold_rounded, widget.onBold,
+                    isActive: widget.isBoldActive),
+                _buildIconBtn(Icons.format_italic_rounded, widget.onItalic,
+                    isActive: widget.isItalicActive),
+                _buildIconBtn(Icons.title_rounded, widget.onH1,
+                    isActive: widget.isH1Active),
+                _buildIconBtn(Icons.format_size_rounded, widget.onH2,
+                    isActive: widget.isH2Active),
+                _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList,
+                    isActive: widget.isListActive),
                 if (widget.showChecklist)
-                  _buildIconBtn(Icons.checklist_rounded, widget.onChecklist),
+                  _buildIconBtn(Icons.checklist_rounded, widget.onChecklist,
+                      isActive: widget.isChecklistActive),
               ],
             ),
           ),
@@ -219,7 +242,10 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
       key: const ValueKey('style'),
       children: [
         _buildCloseBtn(),
-        Container(height: 24, width: 1, color: widget.textColor.withValues(alpha: 0.2)),
+        Container(
+            height: 24,
+            width: 1,
+            color: widget.textColor.withValues(alpha: 0.2)),
         Flexible(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -227,7 +253,8 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
               children: [
                 if (widget.onBackgroundColorTap != null)
                   _buildIconBtn(Icons.color_lens, widget.onBackgroundColorTap),
-                _buildIconBtn(Icons.format_color_text_rounded, widget.onColorTap),
+                _buildIconBtn(
+                    Icons.format_color_text_rounded, widget.onColorTap),
               ],
             ),
           ),
@@ -244,11 +271,27 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
   }
 
   Widget _buildIconBtn(IconData icon, VoidCallback? onTap,
-      {Color? color, bool isEnabled = true}) {
+      {Color? color, bool isEnabled = true, bool isActive = false}) {
     final effectiveColor =
         onTap == null ? Colors.grey : (color ?? widget.textColor);
+    final activeColor = widget.textColor;
+
     return IconButton(
-      icon: Icon(icon, color: effectiveColor, size: 22),
+      icon: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        width: 32,
+        height: 32,
+        decoration: isActive
+            ? BoxDecoration(
+                color: activeColor.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(10),
+              )
+            : const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+        child: Icon(icon, color: effectiveColor, size: 22),
+      ),
       onPressed: onTap,
       splashRadius: 24,
       padding: const EdgeInsets.all(8),

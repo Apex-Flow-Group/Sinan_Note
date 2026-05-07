@@ -5,6 +5,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/widgets/editor/apex_magnifier.dart';
 import 'package:apex_note/widgets/editor/quill_editor_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
 class QuillEditorWidget extends StatefulWidget {
@@ -92,6 +93,127 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     super.dispose();
   }
 
+  /// يعترض الـ tap — يُنفذ toggle فقط إذا كان الضغط في منطقة الـ checkbox
+  bool _onTapUp(
+      TapUpDetails details, TextPosition Function(Offset) getPosition) {
+    if (widget.readOnly) return false;
+
+    final pos = getPosition(details.globalPosition);
+    final doc = widget.quillController.document;
+    final result = doc.querySegmentLeafNode(pos.offset);
+    final line = result.line;
+    if (line == null) return false;
+
+    final listAttr = line.style.attributes[Attribute.list.key];
+    if (listAttr == null) return false;
+    final isCheck =
+        listAttr.value == 'checked' || listAttr.value == 'unchecked';
+    if (!isCheck) return false;
+
+    // الـ tap على الـ checkbox يُرجع offset = lineStart (قبل أي حرف في السطر)
+    // أي tap داخل النص يُرجع offset > lineStart
+    final lineStart = line.documentOffset;
+    final tapOffset = pos.offset;
+
+    // إذا كان الـ tap داخل النص → اتركه للـ cursor
+    if (tapOffset > lineStart) return false;
+
+    final isChecked = listAttr.value == 'checked';
+    HapticFeedback.lightImpact();
+
+    widget.quillController
+      ..ignoreFocusOnTextChange = true
+      ..skipRequestKeyboard = true
+      ..formatText(
+        line.documentOffset,
+        0,
+        isChecked ? Attribute.unchecked : Attribute.checked,
+      )
+      ..toolbarButtonToggler = {
+        Attribute.list.key: isChecked ? Attribute.unchecked : Attribute.checked,
+        Attribute.header.key: Attribute.header,
+      };
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.quillController
+        ..ignoreFocusOnTextChange = false
+        ..skipRequestKeyboard = false;
+    });
+
+    return true;
+  }
+
+  /// إصلاح bug Flutter RTL: الـ cursor يقف عند n-1 بدل n
+  /// عند الضغط على نهاية السطر في RTL
+  bool _onTapDown(
+      TapDownDetails details, TextPosition Function(Offset) getPosition) {
+    // نؤجل الإصلاح لما بعد الـ tap حتى يتم تعيين الـ selection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fixRtlCursorPosition();
+    });
+    return false; // لا نمنع الـ tap — نتركه يمر
+  }
+
+  void _fixRtlCursorPosition() {
+    final sel = widget.quillController.selection;
+    if (!sel.isCollapsed) return;
+
+    final plainText = widget.quillController.document.toPlainText();
+    final offset = sel.baseOffset;
+    if (offset <= 0 || offset >= plainText.length) return;
+
+    // نجد نهاية السطر الحالي
+    final lineEnd = plainText.indexOf('\n', offset);
+    if (lineEnd == -1) return;
+
+    // إذا كان الـ cursor عند lineEnd - 1 (آخر حرف قبل newline)
+    // وكان الحرف الأخير حرف عربي — ننقله لـ lineEnd
+    if (offset == lineEnd - 1) {
+      final lastChar = plainText[offset];
+      final isRtlChar =
+          RegExp(r'[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]')
+              .hasMatch(lastChar);
+      if (isRtlChar) {
+        widget.quillController.updateSelection(
+          TextSelection.collapsed(offset: lineEnd),
+          ChangeSource.local,
+        );
+      }
+    }
+  }
+
+  /// Checkbox بألوان النوتة
+  Widget? _buildCheckboxLeading(Node node, LeadingConfig config) {
+    final isCheck = config.attribute == Attribute.checked ||
+        config.attribute == Attribute.unchecked;
+    if (!isCheck) return null;
+
+    final isChecked = config.value;
+    final textColor = widget.textColor;
+    final size = config.lineSize ?? 16.0;
+
+    return Container(
+      alignment: AlignmentDirectional.centerEnd,
+      padding: EdgeInsetsDirectional.only(end: size / 2),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: isChecked ? Colors.green : Colors.transparent,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isChecked ? Colors.green : textColor.withValues(alpha: 0.5),
+            width: 1.5,
+          ),
+        ),
+        child: isChecked
+            ? Icon(Icons.check, size: size * 0.75, color: Colors.white)
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -154,7 +276,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                             style: TextStyle(
                               fontFamily: _cachedFontFamily,
                               fontSize: AppFontSize.noteBody,
-                              height: 1.6,
+                              height: AppLineHeight.body(
+                                widget.fontSize / AppFontSize.noteBody,
+                                _cachedFontFamily,
+                              ),
                               color: widget.hintColor,
                             ),
                           ),
@@ -175,6 +300,12 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       scrollable: true,
                       padding: EdgeInsets.zero,
                       placeholder: '',
+                      checkBoxReadOnly: widget.readOnly,
+                      requestKeyboardFocusOnCheckListChanged: false,
+                      // ignore: experimental_member_use
+                      customLeadingBlockBuilder: _buildCheckboxLeading,
+                      onTapUp: _onTapUp,
+                      onTapDown: _onTapDown,
                       showCursor: !widget.readOnly,
                       enableInteractiveSelection: !widget.readOnly,
                       paintCursorAboveText: true,
@@ -195,7 +326,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           TextStyle(
                             fontSize: AppFontSize.noteBody,
                             fontFamily: _cachedFontFamily,
-                            height: 1.6,
+                            height: AppLineHeight.body(
+                              widget.fontSize / AppFontSize.noteBody,
+                              _cachedFontFamily,
+                            ),
                             color: widget.textColor,
                             fontFeatures: const [
                               FontFeature.disable('liga'),

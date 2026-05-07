@@ -10,8 +10,8 @@ class SettingsProvider with ChangeNotifier {
   double _textScaleFactor = 1.0;
   String _languageCode = 'system';
   String _fontFamily = 'system'; // 'system' | 'Cairo' | 'Tajawal'
-  String _swipeRightAction = 'delete';
-  String _swipeLeftAction = 'archive';
+  String _swipeRightAction = 'category';
+  String _swipeLeftAction = 'share';
   bool _swipeEnabled = true;
   List<String> _swipeCustomActions = ['delete', 'archive', 'share'];
   String _viewType = 'listCompact';
@@ -40,7 +40,8 @@ class SettingsProvider with ChangeNotifier {
   double get textScaleFactor => _textScaleFactor;
   String get languageCode => _languageCode;
   String get fontFamily => _fontFamily;
-  String? get resolvedFontFamily => _fontFamily == 'system' ? null : _fontFamily;
+  String? get resolvedFontFamily =>
+      _fontFamily == 'system' ? null : _fontFamily;
   String get swipeRightAction => _swipeRightAction;
   String get swipeLeftAction => _swipeLeftAction;
   bool get swipeEnabled => _swipeEnabled;
@@ -226,10 +227,11 @@ class SettingsProvider with ChangeNotifier {
       _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
       _fontFamily = prefs.getString('fontFamily') ?? 'system';
       _languageCode = prefs.getString('language') ?? 'system';
-      _swipeRightAction = prefs.getString('swipeRight') ?? 'delete';
-      _swipeLeftAction = prefs.getString('swipeLeft') ?? 'archive';
+      _swipeRightAction = prefs.getString('swipeRight') ?? 'category';
+      _swipeLeftAction = prefs.getString('swipeLeft') ?? 'share';
       _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
-      _swipeCustomActions = prefs.getStringList('swipeCustomActions') ?? ['delete', 'archive', 'share'];
+      _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
+          ['delete', 'archive', 'share'];
       _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');

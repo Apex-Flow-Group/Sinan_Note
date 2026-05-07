@@ -2,6 +2,36 @@
 
 ---
 
+## [3.0.5] - 2026-05 — تحسينات الأداء والتفاعل 🎯
+
+> تحسينات جذرية في أداء الـ Checklist وتفاعل الـ Rich Note مع دعم ديناميكي لارتفاع الأسطر.
+
+### ✨ ميزات جديدة
+- **Checkbox تفاعلي في Rich Note** — الضغط على الـ checkbox يُبدّل حالته مباشرة في وضع التعديل
+- **Checkbox مخصص بألوان النوتة** — شكل موحد في المحرر والعارض (أخضر عند الاكتمال)
+- **ارتفاع سطر ديناميكي** — يتكيف تلقائياً مع حجم الخط ونوعه (Cairo/Tajawal أكبر)
+- **فلتر وبحث في Import Sheet** — الخزنة تدعم الفلتر بالنوع والبحث عند استيراد النوتات
+- **شريط فلتر في الخزنة** — فلتر بأنواع النوتات مع FilterChips
+- **FAB لإضافة نوت في الخزنة** — bottom sheet نظيف بدل AddMenuWidget
+- **تأثير active على أزرار التنسيق** — خلفية دائرية بلون النوت عند تفعيل Bold/Italic/H1/H2/List/Checklist
+
+### 🔧 تحسينات
+- **أداء Checklist** — `RepaintBoundary` + `AutomaticKeepAliveClientMixin` + تقليل rebuilds
+- **Progress bar سلس** — `TweenAnimationBuilder` مع حفظ القيمة السابقة
+- **تقليل rebuilds** — `onUndoRedoChanged` يُطلق فقط عند تغيير فعلي
+- **`onChecklistTitleChanged` بدون setState** — يمنع إعادة بناء ChecklistEditor
+- **`RepaintBoundary` حول content area** — يعزل الـ editor عن scroll progress rebuilds
+- **Landscape padding** — حواف أصغر في وضع العرض الأفقي للـ checklist
+- **إصلاح RTL cursor** — workaround لـ Flutter bug #107006 (cursor عند n-1)
+- **Swipe defaults** — يمين = كاتالوج، يسار = مشاركة
+
+### 🐛 إصلاحات
+- إصلاح الـ checkbox الأسود في Rich Note (كان يستخدم theme colors)
+- إصلاح التقاط الـ tap بالكامل على سطر checklist (الآن فقط منطقة الـ checkbox)
+- إصلاح `ClampingScrollPhysics` + `keyboardDismissBehavior` في Checklist
+
+---
+
 ## [3.0.4] - 2026-05 — آخر تحديث قبل الإطلاق النهائي 🚀
 
 > أكثر نسخة مستقرة في مرحلة الوصول المبكر — النسخة النهائية في الطريق.

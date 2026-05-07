@@ -94,6 +94,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             _onQuillContentChanged();
             _updateUndoRedoState();
           });
+          // تحديث الـ toolbar عند تغيير الـ selection (لإظهار حالة Bold/Italic/إلخ)
+          _coordinator.quillController!.addListener(_onQuillSelectionChanged);
           // طھط­ط¯ظٹط« طµط§ظ…طھ â€” ط¨ط¯ظˆظ† loading indicator
           setState(() {});
         }
@@ -126,6 +128,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         _onQuillContentChanged();
         _updateUndoRedoState();
       });
+      // تحديث الـ toolbar عند تغيير الـ selection (لإظهار حالة Bold/Italic/إلخ)
+      _coordinator.quillController!.addListener(_onQuillSelectionChanged);
     }
 
     _updateUndoRedoState();
@@ -154,6 +158,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   @override
   void dispose() {
     _quillChangesSubscription?.cancel();
+    _coordinator.quillController?.removeListener(_onQuillSelectionChanged);
     _selectionBarActive.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _coordinator.dispose();
@@ -327,6 +332,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     });
   }
 
+  /// يُعاد استدعاؤه عند تغيير الـ cursor/selection في Quill
+  /// لتحديث حالة أزرار التنسيق (Bold/Italic/H1/إلخ) في الـ toolbar
+  void _onQuillSelectionChanged() {
+    if (mounted) setState(() {});
+  }
+
   void _updateUndoRedoState() {
     if (widget.mode == NoteMode.checklist) return;
 
@@ -486,38 +497,36 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         },
         child: Stack(
           children: [
-            EditorBuildMethods.buildContentArea(
-              context: context,
-              coordinator: _coordinator,
-              sidePadding: sidePadding,
-              finalTextColor: finalTextColor,
-              finalHintColor: finalHintColor,
-              mode: widget.mode,
-              note: widget.note,
-              savedNoteId: _coordinator.savedNoteId,
-              onReminderTap: _showReminderDialog,
-              saveCallback: ({bool isManualSave = false}) =>
-                  _saveNoteToDatabase(isManualSave: isManualSave),
-              onUndoRedoControllerCreated: (controller) {
-                _coordinator.checklistUndoRedo = controller;
-                _updateChecklistUndoRedo();
-              },
-              onUndoRedoChanged: _updateChecklistUndoRedo,
-              onScroll: (progress) {
-                _coordinator.scrollProgress.value = progress;
-              },
-              onChecklistTitleChanged: (title) {
-                if (_coordinator.stateManager.checklistTitle != title) {
-                  Future.microtask(() {
-                    if (mounted) {
-                      setState(() =>
-                          _coordinator.stateManager.checklistTitle = title);
-                    }
-                  });
-                }
-              },
-              readOnly: false,
-              selectionBarActive: _selectionBarActive,
+            RepaintBoundary(
+              child: EditorBuildMethods.buildContentArea(
+                context: context,
+                coordinator: _coordinator,
+                sidePadding: sidePadding,
+                finalTextColor: finalTextColor,
+                finalHintColor: finalHintColor,
+                mode: widget.mode,
+                note: widget.note,
+                savedNoteId: _coordinator.savedNoteId,
+                onReminderTap: _showReminderDialog,
+                saveCallback: ({bool isManualSave = false}) =>
+                    _saveNoteToDatabase(isManualSave: isManualSave),
+                onUndoRedoControllerCreated: (controller) {
+                  _coordinator.checklistUndoRedo = controller;
+                  _updateChecklistUndoRedo();
+                },
+                onUndoRedoChanged: _updateChecklistUndoRedo,
+                onScroll: (progress) {
+                  _coordinator.scrollProgress.value = progress;
+                },
+                onChecklistTitleChanged: (title) {
+                  // نحدث العنوان بدون setState لتجنب إعادة بناء ChecklistEditor
+                  if (_coordinator.stateManager.checklistTitle != title) {
+                    _coordinator.stateManager.checklistTitle = title;
+                  }
+                },
+                readOnly: false,
+                selectionBarActive: _selectionBarActive,
+              ),
             ),
             EditorBuildMethods.buildHeader(
               context: context,

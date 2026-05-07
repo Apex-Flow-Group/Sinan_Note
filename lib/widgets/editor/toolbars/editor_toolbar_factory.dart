@@ -38,6 +38,12 @@ class EditorToolbarFactory {
     VoidCallback? onExportCode,
     Function(String)? onLanguageChanged,
     bool showChecklist = true,
+    bool isBoldActive = false,
+    bool isItalicActive = false,
+    bool isH1Active = false,
+    bool isH2Active = false,
+    bool isListActive = false,
+    bool isChecklistActive = false,
   }) {
     switch (mode) {
       case NoteMode.code:
@@ -110,6 +116,12 @@ class EditorToolbarFactory {
           onChecklist: onChecklist ?? () {},
           showChecklist: showChecklist,
           onColorTap: onColorTap ?? () {},
+          isBoldActive: isBoldActive,
+          isItalicActive: isItalicActive,
+          isH1Active: isH1Active,
+          isH2Active: isH2Active,
+          isListActive: isListActive,
+          isChecklistActive: isChecklistActive,
         );
     }
   }
