@@ -75,7 +75,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     );
 
     _coordinator.initialize(context);
-    _coordinator.initialize(context);
     _isReadOnly = widget.readOnly;
     // ظ„ظ„ظ†ظˆطھط§طھ ط§ظ„ط·ظˆظٹظ„ط©: ط£ط¹ط¯ ط¨ظ†ط§ط، QuillController ظپظٹ isolate ط¨ط¹ط¯ ط£ظˆظ„ frame
     // ظ‡ط°ط§ ظٹظ…ظ†ط¹ ط§ظ„طھط¬ظ…ط¯ ط¹ظ†ط¯ ظپطھط­ ظ†ظˆطھط§طھ > 5000 ط­ط±ظپ
@@ -118,18 +117,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     if (widget.mode == NoteMode.code) {
       _coordinator.codeController!.addListener(_onContentChanged);
       _coordinator.codeUndoController.addListener(_updateUndoRedoState);
-    }
-
-    if (widget.mode == NoteMode.simple ||
-        widget.mode == NoteMode.reminder ||
-        widget.mode == NoteMode.rich) {
-      _quillChangesSubscription =
-          _coordinator.quillController!.document.changes.listen((_) {
-        _onQuillContentChanged();
-        _updateUndoRedoState();
-      });
-      // تحديث الـ toolbar عند تغيير الـ selection (لإظهار حالة Bold/Italic/إلخ)
-      _coordinator.quillController!.addListener(_onQuillSelectionChanged);
     }
 
     _updateUndoRedoState();

@@ -25,7 +25,11 @@ class SmartEditorToolbar extends StatefulWidget {
   // Format Callbacks
   final VoidCallback onBold;
   final VoidCallback onItalic;
+  final VoidCallback onUnderline;
+  final VoidCallback onStrikethrough;
   final VoidCallback onList;
+  final VoidCallback onOrderedList;
+  final VoidCallback onBlockquote;
   final VoidCallback onH1;
   final VoidCallback onH2;
   final VoidCallback onChecklist;
@@ -34,9 +38,13 @@ class SmartEditorToolbar extends StatefulWidget {
   // Format Active States
   final bool isBoldActive;
   final bool isItalicActive;
+  final bool isUnderlineActive;
+  final bool isStrikethroughActive;
   final bool isH1Active;
   final bool isH2Active;
   final bool isListActive;
+  final bool isOrderedListActive;
+  final bool isBlockquoteActive;
   final bool isChecklistActive;
 
   // Style Callbacks
@@ -57,7 +65,11 @@ class SmartEditorToolbar extends StatefulWidget {
     this.onPaste,
     required this.onBold,
     required this.onItalic,
+    required this.onUnderline,
+    required this.onStrikethrough,
     required this.onList,
+    required this.onOrderedList,
+    required this.onBlockquote,
     required this.onH1,
     required this.onH2,
     required this.onChecklist,
@@ -69,9 +81,13 @@ class SmartEditorToolbar extends StatefulWidget {
     this.hasContent = false,
     this.isBoldActive = false,
     this.isItalicActive = false,
+    this.isUnderlineActive = false,
+    this.isStrikethroughActive = false,
     this.isH1Active = false,
     this.isH2Active = false,
     this.isListActive = false,
+    this.isOrderedListActive = false,
+    this.isBlockquoteActive = false,
     this.isChecklistActive = false,
   });
 
@@ -87,7 +103,7 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
         color: widget.backgroundColor,
       ),
@@ -166,7 +182,7 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
             onTap: () => _showOptionsMenu(),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: widget.textColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
@@ -220,12 +236,20 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
                     isActive: widget.isBoldActive),
                 _buildIconBtn(Icons.format_italic_rounded, widget.onItalic,
                     isActive: widget.isItalicActive),
+                _buildIconBtn(Icons.format_underlined_rounded, widget.onUnderline,
+                    isActive: widget.isUnderlineActive),
+                _buildIconBtn(Icons.strikethrough_s_rounded, widget.onStrikethrough,
+                    isActive: widget.isStrikethroughActive),
                 _buildIconBtn(Icons.title_rounded, widget.onH1,
                     isActive: widget.isH1Active),
                 _buildIconBtn(Icons.format_size_rounded, widget.onH2,
                     isActive: widget.isH2Active),
                 _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList,
                     isActive: widget.isListActive),
+                _buildIconBtn(Icons.format_list_numbered_rounded, widget.onOrderedList,
+                    isActive: widget.isOrderedListActive),
+                _buildIconBtn(Icons.format_quote_rounded, widget.onBlockquote,
+                    isActive: widget.isBlockquoteActive),
                 if (widget.showChecklist)
                   _buildIconBtn(Icons.checklist_rounded, widget.onChecklist,
                       isActive: widget.isChecklistActive),
@@ -280,8 +304,8 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
       icon: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        width: 32,
-        height: 32,
+        width: 28,
+        height: 28,
         decoration: isActive
             ? BoxDecoration(
                 color: activeColor.withValues(alpha: 0.22),
@@ -294,8 +318,8 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
       ),
       onPressed: onTap,
       splashRadius: 24,
-      padding: const EdgeInsets.all(8),
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+      padding: const EdgeInsets.all(6),
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
   }
 }

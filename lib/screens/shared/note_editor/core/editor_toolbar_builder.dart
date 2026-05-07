@@ -108,6 +108,26 @@ class EditorToolbarBuilder {
                           .attributes['list']
                           ?.value ==
                       'bullet',
+                  isOrderedListActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['list']
+                          ?.value ==
+                      'ordered',
+                  isBlockquoteActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['blockquote']
+                          ?.value ==
+                      true,
+                  isUnderlineActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['underline']
+                          ?.value ==
+                      true,
+                  isStrikethroughActive: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['strike']
+                          ?.value ==
+                      true,
                   isChecklistActive: coordinator.quillController
                           ?.getSelectionStyle()
                           .attributes['list']
@@ -288,6 +308,42 @@ class EditorToolbarBuilder {
                     textColor: finalTextColor,
                     noteId: savedNoteId ?? note?.id,
                   ),
+                  onUnderline: () {
+                    HapticFeedback.lightImpact();
+                    final qc = coordinator.quillController;
+                    if (qc == null) return;
+                    final isUnderline = qc.getSelectionStyle().attributes['underline']?.value == true;
+                    qc.formatSelection(isUnderline
+                        ? Attribute.clone(Attribute.underline, null)
+                        : Attribute.underline);
+                  },
+                  onStrikethrough: () {
+                    HapticFeedback.lightImpact();
+                    final qc = coordinator.quillController;
+                    if (qc == null) return;
+                    final isStrike = qc.getSelectionStyle().attributes['strike']?.value == true;
+                    qc.formatSelection(isStrike
+                        ? Attribute.clone(Attribute.strikeThrough, null)
+                        : Attribute.strikeThrough);
+                  },
+                  onOrderedList: () {
+                    HapticFeedback.lightImpact();
+                    final qc = coordinator.quillController;
+                    if (qc == null) return;
+                    final isOrdered = qc.getSelectionStyle().attributes['list']?.value == 'ordered';
+                    qc.formatSelection(isOrdered
+                        ? Attribute.clone(Attribute.ol, null)
+                        : Attribute.ol);
+                  },
+                  onBlockquote: () {
+                    HapticFeedback.lightImpact();
+                    final qc = coordinator.quillController;
+                    if (qc == null) return;
+                    final isQuote = qc.getSelectionStyle().attributes['blockquote']?.value == true;
+                    qc.formatSelection(isQuote
+                        ? Attribute.clone(Attribute.blockQuote, null)
+                        : Attribute.blockQuote);
+                  },
                   onBold: () {
                     HapticFeedback.lightImpact();
                     final qc = coordinator.quillController;

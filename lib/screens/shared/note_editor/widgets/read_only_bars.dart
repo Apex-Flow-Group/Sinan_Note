@@ -41,7 +41,7 @@ class ReadOnlyBars {
     final l10n = AppLocalizations.of(context)!;
 
     return PreferredSize(
-      preferredSize: const Size.fromHeight(kToolbarHeight),
+      preferredSize: const Size.fromHeight(48),
       child: FadeTransition(
         opacity: fadeAnimation,
         child: SlideTransition(
@@ -54,6 +54,7 @@ class ReadOnlyBars {
           )),
           child: AppBar(
             backgroundColor: barColor,
+            toolbarHeight: 48,
             title: Text(
               note.title.isEmpty ? l10n.viewNote : note.title,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -118,13 +119,15 @@ class ReadOnlyBars {
           child: SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.share_outlined),
                     tooltip: l10n.share,
                     onPressed: onShare,
+                    padding: const EdgeInsets.all(6),
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
@@ -133,6 +136,8 @@ class ReadOnlyBars {
                         : Icons.archive_outlined),
                     tooltip: note.isArchived ? l10n.unarchive : l10n.archive,
                     onPressed: onArchive,
+                    padding: const EdgeInsets.all(6),
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
@@ -140,10 +145,12 @@ class ReadOnlyBars {
                         color: Colors.redAccent),
                     tooltip: l10n.delete,
                     onPressed: onDelete,
+                    padding: const EdgeInsets.all(6),
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   ),
                   const Spacer(),
                   SizedBox(
-                    height: 48,
+                    height: 40,
                     child: ElevatedButton.icon(
                       onPressed: onEdit,
                       style: ElevatedButton.styleFrom(
@@ -195,7 +202,7 @@ class ReadOnlyBars {
           child: SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Expanded(
@@ -205,7 +212,7 @@ class ReadOnlyBars {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                         side: const BorderSide(color: Colors.red),
-                        minimumSize: const Size(0, 48),
+                        minimumSize: const Size(0, 40),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -221,7 +228,7 @@ class ReadOnlyBars {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 48),
+                        minimumSize: const Size(0, 40),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),

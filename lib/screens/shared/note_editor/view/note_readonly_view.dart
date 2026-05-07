@@ -276,16 +276,50 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               customLeadingBlockBuilder: (node, config) =>
                   _buildCheckboxLeading(config, textColor),
               customStyles: DefaultStyles(
+                leading: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: AppFontSize.noteBody,
+                    fontFamily: fontFamily,
+                    height: AppLineHeight.body(
+                      Provider.of<SettingsProvider>(context, listen: false)
+                          .textScaleFactor,
+                      fontFamily,
+                    ),
+                    color: textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  VerticalSpacing.zero,
+                  VerticalSpacing.zero,
+                  null,
+                ),
+                lists: DefaultListBlockStyle(
+                  TextStyle(
+                    fontSize: AppFontSize.noteBody,
+                    fontFamily: fontFamily,
+                    height: AppLineHeight.body(
+                      Provider.of<SettingsProvider>(context, listen: false)
+                          .textScaleFactor,
+                      fontFamily,
+                    ),
+                    color: textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  VerticalSpacing.zero,
+                  VerticalSpacing.zero,
+                  null,
+                  null,
+                ),
                 paragraph: DefaultTextBlockStyle(
                   TextStyle(
-                      fontSize: 16,
-                      fontFamily: fontFamily,
-                      height: AppLineHeight.body(
-                        Provider.of<SettingsProvider>(context, listen: false)
-                            .textScaleFactor,
-                        fontFamily,
-                      ),
-                      color: textColor),
+                    fontSize: AppFontSize.noteBody,
+                    fontFamily: fontFamily,
+                    height: AppLineHeight.body(
+                      Provider.of<SettingsProvider>(context, listen: false)
+                          .textScaleFactor,
+                      fontFamily,
+                    ),
+                    color: textColor,
+                  ),
                   HorizontalSpacing.zero,
                   VerticalSpacing.zero,
                   VerticalSpacing.zero,
@@ -356,7 +390,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       height: isMarkdown ? null : double.infinity,
       margin: isLandscape
           ? const EdgeInsets.only(top: 4, bottom: 4)
-          : const EdgeInsets.only(top: 8, bottom: 16),
+          : const EdgeInsets.only(top: 8, bottom: 8),
       padding: isChecklist
           ? EdgeInsets.fromLTRB(12, isLandscape ? 8 : 16, 12, 8)
           : const EdgeInsets.symmetric(horizontal: 12),

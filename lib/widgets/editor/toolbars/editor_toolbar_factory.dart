@@ -28,9 +28,13 @@ class EditorToolbarFactory {
     VoidCallback? onDeleteTap,
     VoidCallback? onBold,
     VoidCallback? onItalic,
+    VoidCallback? onUnderline,
+    VoidCallback? onStrikethrough,
     VoidCallback? onH1,
     VoidCallback? onH2,
     VoidCallback? onList,
+    VoidCallback? onOrderedList,
+    VoidCallback? onBlockquote,
     VoidCallback? onChecklist,
     VoidCallback? onColorTap,
     Function(String)? onInsertSymbol,
@@ -40,9 +44,13 @@ class EditorToolbarFactory {
     bool showChecklist = true,
     bool isBoldActive = false,
     bool isItalicActive = false,
+    bool isUnderlineActive = false,
+    bool isStrikethroughActive = false,
     bool isH1Active = false,
     bool isH2Active = false,
     bool isListActive = false,
+    bool isOrderedListActive = false,
+    bool isBlockquoteActive = false,
     bool isChecklistActive = false,
   }) {
     switch (mode) {
@@ -110,17 +118,25 @@ class EditorToolbarFactory {
           onDeleteTap: onDeleteTap ?? () {},
           onBold: onBold ?? () {},
           onItalic: onItalic ?? () {},
+          onUnderline: onUnderline ?? () {},
+          onStrikethrough: onStrikethrough ?? () {},
           onH1: onH1 ?? () {},
           onH2: onH2 ?? () {},
           onList: onList ?? () {},
+          onOrderedList: onOrderedList ?? () {},
+          onBlockquote: onBlockquote ?? () {},
           onChecklist: onChecklist ?? () {},
           showChecklist: showChecklist,
           onColorTap: onColorTap ?? () {},
           isBoldActive: isBoldActive,
           isItalicActive: isItalicActive,
+          isUnderlineActive: isUnderlineActive,
+          isStrikethroughActive: isStrikethroughActive,
           isH1Active: isH1Active,
           isH2Active: isH2Active,
           isListActive: isListActive,
+          isOrderedListActive: isOrderedListActive,
+          isBlockquoteActive: isBlockquoteActive,
           isChecklistActive: isChecklistActive,
         );
     }
@@ -164,7 +180,7 @@ class _SimpleToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
         color: backgroundColor,
       ),
@@ -215,7 +231,7 @@ class _SimpleToolbar extends StatelessWidget {
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: textColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
@@ -240,8 +256,8 @@ class _SimpleToolbar extends StatelessWidget {
       icon: Icon(icon, color: effectiveColor, size: 22),
       onPressed: onTap,
       splashRadius: 24,
-      padding: const EdgeInsets.all(8),
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+      padding: const EdgeInsets.all(6),
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
   }
 }

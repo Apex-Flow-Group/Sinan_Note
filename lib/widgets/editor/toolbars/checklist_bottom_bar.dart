@@ -32,7 +32,7 @@ class ChecklistBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
         color: backgroundColor,
       ),
@@ -47,18 +47,24 @@ class ChecklistBottomBar extends StatelessWidget {
                   icon: Icon(Icons.palette_outlined, color: textColor),
                   onPressed: onBackgroundColorTap,
                   tooltip: 'Background Color',
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
                 IconButton(
                   icon: Icon(Icons.undo_rounded,
                       color: onUndo != null ? textColor : Colors.grey),
                   onPressed: onUndo,
                   tooltip: 'Undo',
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
                 IconButton(
                   icon: Icon(Icons.redo_rounded,
                       color: onRedo != null ? textColor : Colors.grey),
                   onPressed: onRedo,
                   tooltip: 'Redo',
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
               ],
             ),
@@ -86,7 +92,7 @@ class ChecklistBottomBar extends StatelessWidget {
                       });
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: textColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),

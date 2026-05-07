@@ -263,7 +263,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
               child: ListenableBuilder(
                 listenable: widget.quillController,
                 builder: (context, child) {
-                  final isEmpty = widget.quillController.document.isEmpty();
+                  final ops = widget.quillController.document.toDelta().toList();
+                  final isEmpty = ops.length <= 1 &&
+                      (ops.isEmpty || (ops.first.isInsert && ops.first.data == '\n' && ops.first.attributes == null));
                   return Stack(
                     fit: StackFit.expand,
                     alignment: AlignmentDirectional.topStart,
@@ -322,6 +324,41 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                         selectionHandleColor: widget.textColor,
                       ),
                       customStyles: DefaultStyles(
+                        leading: DefaultTextBlockStyle(
+                          TextStyle(
+                            fontSize: AppFontSize.noteBody,
+                            fontFamily: _cachedFontFamily,
+                            height: AppLineHeight.body(
+                              widget.fontSize / AppFontSize.noteBody,
+                              _cachedFontFamily,
+                            ),
+                            color: widget.textColor,
+                          ),
+                          HorizontalSpacing.zero,
+                          VerticalSpacing.zero,
+                          VerticalSpacing.zero,
+                          null,
+                        ),
+                        lists: DefaultListBlockStyle(
+                          TextStyle(
+                            fontSize: AppFontSize.noteBody,
+                            fontFamily: _cachedFontFamily,
+                            height: AppLineHeight.body(
+                              widget.fontSize / AppFontSize.noteBody,
+                              _cachedFontFamily,
+                            ),
+                            color: widget.textColor,
+                            fontFeatures: const [
+                              FontFeature.disable('liga'),
+                              FontFeature.disable('clig'),
+                            ],
+                          ),
+                          HorizontalSpacing.zero,
+                          VerticalSpacing.zero,
+                          VerticalSpacing.zero,
+                          null,
+                          null,
+                        ),
                         paragraph: DefaultTextBlockStyle(
                           TextStyle(
                             fontSize: AppFontSize.noteBody,
