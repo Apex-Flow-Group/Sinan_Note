@@ -52,6 +52,7 @@ class DateBarHeader extends StatelessWidget {
   final ValueNotifier<String?> activeFilterNotifier;
   final ValueNotifier<bool>? isPullingNotifier;
   final ValueNotifier<double>? pullDistanceNotifier;
+  final ValueNotifier<bool>? isRefreshingNotifier;
 
   const DateBarHeader({
     super.key,
@@ -60,6 +61,7 @@ class DateBarHeader extends StatelessWidget {
     required this.activeFilterNotifier,
     this.isPullingNotifier,
     this.pullDistanceNotifier,
+    this.isRefreshingNotifier,
   });
 
   @override
@@ -76,6 +78,7 @@ class DateBarHeader extends StatelessWidget {
           activeFilterNotifier: activeFilterNotifier,
           isPullingNotifier: isPullingNotifier,
           pullDistanceNotifier: pullDistanceNotifier,
+          isRefreshingNotifier: isRefreshingNotifier,
         ),
       ),
     );

@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/platform_helper.dart';
@@ -95,9 +96,12 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
     if (autoSync && GoogleDriveService.isSignedIn) {
       await GoogleDriveService.smartSyncOnStartup();
-      // ✅ أعد تحميل الملاحظات بعد المزامنة لتحديث الـ UI
+      // ✅ أعد تحميل الملاحظات والكتالوجات بعد المزامنة لتحديث الـ UI
       if (mounted) {
-        await Provider.of<NotesProvider>(context, listen: false).refreshAllNotes();
+        await Provider.of<NotesProvider>(context, listen: false)
+            .refreshAllNotes(force: true);
+        await Provider.of<CategoriesProvider>(context, listen: false)
+            .refreshCategories();
       }
     }
   }

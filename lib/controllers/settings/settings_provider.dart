@@ -18,6 +18,9 @@ class SettingsProvider with ChangeNotifier {
   String _viewType = 'listCompact';
   bool _heroAnimationEnabled = false;
   bool _isAppLockEnabled = false;
+
+  // Pull-to-refresh mode: 'full' | 'normal' | 'disabled'
+  String _pullToRefreshMode = 'normal';
   bool _hideContentInBackground = false;
   bool _lockDelayEnabled = false;
   int _lockDelaySeconds = 30;
@@ -51,6 +54,7 @@ class SettingsProvider with ChangeNotifier {
   String get viewType => _viewType;
   bool get heroAnimationEnabled => _heroAnimationEnabled;
   bool get isAppLockEnabled => _isAppLockEnabled;
+  String get pullToRefreshMode => _pullToRefreshMode;
   bool get hideContentInBackground => _hideContentInBackground;
   bool get lockDelayEnabled => _lockDelayEnabled;
   int get lockDelaySeconds => _lockDelaySeconds;
@@ -145,6 +149,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('heroAnimationEnabled', enabled);
+  }
+
+  Future<void> setPullToRefreshMode(String mode) async {
+    _pullToRefreshMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('pullToRefreshMode', mode);
   }
 
   Future<void> setViewType(String key, String type) async {
@@ -243,6 +254,7 @@ class SettingsProvider with ChangeNotifier {
       _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
           ['delete', 'archive', 'share'];
       _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
+      _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'normal';
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');
       if (homeViewType != null) {

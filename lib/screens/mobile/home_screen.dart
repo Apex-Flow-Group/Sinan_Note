@@ -192,39 +192,87 @@ class _HomeScreenState extends State<HomeScreen> {
   final ValueNotifier<bool> _isPullingNotifier = ValueNotifier(false);
   final ValueNotifier<double> _pullDistanceNotifier = ValueNotifier(0.0);
   static const double _pullThreshold = 80.0;
+  bool _pullTriggered =
+      false; // Flag: pull reached threshold, waiting for release
+  final ValueNotifier<bool> _isRefreshingNotifier = ValueNotifier(false);
 
   Future<void> _onRefresh() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final mode = settings.pullToRefreshMode;
+
+    // Disabled → do nothing
+    if (mode == 'disabled') return;
+
+    _isRefreshingNotifier.value = true;
+    final minDuration = Future.delayed(const Duration(milliseconds: 1500));
+
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final pullToSyncEnabled = (await SharedPreferences.getInstance())
-            .getBool('google_drive_pull_to_refresh') ??
-        true;
-    if (GoogleDriveService.isSignedIn &&
-        GoogleDriveService.autoSyncEnabled.value &&
-        pullToSyncEnabled) {
-      await GoogleDriveService.smartSyncOnStartup();
-      while (GoogleDriveService.isSyncing.value) {
-        await Future.delayed(const Duration(milliseconds: 200));
+    final categoriesProvider =
+        Provider.of<CategoriesProvider>(context, listen: false);
+
+    try {
+      if (mode == 'full') {
+        final pullToSyncEnabled = (await SharedPreferences.getInstance())
+                .getBool('google_drive_pull_to_refresh') ??
+            true;
+        if (GoogleDriveService.isSignedIn &&
+            GoogleDriveService.autoSyncEnabled.value &&
+            pullToSyncEnabled) {
+          await GoogleDriveService.smartSyncOnStartup();
+          while (GoogleDriveService.isSyncing.value) {
+            await Future.delayed(const Duration(milliseconds: 200));
+          }
+        }
+
+        await notesProvider.refreshAllNotes(force: true);
+        await categoriesProvider.refreshCategories();
+
+        _searchController.clear();
+        _activeFilterNotifier.value = null;
+        if (mounted) setState(() => _isSearchActive = false);
+      } else {
+        await notesProvider.refreshAllNotes(force: true);
       }
+    } finally {
+      // Wait minimum 1.5s so the user sees the refreshing indicator
+      await minDuration;
+      // ✅ Clean reset — ensure all pull state is zeroed for next pull
+      _isRefreshingNotifier.value = false;
+      _pullTriggered = false;
+      _pullDistanceNotifier.value = 0;
+      _isPullingNotifier.value = false;
     }
-    while (notesProvider.isLoading) {
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-    await notesProvider.refreshAllNotes();
   }
 
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
+    // Don't show pull indicator when pull-to-refresh is disabled
+    final mode =
+        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
+    if (mode == 'disabled') return;
+
     final offset = _scrollController.offset;
     if (offset < 0) {
+      // If pull already triggered, stop updating distance (refreshing bar takes over)
+      if (_pullTriggered) return;
+
       final distance = offset.abs();
       _pullDistanceNotifier.value = distance;
       if (distance >= _pullThreshold) {
-        if (!_isPullingNotifier.value) _isPullingNotifier.value = true;
+        if (!_isPullingNotifier.value) {
+          _isPullingNotifier.value = true;
+          _pullTriggered = true;
+          // Switch immediately to refreshing bar (no bounce-back visible)
+          _pullDistanceNotifier.value = 0;
+          _isRefreshingNotifier.value = true;
+        }
       } else {
         if (_isPullingNotifier.value) _isPullingNotifier.value = false;
       }
     } else {
-      if (_pullDistanceNotifier.value != 0) _pullDistanceNotifier.value = 0;
+      if (!_pullTriggered) {
+        if (_pullDistanceNotifier.value != 0) _pullDistanceNotifier.value = 0;
+      }
       if (_isPullingNotifier.value) _isPullingNotifier.value = false;
     }
   }
@@ -243,6 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _activeFilterNotifier.dispose();
     _isPullingNotifier.dispose();
     _pullDistanceNotifier.dispose();
+    _isRefreshingNotifier.dispose();
     UnifiedNotificationService().commitAll();
     super.dispose();
   }
@@ -301,7 +350,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           _handleScrollEnd();
                         }
                         if (notification is ScrollEndNotification &&
-                            _isPullingNotifier.value) {
+                            _pullTriggered) {
+                          _pullTriggered = false;
                           _isPullingNotifier.value = false;
                           _pullDistanceNotifier.value = 0;
                           _onRefresh();
@@ -353,6 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             activeFilterNotifier: _activeFilterNotifier,
                             isPullingNotifier: _isPullingNotifier,
                             pullDistanceNotifier: _pullDistanceNotifier,
+                            isRefreshingNotifier: _isRefreshingNotifier,
                           ),
                           NotesGridView(
                             viewTypeNotifier: _viewTypeNotifier,

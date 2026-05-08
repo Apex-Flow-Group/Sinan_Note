@@ -21,6 +21,7 @@ class DateIndicatorBar extends StatefulWidget {
   final ValueNotifier<String?> activeFilterNotifier;
   final ValueNotifier<bool>? isPullingNotifier;
   final ValueNotifier<double>? pullDistanceNotifier;
+  final ValueNotifier<bool>? isRefreshingNotifier;
 
   const DateIndicatorBar({
     super.key,
@@ -30,6 +31,7 @@ class DateIndicatorBar extends StatefulWidget {
     required this.activeFilterNotifier,
     this.isPullingNotifier,
     this.pullDistanceNotifier,
+    this.isRefreshingNotifier,
   });
 
   @override
@@ -247,6 +249,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
       return SyncProgressBar(
         showLabelOnly: true,
         pullDistanceNotifier: widget.pullDistanceNotifier,
+        isRefreshingNotifier: widget.isRefreshingNotifier,
         child: const SizedBox.shrink(),
       );
     } else {
@@ -275,6 +278,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
 
     return SyncProgressBar(
       pullDistanceNotifier: widget.pullDistanceNotifier,
+      isRefreshingNotifier: widget.isRefreshingNotifier,
       child: barChild,
     );
   }

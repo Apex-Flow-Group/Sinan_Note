@@ -31,6 +31,9 @@ class NotesProvider extends ChangeNotifier {
     _sideEffectService = NoteSideEffectService();
     _batchService = NoteBatchOperationsService(
         _dbService, _stateService, _sideEffectService);
+
+    // ✅ Wire up sync completion callback to refresh UI
+    _stateService.onSyncCompleted = _refreshAfterSync;
   }
 
   bool get isInitialDataLoaded => _stateService.isInitialDataLoaded;
@@ -50,8 +53,8 @@ class NotesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshAllNotes() async {
-    if (_isLoading) return;
+  Future<void> refreshAllNotes({bool force = false}) async {
+    if (_isLoading && !force) return;
     _isLoading = true;
     notifyListeners();
     try {
@@ -61,6 +64,18 @@ class NotesProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Called by NoteStateService after background sync completes
+  Future<void> _refreshAfterSync() async {
+    try {
+      final notes = await _dbService.getAllNotes();
+      _stateService.updateAllNotes(notes);
+      _refreshStamp++;
+      notifyListeners();
+    } catch (_) {
+      // Silent failure for background sync refresh
     }
   }
 

@@ -27,6 +27,7 @@ class GoogleDriveService {
     await GoogleDriveAuth.initializeSignIn();
     await loadAutoSyncState();
   }
+
   static Future<bool> signIn() => GoogleDriveAuth.signIn();
   static Future<void> signOut() async {
     await GoogleDriveAuth.signOut();
@@ -73,6 +74,7 @@ class GoogleDriveService {
     if (GoogleDriveAuth.driveApi == null) return;
     if (!await _hasInternet()) return;
 
+    isSyncing.value = true;
     try {
       var driveFile = await GoogleDriveAuth.findFile('sinan_backup.gz');
 
@@ -121,6 +123,10 @@ class GoogleDriveService {
       }
     } catch (e) {
       AppLogger.error('Smart sync failed', 'GoogleDrive', e);
+    } finally {
+      if (!_isDownloading && !_isUploading) {
+        isSyncing.value = false;
+      }
     }
   }
 
@@ -135,7 +141,11 @@ class GoogleDriveService {
     isSyncing.value = true;
     try {
       final file = await GoogleDriveAuth.findFile('sinan_backup.gz');
-      if (file == null) return;
+      if (file == null) {
+        _isDownloading = false;
+        isSyncing.value = false;
+        return;
+      }
 
       final response = await GoogleDriveAuth.driveApi!.files.get(
         file.id!,
@@ -233,11 +243,12 @@ class GoogleDriveService {
       AppLogger.success('Silent merge: ${merged.length} notes', 'GoogleDrive');
     } catch (e) {
       AppLogger.error('Silent merge failed', 'GoogleDrive', e);
-    } finally {
       _isDownloading = false;
       isSyncing.value = false;
+      return; // Don't proceed to upload on merge failure
     }
-    // رفع بعد انتهاء الدمج كاملاً — خارج finally لضمان isSyncing صحيح
+    _isDownloading = false;
+    // رفع بعد انتهاء الدمج كاملاً — uploadDatabase manages isSyncing in its finally
     await uploadDatabase(null);
   }
 

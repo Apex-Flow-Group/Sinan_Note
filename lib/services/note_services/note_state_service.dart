@@ -10,15 +10,18 @@ class NoteStateService {
   List<Note> _lockedNotes = [];
   bool _isInitialDataLoaded = false;
   Timer? _sortDebounce;
-  
+
+  /// Callback to refresh notes from database after sync
+  Future<void> Function()? onSyncCompleted;
+
   // Cache
   List<Note>? _cachedActiveNotes;
   List<Note>? _cachedArchivedNotes;
   List<Note>? _cachedTrashedNotes;
   bool _cacheInvalidated = true;
-  
+
   bool get isInitialDataLoaded => _isInitialDataLoaded;
-  
+
   List<Note> get activeNotes {
     if (_cachedActiveNotes != null && !_cacheInvalidated) {
       return _cachedActiveNotes!;
@@ -29,7 +32,7 @@ class NoteStateService {
     _cacheInvalidated = false;
     return _cachedActiveNotes!;
   }
-  
+
   List<Note> get archivedNotes {
     if (_cachedArchivedNotes != null && !_cacheInvalidated) {
       return _cachedArchivedNotes!;
@@ -39,15 +42,16 @@ class NoteStateService {
         .toList();
     return _cachedArchivedNotes!;
   }
-  
+
   List<Note> get trashedNotes {
     if (_cachedTrashedNotes != null && !_cacheInvalidated) {
       return _cachedTrashedNotes!;
     }
-    _cachedTrashedNotes = _allNotes.where((n) => n.isTrashed && !n.isLocked).toList();
+    _cachedTrashedNotes =
+        _allNotes.where((n) => n.isTrashed && !n.isLocked).toList();
     return _cachedTrashedNotes!;
   }
-  
+
   List<Note> get reminderNotes {
     return _allNotes
         .where((n) =>
@@ -57,16 +61,16 @@ class NoteStateService {
             n.reminderDateTime!.isAfter(DateTime.now()))
         .toList();
   }
-  
+
   List<Note> get lockedNotes => _lockedNotes;
-  
+
   void updateAllNotes(List<Note> notes) {
     _allNotes = notes;
     _isInitialDataLoaded = true;
     _invalidateCache();
     sortNotes(immediate: true);
   }
-  
+
   void updateNote(Note note) {
     final index = _allNotes.indexWhere((n) => n.id == note.id);
     if (index != -1) {
@@ -79,7 +83,7 @@ class NoteStateService {
     _invalidateCache();
     _silentSync();
   }
-  
+
   void addNote(Note note) {
     if (note.isLocked) {
       _lockedNotes.insert(0, note);
@@ -91,26 +95,26 @@ class NoteStateService {
     _invalidateCache();
     _silentSync();
   }
-  
+
   void removeNote(int id) {
     _allNotes.removeWhere((n) => n.id == id);
     _lockedNotes.removeWhere((n) => n.id == id);
     _invalidateCache();
   }
-  
+
   void updateLockedNotes(List<Note> notes) {
     _lockedNotes = notes;
   }
-  
+
   void clearLockedNotes() {
     _lockedNotes = [];
   }
-  
+
   List<Note> searchNotes(String query) {
     if (query.trim().isEmpty) {
       return activeNotes;
     }
-    
+
     // ✅ Use cached notes for search (faster)
     final lowerQuery = query.toLowerCase();
     final results = activeNotes
@@ -119,22 +123,22 @@ class NoteStateService {
             n.content.toLowerCase().contains(lowerQuery))
         .take(100) // ✅ Limit to 100 results
         .toList();
-    
+
     return results;
   }
-  
+
   void sortNotes({bool immediate = false}) {
     if (immediate) {
       _performSort();
       return;
     }
-    
+
     _sortDebounce?.cancel();
     _sortDebounce = Timer(const Duration(milliseconds: 50), () {
       if (_allNotes.isNotEmpty) _performSort();
     });
   }
-  
+
   void _performSort() {
     _allNotes.sort((a, b) {
       if (a.isPinned && !b.isPinned) return -1;
@@ -142,19 +146,18 @@ class NoteStateService {
       return b.updatedAt.compareTo(a.updatedAt);
     });
   }
-  
+
   void batchUpdateNotes(List<int> ids, Note Function(Note) transform) {
-    _allNotes = _allNotes.map((n) => 
-        ids.contains(n.id) ? transform(n) : n
-    ).toList();
+    _allNotes =
+        _allNotes.map((n) => ids.contains(n.id) ? transform(n) : n).toList();
     _invalidateCache();
   }
-  
+
   void dispose() {
     _sortDebounce?.cancel();
     _syncDebounce?.cancel();
   }
-  
+
   /// Invalidate cache
   void _invalidateCache() {
     _cacheInvalidated = true;
@@ -162,11 +165,11 @@ class NoteStateService {
     _cachedArchivedNotes = null;
     _cachedTrashedNotes = null;
   }
-  
+
   /// 🔄 Silent background sync with debouncing
   bool _isSyncing = false;
   Timer? _syncDebounce;
-  
+
   void _silentSync() {
     _syncDebounce?.cancel();
     _syncDebounce = Timer(const Duration(seconds: 5), () async {
@@ -177,6 +180,10 @@ class NoteStateService {
       try {
         _isSyncing = true;
         await GoogleDriveService.smartSyncOnStartup();
+        // ✅ Refresh notes from database after sync completes
+        if (onSyncCompleted != null) {
+          await onSyncCompleted!();
+        }
       } catch (_) {
       } finally {
         _isSyncing = false;

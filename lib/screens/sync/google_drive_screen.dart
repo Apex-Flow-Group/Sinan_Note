@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
@@ -309,8 +310,10 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                 ),
               );
               if (result == true && mounted) {
-                // ✅ Reload notes from database
-                await notesProvider.loadNotes();
+                // ✅ Force refresh notes from database after sync
+                await notesProvider.refreshAllNotes(force: true);
+                await Provider.of<CategoriesProvider>(context, listen: false)
+                    .refreshCategories();
                 setState(() {});
                 if (!mounted) return;
                 scaffoldMessenger.showSnackBar(
