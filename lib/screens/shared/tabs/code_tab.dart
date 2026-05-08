@@ -448,7 +448,9 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                   note: note,
                   viewType: _viewType,
                   closeAllSlidables: _closeAllSlidables,
-                  onNoteChanged: () {},
+                  onNoteChanged: () {
+                    _syncNotes();
+                  },
                   isSelected: isSelected,
                   selectionMode: selectionMode,
                   source: 'professional',

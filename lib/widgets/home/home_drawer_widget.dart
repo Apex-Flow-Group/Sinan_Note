@@ -483,7 +483,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
         final authenticated = await BiometricService.authenticate();
 
         if (authenticated) {
-          await nav.pushReplacement(
+          await nav.push(
             MaterialPageRoute(builder: (_) => const LockedNotesScreen()),
           );
           _activeExtraNotifier.value = null;

@@ -236,7 +236,11 @@ class NotesProvider extends ChangeNotifier {
       colorIndex: note.colorIndex,
       noteType: note.noteType,
       isChecklist: note.isChecklist,
+      isProfessional: note.isProfessional,
       isLocked: note.isLocked,
+      categoryIds: note.categoryIds,
+      reminderDateTime: note.reminderDateTime,
+      recurrenceRule: note.recurrenceRule,
     );
 
     final newId = await addNote(copy);
