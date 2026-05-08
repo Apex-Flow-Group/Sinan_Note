@@ -547,11 +547,6 @@ class _ReminderTabView extends StatelessWidget {
                 closeAllSlidables: closeAllSlidables,
                 onNoteChanged: () {
                   onChanged();
-                  // Force rebuild to show duplicated note
-                  if (context.mounted) {
-                    final provider = Provider.of<NotesProvider>(context, listen: false);
-                    provider.notifyListeners();
-                  }
                 },
                 isSelected: isSelected,
                 selectionMode: selectionMode,

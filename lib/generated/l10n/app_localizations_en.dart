@@ -1597,6 +1597,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get skipBiometric => 'Skip for Now';
 
   @override
+  String get biometricLoginHint =>
+      'Use fingerprint or face as an alternative to password';
+
+  @override
+  String get orText => 'or';
+
+  @override
   String get vaultSetupComplete => 'Vault Setup Complete';
 
   @override

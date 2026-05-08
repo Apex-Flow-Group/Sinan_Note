@@ -179,6 +179,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -192,7 +193,12 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -239,20 +245,24 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   }
 
   Widget _buildPasswordMode(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           l10n.enterVaultPassword,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
+
+        // حقل كلمة المرور
         TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
           keyboardType: TextInputType.visiblePassword,
           inputFormatters: [_passwordFormatter],
+          textInputAction: TextInputAction.done,
           decoration: InputDecoration(
             labelText: l10n.enterPassword,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -266,36 +276,117 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           onSubmitted: (_) => _handlePasswordUnlock(),
         ),
         const SizedBox(height: 16),
+
+        // زر الفتح
         SizedBox(
-          height: 56,
+          height: 52,
           child: ElevatedButton.icon(
             onPressed: _handlePasswordUnlock,
             icon: const Icon(Icons.lock_open),
             label: Text(l10n.unlock,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
           ),
         ),
-        const SizedBox(height: 16),
+
+        // زر البصمة — فقط إذا كانت متاحة
         FutureBuilder<bool>(
           future: BiometricService.hasBiometrics(),
           builder: (context, snapshot) {
-            if (snapshot.data == true) {
-              return OutlinedButton.icon(
-                onPressed: _handleBiometricUnlock,
-                icon: const Icon(Icons.fingerprint),
-                label: Text(l10n.authenticateWithBiometric),
-                style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16)),
-              );
-            }
-            return const SizedBox.shrink();
+            if (snapshot.data != true) return const SizedBox.shrink();
+            return Column(
+              children: [
+                const SizedBox(height: 20),
+                // فاصل
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.3))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        l10n.orText,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.grey[500] : Colors.grey[500],
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.3))),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // زر البصمة الواضح
+                InkWell(
+                  onTap: _handleBiometricUnlock,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.4),
+                        width: 1.5,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.orange.withValues(alpha: 0.06),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.fingerprint,
+                            size: 30,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.authenticateWithBiometric,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                l10n.biometricLoginHint,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: Colors.orange.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
           },
         ),
+
         const SizedBox(height: 16),
         TextButton(
           onPressed: () => setState(() {

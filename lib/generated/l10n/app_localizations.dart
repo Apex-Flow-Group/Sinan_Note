@@ -3194,6 +3194,18 @@ abstract class AppLocalizations {
   /// **'Skip for Now'**
   String get skipBiometric;
 
+  /// No description provided for @biometricLoginHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint or face as an alternative to password'**
+  String get biometricLoginHint;
+
+  /// No description provided for @orText.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get orText;
+
   /// No description provided for @vaultSetupComplete.
   ///
   /// In en, this message translates to:

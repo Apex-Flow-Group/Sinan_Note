@@ -533,6 +533,8 @@
   "biometricOptional": "استخدم البصمة/الوجه لفتح الخزنة بسرعة (اختياري)",
   "enableBiometricAccess": "تفعيل الدخول بالبصمة",
   "skipBiometric": "تخطي الآن",
+  "biometricLoginHint": "استخدم البصمة أو الوجه كبديل لكلمة المرور",
+  "orText": "أو",
   "vaultSetupComplete": "اكتمل إعداد الخزنة",
   "codeCopied": "تم نسخ كود الاستعادة",
   "mustSaveCode": "يرجى تأكيد حفظ كود الاستعادة",

@@ -114,15 +114,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
 
     // Add listeners
-    _coordinator.contentController.addListener(_onContentChanged);
-    _coordinator.undoController.addListener(_updateUndoRedoState);
-
-    if (_currentMode == NoteMode.code) {
-      _coordinator.codeController!.addListener(_onContentChanged);
-      _coordinator.codeUndoController.addListener(_updateUndoRedoState);
-    }
-
-    _updateUndoRedoState();
+    _attachListeners();
 
     // Show reminder dialog for new reminder notes
     if (widget.mode == NoteMode.reminder && widget.note == null) {
@@ -227,10 +219,15 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   Future<bool> _saveNoteToDatabase(
       {bool forceUpdate = false, bool isManualSave = false}) {
+    final effectiveNote = _currentNote ?? widget.note;
+    debugPrint('[SAVE] _saveNoteToDatabase called | isManualSave=$isManualSave forceUpdate=$forceUpdate');
+    debugPrint('[SAVE] mode=$_currentMode | savedNoteId=${_coordinator.savedNoteId} | existingNote=${effectiveNote?.id}');
+    debugPrint('[SAVE] isDirty=${_coordinator.stateManager.isDirty} | hasChanges=${_coordinator.stateManager.hasChanges()} | isSaving=${_coordinator.stateManager.isSaving}');
+    debugPrint('[SAVE] content(50)=${(_currentMode == NoteMode.code ? _coordinator.codeController?.text : _coordinator.contentController.text)?.substring(0, (_currentMode == NoteMode.code ? _coordinator.codeController?.text.length ?? 0 : _coordinator.contentController.text.length).clamp(0, 50))}');
     return EditorSaveOperations.saveToDatabase(
       coordinator: _coordinator,
       mode: _currentMode,
-      existingNote: widget.note,
+      existingNote: effectiveNote,
       l10n: _l10nRef,
       isMounted: () => mounted,
       onSavedNewId: () {
@@ -245,7 +242,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         context: context,
         coordinator: _coordinator,
         mode: _currentMode,
-        existingNote: widget.note,
+        existingNote: _currentNote ?? widget.note,
         l10n: _l10nRef,
         isMounted: () => mounted,
         onSavedNewId: () {
@@ -257,7 +254,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         context: context,
         coordinator: _coordinator,
         mode: _currentMode,
-        existingNote: widget.note,
+        existingNote: _currentNote ?? widget.note,
         l10n: _l10nRef,
       );
 
@@ -266,12 +263,22 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         context: context,
         coordinator: _coordinator,
         mode: _currentMode,
-        existingNote: widget.note,
+        existingNote: _currentNote ?? widget.note,
         l10n: _l10nRef,
         extension: extension,
       );
 
   // ==================== LIFECYCLE METHODS ====================
+
+  void _attachListeners() {
+    _coordinator.contentController.addListener(_onContentChanged);
+    _coordinator.undoController.addListener(_updateUndoRedoState);
+    if (_currentMode == NoteMode.code) {
+      _coordinator.codeController!.addListener(_onContentChanged);
+      _coordinator.codeUndoController.addListener(_updateUndoRedoState);
+    }
+    _updateUndoRedoState();
+  }
 
   void _onQuillContentChanged() {
     // ظ„ط§ ظ†ط­ظپط¸ ط£ط«ظ†ط§ط، طھط­ظ…ظٹظ„ ط§ظ„ظ†ظˆطھط© â€” طھط؛ظٹظٹط±ط§طھ _fixDeltaDirections ظ„ظٹط³طھ ظ…ظ† ط§ظ„ظ…ط³طھط®ط¯ظ…
@@ -439,6 +446,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           _currentNote = newNote;
         }),
         onEnterEdit: () {
+          debugPrint('[ENTER_EDIT] _currentMode=$_currentMode | widget.mode=${widget.mode}');
+          debugPrint('[ENTER_EDIT] _currentNote=${_currentNote?.id} | widget.note=${widget.note?.id}');
+          debugPrint('[ENTER_EDIT] stateManager.isDirty=${_coordinator.stateManager.isDirty} | hasChanges=${_coordinator.stateManager.hasChanges()}');
+          debugPrint('[ENTER_EDIT] savedNoteId=${_coordinator.savedNoteId}');
           if (_currentMode != widget.mode) {
             _coordinator.dispose();
             _coordinator = EditorCoordinator(
@@ -448,6 +459,21 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               originallyLocked: widget.originallyLocked,
             );
             _coordinator.initialize(context);
+            _attachListeners();
+            // ربط quill listener إذا كان الـ mode يستخدم quill
+            if (_currentMode == NoteMode.simple ||
+                _currentMode == NoteMode.rich ||
+                _currentMode == NoteMode.reminder) {
+              _quillChangesSubscription?.cancel();
+              if (_coordinator.quillController != null) {
+                _quillChangesSubscription =
+                    _coordinator.quillController!.document.changes.listen((_) {
+                  _onQuillContentChanged();
+                  _updateUndoRedoState();
+                });
+                _coordinator.quillController!.addListener(_onQuillSelectionChanged);
+              }
+            }
           } else {
             if (_coordinator.stateManager.customTitle == null &&
                 widget.note != null &&

@@ -533,6 +533,8 @@
   "biometricOptional": "Use fingerprint/face to unlock vault quickly (optional)",
   "enableBiometricAccess": "Enable Biometric Access",
   "skipBiometric": "Skip for Now",
+  "biometricLoginHint": "Use fingerprint or face as an alternative to password",
+  "orText": "or",
   "vaultSetupComplete": "Vault Setup Complete",
   "codeCopied": "Recovery code copied to clipboard",
   "mustSaveCode": "Please confirm you have saved the recovery code",

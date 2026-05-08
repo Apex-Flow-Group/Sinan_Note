@@ -310,8 +310,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                 ),
               );
               if (result == true && mounted) {
-                // ✅ Force refresh notes from database after sync
                 await notesProvider.refreshAllNotes(force: true);
+                if (!mounted) return;
+                // ignore: use_build_context_synchronously
                 await Provider.of<CategoriesProvider>(context, listen: false)
                     .refreshCategories();
                 setState(() {});

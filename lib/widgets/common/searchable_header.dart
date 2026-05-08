@@ -99,6 +99,8 @@ class _SearchableHeaderState extends State<SearchableHeader>
         padding: EdgeInsets.only(
           top: topPadding + 6,
           bottom: 6 + widget.extraBottomPadding,
+          left: 12,
+          right: 12,
         ),
         child: Row(
           children: [

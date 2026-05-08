@@ -96,13 +96,14 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
     if (autoSync && GoogleDriveService.isSignedIn) {
       await GoogleDriveService.smartSyncOnStartup();
-      // ✅ أعد تحميل الملاحظات والكتالوجات بعد المزامنة لتحديث الـ UI
-      if (mounted) {
-        await Provider.of<NotesProvider>(context, listen: false)
-            .refreshAllNotes(force: true);
-        await Provider.of<CategoriesProvider>(context, listen: false)
-            .refreshCategories();
-      }
+      if (!mounted) return;
+      // ignore: use_build_context_synchronously
+      await Provider.of<NotesProvider>(context, listen: false)
+          .refreshAllNotes(force: true);
+      if (!mounted) return;
+      // ignore: use_build_context_synchronously
+      await Provider.of<CategoriesProvider>(context, listen: false)
+          .refreshCategories();
     }
   }
 

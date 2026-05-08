@@ -1592,6 +1592,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get skipBiometric => 'تخطي الآن';
 
   @override
+  String get biometricLoginHint => 'استخدم البصمة أو الوجه كبديل لكلمة المرور';
+
+  @override
+  String get orText => 'أو';
+
+  @override
   String get vaultSetupComplete => 'اكتمل إعداد الخزنة';
 
   @override

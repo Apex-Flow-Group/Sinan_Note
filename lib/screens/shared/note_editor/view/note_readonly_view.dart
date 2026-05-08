@@ -95,15 +95,35 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       }
       newContent = ChecklistFormatter.fromPlainText(newContent, title: dbNote.title);
     } else if (dbNote.isChecklist) {
-      newContent = ChecklistFormatter.toPlainText(dbNote.content);
+      // checklist → simple/rich/code: استخرج نص عادي
+      final plain = ChecklistFormatter.toPlainText(dbNote.content);
+      if (targetType == 'code') {
+        newContent = plain;
+      } else {
+        // simple/rich: حوّل لـ Delta JSON مباشرة
+        final qc = QuillMigration.controllerFromContent(plain);
+        newContent = QuillMigration.toDeltaJson(qc);
+        qc.dispose();
+      }
+    } else if (dbNote.isProfessional || dbNote.noteType == 'code' || dbNote.noteType == 'pro') {
+      // code → simple/rich: المحتوى نص عادي، حوّله لـ Delta JSON
+      if (targetType != 'code') {
+        final qc = QuillMigration.controllerFromContent(newContent);
+        newContent = QuillMigration.toDeltaJson(qc);
+        qc.dispose();
+      }
     } else if (newContent.trimLeft().startsWith('[')) {
-      try {
-        final ops = jsonDecode(newContent) as List;
-        newContent = ops
-            .where((op) => op is Map && op['insert'] is String)
-            .map((op) => op['insert'] as String)
-            .join().trimRight();
-      } catch (_) {}
+      // Delta JSON → code: استخرج نص عادي
+      if (targetType == 'code') {
+        try {
+          final ops = jsonDecode(newContent) as List;
+          newContent = ops
+              .where((op) => op is Map && op['insert'] is String)
+              .map((op) => op['insert'] as String)
+              .join().trimRight();
+        } catch (_) {}
+      }
+      // Delta JSON → simple/rich: يبقى كما هو
     }
 
     await VersionControlService().smartLogVersion(
@@ -144,6 +164,24 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       widget.coordinator.quillController?.dispose();
       widget.coordinator.quillController = newQc;
     }
+
+    // إعادة تهيئة stateManager بالمحتوى الجديد حتى يعمل hasChanges() بشكل صحيح
+    widget.coordinator.stateManager.loadFromNote(
+      noteContent: updated.content,
+      noteTitle: updated.title.isNotEmpty ? updated.title : null,
+      noteColorIndex: updated.colorIndex,
+      noteReminderDateTime: updated.reminderDateTime,
+      noteRecurrenceRule: updated.recurrenceRule,
+      noteCategoryIds: updated.categoryIds,
+      noteIsHiddenFromHome: updated.isHiddenFromHome,
+      isChecklist: updated.isChecklist,
+    );
+    widget.coordinator.savedNoteId = updated.id;
+
+    debugPrint('[CONVERT] done → newMode=$newMode | noteId=${updated.id} | noteType=${updated.noteType}');
+    debugPrint('[CONVERT] stateManager.isDirty=${widget.coordinator.stateManager.isDirty} | hasChanges=${widget.coordinator.stateManager.hasChanges()}');
+    debugPrint('[CONVERT] savedNoteId=${widget.coordinator.savedNoteId}');
+    debugPrint('[CONVERT] content(50)=${updated.content.substring(0, updated.content.length.clamp(0, 50))}');
 
     setState(() {
       _currentNote = updated;
