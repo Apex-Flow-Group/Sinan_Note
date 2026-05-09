@@ -1920,4 +1920,101 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get selectNoteToViewHistoryHint => 'اختر ملاحظة من القائمة';
+
+  @override
+  String get resetVault => 'إعادة تعيين تشفير الخزنة';
+
+  @override
+  String get resetVaultSubtitle => 'إعادة تشفير جميع الملاحظات بمفتاح جديد';
+
+  @override
+  String get resetVaultWarningTitle => 'إعادة تعيين تشفير الخزنة';
+
+  @override
+  String get resetVaultWarningBody =>
+      'سيتم إعادة تشفير جميع ملاحظاتك المقفلة بمفتاح تشفير جديد. كلمة المرور الحالية وكود الاستعادة سيتم استبدالهما.';
+
+  @override
+  String get resetVaultBackupHint =>
+      'تأكد من وجود نسخة احتياطية من ملاحظاتك قبل المتابعة. هذه العملية لا يمكن التراجع عنها.';
+
+  @override
+  String get authenticateAndProceed => 'تحقق من الهوية والمتابعة';
+
+  @override
+  String get resetVaultNewPasswordHint =>
+      'أنشئ كلمة مرور جديدة للخزنة. ستحل محل القديمة.';
+
+  @override
+  String get startReset => 'بدء إعادة التعيين';
+
+  @override
+  String get resetVaultDoNotClose =>
+      'لا تغلق التطبيق أو تطفئ الهاتف حتى تكتمل العملية.';
+
+  @override
+  String get resetStatusPreparing => 'جاري التحضير...';
+
+  @override
+  String get resetStatusBackingUp => 'جاري قراءة مفتاح التشفير...';
+
+  @override
+  String get resetStatusDecrypting => 'جاري فك تشفير الملاحظات...';
+
+  @override
+  String get resetStatusGeneratingKey => 'جاري إنشاء مفتاح تشفير جديد...';
+
+  @override
+  String get resetStatusReEncrypting => 'جاري إعادة تشفير الملاحظات...';
+
+  @override
+  String get resetStatusReplacing => 'جاري الإنهاء...';
+
+  @override
+  String get resetVaultSuccess => 'تمت إعادة تعيين الخزنة بنجاح!';
+
+  @override
+  String get saveCodeFirst => 'يرجى حفظ كود الاستعادة أولاً';
+
+  @override
+  String get done => 'تم';
+
+  @override
+  String get destroyVault => 'تدمير الخزنة';
+
+  @override
+  String get destroyVaultSubtitle => 'حذف الخزنة ومفاتيح التشفير نهائياً';
+
+  @override
+  String get destroyVaultWarning =>
+      'هذا الإجراء لا يمكن التراجع عنه. تأكد من وجود نسخة احتياطية أو فك قفل الملاحظات المهمة قبل المتابعة.';
+
+  @override
+  String get decryptAndDestroy => 'فك التشفير وتدمير';
+
+  @override
+  String get decryptAndDestroyDesc =>
+      'فك قفل جميع الملاحظات ونقلها للملاحظات العادية ثم تدمير الخزنة';
+
+  @override
+  String get decryptAndDestroyConfirm =>
+      'سيتم فك تشفير جميع الملاحظات المقفلة ونقلها للملاحظات العادية. سيتم حذف الخزنة ومفاتيح التشفير نهائياً. متابعة؟';
+
+  @override
+  String get destroyWithContent => 'تدمير مع المحتوى';
+
+  @override
+  String get destroyWithContentDesc =>
+      'حذف جميع الملاحظات المقفلة نهائياً وتدمير الخزنة';
+
+  @override
+  String get destroyWithContentConfirm =>
+      'سيتم حذف جميع الملاحظات المقفلة نهائياً مع الخزنة. لا يمكن التراجع عن هذا الإجراء. متابعة؟';
+
+  @override
+  String get vaultDestroyed => 'تم تدمير الخزنة بنجاح';
+
+  @override
+  String get confirmDestroyCheckbox =>
+      'أفهم أن هذا الإجراء لا يمكن التراجع عنه';
 }

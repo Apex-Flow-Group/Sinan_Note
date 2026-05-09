@@ -15,6 +15,7 @@ import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/storage/native_db_migration_service.dart';
 import 'package:apex_note/services/widget_service.dart';
@@ -146,6 +147,9 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       ApexDiagnosticsEngine().init(appDir.path);
+
+      // حذف النسخ الاحتياطية المنتهية (أقدم من 15 يوم)
+      unawaited(VaultResetService.cleanExpiredBackups());
 
       if (Platform.isAndroid || Platform.isIOS) {
         await NotificationService().initialize();

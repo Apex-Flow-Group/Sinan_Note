@@ -11,6 +11,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
+import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
@@ -63,11 +64,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     super.dispose();
   }
 
-  final bool _isAuthenticating = false;
+  bool _isAuthenticating = false;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_isAuthenticating) return;
+    if (_isAuthenticating || VaultResetGuard.isActive) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       if (_showAddMenu) setState(() => _showAddMenu = false);

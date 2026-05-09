@@ -3817,6 +3817,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a note from the list'**
   String get selectNoteToViewHistoryHint;
+
+  /// No description provided for @resetVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Vault Encryption'**
+  String get resetVault;
+
+  /// No description provided for @resetVaultSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-encrypt all notes with a new key'**
+  String get resetVaultSubtitle;
+
+  /// No description provided for @resetVaultWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Vault Encryption'**
+  String get resetVaultWarningTitle;
+
+  /// No description provided for @resetVaultWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will re-encrypt all your locked notes with a new encryption key. Your current password and recovery code will be replaced.'**
+  String get resetVaultWarningBody;
+
+  /// No description provided for @resetVaultBackupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure you have a backup of your notes before proceeding. This operation cannot be undone.'**
+  String get resetVaultBackupHint;
+
+  /// No description provided for @authenticateAndProceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate & Proceed'**
+  String get authenticateAndProceed;
+
+  /// No description provided for @resetVaultNewPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new password for your vault. This will replace the old one.'**
+  String get resetVaultNewPasswordHint;
+
+  /// No description provided for @startReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Reset'**
+  String get startReset;
+
+  /// No description provided for @resetVaultDoNotClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not close the app or turn off your phone until the process is complete.'**
+  String get resetVaultDoNotClose;
+
+  /// No description provided for @resetStatusPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing...'**
+  String get resetStatusPreparing;
+
+  /// No description provided for @resetStatusBackingUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading encryption key...'**
+  String get resetStatusBackingUp;
+
+  /// No description provided for @resetStatusDecrypting.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypting notes...'**
+  String get resetStatusDecrypting;
+
+  /// No description provided for @resetStatusGeneratingKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating new encryption key...'**
+  String get resetStatusGeneratingKey;
+
+  /// No description provided for @resetStatusReEncrypting.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-encrypting notes...'**
+  String get resetStatusReEncrypting;
+
+  /// No description provided for @resetStatusReplacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing...'**
+  String get resetStatusReplacing;
+
+  /// No description provided for @resetVaultSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault Reset Complete!'**
+  String get resetVaultSuccess;
+
+  /// No description provided for @saveCodeFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please save the recovery code first'**
+  String get saveCodeFirst;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @destroyVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Destroy Vault'**
+  String get destroyVault;
+
+  /// No description provided for @destroyVaultSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete the vault and its keys'**
+  String get destroyVaultSubtitle;
+
+  /// No description provided for @destroyVaultWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is irreversible. Make sure you have a backup or have unlocked important notes before proceeding.'**
+  String get destroyVaultWarning;
+
+  /// No description provided for @decryptAndDestroy.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypt & Destroy'**
+  String get decryptAndDestroy;
+
+  /// No description provided for @decryptAndDestroyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock all notes and move them to regular notes, then destroy the vault'**
+  String get decryptAndDestroyDesc;
+
+  /// No description provided for @decryptAndDestroyConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'All locked notes will be decrypted and moved to regular notes. The vault and its encryption keys will be permanently deleted. Continue?'**
+  String get decryptAndDestroyConfirm;
+
+  /// No description provided for @destroyWithContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Destroy with Content'**
+  String get destroyWithContent;
+
+  /// No description provided for @destroyWithContentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete all locked notes and destroy the vault'**
+  String get destroyWithContentDesc;
+
+  /// No description provided for @destroyWithContentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'All locked notes will be PERMANENTLY DELETED along with the vault. This cannot be undone. Continue?'**
+  String get destroyWithContentConfirm;
+
+  /// No description provided for @vaultDestroyed.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault destroyed successfully'**
+  String get vaultDestroyed;
+
+  /// No description provided for @confirmDestroyCheckbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand this action is irreversible'**
+  String get confirmDestroyCheckbox;
 }
 
 class _AppLocalizationsDelegate

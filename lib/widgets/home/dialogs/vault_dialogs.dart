@@ -1,10 +1,17 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/screens/auth/vault_reset_screen.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
+import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class VaultDialogs {
   static void showSettings(BuildContext context) {
@@ -51,11 +58,353 @@ class VaultDialogs {
                 );
               },
             ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.restart_alt, color: Colors.orange),
+              title: Text(l10n.resetVault),
+              subtitle: Text(l10n.resetVaultSubtitle),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const VaultResetScreen(),
+                  ),
+                );
+              },
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.delete_forever, color: Colors.red),
+              title: Text(l10n.destroyVault),
+              subtitle: Text(l10n.destroyVaultSubtitle),
+              onTap: () {
+                Navigator.pop(context);
+                _showDestroyVaultDialog(context);
+              },
+            ),
             const SizedBox(height: 8),
           ],
         ),
       ),
     );
+  }
+
+  static void _showDestroyVaultDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    AppBottomSheet.show(
+      context,
+      isScrollControlled: true,
+      child: AppBottomSheet(
+        title: l10n.destroyVault,
+        titleIcon: Icons.delete_forever,
+        scrollable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber, color: Colors.red, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.destroyVaultWarning,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.red[200] : Colors.red[800],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // خيار 1: فك التشفير ثم تدمير الخزنة
+              ListTile(
+                leading: const Icon(Icons.lock_open, color: Colors.orange),
+                title: Text(l10n.decryptAndDestroy),
+                subtitle: Text(l10n.decryptAndDestroyDesc),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.orange.withValues(alpha: 0.3)),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDecryptAndDestroy(context);
+                },
+              ),
+              const SizedBox(height: 12),
+              // خيار 2: تدمير مع المحتوى
+              ListTile(
+                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                title: Text(l10n.destroyWithContent),
+                subtitle: Text(l10n.destroyWithContentDesc),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDestroyWithContent(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static void _confirmDecryptAndDestroy(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    bool confirmed = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n.decryptAndDestroy),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.decryptAndDestroyConfirm),
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                value: confirmed,
+                onChanged: (val) =>
+                    setDialogState(() => confirmed = val ?? false),
+                title: Text(
+                  l10n.confirmDestroyCheckbox,
+                  style: const TextStyle(fontSize: 13),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: confirmed
+                  ? () async {
+                      Navigator.pop(ctx);
+                      await _authenticateAndExecute(
+                        context,
+                        () => _executeDecryptAndDestroy(context),
+                      );
+                    }
+                  : null,
+              style: TextButton.styleFrom(foregroundColor: Colors.orange),
+              child: Text(l10n.confirm),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static void _confirmDestroyWithContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    bool confirmed = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n.destroyWithContent),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.destroyWithContentConfirm),
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                value: confirmed,
+                onChanged: (val) =>
+                    setDialogState(() => confirmed = val ?? false),
+                title: Text(
+                  l10n.confirmDestroyCheckbox,
+                  style: const TextStyle(fontSize: 13),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: confirmed
+                  ? () async {
+                      Navigator.pop(ctx);
+                      await _authenticateAndExecute(
+                        context,
+                        () => _executeDestroyWithContent(context),
+                      );
+                    }
+                  : null,
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(l10n.confirm),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// تحقق بالبصمة ثم نفّذ العملية (مع حماية من إغلاق الخزنة)
+  static Future<void> _authenticateAndExecute(
+    BuildContext context,
+    Future<void> Function() action,
+  ) async {
+    VaultResetGuard.isActive = true;
+
+    final authenticated = await BiometricService.authenticate();
+
+    if (!authenticated) {
+      VaultResetGuard.isActive = false;
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: AppLocalizations.of(context)!.authenticationFailed,
+        type: NotificationType.error,
+      );
+      return;
+    }
+
+    try {
+      await action();
+    } finally {
+      VaultResetGuard.isActive = false;
+    }
+  }
+
+  /// فك تشفير كل الملاحظات ثم تدمير الخزنة
+  static Future<void> _executeDecryptAndDestroy(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      final dbService = IsarDatabaseService();
+      final lockedNotes = await dbService.getLockedNotes();
+
+      if (lockedNotes.isNotEmpty) {
+        enc.Key? masterKey;
+        try {
+          masterKey = await VaultService.getMasterKey();
+        } catch (_) {
+          if (!context.mounted) return;
+          UnifiedNotificationService().show(
+            context: context,
+            message: l10n.decryptionFailed,
+            type: NotificationType.error,
+          );
+          return;
+        }
+
+        // فك تشفير كل ملاحظة وإلغاء القفل
+        for (final note in lockedNotes) {
+          final decryptedTitle =
+              VaultService.decryptWithKey(note.title, masterKey);
+          final decryptedContent =
+              VaultService.decryptWithKey(note.content, masterKey);
+
+          final unlocked = note.copyWith(
+            title: decryptedTitle,
+            content: decryptedContent,
+            isLocked: false,
+            updatedAt: DateTime.now(),
+          );
+          await dbService.updateNote(unlocked);
+        }
+
+        VaultService.wipeMasterKey(masterKey);
+      }
+
+      // تدمير الخزنة
+      await VaultService.clearVault();
+
+      if (!context.mounted) return;
+
+      // تحديث الصفحة الرئيسية
+      Provider.of<NotesProvider>(context, listen: false)
+          .refreshAllNotes(force: true);
+
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.vaultDestroyed,
+        type: NotificationType.success,
+      );
+
+      // الخروج من شاشة الخزنة
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.failed}: $e',
+        type: NotificationType.error,
+      );
+    }
+  }
+
+  /// تدمير الخزنة مع كل محتوياتها
+  static Future<void> _executeDestroyWithContent(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      final dbService = IsarDatabaseService();
+      final lockedNotes = await dbService.getLockedNotes();
+
+      // حذف كل الملاحظات المقفلة
+      for (final note in lockedNotes) {
+        if (note.id != null) {
+          await dbService.deleteNote(note.id!);
+        }
+      }
+
+      // تدمير الخزنة
+      await VaultService.clearVault();
+
+      if (!context.mounted) return;
+
+      // تحديث الصفحة الرئيسية
+      Provider.of<NotesProvider>(context, listen: false)
+          .refreshAllNotes(force: true);
+
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.vaultDestroyed,
+        type: NotificationType.success,
+      );
+
+      // الخروج من شاشة الخزنة
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.failed}: $e',
+        type: NotificationType.error,
+      );
+    }
   }
 
   static void showChangePassword(BuildContext context) {

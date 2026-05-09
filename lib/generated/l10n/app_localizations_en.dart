@@ -1929,4 +1929,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectNoteToViewHistoryHint => 'Choose a note from the list';
+
+  @override
+  String get resetVault => 'Reset Vault Encryption';
+
+  @override
+  String get resetVaultSubtitle => 'Re-encrypt all notes with a new key';
+
+  @override
+  String get resetVaultWarningTitle => 'Reset Vault Encryption';
+
+  @override
+  String get resetVaultWarningBody =>
+      'This will re-encrypt all your locked notes with a new encryption key. Your current password and recovery code will be replaced.';
+
+  @override
+  String get resetVaultBackupHint =>
+      'Make sure you have a backup of your notes before proceeding. This operation cannot be undone.';
+
+  @override
+  String get authenticateAndProceed => 'Authenticate & Proceed';
+
+  @override
+  String get resetVaultNewPasswordHint =>
+      'Create a new password for your vault. This will replace the old one.';
+
+  @override
+  String get startReset => 'Start Reset';
+
+  @override
+  String get resetVaultDoNotClose =>
+      'Do not close the app or turn off your phone until the process is complete.';
+
+  @override
+  String get resetStatusPreparing => 'Preparing...';
+
+  @override
+  String get resetStatusBackingUp => 'Reading encryption key...';
+
+  @override
+  String get resetStatusDecrypting => 'Decrypting notes...';
+
+  @override
+  String get resetStatusGeneratingKey => 'Generating new encryption key...';
+
+  @override
+  String get resetStatusReEncrypting => 'Re-encrypting notes...';
+
+  @override
+  String get resetStatusReplacing => 'Finalizing...';
+
+  @override
+  String get resetVaultSuccess => 'Vault Reset Complete!';
+
+  @override
+  String get saveCodeFirst => 'Please save the recovery code first';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get destroyVault => 'Destroy Vault';
+
+  @override
+  String get destroyVaultSubtitle =>
+      'Permanently delete the vault and its keys';
+
+  @override
+  String get destroyVaultWarning =>
+      'This action is irreversible. Make sure you have a backup or have unlocked important notes before proceeding.';
+
+  @override
+  String get decryptAndDestroy => 'Decrypt & Destroy';
+
+  @override
+  String get decryptAndDestroyDesc =>
+      'Unlock all notes and move them to regular notes, then destroy the vault';
+
+  @override
+  String get decryptAndDestroyConfirm =>
+      'All locked notes will be decrypted and moved to regular notes. The vault and its encryption keys will be permanently deleted. Continue?';
+
+  @override
+  String get destroyWithContent => 'Destroy with Content';
+
+  @override
+  String get destroyWithContentDesc =>
+      'Permanently delete all locked notes and destroy the vault';
+
+  @override
+  String get destroyWithContentConfirm =>
+      'All locked notes will be PERMANENTLY DELETED along with the vault. This cannot be undone. Continue?';
+
+  @override
+  String get vaultDestroyed => 'Vault destroyed successfully';
+
+  @override
+  String get confirmDestroyCheckbox =>
+      'I understand this action is irreversible';
 }
