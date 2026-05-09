@@ -440,7 +440,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       final content = widget.coordinator.codeController?.text ??
           widget.coordinator.contentController.text;
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.only(top: 12, bottom: 80),
         child: MarkdownViewer(
           content: content,
           textColor: textColor,
@@ -459,7 +459,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           child: Directionality(
             textDirection: TextDirection.ltr,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.only(top: 20, bottom: 80),
               child: SelectableText(
                 content,
                 style: TextStyle(
@@ -493,10 +493,11 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
             focusNode: widget.coordinator.textFieldFocusNode,
             scrollController: ScrollController(),
             config: QuillEditorConfig(
+              unknownEmbedBuilder: _unknownEmbedBuilder,
               autoFocus: false,
               expands: true,
               scrollable: true,
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.only(top: 20, bottom: 40),
               showCursor: false,
               enableInteractiveSelection: false,
               checkBoxReadOnly: true,
@@ -722,3 +723,14 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
   }
 }
+
+class _UnknownEmbedBuilder extends EmbedBuilder {
+  const _UnknownEmbedBuilder();
+  @override
+  String get key => '__unknown__';
+  @override
+  Widget build(BuildContext context, EmbedContext embedContext) =>
+      const SizedBox.shrink();
+}
+
+const _unknownEmbedBuilder = _UnknownEmbedBuilder();

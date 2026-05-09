@@ -16,13 +16,24 @@ class AppUpdateService {
       final info = await InAppUpdate.checkForUpdate();
 
       if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-        // Flexible — يحمّل في الخلفية ويعرض bottom sheet من Google
+        // Flexible — يحمّل في الخلفية فقط، التثبيت عند إعادة فتح التطبيق
         await InAppUpdate.startFlexibleUpdate();
-        await InAppUpdate.completeFlexibleUpdate();
+        // لا نستدعي completeFlexibleUpdate هنا — يتم تلقائياً عند إعادة الفتح
       }
     } catch (_) {
       // silent — لا نوقف التطبيق إذا فشل الفحص
     }
+  }
+
+  /// يُستدعى عند العودة للتطبيق — يثبّت التحديث إذا كان جاهزاً
+  static Future<void> completeIfDownloaded() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.installStatus == InstallStatus.downloaded) {
+        await InAppUpdate.completeFlexibleUpdate();
+      }
+    } catch (_) {}
   }
 
   /// للتحديثات الحرجة — يجبر المستخدم على التحديث

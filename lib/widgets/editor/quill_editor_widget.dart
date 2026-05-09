@@ -298,6 +298,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                     focusNode: widget.focusNode,
                     scrollController: _ctrl.scrollController,
                     config: QuillEditorConfig(
+                      unknownEmbedBuilder: _unknownEmbedBuilder,
                       editorKey: _ctrl.editorKey,
                       autoFocus: widget.autoFocus,
                       expands: true,
@@ -392,3 +393,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     );
   }
 }
+
+class _UnknownEmbedBuilder extends EmbedBuilder {
+  const _UnknownEmbedBuilder();
+  @override
+  String get key => '__unknown__';
+  @override
+  Widget build(BuildContext context, EmbedContext embedContext) =>
+      const SizedBox.shrink();
+}
+
+const _unknownEmbedBuilder = _UnknownEmbedBuilder();

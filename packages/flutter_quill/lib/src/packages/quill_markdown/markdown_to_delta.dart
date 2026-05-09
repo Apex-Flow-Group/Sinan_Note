@@ -89,10 +89,7 @@ class MarkdownToDelta extends Converter<String, Delta>
     'code': (_) => [Attribute.inlineCode],
   };
 
-  final _elementToEmbed = <String, ElementToEmbeddableConvertor>{
-    'img': (elAttrs) => BlockEmbed.image(elAttrs['src'] ?? ''),
-    'video': (elAttrs) => BlockEmbed.video(elAttrs['src'] ?? '')
-  };
+  final _elementToEmbed = <String, ElementToEmbeddableConvertor>{};
 
   var _delta = Delta();
   final _activeInlineAttributes = Queue<List<Attribute<dynamic>>>();

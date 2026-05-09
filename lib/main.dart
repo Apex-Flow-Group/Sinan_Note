@@ -21,6 +21,7 @@ import 'package:apex_note/screens/other/widget_selection_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
 import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
+import 'package:apex_note/services/app_update_service.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/security/security_gate.dart';
@@ -311,6 +312,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // عند العودة من الخلفية — نجدد الجلسة بصمت بدون dialog
       GoogleDriveAuth.refreshSessionIfNeeded();
+      // تثبيت التحديث إذا كان جاهزاً
+      AppUpdateService.completeIfDownloaded();
     }
   }
 
