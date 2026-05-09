@@ -16,6 +16,7 @@ import 'package:apex_note/services/code_preview_service.dart';
 import 'package:apex_note/services/svg_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
+import 'package:apex_note/widgets/editor/markdown_viewer.dart';
 import 'package:apex_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -172,7 +173,48 @@ class EditorToolbarBuilder {
                           try {
                             final lang = coordinator.detectedLanguage!;
                             final code = coordinator.codeController!.text;
-                            if (lang == 'SVG') {
+                            if (lang == 'Markdown') {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) => DraggableScrollableSheet(
+                                  initialChildSize: 0.85,
+                                  maxChildSize: 0.95,
+                                  minChildSize: 0.4,
+                                  builder: (_, sc) => Container(
+                                    decoration: BoxDecoration(
+                                      color: coordinator.getBackgroundColor(context),
+                                      borderRadius: const BorderRadius.vertical(
+                                          top: Radius.circular(20)),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(height: 12),
+                                        Container(
+                                          width: 40, height: 4,
+                                          decoration: BoxDecoration(
+                                            color: finalTextColor.withValues(alpha: 0.3),
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            controller: sc,
+                                            padding: const EdgeInsets.all(16),
+                                            child: MarkdownViewer(
+                                              content: code,
+                                              textColor: finalTextColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else if (lang == 'SVG') {
                               await SvgService.previewSvgCode(context, code);
                             } else {
                               await CodePreviewService.preview(

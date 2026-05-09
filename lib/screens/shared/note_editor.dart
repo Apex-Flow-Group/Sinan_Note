@@ -220,10 +220,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   Future<bool> _saveNoteToDatabase(
       {bool forceUpdate = false, bool isManualSave = false}) {
     final effectiveNote = _currentNote ?? widget.note;
-    debugPrint('[SAVE] _saveNoteToDatabase called | isManualSave=$isManualSave forceUpdate=$forceUpdate');
-    debugPrint('[SAVE] mode=$_currentMode | savedNoteId=${_coordinator.savedNoteId} | existingNote=${effectiveNote?.id}');
-    debugPrint('[SAVE] isDirty=${_coordinator.stateManager.isDirty} | hasChanges=${_coordinator.stateManager.hasChanges()} | isSaving=${_coordinator.stateManager.isSaving}');
-    debugPrint('[SAVE] content(50)=${(_currentMode == NoteMode.code ? _coordinator.codeController?.text : _coordinator.contentController.text)?.substring(0, (_currentMode == NoteMode.code ? _coordinator.codeController?.text.length ?? 0 : _coordinator.contentController.text.length).clamp(0, 50))}');
     return EditorSaveOperations.saveToDatabase(
       coordinator: _coordinator,
       mode: _currentMode,
@@ -446,10 +442,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           _currentNote = newNote;
         }),
         onEnterEdit: () {
-          debugPrint('[ENTER_EDIT] _currentMode=$_currentMode | widget.mode=${widget.mode}');
-          debugPrint('[ENTER_EDIT] _currentNote=${_currentNote?.id} | widget.note=${widget.note?.id}');
-          debugPrint('[ENTER_EDIT] stateManager.isDirty=${_coordinator.stateManager.isDirty} | hasChanges=${_coordinator.stateManager.hasChanges()}');
-          debugPrint('[ENTER_EDIT] savedNoteId=${_coordinator.savedNoteId}');
           if (_currentMode != widget.mode) {
             _coordinator.dispose();
             _coordinator = EditorCoordinator(

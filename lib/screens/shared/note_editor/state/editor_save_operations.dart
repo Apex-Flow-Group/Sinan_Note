@@ -29,10 +29,6 @@ class EditorSaveOperations {
   }) async {
     if (coordinator.stateManager.isSaving) return false;
 
-    debugPrint('[SAVE_DB] forceUpdate=$forceUpdate isManualSave=$isManualSave');
-    debugPrint('[SAVE_DB] isSaving=${coordinator.stateManager.isSaving} | hasChanges=${coordinator.stateManager.hasChanges()} | isDirty=${coordinator.stateManager.isDirty}');
-    debugPrint('[SAVE_DB] savedNoteId=${coordinator.savedNoteId} | existingNote=${existingNote?.id}');
-
     final isNewLockedNote =
         (coordinator.initialLockState || existingNote?.isLocked == true) &&
             existingNote?.id == null &&
@@ -42,7 +38,6 @@ class EditorSaveOperations {
         !isNewLockedNote &&
         (coordinator.savedNoteId != null || existingNote != null)) {
       if (!coordinator.stateManager.hasChanges()) {
-        debugPrint('[SAVE_DB] ⛔ SKIPPED — hasChanges() = false');
         return false;
       }
     }

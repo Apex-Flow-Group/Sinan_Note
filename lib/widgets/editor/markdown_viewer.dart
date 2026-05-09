@@ -182,29 +182,6 @@ class MarkdownViewer extends StatelessWidget {
     }
   }
 
-  // تقسيم النص إلى فقرات — كل مجموعة سطور متتالية = فقرة واحدة
-  List<String> _splitIntoParagraphs(String raw) {
-    final paragraphs = <String>[];
-    final buffer = StringBuffer();
-
-    for (final line in raw.split('\n')) {
-      if (line.trim().isEmpty) {
-        if (buffer.isNotEmpty) {
-          paragraphs.add(buffer.toString().trimRight());
-          buffer.clear();
-        }
-        paragraphs.add('');
-      } else {
-        buffer.write(line.trimRight());
-        buffer.writeln('  ');
-      }
-    }
-    if (buffer.isNotEmpty) {
-      paragraphs.add(buffer.toString().trimRight());
-    }
-    return paragraphs;
-  }
-
   MarkdownStyleSheet _buildStyleSheet(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final codeBg = isDark
@@ -284,79 +261,65 @@ class MarkdownViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildParagraph(BuildContext context, String para) {
-    if (para.isEmpty) return const SizedBox(height: 12);
-
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dir = TextDirectionUtils.getDirection(para);
+    final dir = TextDirectionUtils.getDirection(content);
+    final sanitized = content.replaceAllMapped(
+      RegExp(r'<kbd>(.*?)</kbd>', caseSensitive: false),
+      (m) => '`${m[1]}`',
+    );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+    return ScrollbarTheme(
+      data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
       child: Directionality(
         textDirection: dir,
-        child: SizedBox(
-          width: double.infinity,
-          child: MarkdownBody(
-            data: para,
-            selectable: true,
-            styleSheet: _buildStyleSheet(context),
-            extensionSet: md.ExtensionSet(
-              [...md.ExtensionSet.gitHubFlavored.blockSyntaxes],
-              [
-                md.EmojiSyntax(),
-                ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-              ],
-            ),
-            onTapLink: _onTapLink,
-            builders: {
-              'code': _CodeBlockBuilder(textColor: textColor, isDark: isDark),
-            },
-            imageBuilder: (uri, title, alt) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  uri.toString(),
-                  errorBuilder: (_, __, ___) => Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: textColor.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(8),
-                      border:
-                          Border.all(color: textColor.withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.broken_image_outlined,
-                            color: textColor.withValues(alpha: 0.4), size: 18),
-                        const SizedBox(width: 6),
-                        Text(alt ?? 'Image',
-                            style: TextStyle(
-                                color: textColor.withValues(alpha: 0.5),
-                                fontSize: 13)),
-                      ],
-                    ),
+        child: MarkdownBody(
+          data: sanitized,
+          selectable: true,
+          styleSheet: _buildStyleSheet(context),
+          extensionSet: md.ExtensionSet(
+            [...md.ExtensionSet.gitHubFlavored.blockSyntaxes],
+            [
+              md.EmojiSyntax(),
+              ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+            ],
+          ),
+          onTapLink: _onTapLink,
+          builders: {
+            'code': _CodeBlockBuilder(textColor: textColor, isDark: isDark),
+          },
+          imageBuilder: (uri, title, alt) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                uri.toString(),
+                errorBuilder: (_, __, ___) => Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: textColor.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: textColor.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.broken_image_outlined,
+                          color: textColor.withValues(alpha: 0.4), size: 18),
+                      const SizedBox(width: 6),
+                      Text(alt ?? 'Image',
+                          style: TextStyle(
+                              color: textColor.withValues(alpha: 0.5),
+                              fontSize: 13)),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final paragraphs = _splitIntoParagraphs(content);
-
-    return ScrollbarTheme(
-      data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children:
-            paragraphs.map((para) => _buildParagraph(context, para)).toList(),
       ),
     );
   }

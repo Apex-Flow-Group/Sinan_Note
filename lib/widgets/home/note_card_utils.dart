@@ -177,14 +177,32 @@ class NoteCardUtils {
   }
 
   static Widget buildChecklistPreview(String content, Color titleColor) {
-    final items = ChecklistFormatter.parseJson(content).take(3).toList();
+    final items = ChecklistFormatter.parseJson(content)
+        .where((item) => item.text.trim().isNotEmpty)
+        .take(3)
+        .toList();
     if (items.isEmpty) {
-      return Text(
-        content,
-        maxLines: 4,
-        overflow: TextOverflow.ellipsis,
-        style:
-            TextStyle(fontSize: 14, color: titleColor.withValues(alpha: 0.7)),
+      return Row(
+        textDirection: TextDirection.ltr,
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: titleColor.withValues(alpha: 0.3),
+                width: 2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Task',
+            style: TextStyle(
+                fontSize: 14, color: titleColor.withValues(alpha: 0.3)),
+          ),
+        ],
       );
     }
 
@@ -196,17 +214,27 @@ class NoteCardUtils {
           child: Row(
             textDirection: TextDirection.ltr,
             children: [
-              Icon(
-                item.isDone ? Icons.check_box : Icons.check_box_outline_blank,
-                size: 18,
-                color: item.isDone
-                    ? Colors.green
-                    : titleColor.withValues(alpha: 0.6),
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: item.isDone ? Colors.green : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: item.isDone
+                        ? Colors.green
+                        : titleColor.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                ),
+                child: item.isDone
+                    ? const Icon(Icons.check, size: 12, color: Colors.white)
+                    : null,
               ),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
-                  item.text.isEmpty ? 'Mission...' : item.text,
+                  item.text.isEmpty ? 'Task' : item.text,
                   style: TextStyle(
                     fontSize: 14,
                     color: item.isDone

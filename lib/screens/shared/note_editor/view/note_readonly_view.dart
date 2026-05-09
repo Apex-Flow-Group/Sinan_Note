@@ -7,7 +7,6 @@ import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/core/utils/quill_migration.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
@@ -90,10 +89,12 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           newContent = ops
               .where((op) => op is Map && op['insert'] is String)
               .map((op) => op['insert'] as String)
-              .join().trimRight();
+              .join()
+              .trimRight();
         } catch (_) {}
       }
-      newContent = ChecklistFormatter.fromPlainText(newContent, title: dbNote.title);
+      newContent =
+          ChecklistFormatter.fromPlainText(newContent, title: dbNote.title);
     } else if (dbNote.isChecklist) {
       // checklist → simple/rich/code: استخرج نص عادي
       final plain = ChecklistFormatter.toPlainText(dbNote.content);
@@ -105,7 +106,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         newContent = QuillMigration.toDeltaJson(qc);
         qc.dispose();
       }
-    } else if (dbNote.isProfessional || dbNote.noteType == 'code' || dbNote.noteType == 'pro') {
+    } else if (dbNote.isProfessional ||
+        dbNote.noteType == 'code' ||
+        dbNote.noteType == 'pro') {
       // code → simple/rich: المحتوى نص عادي، حوّله لـ Delta JSON
       if (targetType != 'code') {
         final qc = QuillMigration.controllerFromContent(newContent);
@@ -120,7 +123,8 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           newContent = ops
               .where((op) => op is Map && op['insert'] is String)
               .map((op) => op['insert'] as String)
-              .join().trimRight();
+              .join()
+              .trimRight();
         } catch (_) {}
       }
       // Delta JSON → simple/rich: يبقى كما هو
@@ -178,10 +182,13 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
     widget.coordinator.savedNoteId = updated.id;
 
-    debugPrint('[CONVERT] done → newMode=$newMode | noteId=${updated.id} | noteType=${updated.noteType}');
-    debugPrint('[CONVERT] stateManager.isDirty=${widget.coordinator.stateManager.isDirty} | hasChanges=${widget.coordinator.stateManager.hasChanges()}');
+    debugPrint(
+        '[CONVERT] done → newMode=$newMode | noteId=${updated.id} | noteType=${updated.noteType}');
+    debugPrint(
+        '[CONVERT] stateManager.isDirty=${widget.coordinator.stateManager.isDirty} | hasChanges=${widget.coordinator.stateManager.hasChanges()}');
     debugPrint('[CONVERT] savedNoteId=${widget.coordinator.savedNoteId}');
-    debugPrint('[CONVERT] content(50)=${updated.content.substring(0, updated.content.length.clamp(0, 50))}');
+    debugPrint(
+        '[CONVERT] content(50)=${updated.content.substring(0, updated.content.length.clamp(0, 50))}');
 
     setState(() {
       _currentNote = updated;
@@ -357,6 +364,19 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       );
     }
 
+    // Markdown preview — يجب أن يكون قبل Code
+    if (_showMarkdown) {
+      final content = widget.coordinator.codeController?.text ??
+          widget.coordinator.contentController.text;
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: MarkdownViewer(
+          content: content,
+          textColor: textColor,
+        ),
+      );
+    }
+
     // Code
     if (_currentMode == NoteMode.code) {
       final content = widget.coordinator.codeController?.text ??
@@ -387,20 +407,6 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final qc = widget.coordinator.quillController;
     if (qc == null) return const SizedBox.shrink();
 
-    // Markdown
-    if (_showMarkdown) {
-      final rawContent = widget.note.content;
-      final converted = NoteContentUtils.toDisplayText(rawContent);
-      debugPrint('📝 [Markdown] raw length: ${rawContent.length}');
-      debugPrint('📝 [Markdown] converted length: ${converted.length}');
-      debugPrint(
-          '📝 [Markdown] first 300 chars:\n${converted.substring(0, converted.length.clamp(0, 300))}');
-      return MarkdownViewer(
-        content: converted,
-        textColor: textColor,
-      );
-    }
-
     // Rich / Simple / Reminder
     final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
     qc.readOnly = true;
@@ -413,7 +419,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           child: QuillEditor(
             controller: qc,
             focusNode: widget.coordinator.textFieldFocusNode,
-            scrollController: _scrollController,
+            scrollController: ScrollController(),
             config: QuillEditorConfig(
               autoFocus: false,
               expands: true,
@@ -543,7 +549,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           : const EdgeInsets.only(top: 8, bottom: 8),
       padding: isChecklist
           ? EdgeInsets.fromLTRB(12, isLandscape ? 8 : 16, 12, 8)
-          : const EdgeInsets.symmetric(horizontal: 12),
+          : isMarkdown
+              ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+              : const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: noteColor,
         borderRadius: BorderRadius.circular(16),
@@ -576,9 +584,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           )
         : noteCard;
 
-    final canMarkdown = _currentMode == NoteMode.simple ||
-        _currentMode == NoteMode.rich ||
-        _currentMode == NoteMode.reminder;
+    final canMarkdown = _currentNote.noteType == 'markdown';
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -610,8 +616,8 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
                   child: GestureDetector(
                     onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: widget.sidePadding),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: widget.sidePadding),
                       child: heroCard,
                     ),
                   ),
@@ -644,9 +650,8 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               onDelete: _onDelete,
               onEdit: widget.onEnterEdit,
               onConvert: (targetType) => _onConvert(targetType),
-              currentNoteType: _currentNote.isProfessional
-                  ? 'code'
-                  : _currentNote.noteType,
+              currentNoteType:
+                  _currentNote.isProfessional ? 'code' : _currentNote.noteType,
               isChecklist: _currentNote.isChecklist,
             ),
     );

@@ -238,36 +238,40 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     '© 2025 Apex Flow Group',
                     style:
                         TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
                   ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const SupportFormScreen()));
-                    },
-                    child: Icon(Icons.support_agent_rounded,
-                        size: 18, color: scheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AboutScreen()));
-                    },
-                    child: Icon(Icons.info_outline_rounded,
-                        size: 18, color: scheme.onSurfaceVariant),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const SupportFormScreen()));
+                        },
+                        child: Icon(Icons.support_agent_rounded,
+                            size: 18, color: scheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const AboutScreen()));
+                        },
+                        child: Icon(Icons.info_outline_rounded,
+                            size: 18, color: scheme.onSurfaceVariant),
+                      ),
+                    ],
                   ),
                 ],
               ),

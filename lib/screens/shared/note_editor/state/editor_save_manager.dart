@@ -33,26 +33,6 @@ class EditorSaveManager {
 
   /// Prepare checklist content for saving
   static String prepareChecklistContent(String content, String defaultTask) {
-    try {
-      final decoded = jsonDecode(content);
-      if (decoded is Map) {
-        final items = decoded['items'] as List? ?? [];
-        if (items.isEmpty) {
-          return jsonEncode({
-            'title': decoded['title'] ?? '',
-            'items': [
-              {
-                'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                'text': defaultTask,
-                'isDone': false
-              }
-            ]
-          });
-        }
-      }
-    } catch (e) {
-      // Invalid JSON, return original
-    }
     return content;
   }
 

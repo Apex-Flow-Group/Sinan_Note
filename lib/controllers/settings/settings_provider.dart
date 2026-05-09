@@ -236,6 +236,12 @@ class SettingsProvider with ChangeNotifier {
   Future<void> _loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      
+      // Migration: Force disable hero animation for all users
+      if (prefs.containsKey('heroAnimationEnabled')) {
+        await prefs.setBool('heroAnimationEnabled', false);
+      }
+      
       int? themeIndex = prefs.getInt('themeMode');
       if (themeIndex != null &&
           themeIndex >= 0 &&
@@ -253,7 +259,7 @@ class SettingsProvider with ChangeNotifier {
       _doubleTapToEdit = prefs.getBool('doubleTapToEdit') ?? true;
       _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
           ['delete', 'archive', 'share'];
-      _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
+      _heroAnimationEnabled = false;
       _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'normal';
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');
