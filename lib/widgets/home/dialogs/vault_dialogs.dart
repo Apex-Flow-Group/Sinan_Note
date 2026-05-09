@@ -277,17 +277,21 @@ class VaultDialogs {
   ) async {
     VaultResetGuard.isActive = true;
 
-    final authenticated = await BiometricService.authenticate();
+    // لو الجهاز بلا حماية — المستخدم داخل الخزنة أصلاً، ننفّذ مباشرة
+    final hasBio = await BiometricService.hasBiometrics();
+    if (hasBio) {
+      final authenticated = await BiometricService.authenticate();
 
-    if (!authenticated) {
-      VaultResetGuard.isActive = false;
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: AppLocalizations.of(context)!.authenticationFailed,
-        type: NotificationType.error,
-      );
-      return;
+      if (!authenticated) {
+        VaultResetGuard.isActive = false;
+        if (!context.mounted) return;
+        UnifiedNotificationService().show(
+          context: context,
+          message: AppLocalizations.of(context)!.authenticationFailed,
+          type: NotificationType.error,
+        );
+        return;
+      }
     }
 
     try {

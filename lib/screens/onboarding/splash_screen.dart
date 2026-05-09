@@ -101,8 +101,17 @@ class _SplashScreenState extends State<SplashScreen> {
       _updateStatus(
           isArabic ? 'التحقق من الأمان...' : 'Security check...', 0.9);
       if (settings.isAppLockEnabled) {
-        final authenticated = await BiometricService.authenticate();
-        if (!authenticated) return;
+        // كشف إلغاء حماية الجهاز — تعطيل القفل تلقائياً
+        final hasBio = await BiometricService.hasBiometrics();
+        if (!hasBio) {
+          await settings.setAppLockEnabled(false);
+          if (mounted) {
+            _showBiometricRemovedNotice(isArabic);
+          }
+        } else {
+          final authenticated = await BiometricService.authenticate();
+          if (!authenticated) return;
+        }
       }
 
       if (!mounted) return;
@@ -141,6 +150,21 @@ class _SplashScreenState extends State<SplashScreen> {
       AppLogger.error('Splash initialization error', 'SplashScreen', e);
       _updateStatus(isArabic ? 'حدث خطأ...' : 'Error occurred...', 0.0);
     }
+  }
+
+  void _showBiometricRemovedNotice(bool isArabic) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isArabic
+              ? 'تم تعطيل قفل التطبيق — لا توجد حماية على الجهاز'
+              : 'App lock disabled — no device security detected',
+        ),
+        duration: const Duration(seconds: 4),
+        backgroundColor: Colors.orange.shade800,
+      ),
+    );
   }
 
   Future<void> _initBackgroundServices() async {
