@@ -62,20 +62,6 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     final biometricEnabled = await VaultService.isBiometricEnabled();
 
     if (biometricEnabled) {
-      // كشف إلغاء حماية الجهاز — تعطيل البصمة للخزنة
-      final hasBio = await BiometricService.hasBiometrics();
-      if (!hasBio) {
-        await VaultService.setBiometricEnabled(false);
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const VaultUnlockScreen(),
-            ),
-          );
-        }
-        return;
-      }
       await _authenticateWithBiometric();
     } else {
       if (mounted) {

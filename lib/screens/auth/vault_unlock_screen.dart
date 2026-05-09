@@ -293,9 +293,9 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           ),
         ),
 
-        // زر البصمة — فقط إذا كانت متاحة
+        // زر البصمة — فقط إذا كانت مفعّلة بالخزنة
         FutureBuilder<bool>(
-          future: BiometricService.hasBiometrics(),
+          future: VaultService.isBiometricEnabled(),
           builder: (context, snapshot) {
             if (snapshot.data != true) return const SizedBox.shrink();
             return Column(

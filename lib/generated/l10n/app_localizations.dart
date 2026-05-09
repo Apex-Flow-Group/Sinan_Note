@@ -3991,6 +3991,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I understand this action is irreversible'**
   String get confirmDestroyCheckbox;
+
+  /// No description provided for @deviceSecurityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must set up a screen lock (PIN, pattern, or biometric) on your device first'**
+  String get deviceSecurityRequired;
+
+  /// No description provided for @deviceSecurityRequiredDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'To use the app lock feature, your device must be protected with a screen lock (PIN, pattern, fingerprint, or face recognition). Go to your device Settings > Security to set it up.'**
+  String get deviceSecurityRequiredDesc;
 }
 
 class _AppLocalizationsDelegate

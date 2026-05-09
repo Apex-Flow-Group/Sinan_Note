@@ -2027,4 +2027,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get confirmDestroyCheckbox =>
       'I understand this action is irreversible';
+
+  @override
+  String get deviceSecurityRequired =>
+      'You must set up a screen lock (PIN, pattern, or biometric) on your device first';
+
+  @override
+  String get deviceSecurityRequiredDesc =>
+      'To use the app lock feature, your device must be protected with a screen lock (PIN, pattern, fingerprint, or face recognition). Go to your device Settings > Security to set it up.';
 }

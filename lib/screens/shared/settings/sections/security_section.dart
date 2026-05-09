@@ -27,8 +27,39 @@ class SecuritySection extends StatelessWidget {
           subtitle: Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
           value: settings.isAppLockEnabled,
           onChanged: (val) async {
-            final authenticated = await BiometricService.authenticate();
-            if (authenticated) await settings.setAppLockEnabled(val);
+            if (val) {
+              // تفعيل — نحاول المصادقة أولاً
+              final result = await BiometricService.authenticateOrNull();
+              if (result == null) {
+                // الجهاز بلا حماية
+                if (!context.mounted) return;
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    icon: const Icon(Icons.phonelink_lock, size: 40, color: Colors.orange),
+                    title: Text(l10n.deviceSecurityRequired),
+                    content: Text(l10n.deviceSecurityRequiredDesc),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(l10n.ok),
+                      ),
+                    ],
+                  ),
+                );
+                return;
+              }
+              if (result) await settings.setAppLockEnabled(true);
+            } else {
+              // تعطيل
+              final result = await BiometricService.authenticateOrNull();
+              if (result == null) {
+                // الجهاز بلا حماية — نسمح مباشرة
+                await settings.setAppLockEnabled(false);
+                return;
+              }
+              if (result) await settings.setAppLockEnabled(false);
+            }
           },
         ),
         if (settings.isAppLockEnabled)

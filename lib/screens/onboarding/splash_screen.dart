@@ -16,6 +16,7 @@ import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/storage/native_db_migration_service.dart';
 import 'package:apex_note/services/widget_service.dart';
@@ -100,19 +101,26 @@ class _SplashScreenState extends State<SplashScreen> {
       // Step 4: Authentication check (90%)
       _updateStatus(
           isArabic ? 'التحقق من الأمان...' : 'Security check...', 0.9);
+      AppLogger.debug('[Splash] isAppLockEnabled: ${settings.isAppLockEnabled}');
       if (settings.isAppLockEnabled) {
-        // كشف إلغاء حماية الجهاز — تعطيل القفل تلقائياً
-        final hasBio = await BiometricService.hasBiometrics();
-        if (!hasBio) {
+        AppLogger.debug('[Splash] Calling authenticateOrNull()...');
+        final result = await BiometricService.authenticateOrNull();
+        AppLogger.debug('[Splash] authenticateOrNull() returned: $result');
+
+        if (result == null) {
+          // null = الجهاز بلا حماية (NotAvailable) — عطّل القفل + بصمة الخزنة
+          AppLogger.debug('[Splash] Disabling app lock + vault biometric (no device security)');
           await settings.setAppLockEnabled(false);
-          if (mounted) {
-            _showBiometricRemovedNotice(isArabic);
-          }
-        } else {
-          final authenticated = await BiometricService.authenticate();
-          if (!authenticated) return;
+          await VaultService.setBiometricEnabled(false);
+          if (mounted) _showBiometricRemovedNotice(isArabic);
+        } else if (!result) {
+          // false = المستخدم رفض المصادقة — لا تكمل
+          AppLogger.debug('[Splash] User refused authentication — stopping');
+          return;
         }
+        // true = نجحت المصادقة — أكمل
       }
+      AppLogger.debug('[Splash] Security check passed');
 
       if (!mounted) return;
 

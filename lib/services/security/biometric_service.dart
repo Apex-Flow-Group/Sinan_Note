@@ -26,23 +26,31 @@ class BiometricService {
   }
 
   /// المصادقة باستخدام البصمة أو كلمة مرور الجهاز
+  /// يرجع null لو الجهاز لا يدعم أو لا توجد credentials مسجّلة
+  static Future<bool?> authenticateOrNull() async {
+    if (Platform.isLinux || Platform.isWindows) return true;
+    try {
+      return await _auth.authenticate(
+        localizedReason: await _getAuthenticationMessage(),
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false,
+          useErrorDialogs: true,
+        ),
+      );
+    } on PlatformException catch (e) {
+      AppLogger.debug("Authentication error: $e");
+      // NotAvailable = لا توجد credentials مسجّلة (الجهاز بلا حماية)
+      if (e.code == 'NotAvailable') return null;
+      return false;
+    }
+  }
+
+  /// المصادقة باستخدام البصمة أو كلمة مرور الجهاز
   static Future<bool> authenticate() async {
     return await ApexErrorManager.monitorCritical(() async {
-      if (Platform.isLinux || Platform.isWindows) return true;
-
-      try {
-        return await _auth.authenticate(
-          localizedReason: await _getAuthenticationMessage(),
-          options: const AuthenticationOptions(
-            stickyAuth: true,
-            biometricOnly: false,
-            useErrorDialogs: true,
-          ),
-        );
-      } on PlatformException catch (e) {
-        AppLogger.debug("Authentication error: $e");
-        return false;
-      }
+      final result = await authenticateOrNull();
+      return result ?? false;
     }, 'BiometricAuth');
   }
 

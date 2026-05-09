@@ -2017,4 +2017,12 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get confirmDestroyCheckbox =>
       'أفهم أن هذا الإجراء لا يمكن التراجع عنه';
+
+  @override
+  String get deviceSecurityRequired =>
+      'يجب إعداد قفل الشاشة (PIN أو نمط أو بصمة) على جهازك أولاً';
+
+  @override
+  String get deviceSecurityRequiredDesc =>
+      'لاستخدام ميزة قفل التطبيق، يجب أن يكون جهازك محمياً بقفل شاشة (PIN أو نمط أو بصمة أو التعرف على الوجه). اذهب إلى إعدادات الجهاز > الأمان لإعداده.';
 }
