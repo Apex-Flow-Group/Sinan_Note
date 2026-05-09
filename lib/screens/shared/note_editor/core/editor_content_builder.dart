@@ -68,6 +68,7 @@ class EditorContentBuilder {
       coordinator.quillController ??= QuillMigration.controllerFromContent(
           coordinator.contentController.text);
       return QuillEditorWidget(
+        key: ValueKey(coordinator.quillControllerVersion),
         quillController: coordinator.quillController!,
         focusNode: coordinator.textFieldFocusNode,
         textColor: finalTextColor,
@@ -78,6 +79,7 @@ class EditorContentBuilder {
         totalBottomSpace: totalBottomSpace,
         autoFocus: note == null && !readOnly,
         readOnly: readOnly,
+        markdownPaste: mode == NoteMode.rich,
         onScroll: onScroll,
         selectionBarActive: selectionBarActive ?? ValueNotifier(false),
       );

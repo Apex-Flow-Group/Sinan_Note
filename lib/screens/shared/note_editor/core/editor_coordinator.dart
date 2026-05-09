@@ -124,6 +124,7 @@ class EditorCoordinator {
   late TextEditingController contentController;
   CodeController? codeController;
   QuillController? quillController;
+  int quillControllerVersion = 0;
   BiDiCursorCorrectionMiddleware? _bidiMiddleware;
   final UndoHistoryController undoController = UndoHistoryController();
   final UndoHistoryController codeUndoController = UndoHistoryController();

@@ -100,7 +100,6 @@ class NoteConversionSheet {
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
 
-    debugPrint('[NoteConversionSheet] from=${note.noteType} isChecklist=${note.isChecklist} to=$targetType');
 
     String newContent = note.content;
 
@@ -123,7 +122,6 @@ class NoteConversionSheet {
     }
     // simple/code → rich: النص كما هو (QuillController يبنيه عند الفتح)
 
-    debugPrint('[NoteConversionSheet] from=${note.noteType} isChecklist=${note.isChecklist} → $targetType | content: ${newContent.substring(0, newContent.length.clamp(0, 100))}');
 
     // حفظ نسخة قبل التحويل
     if (note.id != null) {

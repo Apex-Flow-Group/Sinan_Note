@@ -19,6 +19,7 @@ class QuillEditorWidget extends StatefulWidget {
   final double totalBottomSpace;
   final bool autoFocus;
   final bool readOnly;
+  final bool markdownPaste;
   final ValueChanged<double>? onScroll;
   final ValueNotifier<bool> selectionBarActive;
 
@@ -35,6 +36,7 @@ class QuillEditorWidget extends StatefulWidget {
     required this.selectionBarActive,
     this.autoFocus = false,
     this.readOnly = false,
+    this.markdownPaste = false,
     this.onScroll,
   });
 
@@ -239,13 +241,13 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         ),
         PasteTextIntent: CallbackAction<PasteTextIntent>(
           onInvoke: (_) {
-            _ctrl.pastePlainText();
+            _ctrl.pastePlainText(markdownEnabled: widget.markdownPaste);
             return null;
           },
         ),
       },
       child: Focus(
-        onKeyEvent: (_, event) => _ctrl.handleKeyEvent(event),
+        onKeyEvent: (_, event) => _ctrl.handleKeyEvent(event, markdownEnabled: widget.markdownPaste),
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () {

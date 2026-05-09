@@ -268,9 +268,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       }
                     } else {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final tapTime = DateTime.now();
-                      debugPrint(
-                          '⏱️ [Editor] tap: ${tapTime.toIso8601String()}');
                       final result = await Navigator.push(
                         context,
                         EditorPageRoute(

@@ -22,29 +22,20 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('🔐 [VaultEntry] initState');
     _checkVaultStatus();
   }
 
   @override
   void dispose() {
-    debugPrint('🔐 [VaultEntry] dispose');
     super.dispose();
   }
 
   Future<void> _checkVaultStatus() async {
-    debugPrint('🔐 [VaultEntry] _checkVaultStatus START');
-
     final dbService = IsarDatabaseService();
     final lockedNotes = await dbService.getLockedNotes();
     final hasNewVault = await VaultService.isVaultSetup();
 
-    debugPrint(
-        '🔐 [VaultEntry] lockedNotes=${lockedNotes.length}, hasNewVault=$hasNewVault');
-
     if (lockedNotes.isNotEmpty && !hasNewVault) {
-      debugPrint(
-          '🔐 [VaultEntry] → pushReplacement LockedNotesIntroScreen (locked notes exist)');
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -57,8 +48,6 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     }
 
     if (!hasNewVault) {
-      debugPrint(
-          '🔐 [VaultEntry] → pushReplacement LockedNotesIntroScreen (no vault)');
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -71,13 +60,10 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     }
 
     final biometricEnabled = await VaultService.isBiometricEnabled();
-    debugPrint('🔐 [VaultEntry] biometricEnabled=$biometricEnabled');
 
     if (biometricEnabled) {
-      debugPrint('🔐 [VaultEntry] → authenticateWithBiometric');
       await _authenticateWithBiometric();
     } else {
-      debugPrint('🔐 [VaultEntry] → pushReplacement VaultUnlockScreen');
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -91,10 +77,8 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
 
   Future<void> _authenticateWithBiometric() async {
     final authenticated = await BiometricService.authenticate();
-    debugPrint('🔐 [VaultEntry] biometric result=$authenticated');
 
     if (authenticated && mounted) {
-      debugPrint('🔐 [VaultEntry] → pushReplacement LockedNotesScreen');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -102,8 +86,6 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
         ),
       );
     } else if (mounted) {
-      debugPrint(
-          '🔐 [VaultEntry] → pushReplacement VaultUnlockScreen (biometric failed)');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

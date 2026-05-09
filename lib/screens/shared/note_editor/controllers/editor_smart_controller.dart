@@ -298,22 +298,14 @@ class EditorSmartController {
           FilledButton.icon(
             onPressed: () {
               Navigator.pop(ctx);
-              debugPrint('[Calc] insertText="$insertText"');
-              debugPrint(
-                  '[Calc] hasQuill=${data['quill'] != null} hasCtrl=${data['controller'] != null}');
-              debugPrint('[Calc] insertOffset=${data['insertOffset']}');
               if (data['quill'] != null) {
                 final quill = data['quill'] as QuillController;
                 final offset = data['insertOffset'] as int;
-                debugPrint(
-                    '[Calc] quill docLength=${quill.document.length} offset=$offset');
                 quill.replaceText(offset, 0, insertText, null);
                 quill.moveCursorToPosition(offset + insertText.length);
               } else if (data['controller'] != null) {
                 final ctrl = data['controller'] as TextEditingController;
                 final offset = data['insertOffset'] as int;
-                debugPrint(
-                    '[Calc] ctrl textLength=${ctrl.text.length} offset=$offset');
                 final newText =
                     ctrl.text.replaceRange(offset, offset, insertText);
                 ctrl.value = TextEditingValue(

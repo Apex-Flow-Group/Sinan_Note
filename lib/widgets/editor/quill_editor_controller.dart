@@ -8,6 +8,8 @@ import 'package:apex_note/widgets/editor/tear/tear.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
+import 'package:markdown/markdown.dart' as md;
 
 class QuillEditorController {
   final QuillController quillController;
@@ -319,7 +321,14 @@ class QuillEditorController {
   }
 
   // ── paste ──────────────────────────────────────────────────────────────────
-  Future<void> pastePlainText() async {
+  static bool _looksLikeMarkdown(String text) {
+    return RegExp(
+      r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
+      multiLine: true,
+    ).hasMatch(text);
+  }
+
+  Future<void> pastePlainText({bool markdownEnabled = false}) async {
     isPasting = true;
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
@@ -328,31 +337,57 @@ class QuillEditorController {
     final sel = quillController.selection;
     final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
     final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
-    quillController.replaceText(offset, deleteLen, text, null);
 
-    final lines = text.split('\n');
-    int pos = offset;
-    for (int i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      final isLast = i == lines.length - 1;
-      final len = line.length;
-      if (len > 0) {
-        quillController.formatText(pos, len, const ColorAttribute(null));
-        quillController.formatText(pos, len, const BackgroundAttribute(null));
-        quillController.formatText(pos, len, Attribute.clone(Attribute.bold, null));
-        quillController.formatText(pos, len, Attribute.clone(Attribute.italic, null));
-        quillController.formatText(pos, len, Attribute.clone(Attribute.underline, null));
-        quillController.formatText(pos, len, const SizeAttribute(null));
+    if (markdownEnabled && _looksLikeMarkdown(text)) {
+      final mdDelta = MarkdownToDelta(
+        markdownDocument: md.Document(encodeHtml: false),
+      ).convert(text);
+
+      // بناء delta للإدراج عند الـ offset
+      final insertDelta = Delta();
+      if (deleteLen > 0) {
+        insertDelta..retain(offset)..delete(deleteLen);
+      } else {
+        insertDelta.retain(offset);
       }
-      pos += len;
-      if (!isLast) {
-        final isRtl = TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') == TextDirection.rtl;
-        quillController.formatText(pos, 1, const AlignAttribute(null));
-        quillController.formatText(pos, 1, isRtl ? const DirectionAttribute(null) : Attribute.rtl);
-        pos += 1;
+      for (final op in mdDelta.toList()) {
+        insertDelta.push(op);
       }
+
+      quillController.compose(
+        insertDelta,
+        TextSelection.collapsed(offset: offset + mdDelta.length - 1),
+        ChangeSource.local,
+      );
+
+      isPasting = false;
+    } else {
+      quillController.replaceText(offset, deleteLen, text, null);
+
+      final lines = text.split('\n');
+      int pos = offset;
+      for (int i = 0; i < lines.length; i++) {
+        final line = lines[i];
+        final isLast = i == lines.length - 1;
+        final len = line.length;
+        if (len > 0) {
+          quillController.formatText(pos, len, const ColorAttribute(null));
+          quillController.formatText(pos, len, const BackgroundAttribute(null));
+          quillController.formatText(pos, len, Attribute.clone(Attribute.bold, null));
+          quillController.formatText(pos, len, Attribute.clone(Attribute.italic, null));
+          quillController.formatText(pos, len, Attribute.clone(Attribute.underline, null));
+          quillController.formatText(pos, len, const SizeAttribute(null));
+        }
+        pos += len;
+        if (!isLast) {
+          final isRtl = TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') == TextDirection.rtl;
+          quillController.formatText(pos, 1, const AlignAttribute(null));
+          quillController.formatText(pos, 1, isRtl ? const DirectionAttribute(null) : Attribute.rtl);
+          pos += 1;
+        }
+      }
+      isPasting = false;
     }
-    isPasting = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!scrollController.hasClients) return;
       final p = scrollController.position;
@@ -362,10 +397,10 @@ class QuillEditorController {
   }
 
   // ── keyboard ───────────────────────────────────────────────────────────────
-  KeyEventResult handleKeyEvent(KeyEvent event) {
+  KeyEventResult handleKeyEvent(KeyEvent event, {bool markdownEnabled = false}) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
     if (event.logicalKey == LogicalKeyboardKey.keyV && HardwareKeyboard.instance.isControlPressed) {
-      pastePlainText();
+      pastePlainText(markdownEnabled: markdownEnabled);
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter) {

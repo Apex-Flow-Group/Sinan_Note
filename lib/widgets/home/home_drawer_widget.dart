@@ -109,8 +109,6 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/archive',
                     onTap: () async {
-                      debugPrint(
-                          'ًں§­ Drawer â†’ Archive (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)
@@ -129,8 +127,6 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/trash',
                     onTap: () async {
-                      debugPrint(
-                          'ًں§­ Drawer â†’ Trash (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)
@@ -176,8 +172,6 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         isDark: isDark,
                         isActive: currentRoute == '/drive',
                         onTap: () async {
-                          debugPrint(
-                              'ًں§­ Drawer â†’ Drive (pop + popUntil + pushNamed)');
                           Navigator.of(context, rootNavigator: true).pop();
                           if (!context.mounted) return;
                           Navigator.of(context, rootNavigator: true)
@@ -197,8 +191,6 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/history',
                     onTap: () async {
-                      debugPrint(
-                          'ًں§­ Drawer â†’ History (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)
@@ -215,8 +207,6 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/settings',
                     onTap: () async {
-                      debugPrint(
-                          'ًں§­ Drawer â†’ Settings (pop + popUntil + pushNamed)');
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)

@@ -187,10 +187,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         elevation: 0,
         leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              debugPrint('🔙 [VaultIntro] Back button pressed');
-              Navigator.pop(context);
-            }),
+            onPressed: () => Navigator.pop(context)),
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),

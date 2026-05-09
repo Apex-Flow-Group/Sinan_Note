@@ -90,7 +90,6 @@ class MarkdownToDelta extends Converter<String, Delta>
   };
 
   final _elementToEmbed = <String, ElementToEmbeddableConvertor>{
-    'hr': (_) => horizontalRule,
     'img': (elAttrs) => BlockEmbed.image(elAttrs['src'] ?? ''),
     'video': (elAttrs) => BlockEmbed.video(elAttrs['src'] ?? '')
   };
@@ -119,7 +118,7 @@ class MarkdownToDelta extends Converter<String, Delta>
     _justPreviousBlockExit = false;
     _listItemIndent = -1;
 
-    final mdNodes = markdownDocument.parseInline(input);
+    final mdNodes = markdownDocument.parse(input);
     _topLevelNodes.addAll(mdNodes);
 
     for (final node in mdNodes) {

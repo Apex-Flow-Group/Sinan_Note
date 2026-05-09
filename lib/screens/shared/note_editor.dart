@@ -14,6 +14,9 @@ import 'package:apex_note/screens/shared/note_editor/view/note_readonly_view.dar
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
+import 'package:markdown/markdown.dart' as md;
 
 // Import Core Components
 // Import Handlers
@@ -49,6 +52,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   AppLocalizations? _l10nRef;
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
+
+  static bool _looksLikeMarkdown(String text) => RegExp(
+    r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
+    multiLine: true,
+  ).hasMatch(text);
   late NoteMode _currentMode;
   Note? _currentNote;
   bool _isQuillReady = false;
@@ -569,17 +577,34 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
               selectionBarActive: _selectionBarActive,
               quillController: _coordinator.quillController,
               onPaste: () async {
-                if (_coordinator.quillController != null) {
-                  final data = await Clipboard.getData(Clipboard.kTextPlain);
-                  final text = data?.text;
-                  if (text != null && text.isNotEmpty) {
-                    final ctrl = _coordinator.quillController!;
-                    final sel = ctrl.selection;
-                    final offset =
-                        sel.isCollapsed ? sel.extentOffset : sel.start;
-                    final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
-                    ctrl.replaceText(offset, deleteLen, text, null);
+                final ctrl = _coordinator.quillController;
+                if (ctrl == null) return;
+                final data = await Clipboard.getData(Clipboard.kTextPlain);
+                final text = data?.text;
+                if (text == null || text.isEmpty) return;
+                final sel = ctrl.selection;
+                final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
+                final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
+                if (_currentMode == NoteMode.rich && _looksLikeMarkdown(text)) {
+                  final mdDelta = MarkdownToDelta(
+                    markdownDocument: md.Document(encodeHtml: false),
+                  ).convert(text);
+                  final insertDelta = Delta();
+                  if (deleteLen > 0) {
+                    insertDelta..retain(offset)..delete(deleteLen);
+                  } else {
+                    insertDelta.retain(offset);
                   }
+                  for (final op in mdDelta.toList()) {
+                    insertDelta.push(op);
+                  }
+                  ctrl.compose(
+                    insertDelta,
+                    TextSelection.collapsed(offset: offset + mdDelta.length - 1),
+                    ChangeSource.local,
+                  );
+                } else {
+                  ctrl.replaceText(offset, deleteLen, text, null);
                 }
               },
               onSaveTap: () async {

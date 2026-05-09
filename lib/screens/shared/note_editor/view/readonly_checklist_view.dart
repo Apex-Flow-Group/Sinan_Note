@@ -58,8 +58,10 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
     final items =
         ChecklistFormatter.parseJson(widget.coordinator.contentController.text);
     if (items.isEmpty) {
-      return Text(widget.coordinator.contentController.text,
-          style: TextStyle(fontSize: 16, color: widget.textColor));
+      return SingleChildScrollView(
+        controller: widget.scrollController,
+        child: const SizedBox.shrink(),
+      );
     }
 
     final done = items.where((e) => e.isDone).length;

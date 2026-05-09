@@ -293,6 +293,7 @@ class CodeEditorToolbar extends StatelessWidget {
       ),
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
+        maxWidth: 500,
       ),
       builder: (ctx) => SafeArea(
         child: Column(

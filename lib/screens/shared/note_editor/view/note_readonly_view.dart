@@ -24,6 +24,7 @@ import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:provider/provider.dart';
 
 class NoteReadOnlyView extends StatefulWidget {
@@ -59,6 +60,12 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   bool _showMarkdown = false;
   late Note _currentNote;
   late NoteMode _currentMode;
+  int _quillKey = 0;
+
+  static bool _looksLikeMarkdown(String text) => RegExp(
+    r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
+    multiLine: true,
+  ).hasMatch(text);
 
   @override
   void initState() {
@@ -96,12 +103,10 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       newContent =
           ChecklistFormatter.fromPlainText(newContent, title: dbNote.title);
     } else if (dbNote.isChecklist) {
-      // checklist → simple/rich/code: استخرج نص عادي
       final plain = ChecklistFormatter.toPlainText(dbNote.content);
       if (targetType == 'code') {
         newContent = plain;
       } else {
-        // simple/rich: حوّل لـ Delta JSON مباشرة
         final qc = QuillMigration.controllerFromContent(plain);
         newContent = QuillMigration.toDeltaJson(qc);
         qc.dispose();
@@ -109,14 +114,69 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     } else if (dbNote.isProfessional ||
         dbNote.noteType == 'code' ||
         dbNote.noteType == 'pro') {
-      // code → simple/rich: المحتوى نص عادي، حوّله لـ Delta JSON
-      if (targetType != 'code') {
-        final qc = QuillMigration.controllerFromContent(newContent);
+      if (targetType == 'rich') {
+        // إذا كان المحتوى Markdown — حوّله منسقاً
+        if (_looksLikeMarkdown(newContent)) {
+          final mdDelta = MarkdownToDelta(
+            markdownDocument: md.Document(encodeHtml: false),
+          ).convert(newContent);
+          final qc = QuillController(
+            document: Document.fromDelta(mdDelta),
+            selection: const TextSelection.collapsed(offset: 0),
+          );
+          newContent = QuillMigration.toDeltaJson(qc);
+          qc.dispose();
+        } else {
+          final qc = QuillMigration.controllerFromContent(newContent);
+          newContent = QuillMigration.toDeltaJson(qc);
+          qc.dispose();
+        }
+      } else if (targetType == 'simple') {
+        // إذا كان Markdown — أزل الرموز
+        if (_looksLikeMarkdown(newContent)) {
+          newContent = newContent
+              .replaceAll(RegExp(r'^#{1,6} ', multiLine: true), '')
+              .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
+              .replaceAll(RegExp(r'__(.+?)__'), r'$1')
+              .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
+              .replaceAll(RegExp(r'_(.+?)_'), r'$1')
+              .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
+              .replaceAll(RegExp(r'`(.+?)`'), r'$1')
+              .replaceAll(RegExp(r'^ *[-*+] ', multiLine: true), '')
+              .replaceAll(RegExp(r'^ *\d+\. ', multiLine: true), '')
+              .replaceAll(RegExp(r'^> ', multiLine: true), '')
+              .replaceAll(RegExp(r'```[\s\S]*?```'), '')
+              .trim();
+        }
+        // نص عادي → simple: يبقى كما هو
+      }
+    } else if (dbNote.noteType == 'markdown') {
+      if (targetType == 'rich') {
+        final mdDelta = MarkdownToDelta(
+          markdownDocument: md.Document(encodeHtml: false),
+        ).convert(newContent);
+        final qc = QuillController(
+          document: Document.fromDelta(mdDelta),
+          selection: const TextSelection.collapsed(offset: 0),
+        );
         newContent = QuillMigration.toDeltaJson(qc);
         qc.dispose();
+      } else if (targetType == 'simple' || targetType == 'code') {
+        newContent = newContent
+            .replaceAll(RegExp(r'^#{1,6} ', multiLine: true), '')
+            .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
+            .replaceAll(RegExp(r'__(.+?)__'), r'$1')
+            .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
+            .replaceAll(RegExp(r'_(.+?)_'), r'$1')
+            .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
+            .replaceAll(RegExp(r'`(.+?)`'), r'$1')
+            .replaceAll(RegExp(r'^ *[-*+] ', multiLine: true), '')
+            .replaceAll(RegExp(r'^ *\d+\. ', multiLine: true), '')
+            .replaceAll(RegExp(r'^> ', multiLine: true), '')
+            .replaceAll(RegExp(r'```[\s\S]*?```'), '')
+            .trim();
       }
     } else if (newContent.trimLeft().startsWith('[')) {
-      // Delta JSON → code: استخرج نص عادي
       if (targetType == 'code') {
         try {
           final ops = jsonDecode(newContent) as List;
@@ -124,10 +184,27 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               .where((op) => op is Map && op['insert'] is String)
               .map((op) => op['insert'] as String)
               .join()
-              .trimRight();
+              .replaceAll(RegExp(r'\n+$'), '');
+        } catch (_) {}
+      } else if (targetType == 'simple') {
+        try {
+          final ops = jsonDecode(newContent) as List;
+          newContent = ops
+              .where((op) => op is Map && op['insert'] is String)
+              .map((op) => op['insert'] as String)
+              .join()
+              .replaceAll(RegExp(r'\n+$'), '');
         } catch (_) {}
       }
-      // Delta JSON → simple/rich: يبقى كما هو
+      // Delta JSON → rich: يبقى كما هو
+    } else {
+      // نص عادي → rich
+      if (targetType == 'rich') {
+        final qc = QuillMigration.controllerFromContent(newContent);
+        newContent = QuillMigration.toDeltaJson(qc);
+        qc.dispose();
+      }
+      // نص عادي → code/simple: يبقى كما هو
     }
 
     await VersionControlService().smartLogVersion(
@@ -167,6 +244,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       final newQc = QuillMigration.controllerFromContent(updated.content);
       widget.coordinator.quillController?.dispose();
       widget.coordinator.quillController = newQc;
+      widget.coordinator.quillControllerVersion++;
     }
 
     // إعادة تهيئة stateManager بالمحتوى الجديد حتى يعمل hasChanges() بشكل صحيح
@@ -182,17 +260,10 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
     widget.coordinator.savedNoteId = updated.id;
 
-    debugPrint(
-        '[CONVERT] done → newMode=$newMode | noteId=${updated.id} | noteType=${updated.noteType}');
-    debugPrint(
-        '[CONVERT] stateManager.isDirty=${widget.coordinator.stateManager.isDirty} | hasChanges=${widget.coordinator.stateManager.hasChanges()}');
-    debugPrint('[CONVERT] savedNoteId=${widget.coordinator.savedNoteId}');
-    debugPrint(
-        '[CONVERT] content(50)=${updated.content.substring(0, updated.content.length.clamp(0, 50))}');
-
     setState(() {
       _currentNote = updated;
       _currentMode = newMode;
+      _quillKey++;
     });
     widget.onModeChanged?.call(_currentMode, _currentNote);
 
@@ -417,6 +488,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         child: ScrollbarTheme(
           data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
           child: QuillEditor(
+            key: ValueKey(_quillKey),
             controller: qc,
             focusNode: widget.coordinator.textFieldFocusNode,
             scrollController: ScrollController(),
@@ -602,36 +674,29 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
             ? () => setState(() => _showMarkdown = !_showMarkdown)
             : null,
       ),
-      body: Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: true,
-        thickness: 4,
-        radius: const Radius.circular(4),
-        child: Builder(builder: (ctx) {
+      body: Builder(builder: (ctx) {
           final canDoubleTap = !note.isTrashed &&
               Provider.of<SettingsProvider>(ctx, listen: false).doubleTapToEdit;
+          final inner = GestureDetector(
+            onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.sidePadding),
+              child: heroCard,
+            ),
+          );
           return isMarkdown
-              ? SingleChildScrollView(
+              ? Scrollbar(
                   controller: _scrollController,
-                  child: GestureDetector(
-                    onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
-                    child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: widget.sidePadding),
-                      child: heroCard,
-                    ),
+                  thumbVisibility: true,
+                  thickness: 4,
+                  radius: const Radius.circular(4),
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: inner,
                   ),
                 )
-              : GestureDetector(
-                  onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: widget.sidePadding),
-                    child: heroCard,
-                  ),
-                );
+              : inner;
         }),
-      ),
       bottomNavigationBar: note.isTrashed
           ? ReadOnlyBars.buildRestoreBar(
               context: context,
