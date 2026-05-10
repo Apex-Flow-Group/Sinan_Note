@@ -7,8 +7,8 @@ import 'package:apex_note/screens/auth/vault_intro_pages.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/copy_code_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// شاشة إعادة تعيين تشفير الخزنة (Wizard)
 /// الخطوات:
@@ -329,18 +329,21 @@ class _WarningStep extends StatelessWidget {
         children: [
           const SizedBox(height: 20),
           Container(
-            width: 100, height: 100,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               color: Colors.orange.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.warning_amber, size: 50, color: Colors.orange),
+            child:
+                const Icon(Icons.warning_amber, size: 50, color: Colors.orange),
           ),
           const SizedBox(height: 32),
           Text(
             l10n.resetVaultWarningTitle,
             style: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.bold,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : Colors.black87,
             ),
             textAlign: TextAlign.center,
@@ -349,7 +352,8 @@ class _WarningStep extends StatelessWidget {
           Text(
             l10n.resetVaultWarningBody,
             style: TextStyle(
-              fontSize: 15, height: 1.6,
+              fontSize: 15,
+              height: 1.6,
               color: isDark ? Colors.grey[300] : Colors.grey[700],
             ),
             textAlign: TextAlign.center,
@@ -389,7 +393,8 @@ class _WarningStep extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ),
@@ -541,7 +546,8 @@ class _RecoveryCodeStep extends StatelessWidget {
               color: Colors.green.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check_circle, size: 50, color: Colors.green),
+            child:
+                const Icon(Icons.check_circle, size: 50, color: Colors.green),
           ),
           const SizedBox(height: 24),
           Text(
@@ -563,48 +569,27 @@ class _RecoveryCodeStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: recoveryCode));
-              UnifiedNotificationService().show(
-                context: context,
-                message: l10n.codeCopied,
-                type: NotificationType.success,
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange, width: 2),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange, width: 2),
+            ),
+            child: Text(
+              recoveryCode,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
               ),
-              child: Text(
-                recoveryCode,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: recoveryCode));
-                UnifiedNotificationService().show(
-                  context: context,
-                  message: l10n.codeCopied,
-                  type: NotificationType.success,
-                );
-              },
-              icon: const Icon(Icons.copy),
-              label: Text(l10n.copyCode),
-            ),
+          CopyCodeButton(
+            code: recoveryCode,
+            label: l10n.copyCode,
           ),
           const SizedBox(height: 20),
           CheckboxListTile(

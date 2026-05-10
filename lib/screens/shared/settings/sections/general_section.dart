@@ -83,6 +83,14 @@ class GeneralSection extends StatelessWidget {
             Text(_pullToRefreshSubtitle(context, settings.pullToRefreshMode)),
         onTap: () => _showPullToRefreshDialog(context, settings),
       ),
+      // ── إعدادات المحرر ──────────────────────────────────────────
+      SwitchListTile(
+        secondary: const Icon(Icons.touch_app_rounded),
+        title: Text(l10n.doubleTapToEdit),
+        subtitle: Text(l10n.doubleTapToEditDesc),
+        value: settings.doubleTapToEdit,
+        onChanged: settings.setDoubleTapToEdit,
+      ),
     ];
 
     return SettingsSectionCard(

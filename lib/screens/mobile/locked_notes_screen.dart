@@ -9,7 +9,6 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
@@ -18,7 +17,7 @@ import 'package:apex_note/widgets/common/searchable_header.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/home/dialogs/vault_dialogs.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart'
-    show HomeDrawerWidget;
+    show HomeDrawerWidget, setDrawerVaultActive;
 import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +43,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    setDrawerVaultActive(true);
     initSearch();
     searchController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -69,17 +69,20 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_isAuthenticating || VaultResetGuard.isActive || UnifiedLockService().isVaultOperation) return;
+    if (_isAuthenticating ||
+        VaultResetGuard.isActive ||
+        UnifiedLockService().isVaultOperation) {
+      return;
+    }
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      if (_showAddMenu) setState(() => _showAddMenu = false);
+      if (_showAddMenu) {
+        setState(() => _showAddMenu = false);
+      }
       _providerRef?.clearLockedSession(notify: false);
+      setDrawerVaultActive(false);
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainLayoutScreen()),
-          (route) => false,
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
   }
@@ -186,7 +189,14 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         if (didPop) {
           _providerRef?.clearLockedSession(notify: false);
           _providerRef?.lockVault();
+          setDrawerVaultActive(false);
           WidgetsBinding.instance.removeObserver(this);
+          // رجوع لأول شاشة في الـ stack (MainLayout) بدلاً من VaultEntryScreen
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }
+          });
           return;
         }
         if (_selectedNoteIds.isNotEmpty) {

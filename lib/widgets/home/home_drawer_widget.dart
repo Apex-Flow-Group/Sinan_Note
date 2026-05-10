@@ -27,6 +27,11 @@ final _activeExtraNotifier = ValueNotifier<String?>(null);
 /// ط­ط§ظ„ط© ط§ظ„ط®ط²ظ†ط© â€” ظ…ط±ط¦ظٹط© ظ„ظƒظ„ ط§ظ„ظ€ widgets
 final vaultOpenNotifier = ValueNotifier<bool>(false);
 
+/// ضبط حالة تفعيل الخزنة في الـ Drawer من الخارج
+void setDrawerVaultActive(bool active) {
+  _activeExtraNotifier.value = active ? 'vault' : null;
+}
+
 class HomeDrawerWidget extends StatefulWidget {
   final VoidCallback onBackupTap;
   final VoidCallback onNotesChanged;
@@ -70,7 +75,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     title: l10n.home,
                     scheme: scheme,
                     isDark: isDark,
-                    isActive: currentRoute == '/' && activeExtra == null,
+                    isActive: currentRoute == '/' &&
+                        activeExtra == null &&
+                        context
+                                .watch<CategoriesProvider>()
+                                .selectedCategoryId ==
+                            null,
                     onTap: () {
                       Navigator.of(context, rootNavigator: true).pop();
                       Navigator.of(context, rootNavigator: true)
@@ -277,6 +287,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     final catProvider = context.watch<CategoriesProvider>();
     final selectedId = catProvider.selectedCategoryId;
     final hasSelection = selectedId != null;
+    final isOnHome = (ModalRoute.of(context)?.settings.name ?? '/') == '/' &&
+        _activeExtraNotifier.value == null;
     final selectedName = hasSelection
         ? (selectedId == kProCategoryId
             ? AppLocalizations.of(context)!.professional
@@ -290,7 +302,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     final iconBox = Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: isDark ? 0.18 : 0.1),
+        color: scheme.primary.withValues(
+            alpha: hasSelection && isOnHome
+                ? (isDark ? 0.28 : 0.18)
+                : (isDark ? 0.18 : 0.1)),
         borderRadius: BorderRadius.circular(8),
       ),
       child:
@@ -299,8 +314,15 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: SizedBox(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         height: 56,
+        decoration: BoxDecoration(
+          color: hasSelection && isOnHome
+              ? scheme.primary.withValues(alpha: isDark ? 0.15 : 0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),

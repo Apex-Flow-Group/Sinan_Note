@@ -3,7 +3,7 @@
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_reset_screen.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -36,13 +36,16 @@ class VaultDialogs {
               },
             ),
             FutureBuilder<bool>(
-              future: VaultService.isBiometricEnabled(),
+              future: Future.wait([
+                VaultService.isBiometricEnabled(),
+                BiometricService.hasBiometrics(),
+              ]).then((r) => r[1]),
               builder: (context, snapshot) {
-                final isEnabled = snapshot.data ?? false;
-                return FutureBuilder<LockType>(
-                  future: UnifiedLockService().getLockType(),
-                  builder: (context, lockSnapshot) {
-                    if (lockSnapshot.data != LockType.biometric) return const SizedBox.shrink();
+                if (snapshot.data != true) return const SizedBox.shrink();
+                return FutureBuilder<bool>(
+                  future: VaultService.isBiometricEnabled(),
+                  builder: (context, biometricSnapshot) {
+                    final isEnabled = biometricSnapshot.data ?? false;
                     return SwitchListTile(
                       secondary: const Icon(Icons.fingerprint),
                       title: Text(l10n.enableBiometric),
@@ -54,8 +57,11 @@ class VaultDialogs {
                         Navigator.pop(context);
                         UnifiedNotificationService().show(
                           context: context,
-                          message: val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
-                          type: NotificationType.success,
+                          message:
+                              val ? 'Biometric enabled' : 'Biometric disabled',
+                          type: val
+                              ? NotificationType.success
+                              : NotificationType.info,
                         );
                       },
                     );
@@ -64,13 +70,13 @@ class VaultDialogs {
               },
             ),
             FutureBuilder<bool>(
-              future: VaultService.isBiometricButtonVisible(),
+              future: BiometricService.hasBiometrics(),
               builder: (context, snapshot) {
-                final isVisible = snapshot.data ?? true;
-                return FutureBuilder<LockType>(
-                  future: UnifiedLockService().getLockType(),
-                  builder: (context, lockSnapshot) {
-                    if (lockSnapshot.data != LockType.biometric) return const SizedBox.shrink();
+                if (snapshot.data != true) return const SizedBox.shrink();
+                return FutureBuilder<bool>(
+                  future: VaultService.isBiometricButtonVisible(),
+                  builder: (context, visibleSnapshot) {
+                    final isVisible = visibleSnapshot.data ?? true;
                     return SwitchListTile(
                       secondary: const Icon(Icons.visibility_outlined),
                       title: Text(l10n.showBiometricButton),
@@ -144,7 +150,8 @@ class VaultDialogs {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber, color: Colors.red, size: 24),
+                    const Icon(Icons.warning_amber,
+                        color: Colors.red, size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(

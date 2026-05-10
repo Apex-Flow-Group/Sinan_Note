@@ -18,36 +18,27 @@ class SecuritySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
-    final theme = Theme.of(context);
-    final iconColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return SettingsSectionCard(
       title: l10n.security,
       icon: Icons.shield_rounded,
       children: [
         SwitchListTile(
-          contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
-          secondary: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.lock, color: iconColor, size: 22),
-          ),
+          secondary: Icon(Icons.lock_rounded, color: primaryColor),
           title: Text(l10n.appLock),
-          subtitle: Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
+          subtitle:
+              Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
           value: settings.isAppLockEnabled,
           onChanged: (val) async {
             if (val) {
               if (!context.mounted) return;
               final result = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
-                  builder: (_) => PinLockScreen(
+                  builder: (pinContext) => PinLockScreen(
                     isSetup: true,
                     onSuccess: () {
-                      Navigator.of(context).pop(true);
+                      Navigator.of(pinContext).pop(true);
                     },
                   ),
                 ),
@@ -62,11 +53,11 @@ class SecuritySection extends StatelessWidget {
                 if (!context.mounted) return;
                 final result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
-                    builder: (_) => PinLockScreen(
+                    builder: (pinContext) => PinLockScreen(
                       isSetup: false,
                       isDisabling: true,
                       onSuccess: () {
-                        Navigator.of(context).pop(true);
+                        Navigator.of(pinContext).pop(true);
                       },
                     ),
                   ),
@@ -77,7 +68,8 @@ class SecuritySection extends StatelessWidget {
                   await settings.setBiometricLockEnabled(false);
                 }
               } else {
-                final authenticated = await UnifiedLockService().authenticate(context: 'app_lock');
+                final authenticated = await UnifiedLockService()
+                    .authenticate(context: 'app_lock');
                 UnifiedLockService().resetSession();
                 if (authenticated) {
                   await settings.setAppLockEnabled(false);
@@ -97,28 +89,22 @@ class SecuritySection extends StatelessWidget {
               return Column(
                 children: [
                   SwitchListTile(
-                    contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
-                    secondary: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.fingerprint, color: iconColor, size: 22),
-                    ),
+                    secondary: Icon(Icons.fingerprint_rounded,
+                        color: Theme.of(context).colorScheme.primary),
                     title: Text(l10n.unlockWithBiometric),
                     subtitle: Text(l10n.unlockWithBiometricDesc),
                     value: settings.biometricLockEnabled,
                     onChanged: (val) async {
-                  if (val) {
-                    final ok = await UnifiedLockService().authenticate(context: 'app_lock');
-                    if (ok) await settings.setBiometricLockEnabled(true);
-                  } else {
-                    final ok = await UnifiedLockService().authenticate(context: 'app_lock');
-                    if (ok) await settings.setBiometricLockEnabled(false);
-                    }
-                  },
+                      if (val) {
+                        final ok = await UnifiedLockService()
+                            .authenticate(context: 'app_lock');
+                        if (ok) await settings.setBiometricLockEnabled(true);
+                      } else {
+                        final ok = await UnifiedLockService()
+                            .authenticate(context: 'app_lock');
+                        if (ok) await settings.setBiometricLockEnabled(false);
+                      }
+                    },
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -129,45 +115,25 @@ class SecuritySection extends StatelessWidget {
           Column(
             children: [
               ListTile(
-                contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.timer_outlined, color: iconColor, size: 22),
-                ),
+                leading: Icon(Icons.timer_outlined, color: primaryColor),
                 title: Text(l10n.lockDelay),
                 subtitle: Text(
                   settings.lockDelayEnabled
-                      ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)
+                      ? SettingsUtils.getLockDelayText(
+                          settings.lockDelaySeconds, l10n)
                       : l10n.immediate,
-                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
-                  await SettingsDialogs.showLockDelayDialog(context, settings, l10n);
+                  await SettingsDialogs.showLockDelayDialog(
+                      context, settings, l10n);
                 },
               ),
               const SizedBox(height: 8),
             ],
           ),
         SwitchListTile(
-          contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
-          secondary: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.visibility_off, color: iconColor, size: 22),
-          ),
+          secondary: Icon(Icons.visibility_off_rounded, color: primaryColor),
           title: Text(l10n.hideContentInBackground),
           subtitle: Text(l10n.applyBlurEffect),
           value: settings.hideContentInBackground,

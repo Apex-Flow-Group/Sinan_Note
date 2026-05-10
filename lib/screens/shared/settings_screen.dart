@@ -3,9 +3,9 @@
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/shared/settings/sections/data_about_sections.dart';
-import 'package:apex_note/screens/shared/settings/sections/editor_section.dart';
 import 'package:apex_note/screens/shared/settings/sections/general_section.dart';
 import 'package:apex_note/screens/shared/settings/sections/security_section.dart';
+import 'package:apex_note/screens/shared/settings/sections/swipe_section.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -59,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     const GeneralSection(showBetaSeparate: true),
                     const BetaSection(),
-                    const EditorSection(),
+                    const SwipeSection(),
                     const SecuritySection(),
                     DataSection(currentLang: currentLang),
                     AboutSection(version: _version, currentLang: currentLang),
@@ -83,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: const [
                   GeneralSection(),
                   SizedBox(height: 24),
-                  EditorSection(),
+                  SwipeSection(),
                 ],
               ),
             ),

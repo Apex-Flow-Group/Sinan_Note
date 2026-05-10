@@ -2,7 +2,7 @@
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/feature_info.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/copy_code_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,8 +12,11 @@ final _vaultPasswordFormatter = FilteringTextInputFormatter.allow(
 
 String? validateVaultPassword(String password) {
   if (password.length < 8) return 'Minimum 8 characters';
-  if (!RegExp(r'[0-9]').hasMatch(password)) return 'Must contain at least one number';
-  if (!RegExp(r'[!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]').hasMatch(password)) {
+  if (!RegExp(r'[0-9]').hasMatch(password)) {
+    return 'Must contain at least one number';
+  }
+  if (!RegExp(r'[!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]')
+      .hasMatch(password)) {
     return 'Must contain at least one symbol';
   }
   return null;
@@ -22,7 +25,8 @@ String? validateVaultPassword(String password) {
 class VaultFeaturesPage extends StatelessWidget {
   final bool isDark;
   final List<FeatureInfo> features;
-  const VaultFeaturesPage({super.key, required this.isDark, required this.features});
+  const VaultFeaturesPage(
+      {super.key, required this.isDark, required this.features});
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +151,8 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
     setState(() {
       _hasLength = p.length >= 8;
       _hasNumber = RegExp(r'[0-9]').hasMatch(p);
-      _hasSymbol = RegExp(r'[!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]').hasMatch(p);
+      _hasSymbol =
+          RegExp(r'[!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]').hasMatch(p);
       _passwordsMatch = p.isNotEmpty && p == c;
     });
     widget.onChanged();
@@ -166,7 +171,9 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
             Text(label,
                 style: TextStyle(
                     fontSize: 12,
-                    color: met ? Colors.green : Colors.purple.withValues(alpha: 0.8))),
+                    color: met
+                        ? Colors.green
+                        : Colors.purple.withValues(alpha: 0.8))),
           ],
         ),
       );
@@ -181,7 +188,8 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
         children: [
           const SizedBox(height: 20),
           Container(
-            width: 100, height: 100,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               color: widget.headerColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -221,13 +229,17 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
             inputFormatters: [_vaultPasswordFormatter],
             textInputAction: TextInputAction.next,
             onChanged: (_) => _updateChecks(),
-            onSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmFocus),
+            onSubmitted: (_) =>
+                FocusScope.of(context).requestFocus(_confirmFocus),
             decoration: InputDecoration(
               labelText: l10n.enterPassword,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               prefixIcon: const Icon(Icons.lock),
               suffixIcon: IconButton(
-                icon: Icon(widget.obscurePassword ? Icons.visibility : Icons.visibility_off),
+                icon: Icon(widget.obscurePassword
+                    ? Icons.visibility
+                    : Icons.visibility_off),
                 onPressed: widget.onTogglePassword,
               ),
             ),
@@ -244,17 +256,21 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
             onSubmitted: (_) => widget.onSubmit(),
             decoration: InputDecoration(
               labelText: l10n.confirmPassword,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(widget.obscureConfirm ? Icons.visibility : Icons.visibility_off),
+                icon: Icon(widget.obscureConfirm
+                    ? Icons.visibility
+                    : Icons.visibility_off),
                 onPressed: widget.onToggleConfirm,
               ),
             ),
           ),
           if (widget.errorText != null) ...[
             const SizedBox(height: 12),
-            Text(widget.errorText!, style: const TextStyle(color: Colors.red, fontSize: 14)),
+            Text(widget.errorText!,
+                style: const TextStyle(color: Colors.red, fontSize: 14)),
           ],
           const SizedBox(height: 20),
         ],
@@ -289,7 +305,8 @@ class VaultRecoveryPage extends StatelessWidget {
         children: [
           const SizedBox(height: 20),
           Container(
-            width: 100, height: 100,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               color: Colors.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -304,45 +321,24 @@ class VaultRecoveryPage extends StatelessWidget {
                   color: isDark ? Colors.white : Colors.black87),
               textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: recoveryCode ?? ''));
-              UnifiedNotificationService().show(
-                context: context,
-                message: l10n.codeCopied,
-                type: NotificationType.success,
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange, width: 2),
-              ),
-              child: Text(
-                recoveryCode ?? '',
-                style: const TextStyle(
-                    fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
-                textAlign: TextAlign.center,
-              ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange, width: 2),
+            ),
+            child: Text(
+              recoveryCode ?? '',
+              style: const TextStyle(
+                  fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: recoveryCode ?? ''));
-                UnifiedNotificationService().show(
-                  context: context,
-                  message: l10n.codeCopied,
-                  type: NotificationType.success,
-                );
-              },
-              icon: const Icon(Icons.copy),
-              label: Text(l10n.copyCode),
-            ),
+          CopyCodeButton(
+            code: recoveryCode ?? '',
+            label: l10n.copyCode,
           ),
           const SizedBox(height: 16),
           Theme(
@@ -350,12 +346,14 @@ class VaultRecoveryPage extends StatelessWidget {
             child: ExpansionTile(
               tilePadding: const EdgeInsets.symmetric(horizontal: 16),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              collapsedShape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              collapsedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               backgroundColor: Colors.blue.withValues(alpha: 0.05),
               collapsedBackgroundColor: Colors.blue.withValues(alpha: 0.05),
-              leading: const Icon(Icons.info_outline, color: Colors.blue, size: 24),
+              leading:
+                  const Icon(Icons.info_outline, color: Colors.blue, size: 24),
               title: Text(l10n.importantInfo,
                   style: const TextStyle(
                       fontSize: 15,
@@ -407,12 +405,14 @@ class VaultBiometricPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 120, height: 120,
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
                     color: Colors.teal.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.fingerprint, size: 60, color: Colors.teal),
+                  child: const Icon(Icons.fingerprint,
+                      size: 60, color: Colors.teal),
                 ),
                 const SizedBox(height: 40),
                 Text(l10n.enableBiometric,
