@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_intro_pages.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
@@ -58,45 +57,25 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     super.dispose();
   }
 
-  Future<void> _authenticateAndProceed({bool usePassword = false}) async {
+  Future<void> _authenticateAndProceed() async {
     VaultResetGuard.isActive = true;
-
-    bool authenticated = false;
-
-    if (usePassword) {
-      final password = await _showPasswordDialog();
-      if (password == null) {
-        VaultResetGuard.isActive = false;
-        return;
-      }
-      authenticated = await VaultService.verifyPassword(password);
-      if (!authenticated && mounted) {
-        VaultResetGuard.isActive = false;
-        UnifiedNotificationService().show(
-          context: context,
-          message: AppLocalizations.of(context)!.wrongPassword,
-          type: NotificationType.error,
-        );
-        return;
-      }
-    } else {
-      authenticated = await UnifiedLockService().runVaultOperation(
-        () => UnifiedLockService().authenticate(context: 'vault_entry'),
-      );
+    final password = await _showPasswordDialog();
+    if (password == null) {
+      VaultResetGuard.isActive = false;
+      return;
     }
-
+    final authenticated = await VaultService.verifyPassword(password);
     if (!mounted) {
       VaultResetGuard.isActive = false;
       return;
     }
-
     if (authenticated) {
       setState(() => _currentStep = _ResetStep.newPassword);
     } else {
       VaultResetGuard.isActive = false;
       UnifiedNotificationService().show(
         context: context,
-        message: AppLocalizations.of(context)!.authenticationFailed,
+        message: AppLocalizations.of(context)!.wrongPassword,
         type: NotificationType.error,
       );
     }
@@ -222,8 +201,7 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
         return _WarningStep(
           isDark: isDark,
           l10n: l10n,
-          onBiometric: _authenticateAndProceed,
-          onPassword: () => _authenticateAndProceed(usePassword: true),
+          onProceed: _authenticateAndProceed,
         );
       case _ResetStep.newPassword:
         return Column(
@@ -334,14 +312,12 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
 class _WarningStep extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l10n;
-  final VoidCallback onBiometric;
-  final VoidCallback onPassword;
+  final VoidCallback onProceed;
 
   const _WarningStep({
     required this.isDark,
     required this.l10n,
-    required this.onBiometric,
-    required this.onPassword,
+    required this.onProceed,
   });
 
   @override
@@ -353,8 +329,7 @@ class _WarningStep extends StatelessWidget {
         children: [
           const SizedBox(height: 20),
           Container(
-            width: 100,
-            height: 100,
+            width: 100, height: 100,
             decoration: BoxDecoration(
               color: Colors.orange.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -365,8 +340,7 @@ class _WarningStep extends StatelessWidget {
           Text(
             l10n.resetVaultWarningTitle,
             style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+              fontSize: 22, fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : Colors.black87,
             ),
             textAlign: TextAlign.center,
@@ -375,8 +349,7 @@ class _WarningStep extends StatelessWidget {
           Text(
             l10n.resetVaultWarningBody,
             style: TextStyle(
-              fontSize: 15,
-              height: 1.6,
+              fontSize: 15, height: 1.6,
               color: isDark ? Colors.grey[300] : Colors.grey[700],
             ),
             textAlign: TextAlign.center,
@@ -406,51 +379,16 @@ class _WarningStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          // زر البصمة
           SizedBox(
             width: double.infinity,
             height: 52,
             child: ElevatedButton.icon(
-              onPressed: onBiometric,
-              icon: const Icon(Icons.fingerprint),
-              label: Text(l10n.authenticateAndProceed),
+              onPressed: onProceed,
+              icon: const Icon(Icons.lock_outline),
+              label: Text(l10n.enterVaultPassword),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // فاصل أو
-          Row(
-            children: [
-              Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.4))),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  l10n.orText,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.grey[500] : Colors.grey[500],
-                  ),
-                ),
-              ),
-              Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.4))),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // زر كلمة المرور
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: onPassword,
-              icon: const Icon(Icons.lock_outline),
-              label: Text(l10n.enterVaultPassword),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.orange,
-                side: const BorderSide(color: Colors.orange),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),

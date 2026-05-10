@@ -3,7 +3,6 @@
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_reset_screen.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -45,10 +44,6 @@ class VaultDialogs {
                   subtitle: Text(l10n.biometricOptional),
                   value: isEnabled,
                   onChanged: (val) async {
-                    final authenticated = await UnifiedLockService().runVaultOperation(
-                      () => UnifiedLockService().authenticate(context: 'vault_entry'),
-                    );
-                    if (!authenticated) return;
                     await VaultService.setBiometricEnabled(val);
                     if (!context.mounted) return;
                     Navigator.pop(context);
@@ -296,18 +291,6 @@ class VaultDialogs {
   ) async {
     VaultResetGuard.isActive = true;
     try {
-      final authenticated = await UnifiedLockService().runVaultOperation(
-        () => UnifiedLockService().authenticate(context: 'vault_entry'),
-      );
-      if (!authenticated) {
-        if (!context.mounted) return;
-        UnifiedNotificationService().show(
-          context: context,
-          message: AppLocalizations.of(context)!.authenticationFailed,
-          type: NotificationType.error,
-        );
-        return;
-      }
       await action();
     } finally {
       VaultResetGuard.isActive = false;
