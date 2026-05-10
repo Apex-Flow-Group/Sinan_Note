@@ -469,9 +469,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
       widget.onNotesChanged();
     } else {
       final biometricEnabled = await VaultService.isBiometricEnabled();
+      final hasBiometrics = await BiometricService.hasBiometrics();
       if (!context.mounted) return;
 
-      if (biometricEnabled) {
+      if (biometricEnabled && hasBiometrics) {
         final nav = Navigator.of(context);
         nav.pop(); // close drawer before biometric
         final authenticated = await BiometricService.authenticate();

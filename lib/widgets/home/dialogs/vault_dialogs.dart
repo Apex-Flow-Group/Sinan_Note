@@ -3,6 +3,7 @@
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_reset_screen.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -38,19 +39,25 @@ class VaultDialogs {
               future: VaultService.isBiometricEnabled(),
               builder: (context, snapshot) {
                 final isEnabled = snapshot.data ?? false;
-                return SwitchListTile(
-                  secondary: const Icon(Icons.fingerprint),
-                  title: Text(l10n.enableBiometric),
-                  subtitle: Text(l10n.biometricOptional),
-                  value: isEnabled,
-                  onChanged: (val) async {
-                    await VaultService.setBiometricEnabled(val);
-                    if (!context.mounted) return;
-                    Navigator.pop(context);
-                    UnifiedNotificationService().show(
-                      context: context,
-                      message: val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
-                      type: NotificationType.success,
+                return FutureBuilder<LockType>(
+                  future: UnifiedLockService().getLockType(),
+                  builder: (context, lockSnapshot) {
+                    if (lockSnapshot.data != LockType.biometric) return const SizedBox.shrink();
+                    return SwitchListTile(
+                      secondary: const Icon(Icons.fingerprint),
+                      title: Text(l10n.enableBiometric),
+                      subtitle: Text(l10n.biometricOptional),
+                      value: isEnabled,
+                      onChanged: (val) async {
+                        await VaultService.setBiometricEnabled(val);
+                        if (!context.mounted) return;
+                        Navigator.pop(context);
+                        UnifiedNotificationService().show(
+                          context: context,
+                          message: val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
+                          type: NotificationType.success,
+                        );
+                      },
                     );
                   },
                 );
@@ -60,15 +67,21 @@ class VaultDialogs {
               future: VaultService.isBiometricButtonVisible(),
               builder: (context, snapshot) {
                 final isVisible = snapshot.data ?? true;
-                return SwitchListTile(
-                  secondary: const Icon(Icons.visibility_outlined),
-                  title: Text(l10n.showBiometricButton),
-                  subtitle: Text(l10n.showBiometricButtonDesc),
-                  value: isVisible,
-                  onChanged: (val) async {
-                    await VaultService.setBiometricButtonVisible(val);
-                    if (!context.mounted) return;
-                    Navigator.pop(context);
+                return FutureBuilder<LockType>(
+                  future: UnifiedLockService().getLockType(),
+                  builder: (context, lockSnapshot) {
+                    if (lockSnapshot.data != LockType.biometric) return const SizedBox.shrink();
+                    return SwitchListTile(
+                      secondary: const Icon(Icons.visibility_outlined),
+                      title: Text(l10n.showBiometricButton),
+                      subtitle: Text(l10n.showBiometricButtonDesc),
+                      value: isVisible,
+                      onChanged: (val) async {
+                        await VaultService.setBiometricButtonVisible(val);
+                        if (!context.mounted) return;
+                        Navigator.pop(context);
+                      },
+                    );
                   },
                 );
               },

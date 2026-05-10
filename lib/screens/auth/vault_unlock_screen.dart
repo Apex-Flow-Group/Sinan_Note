@@ -3,6 +3,7 @@
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_intro_pages.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
+import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
@@ -106,10 +107,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     final authenticated = await UnifiedLockService().runVaultOperation(
-      () => UnifiedLockService().authenticate(
-        context: 'vault_entry',
-        biometricEnabled: true,
-      ),
+      () => BiometricService.authenticate(),
     );
     if (!mounted) return;
 
@@ -323,7 +321,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
         FutureBuilder<bool>(
           future: Future.wait([
             VaultService.isBiometricButtonVisible(),
-            UnifiedLockService().getLockType().then((t) => t == LockType.biometric),
+            BiometricService.hasBiometrics(),
           ]).then((r) => r[0] && r[1]),
           builder: (context, snapshot) {
             if (snapshot.data != true) return const SizedBox.shrink();
