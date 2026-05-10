@@ -3,7 +3,7 @@
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_intro_pages.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
@@ -104,17 +104,21 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   Future<void> _handleBiometricUnlock() async {
     if (!mounted || _loading) return;
     final l10n = AppLocalizations.of(context)!;
-    final authenticated = await BiometricService.authenticate();
+
+    final authenticated = await UnifiedLockService().runVaultOperation(
+      () => UnifiedLockService().authenticate(
+        context: 'vault_entry',
+        biometricEnabled: true,
+      ),
+    );
     if (!mounted) return;
 
     if (authenticated) {
-      // البصمة نجحت — نتحقق أن المفتاح موجود في الذاكرة
       try {
-        await VaultService.getMasterKey(); // يرمي VaultLockedException إذا غير موجود
+        await VaultService.getMasterKey();
         if (!mounted) return;
         _navigateToVault();
       } catch (_) {
-        // المفتاح غير موجود — نطلب كلمة المرور
         if (!mounted) return;
         setState(() => _errorText = l10n.enterPassword);
       }
@@ -319,7 +323,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
         FutureBuilder<bool>(
           future: Future.wait([
             VaultService.isBiometricButtonVisible(),
-            BiometricService.hasBiometrics(),
+            UnifiedLockService().getLockType().then((t) => t == LockType.biometric),
           ]).then((r) => r[0] && r[1]),
           builder: (context, snapshot) {
             if (snapshot.data != true) return const SizedBox.shrink();

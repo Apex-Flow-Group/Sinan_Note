@@ -4,7 +4,7 @@ import 'dart:async';
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_intro_pages.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
@@ -64,7 +64,6 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     bool authenticated = false;
 
     if (usePassword) {
-      // التحقق بكلمة المرور
       final password = await _showPasswordDialog();
       if (password == null) {
         VaultResetGuard.isActive = false;
@@ -81,7 +80,9 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
         return;
       }
     } else {
-      authenticated = await BiometricService.authenticate();
+      authenticated = await UnifiedLockService().runVaultOperation(
+        () => UnifiedLockService().authenticate(context: 'vault_entry'),
+      );
     }
 
     if (!mounted) {

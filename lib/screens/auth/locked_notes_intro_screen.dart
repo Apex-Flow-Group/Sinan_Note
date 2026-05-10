@@ -5,10 +5,8 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/feature_info.dart';
 import 'package:apex_note/screens/auth/vault_intro_pages.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,7 +30,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   String? _errorText;
   String? _recoveryCode;
   bool _codeSaved = false;
-  bool _hasBackupInDrive = false;
   bool _hasBiometrics = false;
 
   int get _totalPages => 4;
@@ -40,7 +37,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   @override
   void initState() {
     super.initState();
-    _checkForDriveBackup();
     _checkBiometrics();
   }
 
@@ -55,13 +51,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   Future<void> _checkBiometrics() async {
     final hasBio = await BiometricService.hasBiometrics();
     if (mounted) setState(() => _hasBiometrics = hasBio);
-  }
-
-  Future<void> _checkForDriveBackup() async {
-    if (GoogleDriveService.isSignedIn) {
-      final hasBackup = await GoogleDriveService.hasBackupInDrive();
-      if (mounted) setState(() => _hasBackupInDrive = hasBackup);
-    }
   }
 
   List<FeatureInfo> _getFeatures(AppLocalizations l10n) => [
@@ -161,18 +150,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     }
   }
 
-  Future<void> _restoreVaultFromDrive() async {
-    if (mounted) {
-      UnifiedNotificationService().show(
-        context: context,
-        message:
-            '⚠️ استعادة الخزنة من Drive قريباً...\nحالياً: استخدم Recovery Code',
-        type: NotificationType.info,
-        duration: const Duration(seconds: 3),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -234,11 +211,9 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                             isDark: isDark,
                             recoveryCode: _recoveryCode,
                             codeSaved: _codeSaved,
-                            hasBackupInDrive: _hasBackupInDrive,
                             errorText: _errorText,
                             onCodeSavedChanged: (val) =>
                                 setState(() => _codeSaved = val ?? false),
-                            onRestoreFromDrive: _restoreVaultFromDrive,
                           );
                         }
                         if (index == 3) {

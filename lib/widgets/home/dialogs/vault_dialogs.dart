@@ -3,7 +3,7 @@
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_reset_screen.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
@@ -45,14 +45,16 @@ class VaultDialogs {
                   subtitle: Text(l10n.biometricOptional),
                   value: isEnabled,
                   onChanged: (val) async {
+                    final authenticated = await UnifiedLockService().runVaultOperation(
+                      () => UnifiedLockService().authenticate(context: 'vault_entry'),
+                    );
+                    if (!authenticated) return;
                     await VaultService.setBiometricEnabled(val);
                     if (!context.mounted) return;
                     Navigator.pop(context);
                     UnifiedNotificationService().show(
                       context: context,
-                      message: val
-                          ? 'Biometric enabled ✅'
-                          : 'Biometric disabled ❌',
+                      message: val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
                       type: NotificationType.success,
                     );
                   },
@@ -288,20 +290,16 @@ class VaultDialogs {
     );
   }
 
-  /// تحقق بالبصمة ثم نفّذ العملية (مع حماية من إغلاق الخزنة)
   static Future<void> _authenticateAndExecute(
     BuildContext context,
     Future<void> Function() action,
   ) async {
     VaultResetGuard.isActive = true;
-
-    // لو الجهاز بلا حماية — المستخدم داخل الخزنة أصلاً، ننفّذ مباشرة
-    final hasBio = await BiometricService.hasBiometrics();
-    if (hasBio) {
-      final authenticated = await BiometricService.authenticate();
-
+    try {
+      final authenticated = await UnifiedLockService().runVaultOperation(
+        () => UnifiedLockService().authenticate(context: 'vault_entry'),
+      );
       if (!authenticated) {
-        VaultResetGuard.isActive = false;
         if (!context.mounted) return;
         UnifiedNotificationService().show(
           context: context,
@@ -310,9 +308,6 @@ class VaultDialogs {
         );
         return;
       }
-    }
-
-    try {
       await action();
     } finally {
       VaultResetGuard.isActive = false;

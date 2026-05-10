@@ -267,20 +267,16 @@ class VaultRecoveryPage extends StatelessWidget {
   final bool isDark;
   final String? recoveryCode;
   final bool codeSaved;
-  final bool hasBackupInDrive;
   final String? errorText;
   final ValueChanged<bool?> onCodeSavedChanged;
-  final VoidCallback onRestoreFromDrive;
 
   const VaultRecoveryPage({
     super.key,
     required this.isDark,
     required this.recoveryCode,
     required this.codeSaved,
-    required this.hasBackupInDrive,
     this.errorText,
     required this.onCodeSavedChanged,
-    required this.onRestoreFromDrive,
   });
 
   @override
@@ -348,44 +344,6 @@ class VaultRecoveryPage extends StatelessWidget {
               label: Text(l10n.copyCode),
             ),
           ),
-          if (hasBackupInDrive) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue, width: 2),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.cloud_download, color: Colors.blue, size: 24),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(l10n.vaultFoundInDrive,
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: onRestoreFromDrive,
-                      icon: const Icon(Icons.download),
-                      label: Text(l10n.restoreVaultFromDrive),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
           const SizedBox(height: 16),
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

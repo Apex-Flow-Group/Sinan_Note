@@ -92,10 +92,10 @@ class SecuritySection extends StatelessWidget {
                 value: settings.biometricLockEnabled,
                 onChanged: (val) async {
                   if (val) {
-                    final ok = await BiometricService.authenticate();
+                    final ok = await UnifiedLockService().authenticate(context: 'app_lock');
                     if (ok) await settings.setBiometricLockEnabled(true);
                   } else {
-                    final ok = await BiometricService.authenticate();
+                    final ok = await UnifiedLockService().authenticate(context: 'app_lock');
                     if (ok) await settings.setBiometricLockEnabled(false);
                   }
                 },

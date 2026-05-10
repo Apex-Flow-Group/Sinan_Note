@@ -27,8 +27,26 @@ class UnifiedLockService {
   bool _isAuthenticatedThisSession = false;
   bool get isAuthenticatedThisSession => _isAuthenticatedThisSession;
 
+  /// حماية جلسة الخزنة أثناء عمليات المصادقة الداخلية
+  /// يمنع LockedNotesScreen من طرد المستخدم عند ظهور dialog البيومتري
+  bool _isVaultOperation = false;
+  bool get isVaultOperation => _isVaultOperation;
+
+  /// تغليف عملية تتطلب مصادقة داخل الخزنة
+  Future<T> runVaultOperation<T>(Future<T> Function() operation) async {
+    _isVaultOperation = true;
+    try {
+      return await operation();
+    } finally {
+      _isVaultOperation = false;
+    }
+  }
+
   /// إعادة تعيين حالة الجلسة (عند القفل)
-  void resetSession() => _isAuthenticatedThisSession = false;
+  void resetSession() {
+    _isAuthenticatedThisSession = false;
+    _isVaultOperation = false;
+  }
 
   /// تحديد نوع القفل المناسب للجهاز
   /// PIN هو الطبقة الأساسية — البيومتري ثانوي اختياري
