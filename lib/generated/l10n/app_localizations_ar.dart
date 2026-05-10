@@ -2066,16 +2066,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinIncorrectError => 'رمز PIN غير صحيح';
 
   @override
+  String get tooManyAttempts => 'محاولات كثيرة جداً';
+
+  @override
+  String get tryAgainIn => 'حاول مرة أخرى بعد';
+
+  @override
+  String get attemptsRemaining => 'محاولة متبقية';
+
+  @override
   String get showBiometricButton => 'فتح بالبصمة';
 
   @override
-  String get showBiometricButtonDesc =>
-      'إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق';
+  String get showBiometricButtonDesc => 'استخدم البصمة أو الوجه';
 
   @override
   String get unlockWithBiometric => 'فتح بالبصمة';
 
   @override
-  String get unlockWithBiometricDesc =>
-      'إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق';
+  String get unlockWithBiometricDesc => 'استخدم البصمة أو الوجه';
 }

@@ -3,6 +3,7 @@
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/rate_limiter_service.dart';
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,12 +13,14 @@ class PinLockScreen extends StatefulWidget {
   final bool isSetup;
   final VoidCallback? onSuccess;
   final bool autoBiometric;
+  final bool isDisabling;
 
   const PinLockScreen({
     super.key,
     this.isSetup = false,
     this.onSuccess,
     this.autoBiometric = false,
+    this.isDisabling = false,
   });
 
   @override
@@ -34,6 +37,9 @@ class _PinLockScreenState extends State<PinLockScreen>
   String? _error;
   bool _loading = false;
   bool _biometricAvailable = false;
+  bool _isLocked = false;
+  int _remainingLockTime = 0;
+  int _remainingAttempts = 5;
 
   // الطول المحدد من الخطوة الأولى (يُقفل عند الانتقال للتأكيد)
   int get _targetLength => _isConfirmStep ? _firstPin.length : _maxPinLength;
@@ -41,12 +47,12 @@ class _PinLockScreenState extends State<PinLockScreen>
   // لون الشريط
   Color get _progressColor {
     if (_isConfirmStep) {
-      if (_pin.length < _firstPin.length) return Colors.red;
+      if (_pin.length < _firstPin.length) return Colors.orange;
       return _pin == _firstPin ? Colors.green : Colors.red;
     }
     if (_pin.length >= _maxPinLength) return Colors.green;
-    if (_pin.length >= _minPinLength) return Colors.amber;
-    return Colors.red;
+    if (_pin.length >= _minPinLength) return Colors.blue;
+    return Colors.orange;
   }
 
   static const int _minPinLength = 4;
@@ -80,7 +86,46 @@ class _PinLockScreenState extends State<PinLockScreen>
     );
     _iconAnimController.forward();
 
-    if (!widget.isSetup) _initBiometric();
+    if (!widget.isSetup) {
+      _checkLockStatus();
+      _initBiometric();
+    }
+  }
+
+  Future<void> _checkLockStatus() async {
+    final lockTime = await RateLimiterService.getRemainingLockTime();
+    final attempts = await RateLimiterService.getRemainingAttempts();
+    
+    if (mounted) {
+      setState(() {
+        _isLocked = lockTime != null;
+        _remainingLockTime = lockTime ?? 0;
+        _remainingAttempts = attempts;
+      });
+      
+      if (_isLocked) {
+        _startLockTimer();
+      }
+    }
+  }
+
+  void _startLockTimer() {
+    Future.delayed(const Duration(seconds: 1), () async {
+      if (!mounted || !_isLocked) return;
+      
+      final lockTime = await RateLimiterService.getRemainingLockTime();
+      
+      if (lockTime == null) {
+        setState(() {
+          _isLocked = false;
+          _remainingLockTime = 0;
+        });
+        await _checkLockStatus();
+      } else {
+        setState(() => _remainingLockTime = lockTime);
+        _startLockTimer();
+      }
+    });
   }
 
   Future<void> _initBiometric() async {
@@ -111,6 +156,7 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   void _onDigit(String digit) {
+    if (_isLocked) return;
     if (_pin.length >= _targetLength) return;
     setState(() {
       _pin += digit;
@@ -123,11 +169,13 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   void _onConfirm() {
+    if (_isLocked) return;
     if (_pin.length < _minPinLength) return;
     _onPinComplete();
   }
 
   void _onDelete() {
+    if (_isLocked) return;
     if (_pin.isEmpty) return;
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
   }
@@ -135,6 +183,21 @@ class _PinLockScreenState extends State<PinLockScreen>
   Future<void> _onPinComplete() async {
     if (_loading) return;
     final l10n = AppLocalizations.of(context)!;
+
+    // التحقق من القفل
+    if (!widget.isSetup) {
+      final lockTime = await RateLimiterService.getRemainingLockTime();
+      if (lockTime != null) {
+        setState(() {
+          _isLocked = true;
+          _remainingLockTime = lockTime;
+          _error = 'Locked for ${RateLimiterService.formatRemainingTime(lockTime)}';
+          _pin = '';
+        });
+        _shake();
+        return;
+      }
+    }
 
     if (widget.isSetup) {
       if (!_isConfirmStep) {
@@ -167,20 +230,34 @@ class _PinLockScreenState extends State<PinLockScreen>
 
       await UnifiedLockService().setPin(_pin);
       UnifiedLockService().markAuthenticated();
+      await RateLimiterService.reset();
       widget.onSuccess?.call();
     } else {
       setState(() => _loading = true);
       try {
         final valid = await UnifiedLockService().verifyPin(_pin);
         if (!valid) {
+          // تسجيل محاولة فاشلة
+          final lockTime = await RateLimiterService.recordFailedAttempt();
+          final attempts = await RateLimiterService.getRemainingAttempts();
+          
           _shake();
           setState(() {
-            _error = l10n.pinIncorrectError;
+            if (lockTime != null) {
+              _isLocked = true;
+              _remainingLockTime = lockTime;
+              _error = 'Locked for ${RateLimiterService.formatRemainingTime(lockTime)}';
+              _startLockTimer();
+            } else {
+              _error = null;
+              _remainingAttempts = attempts;
+            }
             _pin = '';
             _loading = false;
           });
           return;
         }
+        await RateLimiterService.reset();
         UnifiedLockService().markAuthenticated();
         widget.onSuccess?.call();
       } finally {
@@ -201,36 +278,54 @@ class _PinLockScreenState extends State<PinLockScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: widget.isSetup, // السماح بالرجوع فقط عند الإنشاء
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop && widget.isSetup && _isConfirmStep) {
+          // إذا كان في خطوة التأكيد، الرجوع للخطوة الأولى
+          setState(() {
+            _isConfirmStep = false;
+            _pin = '';
+            _firstPin = '';
+            _error = null;
+          });
+          _iconAnimController
+            ..reset()
+            ..forward();
+        }
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (_isConfirmStep) {
-              setState(() {
-                _isConfirmStep = false;
-                _pin = '';
-                _firstPin = '';
-                _error = null;
-              });
-              _iconAnimController
-                ..reset()
-                ..forward();
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        ),
-      ),
-      body: SafeArea(
+        appBar: widget.isSetup
+            ? AppBar(
+                backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    if (_isConfirmStep) {
+                      setState(() {
+                        _isConfirmStep = false;
+                        _pin = '';
+                        _firstPin = '';
+                        _error = null;
+                      });
+                      _iconAnimController
+                        ..reset()
+                        ..forward();
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+                systemOverlayStyle: SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+                ),
+              )
+            : null,
+        body: SafeArea(
         child: Column(
           children: [
             Expanded(
@@ -264,22 +359,64 @@ class _PinLockScreenState extends State<PinLockScreen>
                   // رسالة الخطأ أو الوصف
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
-                    child: _error != null
-                        ? Text(
-                            _error!,
-                            key: ValueKey(_error),
-                            style: const TextStyle(color: Colors.red, fontSize: 14),
-                            textAlign: TextAlign.center,
+                    child: _isLocked
+                        ? Column(
+                            key: const ValueKey('locked'),
+                            children: [
+                              const Icon(
+                                Icons.timer_outlined,
+                                color: Colors.red,
+                                size: 32,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.tooManyAttempts,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${l10n.tryAgainIn} ${RateLimiterService.formatRemainingTime(_remainingLockTime)}',
+                                style: TextStyle(
+                                  color: Colors.red.withValues(alpha: 0.8),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           )
-                        : Text(
-                            _subtitle(l10n),
-                            key: const ValueKey('subtitle'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                        : _error != null
+                            ? Column(
+                                key: ValueKey(_error),
+                                children: [
+                                  Text(
+                                    _error!,
+                                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              )
+                            : !widget.isSetup && _remainingAttempts < 5
+                                ? Text(
+                                    '$_remainingAttempts ${l10n.attemptsRemaining}',
+                                    key: ValueKey(_remainingAttempts),
+                                    style: const TextStyle(
+                                      color: Colors.orange,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  )
+                                : Text(
+                                _subtitle(l10n),
+                                key: const ValueKey('subtitle'),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                   ),
                   const SizedBox(height: 32),
                   // مربعات PIN — ديناميكية
@@ -339,45 +476,42 @@ class _PinLockScreenState extends State<PinLockScreen>
                     const SizedBox(height: 16),
                     SizedBox(
                       width: 240,
-                    child: Column(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(3),
-                            color: isDark ? Colors.grey[800] : Colors.grey[200],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0, end: _pin.length / _targetLength),
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                              builder: (context, value, _) => LinearProgressIndicator(
-                                value: value,
-                                backgroundColor: Colors.transparent,
-                                valueColor: AlwaysStoppedAnimation<Color>(_progressColor),
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 6,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(3),
+                              color: isDark ? Colors.grey[800] : Colors.grey[200],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: AnimatedFractionallySizedBox(
+                                widthFactor: (_pin.length / _targetLength).clamp(0.0, 1.0),
+                                alignment: AlignmentDirectional.centerStart,
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOut,
+                                child: Container(
+                                  color: _progressColor,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 300),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: _progressColor,
+                          const SizedBox(height: 6),
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: _progressColor,
+                            ),
+                            child: Text(
+                              '${_pin.length} / $_targetLength',
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          child: Text(
-                            '${_pin.length} / $_targetLength',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                   ],
                 ],
               ),
@@ -387,7 +521,7 @@ class _PinLockScreenState extends State<PinLockScreen>
           ],
         ),
       ),
-    );
+    ));
   }
 
   String _title(AppLocalizations l10n) {
@@ -465,21 +599,21 @@ class _PinLockScreenState extends State<PinLockScreen>
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: _loading ? null : (_isConfirmStep
+                onPressed: (_loading || _isLocked) ? null : (_isConfirmStep
                     ? (_pin == _firstPin ? _onConfirm : null)
                     : (_pin.length >= _minPinLength ? _onConfirm : null)),
                 icon: _loading
                     ? const SizedBox(width: 20, height: 20,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.check),
+                    : Icon(widget.isSetup ? Icons.check : (widget.isDisabling ? Icons.lock_open : Icons.lock_open)),
                 label: _loading ? const SizedBox.shrink() : Text(
                   widget.isSetup
                       ? (_isConfirmStep ? l10n.savePinButton : l10n.next)
-                      : l10n.unlock,
+                      : (widget.isDisabling ? l10n.disabled : l10n.unlock),
                   style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: widget.isSetup ? Colors.blue : (widget.isDisabling ? Colors.orange : Colors.blue),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),

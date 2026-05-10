@@ -2076,16 +2076,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinIncorrectError => 'Incorrect PIN';
 
   @override
+  String get tooManyAttempts => 'Too many attempts';
+
+  @override
+  String get tryAgainIn => 'Try again in';
+
+  @override
+  String get attemptsRemaining => 'attempts remaining';
+
+  @override
   String get showBiometricButton => 'Unlock with Biometric';
 
   @override
-  String get showBiometricButtonDesc =>
-      'Show biometric button on lock screen and auto-prompt on app open';
+  String get showBiometricButtonDesc => 'Use fingerprint or face recognition';
 
   @override
   String get unlockWithBiometric => 'Unlock with Biometric';
 
   @override
-  String get unlockWithBiometricDesc =>
-      'Show biometric button on lock screen and auto-prompt on app open';
+  String get unlockWithBiometricDesc => 'Use fingerprint or face recognition';
 }

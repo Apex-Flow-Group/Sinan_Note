@@ -18,48 +18,64 @@ class SecuritySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
+    final theme = Theme.of(context);
+    final iconColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
 
     return SettingsSectionCard(
       title: l10n.security,
       icon: Icons.shield_rounded,
       children: [
         SwitchListTile(
-          secondary: const Icon(Icons.lock),
+          contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+          secondary: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.lock, color: iconColor, size: 22),
+          ),
           title: Text(l10n.appLock),
           subtitle: Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
           value: settings.isAppLockEnabled,
           onChanged: (val) async {
             if (val) {
               if (!context.mounted) return;
-              await Navigator.of(context).push(
+              final result = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
                   builder: (_) => PinLockScreen(
                     isSetup: true,
-                    onSuccess: () async {
-                      Navigator.of(context).pop();
-                      await settings.setAppLockEnabled(true);
-                      await settings.setCustomPinEnabled(true);
+                    onSuccess: () {
+                      Navigator.of(context).pop(true);
                     },
                   ),
                 ),
               );
+              if (result == true) {
+                await settings.setAppLockEnabled(true);
+                await settings.setCustomPinEnabled(true);
+              }
             } else {
               final lockType = await UnifiedLockService().getLockType();
               if (lockType == LockType.pin) {
                 if (!context.mounted) return;
-                await Navigator.of(context).push(
+                final result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
                     builder: (_) => PinLockScreen(
                       isSetup: false,
-                      onSuccess: () async {
-                        Navigator.of(context).pop();
-                        await settings.setAppLockEnabled(false);
-                        await settings.setCustomPinEnabled(false);
-                        await settings.setBiometricLockEnabled(false);
+                      isDisabling: true,
+                      onSuccess: () {
+                        Navigator.of(context).pop(true);
                       },
                     ),
                   ),
                 );
+                if (result == true) {
+                  await settings.setAppLockEnabled(false);
+                  await settings.setCustomPinEnabled(false);
+                  await settings.setBiometricLockEnabled(false);
+                }
               } else {
                 final authenticated = await UnifiedLockService().authenticate(context: 'app_lock');
                 UnifiedLockService().resetSession();
@@ -71,63 +87,87 @@ class SecuritySection extends StatelessWidget {
             }
           },
         ),
+        const SizedBox(height: 8),
         // خيار البصمة — يظهر فقط إذا كان القفل مفعّلاً والجهاز يدعم البيومتري
         if (settings.isAppLockEnabled)
           FutureBuilder<bool>(
             future: BiometricService.hasBiometrics(),
             builder: (context, snapshot) {
               if (snapshot.data != true) return const SizedBox.shrink();
-              return SwitchListTile(
-                contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
-                secondary: Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.teal.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.fingerprint, color: Colors.teal, size: 24),
-                ),
-                title: Text(l10n.unlockWithBiometric),
-                subtitle: Text(l10n.unlockWithBiometricDesc),
-                value: settings.biometricLockEnabled,
-                onChanged: (val) async {
+              return Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+                    secondary: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.fingerprint, color: iconColor, size: 22),
+                    ),
+                    title: Text(l10n.unlockWithBiometric),
+                    subtitle: Text(l10n.unlockWithBiometricDesc),
+                    value: settings.biometricLockEnabled,
+                    onChanged: (val) async {
                   if (val) {
                     final ok = await UnifiedLockService().authenticate(context: 'app_lock');
                     if (ok) await settings.setBiometricLockEnabled(true);
                   } else {
                     final ok = await UnifiedLockService().authenticate(context: 'app_lock');
                     if (ok) await settings.setBiometricLockEnabled(false);
-                  }
-                },
+                    }
+                  },
+                  ),
+                  const SizedBox(height: 8),
+                ],
               );
             },
           ),
         if (settings.isAppLockEnabled)
-          SwitchListTile(
-            contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
-            secondary: Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+          Column(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.timer_outlined, color: iconColor, size: 22),
+                ),
+                title: Text(l10n.lockDelay),
+                subtitle: Text(
+                  settings.lockDelayEnabled
+                      ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)
+                      : l10n.immediate,
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                onTap: () async {
+                  await SettingsDialogs.showLockDelayDialog(context, settings, l10n);
+                },
               ),
-              child: const Icon(Icons.timer_outlined, color: Colors.orange, size: 24),
-            ),
-            title: Text(l10n.lockDelay),
-            subtitle: Text(settings.lockDelayEnabled
-                ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)
-                : l10n.immediate),
-            value: settings.lockDelayEnabled,
-            onChanged: (val) async {
-              if (val) {
-                await SettingsDialogs.showLockDelayDialog(context, settings, l10n);
-              } else {
-                await settings.setLockDelayEnabled(false);
-              }
-            },
+              const SizedBox(height: 8),
+            ],
           ),
         SwitchListTile(
-          secondary: const Icon(Icons.visibility_off),
+          contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+          secondary: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.visibility_off, color: iconColor, size: 22),
+          ),
           title: Text(l10n.hideContentInBackground),
           subtitle: Text(l10n.applyBlurEffect),
           value: settings.hideContentInBackground,

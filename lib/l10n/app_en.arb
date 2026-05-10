@@ -690,8 +690,11 @@
   "pinLengthError": "PIN must be 4 to 6 digits",
   "pinMismatchError": "PINs do not match",
   "pinIncorrectError": "Incorrect PIN",
+  "tooManyAttempts": "Too many attempts",
+  "tryAgainIn": "Try again in",
+  "attemptsRemaining": "attempts remaining",
   "showBiometricButton": "Unlock with Biometric",
-  "showBiometricButtonDesc": "Show biometric button on lock screen and auto-prompt on app open",
+  "showBiometricButtonDesc": "Use fingerprint or face recognition",
   "unlockWithBiometric": "Unlock with Biometric",
-  "unlockWithBiometricDesc": "Show biometric button on lock screen and auto-prompt on app open"
+  "unlockWithBiometricDesc": "Use fingerprint or face recognition"
 }

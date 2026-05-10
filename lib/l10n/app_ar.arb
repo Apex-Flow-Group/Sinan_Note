@@ -690,8 +690,11 @@
   "pinLengthError": "يجب أن يكون رمز PIN من 4 إلى 6 أرقام",
   "pinMismatchError": "رموز PIN غير متطابقة",
   "pinIncorrectError": "رمز PIN غير صحيح",
+  "tooManyAttempts": "محاولات كثيرة جداً",
+  "tryAgainIn": "حاول مرة أخرى بعد",
+  "attemptsRemaining": "محاولة متبقية",
   "showBiometricButton": "فتح بالبصمة",
-  "showBiometricButtonDesc": "إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق",
+  "showBiometricButtonDesc": "استخدم البصمة أو الوجه",
   "unlockWithBiometric": "فتح بالبصمة",
-  "unlockWithBiometricDesc": "إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق"
+  "unlockWithBiometricDesc": "استخدم البصمة أو الوجه"
 }

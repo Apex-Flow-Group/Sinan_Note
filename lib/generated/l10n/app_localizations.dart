@@ -4082,6 +4082,24 @@ abstract class AppLocalizations {
   /// **'Incorrect PIN'**
   String get pinIncorrectError;
 
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts'**
+  String get tooManyAttempts;
+
+  /// No description provided for @tryAgainIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in'**
+  String get tryAgainIn;
+
+  /// No description provided for @attemptsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'attempts remaining'**
+  String get attemptsRemaining;
+
   /// No description provided for @showBiometricButton.
   ///
   /// In en, this message translates to:
@@ -4091,7 +4109,7 @@ abstract class AppLocalizations {
   /// No description provided for @showBiometricButtonDesc.
   ///
   /// In en, this message translates to:
-  /// **'Show biometric button on lock screen and auto-prompt on app open'**
+  /// **'Use fingerprint or face recognition'**
   String get showBiometricButtonDesc;
 
   /// No description provided for @unlockWithBiometric.
@@ -4103,7 +4121,7 @@ abstract class AppLocalizations {
   /// No description provided for @unlockWithBiometricDesc.
   ///
   /// In en, this message translates to:
-  /// **'Show biometric button on lock screen and auto-prompt on app open'**
+  /// **'Use fingerprint or face recognition'**
   String get unlockWithBiometricDesc;
 }
 
