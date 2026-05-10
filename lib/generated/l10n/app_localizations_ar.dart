@@ -2025,4 +2025,57 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get deviceSecurityRequiredDesc =>
       'لاستخدام ميزة قفل التطبيق، يجب أن يكون جهازك محمياً بقفل شاشة (PIN أو نمط أو بصمة أو التعرف على الوجه). اذهب إلى إعدادات الجهاز > الأمان لإعداده.';
+
+  @override
+  String get enterPinTitle => 'أدخل رمز PIN';
+
+  @override
+  String get enterPinSubtitle => 'أدخل رمز PIN لفتح التطبيق';
+
+  @override
+  String get createPinTitle => 'إنشاء رمز PIN';
+
+  @override
+  String get createPinSubtitle => 'اختر رمز PIN لحماية تطبيقك';
+
+  @override
+  String get confirmPinTitle => 'تأكيد رمز PIN';
+
+  @override
+  String get confirmPinSubtitle => 'أعد إدخال رمز PIN للتأكيد';
+
+  @override
+  String get pinLabel => 'رمز PIN (4-6 أرقام)';
+
+  @override
+  String get confirmPinLabel => 'تأكيد رمز PIN';
+
+  @override
+  String get pinRequirement => 'من 4 إلى 6 أرقام فقط';
+
+  @override
+  String get savePinButton => 'حفظ رمز PIN';
+
+  @override
+  String get pinLengthError => 'يجب أن يكون رمز PIN من 4 إلى 6 أرقام';
+
+  @override
+  String get pinMismatchError => 'رموز PIN غير متطابقة';
+
+  @override
+  String get pinIncorrectError => 'رمز PIN غير صحيح';
+
+  @override
+  String get showBiometricButton => 'فتح بالبصمة';
+
+  @override
+  String get showBiometricButtonDesc =>
+      'إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق';
+
+  @override
+  String get unlockWithBiometric => 'فتح بالبصمة';
+
+  @override
+  String get unlockWithBiometricDesc =>
+      'إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق';
 }

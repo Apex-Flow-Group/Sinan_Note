@@ -2035,4 +2035,57 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deviceSecurityRequiredDesc =>
       'To use the app lock feature, your device must be protected with a screen lock (PIN, pattern, fingerprint, or face recognition). Go to your device Settings > Security to set it up.';
+
+  @override
+  String get enterPinTitle => 'Enter PIN';
+
+  @override
+  String get enterPinSubtitle => 'Enter your PIN to unlock the app';
+
+  @override
+  String get createPinTitle => 'Create PIN';
+
+  @override
+  String get createPinSubtitle => 'Choose a PIN to protect your app';
+
+  @override
+  String get confirmPinTitle => 'Confirm PIN';
+
+  @override
+  String get confirmPinSubtitle => 'Re-enter your PIN to confirm';
+
+  @override
+  String get pinLabel => 'PIN (4-6 digits)';
+
+  @override
+  String get confirmPinLabel => 'Confirm PIN';
+
+  @override
+  String get pinRequirement => '4 to 6 digits only';
+
+  @override
+  String get savePinButton => 'Save PIN';
+
+  @override
+  String get pinLengthError => 'PIN must be 4 to 6 digits';
+
+  @override
+  String get pinMismatchError => 'PINs do not match';
+
+  @override
+  String get pinIncorrectError => 'Incorrect PIN';
+
+  @override
+  String get showBiometricButton => 'Unlock with Biometric';
+
+  @override
+  String get showBiometricButtonDesc =>
+      'Show biometric button on lock screen and auto-prompt on app open';
+
+  @override
+  String get unlockWithBiometric => 'Unlock with Biometric';
+
+  @override
+  String get unlockWithBiometricDesc =>
+      'Show biometric button on lock screen and auto-prompt on app open';
 }

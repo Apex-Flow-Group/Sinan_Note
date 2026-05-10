@@ -180,7 +180,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final pageCount = _hasBiometrics ? _totalPages : _totalPages - 1;
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -226,6 +226,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                             onToggleConfirm: () => setState(
                                 () => _obscureConfirm = !_obscureConfirm),
                             onChanged: () => setState(() => _errorText = null),
+                            onSubmit: _handleNext,
                           );
                         }
                         if (index == 2) {

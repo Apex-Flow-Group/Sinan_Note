@@ -1,10 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
+import 'package:apex_note/screens/auth/pin_lock_screen.dart';
 import 'package:apex_note/screens/auth/vault_unlock_screen.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:flutter/material.dart';
@@ -76,22 +76,53 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
   }
 
   Future<void> _authenticateWithBiometric() async {
-    final authenticated = await BiometricService.authenticate();
+    // إذا تمت المصادقة مسبقاً عبر قفل التطبيق → دخول مباشر
+    if (UnifiedLockService().isAuthenticatedThisSession) {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
+        );
+      }
+      return;
+    }
+
+    final lockType = await UnifiedLockService().getLockType();
+
+    if (lockType == LockType.pin) {
+      if (!mounted) return;
+      final hasPinAlready = await UnifiedLockService().hasPinSet();
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PinLockScreen(
+            isSetup: !hasPinAlready,
+            autoBiometric: true,
+            onSuccess: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LockedNotesScreen()),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    final authenticated = await UnifiedLockService().authenticate(context: 'vault_entry');
 
     if (authenticated && mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const LockedNotesScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const LockedNotesScreen()),
       );
     } else if (mounted) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const VaultUnlockScreen(
-            biometricFailed: true,
-          ),
+          builder: (context) => const VaultUnlockScreen(biometricFailed: true),
         ),
       );
     }
@@ -99,7 +130,6 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -125,7 +155,7 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
             const CircularProgressIndicator(color: Colors.orange),
             const SizedBox(height: 16),
             Text(
-              l10n.verifyingIdentity,
+              isDark ? 'جاري التحقق...' : 'Verifying...',
               style: TextStyle(
                 fontSize: 16,
                 color: isDark ? Colors.grey[300] : Colors.grey[700],

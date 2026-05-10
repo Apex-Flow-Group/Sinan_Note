@@ -6,6 +6,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_intro_pages.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
+import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,11 +58,31 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     super.dispose();
   }
 
-  Future<void> _authenticateAndProceed() async {
-    // منع LockedNotesScreen من الخروج أثناء البصمة
+  Future<void> _authenticateAndProceed({bool usePassword = false}) async {
     VaultResetGuard.isActive = true;
 
-    final authenticated = await BiometricService.authenticate();
+    bool authenticated = false;
+
+    if (usePassword) {
+      // التحقق بكلمة المرور
+      final password = await _showPasswordDialog();
+      if (password == null) {
+        VaultResetGuard.isActive = false;
+        return;
+      }
+      authenticated = await VaultService.verifyPassword(password);
+      if (!authenticated && mounted) {
+        VaultResetGuard.isActive = false;
+        UnifiedNotificationService().show(
+          context: context,
+          message: AppLocalizations.of(context)!.wrongPassword,
+          type: NotificationType.error,
+        );
+        return;
+      }
+    } else {
+      authenticated = await BiometricService.authenticate();
+    }
 
     if (!mounted) {
       VaultResetGuard.isActive = false;
@@ -69,16 +90,52 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     }
 
     if (authenticated) {
-      // نبقي الـ guard مفعّل طوال عملية الريست
       setState(() => _currentStep = _ResetStep.newPassword);
     } else {
       VaultResetGuard.isActive = false;
       UnifiedNotificationService().show(
         context: context,
-        message: 'فشل التحقق من الهوية',
+        message: AppLocalizations.of(context)!.authenticationFailed,
         type: NotificationType.error,
       );
     }
+  }
+
+  Future<String?> _showPasswordDialog() async {
+    final ctrl = TextEditingController();
+    bool obscure = true;
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => AlertDialog(
+          title: Text(AppLocalizations.of(ctx)!.enterVaultPassword),
+          content: TextField(
+            controller: ctrl,
+            obscureText: obscure,
+            autofocus: true,
+            keyboardType: TextInputType.visiblePassword,
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.lock),
+              suffixIcon: IconButton(
+                icon: Icon(obscure ? Icons.visibility : Icons.visibility_off),
+                onPressed: () => set(() => obscure = !obscure),
+              ),
+            ),
+            onSubmitted: (_) => Navigator.pop(ctx, ctrl.text),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(ctx)!.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: Text(AppLocalizations.of(ctx)!.confirm),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _startReset() {
@@ -164,7 +221,8 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
         return _WarningStep(
           isDark: isDark,
           l10n: l10n,
-          onProceed: _authenticateAndProceed,
+          onBiometric: _authenticateAndProceed,
+          onPassword: () => _authenticateAndProceed(usePassword: true),
         );
       case _ResetStep.newPassword:
         return Column(
@@ -182,6 +240,7 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
                 onToggleConfirm: () =>
                     setState(() => _obscureConfirm = !_obscureConfirm),
                 onChanged: () => setState(() => _passwordError = null),
+                onSubmit: _startReset,
               ),
             ),
             Padding(
@@ -274,21 +333,24 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
 class _WarningStep extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l10n;
-  final VoidCallback onProceed;
+  final VoidCallback onBiometric;
+  final VoidCallback onPassword;
 
   const _WarningStep({
     required this.isDark,
     required this.l10n,
-    required this.onProceed,
+    required this.onBiometric,
+    required this.onPassword,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          const Spacer(),
+          const SizedBox(height: 20),
           Container(
             width: 100,
             height: 100,
@@ -296,8 +358,7 @@ class _WarningStep extends StatelessWidget {
               color: Colors.orange.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child:
-                const Icon(Icons.warning_amber, size: 50, color: Colors.orange),
+            child: const Icon(Icons.warning_amber, size: 50, color: Colors.orange),
           ),
           const SizedBox(height: 32),
           Text(
@@ -343,20 +404,53 @@ class _WarningStep extends StatelessWidget {
               ],
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 24),
+          // زر البصمة
           SizedBox(
             width: double.infinity,
             height: 52,
             child: ElevatedButton.icon(
-              onPressed: onProceed,
+              onPressed: onBiometric,
               icon: const Icon(Icons.fingerprint),
               label: Text(l10n.authenticateAndProceed),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // فاصل أو
+          Row(
+            children: [
+              Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.4))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  l10n.orText,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[500] : Colors.grey[500],
+                  ),
                 ),
+              ),
+              Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.4))),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // زر كلمة المرور
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: onPassword,
+              icon: const Icon(Icons.lock_outline),
+              label: Text(l10n.enterVaultPassword),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.orange,
+                side: const BorderSide(color: Colors.orange),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ),

@@ -2,6 +2,7 @@
 
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/services/security/security_gate.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,6 +19,8 @@ class SettingsProvider with ChangeNotifier {
   String _viewType = 'listCompact';
   bool _heroAnimationEnabled = false;
   bool _isAppLockEnabled = false;
+  bool _customPinEnabled = false;
+  bool _biometricLockEnabled = false;
 
   // Pull-to-refresh mode: 'full' | 'normal' | 'disabled'
   String _pullToRefreshMode = 'normal';
@@ -54,6 +57,8 @@ class SettingsProvider with ChangeNotifier {
   String get viewType => _viewType;
   bool get heroAnimationEnabled => _heroAnimationEnabled;
   bool get isAppLockEnabled => _isAppLockEnabled;
+  bool get customPinEnabled => _customPinEnabled;
+  bool get biometricLockEnabled => _biometricLockEnabled;
   String get pullToRefreshMode => _pullToRefreshMode;
   bool get hideContentInBackground => _hideContentInBackground;
   bool get lockDelayEnabled => _lockDelayEnabled;
@@ -178,7 +183,27 @@ class SettingsProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('appLockEnabled', enabled);
 
-    // CRITICAL: Direct update to SecurityController
+    if (!enabled) {
+      // عند تعطيل القفل: إعادة تعيين الجلسة
+      UnifiedLockService().resetSession();
+    }
+
+    _updateSecurityController();
+  }
+
+  Future<void> setBiometricLockEnabled(bool enabled) async {
+    _biometricLockEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('biometricLockEnabled', enabled);
+  }
+
+  Future<void> setCustomPinEnabled(bool enabled) async {
+    _customPinEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('customPinEnabled', enabled);
+    if (!enabled) await UnifiedLockService().clearPin();
     _updateSecurityController();
   }
 
@@ -267,6 +292,8 @@ class SettingsProvider with ChangeNotifier {
         _viewType = homeViewType;
       }
       _isAppLockEnabled = prefs.getBool('appLockEnabled') ?? false;
+      _customPinEnabled = prefs.getBool('customPinEnabled') ?? false;
+      _biometricLockEnabled = prefs.getBool('biometricLockEnabled') ?? false;
       _hideContentInBackground =
           prefs.getBool('hideContentInBackground') ?? false;
       _lockDelayEnabled = prefs.getBool('lockDelayEnabled') ?? false;
@@ -319,13 +346,15 @@ class SettingsProvider with ChangeNotifier {
       lockEnabled: _isAppLockEnabled,
       lockDelaySeconds: effectiveDelaySeconds,
       privacyBlurEnabled: _hideContentInBackground,
+      biometricEnabled: _biometricLockEnabled,
     );
 
     // Skip update if config hasn't changed
     final controller = SecurityController();
     if (controller.config.lockEnabled == newConfig.lockEnabled &&
         controller.config.lockDelaySeconds == newConfig.lockDelaySeconds &&
-        controller.config.privacyBlurEnabled == newConfig.privacyBlurEnabled) {
+        controller.config.privacyBlurEnabled == newConfig.privacyBlurEnabled &&
+        controller.config.biometricEnabled == newConfig.biometricEnabled) {
       return; // No change, skip update
     }
 

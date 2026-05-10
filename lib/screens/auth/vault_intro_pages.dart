@@ -102,6 +102,10 @@ class VaultPasswordPage extends StatefulWidget {
   final VoidCallback onTogglePassword;
   final VoidCallback onToggleConfirm;
   final VoidCallback onChanged;
+  final VoidCallback onSubmit;
+  final IconData headerIcon;
+  final Color headerColor;
+  final String? headerTitle;
 
   const VaultPasswordPage({
     super.key,
@@ -114,6 +118,10 @@ class VaultPasswordPage extends StatefulWidget {
     required this.onTogglePassword,
     required this.onToggleConfirm,
     required this.onChanged,
+    required this.onSubmit,
+    this.headerIcon = Icons.vpn_key,
+    this.headerColor = Colors.purple,
+    this.headerTitle,
   });
 
   @override
@@ -125,6 +133,13 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
   bool _hasNumber = false;
   bool _hasSymbol = false;
   bool _passwordsMatch = false;
+  final _confirmFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _confirmFocus.dispose();
+    super.dispose();
+  }
 
   void _updateChecks() {
     final p = widget.passwordController.text;
@@ -161,21 +176,20 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(
-          32, 32, 32, MediaQuery.of(context).viewInsets.bottom + 32),
+      padding: const EdgeInsets.fromLTRB(32, 32, 32, 32),
       child: Column(
         children: [
           const SizedBox(height: 20),
           Container(
             width: 100, height: 100,
             decoration: BoxDecoration(
-              color: Colors.purple.withValues(alpha: 0.1),
+              color: widget.headerColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.vpn_key, size: 50, color: Colors.purple),
+            child: Icon(widget.headerIcon, size: 50, color: widget.headerColor),
           ),
           const SizedBox(height: 24),
-          Text(l10n.createPassword,
+          Text(widget.headerTitle ?? l10n.createPassword,
               style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -205,7 +219,9 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
             obscureText: widget.obscurePassword,
             keyboardType: TextInputType.visiblePassword,
             inputFormatters: [_vaultPasswordFormatter],
+            textInputAction: TextInputAction.next,
             onChanged: (_) => _updateChecks(),
+            onSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmFocus),
             decoration: InputDecoration(
               labelText: l10n.enterPassword,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -219,10 +235,13 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
           const SizedBox(height: 16),
           TextField(
             controller: widget.confirmController,
+            focusNode: _confirmFocus,
             obscureText: widget.obscureConfirm,
             keyboardType: TextInputType.visiblePassword,
             inputFormatters: [_vaultPasswordFormatter],
+            textInputAction: TextInputAction.send,
             onChanged: (_) => _updateChecks(),
+            onSubmitted: (_) => widget.onSubmit(),
             decoration: InputDecoration(
               labelText: l10n.confirmPassword,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

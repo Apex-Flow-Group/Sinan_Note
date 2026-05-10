@@ -22,7 +22,7 @@ class VaultDialogs {
       child: AppBottomSheet(
         title: l10n.settings,
         titleIcon: Icons.settings,
-        scrollable: false,
+        scrollable: true,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -50,10 +50,28 @@ class VaultDialogs {
                     Navigator.pop(context);
                     UnifiedNotificationService().show(
                       context: context,
-                      message:
-                          val ? 'Biometric enabled ✅' : 'Biometric disabled ❌',
+                      message: val
+                          ? 'Biometric enabled ✅'
+                          : 'Biometric disabled ❌',
                       type: NotificationType.success,
                     );
+                  },
+                );
+              },
+            ),
+            FutureBuilder<bool>(
+              future: VaultService.isBiometricButtonVisible(),
+              builder: (context, snapshot) {
+                final isVisible = snapshot.data ?? true;
+                return SwitchListTile(
+                  secondary: const Icon(Icons.visibility_outlined),
+                  title: Text(l10n.showBiometricButton),
+                  subtitle: Text(l10n.showBiometricButtonDesc),
+                  value: isVisible,
+                  onChanged: (val) async {
+                    await VaultService.setBiometricButtonVisible(val);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
                   },
                 );
               },

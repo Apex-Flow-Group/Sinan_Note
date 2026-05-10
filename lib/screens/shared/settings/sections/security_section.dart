@@ -2,10 +2,12 @@
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/screens/auth/pin_lock_screen.dart';
 import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:apex_note/screens/shared/settings/settings_utils.dart';
 import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,43 +30,89 @@ class SecuritySection extends StatelessWidget {
           value: settings.isAppLockEnabled,
           onChanged: (val) async {
             if (val) {
-              // تفعيل — نحاول المصادقة أولاً
-              final result = await BiometricService.authenticateOrNull();
-              if (result == null) {
-                // الجهاز بلا حماية
+              if (!context.mounted) return;
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PinLockScreen(
+                    isSetup: true,
+                    onSuccess: () async {
+                      Navigator.of(context).pop();
+                      await settings.setAppLockEnabled(true);
+                      await settings.setCustomPinEnabled(true);
+                    },
+                  ),
+                ),
+              );
+            } else {
+              final lockType = await UnifiedLockService().getLockType();
+              if (lockType == LockType.pin) {
                 if (!context.mounted) return;
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    icon: const Icon(Icons.phonelink_lock, size: 40, color: Colors.orange),
-                    title: Text(l10n.deviceSecurityRequired),
-                    content: Text(l10n.deviceSecurityRequiredDesc),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(l10n.ok),
-                      ),
-                    ],
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => PinLockScreen(
+                      isSetup: false,
+                      onSuccess: () async {
+                        Navigator.of(context).pop();
+                        await settings.setAppLockEnabled(false);
+                        await settings.setCustomPinEnabled(false);
+                        await settings.setBiometricLockEnabled(false);
+                      },
+                    ),
                   ),
                 );
-                return;
+              } else {
+                final authenticated = await UnifiedLockService().authenticate(context: 'app_lock');
+                UnifiedLockService().resetSession();
+                if (authenticated) {
+                  await settings.setAppLockEnabled(false);
+                  await settings.setBiometricLockEnabled(false);
+                }
               }
-              if (result) await settings.setAppLockEnabled(true);
-            } else {
-              // تعطيل
-              final result = await BiometricService.authenticateOrNull();
-              if (result == null) {
-                // الجهاز بلا حماية — نسمح مباشرة
-                await settings.setAppLockEnabled(false);
-                return;
-              }
-              if (result) await settings.setAppLockEnabled(false);
             }
           },
         ),
+        // خيار البصمة — يظهر فقط إذا كان القفل مفعّلاً والجهاز يدعم البيومتري
+        if (settings.isAppLockEnabled)
+          FutureBuilder<bool>(
+            future: BiometricService.hasBiometrics(),
+            builder: (context, snapshot) {
+              if (snapshot.data != true) return const SizedBox.shrink();
+              return SwitchListTile(
+                contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+                secondary: Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.teal.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.fingerprint, color: Colors.teal, size: 24),
+                ),
+                title: Text(l10n.unlockWithBiometric),
+                subtitle: Text(l10n.unlockWithBiometricDesc),
+                value: settings.biometricLockEnabled,
+                onChanged: (val) async {
+                  if (val) {
+                    final ok = await BiometricService.authenticate();
+                    if (ok) await settings.setBiometricLockEnabled(true);
+                  } else {
+                    final ok = await BiometricService.authenticate();
+                    if (ok) await settings.setBiometricLockEnabled(false);
+                  }
+                },
+              );
+            },
+          ),
         if (settings.isAppLockEnabled)
           SwitchListTile(
-            contentPadding: const EdgeInsetsDirectional.only(start: 72, end: 16),
+            contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+            secondary: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.timer_outlined, color: Colors.orange, size: 24),
+            ),
             title: Text(l10n.lockDelay),
             subtitle: Text(settings.lockDelayEnabled
                 ? SettingsUtils.getLockDelayText(settings.lockDelaySeconds, l10n)

@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -80,11 +81,9 @@ class VaultService {
   /// Unlock vault with password
   static Future<bool> unlockWithPassword(String password) async {
     return await ApexErrorManager.monitorCritical(() async {
-      if (!await verifyPassword(password)) return false;
-      
       final encrypted = await _storage.read(key: '${_masterKeyName}_password');
       if (encrypted == null) return false;
-      
+
       try {
         final masterKey = await _decryptMasterKey(encrypted, password);
         await _storage.write(key: _masterKeyName, value: masterKey.base64);
@@ -97,11 +96,9 @@ class VaultService {
 
   /// Recover vault with recovery code
   static Future<bool> recoverWithCode(String recoveryCode) async {
-    if (!await verifyRecoveryCode(recoveryCode)) return false;
-    
     final encrypted = await _storage.read(key: '${_masterKeyName}_recovery');
     if (encrypted == null) return false;
-    
+
     try {
       final masterKey = await _decryptMasterKey(encrypted, recoveryCode);
       await _storage.write(key: _masterKeyName, value: masterKey.base64);
@@ -176,16 +173,43 @@ class VaultService {
     return value == 'true';
   }
 
-  static const _saltKeyName = 'vault_pbkdf2_salt';
+  static const _biometricButtonVisibleName = 'vault_biometric_button_visible';
 
-  /// Derive a 32-byte key from secret using PBKDF2-SHA256
-  static Future<Key> _deriveKey(String secret, {Uint8List? salt}) async {
+  /// إظهار/إخفاء زر البصمة في شاشة القفل
+  static Future<void> setBiometricButtonVisible(bool visible) async {
+    await _storage.write(key: _biometricButtonVisibleName, value: visible.toString());
+  }
+
+  /// هل زر البصمة ظاهر؟ (الافتراضي: true)
+  static Future<bool> isBiometricButtonVisible() async {
+    final value = await _storage.read(key: _biometricButtonVisibleName);
+    if (value == null) return true;
+    return value == 'true';
+  }
+
+  static const _saltKeyName = 'vault_pbkdf2_salt';
+  static const _kIterations = 10000;
+  static const _kLegacyIterations = 100000;
+
+  /// Derive a 32-byte key from secret using PBKDF2-SHA256 (in isolate)
+  static Future<Key> _deriveKey(String secret, {Uint8List? salt, int iterations = _kIterations}) async {
     final storedSalt = salt ?? await _getOrCreateSalt();
-    final params = pc.Pbkdf2Parameters(storedSalt, 100000, 32);
+    final keyBytes = await Isolate.run(() => _pbkdf2Sync(
+          utf8.encode(secret),
+          storedSalt,
+          iterations,
+          32,
+        ));
+    return Key(keyBytes);
+  }
+
+  /// PBKDF2-SHA256 — runs in isolate (no async allowed inside)
+  static Uint8List _pbkdf2Sync(
+      List<int> password, Uint8List salt, int iterations, int keyLength) {
+    final params = pc.Pbkdf2Parameters(salt, iterations, keyLength);
     final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64));
     pbkdf2.init(params);
-    final keyBytes = pbkdf2.process(Uint8List.fromList(utf8.encode(secret)));
-    return Key(keyBytes);
+    return pbkdf2.process(Uint8List.fromList(password));
   }
 
   static Future<Uint8List> _getOrCreateSalt() async {
@@ -198,36 +222,53 @@ class VaultService {
 
   /// Encrypt master key with password/recovery code
   static Future<String> _encryptMasterKey(Key masterKey, String secret) async {
-    final derivedKey = await _deriveKey(secret);
+    final derivedKey = await _deriveKey(secret, iterations: _kIterations);
     final iv = IV.fromSecureRandom(16);
     final encrypter = Encrypter(AES(derivedKey));
     final encrypted = encrypter.encrypt(masterKey.base64, iv: iv);
-    return '${iv.base64}:${encrypted.base64}';
+    // تخزين عدد الإيتراشنز مع البيانات: iterations:iv:ciphertext
+    return '$_kIterations:${iv.base64}:${encrypted.base64}';
   }
 
   /// Decrypt master key with password/recovery code
   static Future<Key> _decryptMasterKey(String encrypted, String secret) async {
     final parts = encrypted.split(':');
-    if (parts.length != 2) throw Exception('Invalid encrypted data');
-    final derivedKey = await _deriveKey(secret);
-    final iv = IV.fromBase64(parts[0]);
-    final encrypter = Encrypter(AES(derivedKey));
-    final decrypted = encrypter.decrypt64(parts[1], iv: iv);
-    return Key.fromBase64(decrypted);
+
+    // الصيغة الجديدة: iterations:iv:ciphertext
+    if (parts.length == 3) {
+      final iterations = int.tryParse(parts[0]) ?? _kIterations;
+      final iv = IV.fromBase64(parts[1]);
+      final derivedKey = await _deriveKey(secret, iterations: iterations);
+      final encrypter = Encrypter(AES(derivedKey));
+      final decrypted = encrypter.decrypt64(parts[2], iv: iv);
+      return Key.fromBase64(decrypted);
+    }
+
+    // الصيغة القديمة: iv:ciphertext (كانت 100,000)
+    if (parts.length == 2) {
+      final iv = IV.fromBase64(parts[0]);
+      final derivedKey = await _deriveKey(secret, iterations: _kLegacyIterations);
+      final encrypter = Encrypter(AES(derivedKey));
+      final decrypted = encrypter.decrypt64(parts[1], iv: iv);
+      return Key.fromBase64(decrypted);
+    }
+
+    throw Exception('Invalid encrypted data');
   }
 
   /// Hash with PBKDF2 for verification (stored as salt:hash)
   static Future<String> _hashSecure(String input) async {
     final salt = IV.fromSecureRandom(16).bytes;
-    final params = pc.Pbkdf2Parameters(salt, 100000, 32);
-    final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64));
-    pbkdf2.init(params);
-    final hash = pbkdf2.process(Uint8List.fromList(utf8.encode(input)));
+    final hash = await Isolate.run(() => _pbkdf2Sync(
+          utf8.encode(input),
+          salt,
+          _kIterations,
+          32,
+        ));
     return '${base64.encode(salt)}:${base64.encode(hash)}';
   }
 
   static Future<bool> _verifySecureHash(String input, String stored) async {
-    // Legacy SHA-256 (no salt) — للتوافق مع الإصدارات القديمة
     if (!stored.contains(':')) {
       return stored == sha256.convert(utf8.encode(input)).toString();
     }
@@ -235,10 +276,12 @@ class VaultService {
     if (parts.length != 2) return false;
     final salt = base64.decode(parts[0]);
     final expectedHash = base64.decode(parts[1]);
-    final params = pc.Pbkdf2Parameters(salt, 100000, 32);
-    final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64));
-    pbkdf2.init(params);
-    final hash = pbkdf2.process(Uint8List.fromList(utf8.encode(input)));
+    final hash = await Isolate.run(() => _pbkdf2Sync(
+          utf8.encode(input),
+          salt,
+          _kIterations,
+          32,
+        ));
     if (hash.length != expectedHash.length) return false;
     int diff = 0;
     for (int i = 0; i < hash.length; i++) { diff |= hash[i] ^ expectedHash[i]; }

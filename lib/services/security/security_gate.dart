@@ -1,6 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,11 +9,13 @@ class SecurityConfig {
   final bool lockEnabled;
   final int lockDelaySeconds;
   final bool privacyBlurEnabled;
+  final bool biometricEnabled;
 
   const SecurityConfig({
     required this.lockEnabled,
     required this.lockDelaySeconds,
     required this.privacyBlurEnabled,
+    this.biometricEnabled = false,
   });
 }
 
@@ -130,12 +132,16 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _authenticate() async {
     // 🛡️ Guard Clause #1: Already unlocked? Don't authenticate again!
-    if (!_isLocked) {
-      return;
-    }
+    if (!_isLocked) return;
 
     // 🛡️ Guard Clause #2: Already authenticating?
-    if (_isAuthenticating) {
+    if (_isAuthenticating) return;
+
+    // 🛡️ Guard Clause #3: Already authenticated this session via UnifiedLockService?
+    if (UnifiedLockService().isAuthenticatedThisSession) {
+      _isLocked = false;
+      _pausedTime = null;
+      notifyListeners();
       return;
     }
 
@@ -144,23 +150,22 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
 
     try {
-      final authenticated = await BiometricService.authenticate();
-      
+      final authenticated = await UnifiedLockService().authenticate(
+        context: 'app_lock',
+        biometricEnabled: _config.biometricEnabled,
+      );
+
       if (authenticated) {
         _isLocked = false;
         _pausedTime = null;
-        
-        // 🚀 INSTANT DISMISSAL: Update UI immediately to hide lock screen
         notifyListeners();
       }
+      // PIN case: authenticate() returns false → UI will show PinLockScreen
     } catch (e) {
       // Silent error
     } finally {
       _isAuthenticating = false;
-      
-      // 🔇 Safety period: Keep silencing for 500ms in background
       await Future.delayed(const Duration(milliseconds: 500));
-      
       _ignoreLifecycle = false; // 🔊 UNMUTE: Re-enable lifecycle listener
     }
   }
@@ -174,6 +179,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
   void lock() {
     _isLocked = true;
     _pausedTime = DateTime.now();
+    UnifiedLockService().resetSession();
     notifyListeners();
   }
 

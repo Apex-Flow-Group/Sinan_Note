@@ -64,7 +64,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     super.dispose();
   }
 
-  bool _isAuthenticating = false;
+  final bool _isAuthenticating = false;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

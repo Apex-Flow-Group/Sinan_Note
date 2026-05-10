@@ -7,6 +7,7 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/main.dart' show navigatorKey;
+import 'package:apex_note/screens/auth/pin_lock_screen.dart';
 import 'package:apex_note/screens/onboarding/whats_new_dialog.dart';
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:apex_note/services/app_update_service.dart';
@@ -14,9 +15,8 @@ import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
+import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/isar_database_service.dart';
 import 'package:apex_note/services/storage/native_db_migration_service.dart';
 import 'package:apex_note/services/widget_service.dart';
@@ -103,22 +103,45 @@ class _SplashScreenState extends State<SplashScreen> {
           isArabic ? 'التحقق من الأمان...' : 'Security check...', 0.9);
       AppLogger.debug('[Splash] isAppLockEnabled: ${settings.isAppLockEnabled}');
       if (settings.isAppLockEnabled) {
-        AppLogger.debug('[Splash] Calling authenticateOrNull()...');
-        final result = await BiometricService.authenticateOrNull();
-        AppLogger.debug('[Splash] authenticateOrNull() returned: $result');
+        AppLogger.debug('[Splash] Calling UnifiedLockService.authenticate()...');
+        final lockType = await UnifiedLockService().getLockType();
+        AppLogger.debug('[Splash] LockType: $lockType');
 
-        if (result == null) {
-          // null = الجهاز بلا حماية (NotAvailable) — عطّل القفل + بصمة الخزنة
-          AppLogger.debug('[Splash] Disabling app lock + vault biometric (no device security)');
-          await settings.setAppLockEnabled(false);
-          await VaultService.setBiometricEnabled(false);
-          if (mounted) _showBiometricRemovedNotice(isArabic);
-        } else if (!result) {
-          // false = المستخدم رفض المصادقة — لا تكمل
-          AppLogger.debug('[Splash] User refused authentication — stopping');
-          return;
+        if (lockType == LockType.pin) {
+          // PIN: عرض شاشة PIN وانتظار النتيجة
+          if (!mounted) return;
+          final hasPinAlready = await UnifiedLockService().hasPinSet();
+          if (!mounted) return;
+          final pinCompleter = Completer<bool>();
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PinLockScreen(
+                isSetup: !hasPinAlready,
+                autoBiometric: settings.biometricLockEnabled,
+                onSuccess: () {
+                  Navigator.of(context).pop();
+                  pinCompleter.complete(true);
+                },
+              ),
+            ),
+          );
+          if (!pinCompleter.isCompleted) pinCompleter.complete(false);
+          final pinResult = await pinCompleter.future;
+          if (!pinResult) {
+            AppLogger.debug('[Splash] PIN auth failed — stopping');
+            return;
+          }
+        } else {
+          final result = await UnifiedLockService().authenticate(
+            context: 'app_lock',
+            biometricEnabled: settings.biometricLockEnabled,
+          );
+          AppLogger.debug('[Splash] authenticate() returned: $result');
+          if (!result) {
+            AppLogger.debug('[Splash] User refused authentication — stopping');
+            return;
+          }
         }
-        // true = نجحت المصادقة — أكمل
       }
       AppLogger.debug('[Splash] Security check passed');
 
@@ -158,21 +181,6 @@ class _SplashScreenState extends State<SplashScreen> {
       AppLogger.error('Splash initialization error', 'SplashScreen', e);
       _updateStatus(isArabic ? 'حدث خطأ...' : 'Error occurred...', 0.0);
     }
-  }
-
-  void _showBiometricRemovedNotice(bool isArabic) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isArabic
-              ? 'تم تعطيل قفل التطبيق — لا توجد حماية على الجهاز'
-              : 'App lock disabled — no device security detected',
-        ),
-        duration: const Duration(seconds: 4),
-        backgroundColor: Colors.orange.shade800,
-      ),
-    );
   }
 
   Future<void> _initBackgroundServices() async {

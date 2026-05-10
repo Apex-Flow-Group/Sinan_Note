@@ -4003,6 +4003,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To use the app lock feature, your device must be protected with a screen lock (PIN, pattern, fingerprint, or face recognition). Go to your device Settings > Security to set it up.'**
   String get deviceSecurityRequiredDesc;
+
+  /// No description provided for @enterPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter PIN'**
+  String get enterPinTitle;
+
+  /// No description provided for @enterPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN to unlock the app'**
+  String get enterPinSubtitle;
+
+  /// No description provided for @createPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create PIN'**
+  String get createPinTitle;
+
+  /// No description provided for @createPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PIN to protect your app'**
+  String get createPinSubtitle;
+
+  /// No description provided for @confirmPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get confirmPinTitle;
+
+  /// No description provided for @confirmPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your PIN to confirm'**
+  String get confirmPinSubtitle;
+
+  /// No description provided for @pinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN (4-6 digits)'**
+  String get pinLabel;
+
+  /// No description provided for @confirmPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get confirmPinLabel;
+
+  /// No description provided for @pinRequirement.
+  ///
+  /// In en, this message translates to:
+  /// **'4 to 6 digits only'**
+  String get pinRequirement;
+
+  /// No description provided for @savePinButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PIN'**
+  String get savePinButton;
+
+  /// No description provided for @pinLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN must be 4 to 6 digits'**
+  String get pinLengthError;
+
+  /// No description provided for @pinMismatchError.
+  ///
+  /// In en, this message translates to:
+  /// **'PINs do not match'**
+  String get pinMismatchError;
+
+  /// No description provided for @pinIncorrectError.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN'**
+  String get pinIncorrectError;
+
+  /// No description provided for @showBiometricButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Biometric'**
+  String get showBiometricButton;
+
+  /// No description provided for @showBiometricButtonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show biometric button on lock screen and auto-prompt on app open'**
+  String get showBiometricButtonDesc;
+
+  /// No description provided for @unlockWithBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Biometric'**
+  String get unlockWithBiometric;
+
+  /// No description provided for @unlockWithBiometricDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show biometric button on lock screen and auto-prompt on app open'**
+  String get unlockWithBiometricDesc;
 }
 
 class _AppLocalizationsDelegate

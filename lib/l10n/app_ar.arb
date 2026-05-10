@@ -676,5 +676,22 @@
   "vaultDestroyed": "تم تدمير الخزنة بنجاح",
   "confirmDestroyCheckbox": "أفهم أن هذا الإجراء لا يمكن التراجع عنه",
   "deviceSecurityRequired": "يجب إعداد قفل الشاشة (PIN أو نمط أو بصمة) على جهازك أولاً",
-  "deviceSecurityRequiredDesc": "لاستخدام ميزة قفل التطبيق، يجب أن يكون جهازك محمياً بقفل شاشة (PIN أو نمط أو بصمة أو التعرف على الوجه). اذهب إلى إعدادات الجهاز > الأمان لإعداده."
+  "deviceSecurityRequiredDesc": "لاستخدام ميزة قفل التطبيق، يجب أن يكون جهازك محمياً بقفل شاشة (PIN أو نمط أو بصمة أو التعرف على الوجه). اذهب إلى إعدادات الجهاز > الأمان لإعداده.",
+  "enterPinTitle": "أدخل رمز PIN",
+  "enterPinSubtitle": "أدخل رمز PIN لفتح التطبيق",
+  "createPinTitle": "إنشاء رمز PIN",
+  "createPinSubtitle": "اختر رمز PIN لحماية تطبيقك",
+  "confirmPinTitle": "تأكيد رمز PIN",
+  "confirmPinSubtitle": "أعد إدخال رمز PIN للتأكيد",
+  "pinLabel": "رمز PIN (4-6 أرقام)",
+  "confirmPinLabel": "تأكيد رمز PIN",
+  "pinRequirement": "من 4 إلى 6 أرقام فقط",
+  "savePinButton": "حفظ رمز PIN",
+  "pinLengthError": "يجب أن يكون رمز PIN من 4 إلى 6 أرقام",
+  "pinMismatchError": "رموز PIN غير متطابقة",
+  "pinIncorrectError": "رمز PIN غير صحيح",
+  "showBiometricButton": "فتح بالبصمة",
+  "showBiometricButtonDesc": "إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق",
+  "unlockWithBiometric": "فتح بالبصمة",
+  "unlockWithBiometricDesc": "إظهار زر البصمة وطلبها تلقائياً عند فتح التطبيق"
 }
