@@ -194,7 +194,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   _buildCreditTile('Flutter', l10n.flutterFramework),
                   _buildCreditTile('Dart', l10n.dartLanguage),
                   _buildCreditTile('Provider', l10n.providerStateManagement),
-                  _buildCreditTile('Isar', l10n.isarDatabase),
+                  _buildCreditTile('SQLite', l10n.localDatabase),
                 ],
               ),
 

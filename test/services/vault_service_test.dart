@@ -316,12 +316,16 @@ void main() {
     test('التشفير بعد lockVault يرمي VaultLockedException', () async {
       await VaultService.setupVault('Pass');
       await VaultService.unlockWithPassword('Pass');
-      // قفل الخزنة يحذف المفتاح من الذاكرة
       await VaultService.lockVault();
-      expect(
-        () async => await VaultService.encryptWithMasterKey('test'),
-        throwsA(isA<VaultLockedException>()),
-      );
+      // monitorCritical يُسجّل الخطأ ثم يُعيد رميه — نتحقق من أي استثناء
+      bool threw = false;
+      try {
+        await VaultService.encryptWithMasterKey('test');
+      } catch (e) {
+        threw = true;
+        expect(e, isA<VaultLockedException>());
+      }
+      expect(threw, isTrue, reason: 'يجب أن يرمي استثناءً عند الخزنة مقفلة');
     });
 
     test('تشفير وفك تشفير متعدد متتالي يحافظ على البيانات', () async {

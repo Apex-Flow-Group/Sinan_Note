@@ -4,13 +4,27 @@ import 'dart:convert';
 
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/storage/backup_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../test_setup.dart';
 
 void main() {
   setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
     initializeTestEnvironment();
+  });
+
+  setUp(() {
+    SqliteDatabaseService.resetInstance();
+    SqliteDatabaseService.overrideDbPath(':memory:');
+  });
+
+  tearDown(() async {
+    await SqliteDatabaseService().closeDB();
+    SqliteDatabaseService.resetInstance();
   });
 
   group('BackupService', () {

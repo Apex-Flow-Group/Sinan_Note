@@ -58,21 +58,6 @@ class GoogleDriveHandlers {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isArabic ? 'تأكيد الرفع' : 'Confirm Upload'),
-        content: Text(isArabic
-            ? 'سيتم رفع ملاحظاتك العادية إلى Drive.\nأي تعديلات من أجهزة أخرى ستُدمج تلقائياً.\n\nملاحظة: الخزنة المشفرة لا تُرفع أبداً.'
-            : 'Your regular notes will be uploaded to Drive.\nChanges from other devices will be merged automatically.\n\nNote: Encrypted vault notes are never uploaded.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(isArabic ? 'رفع' : 'Upload')),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
     try {
       final success = await GoogleDriveService.uploadDatabase(null);
       if (!context.mounted) return;
@@ -100,19 +85,6 @@ class GoogleDriveHandlers {
       );
       return;
     }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.confirmDownload),
-        content: Text(l10n.confirmDownloadMessage),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.download)),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
 
     try {
       final success = await GoogleDriveService.downloadDatabase(null);

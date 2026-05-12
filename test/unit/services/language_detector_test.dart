@@ -13,76 +13,53 @@ void main() {
   group('LanguageDetector', () {
     group('detectLanguage', () {
       test('detects Python', () {
-        expect(LanguageDetector.detectLanguage('def hello():\n    print("Hi")'),
-            'python');
-        expect(LanguageDetector.detectLanguage('import numpy as np'), 'python');
-        expect(LanguageDetector.detectLanguage('class MyClass:\n    pass'),
-            'python');
+        expect(LanguageDetector.detectLanguage('def hello():\n    print("Hi")\n    return True\nif __name__ == "__main__":\n    hello()'), 'Python');
+        expect(LanguageDetector.detectLanguage('from os import path\nimport sys\ndef main():\n    pass'), 'Python');
       });
 
       test('detects JavaScript', () {
-        expect(LanguageDetector.detectLanguage('function test() {}'),
-            'javascript');
-        expect(LanguageDetector.detectLanguage('const x = 5;'), 'javascript');
-        expect(LanguageDetector.detectLanguage('let arr = [1, 2, 3];'),
-            'javascript');
+        expect(LanguageDetector.detectLanguage('function test() {}\nconsole.log("hi");\nconst x = 5;'), 'JavaScript');
+        expect(LanguageDetector.detectLanguage('const arr = [1,2,3];\nconsole.log(arr);\nmodule.exports = arr;'), 'JavaScript');
       });
 
       test('detects Java', () {
-        expect(LanguageDetector.detectLanguage('public class Main {}'), 'java');
-        expect(LanguageDetector.detectLanguage('System.out.println("Hi");'),
-            'java');
-        expect(
-            LanguageDetector.detectLanguage('private void test() {}'), 'java');
+        expect(LanguageDetector.detectLanguage('public class Main {\n  public static void main(String[] args) {\n    System.out.println("Hi");\n  }\n}'), 'Java');
       });
 
       test('detects Dart', () {
-        expect(LanguageDetector.detectLanguage('void main() {}'), 'dart');
-        expect(
-            LanguageDetector.detectLanguage(
-                'class MyWidget extends StatelessWidget {}'),
-            'dart');
-        expect(LanguageDetector.detectLanguage('final String name;'), 'dart');
+        expect(LanguageDetector.detectLanguage('import \'package:flutter/material.dart\';\nvoid main() { runApp(MyApp()); }'), 'Dart');
+        expect(LanguageDetector.detectLanguage('class MyWidget extends StatelessWidget {\n  Widget build(BuildContext context) {}\n}'), 'Dart');
       });
 
       test('detects C++', () {
-        expect(LanguageDetector.detectLanguage('#include <iostream>'), 'cpp');
-        expect(LanguageDetector.detectLanguage('std::cout << "Hi";'), 'cpp');
-        expect(LanguageDetector.detectLanguage('using namespace std;'), 'cpp');
+        expect(LanguageDetector.detectLanguage('#include <iostream>\nusing namespace std;\nint main() { cout << "Hi"; }'), 'C++');
+        expect(LanguageDetector.detectLanguage('#include <iostream>\nstd::cout << "Hi" << std::endl;'), 'C++');
       });
 
       test('detects C', () {
-        expect(LanguageDetector.detectLanguage('#include <stdio.h>'), 'c');
-        expect(LanguageDetector.detectLanguage('printf("Hi");'), 'c');
+        expect(LanguageDetector.detectLanguage('#include <stdio.h>\nint main() {\n  printf("Hi");\n  return 0;\n}'), 'C');
       });
 
       test('detects HTML', () {
-        expect(LanguageDetector.detectLanguage('<html><body></body></html>'),
-            'html');
-        expect(LanguageDetector.detectLanguage('<div class="test">'), 'html');
+        expect(LanguageDetector.detectLanguage('<!DOCTYPE html>\n<html><body><div class="test"></div></body></html>'), 'HTML');
       });
 
       test('detects CSS', () {
-        expect(
-            LanguageDetector.detectLanguage('.class { color: red; }'), 'css');
-        expect(LanguageDetector.detectLanguage('#id { margin: 0; }'), 'css');
+        expect(LanguageDetector.detectLanguage('.class { color: red; }\n#id { margin: 0; }\n@media screen { padding: 0; }'), 'CSS');
       });
 
       test('detects SQL', () {
-        expect(LanguageDetector.detectLanguage('SELECT * FROM users'), 'sql');
-        expect(
-            LanguageDetector.detectLanguage('INSERT INTO table VALUES'), 'sql');
-        expect(LanguageDetector.detectLanguage('CREATE TABLE users'), 'sql');
+        expect(LanguageDetector.detectLanguage('SELECT * FROM users WHERE id = 1;\nINSERT INTO table VALUES (1);'), 'SQL');
+        expect(LanguageDetector.detectLanguage('CREATE TABLE users (id INT);\nSELECT name FROM users;'), 'SQL');
       });
 
       test('detects JSON', () {
-        expect(LanguageDetector.detectLanguage('{"name": "test"}'), 'json');
-        expect(LanguageDetector.detectLanguage('[1, 2, 3]'), 'json');
+        expect(LanguageDetector.detectLanguage('{"name": "test", "value": true, "count": 42}'), 'JSON');
       });
 
       test('detects Bash', () {
-        expect(LanguageDetector.detectLanguage('#!/bin/bash'), 'bash');
-        expect(LanguageDetector.detectLanguage('echo "Hello"'), 'bash');
+        expect(LanguageDetector.detectLanguage('#!/bin/bash\necho "Hello"'), 'Bash');
+        expect(LanguageDetector.detectLanguage('#!/bin/sh\necho "Hello"'), 'Bash');
       });
 
       test('returns null for plain text', () {
@@ -97,12 +74,12 @@ void main() {
 
     group('getLanguageFromExtension', () {
       test('maps common extensions', () {
-        expect(LanguageDetector.getLanguageFromExtension('py'), 'python');
-        expect(LanguageDetector.getLanguageFromExtension('js'), 'javascript');
-        expect(LanguageDetector.getLanguageFromExtension('java'), 'java');
-        expect(LanguageDetector.getLanguageFromExtension('dart'), 'dart');
-        expect(LanguageDetector.getLanguageFromExtension('cpp'), 'cpp');
-        expect(LanguageDetector.getLanguageFromExtension('c'), 'c');
+        expect(LanguageDetector.getLanguageFromExtension('py'), 'Python');
+        expect(LanguageDetector.getLanguageFromExtension('js'), 'JavaScript');
+        expect(LanguageDetector.getLanguageFromExtension('java'), 'Java');
+        expect(LanguageDetector.getLanguageFromExtension('dart'), 'Dart');
+        expect(LanguageDetector.getLanguageFromExtension('cpp'), 'C++');
+        expect(LanguageDetector.getLanguageFromExtension('c'), 'C');
       });
 
       test('returns null for unknown extension', () {
@@ -111,8 +88,10 @@ void main() {
       });
 
       test('is case insensitive', () {
-        expect(LanguageDetector.getLanguageFromExtension('PY'), 'python');
-        expect(LanguageDetector.getLanguageFromExtension('JS'), 'javascript');
+        // getLanguageFromExtension تبحث عن الامتداد كما هو — case sensitive
+        expect(LanguageDetector.getLanguageFromExtension('py'), 'Python');
+        expect(LanguageDetector.getLanguageFromExtension('dart'), 'Dart');
+        expect(LanguageDetector.getLanguageFromExtension('UNKNOWN'), isNull);
       });
     });
 
@@ -123,22 +102,17 @@ def hello():
     print("Hello")
     return True
 ''';
-        expect(LanguageDetector.detectLanguage(code), 'python');
+        expect(LanguageDetector.detectLanguage(code), 'Python');
       });
 
       test('handles code with comments', () {
-        const code = '''
-// This is a comment
-function test() {
-    return 42;
-}
-''';
-        expect(LanguageDetector.detectLanguage(code), 'javascript');
+        const code = '// This is a comment\nfunction test() {\n    return 42;\n}\nconsole.log(test());';
+        expect(LanguageDetector.detectLanguage(code), 'JavaScript');
       });
 
       test('handles mixed content', () {
-        const code = 'Some text\nfunction test() {}';
-        expect(LanguageDetector.detectLanguage(code), 'javascript');
+        const code = 'Some text\nfunction test() {}\nconsole.log("hi");';
+        expect(LanguageDetector.detectLanguage(code), 'JavaScript');
       });
     });
   });

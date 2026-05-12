@@ -9,7 +9,7 @@
 ### 📦 storage/
 | الملف | الوظيفة |
 |-------|---------|
-| `isar_database_service.dart` | CRUD مباشر مع قاعدة Isar + تطبيع النص للبحث |
+| `isar_database_service.dart` | خدمة قديمة (Isar) — محتفظ بها للمرجعية فقط |
 | `storage_service.dart` | تصدير/استيراد JSON |
 | `backup_service.dart` | نسخ احتياطي كامل مع بيانات الخزنة |
 | `compression_service.dart` | ضغط البيانات |

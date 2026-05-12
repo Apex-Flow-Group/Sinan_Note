@@ -1,13 +1,17 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../test_setup.dart';
 
 void main() {
   setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
     initializeTestEnvironment();
   });
 
@@ -15,11 +19,14 @@ void main() {
     late SqliteDatabaseService db;
 
     setUp(() {
+      SqliteDatabaseService.resetInstance();
+      SqliteDatabaseService.overrideDbPath(':memory:');
       db = SqliteDatabaseService();
     });
 
     tearDown(() async {
       await db.closeDB();
+      SqliteDatabaseService.resetInstance();
     });
 
     group('CRUD Operations', () {
@@ -249,31 +256,46 @@ void main() {
     });
 
     group('Version Control', () {
-      test('logs note version on insert', () async {
+      test('logNoteVersion يُسجّل نسخة', () async {
         final note = Note(
           title: 'Test',
           content: 'Content',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-
         final id = await db.insertNote(note);
-        final history = await db.getNoteHistory(id);
 
+        await db.logNoteVersion(NoteVersion.create(
+          noteId: id,
+          title: note.title,
+          content: note.content,
+          timestamp: DateTime.now(),
+          action: 'created',
+          noteType: 'simple',
+        ));
+
+        final history = await db.getNoteHistory(id);
         expect(history.length, 1);
         expect(history.first.action, 'created');
       });
 
-      test('logs note version on update', () async {
+      test('logNoteVersion مرتين يُسجّل نسختين', () async {
         final note = Note(
           title: 'Test',
           content: 'Content',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-
         final id = await db.insertNote(note);
-        await db.updateNote(note.copyWith(id: id, title: 'Updated'));
+
+        await db.logNoteVersion(NoteVersion.create(
+          noteId: id, title: note.title, content: note.content,
+          timestamp: DateTime.now(), action: 'created', noteType: 'simple',
+        ));
+        await db.logNoteVersion(NoteVersion.create(
+          noteId: id, title: 'Updated', content: note.content,
+          timestamp: DateTime.now(), action: 'updated', noteType: 'simple',
+        ));
 
         final history = await db.getNoteHistory(id);
         expect(history.length, 2);

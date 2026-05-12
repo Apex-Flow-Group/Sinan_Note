@@ -143,8 +143,7 @@ class BackupService {
       }
       for (var noteMap in notesData) {
         final note = Note.fromMap(noteMap);
-        note.updatedAt = DateTime.now();
-        await dbService.insertNote(note);
+        await dbService.upsertNote(note);
       }
 
       AppLogger.debug(
@@ -183,8 +182,7 @@ class BackupService {
       int merged = 0;
       for (var noteMap in notesData) {
         final note = Note.fromMap(noteMap);
-        note.updatedAt = DateTime.now();
-        await dbService.insertNote(note);
+        await dbService.upsertNote(note);
         merged++;
       }
 

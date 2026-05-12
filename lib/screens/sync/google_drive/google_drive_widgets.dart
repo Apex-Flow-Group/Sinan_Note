@@ -157,6 +157,175 @@ class GoogleDriveWidgets {
     VoidCallback? onUpload,
     VoidCallback? onDownload,
   ) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    void showUploadSheet() {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.cloud_upload, color: Colors.blue, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.uploadDatabase,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 2),
+                        Text(l10n.uploadDatabaseDesc,
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  isAr
+                      ? 'سيتم رفع ملاحظاتك العادية إلى Drive.\nالخزنة المشفرة لا تُرفع أبداً.'
+                      : 'Your regular notes will be uploaded to Drive.\nEncrypted vault notes are never uploaded.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.6),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        onUpload?.call();
+                      },
+                      icon: const Icon(Icons.cloud_upload, size: 18),
+                      label: Text(isAr ? 'رفع' : 'Upload'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    void showDownloadSheet() {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.cloud_download, color: Colors.green, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.downloadDatabase,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 2),
+                        Text(l10n.downloadDatabaseDesc,
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isAr
+                            ? 'سيتم استبدال ملاحظاتك المحلية بنسخة Drive.'
+                            : 'Your local notes will be replaced with the Drive version.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        onDownload?.call();
+                      },
+                      icon: const Icon(Icons.cloud_download, size: 18),
+                      label: Text(isAr ? 'تنزيل' : 'Download'),
+                      style: FilledButton.styleFrom(backgroundColor: Colors.green),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       elevation: 0,
       child: Padding(
@@ -188,10 +357,9 @@ class GoogleDriveWidgets {
               ),
               title: Text(l10n.uploadDatabase),
               subtitle: Text(l10n.uploadDatabaseDesc),
-              trailing: IconButton(
-                  onPressed: isSignedIn ? onUpload : null,
-                  icon: const Icon(Icons.arrow_forward)),
-              onTap: isSignedIn ? onUpload : null,
+              trailing: const Icon(Icons.chevron_right),
+              enabled: isSignedIn,
+              onTap: isSignedIn ? showUploadSheet : null,
             ),
             const Divider(),
             ListTile(
@@ -205,10 +373,9 @@ class GoogleDriveWidgets {
               ),
               title: Text(l10n.downloadDatabase),
               subtitle: Text(l10n.downloadDatabaseDesc),
-              trailing: IconButton(
-                  onPressed: isSignedIn ? onDownload : null,
-                  icon: const Icon(Icons.arrow_forward)),
-              onTap: isSignedIn ? onDownload : null,
+              trailing: const Icon(Icons.chevron_right),
+              enabled: isSignedIn,
+              onTap: isSignedIn ? showDownloadSheet : null,
             ),
           ],
         ),

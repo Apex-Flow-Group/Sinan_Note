@@ -2900,11 +2900,11 @@ abstract class AppLocalizations {
   /// **'State Management'**
   String get providerStateManagement;
 
-  /// No description provided for @isarDatabase.
+  /// No description provided for @localDatabase.
   ///
   /// In en, this message translates to:
   /// **'Local Database'**
-  String get isarDatabase;
+  String get localDatabase;
 
   /// No description provided for @officialGooglePlay.
   ///

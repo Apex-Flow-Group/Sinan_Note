@@ -47,8 +47,7 @@ class BackupValidators {
 
   /// Auto-detect if file is database or JSON
   static bool isDatabaseFile(String fileName) {
-    return fileName.endsWith('.isar') ||
-        fileName.endsWith('.sinannote') ||
+    return fileName.endsWith('.sinannote') ||
         fileName.endsWith('.db');
   }
 }

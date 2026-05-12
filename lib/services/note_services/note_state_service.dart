@@ -84,6 +84,14 @@ class NoteStateService {
     _silentSync();
   }
 
+  Note? getNoteById(int id) {
+    try {
+      return _allNotes.firstWhere((n) => n.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
   void addNote(Note note) {
     if (note.isLocked) {
       _lockedNotes.insert(0, note);
@@ -101,6 +109,7 @@ class NoteStateService {
     _lockedNotes.removeWhere((n) => n.id == id);
     _invalidateCache();
     GoogleDriveService.markDirty();
+    _silentSync();
   }
 
   void updateLockedNotes(List<Note> notes) {

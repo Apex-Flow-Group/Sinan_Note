@@ -238,7 +238,7 @@ class SettingsBackupHandlers {
 
       final filePath = result.files.single.path!;
       final name = result.files.single.name;
-      final isDatabase = name.endsWith('.isar') || name.endsWith('.sinannote');
+      final isDatabase = name.endsWith('.sinannote') || name.endsWith('.db');
 
       if (!context.mounted) return;
       if (isDatabase) {

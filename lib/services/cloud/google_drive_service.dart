@@ -56,7 +56,7 @@ class GoogleDriveService {
   static bool _isDownloading = false;
   static DateTime? _lastUploadTime;
   static int _uploadCount = 0;
-  static const _maxUploadsPerHour = 60;
+  static const _maxUploadsPerHour = 180;
 
   // ── Dirty tracking (رفع فقط عند وجود تغييرات) ────────────────────────────
   static bool _hasPendingChanges = false;
@@ -217,29 +217,38 @@ class GoogleDriveService {
         }
       });
 
-      // حذف النوتات القديمة وإدراج المدمجة
-      final lockedLocal = localNotes.where((n) => n.isLocked).toList();
+      // upsert المدمجة مع الحفاظ على الـ id — بدون حذف وإعادة إدراج
       final allLocal = await dbService.getAllNotes();
+      final mergedIds = merged.keys.toSet();
       for (final n in allLocal) {
-        if (n.id != null && !n.isLocked) await dbService.deleteNote(n.id!);
+        if (n.id != null && !n.isLocked && !mergedIds.contains(n.id)) {
+          await dbService.deleteNote(n.id!);
+        }
       }
       for (final n in merged.values) {
-        await dbService.insertNote(n);
+        await dbService.upsertNote(n);
       }
-      for (final n in lockedLocal) {
-        await dbService.updateNote(n);
-      }
-      // دمج الكتالوجات: أضف الجديدة من Drive بدون حذف المحلية
+      // دمج الكتالوجات: upsert الموجودة + أضف الجديدة + احذف المحذوفة من Drive
       final existingCats = await dbService.getAllCategories();
       final existingIds = existingCats.map((c) => c.id).toSet();
+      final driveCatIds = driveCats.map((c) => c['id'] as int).toSet();
       for (final c in driveCats) {
         final catId = c['id'] as int;
-        if (!existingIds.contains(catId)) {
-          await dbService.insertCategory(NoteCategory(
-            id: catId,
-            name: c['name'] as String,
-            sortOrder: c['sortOrder'] as int? ?? 0,
-          ));
+        final cat = NoteCategory(
+          id: catId,
+          name: c['name'] as String,
+          sortOrder: c['sortOrder'] as int? ?? 0,
+        );
+        if (existingIds.contains(catId)) {
+          await dbService.updateCategory(cat);
+        } else {
+          await dbService.insertCategory(cat);
+        }
+      }
+      // احذف الكتالوجات المحلية غير الموجودة في Drive
+      for (final c in existingCats) {
+        if (!driveCatIds.contains(c.id)) {
+          await dbService.deleteCategory(c.id);
         }
       }
 
@@ -377,13 +386,13 @@ class GoogleDriveService {
 
       final dbService = SqliteDatabaseService();
       final lockedLocal = await dbService.getLockedNotes();
-      // حذف النوتات العادية وإدراج نوتات Drive
+      // حذف النوتات العادية وإدراج نوتات Drive مع الحفاظ على الـ id
       final allLocal = await dbService.getAllNotes();
       for (final n in allLocal) {
         if (n.id != null && !n.isLocked) await dbService.deleteNote(n.id!);
       }
       for (final m in regularNotes) {
-        await dbService.insertNote(Note.fromMap(m));
+        await dbService.upsertNote(Note.fromMap(m));
       }
       for (final n in lockedLocal) {
         await dbService.updateNote(n);

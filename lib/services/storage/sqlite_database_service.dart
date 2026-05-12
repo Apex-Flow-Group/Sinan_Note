@@ -27,6 +27,21 @@ class SqliteDatabaseService implements NoteDbInterface {
     return _instance!;
   }
 
+  static String? _dbPathOverride;
+
+  /// للاختبارات فقط — يُعيد تعيين الـ singleton
+  static void resetInstance() {
+    _db = null;
+    _instance = null;
+    _initCompleter = null;
+    _dbPathOverride = null;
+  }
+
+  /// للاختبارات فقط — يسمح باستخدام ':memory:' لعزل كل اختبار
+  static void overrideDbPath(String path) {
+    _dbPathOverride = path;
+  }
+
   SqliteDatabaseService._();
 
   // ── Init ──────────────────────────────────────────────────────────────────
@@ -72,6 +87,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   }
 
   static Future<String> _dbPath() async {
+    if (_dbPathOverride != null) return _dbPathOverride!;
     if (Platform.isAndroid) {
       return p.join(await getDatabasesPath(), _dbName);
     }
@@ -183,6 +199,16 @@ class SqliteDatabaseService implements NoteDbInterface {
       return await db.insert('notes', map,
           conflictAlgorithm: ConflictAlgorithm.replace);
     }, name: 'InsertNote');
+  }
+
+  /// يحافظ على الـ id الأصلي — للمزامنة فقط
+  Future<void> upsertNote(Note note) async {
+    return await ApexErrorManager.monitorDB(() async {
+      final db = await database;
+      final map = _noteToMap(note);
+      await db.insert('notes', map,
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    }, name: 'UpsertNote');
   }
 
   @override

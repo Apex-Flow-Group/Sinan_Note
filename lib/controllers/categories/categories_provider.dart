@@ -1,6 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
+
 import 'package:apex_note/models/category.dart';
+import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,6 +90,8 @@ class CategoriesProvider extends ChangeNotifier {
         _categories.isEmpty ? 0 : _categories.last.sortOrder + 1;
     await SqliteDatabaseService()
         .insertCategory(NoteCategory(name: trimmed, sortOrder: nextSortOrder));
+    GoogleDriveService.markDirty();
+    _triggerSync();
     await _load();
     return true;
   }
@@ -98,6 +103,8 @@ class CategoriesProvider extends ChangeNotifier {
         orElse: () => NoteCategory(id: id, name: trimmed));
     cat.name = trimmed;
     await SqliteDatabaseService().updateCategory(cat);
+    GoogleDriveService.markDirty();
+    _triggerSync();
     await _load();
   }
 
@@ -118,8 +125,23 @@ class CategoriesProvider extends ChangeNotifier {
     }
 
     await db.deleteCategory(id);
+    GoogleDriveService.markDirty();
+    _triggerSync();
     if (_selectedCategoryId == id) _selectedCategoryId = null;
     await _load();
+  }
+
+  // debounce لمنع رفعات متكررة عند تعديل كتالوجات متعددة
+  Timer? _syncDebounce;
+  void _triggerSync() {
+    _syncDebounce?.cancel();
+    _syncDebounce = Timer(const Duration(seconds: 5), () async {
+      if (!GoogleDriveService.isSignedIn) return;
+      if (!GoogleDriveService.autoSyncEnabled.value) return;
+      try {
+        await GoogleDriveService.smartSyncOnStartup();
+      } catch (_) {}
+    });
   }
 
   void selectCategory(int? id) {

@@ -13,16 +13,25 @@ class NoteBatchOperationsService {
       this._dbService, this._stateService, this._sideEffectService);
 
   Future<void> batchTrashNotes(List<int> ids) async {
-    _stateService.batchUpdateNotes(
-        ids,
-        (note) => note.copyWith(
-              isTrashed: true,
-              isPinned: false,
-              updatedAt: DateTime.now(),
-            ));
     for (var id in ids) {
-      await _dbService.trashNote(id);
-      await _sideEffectService.cancelReminderSideEffect(id);
+      final note = _stateService.getNoteById(id);
+      if (note == null) continue;
+
+      if (note.isLocked) {
+        // الملاحظات المقفلة تُحذف نهائياً بدل النقل للمهملات
+        _stateService.removeNote(id);
+        await _dbService.deleteNote(id);
+      } else {
+        _stateService.batchUpdateNotes(
+            [id],
+            (n) => n.copyWith(
+                  isTrashed: true,
+                  isPinned: false,
+                  updatedAt: DateTime.now(),
+                ));
+        await _dbService.trashNote(id);
+        await _sideEffectService.cancelReminderSideEffect(id);
+      }
     }
     await _sideEffectService.updateWidgetSideEffect();
   }

@@ -90,7 +90,7 @@ class AboutSection extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.storage_rounded, color: Colors.orange),
             title: const Text('DB Inspector'),
-            subtitle: const Text('Isar + SQLite report'),
+            subtitle: const Text('SQLite report'),
             onTap: () => DbInspectorService.showReport(context),
           ),
         if (kDebugMode)

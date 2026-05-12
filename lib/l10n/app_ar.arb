@@ -483,7 +483,7 @@
   "flutterFramework": "إطار عمل من Google",
   "dartLanguage": "لغة البرمجة",
   "providerStateManagement": "إدارة الحالة",
-  "isarDatabase": "قاعدة البيانات المحلية",
+  "localDatabase": "قاعدة البيانات المحلية",
   "officialGooglePlay": "نسخة رسمية معتمدة من متجر Google Play\nتحديثات تلقائية وأمان مضمون",
   "fdroidVersion": "نسخة F-Droid - مفتوحة المصدر\nميزة المشاركة عبر WiFi متاحة",
   "madeWithLove": "صُنع بـ",

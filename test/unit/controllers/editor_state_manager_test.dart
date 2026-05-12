@@ -134,7 +134,7 @@ void main() {
           noteTitle: 'Title',
         );
 
-        manager.content = 'Modified';
+        manager.updateContent('Modified');
 
         expect(manager.hasChanges(), true);
       });
@@ -215,7 +215,7 @@ void main() {
           noteTitle: 'Title',
         );
 
-        manager.content = 'Modified';
+        manager.updateContent('Modified');
         expect(manager.hasChanges(), true);
 
         manager.updateSnapshot();
@@ -223,18 +223,16 @@ void main() {
       });
 
       test('updates all snapshot fields', () {
-        manager.content = 'New Content';
-        manager.customTitle = 'New Title';
+        manager.updateContent('New Content');
+        manager.updateTitle('New Title');
         manager.colorIndex = 3;
         manager.reminderDateTime = now.add(const Duration(days: 1));
         manager.recurrenceRule = 'FREQ=DAILY';
 
         manager.updateSnapshot();
-
         expect(manager.hasChanges(), false);
 
-        // Modify one field
-        manager.content = 'Different';
+        manager.updateContent('Different');
         expect(manager.hasChanges(), true);
       });
     });
@@ -284,7 +282,7 @@ void main() {
 
         expect(manager.hasChanges(), false);
 
-        manager.content = 'New';
+        manager.updateContent('New');
         expect(manager.hasChanges(), true);
       });
 
@@ -340,7 +338,6 @@ void main() {
 
     group('Complex Scenarios', () {
       test('handles multiple changes and snapshot updates', () {
-        // Initial load
         manager.loadFromNote(
           noteContent: 'Original',
           noteTitle: 'Title',
@@ -348,19 +345,15 @@ void main() {
         );
         expect(manager.hasChanges(), false);
 
-        // First change
-        manager.content = 'Modified 1';
+        manager.updateContent('Modified 1');
         expect(manager.hasChanges(), true);
 
-        // Save (update snapshot)
         manager.updateSnapshot();
         expect(manager.hasChanges(), false);
 
-        // Second change
-        manager.customTitle = 'New Title';
+        manager.updateTitle('New Title');
         expect(manager.hasChanges(), true);
 
-        // Save again
         manager.updateSnapshot();
         expect(manager.hasChanges(), false);
       });

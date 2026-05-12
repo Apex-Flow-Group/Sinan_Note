@@ -483,7 +483,7 @@
   "flutterFramework": "Framework from Google",
   "dartLanguage": "Programming Language",
   "providerStateManagement": "State Management",
-  "isarDatabase": "Local Database",
+  "localDatabase": "Local Database",
   "officialGooglePlay": "Official certified version from Google Play Store\nAutomatic updates and guaranteed security",
   "fdroidVersion": "F-Droid Version - Open Source\nWiFi sharing feature available",
   "madeWithLove": "Made with",

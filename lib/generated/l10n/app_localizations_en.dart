@@ -1442,7 +1442,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerStateManagement => 'State Management';
 
   @override
-  String get isarDatabase => 'Local Database';
+  String get localDatabase => 'Local Database';
 
   @override
   String get officialGooglePlay =>
