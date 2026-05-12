@@ -9,7 +9,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/screens/shared/settings/backup_validators.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/storage/backup_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
@@ -81,8 +81,8 @@ class JsonImportHandler {
       }
       if (masterKey != null) VaultService.wipeMasterKey(masterKey);
 
-      final dbService = IsarDatabaseService();
-      await IsarDatabaseService.initialize();
+      final dbService = SqliteDatabaseService();
+      await SqliteDatabaseService.initialize();
       final localCount = await BackupService().checkLocalNotesCount();
 
       if (localCount == 0) {
@@ -137,25 +137,27 @@ class JsonImportHandler {
   }
 
   static Future<void> _writeNotes(
-    IsarDatabaseService dbService,
+    SqliteDatabaseService dbService,
     List<Note> notes, {
     required bool replace,
   }) async {
-    final isar = await dbService.database;
-    await isar.writeTxn(() async {
-      if (replace) await isar.notes.clear();
-      for (final note in notes) {
-        note.updatedAt = DateTime.now();
-        await isar.notes.put(note);
+    if (replace) {
+      final existing = await dbService.getAllNotes();
+      for (final n in existing) {
+        if (n.id != null) await dbService.deleteNote(n.id!);
       }
-    });
+    }
+    for (final note in notes) {
+      note.updatedAt = DateTime.now();
+      await dbService.insertNote(note);
+    }
   }
 
   static Future<void> _showResult(
     BuildContext context,
     String lang,
     AppLocalizations l10n,
-    IsarDatabaseService dbService,
+    SqliteDatabaseService dbService,
     int count, {
     required String action,
   }) async {

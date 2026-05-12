@@ -9,7 +9,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/compression_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:path/path.dart';
@@ -29,14 +29,12 @@ class GoogleDriveMerge {
       }
 
       final driveNotes = await _downloadDriveNotes(file);
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final localNotes = await dbService.getAllNotes();
 
       final action =
           await _showMergeDialog(context, localNotes.length, driveNotes.length);
       if (action == null || action == 'cancel') return false;
-
-      final isar = await dbService.database;
 
       if (action == 'useLocal') {
         await uploadFn(context);
@@ -46,12 +44,9 @@ class GoogleDriveMerge {
       }
 
       if (action == 'useDrive') {
-        await isar.writeTxn(() async {
-          await isar.notes.clear();
-          for (final note in driveNotes) {
-            await isar.notes.put(note);
-          }
-        });
+        for (final note in driveNotes) {
+          await dbService.updateNote(note);
+        }
         AppLogger.success(
             'Used Drive notes (${driveNotes.length})', 'GoogleDrive');
         return true;

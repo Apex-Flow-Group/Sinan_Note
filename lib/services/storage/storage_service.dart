@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
@@ -19,7 +19,7 @@ class StorageService {
   /// [includeVault] = true  → كامل مع المشفرة كـ ciphertext
   Future<Map<String, dynamic>> _buildExportData(
       {bool includeVault = false}) async {
-    final dbService = IsarDatabaseService();
+    final dbService = SqliteDatabaseService();
     final allNotes = await dbService.getAllNotes();
 
     final notes = includeVault
@@ -152,7 +152,7 @@ class StorageService {
     int count = 0;
     for (final note in notes) {
       if (note.content.isEmpty) continue;
-      await IsarDatabaseService().insertNote(Note(
+      await SqliteDatabaseService().insertNote(Note(
         title: note.title,
         content: note.content,
         createdAt: note.createdAt,

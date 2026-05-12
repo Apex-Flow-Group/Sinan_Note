@@ -6,12 +6,14 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/shared/settings/backup_validators.dart';
 import 'package:apex_note/services/storage/backup_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseRestoreHandler {
   static Future<void> handle(
@@ -20,7 +22,8 @@ class DatabaseRestoreHandler {
     AppLocalizations l10n,
     String backupPath,
   ) async {
-    final isDb = BackupValidators.isDatabaseFile(backupPath.split('/').last);
+    final isDb = BackupValidators.isDatabaseFile(
+        backupPath.split(Platform.pathSeparator).last);
     final validationError =
         await BackupValidators.validate(backupPath, isDatabase: isDb);
     if (validationError != null) {
@@ -45,7 +48,7 @@ class DatabaseRestoreHandler {
                   color: Theme.of(context).colorScheme.primary)),
         );
         if (isDb) {
-          await _restoreIsarFile(backupPath);
+          await _restoreDbFile(backupPath);
         } else {
           await BackupService().replaceDatabase(backupPath);
         }
@@ -54,9 +57,9 @@ class DatabaseRestoreHandler {
             .loadNotes(force: true);
         final restoredCount = await BackupService().checkLocalNotesCount();
         if (!context.mounted) return;
-        Navigator.pop(context);
+        Navigator.pop(context); // dismiss loading
 
-        final dbService = IsarDatabaseService();
+        final dbService = SqliteDatabaseService();
         final lockedNotes = await dbService.getLockedNotes();
         final unlockedCount = restoredCount - lockedNotes.length;
         final message = lockedNotes.isNotEmpty
@@ -68,51 +71,27 @@ class DatabaseRestoreHandler {
                 : 'Successfully restored $restoredCount notes.');
 
         if (!context.mounted) return;
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            icon: Icon(Icons.check_circle_outline,
-                color: Theme.of(context).colorScheme.primary, size: 50),
-            title: Text(l10n.restoreSuccessful, textAlign: TextAlign.center),
-            content: Text(message, textAlign: TextAlign.center),
-            actions: [
-              ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx), child: Text(l10n.ok))
-            ],
-          ),
-        );
+        _showSuccessSheet(context, l10n, message);
         return;
       }
 
+      // لديه ملاحظات — اسأله: دمج أو استبدال
       if (!context.mounted) return;
-      final action = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.warning),
-          content: Text(lang == 'ar'
-              ? 'لديك $localCount ملاحظة حالياً. ماذا تريد أن تفعل؟'
-              : 'You have $localCount notes. What do you want to do?'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, 'cancel'),
-                child: Text(l10n.cancel)),
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, 'merge'),
-                child: Text(l10n.merge)),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, 'replace'),
-              child: Text(l10n.replace,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ),
-          ],
-        ),
-      );
-
+      final action =
+          await _showRestoreOptionsSheet(context, lang, l10n, localCount);
       if (action == null || action == 'cancel') return;
 
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Center(
+            child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary)),
+      );
+
       if (isDb) {
-        await _restoreIsarFile(backupPath);
+        await _restoreDbFile(backupPath);
       } else if (action == 'merge') {
         await BackupService().mergeDatabase(backupPath);
       } else {
@@ -123,27 +102,31 @@ class DatabaseRestoreHandler {
       await Provider.of<NotesProvider>(context, listen: false)
           .loadNotes(force: true);
 
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final lockedNotes = await dbService.getLockedNotes();
       final totalNotes = await BackupService().checkLocalNotesCount();
       final unlockedCount = totalNotes - lockedNotes.length;
 
       if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: lockedNotes.isNotEmpty
-            ? (lang == 'ar'
-                ? '${action == 'merge' ? 'تم الدمج' : 'تم الاستبدال'}: $totalNotes ملاحظة ($unlockedCount عادية، ${lockedNotes.length} مشفرة)'
-                : '${action == 'merge' ? 'Merged' : 'Replaced'}: $totalNotes notes ($unlockedCount normal, ${lockedNotes.length} encrypted)')
-            : (action == 'merge' ? l10n.mergedSuccessfully : l10n.restoredSuccessfully),
-        type: NotificationType.success,
-        duration: const Duration(seconds: 5),
-      );
+      Navigator.pop(context); // dismiss loading
 
-      if (action == 'replace' && context.mounted) {
-        Navigator.of(context).pop();
-      }
+      final successMsg = lockedNotes.isNotEmpty
+          ? (lang == 'ar'
+              ? '${action == 'merge' ? 'تم الدمج' : 'تم الاستبدال'}: $totalNotes ملاحظة ($unlockedCount عادية، ${lockedNotes.length} مشفرة)'
+              : '${action == 'merge' ? 'Merged' : 'Replaced'}: $totalNotes notes ($unlockedCount normal, ${lockedNotes.length} encrypted)')
+          : (lang == 'ar'
+              ? '${action == 'merge' ? 'تم الدمج' : 'تم الاستبدال'}: $totalNotes ملاحظة'
+              : '${action == 'merge' ? 'Merged' : 'Replaced'}: $totalNotes notes');
+
+      if (!context.mounted) return;
+      _showSuccessSheet(context, l10n, successMsg);
     } catch (e) {
+      // dismiss loading if showing
+      if (context.mounted) {
+        try {
+          Navigator.pop(context);
+        } catch (_) {}
+      }
       if (!context.mounted) return;
       UnifiedNotificationService().show(
           context: context,
@@ -152,11 +135,147 @@ class DatabaseRestoreHandler {
     }
   }
 
-  static Future<void> _restoreIsarFile(String backupPath) async {
+  // ── Bottom Sheets ─────────────────────────────────────────────────────────
+
+  static Future<String?> _showRestoreOptionsSheet(
+    BuildContext context,
+    String lang,
+    AppLocalizations l10n,
+    int localCount,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    return AppBottomSheet.show<String>(
+      context,
+      child: AppBottomSheet(
+        title: lang == 'ar' ? 'استعادة البيانات' : 'Restore Data',
+        titleIcon: Icons.restore_rounded,
+        scrollable: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded,
+                        color: Colors.orange, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        lang == 'ar'
+                            ? 'لديك $localCount ملاحظة حالياً'
+                            : 'You have $localCount notes currently',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(context, 'merge'),
+                  icon: const Icon(Icons.merge_rounded),
+                  label: Text(l10n.merge),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context, 'replace'),
+                  icon: Icon(Icons.swap_horiz_rounded, color: scheme.error),
+                  label:
+                      Text(l10n.replace, style: TextStyle(color: scheme.error)),
+                  style: OutlinedButton.styleFrom(
+                    side:
+                        BorderSide(color: scheme.error.withValues(alpha: 0.5)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, 'cancel'),
+                  child: Text(l10n.cancel),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static void _showSuccessSheet(
+    BuildContext context,
+    AppLocalizations l10n,
+    String message,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    AppBottomSheet.show(
+      context,
+      child: AppBottomSheet(
+        scrollable: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle_outline_rounded,
+                  color: scheme.primary, size: 56),
+              const SizedBox(height: 16),
+              Text(
+                l10n.restoreSuccessful,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.ok),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── DB Restore ────────────────────────────────────────────────────────────
+
+  static Future<void> _restoreDbFile(String backupPath) async {
+    final dbService = SqliteDatabaseService();
+    await dbService.closeDB();
+    final dbPath = await _getSqliteDbPath();
+    await File(backupPath).copy(dbPath);
+    await dbService.reopenDatabase();
+  }
+
+  static Future<String> _getSqliteDbPath() async {
+    if (Platform.isAndroid) {
+      final dbDir = await getDatabasesPath();
+      return p.join(dbDir, 'sinan_notes.db');
+    }
     final dir = await getApplicationDocumentsDirectory();
-    final targetPath = p.join(dir.path, 'sinan_notes.isar');
-    await IsarDatabaseService().closeDB();
-    await File(backupPath).copy(targetPath);
-    await IsarDatabaseService.initialize();
+    return p.join(dir.path, 'sinan_notes.db');
   }
 }

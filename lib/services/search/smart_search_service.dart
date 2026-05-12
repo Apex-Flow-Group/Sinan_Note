@@ -3,14 +3,14 @@
 import 'dart:async';
 
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 
 class SmartSearchService {
   static final SmartSearchService _instance = SmartSearchService._();
   factory SmartSearchService() => _instance;
   SmartSearchService._();
 
-  final _dbService = IsarDatabaseService();
+  final _dbService = SqliteDatabaseService();
 
   /// Smart search with fuzzy matching
   Future<SearchResult> search(String query, {int limit = 100}) async {

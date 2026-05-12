@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -135,7 +135,7 @@ class VaultResetService {
       // ═══════════════════════════════════════════════════════════════
       // الخطوة 3: جلب كل الملاحظات المشفرة
       // ═══════════════════════════════════════════════════════════════
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final lockedNotes = await dbService.getLockedNotes();
 
       if (lockedNotes.isEmpty) {
@@ -287,7 +287,7 @@ class VaultResetService {
       final backupFile = File(backupPath);
       if (!await backupFile.exists()) return;
 
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       await dbService.closeDB();
 
       final dbPath = await _getDbPath();

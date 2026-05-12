@@ -41,11 +41,13 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
                 : () => Navigator.pop(context),
           ),
           automaticallyImplyLeading: false,
-          title: Text(_flow == null
-              ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
-              : _flow == 'backup'
-                  ? (isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup')
-                  : (isArabic ? 'استعادة البيانات' : 'Restore Data')),
+          title: Text(
+            _flow == null
+                ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
+                : _flow == 'backup'
+                    ? (isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup')
+                    : (isArabic ? 'استعادة البيانات' : 'Restore Data'),
+          ),
           centerTitle: true,
         ),
         body: _isLoading
@@ -110,16 +112,21 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.lock_outline,
-                    size: 18, color: scheme.onSurfaceVariant),
+                Icon(
+                  Icons.lock_outline,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     isArabic
                         ? 'الملاحظات المشفرة في الخزنة لا تُصدَّر تلقائياً — اختر "تصدير كامل" لتضمينها'
                         : 'Encrypted vault notes are not exported by default — choose "Full Export" to include them',
-                    style:
-                        TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -132,7 +139,10 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
 
   // ── Backup Flow ───────────────────────────────────────────────────────────
   Widget _buildBackupFlow(
-      AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
+    AppLocalizations l10n,
+    bool isArabic,
+    ColorScheme scheme,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -191,35 +201,28 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           _SectionHeader(
             icon: Icons.storage_outlined,
             label: isArabic ? 'تصدير قاعدة البيانات' : 'Database Export',
-            color: Colors.grey,
+            color: Colors.teal,
           ),
           const SizedBox(height: 12),
-          Opacity(
-            opacity: 0.45,
-            child: _OptionTile(
-              icon: Icons.storage_outlined,
-              title: isArabic
-                  ? 'ملف .sinannote (معطّل)'
-                  : '.sinannote File (disabled)',
-              subtitle: isArabic
-                  ? 'التصدير غير متاح في هذا الإصدار — استخدم JSON بدلاً'
-                  : 'Export unavailable in this version — use JSON instead',
-              color: Colors.grey,
-              actions: [
-                _ActionBtn(
-                  icon: Icons.save_alt,
-                  label: isArabic ? 'حفظ' : 'Save',
-                  onTap: () {},
-                  disabled: true,
-                ),
-                _ActionBtn(
-                  icon: Icons.share,
-                  label: isArabic ? 'مشاركة' : 'Share',
-                  onTap: () {},
-                  disabled: true,
-                ),
-              ],
-            ),
+          _OptionTile(
+            icon: Icons.storage_outlined,
+            title: isArabic ? 'ملف .db' : '.db File',
+            subtitle: isArabic
+                ? 'نسخة كاملة من قاعدة البيانات — أسرع استعادة'
+                : 'Full database copy — fastest restore',
+            color: Colors.teal,
+            actions: [
+              _ActionBtn(
+                icon: Icons.save_alt,
+                label: isArabic ? 'حفظ' : 'Save',
+                onTap: () => _exportDatabase(share: false),
+              ),
+              _ActionBtn(
+                icon: Icons.share,
+                label: isArabic ? 'مشاركة' : 'Share',
+                onTap: () => _exportDatabase(share: true),
+              ),
+            ],
           ),
         ],
       ),
@@ -228,7 +231,10 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
 
   // ── Restore Flow ──────────────────────────────────────────────────────────
   Widget _buildRestoreFlow(
-      AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
+    AppLocalizations l10n,
+    bool isArabic,
+    ColorScheme scheme,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -250,13 +256,13 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          // استعادة .sinannote/.isar — متاحة دائماً لمن عنده نسخة قديمة
+          // استعادة .db/.sinannote/.isar — متاحة دائماً لمن عنده نسخة قديمة
           _OptionTile(
             icon: Icons.storage_outlined,
             title: isArabic ? 'استعادة قاعدة البيانات' : 'Restore Database',
             subtitle: isArabic
-                ? 'استعد من ملف .sinannote أو .isar — يستبدل البيانات الحالية'
-                : 'Restore from .sinannote or .isar — replaces current data',
+                ? 'استعد من ملف .db أو .sinannote أو .isar'
+                : 'Restore from .db, .sinannote or .isar file',
             color: Colors.purple,
             actions: [
               _ActionBtn(
@@ -308,8 +314,10 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  Future<void> _exportJson(
-      {required bool includeVault, required bool share}) async {
+  Future<void> _exportJson({
+    required bool includeVault,
+    required bool share,
+  }) async {
     setState(() => _isLoading = true);
     try {
       if (share) {
@@ -317,22 +325,26 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
       } else {
         final dir = await FilePicker.platform.getDirectoryPath();
         if (dir == null) return;
-        final msg = await StorageService()
-            .exportNotesToPath(dir, includeVault: includeVault);
+        final msg = await StorageService().exportNotesToPath(
+          dir,
+          includeVault: includeVault,
+        );
         if (mounted) {
           UnifiedNotificationService().show(
-              context: context,
-              message: msg,
-              type: NotificationType.success,
-              duration: const Duration(seconds: 4));
+            context: context,
+            message: msg,
+            type: NotificationType.success,
+            duration: const Duration(seconds: 4),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
         UnifiedNotificationService().show(
-            context: context,
-            message: e.toString().replaceAll('Exception:', ''),
-            type: NotificationType.error);
+          context: context,
+          message: e.toString().replaceAll('Exception:', ''),
+          type: NotificationType.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -340,14 +352,20 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   }
 
   Future<void> _restoreJson() async {
-    final result = await FilePicker.platform
-        .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
     if (result == null || result.files.single.path == null) return;
     if (!mounted) return;
     final lang = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
     await JsonImportHandler.handle(
-        context, lang, l10n, result.files.single.path!);
+      context,
+      lang,
+      l10n,
+      result.files.single.path!,
+    );
   }
 
   Future<void> _restoreDatabase() async {
@@ -357,6 +375,40 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
     final lang = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
     await DatabaseRestoreHandler.handle(context, lang, l10n, backupPath);
+  }
+
+  Future<void> _exportDatabase({required bool share}) async {
+    setState(() => _isLoading = true);
+    try {
+      if (share) {
+        await BackupService().shareDatabase();
+      } else {
+        final dir = await FilePicker.platform.getDirectoryPath();
+        if (dir == null) return;
+        final outputPath = await BackupService().exportDatabaseToPath(dir);
+        if (mounted) {
+          final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+          UnifiedNotificationService().show(
+            context: context,
+            message: isArabic
+                ? 'تم حفظ النسخة الاحتياطية:\n$outputPath'
+                : 'Backup saved:\n$outputPath',
+            type: NotificationType.success,
+            duration: const Duration(seconds: 4),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        UnifiedNotificationService().show(
+          context: context,
+          message: e.toString().replaceAll('Exception:', ''),
+          type: NotificationType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }
 
@@ -405,13 +457,21 @@ class _FlowCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(subtitle,
-                      style: TextStyle(
-                          fontSize: 13, color: scheme.onSurfaceVariant)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -428,8 +488,11 @@ class _SectionHeader extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _SectionHeader(
-      {required this.icon, required this.label, required this.color});
+  const _SectionHeader({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -437,9 +500,14 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: color),
         const SizedBox(width: 8),
-        Text(label,
-            style: TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
       ],
     );
   }
@@ -480,13 +548,21 @@ class _OptionTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w600)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle,
-                        style: TextStyle(
-                            fontSize: 12, color: scheme.onSurfaceVariant)),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -495,10 +571,12 @@ class _OptionTile extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: actions
-                .map((a) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: a,
-                    ))
+                .map(
+                  (a) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: a,
+                  ),
+                )
                 .toList(),
           ),
         ],
@@ -511,18 +589,17 @@ class _ActionBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool disabled;
 
-  const _ActionBtn(
-      {required this.icon,
-      required this.label,
-      required this.onTap,
-      this.disabled = false});
+  const _ActionBtn({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return FilledButton.tonalIcon(
-      onPressed: disabled ? null : onTap,
+      onPressed: onTap,
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 13)),
       style: FilledButton.styleFrom(

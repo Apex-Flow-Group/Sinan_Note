@@ -14,7 +14,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:apex_note/screens/shared/note_editor/view/readonly_checklist_view.dart';
 import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/services/version_control_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
@@ -85,7 +85,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     if (noteId == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
 
-    final dbNote = await IsarDatabaseService().getNoteById(noteId);
+    final dbNote = await SqliteDatabaseService().getNoteById(noteId);
     if (dbNote == null || !mounted) return;
 
     String newContent = dbNote.content;
@@ -225,7 +225,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       isChecklist: targetType == 'checklist',
     );
 
-    final updated = await IsarDatabaseService().getNoteById(noteId);
+    final updated = await SqliteDatabaseService().getNoteById(noteId);
     if (updated == null || !mounted) return;
 
     // تحديث coordinator بالمحتوى الجديد

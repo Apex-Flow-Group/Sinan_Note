@@ -8,13 +8,13 @@ import 'package:apex_note/services/note_services/note_security_service.dart';
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/version_control_service.dart';
 import 'package:flutter/widgets.dart';
 
 class NotesProvider extends ChangeNotifier {
   late final NoteStateService _stateService;
-  late final IsarDatabaseService _dbService;
+  late final SqliteDatabaseService _dbService;
   late final NoteSecurityService _securityService;
   late final NoteSideEffectService _sideEffectService;
   late final NoteBatchOperationsService _batchService;
@@ -24,8 +24,8 @@ class NotesProvider extends ChangeNotifier {
   int _refreshStamp = 0;
   int get refreshStamp => _refreshStamp;
 
-  NotesProvider({IsarDatabaseService? dbService}) {
-    _dbService = dbService ?? IsarDatabaseService();
+  NotesProvider({SqliteDatabaseService? dbService}) {
+    _dbService = dbService ?? SqliteDatabaseService();
     _stateService = NoteStateService();
     _securityService = NoteSecurityService();
     _sideEffectService = NoteSideEffectService();

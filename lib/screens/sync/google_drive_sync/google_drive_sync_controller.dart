@@ -3,7 +3,7 @@
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/sync_step.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -50,7 +50,7 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
   Future<void> _checkState() async {
     try {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       await dbService.database;
 
       // العادية فقط — الخزنة محلية لا تُحسب

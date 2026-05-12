@@ -1,23 +1,22 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:isar/isar.dart';
-
-part 'note_version.g.dart';
-
-@collection
 class NoteVersion {
-  Id id = Isar.autoIncrement;
+  int id;
+  int noteId;
+  String title;
+  String content;
+  DateTime timestamp;
+  String action;
+  String noteType;
 
-  @Index()
-  late int noteId;
-  
-  late String title;
-  late String content;
-  late DateTime timestamp;
-  late String action; // 'created', 'updated', 'archived', 'restored'
-  String noteType = 'simple'; // نوع الملاحظة وقت التسجيل
-
-  NoteVersion();
+  NoteVersion()
+      : id = 0,
+        noteId = 0,
+        title = '',
+        content = '',
+        timestamp = DateTime.now(),
+        action = 'updated',
+        noteType = 'simple';
 
   NoteVersion.create({
     required this.noteId,
@@ -26,5 +25,5 @@ class NoteVersion {
     required this.timestamp,
     this.action = 'update',
     this.noteType = 'simple',
-  });
+  }) : id = 0;
 }

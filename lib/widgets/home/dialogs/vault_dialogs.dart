@@ -6,7 +6,7 @@ import 'package:apex_note/screens/auth/vault_reset_screen.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:encrypt/encrypt.dart' as enc;
@@ -322,7 +322,7 @@ class VaultDialogs {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final lockedNotes = await dbService.getLockedNotes();
 
       if (lockedNotes.isNotEmpty) {
@@ -390,7 +390,7 @@ class VaultDialogs {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final lockedNotes = await dbService.getLockedNotes();
 
       // حذف كل الملاحظات المقفلة

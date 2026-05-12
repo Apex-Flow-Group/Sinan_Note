@@ -3,7 +3,7 @@
 import 'dart:convert';
 
 import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:crypto/crypto.dart';
 
 /// Ultra-Smart Version Control Service
@@ -18,7 +18,7 @@ class VersionControlService {
   static final Map<int, String> _sessionSnapshots = {};
   static final Map<int, DateTime> _sessionStartTimes = {};
 
-  final IsarDatabaseService _db = IsarDatabaseService();
+  final SqliteDatabaseService _db = SqliteDatabaseService();
 
   /// Start editing session - Take snapshot
   void startEditingSession(int noteId, String title, String content) {

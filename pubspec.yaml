@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.0.4+3367
+version: 3.1.0+3370
 publish_to: none
 
 environment:
@@ -20,9 +20,7 @@ dependencies:
   googleapis: ^13.2.0
   extension_google_sign_in_as_googleapis_auth: ^2.0.13
   
-  # Database (Stable versions)
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  # Database — migrated to SQLite (16KB page size support)
   
   # Storage & Files (UPDATED)
   path_provider: ^2.1.5
@@ -66,6 +64,7 @@ dependencies:
   flutter_markdown_plus: ^1.0.7
   markdown: ^7.2.2
   sqflite: ^2.4.2
+  sqflite_common_ffi: ^2.3.4+4
   in_app_update: ^4.2.3
 
 dev_dependencies:
@@ -74,7 +73,6 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  isar_generator: ^3.1.0+1
   build_runner: ^2.4.0
   flutter_launcher_icons: ^0.14.4
 

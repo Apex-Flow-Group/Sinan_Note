@@ -1,5 +1,5 @@
 # 📊 تقرير إحصاءات المشروع — Sinan Note
-> تاريخ التقرير: مايو 2026 | الإصدار: 3.0.4+3355
+> تاريخ التقرير: مايو 2026 | الإصدار: 3.1.0+3369
 
 ---
 
@@ -8,29 +8,29 @@
 | الحقل | القيمة |
 |-------|--------|
 | اسم المشروع | Sinan Note (apex_note) |
-| الإصدار | 3.0.4+3355 |
+| الإصدار | 3.1.0+3369 |
 | إطار العمل | Flutter 3.0+ / Dart 3.0+ |
 | المنصات | Android · Linux · Windows |
 | compileSdk | 36 |
 | targetSdk | 35 |
 | تاريخ أول commit | ديسمبر 2025 |
 | تاريخ آخر commit | مايو 2026 |
-| إجمالي الـ commits | 130 commit |
+| إجمالي الـ commits | 148+ commit |
 
 ---
 
 ## 📁 هيكل المجلدات
 
-| المجلد | عدد المجلدات الفرعية | عدد الملفات | الأسطر |
-|--------|---------------------|-------------|--------|
-| `lib/screens/` | 20 | 91 | 20,477 |
-| `lib/widgets/` | 10 | 77 | 15,930 |
-| `lib/services/` | 7 | 34 | 6,724 |
-| `lib/core/` | 4 | 14 | 1,050 |
-| `lib/controllers/` | 4 | 4 | 1,040 |
-| `lib/models/` | — | 6 | 344 |
-| `lib/providers/` | — | 1 | — |
-| **المجموع** | **64 مجلد** | **228 ملف** | **~46,000** |
+| المجلد | عدد الملفات | الأسطر |
+|--------|-------------|--------|
+| `lib/screens/` | 93 | 21,134 |
+| `lib/widgets/` | 78 | 15,419 |
+| `lib/services/` | 37 | 6,563 |
+| `lib/controllers/` | 4 | 1,041 |
+| `lib/core/` | 14 | 935 |
+| `lib/models/` | 6 | 309 |
+| `lib/providers/` | 1 | — |
+| **المجموع** | **~233 ملف** | **~46,000** |
 
 ---
 
@@ -40,31 +40,31 @@
 
 | النوع | العدد | الأسطر |
 |-------|-------|--------|
-| Dart (مكتوب يدوياً) | 228 | 46,046 |
-| Dart (مولّد `.g.dart`) | 3 | 5,414 |
-| Dart (ترجمات `l10n`) | 3 | 7,583 |
-| ARB (ملفات الترجمة) | 2 | 1,278 |
-| **إجمالي Dart** | **234** | **59,043** |
+| Dart (مكتوب يدوياً) | 237 | 52,328 |
+| Dart (مولّد `.g.dart`) | 0 | 0 |
+| Dart (ترجمات `l10n`) | — | 1,400 |
+| ARB (ملفات الترجمة) | 2 | 1,400 |
+| **إجمالي Dart** | **237** | **~53,728** |
 
 ### أكبر 15 ملفاً (مكتوب يدوياً)
 
 | الملف | الأسطر |
 |-------|--------|
-| `screens/mobile/locked_notes_screen.dart` | 721 |
-| `screens/shared/note_editor.dart` | 697 |
-| `widgets/editor/checklist_editor.dart` | 644 |
-| `widgets/home/note_card_widget.dart` | 591 |
-| `screens/shared/tabs/reminder_dashboard.dart` | 585 |
-| `widgets/home/home_drawer_widget.dart` | 564 |
-| `widgets/home/categories_panel.dart` | 538 |
-| `screens/onboarding/tour_screen.dart` | 537 |
-| `screens/other/support_form_screen.dart` | 536 |
-| `screens/shared/backup_wizard_screen.dart` | 535 |
-| `screens/desktop/home_screen_responsive.dart` | 531 |
-| `services/unified_notification_service.dart` | 521 |
-| `widgets/editor/reminder_picker_sheet.dart` | 509 |
-| `screens/shared/tabs/code_tab.dart` | 496 |
-| `screens/shared/note_editor/view/note_readonly_view.dart` | 494 |
+| `screens/shared/note_editor.dart` | 699 |
+| `screens/mobile/locked_notes_screen.dart` | 684 |
+| `screens/shared/note_editor/view/note_readonly_view.dart` | 682 |
+| `screens/auth/pin_lock_screen.dart` | 635 |
+| `screens/auth/vault_reset_screen.dart` | 590 |
+| `widgets/editor/checklist_editor.dart` | 582 |
+| `widgets/home/note_card_widget.dart` | 572 |
+| `widgets/home/dialogs/vault_dialogs.dart` | 564 |
+| `widgets/home/home_drawer_widget.dart` | 558 |
+| `screens/shared/tabs/reminder_dashboard.dart` | 549 |
+| `screens/onboarding/tour_screen.dart` | 508 |
+| `widgets/home/categories_panel.dart` | 508 |
+| `screens/shared/backup_wizard_screen.dart` | 508 |
+| `screens/other/support_form_screen.dart` | 504 |
+| `screens/shared/note_editor/core/editor_toolbar_builder.dart` | 502 |
 
 ---
 
@@ -72,11 +72,11 @@
 
 | المقياس | القيمة |
 |---------|--------|
-| StatefulWidget | 84 |
-| StatelessWidget | 61 |
-| إجمالي الـ Widgets | 145 |
-| ملفات تستخدم Provider | 82 |
-| مفاتيح الترجمة (AR + EN) | ~312 مفتاح |
+| StatefulWidget | 95 |
+| StatelessWidget | 88 |
+| إجمالي الـ Widgets | 183 |
+| ملفات تستخدم Provider | 59 |
+| مفاتيح الترجمة (AR + EN) | ~679 مفتاح |
 
 ---
 
@@ -87,7 +87,7 @@
 | `screens/shared/` | محرر الملاحظات، الإعدادات، التبويبات، العارض |
 | `screens/mobile/` | الرئيسية، الخزنة، المهملات، الأرشيف |
 | `screens/desktop/` | تخطيط Master-Details |
-| `screens/auth/` | فتح الخزنة، المقدمة |
+| `screens/auth/` | فتح الخزنة، إعادة التعيين، المقدمة |
 | `screens/onboarding/` | جولة التعريف، الشاشة السينمائية |
 | `screens/sync/` | Google Drive |
 | `screens/other/` | الدعم، سجل الإصدارات |
@@ -100,8 +100,8 @@
 | الحزمة | الغرض |
 |--------|--------|
 | `flutter_quill` | محرر Rich Text |
-| `isar` | قاعدة البيانات الرئيسية |
-| `sqflite` | قاعدة SQLite للمزامنة |
+| `isar` | ~~قاعدة البيانات~~ — **حُذف (ترحيل لـ SQLite)** |
+| `sqflite` | قاعدة البيانات الرئيسية (SQLite) |
 | `provider` | إدارة الحالة |
 | `google_sign_in` + `googleapis` | Google Drive |
 | `local_auth` | المصادقة البيومترية |
@@ -120,11 +120,11 @@
 ### Dev
 | الحزمة | الغرض |
 |--------|--------|
-| `isar_generator` + `build_runner` | توليد كود Isar |
+| `isar_generator` + `build_runner` | ~~توليد كود Isar~~ — **حُذف** |
 | `flutter_launcher_icons` | أيقونة التطبيق |
 | `flutter_lints` | جودة الكود |
 
-**إجمالي التبعيات: 35 حزمة**
+**إجمالي التبعيات: 33 حزمة**
 
 ---
 
@@ -161,9 +161,9 @@
 
 | اللغة | الملف | الأسطر |
 |-------|-------|--------|
-| العربية | `intl_ar.arb` | ~639 |
-| الإنجليزية | `intl_en.arb` | ~639 |
-| **إجمالي المفاتيح** | | **~312 مفتاح** |
+| العربية | `app_ar.arb` | 700 |
+| الإنجليزية | `app_en.arb` | 700 |
+| **إجمالي المفاتيح** | | **~679 مفتاح** |
 
 ---
 
@@ -173,59 +173,56 @@
 
 | المقياس | القيمة |
 |---------|--------|
-| ملفات الاختبار | 24 ملف |
-| إجمالي أسطر الاختبارات | 5,099 سطر |
-| نسبة الاختبارات للكود | ~11% |
-| إجمالي الاختبارات | 364 |
-| ناجح | 268 |
-| فاشل (بيئة Linux) | 77 |
-| فاشل (اختبارات قديمة) | 19 |
+| ملفات الاختبار | 25 ملف |
+| إجمالي أسطر الاختبارات | 4,605 سطر |
+| نسبة الاختبارات للكود | ~9% |
+| إجمالي الاختبارات | 359 |
 
 ### أكبر ملفات الاختبار
 
 | الملف | الأسطر |
 |-------|--------|
-| `unit/services/google_drive_service_test.dart` | 480 |
-| `unit/services/note_batch_operations_service_test.dart` | 477 |
-| `unit/controllers/editor_state_manager_test.dart` | 434 |
-| `unit/services/smart_analyzer_test.dart` | 380 |
-| `integration/note_editor_integration_test.dart` | 378 |
-| `integration/notes_provider_integration_test.dart` | 347 |
-| `unit/services/isar_database_service_test.dart` | 343 |
-| `services/vault_service_test.dart` | 339 |
-| `unit/services/note_state_service_test.dart` | 313 |
-| `unit/services/note_side_effect_service_test.dart` | 276 |
+| `unit/services/google_drive_service_test.dart` | 406 |
+| `unit/services/note_batch_operations_service_test.dart` | 398 |
+| `unit/controllers/editor_state_manager_test.dart` | 349 |
+| `unit/services/smart_analyzer_test.dart` | 319 |
+| `integration/note_editor_integration_test.dart` | 302 |
+| `integration/notes_provider_integration_test.dart` | 296 |
+| `services/vault_service_test.dart` | 291 |
+| `unit/services/isar_database_service_test.dart` | 279 |
+| `unit/services/note_state_service_test.dart` | 272 |
+| `unit/services/note_side_effect_service_test.dart` | 238 |
 
 ### تصنيف الاختبارات
 
 | النوع | الملفات | الأسطر |
 |-------|---------|--------|
-| Unit (services) | 14 | 2,927 |
-| Unit (controllers) | 1 | 434 |
-| Integration | 2 | 725 |
-| Widget | 1 | 40 |
-| Performance | 1 | 119 |
-| Property | 1 | 72 |
-| Stress (integration_test) | 1 | 60 |
-| Memory | 1 | 205 |
-| Setup + Vault | 2 | 419 |
-| **المجموع** | **24** | **5,099** |
+| Unit (services) | 14 | 2,682 |
+| Unit (controllers) | 1 | 349 |
+| Integration | 2 | 598 |
+| Security | 2 | 396 |
+| Widget | 1 | 35 |
+| Performance | 1 | 96 |
+| Property | 1 | 60 |
+| Memory | 1 | 170 |
+| Setup + Vault | 2 | 219 |
+| **المجموع** | **25** | **4,605** |
 
 ---
 
 ## ✅ ملخص للإطلاق
 
 ```
-الكود المكتوب يدوياً  : 46,046 سطر في 228 ملف
-إجمالي كود Dart       : 59,043 سطر في 234 ملف
-المجلدات              : 64 مجلد
-الـ Widgets           : 145 (84 Stateful + 61 Stateless)
-التبعيات              : 35 حزمة
+الكود المكتوب يدوياً  : 52,328 سطر في 237 ملف
+إجمالي كود Dart       : ~53,728 سطر في 237 ملف
+المجلدات              : 62 مجلد
+الـ Widgets           : 183 (95 Stateful + 88 Stateless)
+التبعيات              : 33 حزمة
 الأصول               : 9 ملفات (5 خطوط + 2 أيقونة + 2 متجر)
-الترجمة               : عربي + إنجليزي (~312 مفتاح)
-الـ commits           : 130 commit (ديسمبر 2025 → مايو 2026)
-الإصدار               : 3.0.4+3355
-الاختبارات            : 364 اختبار في 5,099 سطر (268 ناجح)
+الترجمة               : عربي + إنجليزي (~679 مفتاح)
+الـ commits           : 148+ commit (ديسمبر 2025 → مايو 2026)
+الإصدار               : 3.1.0+3369
+الاختبارات            : 359 اختبار في 4,605 سطر
 ```
 
 ---

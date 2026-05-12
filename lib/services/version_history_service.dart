@@ -2,13 +2,13 @@
 
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/version_control_service.dart';
 
 /// Version History Service - UI layer for smart version control
 /// Uses VersionControlService settings for consistency
 class VersionHistoryService {
-  final _dbService = IsarDatabaseService();
+  final _dbService = SqliteDatabaseService();
   final _versionControl = VersionControlService();
 
   // Use same max versions as smart control
@@ -35,9 +35,7 @@ class VersionHistoryService {
   }
 
   Future<void> restoreVersion(int noteId, NoteVersion version) async {
-    final isar = await _dbService.database;
-
-    final note = await isar.notes.get(noteId);
+    final note = await _dbService.getNoteById(noteId);
     if (note == null) return;
 
     await _versionControl.smartLogVersion(
@@ -49,9 +47,8 @@ class VersionHistoryService {
       forceLog: true,
     );
 
-    final restoredNoteType = version.noteType.isNotEmpty
-        ? version.noteType
-        : note.noteType;
+    final restoredNoteType =
+        version.noteType.isNotEmpty ? version.noteType : note.noteType;
     final restored = note.copyWith(
       title: version.title,
       content: version.content,
@@ -60,9 +57,7 @@ class VersionHistoryService {
       updatedAt: DateTime.now(),
     );
 
-    await isar.writeTxn(() async {
-      await isar.notes.put(restored);
-    });
+    await _dbService.updateNote(restored);
   }
 
   Future<int> getVersionCount(int noteId) async {

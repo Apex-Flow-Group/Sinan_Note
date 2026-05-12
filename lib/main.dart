@@ -25,7 +25,7 @@ import 'package:apex_note/services/app_update_service.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/content_guard.dart';
 import 'package:apex_note/services/security/security_gate.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -35,6 +35,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Global navigator key for error feedback
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -48,6 +49,12 @@ final ValueNotifier<bool> bottomNavHiddenNotifier = ValueNotifier<bool>(false);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🖥️ Desktop: initialize sqflite FFI
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   // 🔒 Initialize SecurityController IMMEDIATELY (lightweight)
   SecurityController().initialize(const SecurityConfig(
@@ -203,7 +210,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
         await notesProvider.addOrUpdateNote(newNote, silent: true);
 
     // Get the saved note from database
-    final dbService = IsarDatabaseService();
+    final dbService = SqliteDatabaseService();
     final savedNote = await dbService.getNoteById(savedNoteId);
     if (!mounted) return;
 
@@ -281,7 +288,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
   void _openNoteById(int noteId) async {
     try {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null) {
         navigatorKey.currentState?.push(
@@ -357,14 +364,15 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
                 return AnnotatedRegion<SystemUiOverlayStyle>(
                   value: SystemUiOverlayStyle(
                     systemNavigationBarColor: scheme.surface,
-                    systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+                    systemNavigationBarIconBrightness:
+                        isDark ? Brightness.light : Brightness.dark,
                   ),
                   child: MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    textScaler: TextScaler.linear(settings.textScaleFactor),
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(settings.textScaleFactor),
+                    ),
+                    child: child ?? const SizedBox.shrink(),
                   ),
-                  child: child ?? const SizedBox.shrink(),
-                ),
                 );
               },
               routes: {

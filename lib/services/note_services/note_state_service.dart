@@ -100,6 +100,7 @@ class NoteStateService {
     _allNotes.removeWhere((n) => n.id == id);
     _lockedNotes.removeWhere((n) => n.id == id);
     _invalidateCache();
+    GoogleDriveService.markDirty();
   }
 
   void updateLockedNotes(List<Note> notes) {
@@ -171,6 +172,9 @@ class NoteStateService {
   Timer? _syncDebounce;
 
   void _silentSync() {
+    // تعليم أن هناك تغييرات تحتاج رفع
+    GoogleDriveService.markDirty();
+
     _syncDebounce?.cancel();
     _syncDebounce = Timer(const Duration(seconds: 5), () async {
       if (_isSyncing) return;

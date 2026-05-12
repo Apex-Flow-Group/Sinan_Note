@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/main.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -265,7 +265,7 @@ class NotificationService {
 
   static Future<void> _openNoteById(int noteId) async {
     try {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null && navigatorKey.currentState != null) {
         navigatorKey.currentState!.push(

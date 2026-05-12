@@ -9,7 +9,7 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/cloud/google_drive_merge.dart';
 import 'package:apex_note/services/storage/compression_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:path/path.dart';
@@ -58,6 +58,17 @@ class GoogleDriveService {
   static int _uploadCount = 0;
   static const _maxUploadsPerHour = 60;
 
+  // ── Dirty tracking (رفع فقط عند وجود تغييرات) ────────────────────────────
+  static bool _hasPendingChanges = false;
+
+  /// يُستدعى عند تعديل/إضافة/حذف ملاحظة لتعليم أن هناك تغييرات تحتاج رفع
+  static void markDirty() {
+    _hasPendingChanges = true;
+  }
+
+  /// هل هناك تغييرات محلية لم تُرفع بعد؟
+  static bool get hasPendingChanges => _hasPendingChanges;
+
   // ── Internet check ────────────────────────────────────────────────────────
   static Future<bool> _hasInternet() async {
     try {
@@ -89,15 +100,7 @@ class GoogleDriveService {
         return;
       }
 
-      // نقارن وقت Drive بأحدث نوتة محلية — أدق من last_upload_timestamp
-      final dbService = IsarDatabaseService();
-      final localNotes = await dbService.getAllNotes();
-      final latestLocal = localNotes.isEmpty
-          ? null
-          : localNotes
-              .map((n) => n.updatedAt)
-              .reduce((a, b) => a.isAfter(b) ? a : b);
-
+      // نقارن وقت Drive بآخر رفع محلي
       final prefs = await _getPrefs();
       final lastUploadMs = prefs.getInt('last_upload_timestamp');
       final lastUpload = lastUploadMs != null
@@ -108,18 +111,16 @@ class GoogleDriveService {
       final driveIsNewer = lastUpload == null ||
           driveModified.isAfter(lastUpload.add(const Duration(seconds: 10)));
 
-      // النوتات المحلية أحدث من Drive → ارفع
-      final localIsNewer = latestLocal != null &&
-          latestLocal.isAfter(driveModified.add(const Duration(seconds: 10)));
-
-      if (driveIsNewer && !localIsNewer) {
+      if (driveIsNewer) {
         AppLogger.info('Drive is newer → silent merge', 'GoogleDrive');
         await _silentMerge();
-      } else {
-        AppLogger.info('Local is newer → uploading', 'GoogleDrive');
+      } else if (_hasPendingChanges) {
+        AppLogger.info('Local has pending changes → uploading', 'GoogleDrive');
         await uploadDatabase(null);
         await prefs.setInt(
             'last_upload_timestamp', DateTime.now().millisecondsSinceEpoch);
+      } else {
+        AppLogger.info('No pending changes → skip upload', 'GoogleDrive');
       }
     } catch (e) {
       AppLogger.error('Smart sync failed', 'GoogleDrive', e);
@@ -180,7 +181,7 @@ class GoogleDriveService {
           driveDeleted[id] = DateTime.fromMillisecondsSinceEpoch(ms);
         }
       });
-      final localDeleted = await IsarDatabaseService.getDeletedNoteIds();
+      final localDeleted = await SqliteDatabaseService.getDeletedNoteIds();
       final allDeleted = <int, DateTime>{...localDeleted};
       driveDeleted.forEach((id, dt) {
         if (!allDeleted.containsKey(id) || dt.isAfter(allDeleted[id]!)) {
@@ -188,7 +189,7 @@ class GoogleDriveService {
         }
       });
 
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final localNotes = await dbService.getAllNotes();
       // فقط النوتات غير المشفرة من Drive
       final driveNotes = driveList
@@ -216,28 +217,31 @@ class GoogleDriveService {
         }
       });
 
-      final isar = await dbService.database;
-      await isar.writeTxn(() async {
-        final lockedLocal = localNotes.where((n) => n.isLocked).toList();
-        await isar.notes.clear();
-        for (final n in merged.values) {
-          await isar.notes.put(n);
+      // حذف النوتات القديمة وإدراج المدمجة
+      final lockedLocal = localNotes.where((n) => n.isLocked).toList();
+      final allLocal = await dbService.getAllNotes();
+      for (final n in allLocal) {
+        if (n.id != null && !n.isLocked) await dbService.deleteNote(n.id!);
+      }
+      for (final n in merged.values) {
+        await dbService.insertNote(n);
+      }
+      for (final n in lockedLocal) {
+        await dbService.updateNote(n);
+      }
+      // دمج الكتالوجات: أضف الجديدة من Drive بدون حذف المحلية
+      final existingCats = await dbService.getAllCategories();
+      final existingIds = existingCats.map((c) => c.id).toSet();
+      for (final c in driveCats) {
+        final catId = c['id'] as int;
+        if (!existingIds.contains(catId)) {
+          await dbService.insertCategory(NoteCategory(
+            id: catId,
+            name: c['name'] as String,
+            sortOrder: c['sortOrder'] as int? ?? 0,
+          ));
         }
-        for (final n in lockedLocal) {
-          await isar.notes.put(n);
-        }
-        // دمج الكتالوجات: أضف الجديدة من Drive بدون حذف المحلية
-        for (final c in driveCats) {
-          final existing = await isar.noteCategorys.get(c['id'] as int);
-          if (existing == null) {
-            await isar.noteCategorys.put(NoteCategory(
-              id: c['id'] as int,
-              name: c['name'] as String,
-              sortOrder: c['sortOrder'] as int? ?? 0,
-            ));
-          }
-        }
-      });
+      }
 
       _lastSyncTime = DateTime.now();
       AppLogger.success('Silent merge: ${merged.length} notes', 'GoogleDrive');
@@ -272,15 +276,15 @@ class GoogleDriveService {
       _lastUploadTime = DateTime.now();
       _uploadCount++;
 
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final allNotes = await dbService.getAllNotes();
 
       // الخزنة محلية دائماً — لا نرفع المشفر أبداً
       final notes = allNotes.where((n) => !n.isLocked).toList();
 
       final categories = await dbService.getAllCategories();
-      final deletedIds = await IsarDatabaseService.getDeletedNoteIds();
-      await IsarDatabaseService.cleanOldDeletions();
+      final deletedIds = await SqliteDatabaseService.getDeletedNoteIds();
+      await SqliteDatabaseService.cleanOldDeletions();
 
       final backupData = <String, dynamic>{
         'version': '2.0',
@@ -318,6 +322,7 @@ class GoogleDriveService {
 
       await backupFile.delete();
       _lastSyncTime = DateTime.now();
+      _hasPendingChanges = false; // ✅ تم الرفع — لا تغييرات معلّقة
       final prefs = await _getPrefs();
       await prefs.setInt(
           'last_upload_timestamp', _lastSyncTime!.millisecondsSinceEpoch);
@@ -370,30 +375,33 @@ class GoogleDriveService {
       final regularNotes =
           notesList.where((m) => (m['isLocked'] ?? 0) == 0).toList();
 
-      final dbService = IsarDatabaseService();
-      final isar = await dbService.database;
+      final dbService = SqliteDatabaseService();
       final lockedLocal = await dbService.getLockedNotes();
-
-      await isar.writeTxn(() async {
-        await isar.notes.clear();
-        for (final m in regularNotes) {
-          await isar.notes.put(Note.fromMap(m));
+      // حذف النوتات العادية وإدراج نوتات Drive
+      final allLocal = await dbService.getAllNotes();
+      for (final n in allLocal) {
+        if (n.id != null && !n.isLocked) await dbService.deleteNote(n.id!);
+      }
+      for (final m in regularNotes) {
+        await dbService.insertNote(Note.fromMap(m));
+      }
+      for (final n in lockedLocal) {
+        await dbService.updateNote(n);
+      }
+      // استعادة الكتالوجات
+      if (categoriesList.isNotEmpty) {
+        final existingCats = await dbService.getAllCategories();
+        for (final c in existingCats) {
+          await dbService.deleteCategory(c.id);
         }
-        for (final n in lockedLocal) {
-          await isar.notes.put(n);
+        for (final c in categoriesList) {
+          await dbService.insertCategory(NoteCategory(
+            id: c['id'] as int,
+            name: c['name'] as String,
+            sortOrder: c['sortOrder'] as int? ?? 0,
+          ));
         }
-        // استعادة الكتالوجات
-        if (categoriesList.isNotEmpty) {
-          await isar.noteCategorys.clear();
-          for (final c in categoriesList) {
-            await isar.noteCategorys.put(NoteCategory(
-              id: c['id'] as int,
-              name: c['name'] as String,
-              sortOrder: c['sortOrder'] as int? ?? 0,
-            ));
-          }
-        }
-      });
+      }
 
       _lastSyncTime = DateTime.now();
       AppLogger.success(

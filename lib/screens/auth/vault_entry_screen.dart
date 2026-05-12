@@ -6,7 +6,7 @@ import 'package:apex_note/screens/auth/vault_unlock_screen.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
 
 /// نقطة الدخول الرئيسية للخزنة
@@ -31,7 +31,7 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
   }
 
   Future<void> _checkVaultStatus() async {
-    final dbService = IsarDatabaseService();
+    final dbService = SqliteDatabaseService();
     final lockedNotes = await dbService.getLockedNotes();
     final hasNewVault = await VaultService.isVaultSetup();
 

@@ -95,14 +95,14 @@ class _PinLockScreenState extends State<PinLockScreen>
   Future<void> _checkLockStatus() async {
     final lockTime = await RateLimiterService.getRemainingLockTime();
     final attempts = await RateLimiterService.getRemainingAttempts();
-    
+
     if (mounted) {
       setState(() {
         _isLocked = lockTime != null;
         _remainingLockTime = lockTime ?? 0;
         _remainingAttempts = attempts;
       });
-      
+
       if (_isLocked) {
         _startLockTimer();
       }
@@ -112,9 +112,9 @@ class _PinLockScreenState extends State<PinLockScreen>
   void _startLockTimer() {
     Future.delayed(const Duration(seconds: 1), () async {
       if (!mounted || !_isLocked) return;
-      
+
       final lockTime = await RateLimiterService.getRemainingLockTime();
-      
+
       if (lockTime == null) {
         setState(() {
           _isLocked = false;
@@ -191,7 +191,8 @@ class _PinLockScreenState extends State<PinLockScreen>
         setState(() {
           _isLocked = true;
           _remainingLockTime = lockTime;
-          _error = 'Locked for ${RateLimiterService.formatRemainingTime(lockTime)}';
+          _error =
+              'Locked for ${RateLimiterService.formatRemainingTime(lockTime)}';
           _pin = '';
         });
         _shake();
@@ -240,13 +241,14 @@ class _PinLockScreenState extends State<PinLockScreen>
           // تسجيل محاولة فاشلة
           final lockTime = await RateLimiterService.recordFailedAttempt();
           final attempts = await RateLimiterService.getRemainingAttempts();
-          
+
           _shake();
           setState(() {
             if (lockTime != null) {
               _isLocked = true;
               _remainingLockTime = lockTime;
-              _error = 'Locked for ${RateLimiterService.formatRemainingTime(lockTime)}';
+              _error =
+                  'Locked for ${RateLimiterService.formatRemainingTime(lockTime)}';
               _startLockTimer();
             } else {
               _error = null;
@@ -279,249 +281,283 @@ class _PinLockScreenState extends State<PinLockScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
-      canPop: widget.isSetup, // السماح بالرجوع فقط عند الإنشاء
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop && widget.isSetup && _isConfirmStep) {
-          // إذا كان في خطوة التأكيد، الرجوع للخطوة الأولى
-          setState(() {
-            _isConfirmStep = false;
-            _pin = '';
-            _firstPin = '';
-            _error = null;
-          });
-          _iconAnimController
-            ..reset()
-            ..forward();
-        }
-      },
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        appBar: widget.isSetup
-            ? AppBar(
-                backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                elevation: 0,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    if (_isConfirmStep) {
-                      setState(() {
-                        _isConfirmStep = false;
-                        _pin = '';
-                        _firstPin = '';
-                        _error = null;
-                      });
-                      _iconAnimController
-                        ..reset()
-                        ..forward();
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-                systemOverlayStyle: SystemUiOverlayStyle(
-                  statusBarColor: Colors.transparent,
-                  statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-                ),
-              )
-            : null,
-        body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // أيقونة
-                  ScaleTransition(
-                    scale: _iconScaleAnim,
-                    child: Container(
-                      width: 80, height: 80,
-                      decoration: BoxDecoration(
-                        color: _iconColor.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(_iconData, size: 40, color: _iconColor),
-                    ),
+        canPop: widget.isSetup, // السماح بالرجوع فقط عند الإنشاء
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop && widget.isSetup && _isConfirmStep) {
+            // إذا كان في خطوة التأكيد، الرجوع للخطوة الأولى
+            setState(() {
+              _isConfirmStep = false;
+              _pin = '';
+              _firstPin = '';
+              _error = null;
+            });
+            _iconAnimController
+              ..reset()
+              ..forward();
+          }
+        },
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          appBar: widget.isSetup
+              ? AppBar(
+                  backgroundColor:
+                      isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      if (_isConfirmStep) {
+                        setState(() {
+                          _isConfirmStep = false;
+                          _pin = '';
+                          _firstPin = '';
+                          _error = null;
+                        });
+                        _iconAnimController
+                          ..reset()
+                          ..forward();
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  // العنوان
-                  Text(
-                    _title(l10n),
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
+                  systemOverlayStyle: SystemUiOverlayStyle(
+                    statusBarColor: Colors.transparent,
+                    statusBarIconBrightness:
+                        isDark ? Brightness.light : Brightness.dark,
                   ),
-                  const SizedBox(height: 8),
-                  // رسالة الخطأ أو الوصف
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: _isLocked
-                        ? Column(
-                            key: const ValueKey('locked'),
-                            children: [
-                              const Icon(
-                                Icons.timer_outlined,
-                                color: Colors.red,
-                                size: 32,
+                )
+              : null,
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // أيقونة
+                          ScaleTransition(
+                            scale: _iconScaleAnim,
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: _iconColor.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                l10n.tooManyAttempts,
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child:
+                                  Icon(_iconData, size: 40, color: _iconColor),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // العنوان
+                          Text(
+                            _title(l10n),
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          // رسالة الخطأ أو الوصف
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: _isLocked
+                                ? Column(
+                                    key: const ValueKey('locked'),
+                                    children: [
+                                      const Icon(
+                                        Icons.timer_outlined,
+                                        color: Colors.red,
+                                        size: 32,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        l10n.tooManyAttempts,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${l10n.tryAgainIn} ${RateLimiterService.formatRemainingTime(_remainingLockTime)}',
+                                        style: TextStyle(
+                                          color:
+                                              Colors.red.withValues(alpha: 0.8),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : _error != null
+                                    ? Column(
+                                        key: ValueKey(_error),
+                                        children: [
+                                          Text(
+                                            _error!,
+                                            style: const TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 14),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      )
+                                    : !widget.isSetup && _remainingAttempts < 5
+                                        ? Text(
+                                            '$_remainingAttempts ${l10n.attemptsRemaining}',
+                                            key: ValueKey(_remainingAttempts),
+                                            style: const TextStyle(
+                                              color: Colors.orange,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          )
+                                        : Text(
+                                            _subtitle(l10n),
+                                            key: const ValueKey('subtitle'),
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: isDark
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[600],
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                          ),
+                          const SizedBox(height: 32),
+                          // مربعات PIN — ديناميكية
+                          AnimatedBuilder(
+                            animation: _shakeAnim,
+                            builder: (context, child) {
+                              final offset = _shakeController.isAnimating
+                                  ? 8 *
+                                      (0.5 - (_shakeAnim.value - 0.5).abs()) *
+                                      2
+                                  : 0.0;
+                              return Transform.translate(
+                                offset: Offset(offset * 10, 0),
+                                child: child,
+                              );
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                _pin.isEmpty
+                                    ? 1
+                                    : _pin.length.clamp(1, _maxPinLength),
+                                (i) {
+                                  final filled = i < _pin.length;
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 150),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 6),
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: filled
+                                          ? Colors.blue
+                                          : (isDark
+                                              ? Colors.grey[800]
+                                              : Colors.grey[200]),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: filled
+                                            ? Colors.blue
+                                            : (isDark
+                                                ? Colors.grey[700]!
+                                                : Colors.grey[300]!),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: filled
+                                        ? widget.isSetup
+                                            ? Center(
+                                                child: Text(
+                                                  _pin.length > i
+                                                      ? _pin[i]
+                                                      : '',
+                                                  style: const TextStyle(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.white),
+                                                ),
+                                              )
+                                            : const Icon(Icons.circle,
+                                                size: 14, color: Colors.white)
+                                        : null,
+                                  );
+                                },
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${l10n.tryAgainIn} ${RateLimiterService.formatRemainingTime(_remainingLockTime)}',
-                                style: TextStyle(
-                                  color: Colors.red.withValues(alpha: 0.8),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          )
-                        : _error != null
-                            ? Column(
-                                key: ValueKey(_error),
+                            ),
+                          ),
+                          // مؤشر التقدم — فقط عند الإنشاء
+                          if (widget.isSetup) ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: 240,
+                              child: Column(
                                 children: [
-                                  Text(
-                                    _error!,
-                                    style: const TextStyle(color: Colors.red, fontSize: 14),
-                                    textAlign: TextAlign.center,
+                                  Container(
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(3),
+                                      color: isDark
+                                          ? Colors.grey[800]
+                                          : Colors.grey[200],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(3),
+                                      child: AnimatedFractionallySizedBox(
+                                        widthFactor:
+                                            (_pin.length / _targetLength)
+                                                .clamp(0.0, 1.0),
+                                        alignment:
+                                            AlignmentDirectional.centerStart,
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        curve: Curves.easeOut,
+                                        child: Container(
+                                          color: _progressColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  AnimatedDefaultTextStyle(
+                                    duration: const Duration(milliseconds: 200),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: _progressColor,
+                                    ),
+                                    child: Text(
+                                      '${_pin.length} / $_targetLength',
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
                                 ],
-                              )
-                            : !widget.isSetup && _remainingAttempts < 5
-                                ? Text(
-                                    '$_remainingAttempts ${l10n.attemptsRemaining}',
-                                    key: ValueKey(_remainingAttempts),
-                                    style: const TextStyle(
-                                      color: Colors.orange,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  )
-                                : Text(
-                                _subtitle(l10n),
-                                key: const ValueKey('subtitle'),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                  ),
-                  const SizedBox(height: 32),
-                  // مربعات PIN — ديناميكية
-                  AnimatedBuilder(
-                    animation: _shakeAnim,
-                    builder: (context, child) {
-                      final offset = _shakeController.isAnimating
-                          ? 8 * (0.5 - (_shakeAnim.value - 0.5).abs()) * 2
-                          : 0.0;
-                      return Transform.translate(
-                        offset: Offset(offset * 10, 0),
-                        child: child,
-                      );
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        _pin.isEmpty ? 1 : _pin.length.clamp(1, _maxPinLength),
-                        (i) {
-                          final filled = i < _pin.length;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            width: 44, height: 44,
-                            decoration: BoxDecoration(
-                              color: filled
-                                  ? Colors.blue
-                                  : (isDark ? Colors.grey[800] : Colors.grey[200]),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: filled
-                                    ? Colors.blue
-                                    : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
-                                width: 2,
                               ),
                             ),
-                            child: filled
-                                ? widget.isSetup
-                                    ? Center(
-                                        child: Text(
-                                          _pin.length > i ? _pin[i] : '',
-                                          style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white),
-                                        ),
-                                      )
-                                    : const Icon(Icons.circle, size: 14, color: Colors.white)
-                                : null,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  // مؤشر التقدم — فقط عند الإنشاء
-                  if (widget.isSetup) ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: 240,
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 6,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(3),
-                              color: isDark ? Colors.grey[800] : Colors.grey[200],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(3),
-                              child: AnimatedFractionallySizedBox(
-                                widthFactor: (_pin.length / _targetLength).clamp(0.0, 1.0),
-                                alignment: AlignmentDirectional.centerStart,
-                                duration: const Duration(milliseconds: 200),
-                                curve: Curves.easeOut,
-                                child: Container(
-                                  color: _progressColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 200),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: _progressColor,
-                            ),
-                            child: Text(
-                              '${_pin.length} / $_targetLength',
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
+                    // لوحة الأرقام
+                    _buildNumpad(isDark, l10n),
                   ],
-                ],
+                ),
               ),
             ),
-            // لوحة الأرقام
-            _buildNumpad(isDark, l10n),
-          ],
-        ),
-      ),
-    ));
+          ),
+        ));
   }
 
   String _title(AppLocalizations l10n) {
@@ -560,7 +596,8 @@ class _PinLockScreenState extends State<PinLockScreen>
             children: [
               // زر البصمة أو فراغ
               SizedBox(
-                width: 72, height: 72,
+                width: 72,
+                height: 72,
                 child: _biometricAvailable && !widget.isSetup
                     ? _numpadKey(
                         child: const Icon(Icons.fingerprint, size: 28),
@@ -580,7 +617,8 @@ class _PinLockScreenState extends State<PinLockScreen>
                 isDark: isDark,
               ),
               SizedBox(
-                width: 72, height: 72,
+                width: 72,
+                height: 72,
                 child: _numpadKey(
                   child: const Icon(Icons.backspace_outlined, size: 24),
                   onTap: _onDelete,
@@ -599,23 +637,40 @@ class _PinLockScreenState extends State<PinLockScreen>
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: (_loading || _isLocked) ? null : (_isConfirmStep
-                    ? (_pin == _firstPin ? _onConfirm : null)
-                    : (_pin.length >= _minPinLength ? _onConfirm : null)),
+                onPressed: (_loading || _isLocked)
+                    ? null
+                    : (_isConfirmStep
+                        ? (_pin == _firstPin ? _onConfirm : null)
+                        : (_pin.length >= _minPinLength ? _onConfirm : null)),
                 icon: _loading
-                    ? const SizedBox(width: 20, height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Icon(widget.isSetup ? Icons.check : (widget.isDisabling ? Icons.lock_open : Icons.lock_open)),
-                label: _loading ? const SizedBox.shrink() : Text(
-                  widget.isSetup
-                      ? (_isConfirmStep ? l10n.savePinButton : l10n.next)
-                      : (widget.isDisabling ? l10n.disabled : l10n.unlock),
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                ),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : Icon(widget.isSetup
+                        ? Icons.check
+                        : (widget.isDisabling
+                            ? Icons.lock_open
+                            : Icons.lock_open)),
+                label: _loading
+                    ? const SizedBox.shrink()
+                    : Text(
+                        widget.isSetup
+                            ? (_isConfirmStep ? l10n.savePinButton : l10n.next)
+                            : (widget.isDisabling
+                                ? l10n.disabled
+                                : l10n.unlock),
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.isSetup ? Colors.blue : (widget.isDisabling ? Colors.orange : Colors.blue),
+                  backgroundColor: widget.isSetup
+                      ? Colors.blue
+                      : (widget.isDisabling ? Colors.orange : Colors.blue),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ),
@@ -650,7 +705,8 @@ class _PinLockScreenState extends State<PinLockScreen>
     Color? color,
   }) {
     return SizedBox(
-      width: 72, height: 72,
+      width: 72,
+      height: 72,
       child: Material(
         color: color != null
             ? color.withValues(alpha: 0.1)
@@ -662,7 +718,8 @@ class _PinLockScreenState extends State<PinLockScreen>
           onLongPress: onLongPress,
           child: Center(
             child: IconTheme(
-              data: IconThemeData(color: color ?? (isDark ? Colors.white : Colors.black87)),
+              data: IconThemeData(
+                  color: color ?? (isDark ? Colors.white : Colors.black87)),
               child: child,
             ),
           ),

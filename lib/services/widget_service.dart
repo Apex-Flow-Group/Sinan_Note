@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,7 +15,7 @@ class WidgetService {
   factory WidgetService() => _instance;
   WidgetService._internal();
 
-  final IsarDatabaseService _dbService = IsarDatabaseService();
+  final SqliteDatabaseService _dbService = SqliteDatabaseService();
 
   Future<void> updateWidgetData() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
@@ -406,7 +406,7 @@ void _widgetBackgroundCallback(Uri? uri) async {
   if (uri?.host == 'deleteNote') {
     final noteId = int.tryParse(uri?.queryParameters['id'] ?? '');
     if (noteId != null) {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       await dbService.deleteNote(noteId);
       await WidgetService().updateWidgetData();
     }

@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 
@@ -37,7 +37,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
   }
 
   Future<void> _loadNotes() async {
-    final dbService = IsarDatabaseService();
+    final dbService = SqliteDatabaseService();
     final allNotes = await dbService.getAllNotes();
     setState(() {
       if (widget.widgetType == 'checklist') {

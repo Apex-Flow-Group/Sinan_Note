@@ -17,8 +17,7 @@ import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
-import 'package:apex_note/services/storage/native_db_migration_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -61,17 +60,11 @@ class _SplashScreenState extends State<SplashScreen> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     try {
-      // Step 1: Initialize Isar Database (20%)
+      // Step 1: Initialize SQLite Database (20%)
       _updateStatus(
           isArabic ? 'تهيئة قاعدة البيانات...' : 'Initializing database...',
           0.2);
-      await IsarDatabaseService.initialize();
-
-      // Step 2: Migration to Native SQLite — مرة واحدة فقط (50%)
-      _updateStatus(
-          isArabic ? 'ترحيل البيانات...' : 'Migrating data...',
-          0.5);
-      await NativeDbMigrationService.runIfNeeded();
+      await SqliteDatabaseService.initialize();
 
       // Step 2: Background services (60%)
       _updateStatus(isArabic ? 'تحميل الخدمات...' : 'Loading services...', 0.6);
@@ -101,9 +94,11 @@ class _SplashScreenState extends State<SplashScreen> {
       // Step 4: Authentication check (90%)
       _updateStatus(
           isArabic ? 'التحقق من الأمان...' : 'Security check...', 0.9);
-      AppLogger.debug('[Splash] isAppLockEnabled: ${settings.isAppLockEnabled}');
+      AppLogger.debug(
+          '[Splash] isAppLockEnabled: ${settings.isAppLockEnabled}');
       if (settings.isAppLockEnabled) {
-        AppLogger.debug('[Splash] Calling UnifiedLockService.authenticate()...');
+        AppLogger.debug(
+            '[Splash] Calling UnifiedLockService.authenticate()...');
         final lockType = await UnifiedLockService().getLockType();
         AppLogger.debug('[Splash] LockType: $lockType');
 

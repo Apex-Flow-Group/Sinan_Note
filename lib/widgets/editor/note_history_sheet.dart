@@ -3,7 +3,7 @@
 import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -284,7 +284,7 @@ class NoteHistorySheet extends StatelessWidget {
           const Divider(height: 1),
           Expanded(
             child: FutureBuilder<List<NoteVersion>>(
-              future: IsarDatabaseService().getNoteHistory(noteId),
+              future: SqliteDatabaseService().getNoteHistory(noteId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());

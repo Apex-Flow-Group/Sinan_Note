@@ -55,6 +55,13 @@ android {
         }
     }
 
+    // 16 KB page size support (Android 15+)
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     // Workaround for Flutter Gradle Plugin + AGP 8.x race condition
     // libs.jar must exist before JetifyTransform runs
     applicationVariants.configureEach { variant ->

@@ -3,7 +3,7 @@
 
 import 'dart:io';
 
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
@@ -26,10 +26,10 @@ class DbInspectorService {
 
     // ── Isar ──────────────────────────────────────────────────────────────
     try {
-      final isar = IsarDatabaseService();
+      final isar = SqliteDatabaseService();
       final notes      = await isar.getAllNotes();
       final categories = await isar.getAllCategories();
-      final deletedIds = await IsarDatabaseService.getDeletedNoteIds();
+      final deletedIds = await SqliteDatabaseService.getDeletedNoteIds();
 
       // عدد كل الـ versions
       int totalVersions = 0;

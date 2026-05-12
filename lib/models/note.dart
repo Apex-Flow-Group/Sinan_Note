@@ -1,60 +1,27 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/models/exceptions.dart';
-import 'package:isar/isar.dart';
 
-part 'note.g.dart';
-
-@collection
 class Note {
-  Id? id = Isar.autoIncrement;
-  
-  @Index(type: IndexType.value)
+  int? id;
   late String title;
-  
-  @Index(type: IndexType.value)
   late String content;
-  
-  // Normalized fields for smart Arabic search
-  @Index(type: IndexType.value)
   late String normalizedTitle;
-  
-  @Index(type: IndexType.value)
   late String normalizedContent;
-  
   late DateTime createdAt;
   late DateTime updatedAt;
-  
-  @Index()
   late int colorIndex;
-  
-  @Index()
   late bool isArchived;
-  
-  @Index()
   late bool isTrashed;
-  
-  @Index()
   DateTime? reminderDateTime;
-  
-  @Index()
   late bool isLocked;
-  
-  @Index()
   late String noteType;
-  
   String? recurrenceRule;
   late bool isCompleted;
   late bool isProfessional;
-  
-  @Index()
   late bool isPinned;
-  
   late bool isChecklist;
-
   List<int> categoryIds;
-
-  @Index()
   late bool isHiddenFromHome;
 
   Note({
@@ -107,7 +74,7 @@ class Note {
 
   /// Immutable copy with updated fields
   Note copyWith({
-    Id? id,
+    int? id,
     String? title,
     String? content,
     DateTime? createdAt,

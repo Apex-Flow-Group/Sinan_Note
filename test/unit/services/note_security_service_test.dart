@@ -1,7 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🔒 NOTE SECURITY SERVICE — اختبارات شاملة
 
+import 'package:apex_note/models/category.dart';
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/note_services/note_db_interface.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
@@ -14,18 +16,38 @@ import '../../test_setup.dart';
 class _MockDb implements NoteDbInterface {
   final Map<int, Note> _store = {};
 
-  @override
-  Future<List<Note>> getLockedNotes() async =>
-      _store.values.where((n) => n.isLocked).toList();
+  @override Future<List<Note>> getLockedNotes() async => _store.values.where((n) => n.isLocked).toList();
+  @override Future<Note?> getNoteById(int id) async => _store[id];
+  @override Future<int> updateNote(Note note) async { _store[note.id!] = note; return note.id!; }
 
-  @override
-  Future<Note?> getNoteById(int id) async => _store[id];
-
-  @override
-  Future<int> updateNote(Note note) async {
-    _store[note.id!] = note;
-    return note.id!;
-  }
+  // ── unused stubs ──
+  @override Future<int>    insertNote(Note n) async => 0;
+  @override Future<bool>   deleteNote(int id) async => false;
+  @override Future<List<Note>> getAllNotes({int? limit, int? offset}) async => [];
+  @override Future<List<Note>> getNotes({int? limit, int? offset}) async => [];
+  @override Future<List<Note>> getArchivedNotes() async => [];
+  @override Future<List<Note>> getTrashedNotes() async => [];
+  @override Future<List<Note>> searchNotes(String q, {int limit = 100}) async => [];
+  @override Future<int>    archiveNote(int id) async => 0;
+  @override Future<int>    unarchiveNote(int id) async => 0;
+  @override Future<int>    trashNote(int id) async => 0;
+  @override Future<int>    restoreNote(int id) async => 0;
+  @override Future<List<Note>> getUpcomingReminders() async => [];
+  @override Future<List<Note>> getNotesForWidget() async => [];
+  @override Future<List<Note>> getScheduledReminders() async => [];
+  @override Future<List<Note>> getExpiredReminders() async => [];
+  @override Future<void>   logNoteVersion(v) async {}
+  @override Future<List<NoteVersion>> getNoteHistory(int id) async => [];
+  @override Future<NoteVersion?>   getLastNoteVersion(int id) async => null;
+  @override Future<void>   keepMaxVersions(int id, int max) async {}
+  @override Future<int>    deleteNoteVersions(int id) async => 0;
+  @override Future<List<NoteCategory>> getAllCategories() async => [];
+  @override Future<int>    insertCategory(NoteCategory cat) async => 0;
+  @override Future<void>   updateCategory(NoteCategory cat) async {}
+  @override Future<void>   deleteCategory(int id) async {}
+  @override Future<void>   closeDB() async {}
+  @override Future<void>   reopenDatabase() async {}
+  @override Future<void>   runLegacyHistoryCleanup() async {}
 
   void seed(Note note) => _store[note.id!] = note;
 }

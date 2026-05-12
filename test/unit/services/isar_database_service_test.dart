@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_setup.dart';
@@ -11,11 +11,11 @@ void main() {
     initializeTestEnvironment();
   });
 
-  group('IsarDatabaseService', () {
-    late IsarDatabaseService db;
+  group('SqliteDatabaseService', () {
+    late SqliteDatabaseService db;
 
     setUp(() {
-      db = IsarDatabaseService();
+      db = SqliteDatabaseService();
     });
 
     tearDown(() async {

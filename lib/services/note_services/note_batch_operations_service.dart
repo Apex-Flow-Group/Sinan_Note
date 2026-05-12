@@ -2,10 +2,10 @@
 
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
 import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 
 class NoteBatchOperationsService {
-  final IsarDatabaseService _dbService;
+  final SqliteDatabaseService _dbService;
   final NoteStateService _stateService;
   final NoteSideEffectService _sideEffectService;
 

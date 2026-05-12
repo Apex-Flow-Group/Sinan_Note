@@ -7,34 +7,39 @@ import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sqflite/sqflite.dart';
 
 class BackupService {
   String _backupFileName() {
     final now = DateTime.now();
-    return 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.sinannote';
+    return 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}.db';
   }
 
-  Future<String> _getIsarFilePath() async {
+  Future<String> _getDbFilePath() async {
+    if (Platform.isAndroid) {
+      final dbDir = await getDatabasesPath();
+      return join(dbDir, 'sinan_notes.db');
+    }
     final dir = await getApplicationDocumentsDirectory();
-    return join(dir.path, 'sinan_notes.isar');
+    return join(dir.path, 'sinan_notes.db');
   }
 
   Future<void> exportDatabase() async {
     await ApexErrorManager.monitorCritical(() async {
-      final isarPath = await _getIsarFilePath();
-      if (!await File(isarPath).exists())
+      final dbPath = await _getDbFilePath();
+      if (!await File(dbPath).exists())
         // ignore: curly_braces_in_flow_control_structures
         throw Exception('ملف قاعدة البيانات غير موجود');
 
       final fileName = _backupFileName();
       final tempDir = await getTemporaryDirectory();
       final tempPath = join(tempDir.path, fileName);
-      await File(isarPath).copy(tempPath);
+      await File(dbPath).copy(tempPath);
 
       final params = SaveFileDialogParams(
         sourceFilePath: tempPath,
@@ -48,29 +53,29 @@ class BackupService {
 
   Future<String> exportDatabaseToPath(String directoryPath) async {
     return await ApexErrorManager.monitorCritical(() async {
-      final isarPath = await _getIsarFilePath();
-      if (!await File(isarPath).exists()) {
+      final dbPath = await _getDbFilePath();
+      if (!await File(dbPath).exists()) {
         throw Exception('ملف قاعدة البيانات غير موجود');
       }
 
       final fileName = _backupFileName();
       final outputPath = join(directoryPath, fileName);
-      await File(isarPath).copy(outputPath);
+      await File(dbPath).copy(outputPath);
       return outputPath;
     }, 'Backup_ExportToPath');
   }
 
   Future<void> shareDatabase() async {
     try {
-      final isarPath = await _getIsarFilePath();
-      if (!await File(isarPath).exists()) {
+      final dbPath = await _getDbFilePath();
+      if (!await File(dbPath).exists()) {
         throw Exception('ملف قاعدة البيانات غير موجود');
       }
 
       final fileName = _backupFileName();
       final tempDir = await getTemporaryDirectory();
       final tempPath = join(tempDir.path, fileName);
-      await File(isarPath).copy(tempPath);
+      await File(dbPath).copy(tempPath);
 
       await Share.shareXFiles(
         [XFile(tempPath, mimeType: 'application/octet-stream', name: fileName)],
@@ -84,7 +89,7 @@ class BackupService {
 
   Future<int> checkLocalNotesCount() async {
     try {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final notes = await dbService.getAllNotes();
       return notes.length;
     } catch (e) {
@@ -129,18 +134,18 @@ class BackupService {
         notesData = jsonData;
       }
 
-      final dbService = IsarDatabaseService();
-      final isar = await dbService.database;
+      final dbService = SqliteDatabaseService();
 
       // Clear and insert notes
-      await isar.writeTxn(() async {
-        await isar.notes.clear();
-        for (var noteMap in notesData) {
-          final note = Note.fromMap(noteMap);
-          note.updatedAt = DateTime.now();
-          await isar.notes.put(note);
-        }
-      });
+      final existing = await dbService.getAllNotes();
+      for (final n in existing) {
+        if (n.id != null) await dbService.deleteNote(n.id!);
+      }
+      for (var noteMap in notesData) {
+        final note = Note.fromMap(noteMap);
+        note.updatedAt = DateTime.now();
+        await dbService.insertNote(note);
+      }
 
       AppLogger.debug(
           '[Replace] Database replaced with ${notesData.length} notes');
@@ -173,18 +178,15 @@ class BackupService {
         notesData = jsonData;
       }
 
-      final dbService = IsarDatabaseService();
-      final isar = await dbService.database;
+      final dbService = SqliteDatabaseService();
 
       int merged = 0;
-      await isar.writeTxn(() async {
-        for (var noteMap in notesData) {
-          final note = Note.fromMap(noteMap);
-          note.updatedAt = DateTime.now();
-          await isar.notes.put(note);
-          merged++;
-        }
-      });
+      for (var noteMap in notesData) {
+        final note = Note.fromMap(noteMap);
+        note.updatedAt = DateTime.now();
+        await dbService.insertNote(note);
+        merged++;
+      }
 
       AppLogger.debug('[Merge] Merged $merged notes');
       return merged;
@@ -193,7 +195,7 @@ class BackupService {
 
   Future<(String, int)> prepareSanitizedDatabase() async {
     return await ApexErrorManager.monitorCritical(() async {
-      final dbService = IsarDatabaseService();
+      final dbService = SqliteDatabaseService();
       final allNotes = await dbService.getAllNotes();
 
       final unlockedNotes = allNotes.where((n) => !n.isLocked).toList();

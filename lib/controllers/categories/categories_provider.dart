@@ -1,13 +1,13 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 import 'package:apex_note/models/category.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/isar_database_service.dart';
+import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const int kMaxCategories = 20;
 const int kMaxCategoryNameLength = 20;
-const int kProCategoryId = -1; // ID ثابت للكتالوج المحترف (virtual)
+const int kProCategoryId = -1;
 
 class CategoriesProvider extends ChangeNotifier {
   List<NoteCategory> _categories = [];
@@ -24,9 +24,8 @@ class CategoriesProvider extends ChangeNotifier {
   void setHideProFromHome(bool value) {
     _hideProFromHome = value;
     notifyListeners();
-    SharedPreferences.getInstance().then(
-      (p) => p.setBool('hide_pro_from_home', value),
-    );
+    SharedPreferences.getInstance()
+        .then((p) => p.setBool('hide_pro_from_home', value));
   }
 
   CategoriesProvider() {
@@ -37,9 +36,7 @@ class CategoriesProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _hideProFromHome = prefs.getBool('hide_pro_from_home') ?? false;
     await _load();
-    if (_categories.isEmpty) {
-      await _seedDefaults(null);
-    }
+    if (_categories.isEmpty) await _seedDefaults(null);
     _isLoading = false;
     notifyListeners();
   }
@@ -51,29 +48,21 @@ class CategoriesProvider extends ChangeNotifier {
   }
 
   Future<void> _load() async {
-    await IsarDatabaseService.initialize();
-    final isar = await IsarDatabaseService().database;
-    final all =
-        await isar.noteCategorys.filter().sortOrderGreaterThan(-1).findAll();
+    final db = SqliteDatabaseService();
+    final all = await db.getAllCategories();
     all.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     // حذف المكررات بناءً على الاسم
     final seen = <String>{};
-    final duplicateIds = <int>[];
     final unique = <NoteCategory>[];
     for (final cat in all) {
       final key = cat.name.trim().toLowerCase();
-      if (seen.contains(key)) {
-        duplicateIds.add(cat.id);
-      } else {
+      if (!seen.contains(key)) {
         seen.add(key);
         unique.add(cat);
+      } else {
+        await db.deleteCategory(cat.id);
       }
-    }
-    if (duplicateIds.isNotEmpty) {
-      await isar.writeTxn(() async {
-        await isar.noteCategorys.deleteAll(duplicateIds);
-      });
     }
 
     _categories = unique;
@@ -82,66 +71,53 @@ class CategoriesProvider extends ChangeNotifier {
 
   Future<void> _seedDefaults(List<String>? names) async {
     final defaults = names ?? ['Work', 'Personal', 'Ideas', 'Tasks'];
-    final isar = await IsarDatabaseService().database;
-    await isar.writeTxn(() async {
-      for (int i = 0; i < defaults.length; i++) {
-        await isar.noteCategorys.put(
-          NoteCategory(name: defaults[i], sortOrder: i),
-        );
-      }
-    });
+    final db = SqliteDatabaseService();
+    for (int i = 0; i < defaults.length; i++) {
+      await db.insertCategory(NoteCategory(name: defaults[i], sortOrder: i));
+    }
     await _load();
   }
 
   Future<bool> addCategory(String name) async {
     if (_categories.length >= kMaxCategories) return false;
     final trimmed = name.trim();
-    if (trimmed.isEmpty) return false;
-    if (trimmed.length > kMaxCategoryNameLength) return false;
+    if (trimmed.isEmpty || trimmed.length > kMaxCategoryNameLength) return false;
 
-    // الحل لمشكلة الترتيب: أخذ الترتيب الأخير + 1
     final nextSortOrder =
         _categories.isEmpty ? 0 : _categories.last.sortOrder + 1;
-
-    final isar = await IsarDatabaseService().database;
-    await isar.writeTxn(() async {
-      await isar.noteCategorys.put(
-        NoteCategory(name: trimmed, sortOrder: nextSortOrder),
-      );
-    });
+    await SqliteDatabaseService()
+        .insertCategory(NoteCategory(name: trimmed, sortOrder: nextSortOrder));
     await _load();
     return true;
   }
 
   Future<void> renameCategory(int id, String newName) async {
     final trimmed = newName.trim();
-    if (trimmed.isEmpty) return;
-    if (trimmed.length > kMaxCategoryNameLength) return;
-    final isar = await IsarDatabaseService().database;
-    final cat = await isar.noteCategorys.get(id);
-    if (cat == null) return;
+    if (trimmed.isEmpty || trimmed.length > kMaxCategoryNameLength) return;
+    final cat = _categories.firstWhere((c) => c.id == id,
+        orElse: () => NoteCategory(id: id, name: trimmed));
     cat.name = trimmed;
-    await isar.writeTxn(() => isar.noteCategorys.put(cat));
+    await SqliteDatabaseService().updateCategory(cat);
     await _load();
   }
 
   Future<void> deleteCategory(int id) async {
-    final isar = await IsarDatabaseService().database;
+    final db = SqliteDatabaseService();
 
-    // أزل الـ id من جميع الملاحظات التي تحمله لتجنب orphan IDs
-    final notesWithCat =
-        await isar.notes.filter().categoryIdsElementEqualTo(id).findAll();
-    if (notesWithCat.isNotEmpty) {
-      await isar.writeTxn(() async {
-        for (final note in notesWithCat) {
-          note.categoryIds = note.categoryIds.where((i) => i != id).toList();
-          if (note.categoryIds.isEmpty) note.isHiddenFromHome = false;
-          await isar.notes.put(note);
-        }
-      });
+    // أزل الـ id من جميع الملاحظات التي تحمله
+    final allNotes = await db.getAllNotes();
+    for (final note in allNotes) {
+      if (note.categoryIds.contains(id)) {
+        final updated = note.copyWith(
+          categoryIds: note.categoryIds.where((i) => i != id).toList(),
+          isHiddenFromHome:
+              note.categoryIds.length == 1 ? false : note.isHiddenFromHome,
+        );
+        await db.updateNote(updated);
+      }
     }
 
-    await isar.writeTxn(() => isar.noteCategorys.delete(id));
+    await db.deleteCategory(id);
     if (_selectedCategoryId == id) _selectedCategoryId = null;
     await _load();
   }
@@ -151,8 +127,5 @@ class CategoriesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Reload categories from database (e.g., after sync)
-  Future<void> refreshCategories() async {
-    await _load();
-  }
+  Future<void> refreshCategories() async => await _load();
 }
