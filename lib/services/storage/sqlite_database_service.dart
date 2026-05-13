@@ -20,7 +20,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   static Completer<Database>? _initCompleter;
 
   static const _dbName = 'sinan_notes.db';
-  static const _dbVersion = 3;
+  static const _dbVersion = 4;
 
   factory SqliteDatabaseService() {
     _instance ??= SqliteDatabaseService._();
@@ -64,7 +64,14 @@ class SqliteDatabaseService implements NoteDbInterface {
         path,
         version: _dbVersion,
         onCreate: (db, _) => _createTables(db),
-        onUpgrade: (db, _, __) => _createTables(db),
+        onUpgrade: (db, oldVersion, newVersion) async {
+          // Always ensure tables exist
+          await _createTables(db);
+          // v4: add noteType column to note_versions if missing
+          if (oldVersion < 4) {
+            await _migrateToV4(db);
+          }
+        },
       );
       _initCompleter!.complete(_db!);
     } catch (e) {
@@ -153,6 +160,22 @@ class SqliteDatabaseService implements NoteDbInterface {
         'CREATE INDEX IF NOT EXISTS idx_notes_reminder  ON notes (reminderDateTime)');
     await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_versions_noteId ON note_versions (noteId)');
+  }
+
+  /// v4 migration: add noteType column to note_versions if it doesn't exist.
+  /// Needed for devices that had the old NativeDbMigrationService schema.
+  static Future<void> _migrateToV4(Database db) async {
+    try {
+      final cols = await db.rawQuery('PRAGMA table_info(note_versions)');
+      final hasNoteType = cols.any((c) => c['name'] == 'noteType');
+      if (!hasNoteType) {
+        await db.execute(
+          "ALTER TABLE note_versions ADD COLUMN noteType TEXT NOT NULL DEFAULT 'simple'",
+        );
+      }
+    } catch (_) {
+      // If migration fails, the table will be recreated on next onCreate
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

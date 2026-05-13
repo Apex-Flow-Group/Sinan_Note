@@ -7,6 +7,7 @@ import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_conflict_w
 import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_progress_widget.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_sign_in_widget.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_success_widget.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -53,12 +54,11 @@ class _GoogleDriveSyncPageContentState
   void _handleSnackBar() {
     final controller = context.read<GoogleDriveSyncController>();
     if (controller.snackBarMessage != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(controller.snackBarMessage!),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 4),
-        ),
+      UnifiedNotificationService().show(
+        context: context,
+        message: controller.snackBarMessage!,
+        type: NotificationType.warning,
+        duration: const Duration(seconds: 4),
       );
       controller.consumeSnackBar();
     }

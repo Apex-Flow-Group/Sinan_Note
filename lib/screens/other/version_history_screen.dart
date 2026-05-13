@@ -43,7 +43,9 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _ctrl.addListener(() { if (mounted) setState(() {}); });
+    _ctrl.addListener(() {
+      if (mounted) setState(() {});
+    });
     _ctrl.loadNotes();
     _loadColWidths();
     _searchController.addListener(() {
@@ -62,8 +64,11 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   Future<void> _loadColWidths() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _notesColWidth = (prefs.getDouble(_kPrefNotesWidth) ?? kColDefaultNotes).clamp(kColMin, kColMax);
-      _versionsColWidth = (prefs.getDouble(_kPrefVersionsWidth) ?? kColDefaultVersions).clamp(kColMin, kColMax);
+      _notesColWidth = (prefs.getDouble(_kPrefNotesWidth) ?? kColDefaultNotes)
+          .clamp(kColMin, kColMax);
+      _versionsColWidth =
+          (prefs.getDouble(_kPrefVersionsWidth) ?? kColDefaultVersions)
+              .clamp(kColMin, kColMax);
     });
   }
 
@@ -75,22 +80,134 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
 
   void _animateToPage(int page) {
     _pageController.animateToPage(page,
-        duration: const Duration(milliseconds: 320), curve: Curves.easeInOutCubic);
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeInOutCubic);
   }
 
   Future<void> _onRestoreVersion(NoteVersion version, Note note) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.confirmRestore),
-        content: Text(l10n.restoreWarning),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.restore)),
-        ],
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? scheme.surfaceContainerLow : scheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          16,
+          24,
+          24 + MediaQuery.of(ctx).padding.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.restore_rounded,
+                  color: Colors.orange, size: 32),
+            ),
+            const SizedBox(height: 16),
+            // Title
+            Text(
+              l10n.confirmRestore,
+              style: Theme.of(ctx)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            // Version info
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.history_rounded,
+                      size: 16, color: Colors.orange),
+                  const SizedBox(width: 6),
+                  Text(
+                    version.title.isEmpty ? l10n.untitled : version.title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Warning text
+            Text(
+              l10n.restoreWarning,
+              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    icon: const Icon(Icons.restore_rounded, size: 18),
+                    label: Text(l10n.restore),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
+
     if (!mounted || confirmed != true) return;
     await _ctrl.restoreVersion(
       version,
@@ -130,47 +247,54 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: () {}),
         body: Column(
           children: [
-            Builder(builder: (ctx) => SearchableHeader(
-              title: l10n.noteHistory,
-              icon: Icons.history_rounded,
-              isSearching: _isSearching,
-              searchController: _searchController,
-              onSearchChange: (q) => setState(() => _ctrl.searchQuery = q.toLowerCase()),
-              onToggleSearch: () => setState(() {
-                _isSearching = !_isSearching;
-                if (!_isSearching) _searchController.clear();
-              }),
-              leading: Builder(
-                builder: (ctx) => IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => Scaffold.of(ctx).openDrawer(),
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(_viewType == ViewType.listExpanded
-                        ? Icons.view_headline
-                        : Icons.view_agenda_outlined, size: 22),
-                    onPressed: () => setState(() {
-                      _viewType = _viewType == ViewType.listExpanded
-                          ? ViewType.listCompact
-                          : ViewType.listExpanded;
-                    }),
-                  ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.sort),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    onSelected: (v) => setState(() => _ctrl.sortBy = v),
-                    itemBuilder: (_) => [
-                      _sortMenuItem(context, 'date', Icons.access_time, l10n.sortByDate),
-                      _sortMenuItem(context, 'title', Icons.sort_by_alpha, l10n.sortByTitle),
-                    ],
-                  ),
-                ],
-              ),
-            )),
+            Builder(
+                builder: (ctx) => SearchableHeader(
+                      title: l10n.noteHistory,
+                      icon: Icons.history_rounded,
+                      isSearching: _isSearching,
+                      searchController: _searchController,
+                      onSearchChange: (q) =>
+                          setState(() => _ctrl.searchQuery = q.toLowerCase()),
+                      onToggleSearch: () => setState(() {
+                        _isSearching = !_isSearching;
+                        if (!_isSearching) _searchController.clear();
+                      }),
+                      leading: Builder(
+                        builder: (ctx) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(ctx).openDrawer(),
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                                _viewType == ViewType.listExpanded
+                                    ? Icons.view_headline
+                                    : Icons.view_agenda_outlined,
+                                size: 22),
+                            onPressed: () => setState(() {
+                              _viewType = _viewType == ViewType.listExpanded
+                                  ? ViewType.listCompact
+                                  : ViewType.listExpanded;
+                            }),
+                          ),
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.sort),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            onSelected: (v) => setState(() => _ctrl.sortBy = v),
+                            itemBuilder: (_) => [
+                              _sortMenuItem(context, 'date', Icons.access_time,
+                                  l10n.sortByDate),
+                              _sortMenuItem(context, 'title',
+                                  Icons.sort_by_alpha, l10n.sortByTitle),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )),
             Expanded(
               child: _ctrl.isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -190,16 +314,20 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         ? Theme.of(context).colorScheme.surfaceContainerLow
         : Theme.of(context).colorScheme.surfaceContainerLowest;
     final diffPanelColor = _ctrl.selectedNote != null
-        ? AppColorPalette.palette[_ctrl.selectedNote!.colorIndex].getColor(Theme.of(context).brightness)
+        ? AppColorPalette.palette[_ctrl.selectedNote!.colorIndex]
+            .getColor(Theme.of(context).brightness)
         : panelColor;
 
     BoxDecoration panelDeco(Color color) => BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
-            blurRadius: 6, offset: const Offset(0, 2),
-          )],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            )
+          ],
         );
 
     return Padding(
@@ -215,7 +343,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
             ),
           ),
           ResizableDivider(
-            onDrag: (dx) => setState(() => _notesColWidth = (_notesColWidth + dx).clamp(kColMin, kColMax)),
+            onDrag: (dx) => setState(() =>
+                _notesColWidth = (_notesColWidth + dx).clamp(kColMin, kColMax)),
             onDragEnd: _saveColWidths,
           ),
           AnimatedSize(
@@ -234,7 +363,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           ),
           if (_ctrl.selectedNote != null)
             ResizableDivider(
-              onDrag: (dx) => setState(() => _versionsColWidth = (_versionsColWidth + dx).clamp(kColMin, kColMax)),
+              onDrag: (dx) => setState(() => _versionsColWidth =
+                  (_versionsColWidth + dx).clamp(kColMin, kColMax)),
               onDragEnd: _saveColWidths,
             ),
           Expanded(
@@ -246,14 +376,21 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                     : 'hint_${_ctrl.selectedNote != null}'),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  decoration: panelDeco(_ctrl.selectedVersion != null ? diffPanelColor : panelColor),
+                  decoration: panelDeco(_ctrl.selectedVersion != null
+                      ? diffPanelColor
+                      : panelColor),
                   child: _ctrl.selectedVersion != null
                       ? _buildDiffPanel(isWide: true)
-                      : _buildEmptyHint(context,
-                          _ctrl.selectedNote != null ? Icons.compare_arrows_outlined : Icons.touch_app_outlined,
+                      : _buildEmptyHint(
+                          context,
                           _ctrl.selectedNote != null
-                              ? AppLocalizations.of(context)!.selectVersionToViewDiff
-                              : AppLocalizations.of(context)!.selectNoteToViewHistory),
+                              ? Icons.compare_arrows_outlined
+                              : Icons.touch_app_outlined,
+                          _ctrl.selectedNote != null
+                              ? AppLocalizations.of(context)!
+                                  .selectVersionToViewDiff
+                              : AppLocalizations.of(context)!
+                                  .selectNoteToViewHistory),
                 ),
               ),
             ),
@@ -269,7 +406,9 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildNotesPanel(isWide: false),
-        _ctrl.selectedNote != null ? _buildVersionsPanel(isWide: false) : const SizedBox.shrink(),
+        _ctrl.selectedNote != null
+            ? _buildVersionsPanel(isWide: false)
+            : const SizedBox.shrink(),
         _ctrl.selectedNote != null && _ctrl.selectedVersion != null
             ? _buildDiffPanel(isWide: false)
             : const SizedBox.shrink(),
@@ -317,29 +456,36 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         },
       );
 
-  Widget _buildEmptyHint(BuildContext context, IconData icon, String message) => Center(
+  Widget _buildEmptyHint(BuildContext context, IconData icon, String message) =>
+      Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 56, color: Colors.grey[400]),
             const SizedBox(height: 16),
-            Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[500], fontSize: 15)),
           ],
         ),
       );
 
-  PopupMenuItem<String> _sortMenuItem(BuildContext context, String value, IconData icon, String label) {
+  PopupMenuItem<String> _sortMenuItem(
+      BuildContext context, String value, IconData icon, String label) {
     final isSelected = _ctrl.sortBy == value;
     return PopupMenuItem(
       value: value,
       child: Row(
         children: [
-          Icon(icon, size: 20, color: isSelected ? Theme.of(context).colorScheme.primary : null),
+          Icon(icon,
+              size: 20,
+              color: isSelected ? Theme.of(context).colorScheme.primary : null),
           const SizedBox(width: 12),
           Text(label),
           if (isSelected) ...[
             const Spacer(),
-            Icon(Icons.check, size: 20, color: Theme.of(context).colorScheme.primary),
+            Icon(Icons.check,
+                size: 20, color: Theme.of(context).colorScheme.primary),
           ],
         ],
       ),

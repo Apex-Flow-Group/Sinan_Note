@@ -4,6 +4,7 @@ import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/category.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,7 +30,16 @@ class CategoriesPanel extends StatefulWidget {
 
 class _CategoriesPanelState extends State<CategoriesPanel> {
   // ألوان الكتالوجات — من نظام الألوان الديناميكي (adaptive light/dark)
-  static const _catColorIndices = [8, 2, 5, 10, 3, 6, 9, 11]; // Blue, Red, Green, Pink, Orange, Teal, Purple, Brown
+  static const _catColorIndices = [
+    8,
+    2,
+    5,
+    10,
+    3,
+    6,
+    9,
+    11
+  ]; // Blue, Red, Green, Pink, Orange, Teal, Purple, Brown
 
   Color _catColor(int index, Brightness brightness) {
     final paletteIndex = _catColorIndices[index % _catColorIndices.length];
@@ -79,18 +89,13 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
       _addCtrl.clear();
       widget.onAddDone();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isArabic
-                ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
-                : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
-            style: const TextStyle(fontSize: 13),
-          ),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+      UnifiedNotificationService().show(
+        context: context,
+        message: isArabic
+            ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
+            : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
+        type: NotificationType.info,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
@@ -99,15 +104,11 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
     widget.onAddDone();
     if (!success && mounted) {
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      UnifiedNotificationService().show(
+        context: context,
+        message:
             isAr ? '⚠️ اسم غير صالح أو مكرر' : '⚠️ Invalid or duplicate name',
-            style: const TextStyle(fontSize: 13),
-          ),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+        type: NotificationType.error,
       );
     }
   }
@@ -219,8 +220,8 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                 controller: _addCtrl,
                 focusNode: _addFocus,
                 scheme: scheme,
-                accentColor:
-                    _catColor(provider.categories.length, Theme.of(context).brightness),
+                accentColor: _catColor(
+                    provider.categories.length, Theme.of(context).brightness),
                 onSubmit: () => _commitAdd(provider),
                 onCancel: widget.onAddDone,
               ),
@@ -358,7 +359,8 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CategoriesProvider>();
-    final proColor = AppColorPalette.palette[6].getColor(Theme.of(context).brightness);
+    final proColor =
+        AppColorPalette.palette[6].getColor(Theme.of(context).brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: Column(
@@ -381,8 +383,7 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color:
-                      proColor.withValues(alpha: widget.isDark ? 0.2 : 0.12),
+                  color: proColor.withValues(alpha: widget.isDark ? 0.2 : 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.workspace_premium_rounded,
@@ -393,8 +394,7 @@ class _ProCategoryTileState extends State<_ProCategoryTile> {
                 style: TextStyle(
                   fontWeight:
                       widget.isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color:
-                      widget.isSelected ? proColor : widget.scheme.onSurface,
+                  color: widget.isSelected ? proColor : widget.scheme.onSurface,
                 ),
               ),
               trailing: GestureDetector(

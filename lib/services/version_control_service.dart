@@ -9,9 +9,9 @@ import 'package:crypto/crypto.dart';
 /// Ultra-Smart Version Control Service
 /// Philosophy: ONE meaningful version per editing session
 class VersionControlService {
-  // Ultra-strict settings
-  static const int _minSignificantChange = 100; // 100 chars minimum
-  static const double _minChangePercentage = 0.10; // 10% change minimum
+  // Smart settings — balanced for real usage
+  static const int _minSignificantChange = 20; // 20 chars minimum
+  static const double _minChangePercentage = 0.05; // 5% change minimum
   static const int _maxVersionsPerNote = 5; // Keep only 5 versions max
 
   // Session tracking (in-memory)
@@ -32,6 +32,7 @@ class VersionControlService {
     required String title,
     required String content,
     bool isLocked = false,
+    String noteType = 'simple',
   }) async {
     // 🔒 SECURITY: Never save locked notes
     if (isLocked) {
@@ -57,6 +58,13 @@ class VersionControlService {
     final lastVersion = await _db.getLastNoteVersion(noteId);
 
     if (lastVersion != null) {
+      // Check if content is same as last saved version
+      final lastHash = _generateHash(lastVersion.title + lastVersion.content);
+      if (currentHash == lastHash) {
+        _cleanupSession(noteId);
+        return;
+      }
+
       // Calculate semantic difference
       final significance = _calculateSignificance(
         oldTitle: lastVersion.title,
@@ -79,6 +87,7 @@ class VersionControlService {
       content: content,
       timestamp: DateTime.now(),
       action: 'session_end',
+      noteType: noteType,
     );
 
     await _db.logNoteVersion(newVersion);
@@ -125,7 +134,7 @@ class VersionControlService {
     final totalWordChange = addedWords + removedWords;
 
     // Significant word change?
-    if (totalWordChange > 10) {
+    if (totalWordChange > 3) {
       return _ChangeSignificance(
         isSignificant: true,
         reason: '$totalWordChange words changed (+$addedWords, -$removedWords)',

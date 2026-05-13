@@ -14,6 +14,7 @@ import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/categories_panel.dart';
 import 'package:apex_note/widgets/home/drawer_widgets.dart';
 import 'package:flutter/material.dart';
@@ -407,19 +408,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                                       .categories
                                       .length >=
                                   kMaxCategories) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(
-                                  content: Text(
-                                    isArabic
-                                        ? 'ًںژ¯ ظˆطµظ„طھ ظ„ظ„ط­ط¯ ط§ظ„ط£ظ‚طµظ‰! 20 ظƒطھط§ظ„ظˆط¬ ظٹظƒظپظٹ ظ„طھظ†ط¸ظٹظ… ط§ظ„ط¹ط§ظ„ظ… ظƒظ„ظ‡ ًںک„'
-                                        : 'ًںژ¯ Max reached! 20 catalogs is enough to organize the whole world ًںک„',
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                  behavior: SnackBarBehavior.floating,
+                                UnifiedNotificationService().show(
+                                  context: context,
+                                  message: isArabic
+                                      ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
+                                      : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
+                                  type: NotificationType.info,
                                   duration: const Duration(seconds: 3),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                ));
+                                );
                                 return;
                               }
                               setState(() {

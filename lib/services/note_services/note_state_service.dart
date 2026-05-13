@@ -161,6 +161,7 @@ class NoteStateService {
     _allNotes =
         _allNotes.map((n) => ids.contains(n.id) ? transform(n) : n).toList();
     _invalidateCache();
+    _silentSync();
   }
 
   void dispose() {

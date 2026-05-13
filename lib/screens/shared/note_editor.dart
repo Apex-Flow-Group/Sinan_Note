@@ -12,6 +12,7 @@ import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_hand
 import 'package:apex_note/screens/shared/note_editor/state/editor_save_operations.dart';
 import 'package:apex_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/services/version_control_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -54,9 +55,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   late bool _isReadOnly;
 
   static bool _looksLikeMarkdown(String text) => RegExp(
-    r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
-    multiLine: true,
-  ).hasMatch(text);
+        r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
+        multiLine: true,
+      ).hasMatch(text);
   late NoteMode _currentMode;
   Note? _currentNote;
   bool _isQuillReady = false;
@@ -87,6 +88,17 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     _coordinator.initialize(context);
     _isReadOnly = widget.readOnly;
+
+    // Start version control session for existing notes
+    if (widget.note != null &&
+        widget.note!.id != null &&
+        !widget.note!.isLocked) {
+      VersionControlService().startEditingSession(
+        widget.note!.id!,
+        widget.note!.title,
+        widget.note!.content,
+      );
+    }
     // ظ„ظ„ظ†ظˆطھط§طھ ط§ظ„ط·ظˆظٹظ„ط©: ط£ط¹ط¯ ط¨ظ†ط§ط، QuillController ظپظٹ isolate ط¨ط¹ط¯ ط£ظˆظ„ frame
     // ظ‡ط°ط§ ظٹظ…ظ†ط¹ ط§ظ„طھط¬ظ…ط¯ ط¹ظ†ط¯ ظپطھط­ ظ†ظˆطھط§طھ > 5000 ط­ط±ظپ
     if (widget.mode == NoteMode.simple ||
@@ -147,12 +159,59 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   @override
   void dispose() {
+    // End version control session to save history (fire-and-forget)
+    _endVersionSession();
     _quillChangesSubscription?.cancel();
     _coordinator.quillController?.removeListener(_onQuillSelectionChanged);
     _selectionBarActive.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _coordinator.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      // Save version history when app goes to background
+      _endVersionSession();
+    } else if (state == AppLifecycleState.resumed) {
+      // Restart session when app comes back
+      final noteId = _coordinator.savedNoteId ?? widget.note?.id;
+      if (noteId != null && !_coordinator.initialLockState) {
+        final content = _currentMode == NoteMode.code
+            ? _coordinator.codeController!.text
+            : (_currentMode == NoteMode.checklist
+                ? _coordinator.contentController.text
+                : (_coordinator.quillController != null
+                    ? QuillMigration.toDeltaJson(_coordinator.quillController!)
+                    : ''));
+        final title = _coordinator.getCurrentTitle('');
+        VersionControlService().startEditingSession(noteId, title, content);
+      }
+    }
+  }
+
+  /// End the version control session, saving history if there were significant changes
+  Future<void> _endVersionSession() async {
+    final noteId = _coordinator.savedNoteId ?? widget.note?.id;
+    if (noteId == null || _coordinator.initialLockState) return;
+
+    final content = _currentMode == NoteMode.code
+        ? (_coordinator.codeController?.text ?? '')
+        : (_currentMode == NoteMode.checklist
+            ? _coordinator.contentController.text
+            : (_coordinator.quillController != null
+                ? QuillMigration.toDeltaJson(_coordinator.quillController!)
+                : ''));
+    final title = _coordinator.getCurrentTitle('');
+
+    await VersionControlService().endEditingSession(
+      noteId: noteId,
+      title: title,
+      content: content,
+      isLocked: _coordinator.initialLockState,
+    );
   }
 
   // ==================== DIALOG METHODS ====================
@@ -407,6 +466,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       await _saveNoteToDatabase(isManualSave: true);
     }
 
+    // End version control session — saves history for significant changes
+    await _endVersionSession();
+
     if (hasContent && wasSaved && mounted) {
       final l10n = AppLocalizations.of(context);
       UnifiedNotificationService().show(
@@ -471,7 +533,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   _onQuillContentChanged();
                   _updateUndoRedoState();
                 });
-                _coordinator.quillController!.addListener(_onQuillSelectionChanged);
+                _coordinator.quillController!
+                    .addListener(_onQuillSelectionChanged);
               }
             }
           } else {
@@ -591,7 +654,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   ).convert(text);
                   final insertDelta = Delta();
                   if (deleteLen > 0) {
-                    insertDelta..retain(offset)..delete(deleteLen);
+                    insertDelta
+                      ..retain(offset)
+                      ..delete(deleteLen);
                   } else {
                     insertDelta.retain(offset);
                   }
@@ -600,7 +665,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   }
                   ctrl.compose(
                     insertDelta,
-                    TextSelection.collapsed(offset: offset + mdDelta.length - 1),
+                    TextSelection.collapsed(
+                        offset: offset + mdDelta.length - 1),
                     ChangeSource.local,
                   );
                 } else {

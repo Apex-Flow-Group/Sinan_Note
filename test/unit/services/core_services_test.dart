@@ -32,7 +32,9 @@ void main() {
     });
 
     test('compression reduces size for large data', () {
-      final large = '{"notes":${List.generate(100, (i) => '{"id":$i,"title":"Note $i","content":"Content $i repeated many times"}')}}'.replaceAll('}}', '}}');
+      final large =
+          '{"notes":${List.generate(100, (i) => '{"id":$i,"title":"Note $i","content":"Content $i repeated many times"}')}}'
+              .replaceAll('}}', '}}');
       final compressed = CompressionService.compress(large);
       expect(compressed.length, lessThan(large.length));
     });
@@ -42,14 +44,17 @@ void main() {
     });
 
     test('handles Arabic content', () {
-      const arabic = '{"notes":[{"title":"ملاحظة عربية","content":"محتوى عربي طويل نسبياً"}]}';
+      const arabic =
+          '{"notes":[{"title":"ملاحظة عربية","content":"محتوى عربي طويل نسبياً"}]}';
       final compressed = CompressionService.compress(arabic);
       expect(CompressionService.decompress(compressed), arabic);
     });
 
     test('handles special characters', () {
       const special = '{"content":"Hello\\nWorld\\t😀🎉"}';
-      expect(CompressionService.decompress(CompressionService.compress(special)), special);
+      expect(
+          CompressionService.decompress(CompressionService.compress(special)),
+          special);
     });
   });
 
@@ -135,20 +140,26 @@ void main() {
       SqliteDatabaseService.resetInstance();
     });
 
-    Future<int> _insertNote(String title, String content) async {
+    Future<int> insertNote(String title, String content) async {
       return await db.insertNote(Note(
-        title: title, content: content,
-        createdAt: now, updatedAt: now,
+        title: title,
+        content: content,
+        createdAt: now,
+        updatedAt: now,
       ));
     }
 
-    test('startEditingSession + endEditingSession saves version on significant change', () async {
-      final id = await _insertNote('Title', 'Short');
+    test(
+        'startEditingSession + endEditingSession saves version on significant change',
+        () async {
+      final id = await insertNote('Title', 'Short');
       service.startEditingSession(id, 'Title', 'Short');
 
       final longContent = 'A' * 200;
       await service.endEditingSession(
-        noteId: id, title: 'Title', content: longContent,
+        noteId: id,
+        title: 'Title',
+        content: longContent,
       );
 
       final history = await db.getNoteHistory(id);
@@ -156,19 +167,23 @@ void main() {
     });
 
     test('no version saved when content unchanged', () async {
-      final id = await _insertNote('Title', 'Content');
+      final id = await insertNote('Title', 'Content');
       service.startEditingSession(id, 'Title', 'Content');
-      await service.endEditingSession(noteId: id, title: 'Title', content: 'Content');
+      await service.endEditingSession(
+          noteId: id, title: 'Title', content: 'Content');
 
       final history = await db.getNoteHistory(id);
       expect(history, isEmpty);
     });
 
     test('no version saved for locked notes', () async {
-      final id = await _insertNote('Title', 'Content');
+      final id = await insertNote('Title', 'Content');
       service.startEditingSession(id, 'Title', 'Content');
       await service.endEditingSession(
-        noteId: id, title: 'Title', content: 'A' * 200, isLocked: true,
+        noteId: id,
+        title: 'Title',
+        content: 'A' * 200,
+        isLocked: true,
       );
 
       final history = await db.getNoteHistory(id);
@@ -176,10 +191,13 @@ void main() {
     });
 
     test('smartLogVersion saves manual version', () async {
-      final id = await _insertNote('Title', 'Content');
+      final id = await insertNote('Title', 'Content');
       await service.smartLogVersion(
-        noteId: id, title: 'Title', content: 'New Content',
-        isManualAction: true, noteType: 'simple',
+        noteId: id,
+        title: 'Title',
+        content: 'New Content',
+        isManualAction: true,
+        noteType: 'simple',
       );
 
       final history = await db.getNoteHistory(id);
@@ -188,9 +206,11 @@ void main() {
     });
 
     test('smartLogVersion skips non-manual actions', () async {
-      final id = await _insertNote('Title', 'Content');
+      final id = await insertNote('Title', 'Content');
       await service.smartLogVersion(
-        noteId: id, title: 'Title', content: 'New Content',
+        noteId: id,
+        title: 'Title',
+        content: 'New Content',
         isManualAction: false,
       );
 
@@ -198,13 +218,17 @@ void main() {
     });
 
     test('smartLogVersion skips duplicate content', () async {
-      final id = await _insertNote('Title', 'Content');
+      final id = await insertNote('Title', 'Content');
       await service.smartLogVersion(
-        noteId: id, title: 'Title', content: 'Content',
+        noteId: id,
+        title: 'Title',
+        content: 'Content',
         isManualAction: true,
       );
       await service.smartLogVersion(
-        noteId: id, title: 'Title', content: 'Content',
+        noteId: id,
+        title: 'Title',
+        content: 'Content',
         isManualAction: true,
       );
 
@@ -212,25 +236,34 @@ void main() {
     });
 
     test('forceLog saves even duplicate content', () async {
-      final id = await _insertNote('Title', 'Content');
+      final id = await insertNote('Title', 'Content');
       await service.smartLogVersion(
-        noteId: id, title: 'Title', content: 'Content',
-        isManualAction: true, forceLog: true,
+        noteId: id,
+        title: 'Title',
+        content: 'Content',
+        isManualAction: true,
+        forceLog: true,
       );
       await service.smartLogVersion(
-        noteId: id, title: 'Title', content: 'Content',
-        isManualAction: true, forceLog: true,
+        noteId: id,
+        title: 'Title',
+        content: 'Content',
+        isManualAction: true,
+        forceLog: true,
       );
 
       expect((await db.getNoteHistory(id)).length, 2);
     });
 
     test('max 5 versions kept', () async {
-      final id = await _insertNote('Title', 'Content');
+      final id = await insertNote('Title', 'Content');
       for (int i = 0; i < 8; i++) {
         await service.smartLogVersion(
-          noteId: id, title: 'Title $i', content: 'Content $i',
-          isManualAction: true, forceLog: true,
+          noteId: id,
+          title: 'Title $i',
+          content: 'Content $i',
+          isManualAction: true,
+          forceLog: true,
         );
       }
 
@@ -261,11 +294,18 @@ void main() {
 
     test('getNotesWithHistory returns notes that have versions', () async {
       final id = await db.insertNote(Note(
-        title: 'Note', content: 'Content', createdAt: now, updatedAt: now,
+        title: 'Note',
+        content: 'Content',
+        createdAt: now,
+        updatedAt: now,
       ));
       await db.logNoteVersion(NoteVersion.create(
-        noteId: id, title: 'Note', content: 'Content',
-        timestamp: now, action: 'created', noteType: 'simple',
+        noteId: id,
+        title: 'Note',
+        content: 'Content',
+        timestamp: now,
+        action: 'created',
+        noteType: 'simple',
       ));
 
       final notes = await service.getNotesWithHistory();
@@ -274,11 +314,19 @@ void main() {
 
     test('getNotesWithHistory excludes locked notes', () async {
       final id = await db.insertNote(Note(
-        title: 'Locked', content: 'Secret', createdAt: now, updatedAt: now, isLocked: true,
+        title: 'Locked',
+        content: 'Secret',
+        createdAt: now,
+        updatedAt: now,
+        isLocked: true,
       ));
       await db.logNoteVersion(NoteVersion.create(
-        noteId: id, title: 'Locked', content: 'Secret',
-        timestamp: now, action: 'created', noteType: 'simple',
+        noteId: id,
+        title: 'Locked',
+        content: 'Secret',
+        timestamp: now,
+        action: 'created',
+        noteType: 'simple',
       ));
 
       final notes = await service.getNotesWithHistory();
@@ -287,12 +335,19 @@ void main() {
 
     test('getNoteVersions returns max 20 versions', () async {
       final id = await db.insertNote(Note(
-        title: 'Note', content: 'Content', createdAt: now, updatedAt: now,
+        title: 'Note',
+        content: 'Content',
+        createdAt: now,
+        updatedAt: now,
       ));
       for (int i = 0; i < 25; i++) {
         await db.logNoteVersion(NoteVersion.create(
-          noteId: id, title: 'Note $i', content: 'Content $i',
-          timestamp: now.add(Duration(minutes: i)), action: 'updated', noteType: 'simple',
+          noteId: id,
+          title: 'Note $i',
+          content: 'Content $i',
+          timestamp: now.add(Duration(minutes: i)),
+          action: 'updated',
+          noteType: 'simple',
         ));
       }
 
@@ -302,12 +357,19 @@ void main() {
 
     test('getVersionCount returns correct count', () async {
       final id = await db.insertNote(Note(
-        title: 'Note', content: 'Content', createdAt: now, updatedAt: now,
+        title: 'Note',
+        content: 'Content',
+        createdAt: now,
+        updatedAt: now,
       ));
       for (int i = 0; i < 3; i++) {
         await db.logNoteVersion(NoteVersion.create(
-          noteId: id, title: 'Note', content: 'Content $i',
-          timestamp: now, action: 'updated', noteType: 'simple',
+          noteId: id,
+          title: 'Note',
+          content: 'Content $i',
+          timestamp: now,
+          action: 'updated',
+          noteType: 'simple',
         ));
       }
 
@@ -316,11 +378,18 @@ void main() {
 
     test('restoreVersion updates note content', () async {
       final id = await db.insertNote(Note(
-        title: 'Original', content: 'Original Content', createdAt: now, updatedAt: now,
+        title: 'Original',
+        content: 'Original Content',
+        createdAt: now,
+        updatedAt: now,
       ));
       final version = NoteVersion.create(
-        noteId: id, title: 'Old Title', content: 'Old Content',
-        timestamp: now, action: 'created', noteType: 'simple',
+        noteId: id,
+        title: 'Old Title',
+        content: 'Old Content',
+        timestamp: now,
+        action: 'created',
+        noteType: 'simple',
       );
 
       await service.restoreVersion(id, version);
@@ -365,12 +434,16 @@ void main() {
 
     test('finds notes by title', () async {
       await db.insertNote(Note(
-        title: 'Flutter Tutorial', content: 'Content',
-        createdAt: now, updatedAt: now,
+        title: 'Flutter Tutorial',
+        content: 'Content',
+        createdAt: now,
+        updatedAt: now,
       ));
       await db.insertNote(Note(
-        title: 'Dart Guide', content: 'Content',
-        createdAt: now, updatedAt: now,
+        title: 'Dart Guide',
+        content: 'Content',
+        createdAt: now,
+        updatedAt: now,
       ));
 
       final result = await service.search('Flutter');
@@ -380,8 +453,10 @@ void main() {
 
     test('finds notes by content', () async {
       await db.insertNote(Note(
-        title: 'Note', content: 'This is about Flutter development',
-        createdAt: now, updatedAt: now,
+        title: 'Note',
+        content: 'This is about Flutter development',
+        createdAt: now,
+        updatedAt: now,
       ));
 
       final result = await service.search('Flutter');
@@ -390,8 +465,10 @@ void main() {
 
     test('search is case insensitive', () async {
       await db.insertNote(Note(
-        title: 'Flutter', content: 'Content',
-        createdAt: now, updatedAt: now,
+        title: 'Flutter',
+        content: 'Content',
+        createdAt: now,
+        updatedAt: now,
       ));
 
       final result = await service.search('flutter');
@@ -400,8 +477,10 @@ void main() {
 
     test('no results for non-existent query', () async {
       await db.insertNote(Note(
-        title: 'Flutter', content: 'Content',
-        createdAt: now, updatedAt: now,
+        title: 'Flutter',
+        content: 'Content',
+        createdAt: now,
+        updatedAt: now,
       ));
 
       final result = await service.search('xyz123nonexistent');
@@ -410,8 +489,11 @@ void main() {
 
     test('does not return locked notes', () async {
       await db.insertNote(Note(
-        title: 'Secret Flutter', content: 'Locked content',
-        createdAt: now, updatedAt: now, isLocked: true,
+        title: 'Secret Flutter',
+        content: 'Locked content',
+        createdAt: now,
+        updatedAt: now,
+        isLocked: true,
       ));
 
       final result = await service.search('Flutter');

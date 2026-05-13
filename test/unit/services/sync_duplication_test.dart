@@ -80,9 +80,24 @@ void main() {
 
       // محاكاة _silentMerge: نوتات Drive (نفس الـ ids)
       final driveNotes = [
-        Note(id: 1, title: 'ملاحظة 1', content: 'محتوى 1', createdAt: now, updatedAt: now),
-        Note(id: 2, title: 'ملاحظة 2 محدثة', content: 'محتوى جديد', createdAt: now, updatedAt: now.add(const Duration(minutes: 5))),
-        Note(id: 3, title: 'ملاحظة 3', content: 'محتوى 3', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'ملاحظة 1',
+            content: 'محتوى 1',
+            createdAt: now,
+            updatedAt: now),
+        Note(
+            id: 2,
+            title: 'ملاحظة 2 محدثة',
+            content: 'محتوى جديد',
+            createdAt: now,
+            updatedAt: now.add(const Duration(minutes: 5))),
+        Note(
+            id: 3,
+            title: 'ملاحظة 3',
+            content: 'محتوى 3',
+            createdAt: now,
+            updatedAt: now),
       ];
 
       // تطبيق الدمج بالطريقة الجديدة (upsertNote)
@@ -103,7 +118,9 @@ void main() {
       final allLocal = await db.getAllNotes();
       final mergedIds = merged.keys.toSet();
       for (final n in allLocal) {
-        if (n.id != null && !mergedIds.contains(n.id)) await db.deleteNote(n.id!);
+        if (n.id != null && !mergedIds.contains(n.id)) {
+          await db.deleteNote(n.id!);
+        }
       }
       for (final n in merged.values) {
         await db.upsertNote(n);
@@ -130,13 +147,15 @@ void main() {
 
       // 3 دورات مزامنة
       for (int cycle = 0; cycle < 3; cycle++) {
-        final driveNotes = List.generate(3, (i) => Note(
-          id: i + 1,
-          title: 'ملاحظة ${i + 1}',
-          content: 'محتوى دورة $cycle',
-          createdAt: now,
-          updatedAt: now.add(Duration(minutes: cycle)),
-        ));
+        final driveNotes = List.generate(
+            3,
+            (i) => Note(
+                  id: i + 1,
+                  title: 'ملاحظة ${i + 1}',
+                  content: 'محتوى دورة $cycle',
+                  createdAt: now,
+                  updatedAt: now.add(Duration(minutes: cycle)),
+                ));
 
         final localNotes = await db.getAllNotes();
         final Map<int, Note> merged = {};
@@ -154,7 +173,9 @@ void main() {
         final allLocal = await db.getAllNotes();
         final mergedIds = merged.keys.toSet();
         for (final n in allLocal) {
-          if (n.id != null && !mergedIds.contains(n.id)) await db.deleteNote(n.id!);
+          if (n.id != null && !mergedIds.contains(n.id)) {
+            await db.deleteNote(n.id!);
+          }
         }
         for (final n in merged.values) {
           await db.upsertNote(n);
@@ -166,7 +187,8 @@ void main() {
           reason: 'بعد 3 دورات مزامنة يجب أن تبقى 3 ملاحظات فقط');
     });
 
-    test('المشكلة القديمة — insertNote تُسبب تكراراً (توثيق السلوك الخاطئ)', () async {
+    test('المشكلة القديمة — insertNote تُسبب تكراراً (توثيق السلوك الخاطئ)',
+        () async {
       final db = SqliteDatabaseService();
       final now = DateTime.now();
 
@@ -187,13 +209,15 @@ void main() {
         if (n.id != null) await db.deleteNote(n.id!);
       }
 
-      final driveNotes = List.generate(3, (i) => Note(
-        id: i + 1,
-        title: 'ملاحظة ${i + 1}',
-        content: 'محتوى',
-        createdAt: now,
-        updatedAt: now,
-      ));
+      final driveNotes = List.generate(
+          3,
+          (i) => Note(
+                id: i + 1,
+                title: 'ملاحظة ${i + 1}',
+                content: 'محتوى',
+                createdAt: now,
+                updatedAt: now,
+              ));
 
       for (final n in driveNotes) {
         await db.insertNote(n); // السلوك القديم — يُعطي id جديد
@@ -204,7 +228,8 @@ void main() {
       expect(result.length, 3);
       // في الدورة التالية ستُضاف كنوتات جديدة → تكرار
       final ids = result.map((n) => n.id).toList();
-      expect(ids.contains(1), isFalse, reason: 'السلوك القديم يُضيع الـ id الأصلي');
+      expect(ids.contains(1), isFalse,
+          reason: 'السلوك القديم يُضيع الـ id الأصلي');
     });
 
     test('upsertNote تُحدّث ملاحظة موجودة بدل إضافة نسخة جديدة', () async {
@@ -239,7 +264,8 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   group('downloadDatabase — لا تكرار بعد الإصلاح', () {
     /// محاكاة منطق downloadDatabase بعد الإصلاح (upsertNote)
-    Future<void> simulateDownload(SqliteDatabaseService db, List<Note> driveNotes) async {
+    Future<void> simulateDownload(
+        SqliteDatabaseService db, List<Note> driveNotes) async {
       final allLocal = await db.getAllNotes();
       for (final n in allLocal) {
         if (n.id != null && !n.isLocked) await db.deleteNote(n.id!);
@@ -250,7 +276,8 @@ void main() {
     }
 
     /// محاكاة المنطق القديم (insertNote)
-    Future<void> simulateDownloadOld(SqliteDatabaseService db, List<Note> driveNotes) async {
+    Future<void> simulateDownloadOld(
+        SqliteDatabaseService db, List<Note> driveNotes) async {
       final allLocal = await db.getAllNotes();
       for (final n in allLocal) {
         if (n.id != null && !n.isLocked) await db.deleteNote(n.id!);
@@ -264,10 +291,15 @@ void main() {
       final db = SqliteDatabaseService();
       final now = DateTime.now();
 
-      final driveNotes = List.generate(3, (i) => Note(
-        id: i + 1, title: 'ملاحظة ${i + 1}', content: 'محتوى',
-        createdAt: now, updatedAt: now,
-      ));
+      final driveNotes = List.generate(
+          3,
+          (i) => Note(
+                id: i + 1,
+                title: 'ملاحظة ${i + 1}',
+                content: 'محتوى',
+                createdAt: now,
+                updatedAt: now,
+              ));
 
       // دورة 1: download
       await simulateDownload(db, driveNotes);
@@ -276,18 +308,26 @@ void main() {
       // دورة 2: silentMerge (upsert نفس النوتات)
       final localNotes = await db.getAllNotes();
       final Map<int, Note> merged = {};
-      for (final n in localNotes) { if (n.id != null) merged[n.id!] = n; }
+      for (final n in localNotes) {
+        if (n.id != null) merged[n.id!] = n;
+      }
       for (final n in driveNotes) {
         if (n.id == null) continue;
         final local = merged[n.id!];
-        if (local == null || n.updatedAt.isAfter(local.updatedAt)) merged[n.id!] = n;
+        if (local == null || n.updatedAt.isAfter(local.updatedAt)) {
+          merged[n.id!] = n;
+        }
       }
       final allLocal = await db.getAllNotes();
       final mergedIds = merged.keys.toSet();
       for (final n in allLocal) {
-        if (n.id != null && !mergedIds.contains(n.id)) await db.deleteNote(n.id!);
+        if (n.id != null && !mergedIds.contains(n.id)) {
+          await db.deleteNote(n.id!);
+        }
       }
-      for (final n in merged.values) { await db.upsertNote(n); }
+      for (final n in merged.values) {
+        await db.upsertNote(n);
+      }
 
       expect((await db.getAllNotes()).length, 3,
           reason: 'download + silentMerge يجب أن تبقى 3 ملاحظات');
@@ -298,10 +338,15 @@ void main() {
       final now = DateTime.now();
 
       // إدراج أولي — الـ ids تبدأ من 1
-      final driveNotes = List.generate(3, (i) => Note(
-        id: i + 1, title: 'ملاحظة ${i + 1}', content: 'محتوى',
-        createdAt: now, updatedAt: now,
-      ));
+      final driveNotes = List.generate(
+          3,
+          (i) => Note(
+                id: i + 1,
+                title: 'ملاحظة ${i + 1}',
+                content: 'محتوى',
+                createdAt: now,
+                updatedAt: now,
+              ));
       await simulateDownloadOld(db, driveNotes); // ids: 1,2,3
 
       // دورة ثانية: download قديم — يحذف 1,2,3 ثم يُدرج بـ ids جديدة 4,5,6
@@ -314,18 +359,26 @@ void main() {
       // الآن silentMerge: Drive يحتوي ids 1,2,3 لكن المحلي 4,5,6 → تكرار
       final localNotes = await db.getAllNotes();
       final Map<int, Note> merged = {};
-      for (final n in localNotes) { if (n.id != null) merged[n.id!] = n; }
+      for (final n in localNotes) {
+        if (n.id != null) merged[n.id!] = n;
+      }
       for (final n in driveNotes) {
         if (n.id == null) continue;
         final local = merged[n.id!];
-        if (local == null || n.updatedAt.isAfter(local.updatedAt)) merged[n.id!] = n;
+        if (local == null || n.updatedAt.isAfter(local.updatedAt)) {
+          merged[n.id!] = n;
+        }
       }
       final allLocal = await db.getAllNotes();
       final mergedIds = merged.keys.toSet();
       for (final n in allLocal) {
-        if (n.id != null && !mergedIds.contains(n.id)) await db.deleteNote(n.id!);
+        if (n.id != null && !mergedIds.contains(n.id)) {
+          await db.deleteNote(n.id!);
+        }
       }
-      for (final n in merged.values) { await db.upsertNote(n); }
+      for (final n in merged.values) {
+        await db.upsertNote(n);
+      }
 
       // النتيجة: 6 ملاحظات بدل 3 — التكرار الذي أبلغ عنه المستخدمون
       expect((await db.getAllNotes()).length, greaterThan(3),
@@ -336,10 +389,15 @@ void main() {
       final db = SqliteDatabaseService();
       final now = DateTime.now();
 
-      final driveNotes = List.generate(5, (i) => Note(
-        id: i + 1, title: 'ملاحظة ${i + 1}', content: 'محتوى',
-        createdAt: now, updatedAt: now,
-      ));
+      final driveNotes = List.generate(
+          5,
+          (i) => Note(
+                id: i + 1,
+                title: 'ملاحظة ${i + 1}',
+                content: 'محتوى',
+                createdAt: now,
+                updatedAt: now,
+              ));
 
       for (int cycle = 0; cycle < 5; cycle++) {
         // download
@@ -347,18 +405,26 @@ void main() {
         // merge
         final localNotes = await db.getAllNotes();
         final Map<int, Note> merged = {};
-        for (final n in localNotes) { if (n.id != null) merged[n.id!] = n; }
+        for (final n in localNotes) {
+          if (n.id != null) merged[n.id!] = n;
+        }
         for (final n in driveNotes) {
           if (n.id == null) continue;
           final local = merged[n.id!];
-          if (local == null || n.updatedAt.isAfter(local.updatedAt)) merged[n.id!] = n;
+          if (local == null || n.updatedAt.isAfter(local.updatedAt)) {
+            merged[n.id!] = n;
+          }
         }
         final allLocal = await db.getAllNotes();
         final mergedIds = merged.keys.toSet();
         for (final n in allLocal) {
-          if (n.id != null && !mergedIds.contains(n.id)) await db.deleteNote(n.id!);
+          if (n.id != null && !mergedIds.contains(n.id)) {
+            await db.deleteNote(n.id!);
+          }
         }
-        for (final n in merged.values) { await db.upsertNote(n); }
+        for (final n in merged.values) {
+          await db.upsertNote(n);
+        }
       }
 
       expect((await db.getAllNotes()).length, 5,
@@ -370,7 +436,7 @@ void main() {
   // منطق الحذف — الأحدث يتغلب
   // ══════════════════════════════════════════════════════════════
   group('منطق الحذف — الأحدث يتغلب', () {
-    Map<int, Note> _applyMerge({
+    Map<int, Note> applyMerge({
       required List<Note> local,
       required List<Note> drive,
       required Map<int, DateTime> deleted,
@@ -382,11 +448,15 @@ void main() {
       for (final n in drive) {
         if (n.id == null) continue;
         final loc = merged[n.id!];
-        if (loc == null || n.updatedAt.isAfter(loc.updatedAt)) merged[n.id!] = n;
+        if (loc == null || n.updatedAt.isAfter(loc.updatedAt)) {
+          merged[n.id!] = n;
+        }
       }
       deleted.forEach((id, deletedAt) {
         final note = merged[id];
-        if (note != null && deletedAt.isAfter(note.updatedAt)) merged.remove(id);
+        if (note != null && deletedAt.isAfter(note.updatedAt)) {
+          merged.remove(id);
+        }
       });
       return merged;
     }
@@ -396,11 +466,16 @@ void main() {
       final t2 = DateTime(2025, 1, 1, 10, 5); // وقت التعديل — أحدث
 
       final driveNotes = [
-        Note(id: 1, title: 'نسخة محدثة', content: '', createdAt: t1, updatedAt: t2),
+        Note(
+            id: 1,
+            title: 'نسخة محدثة',
+            content: '',
+            createdAt: t1,
+            updatedAt: t2),
       ];
       final deleted = {1: t1}; // حذف قبل التعديل
 
-      final result = _applyMerge(local: [], drive: driveNotes, deleted: deleted);
+      final result = applyMerge(local: [], drive: driveNotes, deleted: deleted);
       expect(result.containsKey(1), isTrue,
           reason: 'التعديل أحدث → النوتة تبقى');
     });
@@ -410,11 +485,16 @@ void main() {
       final t2 = DateTime(2025, 1, 1, 10, 5); // وقت الحذف — أحدث
 
       final localNotes = [
-        Note(id: 1, title: 'نسخة محدثة', content: '', createdAt: t1, updatedAt: t1),
+        Note(
+            id: 1,
+            title: 'نسخة محدثة',
+            content: '',
+            createdAt: t1,
+            updatedAt: t1),
       ];
       final deleted = {1: t2}; // حذف بعد التعديل
 
-      final result = _applyMerge(local: localNotes, drive: [], deleted: deleted);
+      final result = applyMerge(local: localNotes, drive: [], deleted: deleted);
       expect(result.containsKey(1), isFalse,
           reason: 'الحذف أحدث → النوتة تُحذف');
     });
@@ -422,13 +502,26 @@ void main() {
     test('نوتة غير محذوفة لا تتأثر', () {
       final now = DateTime.now();
       final localNotes = [
-        Note(id: 1, title: 'نوتة 1', content: '', createdAt: now, updatedAt: now),
-        Note(id: 2, title: 'نوتة 2', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'نوتة 1',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+        Note(
+            id: 2,
+            title: 'نوتة 2',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
       ];
-      final deleted = {1: now.subtract(const Duration(minutes: 1))}; // الحذف قبل التعديل
+      final deleted = {
+        1: now.subtract(const Duration(minutes: 1))
+      }; // الحذف قبل التعديل
 
-      final result = _applyMerge(local: localNotes, drive: [], deleted: deleted);
-      expect(result.containsKey(1), isTrue, reason: 'التعديل أحدث → النوتة تبقى');
+      final result = applyMerge(local: localNotes, drive: [], deleted: deleted);
+      expect(result.containsKey(1), isTrue,
+          reason: 'التعديل أحدث → النوتة تبقى');
       expect(result.containsKey(2), isTrue, reason: 'النوتة غير المحذوفة تبقى');
     });
   });

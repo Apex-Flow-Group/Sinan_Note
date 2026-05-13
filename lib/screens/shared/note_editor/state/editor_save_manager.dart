@@ -115,7 +115,8 @@ class EditorSaveManager {
         noteId: newId,
         title: title,
         content: content,
-        isManualAction: !isAutoSave, // FIXED: respect auto-save flag
+        isManualAction: !isAutoSave,
+        noteType: noteType,
       );
     } catch (e) {
       // History logging failed, but note was saved

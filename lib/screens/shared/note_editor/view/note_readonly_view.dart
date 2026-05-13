@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 
@@ -63,9 +63,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   int _quillKey = 0;
 
   static bool _looksLikeMarkdown(String text) => RegExp(
-    r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
-    multiLine: true,
-  ).hasMatch(text);
+        r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
+        multiLine: true,
+      ).hasMatch(text);
 
   @override
   void initState() {
@@ -385,29 +385,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
 
   Future<void> _onPermanentDelete() async {
     if (_currentNote.id == null || !mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.permanentDelete),
-        content: Text(l10n.confirmPermanentDelete),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cancel)),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child:
-                  Text(l10n.delete, style: const TextStyle(color: Colors.red))),
-        ],
-      ),
-    );
-    if (confirm == true && mounted) {
-      await Provider.of<NotesProvider>(context, listen: false)
-          .deleteNote(_currentNote.id!);
-      if (mounted) _closeOrPop();
-    }
+    await Provider.of<NotesProvider>(context, listen: false)
+        .deleteNote(_currentNote.id!);
+    if (mounted) _closeOrPop();
   }
 
   Future<void> _onRefresh() async {
@@ -432,6 +412,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         noteColor: noteColor,
         scrollController: _scrollController,
         onSave: widget.onSave,
+        isTrashed: _currentNote.isTrashed,
       );
     }
 
@@ -676,36 +657,53 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
             : null,
       ),
       body: Builder(builder: (ctx) {
-          final canDoubleTap = !note.isTrashed &&
-              Provider.of<SettingsProvider>(ctx, listen: false).doubleTapToEdit;
-          final inner = GestureDetector(
-            onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: widget.sidePadding),
-              child: heroCard,
-            ),
-          );
-          return isMarkdown
-              ? Scrollbar(
+        final canDoubleTap = !note.isTrashed &&
+            Provider.of<SettingsProvider>(ctx, listen: false).doubleTapToEdit;
+        final inner = GestureDetector(
+          onDoubleTap: canDoubleTap ? widget.onEnterEdit : null,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.sidePadding),
+            child: heroCard,
+          ),
+        );
+        final content = isMarkdown
+            ? Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                thickness: 4,
+                radius: const Radius.circular(4),
+                child: SingleChildScrollView(
                   controller: _scrollController,
-                  thumbVisibility: true,
-                  thickness: 4,
-                  radius: const Radius.circular(4),
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    child: inner,
-                  ),
-                )
-              : inner;
-        }),
+                  child: inner,
+                ),
+              )
+            : inner;
+
+        if (!note.isTrashed) return content;
+
+        // للسلة: Stack مع sheet عائم في الأسفل
+        return Stack(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(
+                  bottom: 56.0 + MediaQuery.of(context).padding.bottom),
+              child: content,
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _TrashFloatingSheet(
+                fadeAnimation: barsFade,
+                onRestore: _onRestore,
+                onPermanentDelete: _onPermanentDelete,
+              ),
+            ),
+          ],
+        );
+      }),
       bottomNavigationBar: note.isTrashed
-          ? ReadOnlyBars.buildRestoreBar(
-              context: context,
-              barColor: appBarColor,
-              fadeAnimation: barsFade,
-              onRestore: _onRestore,
-              onPermanentDelete: _onPermanentDelete,
-            )
+          ? null
           : ReadOnlyBars.buildActionBar(
               context: context,
               note: note,
@@ -734,3 +732,195 @@ class _UnknownEmbedBuilder extends EmbedBuilder {
 }
 
 const _unknownEmbedBuilder = _UnknownEmbedBuilder();
+
+/// Sheet عائم في الأسفل — يبدأ بـ handle فقط ويتمدد عند السحب
+class _TrashFloatingSheet extends StatefulWidget {
+  final Animation<double> fadeAnimation;
+  final VoidCallback onRestore;
+  final VoidCallback onPermanentDelete;
+
+  const _TrashFloatingSheet({
+    required this.fadeAnimation,
+    required this.onRestore,
+    required this.onPermanentDelete,
+  });
+
+  @override
+  State<_TrashFloatingSheet> createState() => _TrashFloatingSheetState();
+}
+
+class _TrashFloatingSheetState extends State<_TrashFloatingSheet>
+    with SingleTickerProviderStateMixin {
+  static const double _peekH = 56.0;
+  static const double _fullH =
+      56.0 + 56.0 + 1.0 + 56.0 + 16.0; // handle + 2 tiles + divider + pad
+
+  late final AnimationController _anim;
+  late final Animation<double> _heightAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _heightAnim = Tween<double>(begin: _peekH, end: _fullH).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  void _onDragUpdate(DragUpdateDetails d) {
+    // سحب للأعلى = delta سالب → نزيد الـ animation
+    final delta = -d.primaryDelta! / (_fullH - _peekH);
+    _anim.value = (_anim.value + delta).clamp(0.0, 1.0);
+  }
+
+  void _onDragEnd(DragEndDetails d) {
+    // snap: إذا > 50% أو velocity سريع → افتح، وإلا أغلق
+    if (d.primaryVelocity != null && d.primaryVelocity! < -300) {
+      _anim.forward();
+    } else if (d.primaryVelocity != null && d.primaryVelocity! > 300) {
+      _anim.reverse();
+    } else if (_anim.value > 0.5) {
+      _anim.forward();
+    } else {
+      _anim.reverse();
+    }
+  }
+
+  void _toggle() {
+    if (_anim.value > 0.5) {
+      _anim.reverse();
+    } else {
+      _anim.forward();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return FadeTransition(
+      opacity: widget.fadeAnimation,
+      child: AnimatedBuilder(
+        animation: _heightAnim,
+        builder: (context, _) {
+          final height = _heightAnim.value + bottomPad;
+          final openRatio = _anim.value;
+
+          return GestureDetector(
+            onVerticalDragUpdate: _onDragUpdate,
+            onVerticalDragEnd: _onDragEnd,
+            onTap: _toggle,
+            child: Container(
+              height: height,
+              decoration: BoxDecoration(
+                color: isDark ? scheme.surfaceContainerLow : scheme.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Handle ──────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: scheme.onSurface.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'اسحب للأعلى'
+                              : 'Swipe up',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurface.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ── أزرار بـ fade ────────────────────────────
+                  Expanded(
+                    child: Opacity(
+                      opacity: openRatio,
+                      child: IgnorePointer(
+                        ignoring: openRatio < 0.5,
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.restore_rounded,
+                                    color: Colors.green, size: 22),
+                              ),
+                              title: Text(l10n.restore,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600)),
+                              onTap: widget.onRestore,
+                            ),
+                            const Divider(height: 1, indent: 16, endIndent: 16),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.delete_forever_rounded,
+                                    color: Colors.red, size: 22),
+                              ),
+                              title: Text(
+                                l10n.permanentDelete,
+                                style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              onTap: widget.onPermanentDelete,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

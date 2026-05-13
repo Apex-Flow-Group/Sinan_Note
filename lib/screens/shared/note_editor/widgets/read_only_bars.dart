@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 
@@ -222,7 +222,10 @@ class ReadOnlyBars {
             ListTile(
               leading: const Icon(Icons.share_rounded, color: Colors.blue),
               title: Text(l10n.actionShare),
-              onTap: () { Navigator.pop(context); onShare(); },
+              onTap: () {
+                Navigator.pop(context);
+                onShare();
+              },
             ),
             ListTile(
               leading: Icon(
@@ -231,8 +234,12 @@ class ReadOnlyBars {
                     : Icons.archive_rounded,
                 color: Colors.green,
               ),
-              title: Text(note.isArchived ? l10n.unarchive : l10n.actionArchive),
-              onTap: () { Navigator.pop(context); onArchive(); },
+              title:
+                  Text(note.isArchived ? l10n.unarchive : l10n.actionArchive),
+              onTap: () {
+                Navigator.pop(context);
+                onArchive();
+              },
             ),
             _WidgetPinTile(note: note),
             const Divider(height: 1),
@@ -240,7 +247,10 @@ class ReadOnlyBars {
               leading: const Icon(Icons.delete_rounded, color: Colors.red),
               title: Text(l10n.actionDelete,
                   style: const TextStyle(color: Colors.red)),
-              onTap: () { Navigator.pop(context); onDelete(); },
+              onTap: () {
+                Navigator.pop(context);
+                onDelete();
+              },
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
           ],
@@ -258,19 +268,31 @@ class ReadOnlyBars {
   }) {
     final options = <_ConvertOption>[];
     if (isChecklist) {
-      options.add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
-      options.add(_ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
+      options
+          .add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
+      options.add(
+          _ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
     } else if (currentNoteType == 'simple') {
-      options.add(_ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
-      options.add(_ConvertOption(Icons.code_rounded, l10n.professionalNotes, 'code'));
-      options.add(_ConvertOption(Icons.checklist_rounded, l10n.checklist, 'checklist'));
+      options.add(
+          _ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
+      options.add(
+          _ConvertOption(Icons.code_rounded, l10n.professionalNotes, 'code'));
+      options.add(
+          _ConvertOption(Icons.checklist_rounded, l10n.checklist, 'checklist'));
     } else if (currentNoteType == 'rich') {
-      options.add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
-      options.add(_ConvertOption(Icons.code_rounded, l10n.professionalNotes, 'code'));
-      options.add(_ConvertOption(Icons.checklist_rounded, l10n.checklist, 'checklist'));
-    } else if (currentNoteType == 'code' || currentNoteType == 'pro' || currentNoteType == 'professional') {
-      options.add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
-      options.add(_ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
+      options
+          .add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
+      options.add(
+          _ConvertOption(Icons.code_rounded, l10n.professionalNotes, 'code'));
+      options.add(
+          _ConvertOption(Icons.checklist_rounded, l10n.checklist, 'checklist'));
+    } else if (currentNoteType == 'code' ||
+        currentNoteType == 'pro' ||
+        currentNoteType == 'professional') {
+      options
+          .add(_ConvertOption(Icons.note_rounded, l10n.simpleNotes, 'simple'));
+      options.add(
+          _ConvertOption(Icons.text_fields_rounded, l10n.richText, 'rich'));
     }
     if (options.isEmpty) return;
 
@@ -308,73 +330,7 @@ class ReadOnlyBars {
     );
   }
 
-  // ─── Bottom bar المهملات ─────────────────────────────────────────
-  static Widget buildRestoreBar({
-    required BuildContext context,
-    required Color barColor,
-    required Animation<double> fadeAnimation,
-    required VoidCallback onRestore,
-    required VoidCallback onPermanentDelete,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    return FadeTransition(
-      opacity: fadeAnimation,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.3),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: fadeAnimation,
-          curve: Curves.easeOutCubic,
-        )),
-        child: Container(
-          decoration: BoxDecoration(color: barColor),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.delete_forever_outlined, size: 20),
-                      label: Text(l10n.permanentDelete),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        minimumSize: const Size(0, 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: onPermanentDelete,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.restore_rounded, size: 20),
-                      label: Text(l10n.restore),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 40),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: onRestore,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // ─── Bottom bar المهملات — لم يعد مستخدماً (استُبدل بـ bottomSheet) ──
 }
 
 // ─── زر الفئات ────────────────────────────────────────────────────
@@ -429,7 +385,8 @@ class _WidgetPinTile extends StatelessWidget {
         Navigator.pop(context);
         if (note.id == null) return;
 
-        final isChecklistNote = note.isChecklist || note.noteType == 'checklist';
+        final isChecklistNote =
+            note.isChecklist || note.noteType == 'checklist';
         if (isChecklistNote) {
           final stats = _parseChecklistStats(note.content);
           await WidgetService().updateChecklistWidget(

@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -72,16 +73,12 @@ class _PreviewSheetState extends State<_PreviewSheet> {
     try {
       Clipboard.setData(ClipboardData(text: _displayCode));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              Localizations.localeOf(context).languageCode == 'ar'
-                  ? 'تم النسخ'
-                  : 'Copied',
-            ),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
+        UnifiedNotificationService().show(
+          context: context,
+          message: isAr ? 'تم النسخ' : 'Copied',
+          type: NotificationType.success,
+          duration: const Duration(seconds: 1),
         );
       }
     } catch (_) {}
@@ -175,8 +172,7 @@ class _PreviewSheetState extends State<_PreviewSheet> {
                   style: const TextStyle(fontSize: 13),
                   decoration: InputDecoration(
                     hintText: isAr ? 'ابحث في الكود...' : 'Search in code...',
-                    prefixIcon:
-                        const Icon(Icons.search_rounded, size: 18),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18),
                     suffixIcon: _query.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear_rounded, size: 16),
@@ -187,8 +183,8 @@ class _PreviewSheetState extends State<_PreviewSheet> {
                           )
                         : null,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(
@@ -201,8 +197,7 @@ class _PreviewSheetState extends State<_PreviewSheet> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          BorderSide(color: scheme.primary, width: 1.5),
+                      borderSide: BorderSide(color: scheme.primary, width: 1.5),
                     ),
                   ),
                   onChanged: (v) => setState(() => _query = v),
@@ -264,8 +259,9 @@ class _SearchResultCount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     try {
-      final count =
-          RegExp(RegExp.escape(query), caseSensitive: false).allMatches(code).length;
+      final count = RegExp(RegExp.escape(query), caseSensitive: false)
+          .allMatches(code)
+          .length;
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -324,14 +320,12 @@ class _CodeWithLineNumbers extends StatelessWidget {
           if (parseError != null) ...[
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: Colors.orange.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: Colors.orange.withValues(alpha: 0.3)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Text(
                 'JSON: $parseError',
@@ -396,7 +390,10 @@ class _CodeWithLineNumbers extends StatelessWidget {
         return SelectableText(
           text,
           style: TextStyle(
-              fontFamily: 'monospace', fontSize: 13, height: 1.6, color: textColor),
+              fontFamily: 'monospace',
+              fontSize: 13,
+              height: 1.6,
+              color: textColor),
         );
       }
 
@@ -437,7 +434,10 @@ class _CodeWithLineNumbers extends StatelessWidget {
       return SelectableText(
         text,
         style: TextStyle(
-            fontFamily: 'monospace', fontSize: 13, height: 1.6, color: textColor),
+            fontFamily: 'monospace',
+            fontSize: 13,
+            height: 1.6,
+            color: textColor),
       );
     }
   }

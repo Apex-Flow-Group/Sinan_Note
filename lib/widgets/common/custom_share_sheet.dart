@@ -12,7 +12,11 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 class CustomShareSheet {
-  static void show(BuildContext context, String text, {String? subject, Note? note, VoidCallback? onNoteCopied, bool appShare = false}) {
+  static void show(BuildContext context, String text,
+      {String? subject,
+      Note? note,
+      VoidCallback? onNoteCopied,
+      bool appShare = false}) {
     final strings = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final isArabic = Directionality.of(context) == TextDirection.rtl;
@@ -27,7 +31,8 @@ class CustomShareSheet {
           color: Theme.of(context).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).padding.bottom),
+        padding: EdgeInsets.fromLTRB(
+            20, 16, 20, 20 + MediaQuery.of(context).padding.bottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -41,28 +46,28 @@ class CustomShareSheet {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Title
             Text(
               appShare
                   ? (isArabic ? 'مشاركة التطبيق' : 'Share App')
                   : (isArabic ? 'مشاركة الملاحظة' : 'Share Note'),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
             ),
             const SizedBox(height: 8),
-            
+
             // Subtitle
             Text(
               isArabic ? 'اختر طريقة المشاركة' : 'Choose sharing method',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
             ),
             const SizedBox(height: 24),
-            
+
             // Share options - horizontal row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -72,45 +77,51 @@ class CustomShareSheet {
                     icon: Icons.file_download_outlined,
                     label: isArabic ? 'حفظ كملف' : 'Save File',
                     onTap: () async {
-                    Navigator.pop(context);
-                    try {
-                      final extension = note != null ? _getFileExtension(note) : 'txt';
-                      final fileName = subject?.isEmpty ?? true 
-                          ? 'note.$extension' 
-                          : '${subject!.replaceAll(RegExp(r'[<>:"/\|?*]'), '_')}.$extension';
-                      
-                      final bytes = Uint8List.fromList(utf8.encode(text));
-                      final result = await FilePicker.platform.saveFile(
-                        dialogTitle: isArabic ? 'حفظ الملف' : 'Save File',
-                        fileName: fileName,
-                        type: FileType.any,
-                        bytes: bytes,
-                      );
-                      
-                      
-                      if (result != null) {
-                        if (context.mounted) {
-                          final toastMsg = isArabic ? 'تم حفظ الملف بنجاح' : 'File saved successfully';
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(toastMsg),
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 2),
-                            ),
+                      // لا نُغلق الـ sheet مبكراً — ننتظر نتيجة الحفظ أولاً
+                      try {
+                        final extension =
+                            note != null ? _getFileExtension(note) : 'txt';
+                        final fileName = subject?.isEmpty ?? true
+                            ? 'note.$extension'
+                            : '${subject!.replaceAll(RegExp(r'[<>:"/\|?*]'), '_')}.$extension';
+
+                        final bytes = Uint8List.fromList(utf8.encode(text));
+                        final result = await FilePicker.platform.saveFile(
+                          dialogTitle: isArabic ? 'حفظ الملف' : 'Save File',
+                          fileName: fileName,
+                          type: FileType.any,
+                          bytes: bytes,
+                        );
+
+                        if (!context.mounted) return;
+                        Navigator.pop(
+                            context); // أغلق الـ sheet بعد انتهاء العملية
+
+                        if (result != null) {
+                          UnifiedNotificationService().show(
+                            context: context,
+                            message: isArabic
+                                ? 'تم حفظ الملف بنجاح'
+                                : 'File saved successfully',
+                            type: NotificationType.success,
+                            duration: const Duration(seconds: 2),
                           );
+                        } else {
+                          // المستخدم ألغى الحفظ — لا نعرض شيئاً
                         }
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        Navigator.pop(context);
                         UnifiedNotificationService().show(
                           context: context,
-                          message: isArabic ? 'فشل حفظ الملف' : 'Failed to save file',
+                          message: isArabic
+                              ? 'فشل حفظ الملف'
+                              : 'Failed to save file',
                           type: NotificationType.error,
                         );
                       }
-                    }
-                  },
-                ),
+                    },
+                  ),
                 _ShareOption(
                   icon: Icons.share_outlined,
                   label: isArabic ? 'مشاركة' : 'Share',
@@ -129,7 +140,9 @@ class CustomShareSheet {
                     if (context.mounted) {
                       UnifiedNotificationService().show(
                         context: context,
-                        message: isArabic ? 'تم النسخ إلى الحافظة' : strings.textCopiedToClipboard,
+                        message: isArabic
+                            ? 'تم النسخ إلى الحافظة'
+                            : strings.textCopiedToClipboard,
                         type: NotificationType.success,
                         duration: const Duration(seconds: 2),
                       );
@@ -182,7 +195,7 @@ class _ShareOptionState extends State<_ShareOption> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -220,9 +233,9 @@ class _ShareOptionState extends State<_ShareOption> {
             Text(
               widget.label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),

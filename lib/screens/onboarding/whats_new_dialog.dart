@@ -23,15 +23,22 @@ class WhatsNewDialog extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 600;
+
     return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 80 : 16,
+        vertical: isDesktop ? 40 : 24,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 480,
-          maxHeight: MediaQuery.of(context).size.height * 0.88,
+          maxWidth: isDesktop ? 520 : 480,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -54,19 +61,24 @@ class WhatsNewDialog extends StatelessWidget {
                     width: 1.5,
                   ),
                 ),
-                child: Icon(Icons.verified_rounded, size: 36, color: scheme.primary),
+                child: Icon(Icons.rocket_launch_rounded,
+                    size: 36, color: scheme.primary),
               ),
               const SizedBox(height: 16),
 
               // ── Title ──
               Text(
-                isAr ? 'سنان — الإصدار النهائي' : 'Sinan — Final Release',
+                isAr
+                    ? 'تحديث الأداء والاستقرار'
+                    : 'Performance & Stability Update',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
+                style: const TextStyle(
+                    fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
               ),
               const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: scheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -91,7 +103,8 @@ class WhatsNewDialog extends StatelessWidget {
                       ? scheme.surfaceContainerHighest.withValues(alpha: 0.5)
                       : scheme.primary.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: scheme.primary.withValues(alpha: 0.15)),
+                  border:
+                      Border.all(color: scheme.primary.withValues(alpha: 0.15)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,8 +115,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'وصلنا — بعد أشهر من البناء والصقل، سنان جاهز بكامل قوته.\n\nكل ملاحظة كتبتها، كل خزنة أنشأتها، كل تذكير ضبطته — كلها هنا، محفوظة ومزامنة.'
-                            : 'We made it — after months of building and refining, Sinan is ready in full force.\n\nEvery note you wrote, every vault you created, every reminder you set — all here, preserved and synced.',
+                            ? 'هذا التحديث يركّز على الاستقرار والسلاسة — إصلاحات مهمة لسجل التعديلات والمزامنة، مع تحسينات في واجهة المستخدم.'
+                            : 'This update focuses on stability and smoothness — important fixes for version history and sync, with UI improvements.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -137,59 +150,52 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Features ──
               _FeatureRow(
-                icon: Icons.lock_rounded,
-                color: Colors.indigo,
-                title: isAr ? 'خزنة ذكية' : 'Smart Vault',
+                icon: Icons.history_rounded,
+                color: Colors.orange,
+                title: isAr ? 'إصلاح سجل التعديلات' : 'Version History Fixed',
                 subtitle: isAr
-                    ? 'تشفير AES-256 + بصمة + كود استرداد'
-                    : 'AES-256 encryption + biometrics + recovery code',
-              ),
-              _FeatureRow(
-                icon: Icons.code_rounded,
-                color: Colors.teal,
-                title: isAr ? 'محرر كود احترافي' : 'Pro Code Editor',
-                subtitle: isAr
-                    ? '26 لغة + معاينة SVG وJSON وMarkdown'
-                    : '26 languages + SVG, JSON & Markdown preview',
+                    ? 'الهيستوري تُسجَّل الآن بشكل صحيح عند كل تعديل'
+                    : 'History now records correctly on every edit session',
               ),
               _FeatureRow(
                 icon: Icons.cloud_sync_rounded,
                 color: Colors.blue,
-                title: isAr ? 'مزامنة Google Drive' : 'Google Drive Sync',
+                title: isAr ? 'مزامنة أذكى' : 'Smarter Sync',
                 subtitle: isAr
-                    ? 'دمج ذكي تلقائي مع حماية الخزنة'
-                    : 'Smart auto-merge with vault protection',
+                    ? 'المزامنة تعمل تلقائياً بعد كل إجراء (حذف، أرشفة، تذكير)'
+                    : 'Auto-sync triggers after every action (delete, archive, reminder)',
               ),
               _FeatureRow(
-                icon: Icons.checklist_rounded,
+                icon: Icons.notifications_rounded,
                 color: Colors.green,
-                title: isAr ? 'قوائم المهام' : 'Checklists',
+                title: isAr ? 'إشعارات موحّدة' : 'Unified Notifications',
                 subtitle: isAr
-                    ? 'سحب لإعادة الترتيب + تقدم مرئي + Undo'
-                    : 'Drag to reorder + progress bar + undo',
+                    ? 'كل الإشعارات بتصميم واحد متناسق في كل الشاشات'
+                    : 'All notifications now use a consistent design across screens',
               ),
               _FeatureRow(
-                icon: Icons.swipe_rounded,
-                color: Colors.orange,
-                title: isAr ? 'إيماءات قابلة للتخصيص' : 'Custom Swipe Actions',
+                icon: Icons.delete_sweep_rounded,
+                color: Colors.red,
+                title: isAr ? 'تجربة السلة الجديدة' : 'New Trash Experience',
                 subtitle: isAr
-                    ? 'اختر إجراء السحب يميناً ويساراً بحرية'
-                    : 'Choose your left & right swipe actions freely',
+                    ? 'شريط سفلي قابل للسحب لاستعادة أو حذف الملاحظات'
+                    : 'Swipeable bottom sheet to restore or permanently delete',
               ),
               _FeatureRow(
-                icon: Icons.monitor_rounded,
+                icon: Icons.storage_rounded,
                 color: Colors.purple,
-                title: isAr ? 'دعم سطح المكتب' : 'Desktop Support',
+                title: isAr ? 'ترقية قاعدة البيانات' : 'Database Upgrade',
                 subtitle: isAr
-                    ? 'تخطيط Master-Details لشاشات Windows وLinux'
-                    : 'Master-Details layout for Windows & Linux',
+                    ? 'إصلاح مشكلة عدم حفظ الهيستوري على الأجهزة المُحدَّثة'
+                    : 'Fixed history not saving on devices updated from older versions',
               ),
 
               const SizedBox(height: 20),
 
               // ── Thanks ──
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: scheme.secondaryContainer.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(16),
@@ -202,12 +208,13 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'شكراً لكل من رافق سنان منذ البداية — هذا الإصدار بُني بملاحظاتكم.'
-                            : 'Thank you to everyone who followed Sinan from day one — this release was built with your feedback.',
+                            ? 'شكراً لملاحظاتكم — كل إصلاح هنا جاء من تجربتكم الحقيقية.'
+                            : 'Thanks for your feedback — every fix here came from your real experience.',
                         style: TextStyle(
                           fontSize: 12.5,
                           height: 1.6,
-                          color: scheme.onSecondaryContainer.withValues(alpha: 0.85),
+                          color: scheme.onSecondaryContainer
+                              .withValues(alpha: 0.85),
                         ),
                       ),
                     ),
@@ -224,8 +231,9 @@ class WhatsNewDialog extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                   label: Text(
-                    isAr ? 'ابدأ الاستخدام' : 'Get Started',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    isAr ? 'تم' : 'Got it',
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -279,7 +287,9 @@ class _FeatureRow extends StatelessWidget {
               children: [
                 Text(title,
                     style: const TextStyle(
-                        fontSize: 13.5, fontWeight: FontWeight.w600, height: 1.3)),
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3)),
                 const SizedBox(height: 2),
                 Text(subtitle,
                     style: TextStyle(

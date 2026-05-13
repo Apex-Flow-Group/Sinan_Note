@@ -12,6 +12,7 @@ class ReadOnlyChecklistView extends StatefulWidget {
   final Color noteColor;
   final ScrollController scrollController;
   final Future<void> Function({bool isManualSave}) onSave;
+  final bool isTrashed;
 
   const ReadOnlyChecklistView({
     super.key,
@@ -20,6 +21,7 @@ class ReadOnlyChecklistView extends StatefulWidget {
     required this.noteColor,
     required this.scrollController,
     required this.onSave,
+    this.isTrashed = false,
   });
 
   @override
@@ -120,32 +122,39 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                   ),
                 );
               },
-              onReorder: (oldIndex, newIndex) {
-                setState(() {
-                  if (newIndex > oldIndex) newIndex--;
-                  final item = items.removeAt(oldIndex);
-                  items.insert(newIndex, item);
-                });
-                _save(items);
-              },
+              onReorder: widget.isTrashed
+                  ? (_, __) {}
+                  : (oldIndex, newIndex) {
+                      setState(() {
+                        if (newIndex > oldIndex) newIndex--;
+                        final item = items.removeAt(oldIndex);
+                        items.insert(newIndex, item);
+                      });
+                      _save(items);
+                    },
               children: items.asMap().entries.map((entry) {
                 final index = entry.key;
                 final item = entry.value;
                 return ListTile(
                   key: ValueKey(item.id),
                   contentPadding: EdgeInsets.zero,
-                  leading: ReorderableDragStartListener(
-                    index: index,
-                    child: Icon(Icons.drag_indicator,
-                        color: widget.textColor.withValues(alpha: 0.3)),
-                  ),
+                  leading: widget.isTrashed
+                      ? null
+                      : ReorderableDragStartListener(
+                          index: index,
+                          child: Icon(Icons.drag_indicator,
+                              color: widget.textColor.withValues(alpha: 0.3)),
+                        ),
                   title: Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          setState(() => items[index].isDone = !item.isDone);
-                          _save(items);
-                        },
+                        onTap: widget.isTrashed
+                            ? null
+                            : () {
+                                setState(
+                                    () => items[index].isDone = !item.isDone);
+                                _save(items);
+                              },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.only(right: 12),

@@ -30,7 +30,8 @@ void main() {
       dbService = SqliteDatabaseService();
       stateService = NoteStateService();
       sideEffectService = NoteSideEffectService();
-      service = NoteBatchOperationsService(dbService, stateService, sideEffectService);
+      service = NoteBatchOperationsService(
+          dbService, stateService, sideEffectService);
       now = DateTime.now();
     });
 
@@ -40,7 +41,7 @@ void main() {
       stateService.dispose();
     });
 
-    Future<List<Note>> _insertAndLoad(List<Note> notes) async {
+    Future<List<Note>> insertAndLoad(List<Note> notes) async {
       final inserted = <Note>[];
       for (final n in notes) {
         final id = await dbService.insertNote(n);
@@ -52,9 +53,19 @@ void main() {
 
     group('trashNotes', () {
       test('trashes multiple notes optimistically', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Note 1', content: 'Content', createdAt: now, updatedAt: now),
-          Note(id: null, title: 'Note 2', content: 'Content', createdAt: now, updatedAt: now),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Note 1',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
+          Note(
+              id: null,
+              title: 'Note 2',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
         ]);
 
         await service.batchTrashNotes(notes.map((n) => n.id!).toList());
@@ -64,9 +75,20 @@ void main() {
       });
 
       test('hard deletes locked notes', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Regular', content: 'Content', createdAt: now, updatedAt: now),
-          Note(id: null, title: 'Locked', content: 'Content', createdAt: now, updatedAt: now, isLocked: true),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Regular',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
+          Note(
+              id: null,
+              title: 'Locked',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
+              isLocked: true),
         ]);
 
         await service.batchTrashNotes(notes.map((n) => n.id!).toList());
@@ -76,9 +98,13 @@ void main() {
       });
 
       test('cancels reminders for trashed notes', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Reminder', content: 'Content',
-              createdAt: now, updatedAt: now,
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Reminder',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
               reminderDateTime: now.add(const Duration(days: 1))),
         ]);
 
@@ -97,9 +123,21 @@ void main() {
 
     group('restoreNotes', () {
       test('restores multiple notes', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Note 1', content: 'Content', createdAt: now, updatedAt: now, isTrashed: true),
-          Note(id: null, title: 'Note 2', content: 'Content', createdAt: now, updatedAt: now, isTrashed: true),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Note 1',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
+              isTrashed: true),
+          Note(
+              id: null,
+              title: 'Note 2',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
+              isTrashed: true),
         ]);
 
         await service.batchRestoreNotes(notes.map((n) => n.id!).toList());
@@ -111,9 +149,21 @@ void main() {
 
       test('triggers sort after restore', () async {
         final older = now.subtract(const Duration(days: 1));
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Old', content: 'Content', createdAt: older, updatedAt: older, isTrashed: true),
-          Note(id: null, title: 'New', content: 'Content', createdAt: now, updatedAt: now, isTrashed: true),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Old',
+              content: 'Content',
+              createdAt: older,
+              updatedAt: older,
+              isTrashed: true),
+          Note(
+              id: null,
+              title: 'New',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
+              isTrashed: true),
         ]);
 
         await service.batchRestoreNotes(notes.map((n) => n.id!).toList());
@@ -130,9 +180,19 @@ void main() {
 
     group('archiveNotes', () {
       test('archives multiple notes', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Note 1', content: 'Content', createdAt: now, updatedAt: now),
-          Note(id: null, title: 'Note 2', content: 'Content', createdAt: now, updatedAt: now),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Note 1',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
+          Note(
+              id: null,
+              title: 'Note 2',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
         ]);
 
         await service.batchArchiveNotes(notes.map((n) => n.id!).toList());
@@ -143,9 +203,13 @@ void main() {
       });
 
       test('cancels reminders for archived notes', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Reminder', content: 'Content',
-              createdAt: now, updatedAt: now,
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Reminder',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
               reminderDateTime: now.add(const Duration(days: 1))),
         ]);
 
@@ -161,9 +225,21 @@ void main() {
 
     group('unarchiveNotes', () {
       test('unarchives multiple notes', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Note 1', content: 'Content', createdAt: now, updatedAt: now, isArchived: true),
-          Note(id: null, title: 'Note 2', content: 'Content', createdAt: now, updatedAt: now, isArchived: true),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Note 1',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
+              isArchived: true),
+          Note(
+              id: null,
+              title: 'Note 2',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now,
+              isArchived: true),
         ]);
 
         await service.batchUnarchiveNotes(notes.map((n) => n.id!).toList());
@@ -180,8 +256,13 @@ void main() {
 
     group('Functional Immutability', () {
       test('batch operations use functional updates', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Original', content: 'Content', createdAt: now, updatedAt: now),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Original',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
         ]);
 
         await service.batchTrashNotes([notes.first.id!]);
@@ -191,8 +272,13 @@ void main() {
 
     group('Background Sync', () {
       test('uses Future.microtask for DB sync', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Test', content: 'Content', createdAt: now, updatedAt: now),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Test',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
         ]);
 
         await service.batchTrashNotes([notes.first.id!]);
@@ -203,8 +289,13 @@ void main() {
 
     group('Edge Cases', () {
       test('handles mixed valid and invalid IDs', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Valid', content: 'Content', createdAt: now, updatedAt: now),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Valid',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
         ]);
 
         await service.batchTrashNotes([notes.first.id!, 999]);
@@ -212,8 +303,13 @@ void main() {
       });
 
       test('handles duplicate IDs', () async {
-        final notes = await _insertAndLoad([
-          Note(id: null, title: 'Test', content: 'Content', createdAt: now, updatedAt: now),
+        final notes = await insertAndLoad([
+          Note(
+              id: null,
+              title: 'Test',
+              content: 'Content',
+              createdAt: now,
+              updatedAt: now),
         ]);
         final id = notes.first.id!;
 
@@ -222,11 +318,16 @@ void main() {
       });
 
       test('handles large batch operations', () async {
-        final notes = await _insertAndLoad(
-          List.generate(100, (i) => Note(
-            id: null, title: 'Note $i', content: 'Content',
-            createdAt: now, updatedAt: now,
-          )),
+        final notes = await insertAndLoad(
+          List.generate(
+              100,
+              (i) => Note(
+                    id: null,
+                    title: 'Note $i',
+                    content: 'Content',
+                    createdAt: now,
+                    updatedAt: now,
+                  )),
         );
 
         await service.batchTrashNotes(notes.map((n) => n.id!).toList());

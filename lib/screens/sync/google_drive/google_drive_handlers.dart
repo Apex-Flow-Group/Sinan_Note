@@ -2,6 +2,7 @@
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 
 class GoogleDriveHandlers {
@@ -10,13 +11,17 @@ class GoogleDriveHandlers {
     try {
       await GoogleDriveService.signOut();
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.signOutSuccess), backgroundColor: Colors.green),
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.signOutSuccess,
+        type: NotificationType.success,
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.signOutFailed} $e'), backgroundColor: Colors.red),
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.signOutFailed} $e',
+        type: NotificationType.error,
       );
     }
   }
@@ -25,8 +30,10 @@ class GoogleDriveHandlers {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     if (!GoogleDriveService.isSignedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.pleaseSignIn), backgroundColor: Colors.orange),
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.pleaseSignIn,
+        type: NotificationType.warning,
       );
       return;
     }
@@ -34,16 +41,17 @@ class GoogleDriveHandlers {
     try {
       await GoogleDriveService.smartSyncOnStartup();
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isArabic ? 'تمت المزامنة بنجاح' : l10n.syncSuccess),
-          backgroundColor: Colors.green,
-        ),
+      UnifiedNotificationService().show(
+        context: context,
+        message: isArabic ? 'تمت المزامنة بنجاح' : l10n.syncSuccess,
+        type: NotificationType.success,
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.syncFailed} $e'), backgroundColor: Colors.red),
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.syncFailed} $e',
+        type: NotificationType.error,
       );
     }
   }
@@ -52,8 +60,10 @@ class GoogleDriveHandlers {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     if (!GoogleDriveService.isSignedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.pleaseSignIn), backgroundColor: Colors.orange),
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.pleaseSignIn,
+        type: NotificationType.warning,
       );
       return;
     }
@@ -61,18 +71,21 @@ class GoogleDriveHandlers {
     try {
       final success = await GoogleDriveService.uploadDatabase(null);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success
-              ? l10n.uploadSuccess
-              : isArabic ? 'انتظر 30 ثانية بين كل رفع' : 'Wait 30s between uploads'),
-          backgroundColor: success ? Colors.green : Colors.orange,
-        ),
+      UnifiedNotificationService().show(
+        context: context,
+        message: success
+            ? l10n.uploadSuccess
+            : isArabic
+                ? 'انتظر 30 ثانية بين كل رفع'
+                : 'Wait 30s between uploads',
+        type: success ? NotificationType.success : NotificationType.warning,
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.uploadFailed} $e'), backgroundColor: Colors.red),
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.uploadFailed} $e',
+        type: NotificationType.error,
       );
     }
   }
@@ -80,8 +93,10 @@ class GoogleDriveHandlers {
   static Future<void> handleDownload(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     if (!GoogleDriveService.isSignedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.pleaseSignIn), backgroundColor: Colors.orange),
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.pleaseSignIn,
+        type: NotificationType.warning,
       );
       return;
     }
@@ -89,11 +104,10 @@ class GoogleDriveHandlers {
     try {
       final success = await GoogleDriveService.downloadDatabase(null);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? l10n.downloadSuccess : l10n.downloadFailed),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
+      UnifiedNotificationService().show(
+        context: context,
+        message: success ? l10n.downloadSuccess : l10n.downloadFailed,
+        type: success ? NotificationType.success : NotificationType.error,
       );
     } catch (e) {
       if (!context.mounted) return;
@@ -101,8 +115,10 @@ class GoogleDriveHandlers {
         _showUpdateRequiredDialog(context);
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.downloadFailed} $e'), backgroundColor: Colors.red),
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.downloadFailed} $e',
+        type: NotificationType.error,
       );
     }
   }

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_controller.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -111,11 +112,10 @@ class _SyncSignInWidgetState extends State<SyncSignInWidget> {
 
       if (!success) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.signInFailed),
-            backgroundColor: Colors.red,
-          ),
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.signInFailed,
+          type: NotificationType.error,
         );
       }
     }

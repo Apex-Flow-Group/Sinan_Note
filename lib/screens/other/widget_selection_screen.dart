@@ -6,6 +6,7 @@ import 'package:apex_note/core/utils/note_content_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 
@@ -117,19 +118,10 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
         ? (widget.widgetType == 'checklist' ? l10n.checklist : l10n.note)
         : note.title;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text('${l10n.widgetPinned} "$title"'),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
+    UnifiedNotificationService().show(
+      context: context,
+      message: '${l10n.widgetPinned} "$title"',
+      type: NotificationType.success,
     );
 
     Navigator.pop(context);
