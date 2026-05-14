@@ -105,7 +105,7 @@ class GoogleDriveAuth {
       final fileList = await driveApi!.files.list(
         q: "name='$fileName' and trashed=false",
         spaces: 'drive',
-        $fields: 'files(id, name, modifiedTime)',
+        $fields: 'files(id, name, modifiedTime, md5Checksum)',
       );
       return fileList.files?.isNotEmpty == true ? fileList.files!.first : null;
     } catch (e) {

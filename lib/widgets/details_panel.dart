@@ -73,10 +73,8 @@ class _DetailsPanelState extends State<DetailsPanel> {
           (note) => note.id == selectedNote.id,
         );
 
-        // مسح الاختيار إذا تم حذف/أرشفة/قفل الملاحظة
-        if (currentNote.isTrashed ||
-            currentNote.isArchived ||
-            currentNote.isLocked) {
+        // مسح الاختيار إذا تم أرشفة/قفل الملاحظة — لكن السلة تُعرض بوضع القراءة
+        if (currentNote.isArchived || currentNote.isLocked) {
           selectedNoteProvider.clearSelection();
         }
       } else {
@@ -140,7 +138,9 @@ class _DetailsPanelState extends State<DetailsPanel> {
         mode: mode,
         note: selectedNote,
         readOnly: selectedNote.id != null &&
-            (selectedNote.title.isNotEmpty || selectedNote.content.isNotEmpty),
+            (selectedNote.isTrashed ||
+                selectedNote.title.isNotEmpty ||
+                selectedNote.content.isNotEmpty),
         onClose: () {
           selectedNoteProvider.clearSelection();
         },

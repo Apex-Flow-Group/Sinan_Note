@@ -196,7 +196,7 @@ class NoteCardActions {
             subject: note.title,
             note: note,
             onNoteCopied: () async {
-              await notesProvider.duplicateNote(note.id!);
+              await notesProvider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
               onNoteChanged();
               if (!context.mounted) return;
               UnifiedNotificationService().show(
@@ -272,7 +272,7 @@ class NoteCardActions {
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          await notesProvider.duplicateNote(note.id!);
+          await notesProvider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
           onNoteChanged();
           if (!context.mounted) return;
           UnifiedNotificationService().show(

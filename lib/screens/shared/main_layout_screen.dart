@@ -55,6 +55,14 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     _autoSyncOnStartup();
     tabToHomeNotifier.addListener(_onBackToHome);
 
+    // ربط callback تحديث الكتالوجات بعد المزامنة التلقائية
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+      final categoriesProvider = Provider.of<CategoriesProvider>(context, listen: false);
+      notesProvider.stateService.onCategoriesRefreshNeeded =
+          () => categoriesProvider.refreshCategories();
+    });
+
     // ⚠️ قفل الاتجاه للموبايل فقط
     WidgetsBinding.instance.addPostFrameCallback((_) {
       PlatformHelper.lockOrientationForMobile(context);
@@ -97,11 +105,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     if (autoSync && GoogleDriveService.isSignedIn) {
       await GoogleDriveService.smartSyncOnStartup();
       if (!mounted) return;
-      // ignore: use_build_context_synchronously
+      
       await Provider.of<NotesProvider>(context, listen: false)
           .refreshAllNotes(force: true);
       if (!mounted) return;
-      // ignore: use_build_context_synchronously
+      
       await Provider.of<CategoriesProvider>(context, listen: false)
           .refreshCategories();
     }

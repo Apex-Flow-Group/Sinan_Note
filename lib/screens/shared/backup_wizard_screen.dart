@@ -26,9 +26,10 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
+    final isWide = MediaQuery.of(context).size.width >= 800;
 
     return PopScope(
-      canPop: _flow == null,
+      canPop: _flow == null || isWide,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) setState(() => _flow = null);
       },
@@ -36,28 +37,82 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: _flow != null
+            onPressed: (!isWide && _flow != null)
                 ? () => setState(() => _flow = null)
                 : () => Navigator.pop(context),
           ),
           automaticallyImplyLeading: false,
           title: Text(
-            _flow == null
-                ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
-                : _flow == 'backup'
-                    ? (isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup')
-                    : (isArabic ? 'استعادة البيانات' : 'Restore Data'),
+            isWide
+                ? (isArabic ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore')
+                : _flow == null
+                    ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
+                    : _flow == 'backup'
+                        ? (isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup')
+                        : (isArabic ? 'استعادة البيانات' : 'Restore Data'),
           ),
           centerTitle: true,
         ),
         body: _isLoading
             ? _buildLoading(isArabic)
-            : _flow == null
-                ? _buildHome(l10n, isArabic, scheme)
-                : _flow == 'backup'
-                    ? _buildBackupFlow(l10n, isArabic, scheme)
-                    : _buildRestoreFlow(l10n, isArabic, scheme),
+            : isWide
+                ? _buildWideLayout(l10n, isArabic, scheme)
+                : _flow == null
+                    ? _buildHome(l10n, isArabic, scheme)
+                    : _flow == 'backup'
+                        ? _buildBackupFlow(l10n, isArabic, scheme)
+                        : _buildRestoreFlow(l10n, isArabic, scheme),
       ),
+    );
+  }
+
+  // ── Wide Layout (Master-Details) ──────────────────────────────────────────
+  Widget _buildWideLayout(
+      AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
+    _flow ??= 'backup';
+    return Row(
+      children: [
+        // Master — قائمة الخيارات
+        Container(
+          width: 240,
+          color: scheme.surfaceContainerLow,
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Icon(Icons.shield_outlined, size: 48, color: scheme.primary),
+              const SizedBox(height: 12),
+              Text(
+                isArabic ? 'بياناتك في أمان' : 'Your data is safe',
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              _SideItem(
+                icon: Icons.cloud_upload_outlined,
+                label: isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup',
+                selected: _flow == 'backup',
+                color: scheme.primary,
+                onTap: () => setState(() => _flow = 'backup'),
+              ),
+              _SideItem(
+                icon: Icons.cloud_download_outlined,
+                label: isArabic ? 'استعادة البيانات' : 'Restore Data',
+                selected: _flow == 'restore',
+                color: Colors.green,
+                onTap: () => setState(() => _flow = 'restore'),
+              ),
+            ],
+          ),
+        ),
+        const VerticalDivider(width: 1),
+        // Details — المحتوى
+        Expanded(
+          child: _flow == 'backup'
+              ? _buildBackupFlow(l10n, isArabic, scheme)
+              : _buildRestoreFlow(l10n, isArabic, scheme),
+        ),
+      ],
     );
   }
 
@@ -606,6 +661,45 @@ class _ActionBtn extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+}
+
+class _SideItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SideItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: ListTile(
+        leading: Icon(icon, color: selected ? color : scheme.onSurfaceVariant),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+            color: selected ? color : null,
+          ),
+        ),
+        selected: selected,
+        selectedTileColor: color.withValues(alpha: 0.1),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        onTap: onTap,
       ),
     );
   }

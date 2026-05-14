@@ -23,7 +23,7 @@ class SettingsProvider with ChangeNotifier {
   bool _biometricLockEnabled = false;
 
   // Pull-to-refresh mode: 'full' | 'normal' | 'disabled'
-  String _pullToRefreshMode = 'normal';
+  String _pullToRefreshMode = 'disabled';
   bool _hideContentInBackground = false;
   bool _lockDelayEnabled = false;
   int _lockDelaySeconds = 30;
@@ -285,7 +285,7 @@ class SettingsProvider with ChangeNotifier {
       _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
           ['delete', 'archive', 'share'];
       _heroAnimationEnabled = false;
-      _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'normal';
+      _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'disabled';
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');
       if (homeViewType != null) {

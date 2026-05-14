@@ -32,15 +32,14 @@ class ResponsiveLayoutWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // التحقق من نوع الجهاز + حجم الشاشة
-        // Desktop Layout فقط على Linux/Windows/macOS مع عرض >= breakpoint
-        final shouldUseDesktop = PlatformHelper.isDesktopPlatform && 
-                                 constraints.maxWidth >= breakpoint;
-        
+        final shouldUseDesktop = PlatformHelper.shouldUseDesktopLayout(
+          context,
+          breakpoint: breakpoint,
+        );
+
         if (shouldUseDesktop) {
           return masterDetailsLayout;
         }
-        // Mobile Layout للأجهزة المحمولة (حتى في Landscape)
         return mobileLayout;
       },
     );

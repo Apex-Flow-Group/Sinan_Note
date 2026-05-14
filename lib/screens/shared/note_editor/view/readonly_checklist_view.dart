@@ -59,15 +59,12 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
   Widget build(BuildContext context) {
     final items =
         ChecklistFormatter.parseJson(widget.coordinator.contentController.text);
-    if (items.isEmpty) {
-      return SingleChildScrollView(
-        controller: widget.scrollController,
-        child: const SizedBox.shrink(),
-      );
-    }
 
+    final displayItems = items.isEmpty
+        ? [ChecklistItem(id: '__ghost__', text: '', isDone: false)]
+        : items;
     final done = items.where((e) => e.isDone).length;
-    final progress = done / items.length;
+    final progress = items.isEmpty ? 0.0 : done / items.length;
 
     return ScrollbarTheme(
       data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
@@ -122,7 +119,7 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                   ),
                 );
               },
-              onReorder: widget.isTrashed
+              onReorder: (items.isEmpty || widget.isTrashed)
                   ? (_, __) {}
                   : (oldIndex, newIndex) {
                       setState(() {
@@ -132,9 +129,10 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                       });
                       _save(items);
                     },
-              children: items.asMap().entries.map((entry) {
+              children: displayItems.asMap().entries.map((entry) {
                 final index = entry.key;
                 final item = entry.value;
+                final isGhost = item.id == '__ghost__';
                 return ListTile(
                   key: ValueKey(item.id),
                   contentPadding: EdgeInsets.zero,
@@ -142,13 +140,14 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                       ? null
                       : ReorderableDragStartListener(
                           index: index,
+                          enabled: !isGhost,
                           child: Icon(Icons.drag_indicator,
                               color: widget.textColor.withValues(alpha: 0.3)),
                         ),
                   title: Row(
                     children: [
                       GestureDetector(
-                        onTap: widget.isTrashed
+                        onTap: (widget.isTrashed || isGhost)
                             ? null
                             : () {
                                 setState(

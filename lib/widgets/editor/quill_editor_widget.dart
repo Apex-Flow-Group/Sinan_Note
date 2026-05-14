@@ -307,7 +307,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       placeholder: '',
                       checkBoxReadOnly: widget.readOnly,
                       requestKeyboardFocusOnCheckListChanged: false,
-                      // ignore: experimental_member_use
+                      
                       customLeadingBlockBuilder: _buildCheckboxLeading,
                       onTapUp: _onTapUp,
                       onTapDown: _onTapDown,

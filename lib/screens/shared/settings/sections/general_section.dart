@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/platform_helper.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/shared/settings/font_family_sheet.dart';
 import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
@@ -56,7 +57,7 @@ class GeneralSection extends StatelessWidget {
         subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
         onTap: () => _showFontFamilySheet(context, settings, l10n),
       ),
-      if (!showBetaSeparate)
+      if (!showBetaSeparate && PlatformHelper.isMobilePlatform)
         SwitchListTile(
           secondary: Row(
             mainAxisSize: MainAxisSize.min,
@@ -228,7 +229,7 @@ class BetaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode) return const SizedBox.shrink();
+    if (!kDebugMode || PlatformHelper.isDesktopPlatform) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
     return SettingsSectionCard(

@@ -166,7 +166,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
           subject: widget.note.title,
           note: widget.note,
           onNoteCopied: () async {
-            await notesProvider.duplicateNote(widget.note.id!);
+            await notesProvider.duplicateNote(widget.note.id!, copyLabel: l10n.noteCopy);
             widget.onNoteChanged();
             if (!context.mounted) return;
             UnifiedNotificationService().show(
@@ -179,7 +179,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
 
       case 'duplicate':
         Navigator.pop(context);
-        await notesProvider.duplicateNote(widget.note.id!);
+        await notesProvider.duplicateNote(widget.note.id!, copyLabel: l10n.noteCopy);
         widget.onNoteChanged();
         if (!context.mounted) return;
         UnifiedNotificationService().show(

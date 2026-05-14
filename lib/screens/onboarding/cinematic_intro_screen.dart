@@ -7,8 +7,9 @@ import 'package:apex_note/screens/onboarding/tour_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// ignore: use_key_in_widget_constructors
 class CinematicIntroScreen extends StatefulWidget {
+  const CinematicIntroScreen({super.key});
+
   @override
   State<CinematicIntroScreen> createState() => _CinematicIntroScreenState();
 }

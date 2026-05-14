@@ -156,6 +156,7 @@ class GoogleDriveWidgets {
     bool isSignedIn,
     VoidCallback? onUpload,
     VoidCallback? onDownload,
+    VoidCallback? onMerge,
   ) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
@@ -241,6 +242,7 @@ class GoogleDriveWidgets {
     void showDownloadSheet() {
       showModalBottomSheet(
         context: context,
+        isScrollControlled: true,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -250,6 +252,7 @@ class GoogleDriveWidgets {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // عنوان
               Row(
                 children: [
                   Container(
@@ -265,60 +268,65 @@ class GoogleDriveWidgets {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.downloadDatabase,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          isAr ? 'جلب من Drive' : 'Download from Drive',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
                         const SizedBox(height: 2),
-                        Text(l10n.downloadDatabaseDesc,
-                            style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          isAr ? 'اختر طريقة الجلب' : 'Choose how to download',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        isAr
-                            ? 'سيتم استبدال ملاحظاتك المحلية بنسخة Drive.'
-                            : 'Your local notes will be replaced with the Drive version.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.6),
-                      ),
-                    ),
-                  ],
-                ),
+
+              // خيار الدمج
+              _buildDownloadOption(
+                context: context,
+                icon: Icons.merge,
+                iconColor: Colors.blue,
+                title: isAr ? 'دمج ذكي' : 'Smart Merge',
+                description: isAr
+                    ? 'يحتفظ بأحدث نسخة من كل ملاحظة.\nالأفضل للمزامنة بين أجهزة متعددة.'
+                    : 'Keeps the latest version of each note.\nBest for syncing across multiple devices.',
+                recommended: true,
+                isAr: isAr,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onMerge?.call();
+                },
               ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(l10n.cancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        onDownload?.call();
-                      },
-                      icon: const Icon(Icons.cloud_download, size: 18),
-                      label: Text(isAr ? 'تنزيل' : 'Download'),
-                      style: FilledButton.styleFrom(backgroundColor: Colors.green),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 12),
+
+              // خيار الاستبدال
+              _buildDownloadOption(
+                context: context,
+                icon: Icons.download_for_offline,
+                iconColor: Colors.orange,
+                title: isAr ? 'استبدال كامل' : 'Full Replace',
+                description: isAr
+                    ? 'يحذف كل الملاحظات المحلية ويستبدلها بنسخة Drive.\nاستخدم عند إعادة التثبيت فقط.'
+                    : 'Deletes all local notes and replaces with Drive.\nUse only when reinstalling the app.',
+                recommended: false,
+                isAr: isAr,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onDownload?.call();
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // زر إلغاء
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(l10n.cancel),
+                ),
               ),
             ],
           ),
@@ -476,6 +484,92 @@ class GoogleDriveWidgets {
           ),
         ),
       ],
+    );
+  }
+
+  static Widget _buildDownloadOption({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String description,
+    required bool recommended,
+    required bool isAr,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: recommended
+                ? Colors.blue.withValues(alpha: 0.5)
+                : Colors.orange.withValues(alpha: 0.4),
+            width: recommended ? 1.5 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          color: recommended
+              ? Colors.blue.withValues(alpha: 0.04)
+              : Colors.orange.withValues(alpha: 0.04),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      if (recommended) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isAr ? 'موصى به' : 'Recommended',
+                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right,
+                color: iconColor.withValues(alpha: 0.7), size: 20),
+          ],
+        ),
+      ),
     );
   }
 }

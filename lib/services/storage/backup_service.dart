@@ -12,6 +12,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 class BackupService {
@@ -32,9 +33,9 @@ class BackupService {
   Future<void> exportDatabase() async {
     await ApexErrorManager.monitorCritical(() async {
       final dbPath = await _getDbFilePath();
-      if (!await File(dbPath).exists())
-        // ignore: curly_braces_in_flow_control_structures
+      if (!await File(dbPath).exists()) {
         throw Exception('ملف قاعدة البيانات غير موجود');
+      }
 
       final fileName = _backupFileName();
       final tempDir = await getTemporaryDirectory();
@@ -146,6 +147,12 @@ class BackupService {
         await dbService.upsertNote(note);
       }
 
+      // مسح sync state — بعد الاستعادة الجهاز يجب أن يرفع لـ Drive أولاً
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('last_upload_timestamp');
+      await prefs.remove('last_known_drive_md5');
+      await prefs.remove('deleted_note_ids');
+
       AppLogger.debug(
           '[Replace] Database replaced with ${notesData.length} notes');
     }, 'Backup_Replace');
@@ -187,6 +194,13 @@ class BackupService {
       }
 
       AppLogger.debug('[Merge] Merged $merged notes');
+
+      // مسح sync state — بعد الدمج الجهاز يجب أن يرفع لـ Drive أولاً
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('last_upload_timestamp');
+      await prefs.remove('last_known_drive_md5');
+      await prefs.remove('deleted_note_ids');
+
       return merged;
     }, 'Backup_Merge');
   }

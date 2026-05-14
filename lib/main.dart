@@ -118,9 +118,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       if (data != null && data is Map) {
         _processIntent(data);
       }
-    } catch (e) {
-      // Ignore: Widget intent errors are non-critical
-    }
+    } catch (_) {}
   }
 
   Future<void> _handleMethodCall(MethodCall call) async {
@@ -410,7 +408,7 @@ class _AppHomeState extends State<_AppHome> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        if (settings.isFirstLaunch) return CinematicIntroScreen();
+        if (settings.isFirstLaunch) return const CinematicIntroScreen();
         return const SplashScreen();
       },
     );

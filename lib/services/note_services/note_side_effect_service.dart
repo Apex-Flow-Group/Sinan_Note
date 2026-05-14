@@ -118,8 +118,8 @@ class NoteSideEffectService {
 
     try {
       await NotificationService().cancelNotification(noteId);
-      // ignore: empty_catches
-    } catch (e) {}
+    
+    } catch (_) {}
   }
 
   /// Update widget side effect
@@ -138,8 +138,8 @@ class NoteSideEffectService {
     // Only handle widgets on Android
     if (!Platform.isAndroid) return;
 
-    // ignore: empty_catches
-    try {} catch (e) {}
+    
+    try {} catch (_) {}
   }
 
   /// Check and update widget if note is pinned
@@ -155,8 +155,8 @@ class NoteSideEffectService {
 
     try {
       await WidgetService.checkAndUpdateIfPinned(note);
-      // ignore: empty_catches
-    } catch (e) {}
+      
+    } catch (_) {}
   }
 
   /// Check and reset widget if pinned note is deleted
@@ -172,7 +172,7 @@ class NoteSideEffectService {
 
     try {
       await WidgetService.checkAndResetIfPinned(noteId);
-      // ignore: empty_catches
-    } catch (e) {}
+      
+    } catch (_) {}
   }
 }

@@ -214,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mode == 'full') {
         final pullToSyncEnabled = (await SharedPreferences.getInstance())
                 .getBool('google_drive_pull_to_refresh') ??
-            true;
+            false;
         if (GoogleDriveService.isSignedIn &&
             GoogleDriveService.autoSyncEnabled.value &&
             pullToSyncEnabled) {
@@ -232,6 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) setState(() => _isSearchActive = false);
       } else {
         await notesProvider.refreshAllNotes(force: true);
+        await categoriesProvider.refreshCategories();
       }
     } finally {
       // Wait minimum 1.5s so the user sees the refreshing indicator

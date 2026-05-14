@@ -37,6 +37,7 @@ class NotesProvider extends ChangeNotifier {
   }
 
   bool get isInitialDataLoaded => _stateService.isInitialDataLoaded;
+  NoteStateService get stateService => _stateService;
   List<Note> get activeNotes => _stateService.activeNotes;
   List<Note> get notes => activeNotes;
   List<Note> get archivedNotes => _stateService.archivedNotes;
@@ -236,15 +237,12 @@ class NotesProvider extends ChangeNotifier {
     await refreshAllNotes();
   }
 
-  Future<int> duplicateNote(int id) async {
+  Future<int> duplicateNote(int id, {String copyLabel = 'Copy'}) async {
     final note = await _dbService.getNoteById(id);
-    if (note == null) {
-      return -1;
-    }
+    if (note == null) return -1;
 
-    // Create completely new note without ID
     final copy = Note(
-      title: note.title.isEmpty ? 'Copy' : '${note.title} - Copy',
+      title: note.title.isEmpty ? copyLabel : '${note.title} - $copyLabel',
       content: note.content,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
