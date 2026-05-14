@@ -90,6 +90,35 @@ class GoogleDriveHandlers {
     }
   }
 
+  static Future<void> handleMerge(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    if (!GoogleDriveService.isSignedIn) {
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.pleaseSignIn,
+        type: NotificationType.warning,
+      );
+      return;
+    }
+    try {
+      await GoogleDriveService.silentMerge();
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: isArabic ? 'تم الدمج بنجاح' : 'Merge completed successfully',
+        type: NotificationType.success,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.syncFailed} $e',
+        type: NotificationType.error,
+      );
+    }
+  }
+
   static Future<void> handleDownload(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     if (!GoogleDriveService.isSignedIn) {
@@ -163,7 +192,7 @@ class GoogleDriveHandlers {
             onPressed: () {
               Navigator.pop(ctx);
               // رابط Google Play
-              // ignore: deprecated_member_use
+              
             },
           ),
         ],

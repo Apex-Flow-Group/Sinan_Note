@@ -18,6 +18,62 @@
 | 10 | Trash view — checklist interactive in read-only | Medium | ✅ Fixed |
 | 11 | Trash view — action buttons always visible (ugly) | Low | ✅ Fixed |
 | 12 | Share sheet — save file notification not showing | Medium | ✅ Fixed |
+| 13 | Checklist read-only — empty list shows blank | Medium | ✅ Fixed |
+| 14 | Trash — empty note opens in edit mode on desktop | Medium | ✅ Fixed |
+| 15 | Duplicate note — copy label hardcoded in English | Low | ✅ Fixed |
+
+---
+
+## Session: Google Drive Sync Engine Overhaul (Current)
+
+### Zero Trust Sync via MD5 Checksum
+
+**Problem:** The old sync relied on a 48-hour timestamp rule to decide trust. This failed silently during long offline periods or multi-device conflicts.
+
+**Solution:** Replaced with `md5Checksum` from Google Drive API — mathematical proof of whether the remote file changed since last sync.
+
+**Two sync paths:**
+- **Fast Path** — MD5 matches local: apply all pending deletions (`deleted_ids`) immediately, upload changes directly.
+- **Merge Path** — MD5 differs (another device synced): download Drive notes, resolve conflicts by comparing `deletedAt` vs `updatedAt` — newest event wins. (CRDT-level logic without schema changes.)
+
+### Auto Housekeeping
+After every successful upload: clear `deleted_note_ids` tombstones + update `last_known_drive_md5`. Prevents tombstone accumulation and keeps performance stable.
+
+### Safe Backup Merge
+On local backup restore: reset all trust paths (`last_upload_timestamp`, `last_known_drive_md5`, `deleted_note_ids`). Forces Merge Path on next sync — protects recent Drive changes from being overwritten by old backup.
+
+### API Quota Protection
+`Pull-to-Refresh` disabled by default. Relies on silent `smartSyncOnStartup` instead of user-triggered refreshes.
+
+---
+
+## Session: Desktop & Responsive UI (Current)
+
+### Responsive Layout
+- `ResponsiveLayoutWrapper` now uses `shouldUseDesktopLayout()` instead of `isDesktopPlatform` — tablets in landscape get Master-Details layout.
+- `DetailsPanel` — trashed notes stay selected and open in read-only mode instead of clearing selection.
+- `BackupWizardScreen` — responsive Master-Details layout for screens >= 800px.
+- `SettingsScreenResponsive` — desktop settings now reuses existing section widgets (`GeneralSection`, `SwipeSection`, `SecuritySection`, `DataSection`, `AboutSection`) — no more duplicated code.
+
+### AppDialog
+New `AppDialog.show()` helper — opens any screen as a floating dialog with fade+scale animation on large screens (>= 800px), normal push on mobile. Applied to: `AboutScreen`, `SupportFormScreen`, `BackupWizardScreen`, `TourScreen`.
+
+### Desktop Menu Bar
+- Removed `Reminder` from File menu (wrong location).
+- Added `Rich Text` note type.
+- Merged Export + Import into single `Backup & Restore` button → opens `BackupWizardScreen`.
+- `About` opens via `AppDialog.show()` internally — removed `onAbout` callback.
+
+### Settings
+- Hero Animation toggle hidden on desktop (`PlatformHelper.isDesktopPlatform`).
+- `BetaSection` hidden on desktop.
+
+### Read-Only View
+- Added color picker button to bottom action bar.
+- `onEnterEdit` blocked when `note.isTrashed == true`.
+
+### Checklist Read-Only
+- Empty checklist now shows progress bar + ghost item (checkbox + drag handle) instead of blank screen.
 
 ---
 

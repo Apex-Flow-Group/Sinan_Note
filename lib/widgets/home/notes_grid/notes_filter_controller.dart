@@ -242,6 +242,8 @@ class NotesFilterController extends ChangeNotifier {
         return note.reminderDateTime != null;
       case 'checklist':
         return note.noteType == 'checklist' || note.isChecklist;
+      case 'rich':
+        return note.noteType == 'rich';
       default:
         return false;
     }

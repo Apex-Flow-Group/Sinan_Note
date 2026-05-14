@@ -15,6 +15,7 @@ import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
+import 'package:apex_note/widgets/common/app_dialog.dart';
 import 'package:apex_note/widgets/home/categories_panel.dart';
 import 'package:apex_note/widgets/home/drawer_widgets.dart';
 import 'package:flutter/material.dart';
@@ -252,10 +253,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       GestureDetector(
                         onTap: () {
                           Navigator.pop(context);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const SupportFormScreen()));
+                          AppDialog.show(context, const SupportFormScreen());
                         },
                         child: Icon(Icons.support_agent_rounded,
                             size: 18, color: scheme.onSurfaceVariant),
@@ -264,10 +262,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       GestureDetector(
                         onTap: () {
                           Navigator.pop(context);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const AboutScreen()));
+                          AppDialog.show(context, const AboutScreen());
                         },
                         child: Icon(Icons.info_outline_rounded,
                             size: 18, color: scheme.onSurfaceVariant),

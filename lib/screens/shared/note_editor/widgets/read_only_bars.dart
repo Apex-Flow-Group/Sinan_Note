@@ -101,6 +101,7 @@ class ReadOnlyBars {
     required VoidCallback onArchive,
     required VoidCallback onDelete,
     required VoidCallback onEdit,
+    VoidCallback? onColorChange,
     void Function(String)? onConvert,
     String currentNoteType = 'simple',
     bool isChecklist = false,
@@ -147,6 +148,16 @@ class ReadOnlyBars {
                     ),
                   ),
                   const Spacer(),
+                  if (onColorChange != null)
+                    IconButton(
+                      icon: const Icon(Icons.palette_outlined),
+                      tooltip: l10n.noteColors,
+                      onPressed: onColorChange,
+                      padding: const EdgeInsets.all(6),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  if (onColorChange != null) const SizedBox(width: 4),
                   if (onConvert != null)
                     IconButton(
                       icon: const Icon(Icons.swap_horiz_rounded),

@@ -32,10 +32,12 @@ class PlatformHelper {
   }
 
   /// التحقق من أن الشاشة يجب أن تستخدم Desktop Layout
-  /// يجمع بين نوع الجهاز وحجم الشاشة
+  /// الهاتف: موبايل دائماً — التابلت أفقي: ديسكتوب — التابلت عمودي: موبايل
   static bool shouldUseDesktopLayout(BuildContext context, {double breakpoint = 600}) {
-    final width = MediaQuery.of(context).size.width;
-    return isDesktopPlatform && width >= breakpoint;
+    if (isDesktopPlatform) return true;
+    final size = MediaQuery.of(context).size;
+    final isTabletDevice = size.shortestSide >= breakpoint;
+    return isTabletDevice && size.width >= 800;
   }
 
   /// الحصول على breakpoint المناسب حسب نوع الجهاز

@@ -37,8 +37,8 @@ class EditorStorageController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('last_font_size', fontSize);
       await prefs.setInt('last_note_color', _colorToInt(backgroundColor));
-      // ignore: empty_catches
-    } catch (e) {}
+      
+    } catch (_) {}
   }
 
   /// Authenticate user for locked notes

@@ -38,6 +38,14 @@ class FilterSheet {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.format_paint_rounded, color: Colors.purple),
+              title: Text(l10n.richNoteMenu),
+              onTap: () {
+                Navigator.pop(context);
+                activeFilterNotifier.value = 'type:rich';
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.checklist, color: Colors.green),
               title: Text(l10n.checklists),
               onTap: () {

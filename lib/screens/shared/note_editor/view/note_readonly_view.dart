@@ -17,6 +17,7 @@ import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/services/version_control_service.dart';
+import 'package:apex_note/widgets/common/color_picker_sheet.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:apex_note/widgets/editor/markdown_viewer.dart';
 import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
@@ -390,6 +391,21 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     if (mounted) _closeOrPop();
   }
 
+  Future<void> _onColorChange() async {
+    final selectedIndex = await ColorPickerSheet.show(
+      context,
+      currentIndex: widget.coordinator.stateManager.colorIndex,
+    );
+    if (selectedIndex == null || !mounted) return;
+    widget.coordinator.stateManager.colorIndex = selectedIndex;
+    widget.coordinator.stateManager.markDirty();
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final updated = _currentNote.copyWith(colorIndex: selectedIndex);
+    await provider.updateNote(updated);
+    if (!mounted) return;
+    setState(() => _currentNote = updated);
+  }
+
   Future<void> _onRefresh() async {
     if (_currentNote.id == null) return;
     final provider = Provider.of<NotesProvider>(context, listen: false);
@@ -482,7 +498,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               showCursor: false,
               enableInteractiveSelection: false,
               checkBoxReadOnly: true,
-              // ignore: experimental_member_use
+            
               customLeadingBlockBuilder: (node, config) =>
                   _buildCheckboxLeading(config, textColor),
               customStyles: DefaultStyles(
@@ -713,6 +729,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               onArchive: _onArchive,
               onDelete: _onDelete,
               onEdit: widget.onEnterEdit,
+              onColorChange: _onColorChange,
               onConvert: (targetType) => _onConvert(targetType),
               currentNoteType:
                   _currentNote.isProfessional ? 'code' : _currentNote.noteType,

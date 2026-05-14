@@ -13,6 +13,7 @@ class NoteStateService {
 
   /// Callback to refresh notes from database after sync
   Future<void> Function()? onSyncCompleted;
+  Future<void> Function()? onCategoriesRefreshNeeded;
 
   // Cache
   List<Note>? _cachedActiveNotes;
@@ -197,6 +198,9 @@ class NoteStateService {
         // ✅ Refresh notes from database after sync completes
         if (onSyncCompleted != null) {
           await onSyncCompleted!();
+        }
+        if (onCategoriesRefreshNeeded != null) {
+          await onCategoriesRefreshNeeded!();
         }
       } catch (_) {
       } finally {

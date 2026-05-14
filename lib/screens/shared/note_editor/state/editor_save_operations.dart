@@ -139,6 +139,10 @@ class EditorSaveOperations {
 
     if (content.trim().isEmpty && title.trim().isEmpty) return;
 
+    final notificationService = UnifiedNotificationService();
+    final savedMessage = l10n?.noteSaved ?? '';
+    final ctx = context;
+
     final saved = await saveToDatabase(
       coordinator: coordinator,
       mode: mode,
@@ -151,13 +155,15 @@ class EditorSaveOperations {
     );
 
     if (saved && isMounted()) {
-      UnifiedNotificationService().show(
-        // ignore: use_build_context_synchronously
-        context: context,
-        message: l10n!.noteSaved,
-        type: NotificationType.success,
-        duration: const Duration(seconds: 1),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!isMounted()) return;
+        notificationService.show(
+          context: ctx,
+          message: savedMessage,
+          type: NotificationType.success,
+          duration: const Duration(seconds: 1),
+        );
+      });
     }
   }
 

@@ -124,6 +124,8 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     switch (filter) {
       case 'type:simple':
         return isAr ? 'نص بسيط' : 'Simple';
+      case 'type:rich':
+        return isAr ? 'منسقة' : 'Rich';
       case 'type:checklist':
         return isAr ? 'قائمة مهام' : 'Checklist';
       case 'pinned:true':

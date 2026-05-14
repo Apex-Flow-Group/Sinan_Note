@@ -9,7 +9,6 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart';
-import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:apex_note/widgets/desktop/desktop_selection_actions.dart';
 import 'package:apex_note/widgets/details_panel.dart';
@@ -304,30 +303,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                   await notesProvider.loadNotes(force: true);
                 },
                 onSettings: () => Navigator.pushNamed(context, '/settings'),
-                onExport: () {
-                  final tempStrings = {
-                    'exportBackup': l10n.exportBackup,
-                    'importBackup': l10n.importBackup,
-                    'googleDrive': l10n.googleDrive,
-                    'share': l10n.share,
-                    'soon': l10n.soon,
-                  };
-                  BackupOptionsDialog.show(context, tempStrings);
-                },
-                onImport: () {
-                  final tempStrings = {
-                    'exportBackup': l10n.exportBackup,
-                    'importBackup': l10n.importBackup,
-                    'googleDrive': l10n.googleDrive,
-                    'share': l10n.share,
-                    'soon': l10n.soon,
-                  };
-                  BackupOptionsDialog.show(context, tempStrings);
-                },
-                onAbout: () => showDialog(
-                  context: context,
-                  builder: (_) => const Dialog(child: AboutScreen()),
-                ),
               ),
               Consumer<NotesProvider>(
                 builder: (_, notes, __) => notes.isLoading

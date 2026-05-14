@@ -512,6 +512,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
           _currentNote = newNote;
         }),
         onEnterEdit: () {
+          if ((_currentNote ?? widget.note)?.isTrashed == true) return;
           if (_currentMode != widget.mode) {
             _coordinator.dispose();
             _coordinator = EditorCoordinator(

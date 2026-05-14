@@ -288,14 +288,6 @@ class VaultService {
     return diff == 0;
   }
 
-  /// Legacy hash — kept for backward compatibility detection only
-  // ignore: unused_element
-  static String _hash(String input) {
-    final bytes = utf8.encode(input);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
-  }
-
   /// Clear vault (for testing/reset) - secure wipe
   static Future<void> clearVault() async {
     // Wipe master key before deletion

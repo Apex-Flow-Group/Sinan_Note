@@ -107,8 +107,16 @@ class GoogleDriveService {
           ? DateTime.fromMillisecondsSinceEpoch(lastUploadMs)
           : null;
 
+      // لا يوجد تاريخ رفع محلي — جهاز جديد أو بعد استعادة backup
+      // ادمج مع Drive بدل Overwrite — يحمي النوتات المحلية ويدمجها مع Drive
+      if (lastUpload == null) {
+        AppLogger.info('First sync on this device → silent merge', 'GoogleDrive');
+        await _silentMerge();
+        return;
+      }
+
       // Drive أحدث من آخر رفع محلي → اجلب من Drive
-      final driveIsNewer = lastUpload == null ||
+      final driveIsNewer =
           driveModified.isAfter(lastUpload.add(const Duration(seconds: 10)));
 
       if (driveIsNewer) {
@@ -125,6 +133,7 @@ class GoogleDriveService {
     } catch (e) {
       AppLogger.error('Smart sync failed', 'GoogleDrive', e);
     } finally {
+      _lastSyncTime = DateTime.now();
       if (!_isDownloading && !_isUploading) {
         isSyncing.value = false;
       }
@@ -148,6 +157,20 @@ class GoogleDriveService {
         return;
       }
 
+      // جلب MD5 الحالي من Drive
+      final currentMd5 = file.md5Checksum;
+      final prefs = await _getPrefs();
+      final lastKnownMd5 = prefs.getString('last_known_drive_md5');
+      final isFastPath = currentMd5 != null &&
+          lastKnownMd5 != null &&
+          currentMd5 == lastKnownMd5;
+
+      AppLogger.info(
+        isFastPath ? 'Fast path: MD5 match' : 'Merge path: MD5 changed',
+        'GoogleDrive',
+      );
+
+      // جلب محتوى Drive
       final response = await GoogleDriveAuth.driveApi!.files.get(
         file.id!,
         downloadOptions: drive.DownloadOptions.fullMedia,
@@ -170,7 +193,7 @@ class GoogleDriveService {
           ? (jsonData['categories'] as List? ?? [])
           : [];
 
-      // سجلات الحذف من Drive + المحلي
+      // سجلات الحذف من Drive
       final driveDeletedRaw =
           (jsonData is Map ? (jsonData['deleted_ids'] as Map? ?? {}) : {});
       final driveDeleted = <int, DateTime>{};
@@ -181,22 +204,35 @@ class GoogleDriveService {
           driveDeleted[id] = DateTime.fromMillisecondsSinceEpoch(ms);
         }
       });
+
       final localDeleted = await SqliteDatabaseService.getDeletedNoteIds();
-      final allDeleted = <int, DateTime>{...localDeleted};
-      driveDeleted.forEach((id, dt) {
-        if (!allDeleted.containsKey(id) || dt.isAfter(allDeleted[id]!)) {
-          allDeleted[id] = dt;
-        }
-      });
+
+      // بناء allDeleted حسب المسار
+      final allDeleted = <int, DateTime>{};
+
+      if (isFastPath) {
+        // Fast Path: الجهاز يملك الحقيقة الكاملة — طبّق كل deleted_ids بدون قيود
+        allDeleted.addAll(localDeleted);
+        driveDeleted.forEach((id, dt) {
+          if (!allDeleted.containsKey(id) || dt.isAfter(allDeleted[id]!)) {
+            allDeleted[id] = dt;
+          }
+        });
+      } else {
+        // Merge Path: الجهاز لا يعرف آخر حالة Drive
+        // لا تطبّق deleted_ids محلية بشكل أعمى — سيتم التحكيم لاحقاً بمقارنة التواريخ
+        // فقط أضف deleted_ids من Drive (Drive موثوق دائماً)
+        allDeleted.addAll(driveDeleted);
+      }
 
       final dbService = SqliteDatabaseService();
       final localNotes = await dbService.getAllNotes();
-      // فقط النوتات غير المشفرة من Drive
       final driveNotes = driveList
           .where((m) => (m['isLocked'] ?? 0) == 0)
           .map((m) => Note.fromMap(m))
           .toList();
 
+      // بناء المدمج: الأحدث يفوز
       final Map<int, Note> merged = {};
       for (final n in localNotes) {
         if (n.id != null && !n.isLocked) merged[n.id!] = n;
@@ -209,15 +245,40 @@ class GoogleDriveService {
         }
       }
 
-      // طبّق الحذف
-      allDeleted.forEach((id, deletedAt) {
-        final note = merged[id];
-        if (note != null && deletedAt.isAfter(note.updatedAt)) {
-          merged.remove(id);
+      // تطبيق الحذف — الأحدث يفوز
+      if (isFastPath) {
+        // Fast Path: طبّق كل الحذف بالمنطق العادي
+        allDeleted.forEach((id, deletedAt) {
+          final note = merged[id];
+          if (note != null && deletedAt.isAfter(note.updatedAt)) {
+            merged.remove(id);
+          }
+        });
+      } else {
+        // Merge Path: لكل نوتة في Drive تحكّم بمقارنة deletedAt vs updatedAt
+        for (final n in driveNotes) {
+          if (n.id == null) continue;
+          if (localDeleted.containsKey(n.id)) {
+            final deletedAt = localDeleted[n.id]!;
+            if (deletedAt.isAfter(n.updatedAt)) {
+              // نية الحذف أحدث — احذف
+              merged.remove(n.id);
+            } else {
+              // تعديل جهاز آخر أحدث — ألغِ الحذف واحتفظ بالنوتة
+              merged[n.id!] = n;
+            }
+          }
         }
-      });
+        // طبّق deleted_ids من Drive بالمنطق العادي
+        driveDeleted.forEach((id, deletedAt) {
+          final note = merged[id];
+          if (note != null && deletedAt.isAfter(note.updatedAt)) {
+            merged.remove(id);
+          }
+        });
+      }
 
-      // upsert المدمجة مع الحفاظ على الـ id — بدون حذف وإعادة إدراج
+      // حفظ النتيجة في قاعدة البيانات
       final allLocal = await dbService.getAllNotes();
       final mergedIds = merged.keys.toSet();
       for (final n in allLocal) {
@@ -228,7 +289,8 @@ class GoogleDriveService {
       for (final n in merged.values) {
         await dbService.upsertNote(n);
       }
-      // دمج الكتالوجات: upsert الموجودة + أضف الجديدة + احذف المحذوفة من Drive
+
+      // دمج الكتالوجات
       final existingCats = await dbService.getAllCategories();
       final existingIds = existingCats.map((c) => c.id).toSet();
       final driveCatIds = driveCats.map((c) => c['id'] as int).toSet();
@@ -245,7 +307,6 @@ class GoogleDriveService {
           await dbService.insertCategory(cat);
         }
       }
-      // احذف الكتالوجات المحلية غير الموجودة في Drive
       for (final c in existingCats) {
         if (!driveCatIds.contains(c.id)) {
           await dbService.deleteCategory(c.id);
@@ -253,7 +314,10 @@ class GoogleDriveService {
       }
 
       _lastSyncTime = DateTime.now();
-      AppLogger.success('Silent merge: ${merged.length} notes', 'GoogleDrive');
+      AppLogger.success(
+        '${isFastPath ? "Fast" : "Merge"} path done: ${merged.length} notes',
+        'GoogleDrive',
+      );
     } catch (e) {
       AppLogger.error('Silent merge failed', 'GoogleDrive', e);
       _isDownloading = false;
@@ -331,10 +395,20 @@ class GoogleDriveService {
 
       await backupFile.delete();
       _lastSyncTime = DateTime.now();
-      _hasPendingChanges = false; // ✅ تم الرفع — لا تغييرات معلّقة
+      _hasPendingChanges = false;
       final prefs = await _getPrefs();
       await prefs.setInt(
           'last_upload_timestamp', _lastSyncTime!.millisecondsSinceEpoch);
+
+      // حفظ MD5 بعد الرفع الناجح — أساس Fast Path
+      final uploadedFile = await GoogleDriveAuth.findFile(fileName);
+      if (uploadedFile?.md5Checksum != null) {
+        await prefs.setString('last_known_drive_md5', uploadedFile!.md5Checksum!);
+      }
+
+      // مسح deleted_ids بعد الرفع — تم تطبيقها بنجاح
+      await prefs.remove('deleted_note_ids');
+
       AppLogger.success('Uploaded ${notes.length} notes', 'GoogleDrive');
       return true;
     } catch (e) {
@@ -413,6 +487,11 @@ class GoogleDriveService {
       }
 
       _lastSyncTime = DateTime.now();
+      // مسح deleted_ids المحلية — بعد Download لا تعد موثوقة
+      final prefs = await _getPrefs();
+      await prefs.remove('deleted_note_ids');
+      await prefs.setInt('last_upload_timestamp', _lastSyncTime!.millisecondsSinceEpoch);
+      _hasPendingChanges = false;
       AppLogger.success(
           'Downloaded ${regularNotes.length} notes', 'GoogleDrive');
       return true;
