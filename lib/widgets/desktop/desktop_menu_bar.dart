@@ -3,10 +3,12 @@
 import 'package:apex_note/core/shortcuts/app_shortcuts.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/screens/shared/backup_wizard_screen.dart';
 import 'package:apex_note/widgets/common/app_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class DesktopMenuBar extends StatelessWidget {
   final void Function(NoteMode) onNewNote;
@@ -57,8 +59,22 @@ class DesktopMenuBar extends StatelessWidget {
             const Divider(),
             MenuItemButton(
               leadingIcon: const Icon(Icons.backup_outlined, size: 16),
-              onPressed: () => AppDialog.show(context, const BackupWizardScreen()),
+              onPressed: () =>
+                  AppDialog.show(context, const BackupWizardScreen()),
               child: Text('${l10n.exportBackup} & ${l10n.restore}'),
+            ),
+            // إغلاق العارض إذا كان مفتوحاً
+            Consumer<SelectedNoteProvider>(
+              builder: (context, selectedNote, _) {
+                if (selectedNote.selectedNote == null) {
+                  return const SizedBox.shrink();
+                }
+                return MenuItemButton(
+                  leadingIcon: const Icon(Icons.close_rounded, size: 16),
+                  onPressed: () => selectedNote.clearSelection(),
+                  child: Text(l10n.close),
+                );
+              },
             ),
           ],
           child: Text(l10n.file),

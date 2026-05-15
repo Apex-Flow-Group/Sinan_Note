@@ -227,8 +227,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
           appBar: AppBar(
             scrolledUnderElevation: 0,
             elevation: 0,
-            backgroundColor:
-                Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+            backgroundColor: Theme.of(context).colorScheme.surface,
             leading: hasSelection
                 ? IconButton(
                     icon: const Icon(Icons.close),

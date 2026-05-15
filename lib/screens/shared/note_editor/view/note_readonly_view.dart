@@ -498,7 +498,8 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               showCursor: false,
               enableInteractiveSelection: false,
               checkBoxReadOnly: true,
-            
+
+              // ignore: experimental_member_use
               customLeadingBlockBuilder: (node, config) =>
                   _buildCheckboxLeading(config, textColor),
               customStyles: DefaultStyles(

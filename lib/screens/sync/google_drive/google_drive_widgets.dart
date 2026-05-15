@@ -166,8 +166,10 @@ class GoogleDriveWidgets {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (ctx) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        builder: (ctx) {
+          final bottomPad = MediaQuery.of(ctx).padding.bottom;
+          return Padding(
+            padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottomPad),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,7 +237,8 @@ class GoogleDriveWidgets {
               ),
             ],
           ),
-        ),
+        );
+        },
       );
     }
 
@@ -246,8 +249,10 @@ class GoogleDriveWidgets {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (ctx) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        builder: (ctx) {
+          final bottomPad = MediaQuery.of(ctx).padding.bottom;
+          return Padding(
+            padding: EdgeInsets.fromLTRB(24, 20, 24, 16 + bottomPad),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +335,8 @@ class GoogleDriveWidgets {
               ),
             ],
           ),
-        ),
+        );
+        },
       );
     }
 

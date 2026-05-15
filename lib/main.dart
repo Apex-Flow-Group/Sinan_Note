@@ -10,6 +10,7 @@ import 'package:apex_note/core/theme/app_theme.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
+import 'package:apex_note/providers/master_width_provider.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/desktop/archive_screen_responsive.dart';
 import 'package:apex_note/screens/desktop/locked_notes_screen_responsive.dart';
@@ -71,6 +72,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => NotesProvider()),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
         ChangeNotifierProvider(create: (_) => CategoriesProvider()),
+        ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
       ],
       child: const ApexNoteApp(),
     ),

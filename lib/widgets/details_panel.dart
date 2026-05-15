@@ -54,6 +54,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
   }
 
   /// التحقق من حالة الملاحظة المختارة ومسح الاختيار إذا تم حذفها/نقلها
+  /// وتحديث الملاحظة المختارة إذا تغيّرت بياناتها (مثل اللون)
   void _checkSelectedNoteStatus() {
     if (!mounted) return;
 
@@ -76,12 +77,26 @@ class _DetailsPanelState extends State<DetailsPanel> {
         // مسح الاختيار إذا تم أرشفة/قفل الملاحظة — لكن السلة تُعرض بوضع القراءة
         if (currentNote.isArchived || currentNote.isLocked) {
           selectedNoteProvider.clearSelection();
+        } else if (_noteHasChanged(selectedNote, currentNote)) {
+          // 🔥 تحديث الملاحظة المختارة إذا تغيّرت بياناتها (لون، عنوان، إلخ)
+          selectedNoteProvider.selectNote(currentNote);
         }
       } else {
         // الملاحظة لم تعد موجودة - مسح الاختيار
         selectedNoteProvider.clearSelection();
       }
     }
+  }
+
+  /// مقارنة الملاحظتين بالقيم لا بالمرجع (Note لا يملك == operator)
+  bool _noteHasChanged(Note old, Note current) {
+    return old.colorIndex != current.colorIndex ||
+        old.title != current.title ||
+        old.content != current.content ||
+        old.updatedAt != current.updatedAt ||
+        old.isPinned != current.isPinned ||
+        old.isArchived != current.isArchived ||
+        old.isTrashed != current.isTrashed;
   }
 
   @override
@@ -185,5 +200,4 @@ class _DetailsPanelState extends State<DetailsPanel> {
       );
     }
   }
-
 }

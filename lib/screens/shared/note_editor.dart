@@ -243,6 +243,15 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         }
       },
     );
+    // حفظ اللون فوراً إذا كانت الملاحظة موجودة مسبقاً
+    final noteId = _coordinator.savedNoteId ?? widget.note?.id;
+    if (noteId != null && _coordinator.stateManager.hasChanges()) {
+      final saved =
+          await _saveNoteToDatabase(forceUpdate: true, isManualSave: true);
+      if (saved) {
+        _coordinator.stateManager.updateSnapshot();
+      }
+    }
   }
 
   void _showHistorySheet() {

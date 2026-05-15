@@ -35,10 +35,12 @@ class SecuritySection extends StatelessWidget {
               if (!context.mounted) return;
               final result = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
-                  builder: (pinContext) => PinLockScreen(
+                  builder: (_) => PinLockScreen(
                     isSetup: true,
                     onSuccess: () {
-                      Navigator.of(pinContext).pop(true);
+                      if (context.mounted) {
+                        Navigator.of(context).pop(true);
+                      }
                     },
                   ),
                 ),
@@ -53,11 +55,13 @@ class SecuritySection extends StatelessWidget {
                 if (!context.mounted) return;
                 final result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
-                    builder: (pinContext) => PinLockScreen(
+                    builder: (_) => PinLockScreen(
                       isSetup: false,
                       isDisabling: true,
                       onSuccess: () {
-                        Navigator.of(pinContext).pop(true);
+                        if (context.mounted) {
+                          Navigator.of(context).pop(true);
+                        }
                       },
                     ),
                   ),

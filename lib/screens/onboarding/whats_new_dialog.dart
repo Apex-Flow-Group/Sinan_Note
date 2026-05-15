@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WhatsNewDialog extends StatelessWidget {
   final String version;
@@ -22,9 +23,7 @@ class WhatsNewDialog extends StatelessWidget {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 600;
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
@@ -68,9 +67,7 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Title ──
               Text(
-                isAr
-                    ? 'تحديث الأداء والاستقرار'
-                    : 'Performance & Stability Update',
+                isAr ? 'سطح المكتب والمزامنة الذكية' : 'Desktop & Smart Sync',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -115,8 +112,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'هذا التحديث يركّز على الاستقرار والسلاسة — إصلاحات مهمة لسجل التعديلات والمزامنة، مع تحسينات في واجهة المستخدم.'
-                            : 'This update focuses on stability and smoothness — important fixes for version history and sync, with UI improvements.',
+                            ? 'تحديث كبير يجلب تجربة سطح مكتب احترافية، مزامنة أذكى مع Google Drive، وتحسينات جذرية في العارض والسلة.'
+                            : 'A major update bringing a professional desktop experience, smarter Google Drive sync, and deep improvements to the viewer and trash.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -129,7 +126,7 @@ class WhatsNewDialog extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // ── Divider with label ──
+              // ── Divider ──
               Row(children: [
                 Expanded(child: Divider(color: scheme.outlineVariant)),
                 Padding(
@@ -150,47 +147,113 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Features ──
               _FeatureRow(
-                icon: Icons.history_rounded,
-                color: Colors.orange,
-                title: isAr ? 'إصلاح سجل التعديلات' : 'Version History Fixed',
+                icon: Icons.desktop_windows_rounded,
+                color: Colors.indigo,
+                title: isAr ? 'سطح مكتب Master-Details' : 'Master-Details Desktop',
                 subtitle: isAr
-                    ? 'الهيستوري تُسجَّل الآن بشكل صحيح عند كل تعديل'
-                    : 'History now records correctly on every edit session',
+                    ? 'عرض القائمة والمحتوى جنباً إلى جنب مع اختصارات لوحة المفاتيح'
+                    : 'Side-by-side list and content with full keyboard shortcuts',
               ),
               _FeatureRow(
                 icon: Icons.cloud_sync_rounded,
                 color: Colors.blue,
-                title: isAr ? 'مزامنة أذكى' : 'Smarter Sync',
+                title: isAr ? 'مزامنة MD5 Fast Path' : 'MD5 Fast Path Sync',
                 subtitle: isAr
-                    ? 'المزامنة تعمل تلقائياً بعد كل إجراء (حذف، أرشفة، تذكير)'
-                    : 'Auto-sync triggers after every action (delete, archive, reminder)',
-              ),
-              _FeatureRow(
-                icon: Icons.notifications_rounded,
-                color: Colors.green,
-                title: isAr ? 'إشعارات موحّدة' : 'Unified Notifications',
-                subtitle: isAr
-                    ? 'كل الإشعارات بتصميم واحد متناسق في كل الشاشات'
-                    : 'All notifications now use a consistent design across screens',
+                    ? 'المزامنة تتخطى الدمج تلقائياً إذا لم يتغير Drive — أسرع وأذكى'
+                    : 'Sync skips merge automatically if Drive is unchanged — faster and smarter',
               ),
               _FeatureRow(
                 icon: Icons.delete_sweep_rounded,
                 color: Colors.red,
-                title: isAr ? 'تجربة السلة الجديدة' : 'New Trash Experience',
+                title: isAr ? 'عارض السلة المحسّن' : 'Improved Trash Viewer',
                 subtitle: isAr
-                    ? 'شريط سفلي قابل للسحب لاستعادة أو حذف الملاحظات'
-                    : 'Swipeable bottom sheet to restore or permanently delete',
+                    ? 'شريط سفلي قابل للسحب + منع التعديل للملاحظات المحذوفة'
+                    : 'Swipeable bottom sheet + edit blocked for trashed notes',
               ),
               _FeatureRow(
-                icon: Icons.storage_rounded,
-                color: Colors.purple,
-                title: isAr ? 'ترقية قاعدة البيانات' : 'Database Upgrade',
+                icon: Icons.palette_rounded,
+                color: Colors.orange,
+                title: isAr ? 'تغيير اللون من العارض' : 'Color Picker in Viewer',
                 subtitle: isAr
-                    ? 'إصلاح مشكلة عدم حفظ الهيستوري على الأجهزة المُحدَّثة'
-                    : 'Fixed history not saving on devices updated from older versions',
+                    ? 'غيّر لون الملاحظة مباشرة من شاشة العرض بدون فتح المحرر'
+                    : 'Change note color directly from the read-only view',
+              ),
+              _FeatureRow(
+                icon: Icons.swap_horiz_rounded,
+                color: Colors.teal,
+                title: isAr ? 'تحويل النوع من العارض' : 'Convert Type in Viewer',
+                subtitle: isAr
+                    ? 'حوّل الملاحظة بين النصي والكود والـ Rich Text من شريط الإجراءات'
+                    : 'Convert between text, code, and rich text from the action bar',
+              ),
+              _FeatureRow(
+                icon: Icons.check_box_rounded,
+                color: Colors.green,
+                title: isAr ? 'Checkbox تفاعلي في Rich Note' : 'Interactive Checkbox in Rich Note',
+                subtitle: isAr
+                    ? 'الضغط على الـ checkbox يُبدّل حالته مباشرة بألوان النوتة'
+                    : 'Tap checkbox to toggle it instantly with note colors',
               ),
 
               const SizedBox(height: 20),
+
+              // ── Privacy Policy update notice ──
+              InkWell(
+                onTap: () => launchUrl(
+                  Uri.parse('https://apexflow.now/ar/projects/sinan-note/privacy'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: scheme.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.privacy_tip_rounded,
+                          size: 20, color: scheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isAr
+                                  ? 'تحديث سياسة الخصوصية'
+                                  : 'Privacy Policy Updated',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isAr
+                                  ? 'تم تحديث السياسة لتعكس المميزات الجديدة — اضغط للمراجعة'
+                                  : 'Policy updated to reflect new features — tap to review',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                height: 1.4,
+                                color: scheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.open_in_new_rounded,
+                          size: 16,
+                          color: scheme.primary.withValues(alpha: 0.7)),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
 
               // ── Thanks ──
               Container(
@@ -208,8 +271,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'شكراً لملاحظاتكم — كل إصلاح هنا جاء من تجربتكم الحقيقية.'
-                            : 'Thanks for your feedback — every fix here came from your real experience.',
+                            ? 'شكراً لملاحظاتكم — كل تحسين هنا جاء من تجربتكم الحقيقية.'
+                            : 'Thanks for your feedback — every improvement here came from your real experience.',
                         style: TextStyle(
                           fontSize: 12.5,
                           height: 1.6,

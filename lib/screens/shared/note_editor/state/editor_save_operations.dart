@@ -68,9 +68,26 @@ class EditorSaveOperations {
         }
       }
 
-      // Empty content → trash
+      // Empty content → trash (فقط إذا كانت ملاحظة جديدة أو المحتوى كان فارغاً أصلاً)
       if (contentToSave.trim().isEmpty && !isNewLockedNote) {
         final noteId = coordinator.savedNoteId ?? existingNote?.id;
+        // إذا كانت الملاحظة موجودة مسبقاً وتغير اللون فقط — لا نرميها
+        final isColorOnlyChange = noteId != null &&
+            coordinator.stateManager.colorIndex !=
+                coordinator.stateManager.originalColorIndex;
+        if (isColorOnlyChange) {
+          // حفظ اللون فقط بدون رمي في السلة
+          await coordinator.notesProviderRef!.updateNote(
+            existingNote!.copyWith(
+              colorIndex: coordinator.stateManager.colorIndex,
+              updatedAt: DateTime.now(),
+            ),
+            silent: false,
+          );
+          coordinator.stateManager.markClean();
+          coordinator.stateManager.isSaving = false;
+          return true;
+        }
         if (noteId != null) {
           await coordinator.notesProviderRef!.trashNote(noteId);
         }
