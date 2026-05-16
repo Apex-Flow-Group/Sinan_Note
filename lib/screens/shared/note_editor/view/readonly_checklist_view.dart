@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:apex_note/core/utils/checklist_formatter.dart';
+import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:flutter/material.dart';
 
@@ -133,17 +134,10 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                 final index = entry.key;
                 final item = entry.value;
                 final isGhost = item.id == '__ghost__';
-                return ListTile(
+
+                final tile = ListTile(
                   key: ValueKey(item.id),
                   contentPadding: EdgeInsets.zero,
-                  leading: widget.isTrashed
-                      ? null
-                      : ReorderableDragStartListener(
-                          index: index,
-                          enabled: !isGhost,
-                          child: Icon(Icons.drag_indicator,
-                              color: widget.textColor.withValues(alpha: 0.3)),
-                        ),
                   title: Row(
                     children: [
                       GestureDetector(
@@ -179,6 +173,8 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                       Expanded(
                         child: Text(
                           item.text.isEmpty ? '...' : item.text,
+                          textDirection:
+                              TextDirectionUtils.getDirection(item.text),
                           style: TextStyle(
                             fontSize: 16,
                             height: 1.5,
@@ -193,6 +189,16 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                       ),
                     ],
                   ),
+                );
+
+                // الضغط الطويل على أي مكان في الصف يُفعّل السحب
+                if (widget.isTrashed || isGhost) {
+                  return KeyedSubtree(key: ValueKey(item.id), child: tile);
+                }
+                return ReorderableDelayedDragStartListener(
+                  key: ValueKey(item.id),
+                  index: index,
+                  child: tile,
                 );
               }).toList(),
             ),

@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
 import 'package:apex_note/widgets/details_panel.dart';
@@ -24,6 +25,7 @@ class LockedNotesScreenResponsive extends StatefulWidget {
 class _LockedNotesScreenResponsiveState
     extends State<LockedNotesScreenResponsive> {
   final TextEditingController _searchController = TextEditingController();
+  bool _isSearchActive = false;
 
   @override
   void initState() {
@@ -68,7 +70,7 @@ class _LockedNotesScreenResponsiveState
         },
       ),
       appBar: AppBar(
-        title: _searchController.text.isEmpty
+        title: !_isSearchActive
             ? Text(l10n.locked)
             : TextField(
                 controller: _searchController,
@@ -91,17 +93,15 @@ class _LockedNotesScreenResponsiveState
         ),
         actions: [
           IconButton(
-            icon: Icon(
-                _searchController.text.isEmpty ? Icons.search : Icons.close),
+            icon: Icon(_isSearchActive ? Icons.close : Icons.search),
             onPressed: () {
               setState(() {
                 if (_searchController.text.isEmpty) {
-                  _searchController.text = ' ';
-                  _searchController.selection = TextSelection.fromPosition(
-                    const TextPosition(offset: 0),
-                  );
+                  _searchController.text = '';
+                  _isSearchActive = true;
                 } else {
                   _searchController.clear();
+                  _isSearchActive = false;
                 }
               });
             },
@@ -120,10 +120,10 @@ class _LockedNotesScreenResponsiveState
             // تطبيق البحث
             final searchQuery = _searchController.text.trim();
             if (searchQuery.isNotEmpty) {
-              final query = searchQuery.toLowerCase();
+              final q = Note.normalize(searchQuery);
               notes = notes.where((note) {
-                return note.title.toLowerCase().contains(query) ||
-                    note.content.toLowerCase().contains(query);
+                return note.normalizedTitle.contains(q) ||
+                    note.normalizedContent.contains(q);
               }).toList();
             }
 

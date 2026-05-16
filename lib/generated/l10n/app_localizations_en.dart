@@ -1349,6 +1349,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checklistItemHint => 'Task...';
 
   @override
+  String get addItem => 'Add item';
+
+  @override
+  String get itemDeleted => 'Item deleted';
+
+  @override
   String get sort => 'Sort';
 
   @override

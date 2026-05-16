@@ -95,7 +95,6 @@ class NotesProvider extends ChangeNotifier {
     return activeNotes;
   }
 
-  Future<void> fetchNotes() async => await refreshAllNotes();
   Future<void> fetchTrashedNotes() async => await refreshAllNotes();
   Future<void> fetchArchivedNotes() async => await refreshAllNotes();
 
@@ -241,19 +240,14 @@ class NotesProvider extends ChangeNotifier {
     final note = await _dbService.getNoteById(id);
     if (note == null) return -1;
 
-    final copy = Note(
+    final copy = note.copyWith(
+      id: null,
       title: note.title.isEmpty ? copyLabel : '${note.title} - $copyLabel',
-      content: note.content,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-      colorIndex: note.colorIndex,
-      noteType: note.noteType,
-      isChecklist: note.isChecklist,
-      isProfessional: note.isProfessional,
-      isLocked: note.isLocked,
-      categoryIds: note.categoryIds,
-      reminderDateTime: note.reminderDateTime,
-      recurrenceRule: note.recurrenceRule,
+      isPinned: false, // النسخة لا تُثبَّت تلقائياً
+      reminderDateTime: null, // التذكير لا يُنسخ
+      recurrenceRule: null,
     );
 
     final newId = await addNote(copy);

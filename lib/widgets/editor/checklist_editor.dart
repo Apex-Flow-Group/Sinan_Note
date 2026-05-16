@@ -6,6 +6,7 @@ import 'package:apex_note/core/constants/app_text_styles.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
+import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
 import 'package:apex_note/widgets/editor/checklist_item_widget.dart';
 import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
@@ -190,9 +191,12 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     final index = _items.indexWhere((e) => e.id == id);
     if (index == -1 || _items.length == 1) return;
 
+    // حفظ نسخة للتراجع
+    final deletedItem = _items[index];
+    final deletedText = _controllers[id]?.text ?? '';
+
     setState(() {
       _items.removeAt(index);
-      // Remove listener before disposing
       if (_controllers.containsKey(id) && _listeners.containsKey(id)) {
         _controllers[id]!.removeListener(_listeners[id]!);
       }
@@ -203,15 +207,37 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       _listeners.remove(id);
     });
 
-    // نقل الـ focus للعنصر السابق فقط إذا كان الكيبورد مفتوحاً
-    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    if (isKeyboardOpen &&
-        index > 0 &&
-        _items.isNotEmpty &&
-        index - 1 < _items.length) {
-      _focusNodes[_items[index - 1].id]?.requestFocus();
-    }
     _notifyParent();
+
+    // Snackbar دوار مع زر تراجع
+    final ctx = context;
+    if (!ctx.mounted) return;
+    final l10n = AppLocalizations.of(ctx)!;
+    final restoredItem = ChecklistItem(
+      id: deletedItem.id,
+      text: deletedText,
+      isDone: deletedItem.isDone,
+    );
+    UnifiedNotificationService().showWithUndo(
+      context: ctx,
+      message: deletedText.isEmpty
+          ? l10n.itemDeleted
+          : '"$deletedText" ${l10n.deleted}',
+      actionKey: 'checklist_delete_${deletedItem.id}',
+      type: NotificationType.info,
+      onExecute: () {},
+      onUndo: () {
+        if (!mounted) return;
+        setState(() {
+          final insertAt = index.clamp(0, _items.length);
+          _items.insert(insertAt, restoredItem);
+          _initializeController(restoredItem);
+          _controllers[restoredItem.id]?.text = deletedText;
+        });
+        _notifyParent();
+      },
+      undoLabel: l10n.undo,
+    );
   }
 
   void _toggleDone(ChecklistItem item) {
@@ -562,6 +588,31 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                 },
         ),
         SliverPadding(padding: EdgeInsets.only(bottom: keyboardHeight)),
+        // زر إضافة item واحد في أسفل القائمة
+        if (!widget.readOnly)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding:
+                  EdgeInsets.fromLTRB(12, 4, 12, keyboardHeight > 0 ? 8 : 24),
+              child: TextButton.icon(
+                onPressed: () => _addNewItem(autoFocus: true),
+                icon: Icon(Icons.add_rounded,
+                    size: 18, color: textColor.withValues(alpha: 0.5)),
+                label: Text(
+                  l10n.addItem,
+                  style: TextStyle(
+                    color: textColor.withValues(alpha: 0.5),
+                    fontSize: 14,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  alignment: Alignment.centerLeft,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -570,7 +621,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     final controller = _controllers[item.id]!;
     final focusNode = _focusNodes[item.id]!;
 
-    return ChecklistItemWidget(
+    final itemWidget = ChecklistItemWidget(
       key: ValueKey(item.id),
       item: item,
       index: index,
@@ -580,15 +631,35 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       backgroundColor: widget.backgroundColor,
       showControls: !widget.readOnly,
       readOnly: widget.readOnly,
-      canDelete: _items.length > 1,
       onToggleDone: widget.readOnly ? null : () => _toggleDone(item),
-      onDelete: widget.readOnly ? null : () => _deleteItem(item.id),
-      onAddBelow: widget.readOnly
-          ? null
-          : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
+      onTextChanged: widget.readOnly ? null : (_) {},
       onSubmitted: widget.readOnly
           ? null
           : () => _addNewItem(insertIndex: index + 1, autoFocus: true),
+    );
+
+    if (widget.readOnly || _items.length <= 1) return itemWidget;
+
+    // Dismissible للحذف بالسحب يميناً
+    return Dismissible(
+      key: ValueKey('dismiss_${item.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.red, size: 22),
+      ),
+      confirmDismiss: (_) async {
+        // لا نحذف إذا كان آخر item
+        return _items.length > 1;
+      },
+      onDismissed: (_) => _deleteItem(item.id),
+      child: itemWidget,
     );
   }
 

@@ -1,14 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
-// DB Inspector — يعرض تقرير كامل عن Isar و SQLite
+// DB Inspector — يعرض تقرير كامل عن SQLite
 
 import 'dart:io';
 
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+
 class DbInspectorService {
   static Future<void> showReport(BuildContext context) async {
     final report = await _buildReport();
@@ -24,39 +23,44 @@ class DbInspectorService {
   static Future<Map<String, dynamic>> _buildReport() async {
     final result = <String, dynamic>{};
 
-    // ── Isar ──────────────────────────────────────────────────────────────
+    // ── SQLite (notes/categories/versions) ────────────────────────────────
     try {
-      final isar = SqliteDatabaseService();
-      final notes      = await isar.getAllNotes();
-      final categories = await isar.getAllCategories();
+      final dbService = SqliteDatabaseService();
+      final notes = await dbService.getAllNotes();
+      final categories = await dbService.getAllCategories();
       final deletedIds = await SqliteDatabaseService.getDeletedNoteIds();
 
       // عدد كل الـ versions
       int totalVersions = 0;
       for (final n in notes) {
         if (n.id != null) {
-          final v = await isar.getNoteHistory(n.id!);
+          final v = await dbService.getNoteHistory(n.id!);
           totalVersions += v.length;
         }
       }
 
-      result['isar'] = {
-        'notes':      notes.length,
-        'locked':     notes.where((n) => n.isLocked).length,
-        'archived':   notes.where((n) => n.isArchived).length,
-        'trashed':    notes.where((n) => n.isTrashed).length,
+      result['notes_summary'] = {
+        'notes': notes.length,
+        'locked': notes.where((n) => n.isLocked).length,
+        'archived': notes.where((n) => n.isArchived).length,
+        'trashed': notes.where((n) => n.isTrashed).length,
         'categories': categories.length,
-        'deleted':    deletedIds.length,
-        'versions':   totalVersions,
-        'sample':     notes.take(5).map((n) => {
-          'id':       n.id,
-          'title':    n.title.length > 30 ? '${n.title.substring(0, 30)}…' : n.title,
-          'type':     n.noteType,
-          'locked':   n.isLocked,
-        }).toList(),
+        'deleted': deletedIds.length,
+        'versions': totalVersions,
+        'sample': notes
+            .take(5)
+            .map((n) => {
+                  'id': n.id,
+                  'title': n.title.length > 30
+                      ? '${n.title.substring(0, 30)}…'
+                      : n.title,
+                  'type': n.noteType,
+                  'locked': n.isLocked,
+                })
+            .toList(),
       };
     } catch (e) {
-      result['isar'] = {'error': e.toString()};
+      result['notes_summary'] = {'error': e.toString()};
     }
 
     // ── SQLite ─────────────────────────────────────────────────────────────
@@ -68,8 +72,8 @@ class DbInspectorService {
       } else {
         final fileSize = await File(dbPath).length();
         final db = await openDatabase(dbPath, readOnly: true);
-        final tables = await db.rawQuery(
-            "SELECT name FROM sqlite_master WHERE type='table'");
+        final tables = await db
+            .rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
         final counts = <String, int>{};
         for (final t in tables) {
           final name = t['name'] as String;
@@ -81,10 +85,10 @@ class DbInspectorService {
             'SELECT id, title, noteType, isLocked FROM notes LIMIT 5');
         await db.close();
         result['sqlite'] = {
-          'path':    dbPath,
+          'path': dbPath,
           'size_kb': (fileSize / 1024).toStringAsFixed(1),
-          'tables':  counts,
-          'sample':  sample,
+          'tables': counts,
+          'sample': sample,
         };
       }
     } catch (e) {
@@ -94,14 +98,7 @@ class DbInspectorService {
     return result;
   }
 
-  static Future<String> _getSqlitePath() async {
-    if (Platform.isAndroid) {
-      final dbDir = await getDatabasesPath();
-      return p.join(dbDir, 'sinan_notes.db');
-    }
-    final dir = await getApplicationDocumentsDirectory();
-    return p.join(dir.path, 'sinan_notes.db');
-  }
+  static Future<String> _getSqlitePath() => SqliteDatabaseService.getDbPath();
 }
 
 // ── Report Sheet ───────────────────────────────────────────────────────────
@@ -130,7 +127,8 @@ class _ReportSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 4),
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: scheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
@@ -142,10 +140,12 @@ class _ReportSheet extends StatelessWidget {
               child: Row(
                 children: [
                   const SizedBox(width: 8),
-                  const Icon(Icons.storage_rounded, size: 18, color: Colors.orange),
+                  const Icon(Icons.storage_rounded,
+                      size: 18, color: Colors.orange),
                   const SizedBox(width: 8),
                   const Text('DB Inspector',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.copy_rounded, size: 20),
@@ -176,7 +176,9 @@ class _ReportSheet extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF12121F) : const Color(0xFFF6F8FA),
+                    color: isDark
+                        ? const Color(0xFF12121F)
+                        : const Color(0xFFF6F8FA),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isDark
@@ -210,8 +212,8 @@ class _ReportSheet extends StatelessWidget {
     buf.writeln('═══════════════════════════\n');
 
     // Isar
-    buf.writeln('── ISAR ──────────────────');
-    final isar = r['isar'] as Map?;
+    buf.writeln('── NOTES SUMMARY ─────────');
+    final isar = r['notes_summary'] as Map?;
     if (isar?['error'] != null) {
       buf.writeln('ERROR: ${isar!['error']}');
     } else if (isar != null) {
@@ -224,7 +226,8 @@ class _ReportSheet extends StatelessWidget {
       buf.writeln('versions:   ${isar['versions']}');
       buf.writeln('\nSample notes:');
       for (final n in (isar['sample'] as List)) {
-        buf.writeln('  [${n['id']}] ${n['title']} (${n['type']})${n['locked'] == true ? ' 🔒' : ''}');
+        buf.writeln(
+            '  [${n['id']}] ${n['title']} (${n['type']})${n['locked'] == true ? ' 🔒' : ''}');
       }
     }
 
@@ -241,7 +244,8 @@ class _ReportSheet extends StatelessWidget {
       }
       buf.writeln('\nSample notes:');
       for (final n in (sqlite['sample'] as List)) {
-        buf.writeln('  [${n['id']}] ${n['title']} (${n['noteType']})${n['isLocked'] == 1 ? ' 🔒' : ''}');
+        buf.writeln(
+            '  [${n['id']}] ${n['title']} (${n['noteType']})${n['isLocked'] == 1 ? ' 🔒' : ''}');
       }
     }
 

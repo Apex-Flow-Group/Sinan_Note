@@ -1,19 +1,16 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+@Tags(['serial'])
+
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_version.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../test_setup.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-    initializeTestEnvironment();
-  });
+  setUpAll(() => initializeTestEnvironment());
 
   group('SqliteDatabaseService', () {
     late SqliteDatabaseService db;
@@ -287,14 +284,24 @@ void main() {
           updatedAt: DateTime.now(),
         );
         final id = await db.insertNote(note);
+        final t1 = DateTime.now();
+        final t2 = t1.add(const Duration(milliseconds: 1));
 
         await db.logNoteVersion(NoteVersion.create(
-          noteId: id, title: note.title, content: note.content,
-          timestamp: DateTime.now(), action: 'created', noteType: 'simple',
+          noteId: id,
+          title: note.title,
+          content: note.content,
+          timestamp: t1,
+          action: 'created',
+          noteType: 'simple',
         ));
         await db.logNoteVersion(NoteVersion.create(
-          noteId: id, title: 'Updated', content: note.content,
-          timestamp: DateTime.now(), action: 'updated', noteType: 'simple',
+          noteId: id,
+          title: 'Updated',
+          content: note.content,
+          timestamp: t2,
+          action: 'updated',
+          noteType: 'simple',
         ));
 
         final history = await db.getNoteHistory(id);

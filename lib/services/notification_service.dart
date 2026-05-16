@@ -24,14 +24,15 @@ class NotificationService {
   Future<void> initialize() async {
     // تهيئة المناطق الزمنية
     tz.initializeTimeZones();
-    
+
     // كشف توقيت جهاز المستخدم الحالي
     try {
       final String timeZoneName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timeZoneName));
       AppLogger.success('Timezone set to: $timeZoneName', 'Notification');
     } catch (e) {
-      AppLogger.warning('Failed to set local timezone, using UTC fallback', 'Notification');
+      AppLogger.warning(
+          'Failed to set local timezone, using UTC fallback', 'Notification');
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
 
@@ -154,14 +155,16 @@ class NotificationService {
       final hasExactAlarmPerm = await checkExactAlarmPermission();
 
       if (!hasNotificationPerm || !hasExactAlarmPerm) {
-        AppLogger.warning('Missing permissions: Notification=$hasNotificationPerm, ExactAlarm=$hasExactAlarmPerm', 'Notification');
+        AppLogger.warning(
+            'Missing permissions: Notification=$hasNotificationPerm, ExactAlarm=$hasExactAlarmPerm',
+            'Notification');
         // Request permissions if missing
         await requestNotificationPermissions();
-        
+
         // Verify again
         final recheckNotif = await checkNotificationPermission();
         final recheckAlarm = await checkExactAlarmPermission();
-        
+
         if (!recheckNotif || !recheckAlarm) {
           throw Exception('Notification permissions denied');
         }
@@ -232,8 +235,9 @@ class NotificationService {
           );
         }
       }
-      
-      AppLogger.success('Notification scheduled: ID=$id, Time=$scheduledTime', 'Notification');
+
+      AppLogger.success('Notification scheduled: ID=$id, Time=$scheduledTime',
+          'Notification');
     } catch (e) {
       AppLogger.error('Failed to schedule notification', 'Notification', e);
       rethrow;
@@ -247,10 +251,6 @@ class NotificationService {
       // Ignore errors when canceling non-existent notifications
       AppLogger.debug('Could not cancel notification $id', 'Notification');
     }
-  }
-
-  Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
   }
 
   static void _onNotificationTapped(NotificationResponse response) async {

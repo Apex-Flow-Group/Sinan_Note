@@ -5,8 +5,12 @@ import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Standalone widget for rendering a single checklist item
-/// Can be reused in different contexts (editor, preview, widget, etc.)
+/// Standalone widget for rendering a single checklist item.
+///
+/// Gestures:
+/// - Tap checkbox → toggle done
+/// - Long press → activate drag-to-reorder (handled by parent ReorderableList)
+/// - Swipe right → delete (handled by parent Dismissible)
 class ChecklistItemWidget extends StatefulWidget {
   final ChecklistItem item;
   final int index;
@@ -15,11 +19,8 @@ class ChecklistItemWidget extends StatefulWidget {
   final Color textColor;
   final Color backgroundColor;
   final bool showControls;
-  final bool canDelete;
   final bool readOnly;
   final VoidCallback? onToggleDone;
-  final VoidCallback? onDelete;
-  final VoidCallback? onAddBelow;
   final ValueChanged<String>? onTextChanged;
   final VoidCallback? onSubmitted;
 
@@ -32,11 +33,8 @@ class ChecklistItemWidget extends StatefulWidget {
     required this.textColor,
     required this.backgroundColor,
     this.showControls = true,
-    this.canDelete = true,
     this.readOnly = false,
     this.onToggleDone,
-    this.onDelete,
-    this.onAddBelow,
     this.onTextChanged,
     this.onSubmitted,
   });
@@ -74,11 +72,11 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // مطلوب لـ AutomaticKeepAliveClientMixin
+    super.build(context);
     final l10n = AppLocalizations.of(context)!;
     final isDone = widget.item.isDone;
 
-    return Container(
+    final content = Container(
       margin: widget.readOnly
           ? const EdgeInsets.symmetric(vertical: 4)
           : const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
@@ -96,46 +94,32 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (widget.showControls && !widget.readOnly)
-            IconButton(
-              icon: Icon(Icons.add_circle_outline,
-                  color: widget.textColor.withValues(alpha: 0.6), size: 20),
-              onPressed: widget.onAddBelow,
-              padding: const EdgeInsets.all(8),
-              constraints: const BoxConstraints(),
-            ),
-          if (widget.showControls && !widget.readOnly)
-            ReorderableDragStartListener(
-              index: widget.index,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                    left: 4, right: 8, top: 12, bottom: 12),
-                child: Icon(Icons.drag_indicator,
-                    color: widget.textColor.withValues(alpha: 0.4), size: 20),
-              ),
-            ),
+          // Checkbox
           GestureDetector(
             onTap: widget.onToggleDone,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 12),
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isDone ? Colors.green : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isDone
-                      ? Colors.green
-                      : widget.textColor.withValues(alpha: 0.5),
-                  width: 2,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, right: 12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isDone ? Colors.green : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDone
+                        ? Colors.green
+                        : widget.textColor.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
                 ),
+                child: isDone
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
               ),
-              child: isDone
-                  ? const Icon(Icons.check, size: 16, color: Colors.white)
-                  : null,
             ),
           ),
+          // Text field
           Expanded(
             child: TextField(
               controller: widget.controller,
@@ -171,14 +155,28 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
               ),
             ),
           ),
-          if (widget.showControls && widget.canDelete && !widget.readOnly)
-            IconButton(
-              icon: Icon(Icons.close,
-                  size: 18, color: widget.textColor.withValues(alpha: 0.4)),
-              onPressed: widget.onDelete,
+          // Long-press drag handle hint (visible only in edit mode)
+          if (widget.showControls && !widget.readOnly)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Icon(
+                Icons.drag_indicator,
+                size: 18,
+                color: widget.textColor.withValues(alpha: 0.25),
+              ),
             ),
         ],
       ),
     );
+
+    // Wrap with ReorderableDragStartListener using long press
+    if (widget.showControls && !widget.readOnly) {
+      return ReorderableDelayedDragStartListener(
+        index: widget.index,
+        child: content,
+      );
+    }
+
+    return content;
   }
 }

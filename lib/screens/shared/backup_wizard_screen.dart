@@ -17,9 +17,20 @@ class BackupWizardScreen extends StatefulWidget {
 }
 
 class _BackupWizardScreenState extends State<BackupWizardScreen> {
-  // null = home, 'backup' = backup flow, 'restore' = restore flow
+  // null = home (narrow only), 'backup' = backup flow, 'restore' = restore flow
   String? _flow;
   bool _isLoading = false;
+  bool _wideInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isWide = MediaQuery.of(context).size.width >= 800;
+    if (isWide && !_wideInitialized) {
+      _flow = 'backup';
+      _wideInitialized = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +80,6 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   // ── Wide Layout (Master-Details) ──────────────────────────────────────────
   Widget _buildWideLayout(
       AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
-    _flow ??= 'backup';
     return Row(
       children: [
         // Master — قائمة الخيارات
@@ -697,8 +707,7 @@ class _SideItem extends StatelessWidget {
         ),
         selected: selected,
         selectedTileColor: color.withValues(alpha: 0.1),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         onTap: onTap,
       ),
     );

@@ -8,7 +8,7 @@ import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
@@ -37,22 +37,22 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   }
 
   Future<void> _restoreSignInState() async {
-    await GoogleDriveService.initializeSignIn();
+    await CloudSyncGateway.initializeSignIn();
     if (mounted) setState(() {});
   }
 
   Future<void> _loadAutoSyncSetting() async {
-    await GoogleDriveService.loadAutoSyncState();
+    await CloudSyncGateway.loadAutoSyncState();
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _autoSync = GoogleDriveService.autoSyncEnabled.value;
+      _autoSync = CloudSyncGateway.autoSyncEnabled.value;
       _pullToRefresh = prefs.getBool('google_drive_pull_to_refresh') ?? false;
     });
   }
 
   Future<void> _saveAutoSyncSetting(bool value) async {
-    await GoogleDriveService.setAutoSync(value);
+    await CloudSyncGateway.setAutoSync(value);
     if (!mounted) return;
     setState(() => _autoSync = value);
   }
@@ -119,9 +119,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     final isDark = settingsProvider.themeMode == ThemeMode.dark ||
         (settingsProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
-    final isSignedIn = GoogleDriveService.isSignedIn;
-    final userEmail = GoogleDriveService.currentUserEmail;
-    final lastSyncTime = GoogleDriveService.lastSyncTime;
+    final isSignedIn = CloudSyncGateway.isSignedIn;
+    final userEmail = CloudSyncGateway.currentUserEmail;
+    final lastSyncTime = CloudSyncGateway.lastSyncTime;
     final lastSyncTimeStr = lastSyncTime != null
         ? GoogleDriveHandlers.formatDateTime(context, lastSyncTime)
         : l10n.never;
@@ -167,7 +167,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
 
   Future<void> _handleRefresh() async {
     await _restoreSignInState();
-    if (mounted && GoogleDriveService.isSignedIn) {
+    if (mounted && CloudSyncGateway.isSignedIn) {
       setState(() => _isLoading = true);
       await GoogleDriveHandlers.handleSync(context);
       if (mounted) setState(() => _isLoading = false);

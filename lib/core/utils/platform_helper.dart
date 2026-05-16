@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -33,16 +34,12 @@ class PlatformHelper {
 
   /// التحقق من أن الشاشة يجب أن تستخدم Desktop Layout
   /// الهاتف: موبايل دائماً — التابلت أفقي: ديسكتوب — التابلت عمودي: موبايل
-  static bool shouldUseDesktopLayout(BuildContext context, {double breakpoint = 600}) {
+  static bool shouldUseDesktopLayout(BuildContext context,
+      {double breakpoint = 600}) {
     if (isDesktopPlatform) return true;
     final size = MediaQuery.of(context).size;
     final isTabletDevice = size.shortestSide >= breakpoint;
     return isTabletDevice && size.width >= 800;
-  }
-
-  /// الحصول على breakpoint المناسب حسب نوع الجهاز
-  static double getBreakpoint() {
-    return isDesktopPlatform ? 600 : double.infinity;
   }
 
   /// قفل اتجاه الشاشة للموبايل فقط (Portrait)

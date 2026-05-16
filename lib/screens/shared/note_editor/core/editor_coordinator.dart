@@ -27,97 +27,6 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:provider/provider.dart';
 
-/// دالة تعمل في isolate منفصل — تبني Delta JSON من النص
-/// لا تعتمد على أي Flutter widgets أو BuildContext
-String _buildDeltaJsonInIsolate(String content) {
-  if (content.isEmpty) {
-    final delta = Delta()..insert('\n');
-    return jsonEncode(delta.toJson());
-  }
-
-  // Delta JSON موجود مسبقاً — أصلح الاتجاهات فقط
-  if (content.trimLeft().startsWith('[')) {
-    try {
-      final rawDelta = Delta.fromJson(jsonDecode(content) as List);
-      final fixed = _fixDeltaDirectionsIsolate(rawDelta);
-      return jsonEncode(fixed.toJson());
-    } catch (_) {
-      // fall through
-    }
-  }
-
-  // نص عادي → Delta
-  final delta = _buildDeltaWithDirectionsIsolate(content);
-  return jsonEncode(delta.toJson());
-}
-
-/// نسخة من _fixDeltaDirections تعمل في isolate (بدون Flutter imports)
-Delta _fixDeltaDirectionsIsolate(Delta original) {
-  final ops = original.toList();
-  final fixed = Delta();
-  String paragraphText = '';
-  String lastNonEmptyDir = '';
-
-  for (final op in ops) {
-    if (!op.isInsert) {
-      if (op.isDelete) fixed.delete(op.length!);
-      if (op.isRetain) fixed.retain(op.length!, op.attributes);
-      continue;
-    }
-    final data = op.data;
-    if (data is! String) {
-      fixed.insert(data, op.attributes);
-      continue;
-    }
-    Map<String, dynamic>? cleanAttrs;
-    if (op.attributes != null) {
-      cleanAttrs = Map<String, dynamic>.from(op.attributes!);
-      if (cleanAttrs['align'] == 'right') cleanAttrs.remove('align');
-      if (cleanAttrs.isEmpty) cleanAttrs = null;
-    }
-    final segments = data.split('\n');
-    for (int i = 0; i < segments.length; i++) {
-      final seg = segments[i];
-      if (seg.isNotEmpty) {
-        paragraphText += seg;
-        fixed.insert(seg, cleanAttrs);
-      }
-      if (i < segments.length - 1) {
-        final dirText =
-            paragraphText.isNotEmpty ? paragraphText : lastNonEmptyDir;
-        final isRtl =
-            TextDirectionUtils.getDirection(dirText) == TextDirection.rtl;
-        final attrs = Map<String, dynamic>.from(op.attributes ?? {});
-        if (isRtl) {
-          attrs.remove('direction');
-          attrs.remove('align');
-        } else {
-          attrs['direction'] = 'rtl';
-          attrs.remove('align');
-        }
-        fixed.insert('\n', attrs.isEmpty ? null : attrs);
-        if (paragraphText.isNotEmpty) lastNonEmptyDir = paragraphText;
-        paragraphText = '';
-      }
-    }
-  }
-  return fixed;
-}
-
-/// نسخة من _buildDeltaWithDirections تعمل في isolate
-Delta _buildDeltaWithDirectionsIsolate(String content) {
-  final delta = Delta();
-  final paragraphs = content.split('\n');
-  for (int i = 0; i < paragraphs.length; i++) {
-    final paragraph = paragraphs[i];
-    final isRtl =
-        TextDirectionUtils.getDirection(paragraph) == TextDirection.rtl;
-    if (paragraph.isNotEmpty) delta.insert(paragraph);
-    delta.insert('\n', isRtl ? null : {'direction': 'rtl'});
-  }
-  return delta;
-}
-
 /// Central coordinator for all editor operations
 class EditorCoordinator {
   // Controllers
@@ -252,7 +161,7 @@ class EditorCoordinator {
     // نوتة فارغة — لا شيء لبناؤه
     if (initialText.isEmpty) return;
 
-    final deltaJson = await compute(_buildDeltaJsonInIsolate, initialText);
+    final deltaJson = await compute(buildDeltaJsonForIsolate, initialText);
 
     final delta = Delta.fromJson(jsonDecode(deltaJson) as List);
     final doc = Document.fromDelta(delta);

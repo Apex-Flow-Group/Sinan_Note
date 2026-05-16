@@ -7,6 +7,28 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 
+/// Top-level function — تعمل في isolate منفصل عبر compute()
+/// تبني Delta JSON من محتوى النوت (نص عادي أو Delta موجود)
+String buildDeltaJsonForIsolate(String content) {
+  if (content.isEmpty) {
+    final delta = Delta()..insert('\n');
+    return jsonEncode(delta.toJson());
+  }
+
+  if (content.trimLeft().startsWith('[')) {
+    try {
+      final rawDelta = Delta.fromJson(jsonDecode(content) as List);
+      final fixed = QuillMigration.fixDeltaDirections(rawDelta);
+      return jsonEncode(fixed.toJson());
+    } catch (_) {
+      // fall through to plain text
+    }
+  }
+
+  final delta = QuillMigration.buildDeltaWithDirections(content);
+  return jsonEncode(delta.toJson());
+}
+
 /// Converts plain text or existing Delta JSON to a Quill Document
 class QuillMigration {
   /// Returns a QuillController from note content (plain text or Delta JSON)
@@ -25,7 +47,7 @@ class QuillMigration {
     if (content.trimLeft().startsWith('[')) {
       try {
         final rawDelta = Delta.fromJson(jsonDecode(content) as List);
-        final delta = _fixDeltaDirections(rawDelta);
+        final delta = fixDeltaDirections(rawDelta);
         final doc = Document.fromDelta(delta);
         return QuillController(
           document: doc,
@@ -37,7 +59,7 @@ class QuillMigration {
     }
 
     // Plain text → Delta with per-paragraph direction
-    final delta = _buildDeltaWithDirections(content);
+    final delta = buildDeltaWithDirections(content);
     final doc = Document.fromDelta(delta);
     return QuillController(
       document: doc,
@@ -48,7 +70,7 @@ class QuillMigration {
   /// إصلاح اتجاهات فقرات Delta محفوظة مسبقاً
   /// يمر على كل op من نوع \n ويصحح direction/align بناءً على نص الفقرة
   /// يُنظف أيضاً align:right المتبقية من إصدارات قديمة
-  static Delta _fixDeltaDirections(Delta original) {
+  static Delta fixDeltaDirections(Delta original) {
     final ops = original.toList();
     final fixed = Delta();
     String paragraphText = '';
@@ -113,7 +135,7 @@ class QuillMigration {
   }
 
   /// بناء Delta مع اتجاه لكل فقرة
-  static Delta _buildDeltaWithDirections(String content) {
+  static Delta buildDeltaWithDirections(String content) {
     final delta = Delta();
     final paragraphs = content.split('\n');
 

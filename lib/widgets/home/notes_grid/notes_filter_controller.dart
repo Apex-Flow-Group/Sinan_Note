@@ -135,7 +135,7 @@ class NotesFilterController extends ChangeNotifier {
   void _onFilterChanged() => _syncFilteredNotes(_sourceNotes, force: true);
 
   void _syncFilteredNotes(List<Note> notes, {bool force = false}) {
-    final searchQuery = searchController.text.toLowerCase();
+    final searchQuery = searchController.text;
     final isFiltering = searchQuery.isNotEmpty ||
         _lastSelectedCategoryId != null ||
         activeFilterNotifier.value != null;
@@ -173,7 +173,7 @@ class NotesFilterController extends ChangeNotifier {
   }
 
   List<Note> _filterNotes(List<Note> notes) {
-    final searchQuery = searchController.text.toLowerCase();
+    final searchQuery = searchController.text;
     final activeFilter = activeFilterNotifier.value;
     final selectedCategoryId = _lastSelectedCategoryId;
     final hideProFromHome = _lastHideProFromHome;

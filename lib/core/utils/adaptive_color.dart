@@ -81,6 +81,4 @@ class AppColorPalette {
       name: 'Brown',
     ),
   ];
-
-  static int get defaultIndex => 0;
 }

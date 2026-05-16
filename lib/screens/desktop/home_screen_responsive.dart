@@ -54,8 +54,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final ValueNotifier<Set<int>> _selectedNoteIdsNotifier = ValueNotifier({});
-  final ValueNotifier<bool> _isEditModeNotifier =
-      ValueNotifier(false); // 🔥 وضع التعديل
   ViewType _viewType = ViewType.listCompact;
   late final ValueNotifier<String> _viewTypeNotifier;
   bool _showAddMenu = false;
@@ -129,7 +127,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     _selectedNoteIdsNotifier.dispose();
-    _isEditModeNotifier.dispose();
     _viewTypeNotifier.dispose();
     _notesScrollController.dispose();
     _activeFilterNotifier.dispose();

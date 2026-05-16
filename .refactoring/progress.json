@@ -1,0 +1,874 @@
+{
+  "startDate": "2026-05-15T14:27:27.224427",
+  "lastUpdated": "2026-05-16T18:00:00.000000",
+  "totalCoreFiles": 63,
+  "completedCoreFiles": 63,
+  "totalFunctionUnits": 502,
+  "reviewedFunctionUnits": 502,
+  "completionPercentage": 100.0,
+  "files": [
+    {
+      "path": "lib/controllers/editor/editor_state_manager.dart",
+      "status": "completed",
+      "totalFunctions": 12,
+      "reviewedFunctions": 12,
+      "reviewed": [
+        "hasChanges",
+        "updateSnapshot",
+        "resetToSnapshot",
+        "clear",
+        "loadFromNote",
+        "markDirty",
+        "markClean",
+        "updateContent",
+        "updateTitle",
+        "updateColor",
+        "updateReminder",
+        "toString"
+      ],
+      "pending": [],
+      "notes": "نظيف — resetToSnapshot/updateColor/updateReminder حُذفت (كود ميت)"
+    },
+    {
+      "path": "lib/controllers/notes/notes_provider.dart",
+      "status": "completed",
+      "totalFunctions": 42,
+      "reviewedFunctions": 42,
+      "reviewed": [
+        "isLoading",
+        "refreshStamp",
+        "NotesProvider",
+        "isInitialDataLoaded",
+        "stateService",
+        "activeNotes",
+        "notes",
+        "archivedNotes",
+        "trashedNotes",
+        "reminderNotes",
+        "lockedNotes",
+        "isVaultUnlocked",
+        "unlockVault",
+        "lockVault",
+        "refreshAllNotes",
+        "_refreshAfterSync",
+        "loadNotes",
+        "getNotes",
+        "fetchNotes",
+        "fetchTrashedNotes",
+        "fetchArchivedNotes",
+        "searchNotes",
+        "addNote",
+        "insertNote",
+        "updateNote",
+        "deleteNote",
+        "archiveNote",
+        "unarchiveNote",
+        "trashNote",
+        "restoreNote",
+        "addOrUpdateNote",
+        "convertNoteType",
+        "duplicateNote",
+        "trashNotes",
+        "restoreNotes",
+        "archiveNotes",
+        "unarchiveNotes",
+        "fetchLockedNotes",
+        "fetchAndDecryptLockedNotes",
+        "toggleLockStatus",
+        "clearLockedSession",
+        "dispose"
+      ],
+      "pending": [],
+      "notes": "fetchNotes حُذفت (مكررة لـ refreshAllNotes) — duplicateNote أُصلحت بـ copyWith"
+    },
+    {
+      "path": "lib/controllers/categories/categories_provider.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "final _db field — حذف 5 instances مكررة. إضافة onError لـ setHideProFromHome"
+    },
+    {
+      "path": "lib/controllers/settings/settings_provider.dart",
+      "status": "completed",
+      "totalFunctions": 20,
+      "reviewedFunctions": 20,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "_savePref() helper — حذف 15+ استدعاء SharedPreferences.getInstance() مكرر"
+    },
+    {
+      "path": "lib/models/note.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "isEncrypted أُصلح — تفويض لـ VaultService.isEncrypted() بدلاً من فحص طول بسيط"
+    },
+    {
+      "path": "lib/services/note_services/note_state_service.dart",
+      "status": "completed",
+      "totalFunctions": 10,
+      "reviewedFunctions": 10,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح البحث العربي (normalizedTitle) + 4 اختبارات جديدة"
+    },
+    {
+      "path": "lib/services/security/note_security_service.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "دمج دالتين متطابقتين في _normalizeChecklistJson"
+    },
+    {
+      "path": "lib/services/storage/storage_service.dart",
+      "status": "completed",
+      "totalFunctions": 12,
+      "reviewedFunctions": 12,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "استبدال 15 حقل يدوي بـ note.copyWith(id: null, updatedAt: now)"
+    },
+    {
+      "path": "lib/services/storage/sqlite_database_service.dart",
+      "status": "completed",
+      "totalFunctions": 15,
+      "reviewedFunctions": 15,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "استخراج getDbPath() كـ static public — توحيد المسار في 3 ملفات"
+    },
+    {
+      "path": "lib/services/storage/backup_service.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "استخدام SqliteDatabaseService.getDbPath()"
+    },
+    {
+      "path": "lib/services/storage/db_inspector_service.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "توحيد مسار DB + إصلاح تسميات مضللة من Isar إلى SQLite"
+    },
+    {
+      "path": "lib/services/storage/isar_database_service.dart",
+      "status": "completed",
+      "totalFunctions": 1,
+      "reviewedFunctions": 1,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف — ملف compatibility فقط"
+    },
+    {
+      "path": "lib/services/storage/compression_service.dart",
+      "status": "completed",
+      "totalFunctions": 2,
+      "reviewedFunctions": 2,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف — 10 أسطر فقط"
+    },
+    {
+      "path": "lib/services/cloud/google_drive_service.dart",
+      "status": "completed",
+      "totalFunctions": 18,
+      "reviewedFunctions": 18,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف checkForRemoteUpdates() (كود ميت). إعادة هيكلة كاملة مؤجلة (تقييم 8)"
+    },
+    {
+      "path": "lib/services/cloud/google_drive_auth.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف — منطق واضح، error handling جيد"
+    },
+    {
+      "path": "lib/services/cloud/google_drive_merge.dart",
+      "status": "reviewed",
+      "totalFunctions": 10,
+      "reviewedFunctions": 10,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "موثق فقط (تقييم 7) — يجمع business logic مع UI dialogs"
+    },
+    {
+      "path": "lib/services/language_detector.dart",
+      "status": "completed",
+      "totalFunctions": 12,
+      "reviewedFunctions": 12,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "دمج getExtensionForLanguage المكررة في getFileExtension"
+    },
+    {
+      "path": "lib/services/widget_service.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "استخراج _getLocalizedText() helper — حذف 4 دوال متطابقة"
+    },
+    {
+      "path": "lib/services/notification_service.dart",
+      "status": "completed",
+      "totalFunctions": 10,
+      "reviewedFunctions": 10,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف cancelAllNotifications() (كود ميت)"
+    },
+    {
+      "path": "lib/services/smart_analyzer.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف. calculateLine/analyzeMath deprecated لكن لا تسببان مشاكل"
+    },
+    {
+      "path": "lib/services/version_control_service.dart",
+      "status": "completed",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/version_history_service.dart",
+      "status": "completed",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/content_guard.dart",
+      "status": "completed",
+      "totalFunctions": 3,
+      "reviewedFunctions": 3,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/clipboard_guard.dart",
+      "status": "completed",
+      "totalFunctions": 3,
+      "reviewedFunctions": 3,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/app_update_service.dart",
+      "status": "completed",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/search/smart_search_service.dart",
+      "status": "completed",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/diagnostics/apex_error_manager.dart",
+      "status": "completed",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/diagnostics/apex_diagnostics_engine.dart",
+      "status": "completed",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/screens/shared/note_editor/quill_migration.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف ~80 سطر مكرر (Delta logic) مع editor_coordinator.dart"
+    },
+    {
+      "path": "lib/screens/shared/note_editor/editor_coordinator.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف ~80 سطر مكرر (Delta logic)"
+    },
+    {
+      "path": "lib/screens/shared/note_editor/state/editor_save_operations.dart",
+      "status": "completed",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/screens/shared/note_editor/lifecycle/editor_lifecycle.dart",
+      "status": "dead_code",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "كود ميت كامل — نُقل إلى _dead_code/"
+    },
+    {
+      "path": "lib/screens/shared/note_editor/lifecycle/editor_lifecycle_manager.dart",
+      "status": "dead_code",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "كود ميت كامل — نُقل إلى _dead_code/"
+    },
+    {
+      "path": "lib/screens/mobile/home_screen.dart",
+      "status": "completed",
+      "totalFunctions": 15,
+      "reviewedFunctions": 15,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف _debounce فارغ. cache _pullToRefreshMode بدلاً من Provider.of في كل scroll"
+    },
+    {
+      "path": "lib/screens/mobile/home_screen_responsive.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف _isEditModeNotifier (كود ميت)"
+    },
+    {
+      "path": "lib/screens/shared/locked_notes/locked_notes_screen.dart",
+      "status": "completed",
+      "totalFunctions": 10,
+      "reviewedFunctions": 10,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح بق: إضافة _onProviderChanged listener — أول ملاحظة في الخزنة تظهر فوراً"
+    },
+    {
+      "path": "lib/screens/shared/locked_notes/locked_notes_screen_responsive.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح space hack في البحث — _isSearchActive flag. إصلاح البحث العربي"
+    },
+    {
+      "path": "lib/screens/shared/locked_notes/locked_notes_intro_screen.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح بق: استدعاء unlockVault() بعد إعداد الخزنة"
+    },
+    {
+      "path": "lib/screens/shared/tabs/reminder_dashboard.dart",
+      "status": "completed",
+      "totalFunctions": 10,
+      "reviewedFunctions": 10,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح البحث العربي. حذف ViewType.grid branch (غير قابل للوصول)"
+    },
+    {
+      "path": "lib/screens/shared/tabs/code_tab.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح البحث العربي"
+    },
+    {
+      "path": "lib/screens/other/archive_screen.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح البحث العربي"
+    },
+    {
+      "path": "lib/screens/other/trash_screen.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح البحث العربي"
+    },
+    {
+      "path": "lib/screens/other/backup_wizard_screen.dart",
+      "status": "completed",
+      "totalFunctions": 12,
+      "reviewedFunctions": 12,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح state mutation في build() — نقل _flow ??= 'backup' إلى didChangeDependencies()"
+    },
+    {
+      "path": "lib/screens/shared/note_view/note_readonly_view.dart",
+      "status": "reviewed",
+      "totalFunctions": 20,
+      "reviewedFunctions": 20,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "موثق فقط (تقييم 7+، 944 سطر). حذف maxChars بارامتر بلا معنى"
+    },
+    {
+      "path": "lib/screens/shared/note_view/readonly_checklist_view.dart",
+      "status": "completed",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "ضغط طويل على كامل الصف للسحب + textDirection تلقائي"
+    },
+    {
+      "path": "lib/screens/desktop/desktop_selection_actions.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح bulk pin — copyWith بدلاً من 16 حقل يدوي"
+    },
+    {
+      "path": "lib/controllers/notes/version_history_controller.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح البحث العربي"
+    },
+    {
+      "path": "lib/widgets/home/note_card/note_card_widget.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح locked note tap بـ copyWith. دمج فرعي archive/else المتطابقين. local variable لـ hideProFromHome"
+    },
+    {
+      "path": "lib/widgets/home/note_card/note_card_actions.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف maxChars بارامتر بلا معنى"
+    },
+    {
+      "path": "lib/widgets/home/note_card/note_card_utils.dart",
+      "status": "completed",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "_codeNoteTypes static const — حذف list مكررة في دالتين"
+    },
+    {
+      "path": "lib/widgets/home/smart_header.dart",
+      "status": "completed",
+      "totalFunctions": 10,
+      "reviewedFunctions": 10,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح bulk pin بـ copyWith. حذف _onSelectionChanged listener فارغ"
+    },
+    {
+      "path": "lib/widgets/home/home_drawer_widget.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف vaultOpenNotifier (كود ميت)"
+    },
+    {
+      "path": "lib/widgets/home/dialogs/vault_dialogs.dart",
+      "status": "completed",
+      "totalFunctions": 10,
+      "reviewedFunctions": 10,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "دمج _executeDecryptAndDestroy و _executeDestroyWithContent (~80 سطر مكرر)"
+    },
+    {
+      "path": "lib/widgets/home/dialogs/swipe_custom_sheet.dart",
+      "status": "completed",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف maxChars بارامتر بلا معنى"
+    },
+    {
+      "path": "lib/widgets/editor/checklist_item_widget.dart",
+      "status": "completed",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف أزرار +/× وأيقونة drag — استبدال بـ gestures + ReorderableDelayedDragStartListener"
+    },
+    {
+      "path": "lib/widgets/editor/checklist_editor.dart",
+      "status": "completed",
+      "totalFunctions": 6,
+      "reviewedFunctions": 6,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "سحب يساراً للحذف + showWithUndo + زر + واحد في الأسفل"
+    },
+    {
+      "path": "lib/core/utils/platform_helper.dart",
+      "status": "completed",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف getBreakpoint() (كود ميت)"
+    },
+    {
+      "path": "lib/core/utils/adaptive_color.dart",
+      "status": "completed",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "حذف defaultIndex getter (كود ميت)"
+    },
+    {
+      "path": "lib/core/utils/search_mixin.dart",
+      "status": "completed",
+      "totalFunctions": 3,
+      "reviewedFunctions": 3,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "إصلاح البحث العربي — حذف toLowerCase() واستبداله بـ Note.normalize()"
+    },
+    {
+      "path": "lib/core/app_shortcuts.dart",
+      "status": "completed",
+      "totalFunctions": 8,
+      "reviewedFunctions": 8,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "تعليق 6 Intents غير مستخدمة"
+    },
+    {
+      "path": "lib/services/cloud/sync/cloud_sync_gateway.dart",
+      "status": "new",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "ملف جديد — فصل منطق المزامنة عن Google Drive"
+    },
+    {
+      "path": "lib/services/cloud/sync/sync_engine.dart",
+      "status": "new",
+      "totalFunctions": 5,
+      "reviewedFunctions": 5,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "ملف جديد"
+    },
+    {
+      "path": "lib/services/cloud/sync/sync_transport.dart",
+      "status": "new",
+      "totalFunctions": 4,
+      "reviewedFunctions": 4,
+      "reviewed": [
+        "all"
+      ],
+      "pending": [],
+      "notes": "ملف جديد"
+    }
+  ],
+  "pendingFiles": [
+    "lib/screens/shared/note_editor/note_editor.dart (831 سطر — تقييم 7+، مؤجل)",
+    "lib/services/cloud/google_drive_merge.dart (تقييم 7 — موثق فقط)"
+  ],
+  "summary": {
+    "totalModifications": 50,
+    "bugsFixed": 5,
+    "deadCodeRemoved": 8,
+    "arabicSearchFixed": 10,
+    "testsPassingFinal": 450
+  },
+  "recentlyReviewed": [
+    {
+      "path": "lib/services/code_executor.dart",
+      "status": "completed",
+      "notes": "حذف ~80 سطر (كود معلّق + تعليقات) — 4 دوال one-liners + _securityMessage const"
+    },
+    {
+      "path": "lib/services/note_services/note_side_effect_service.dart",
+      "status": "completed",
+      "notes": "updateWidgetSideEffect() كانت try {} catch (_) {} — حُذف الجسم الفارغ"
+    },
+    {
+      "path": "lib/services/security/security_gate.dart",
+      "status": "completed",
+      "notes": "_isAndroid() استُبدلت بـ Platform.isAndroid مباشرة + import dart:io"
+    },
+    {
+      "path": "lib/core/utils/apex_smart_controller.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/core/utils/bidi_cursor_middleware.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/core/utils/checklist_formatter.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/core/utils/editor_page_route.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/core/utils/logger.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/core/utils/note_content_utils.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/core/utils/text_direction_utils.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/providers/master_width_provider.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/providers/selected_note_provider.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/svg_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/code_export_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/note_services/note_batch_operations_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/note_services/note_db_interface.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/security/biometric_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/security/rate_limiter_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/security/unified_lock_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/security/vault_reset_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    },
+    {
+      "path": "lib/services/security/vault_service.dart",
+      "status": "completed",
+      "notes": "نظيف"
+    }
+  ]
+}

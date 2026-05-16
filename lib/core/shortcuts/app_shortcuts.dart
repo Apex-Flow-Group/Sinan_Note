@@ -6,38 +6,44 @@ import 'package:flutter/services.dart';
 /// اختصارات لوحة المفاتيح للتطبيق
 class AppShortcuts {
   // New Note
-  static const newNote = SingleActivator(LogicalKeyboardKey.keyN, control: true);
-  
+  static const newNote =
+      SingleActivator(LogicalKeyboardKey.keyN, control: true);
+
   // Search
   static const search = SingleActivator(LogicalKeyboardKey.keyF, control: true);
-  
+
   // Save
   static const save = SingleActivator(LogicalKeyboardKey.keyS, control: true);
-  
+
   // Delete
   static const delete = SingleActivator(LogicalKeyboardKey.delete);
-  
+
   // Archive
-  static const archive = SingleActivator(LogicalKeyboardKey.keyE, control: true);
-  
+  static const archive =
+      SingleActivator(LogicalKeyboardKey.keyE, control: true);
+
   // Lock/Unlock
   static const lock = SingleActivator(LogicalKeyboardKey.keyL, control: true);
-  
+
   // Code Note
-  static const codeNote = SingleActivator(LogicalKeyboardKey.keyN, control: true, shift: true);
-  
+  static const codeNote =
+      SingleActivator(LogicalKeyboardKey.keyN, control: true, shift: true);
+
   // Checklist
-  static const checklist = SingleActivator(LogicalKeyboardKey.keyC, control: true, shift: true);
-  
+  static const checklist =
+      SingleActivator(LogicalKeyboardKey.keyC, control: true, shift: true);
+
   // Reminder
-  static const reminder = SingleActivator(LogicalKeyboardKey.keyR, control: true, shift: true);
-  
+  static const reminder =
+      SingleActivator(LogicalKeyboardKey.keyR, control: true, shift: true);
+
   // Close/Escape
   static const close = SingleActivator(LogicalKeyboardKey.escape);
-  
+
   // Select All
-  static const selectAll = SingleActivator(LogicalKeyboardKey.keyA, control: true);
-  
+  static const selectAll =
+      SingleActivator(LogicalKeyboardKey.keyA, control: true);
+
   // Refresh
   static const refresh = SingleActivator(LogicalKeyboardKey.f5);
 }
@@ -52,25 +58,17 @@ class SearchIntent extends Intent {
   const SearchIntent();
 }
 
-/// Intent للحفظ
-class SaveIntent extends Intent {
-  const SaveIntent();
-}
+/// Intent للحفظ — محجوز للاستخدام المستقبلي
+// class SaveIntent extends Intent { const SaveIntent(); }
 
-/// Intent للحذف
-class DeleteIntent extends Intent {
-  const DeleteIntent();
-}
+/// Intent للحذف — محجوز للاستخدام المستقبلي
+// class DeleteIntent extends Intent { const DeleteIntent(); }
 
-/// Intent للأرشفة
-class ArchiveIntent extends Intent {
-  const ArchiveIntent();
-}
+/// Intent للأرشفة — محجوز للاستخدام المستقبلي
+// class ArchiveIntent extends Intent { const ArchiveIntent(); }
 
-/// Intent للقفل
-class LockIntent extends Intent {
-  const LockIntent();
-}
+/// Intent للقفل — محجوز للاستخدام المستقبلي
+// class LockIntent extends Intent { const LockIntent(); }
 
 /// Intent لملاحظة كود
 class CodeNoteIntent extends Intent {
@@ -87,15 +85,11 @@ class ReminderIntent extends Intent {
   const ReminderIntent();
 }
 
-/// Intent للإغلاق
-class CloseIntent extends Intent {
-  const CloseIntent();
-}
+/// Intent للإغلاق — محجوز للاستخدام المستقبلي
+// class CloseIntent extends Intent { const CloseIntent(); }
 
-/// Intent لتحديد الكل
-class SelectAllIntent extends Intent {
-  const SelectAllIntent();
-}
+/// Intent لتحديد الكل — محجوز للاستخدام المستقبلي
+// class SelectAllIntent extends Intent { const SelectAllIntent(); }
 
 /// Intent للتحديث
 class RefreshIntent extends Intent {

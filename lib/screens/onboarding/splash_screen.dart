@@ -11,13 +11,13 @@ import 'package:apex_note/screens/auth/pin_lock_screen.dart';
 import 'package:apex_note/screens/onboarding/whats_new_dialog.dart';
 import 'package:apex_note/screens/shared/main_layout_screen.dart';
 import 'package:apex_note/services/app_update_service.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -81,9 +81,9 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       // Initialize Google Sign-In + smart sync in background
-      await GoogleDriveService.initializeSignIn();
-      if (GoogleDriveService.isSignedIn) {
-        unawaited(GoogleDriveService.smartSyncOnStartup().then((_) async {
+      await CloudSyncGateway.initializeSignIn();
+      if (CloudSyncGateway.isSignedIn) {
+        unawaited(CloudSyncGateway.smartSync().then((_) async {
           if (!mounted) return;
           await Provider.of<NotesProvider>(context, listen: false).loadNotes();
         }));

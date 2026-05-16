@@ -2,8 +2,8 @@
 
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/screens/sync/google_drive_sync/sync_step.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -24,7 +24,7 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
   Future<bool> signIn() async {
     try {
-      final success = await GoogleDriveService.signIn();
+      final success = await CloudSyncGateway.signIn();
       if (success) {
         _currentStep = SyncStep.checking;
         notifyListeners();
@@ -57,11 +57,11 @@ class GoogleDriveSyncController extends ChangeNotifier {
       final localNotes = await dbService.getAllNotes();
       _localNotesCount = localNotes.where((n) => !n.isLocked).length;
 
-      final hasBackup = await GoogleDriveService.hasBackupInDrive();
+      final hasBackup = await CloudSyncGateway.hasBackupInCloud();
       AppLogger.info('hasBackup: $hasBackup', 'SyncController');
 
       if (hasBackup) {
-        _driveNotesCount = await GoogleDriveService.getDriveNotesCount();
+        _driveNotesCount = await CloudSyncGateway.getCloudNotesCount();
       } else {
         _driveNotesCount = 0;
       }
@@ -92,11 +92,11 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
       bool success = false;
       if (action == 'useDrive') {
-        success = await GoogleDriveService.downloadDatabase(null);
+        success = await CloudSyncGateway.download();
       } else if (action == 'useDevice') {
-        success = await GoogleDriveService.uploadDatabase(null);
+        success = await CloudSyncGateway.upload();
       } else if (action == 'merge') {
-        success = await GoogleDriveService.mergeWithDrive(null);
+        success = await CloudSyncGateway.mergeWithDialog(null);
       }
 
       if (!success) {
@@ -106,7 +106,7 @@ class GoogleDriveSyncController extends ChangeNotifier {
         return;
       }
 
-      await GoogleDriveService.setAutoSync(true);
+      await CloudSyncGateway.setAutoSync(true);
       _currentStep = SyncStep.success;
       notifyListeners();
     } catch (e) {
@@ -121,9 +121,9 @@ class GoogleDriveSyncController extends ChangeNotifier {
       _currentStep = SyncStep.syncing;
       notifyListeners();
 
-      final success = await GoogleDriveService.downloadDatabase(null);
+      final success = await CloudSyncGateway.download();
       if (success) {
-        await GoogleDriveService.setAutoSync(true);
+        await CloudSyncGateway.setAutoSync(true);
         _currentStep = SyncStep.success;
         notifyListeners();
       } else {
@@ -143,9 +143,9 @@ class GoogleDriveSyncController extends ChangeNotifier {
       _currentStep = SyncStep.syncing;
       notifyListeners();
 
-      final success = await GoogleDriveService.uploadDatabase(null);
+      final success = await CloudSyncGateway.upload();
       if (success) {
-        await GoogleDriveService.setAutoSync(true);
+        await CloudSyncGateway.setAutoSync(true);
         _currentStep = SyncStep.success;
         notifyListeners();
       } else {
@@ -161,7 +161,7 @@ class GoogleDriveSyncController extends ChangeNotifier {
   }
 
   Future<void> abort() async {
-    await GoogleDriveService.signOut();
+    await CloudSyncGateway.signOut();
     _currentStep = SyncStep.signIn;
     _errorMessage = null;
     notifyListeners();

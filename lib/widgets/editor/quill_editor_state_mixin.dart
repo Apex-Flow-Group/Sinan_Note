@@ -259,10 +259,14 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
         : newDir;
 
     final isRtl = effectiveDir == TextDirection.rtl;
+    // في Quill: direction:'rtl' يعني LTR (الاتجاه المعاكس للـ widget)، null يعني RTL
+    // لذا currentIsRtl = true يعني الفقرة الحالية LTR، وليس RTL
     final currentAttr =
         quillController.getSelectionStyle().attributes['direction'];
     final currentIsRtl = currentAttr?.value == 'rtl';
 
+    // currentIsRtl != !isRtl ↔ currentIsRtl == isRtl
+    // أي: إذا كان الـ attribute الحالي لا يتطابق مع الاتجاه المطلوب → نُعيد التنسيق
     if (currentIsRtl != !isRtl) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || isFormatting || isDirectionFormatting) return;

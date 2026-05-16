@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:io';
+
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -198,20 +200,11 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Set native FLAG_SECURE
   Future<void> _setSecureFlag(bool secure) async {
-    if (!_isAndroid()) return;
-    
+    if (!Platform.isAndroid) return;
     try {
       await _platform.invokeMethod('secureScreen', {'secure': secure});
     } catch (e) {
       // Silent error
-    }
-  }
-  
-  bool _isAndroid() {
-    try {
-      return Theme.of(WidgetsBinding.instance.rootElement!).platform == TargetPlatform.android;
-    } catch (e) {
-      return false;
     }
   }
 }

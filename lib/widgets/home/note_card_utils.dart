@@ -10,6 +10,40 @@ import 'package:apex_note/services/language_detector.dart';
 import 'package:flutter/material.dart';
 
 class NoteCardUtils {
+  /// أنواع الملاحظات البرمجية — مصدر واحد للحقيقة
+  static const _codeNoteTypes = {
+    'python',
+    'javascript',
+    'typescript',
+    'java',
+    'dart',
+    'html',
+    'css',
+    'svg',
+    'sql',
+    'cpp',
+    'c',
+    'csharp',
+    'swift',
+    'kotlin',
+    'go',
+    'rust',
+    'php',
+    'ruby',
+    'bash',
+    'json',
+    'yaml',
+    'toml',
+    'xml',
+    'lua',
+    'r',
+    'dockerfile',
+    'code',
+    'pro',
+    'professional',
+    'markdown',
+  };
+
   static NoteMode getNoteMode(Note note) {
     if (note.isChecklist) {
       return NoteMode.checklist;
@@ -20,39 +54,7 @@ class NoteCardUtils {
       return NoteMode.code;
     }
 
-    final codeTypes = [
-      'python',
-      'javascript',
-      'typescript',
-      'java',
-      'dart',
-      'html',
-      'css',
-      'svg',
-      'sql',
-      'cpp',
-      'c',
-      'csharp',
-      'swift',
-      'kotlin',
-      'go',
-      'rust',
-      'php',
-      'ruby',
-      'bash',
-      'json',
-      'yaml',
-      'toml',
-      'xml',
-      'lua',
-      'r',
-      'dockerfile',
-      'code',
-      'pro',
-      'professional'
-    ];
-
-    if (codeTypes.contains(note.noteType)) {
+    if (_codeNoteTypes.contains(note.noteType)) {
       return NoteMode.code;
     } else {
       return NoteMode.values.firstWhere(
@@ -87,41 +89,8 @@ class NoteCardUtils {
   }
 
   static bool shouldShowExtension(String noteType) {
-    // Custom extensions always show
     if (noteType.startsWith('custom:')) return true;
-    final codeTypes = [
-      'pro',
-      'code',
-      'markdown',
-      'python',
-      'javascript',
-      'typescript',
-      'java',
-      'dart',
-      'html',
-      'css',
-      'svg',
-      'sql',
-      'cpp',
-      'c',
-      'csharp',
-      'swift',
-      'kotlin',
-      'go',
-      'rust',
-      'php',
-      'ruby',
-      'bash',
-      'json',
-      'yaml',
-      'toml',
-      'xml',
-      'lua',
-      'r',
-      'dockerfile',
-      'professional'
-    ];
-    return codeTypes.contains(noteType);
+    return _codeNoteTypes.contains(noteType);
   }
 
   static String getFileExtension(String content, String noteType) {

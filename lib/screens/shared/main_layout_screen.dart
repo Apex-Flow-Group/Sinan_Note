@@ -12,8 +12,8 @@ import 'package:apex_note/screens/desktop/code_tab_responsive.dart';
 import 'package:apex_note/screens/desktop/home_screen_responsive.dart';
 import 'package:apex_note/screens/desktop/reminder_dashboard_responsive.dart';
 import 'package:apex_note/screens/onboarding/splash_screen.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/security_gate.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart';
 import 'package:apex_note/widgets/navigation/bottom_nav_bar.dart';
@@ -58,7 +58,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     // ربط callback تحديث الكتالوجات بعد المزامنة التلقائية
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-      final categoriesProvider = Provider.of<CategoriesProvider>(context, listen: false);
+      final categoriesProvider =
+          Provider.of<CategoriesProvider>(context, listen: false);
       notesProvider.stateService.onCategoriesRefreshNeeded =
           () => categoriesProvider.refreshCategories();
     });
@@ -97,19 +98,19 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   /// 🔄 Auto-sync on app startup
   Future<void> _autoSyncOnStartup() async {
-    await GoogleDriveService.initializeSignIn();
+    await CloudSyncGateway.initializeSignIn();
 
     final prefs = await SharedPreferences.getInstance();
     final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
 
-    if (autoSync && GoogleDriveService.isSignedIn) {
-      await GoogleDriveService.smartSyncOnStartup();
+    if (autoSync && CloudSyncGateway.isSignedIn) {
+      await CloudSyncGateway.smartSync();
       if (!mounted) return;
-      
+
       await Provider.of<NotesProvider>(context, listen: false)
           .refreshAllNotes(force: true);
       if (!mounted) return;
-      
+
       await Provider.of<CategoriesProvider>(context, listen: false)
           .refreshCategories();
     }

@@ -57,8 +57,9 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
   List<Note> _filterNotes(List<Note> notes) {
     var filtered = notes.where((note) {
       if (searchQuery.isEmpty) return true;
-      return note.title.toLowerCase().contains(searchQuery) ||
-          note.content.toLowerCase().contains(searchQuery);
+      final q = Note.normalize(searchQuery);
+      return note.normalizedTitle.contains(q) ||
+          note.normalizedContent.contains(q);
     }).toList();
 
     if (_sortBy == 'title') {
@@ -133,190 +134,185 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
               onNotesChanged: () {},
             ),
             body: Column(
-                children: [
-                  Builder(builder: (ctx) {
-                    if (_selectionMode) {
-                      return SearchableHeader(
-                        title: '${_selectedNotes.length} ${l10n.selected}',
-                        isSearching: false,
-                        hideSearchFrame: true,
-                        searchController: searchController,
-                        onToggleSearch: () {},
-                        leading: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(() {
-                            _selectionMode = false;
-                            _selectedNotes.clear();
-                          }),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                _selectedNotes.length == trashedNotes.length
-                                    ? Icons.deselect
-                                    : Icons.select_all,
-                              ),
-                              onPressed: () => setState(() {
-                                if (_selectedNotes.length ==
-                                    trashedNotes.length) {
-                                  _selectedNotes.clear();
-                                } else {
-                                  _selectedNotes.clear();
-                                  _selectedNotes
-                                      .addAll(trashedNotes.map((n) => n.id!));
-                                }
-                              }),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.restore,
-                                  color: _selectedNotes.isNotEmpty
-                                      ? Colors.green
-                                      : Colors.grey),
-                              onPressed: _selectedNotes.isNotEmpty
-                                  ? () => _restoreSelectedNotes(
-                                      notesProvider, trashedNotes, l10n)
-                                  : null,
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete_forever,
-                                  color: _selectedNotes.isNotEmpty
-                                      ? Colors.red
-                                      : Colors.grey),
-                              onPressed: _selectedNotes.isNotEmpty
-                                  ? () async {
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: Text(l10n.permanentDelete),
-                                          content: Text(
-                                              '${l10n.confirmPermanentDeleteMultiple} ${_selectedNotes.length} ${l10n.notesQuestion}'),
-                                          actions: [
-                                            TextButton(
-                                                onPressed: () =>
-                                                    Navigator.pop(ctx, false),
-                                                child: Text(l10n.cancel)),
-                                            TextButton(
-                                                onPressed: () =>
-                                                    Navigator.pop(ctx, true),
-                                                child: Text(l10n.delete,
-                                                    style: const TextStyle(
-                                                        color: Colors.red))),
-                                          ],
-                                        ),
-                                      );
-                                      if (confirm == true) {
-                                        final ids =
-                                            List<int>.from(_selectedNotes);
-                                        setState(() {
-                                          _selectionMode = false;
-                                          _selectedNotes.clear();
-                                        });
-                                        for (var id in ids) {
-                                          await notesProvider.deleteNote(id);
-                                        }
-                                      }
-                                    }
-                                  : null,
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+              children: [
+                Builder(builder: (ctx) {
+                  if (_selectionMode) {
                     return SearchableHeader(
-                      title: l10n.trash,
-                      icon: Icons.delete_sweep_outlined,
-                      isSearching: _isSearchActive,
-                      noteCount: trashedNotes.length,
+                      title: '${_selectedNotes.length} ${l10n.selected}',
+                      isSearching: false,
+                      hideSearchFrame: true,
                       searchController: searchController,
-                      onSearchChange: (q) => setState(() {}),
-                      onToggleSearch: () {
-                        if (_isSearchActive) {
-                          _exitSearch();
-                        } else {
-                          setState(() => searchController.text = '');
-                          toggleSearch();
-                        }
-                      },
-                      leading: !_isSearchActive
-                          ? Builder(
-                              builder: (ctx) => IconButton(
-                                icon: const Icon(Icons.menu),
-                                onPressed: () => Scaffold.of(ctx).openDrawer(),
-                              ),
-                            )
-                          : null,
+                      onToggleSearch: () {},
+                      leading: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => setState(() {
+                          _selectionMode = false;
+                          _selectedNotes.clear();
+                        }),
+                      ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          PopupMenuButton<String>(
-                            icon: const Icon(Icons.sort),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            onSelected: (value) =>
-                                setState(() => _sortBy = value),
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'date',
-                                child: Row(children: [
-                                  Icon(Icons.access_time,
-                                      size: 20,
-                                      color: _sortBy == 'date'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null),
-                                  const SizedBox(width: 12),
-                                  Text(l10n.sortByDate),
-                                  if (_sortBy == 'date') ...[
-                                    const Spacer(),
-                                    Icon(Icons.check,
-                                        size: 20,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ],
-                                ]),
-                              ),
-                              PopupMenuItem(
-                                value: 'title',
-                                child: Row(children: [
-                                  Icon(Icons.sort_by_alpha,
-                                      size: 20,
-                                      color: _sortBy == 'title'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null),
-                                  const SizedBox(width: 12),
-                                  Text(l10n.sortByTitle),
-                                  if (_sortBy == 'title') ...[
-                                    const Spacer(),
-                                    Icon(Icons.check,
-                                        size: 20,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ],
-                                ]),
-                              ),
-                            ],
-                          ),
-                          if (trashedNotes.isNotEmpty)
-                            IconButton(
-                              icon: const Icon(Icons.delete_forever),
-                              onPressed: () => TrashEmptySheet.show(
-                                  context,
-                                  trashedNotes: trashedNotes,
-                                  notesProvider: notesProvider),
+                          IconButton(
+                            icon: Icon(
+                              _selectedNotes.length == trashedNotes.length
+                                  ? Icons.deselect
+                                  : Icons.select_all,
                             ),
+                            onPressed: () => setState(() {
+                              if (_selectedNotes.length ==
+                                  trashedNotes.length) {
+                                _selectedNotes.clear();
+                              } else {
+                                _selectedNotes.clear();
+                                _selectedNotes
+                                    .addAll(trashedNotes.map((n) => n.id!));
+                              }
+                            }),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.restore,
+                                color: _selectedNotes.isNotEmpty
+                                    ? Colors.green
+                                    : Colors.grey),
+                            onPressed: _selectedNotes.isNotEmpty
+                                ? () => _restoreSelectedNotes(
+                                    notesProvider, trashedNotes, l10n)
+                                : null,
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete_forever,
+                                color: _selectedNotes.isNotEmpty
+                                    ? Colors.red
+                                    : Colors.grey),
+                            onPressed: _selectedNotes.isNotEmpty
+                                ? () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: Text(l10n.permanentDelete),
+                                        content: Text(
+                                            '${l10n.confirmPermanentDeleteMultiple} ${_selectedNotes.length} ${l10n.notesQuestion}'),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, false),
+                                              child: Text(l10n.cancel)),
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, true),
+                                              child: Text(l10n.delete,
+                                                  style: const TextStyle(
+                                                      color: Colors.red))),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      final ids =
+                                          List<int>.from(_selectedNotes);
+                                      setState(() {
+                                        _selectionMode = false;
+                                        _selectedNotes.clear();
+                                      });
+                                      for (var id in ids) {
+                                        await notesProvider.deleteNote(id);
+                                      }
+                                    }
+                                  }
+                                : null,
+                          ),
                         ],
                       ),
                     );
-                  }),
-                  Expanded(
-                    child: SafeArea(
+                  }
+                  return SearchableHeader(
+                    title: l10n.trash,
+                    icon: Icons.delete_sweep_outlined,
+                    isSearching: _isSearchActive,
+                    noteCount: trashedNotes.length,
+                    searchController: searchController,
+                    onSearchChange: (q) => setState(() {}),
+                    onToggleSearch: () {
+                      if (_isSearchActive) {
+                        _exitSearch();
+                      } else {
+                        setState(() => searchController.text = '');
+                        toggleSearch();
+                      }
+                    },
+                    leading: !_isSearchActive
+                        ? Builder(
+                            builder: (ctx) => IconButton(
+                              icon: const Icon(Icons.menu),
+                              onPressed: () => Scaffold.of(ctx).openDrawer(),
+                            ),
+                          )
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.sort),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          onSelected: (value) =>
+                              setState(() => _sortBy = value),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'date',
+                              child: Row(children: [
+                                Icon(Icons.access_time,
+                                    size: 20,
+                                    color: _sortBy == 'date'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null),
+                                const SizedBox(width: 12),
+                                Text(l10n.sortByDate),
+                                if (_sortBy == 'date') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check,
+                                      size: 20,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ],
+                              ]),
+                            ),
+                            PopupMenuItem(
+                              value: 'title',
+                              child: Row(children: [
+                                Icon(Icons.sort_by_alpha,
+                                    size: 20,
+                                    color: _sortBy == 'title'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null),
+                                const SizedBox(width: 12),
+                                Text(l10n.sortByTitle),
+                                if (_sortBy == 'title') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check,
+                                      size: 20,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ],
+                              ]),
+                            ),
+                          ],
+                        ),
+                        if (trashedNotes.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.delete_forever),
+                            onPressed: () => TrashEmptySheet.show(context,
+                                trashedNotes: trashedNotes,
+                                notesProvider: notesProvider),
+                          ),
+                      ],
+                    ),
+                  );
+                }),
+                Expanded(
+                  child: SafeArea(
                     top: false,
                     child: trashedNotes.isEmpty
                         ? Center(
@@ -435,10 +431,11 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                                                 ChecklistFormatter
                                                         .isValidChecklist(
                                                             note.content)
-                                                    ? NoteCardUtils.buildChecklistPreview(
-                                                        note.content,
-                                                        _getTextColor(
-                                                            note.colorIndex))
+                                                    ? NoteCardUtils
+                                                        .buildChecklistPreview(
+                                                            note.content,
+                                                            _getTextColor(note
+                                                                .colorIndex))
                                                     : Text(
                                                         NoteCardUtils
                                                             .fixNoteContent(
@@ -467,10 +464,10 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                             },
                           ),
                   ), // SafeArea
-                  ), // Expanded
-                ],
-              ), // Column
-            ),
+                ), // Expanded
+              ],
+            ), // Column
+          ),
         );
       },
     );

@@ -308,7 +308,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final note = _currentNote;
     final content = note.isChecklist
         ? ChecklistFormatter.formatForSharing(note.title, note.content)
-        : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length)}';
+        : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content)}';
     CustomShareSheet.show(context, content, subject: note.title, note: note);
   }
 

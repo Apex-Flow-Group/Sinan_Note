@@ -69,11 +69,10 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
 
     // فلتر البحث
     if (searchQuery.isNotEmpty) {
+      final q = Note.normalize(searchQuery);
       result = result.where((note) {
-        final title = note.title.toLowerCase();
-        final content = note.content.toLowerCase();
-        final query = searchQuery.toLowerCase();
-        return title.contains(query) || content.contains(query);
+        return note.normalizedTitle.contains(q) ||
+            note.normalizedContent.contains(q);
       }).toList();
     }
 

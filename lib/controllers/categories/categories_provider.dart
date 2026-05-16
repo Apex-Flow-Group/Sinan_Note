@@ -3,8 +3,8 @@
 import 'dart:async';
 
 import 'package:apex_note/models/category.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +13,8 @@ const int kMaxCategoryNameLength = 20;
 const int kProCategoryId = -1;
 
 class CategoriesProvider extends ChangeNotifier {
+  final _db = SqliteDatabaseService();
+
   List<NoteCategory> _categories = [];
   int? _selectedCategoryId;
   bool _isLoading = true;
@@ -27,8 +29,10 @@ class CategoriesProvider extends ChangeNotifier {
   void setHideProFromHome(bool value) {
     _hideProFromHome = value;
     notifyListeners();
-    SharedPreferences.getInstance()
-        .then((p) => p.setBool('hide_pro_from_home', value));
+    SharedPreferences.getInstance().then(
+      (p) => p.setBool('hide_pro_from_home', value),
+      onError: (_) {},
+    );
   }
 
   CategoriesProvider() {
@@ -51,8 +55,7 @@ class CategoriesProvider extends ChangeNotifier {
   }
 
   Future<void> _load() async {
-    final db = SqliteDatabaseService();
-    final all = await db.getAllCategories();
+    final all = await _db.getAllCategories();
     all.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     // حذف المكررات بناءً على الاسم
@@ -64,7 +67,7 @@ class CategoriesProvider extends ChangeNotifier {
         seen.add(key);
         unique.add(cat);
       } else {
-        await db.deleteCategory(cat.id);
+        await _db.deleteCategory(cat.id);
       }
     }
 
@@ -74,9 +77,8 @@ class CategoriesProvider extends ChangeNotifier {
 
   Future<void> _seedDefaults(List<String>? names) async {
     final defaults = names ?? ['Work', 'Personal', 'Ideas', 'Tasks'];
-    final db = SqliteDatabaseService();
     for (int i = 0; i < defaults.length; i++) {
-      await db.insertCategory(NoteCategory(name: defaults[i], sortOrder: i));
+      await _db.insertCategory(NoteCategory(name: defaults[i], sortOrder: i));
     }
     await _load();
   }
@@ -84,13 +86,15 @@ class CategoriesProvider extends ChangeNotifier {
   Future<bool> addCategory(String name) async {
     if (_categories.length >= kMaxCategories) return false;
     final trimmed = name.trim();
-    if (trimmed.isEmpty || trimmed.length > kMaxCategoryNameLength) return false;
+    if (trimmed.isEmpty || trimmed.length > kMaxCategoryNameLength) {
+      return false;
+    }
 
     final nextSortOrder =
         _categories.isEmpty ? 0 : _categories.last.sortOrder + 1;
-    await SqliteDatabaseService()
+    await _db
         .insertCategory(NoteCategory(name: trimmed, sortOrder: nextSortOrder));
-    GoogleDriveService.markDirty();
+    CloudSyncGateway.markDirty();
     _triggerSync();
     await _load();
     return true;
@@ -102,17 +106,15 @@ class CategoriesProvider extends ChangeNotifier {
     final cat = _categories.firstWhere((c) => c.id == id,
         orElse: () => NoteCategory(id: id, name: trimmed));
     cat.name = trimmed;
-    await SqliteDatabaseService().updateCategory(cat);
-    GoogleDriveService.markDirty();
+    await _db.updateCategory(cat);
+    CloudSyncGateway.markDirty();
     _triggerSync();
     await _load();
   }
 
   Future<void> deleteCategory(int id) async {
-    final db = SqliteDatabaseService();
-
     // أزل الـ id من جميع الملاحظات التي تحمله
-    final allNotes = await db.getAllNotes();
+    final allNotes = await _db.getAllNotes();
     for (final note in allNotes) {
       if (note.categoryIds.contains(id)) {
         final updated = note.copyWith(
@@ -120,12 +122,12 @@ class CategoriesProvider extends ChangeNotifier {
           isHiddenFromHome:
               note.categoryIds.length == 1 ? false : note.isHiddenFromHome,
         );
-        await db.updateNote(updated);
+        await _db.updateNote(updated);
       }
     }
 
-    await db.deleteCategory(id);
-    GoogleDriveService.markDirty();
+    await _db.deleteCategory(id);
+    CloudSyncGateway.markDirty();
     _triggerSync();
     if (_selectedCategoryId == id) _selectedCategoryId = null;
     await _load();
@@ -136,10 +138,10 @@ class CategoriesProvider extends ChangeNotifier {
   void _triggerSync() {
     _syncDebounce?.cancel();
     _syncDebounce = Timer(const Duration(seconds: 5), () async {
-      if (!GoogleDriveService.isSignedIn) return;
-      if (!GoogleDriveService.autoSyncEnabled.value) return;
+      if (!CloudSyncGateway.isSignedIn) return;
+      if (!CloudSyncGateway.autoSyncEnabled.value) return;
       try {
-        await GoogleDriveService.smartSyncOnStartup();
+        await CloudSyncGateway.smartSync();
       } catch (_) {}
     });
   }

@@ -453,6 +453,8 @@
   "supportMessage": "Message",
   "checklistTitle": "Checklist Title",
   "checklistItemHint": "Task...",
+  "addItem": "Add item",
+  "itemDeleted": "Item deleted",
   "sort": "Sort",
   "checklist": "Checklist",
   "checklistMenu": "Checklist",

@@ -189,14 +189,15 @@ class NoteCardActions {
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          final plainContent = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
+          final plainContent = NoteCardUtils.fixNoteContent(note.content);
           CustomShareSheet.show(
             context,
             '${note.title}\n\n$plainContent',
             subject: note.title,
             note: note,
             onNoteCopied: () async {
-              await notesProvider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
+              await notesProvider.duplicateNote(note.id!,
+                  copyLabel: l10n.noteCopy);
               onNoteChanged();
               if (!context.mounted) return;
               UnifiedNotificationService().show(
@@ -225,12 +226,15 @@ class NoteCardActions {
           if (!context.mounted || result == null) return;
           if (result['remove'] == true) {
             await NotificationService().cancelNotification(note.id!);
-            final updated = note.copyWith(reminderDateTime: null, recurrenceRule: null);
+            final updated =
+                note.copyWith(reminderDateTime: null, recurrenceRule: null);
             await notesProvider.updateNote(updated);
           } else {
             final updated = note.copyWith(
               reminderDateTime: result['dateTime'] as DateTime,
-              recurrenceRule: result['recurrence'] == 'none' ? null : result['recurrence'] as String,
+              recurrenceRule: result['recurrence'] == 'none'
+                  ? null
+                  : result['recurrence'] as String,
             );
             await notesProvider.updateNote(updated);
             await NotificationService().scheduleNotification(
@@ -238,7 +242,9 @@ class NoteCardActions {
               title: note.title,
               body: NoteCardUtils.fixNoteContent(note.content, maxChars: 100),
               scheduledTime: result['dateTime'] as DateTime,
-              recurrenceRule: result['recurrence'] == 'none' ? null : result['recurrence'] as String,
+              recurrenceRule: result['recurrence'] == 'none'
+                  ? null
+                  : result['recurrence'] as String,
             );
           }
           onNoteChanged();
@@ -288,7 +294,8 @@ class NoteCardActions {
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          final settings =
+              Provider.of<SettingsProvider>(context, listen: false);
           SwipeCustomSheet.show(
             context,
             note: note,

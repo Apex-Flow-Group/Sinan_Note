@@ -42,21 +42,11 @@ class SmartHeader extends StatefulWidget {
   State<SmartHeader> createState() => _SmartHeaderState();
 }
 
-class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin {
+class _SmartHeaderState extends State<SmartHeader>
+    with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    widget.selectedNoteIdsNotifier.addListener(_onSelectionChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.selectedNoteIdsNotifier.removeListener(_onSelectionChanged);
-    super.dispose();
-  }
-
-  void _onSelectionChanged() {
-    // لا شيء - الشريط دائماً مثبت
   }
 
   @override
@@ -99,23 +89,9 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                         final note =
                             provider.notes.firstWhere((n) => n.id == id);
                         notesToRestore.add(note);
-                        final updatedNote = Note(
-                          id: note.id,
-                          title: note.title,
-                          content: note.content,
-                          createdAt: note.createdAt,
-                          updatedAt: DateTime.now(),
-                          colorIndex: note.colorIndex,
-                          isArchived: note.isArchived,
-                          isTrashed: note.isTrashed,
-                          reminderDateTime: note.reminderDateTime,
-                          isLocked: note.isLocked,
-                          noteType: note.noteType,
-                          recurrenceRule: note.recurrenceRule,
-                          isCompleted: note.isCompleted,
-                          isProfessional: note.isProfessional,
+                        final updatedNote = note.copyWith(
                           isPinned: !note.isPinned,
-                          isChecklist: note.isChecklist,
+                          updatedAt: DateTime.now(),
                         );
                         await provider.updateNote(updatedNote);
                       }

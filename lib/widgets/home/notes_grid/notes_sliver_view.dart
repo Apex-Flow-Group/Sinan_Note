@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
@@ -95,8 +96,13 @@ class _NotesSliverViewState extends State<NotesSliverView> {
             children: [
               Icon(Icons.note_add_outlined, size: 80, color: Colors.grey[400]),
               const SizedBox(height: 16),
-              Text('No notes',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+              Builder(builder: (ctx) {
+                final l10n = Localizations.of(ctx, AppLocalizations);
+                return Text(
+                  l10n?.noNotes ?? 'No notes',
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                );
+              }),
             ],
           ),
         ),

@@ -2720,6 +2720,18 @@ abstract class AppLocalizations {
   /// **'Task...'**
   String get checklistItemHint;
 
+  /// No description provided for @addItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get addItem;
+
+  /// No description provided for @itemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Item deleted'**
+  String get itemDeleted;
+
   /// No description provided for @sort.
   ///
   /// In en, this message translates to:

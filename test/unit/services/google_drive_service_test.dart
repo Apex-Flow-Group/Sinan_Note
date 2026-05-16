@@ -4,8 +4,8 @@
 import 'dart:convert';
 
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/storage/compression_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_setup.dart';
@@ -16,50 +16,46 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   // 1. حالة المصادقة
   // ══════════════════════════════════════════════════════════════
-  group('GoogleDriveService — Auth State', () {
+  group('CloudSyncGateway — Auth State', () {
     test('isSignedIn يُرجع false قبل تسجيل الدخول', () {
-      expect(GoogleDriveService.isSignedIn, isFalse);
+      expect(CloudSyncGateway.isSignedIn, isFalse);
     });
 
     test('currentUserEmail يُرجع null قبل تسجيل الدخول', () {
-      expect(GoogleDriveService.currentUserEmail, isNull);
+      expect(CloudSyncGateway.currentUserEmail, isNull);
     });
 
     test('lastSyncTime يُرجع null قبل أي مزامنة', () {
-      expect(GoogleDriveService.lastSyncTime, isNull);
+      expect(CloudSyncGateway.lastSyncTime, isNull);
     });
 
-    test('uploadDatabase يرمي استثناء عند عدم تسجيل الدخول', () async {
+    test('upload يرمي استثناء عند عدم تسجيل الدخول', () async {
       expect(
-        () async => await GoogleDriveService.uploadDatabase(null),
+        () async => await CloudSyncGateway.upload(),
         throwsA(isA<Exception>()),
       );
     });
 
-    test('downloadDatabase يرمي استثناء عند عدم تسجيل الدخول', () async {
+    test('download يرمي استثناء عند عدم تسجيل الدخول', () async {
       expect(
-        () async => await GoogleDriveService.downloadDatabase(null),
+        () async => await CloudSyncGateway.download(),
         throwsA(isA<Exception>()),
       );
     });
 
-    test('hasBackupInDrive يُرجع false عند عدم تسجيل الدخول', () async {
-      expect(await GoogleDriveService.hasBackupInDrive(), isFalse);
+    test('hasBackupInCloud يُرجع false عند عدم تسجيل الدخول', () async {
+      expect(await CloudSyncGateway.hasBackupInCloud(), isFalse);
     });
 
-    test('checkForVaultData يُرجع false عند عدم تسجيل الدخول', () async {
-      expect(await GoogleDriveService.hasBackupInDrive(), isFalse);
-    });
-
-    test('getDriveNotesCount يُرجع 0 عند عدم تسجيل الدخول', () async {
-      expect(await GoogleDriveService.getDriveNotesCount(), 0);
+    test('getCloudNotesCount يُرجع 0 عند عدم تسجيل الدخول', () async {
+      expect(await CloudSyncGateway.getCloudNotesCount(), 0);
     });
   });
 
   // ══════════════════════════════════════════════════════════════
   // 2. Rate Limiting — منع الإرسال المتكرر
   // ══════════════════════════════════════════════════════════════
-  group('GoogleDriveService — Rate Limiting Logic', () {
+  group('CloudSyncGateway — Rate Limiting Logic', () {
     // نختبر المنطق الداخلي عبر CompressionService وبنية البيانات
 
     test('بنية النسخة الاحتياطية صحيحة', () {
@@ -116,13 +112,15 @@ void main() {
 
     test('الضغط يُقلل حجم البيانات', () {
       final largeJson = jsonEncode({
-        'notes': List.generate(100, (i) => {
-          'id': i,
-          'title': 'Note $i',
-          'content': 'Content $i ' * 20,
-          'createdAt': DateTime.now().toIso8601String(),
-          'updatedAt': DateTime.now().toIso8601String(),
-        }),
+        'notes': List.generate(
+            100,
+            (i) => {
+                  'id': i,
+                  'title': 'Note $i',
+                  'content': 'Content $i ' * 20,
+                  'createdAt': DateTime.now().toIso8601String(),
+                  'updatedAt': DateTime.now().toIso8601String(),
+                }),
       });
 
       final compressed = CompressionService.compress(largeJson);
@@ -130,14 +128,16 @@ void main() {
     });
 
     test('ضغط وفك ضغط ملاحظات حقيقية', () {
-      final notes = List.generate(50, (i) => Note(
-        id: i,
-        title: 'ملاحظة $i',
-        content: 'محتوى الملاحظة رقم $i مع نص عربي طويل نسبياً',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        noteType: i % 2 == 0 ? 'simple' : 'code',
-      ));
+      final notes = List.generate(
+          50,
+          (i) => Note(
+                id: i,
+                title: 'ملاحظة $i',
+                content: 'محتوى الملاحظة رقم $i مع نص عربي طويل نسبياً',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+                noteType: i % 2 == 0 ? 'simple' : 'code',
+              ));
 
       final json = jsonEncode({
         'version': '2.0',
@@ -204,7 +204,8 @@ void main() {
 
       if (driveNote.id != null) {
         if (mergedMap.containsKey(driveNote.id!)) {
-          if (driveNote.updatedAt.isAfter(mergedMap[driveNote.id!]!.updatedAt)) {
+          if (driveNote.updatedAt
+              .isAfter(mergedMap[driveNote.id!]!.updatedAt)) {
             mergedMap[driveNote.id!] = driveNote;
           }
         } else {
@@ -250,16 +251,33 @@ void main() {
       final now = DateTime.now();
 
       final localNotes = [
-        Note(id: 1, title: 'Local 1', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Local 1',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
       ];
 
       final driveNotes = [
-        Note(id: 1, title: 'Local 1', content: '', createdAt: now, updatedAt: now),
-        Note(id: 2, title: 'Drive Only', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Local 1',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+        Note(
+            id: 2,
+            title: 'Drive Only',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
       ];
 
       final Map<int, Note> mergedMap = {};
-      for (final n in localNotes) { mergedMap[n.id!] = n; }
+      for (final n in localNotes) {
+        mergedMap[n.id!] = n;
+      }
       for (final n in driveNotes) {
         if (!mergedMap.containsKey(n.id!)) {
           mergedMap[n.id!] = n;
@@ -274,7 +292,12 @@ void main() {
       final now = DateTime.now();
 
       final localNotes = [
-        Note(id: 1, title: 'Local Only', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Local Only',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
         Note(id: 2, title: 'Both', content: '', createdAt: now, updatedAt: now),
       ];
 
@@ -283,7 +306,9 @@ void main() {
       ];
 
       final Map<int, Note> mergedMap = {};
-      for (final n in localNotes) { mergedMap[n.id!] = n; }
+      for (final n in localNotes) {
+        mergedMap[n.id!] = n;
+      }
       for (final n in driveNotes) {
         if (!mergedMap.containsKey(n.id!)) mergedMap[n.id!] = n;
       }
@@ -297,7 +322,9 @@ void main() {
       final List<Note> localNotes = [];
       final List<Note> driveNotes = [];
 
-      for (final n in localNotes) { mergedMap[n.id!] = n; }
+      for (final n in localNotes) {
+        mergedMap[n.id!] = n;
+      }
       for (final n in driveNotes) {
         if (!mergedMap.containsKey(n.id!)) mergedMap[n.id!] = n;
       }
@@ -384,15 +411,17 @@ void main() {
 
     test('تسلسل 1000 ملاحظة وإعادة تحميلها بدون فقدان بيانات', () {
       final now = DateTime.now();
-      final notes = List.generate(1000, (i) => Note(
-        id: i + 1,
-        title: 'ملاحظة $i',
-        content: 'محتوى $i',
-        createdAt: now,
-        updatedAt: now,
-        colorIndex: i % 12,
-        noteType: ['simple', 'code', 'checklist', 'reminder'][i % 4],
-      ));
+      final notes = List.generate(
+          1000,
+          (i) => Note(
+                id: i + 1,
+                title: 'ملاحظة $i',
+                content: 'محتوى $i',
+                createdAt: now,
+                updatedAt: now,
+                colorIndex: i % 12,
+                noteType: ['simple', 'code', 'checklist', 'reminder'][i % 4],
+              ));
 
       final json = jsonEncode(notes.map((n) => n.toMap()).toList());
       final decoded = jsonDecode(json) as List;
@@ -451,7 +480,7 @@ void main() {
       // بدون تسجيل دخول، كل الطلبات يجب أن ترمي استثناء بشكل نظيف
       final futures = List.generate(5, (_) async {
         try {
-          await GoogleDriveService.uploadDatabase(null);
+          await CloudSyncGateway.upload();
           return 'success';
         } catch (e) {
           return 'error: ${e.toString()}';
@@ -466,7 +495,7 @@ void main() {
     test('طلبات تحميل متزامنة لا تُسبب تعارضاً', () async {
       final futures = List.generate(5, (_) async {
         try {
-          await GoogleDriveService.downloadDatabase(null);
+          await CloudSyncGateway.download();
           return 'success';
         } catch (e) {
           return 'error';

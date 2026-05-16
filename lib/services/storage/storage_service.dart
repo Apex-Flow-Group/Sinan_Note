@@ -152,25 +152,9 @@ class StorageService {
     int count = 0;
     for (final note in notes) {
       if (note.content.isEmpty) continue;
-      await SqliteDatabaseService().insertNote(Note(
-        title: note.title,
-        content: note.content,
-        createdAt: note.createdAt,
-        updatedAt: DateTime.now(),
-        colorIndex: note.colorIndex,
-        isArchived: note.isArchived,
-        isTrashed: note.isTrashed,
-        reminderDateTime: note.reminderDateTime,
-        isLocked: note.isLocked,
-        noteType: note.noteType,
-        recurrenceRule: note.recurrenceRule,
-        isCompleted: note.isCompleted,
-        isProfessional: note.isProfessional,
-        isPinned: note.isPinned,
-        isChecklist: note.isChecklist,
-        categoryIds: note.categoryIds,
-        isHiddenFromHome: note.isHiddenFromHome,
-      ));
+      await SqliteDatabaseService().insertNote(
+        note.copyWith(id: null, updatedAt: DateTime.now()),
+      );
       count++;
     }
 

@@ -103,13 +103,13 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
   (IconData, String, Color) _actionMeta(
       String action, AppLocalizations l10n, ColorScheme scheme) {
     return switch (action) {
-      'delete'    => (Icons.delete_outline_rounded, l10n.delete,     Colors.red),
-      'archive'   => (Icons.archive_outlined,        l10n.archive,    Colors.green),
-      'share'     => (Icons.share_outlined,           l10n.share,      Colors.blue),
-      'reminder'  => (Icons.alarm_rounded,            l10n.reminder,   Colors.orange),
-      'category'  => (Icons.label_outlined,           l10n.categories, scheme.primary),
-      'duplicate' => (Icons.copy_all_rounded,         l10n.noteCopy,   Colors.purple),
-      _           => (Icons.help_outline,             action,          scheme.onSurface),
+      'delete' => (Icons.delete_outline_rounded, l10n.delete, Colors.red),
+      'archive' => (Icons.archive_outlined, l10n.archive, Colors.green),
+      'share' => (Icons.share_outlined, l10n.share, Colors.blue),
+      'reminder' => (Icons.alarm_rounded, l10n.reminder, Colors.orange),
+      'category' => (Icons.label_outlined, l10n.categories, scheme.primary),
+      'duplicate' => (Icons.copy_all_rounded, l10n.noteCopy, Colors.purple),
+      _ => (Icons.help_outline, action, scheme.onSurface),
     };
   }
 
@@ -162,11 +162,12 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
         if (!context.mounted) return;
         CustomShareSheet.show(
           context,
-          '${widget.note.title}\n\n${NoteCardUtils.fixNoteContent(widget.note.content, maxChars: widget.note.content.length)}',
+          '${widget.note.title}\n\n${NoteCardUtils.fixNoteContent(widget.note.content)}',
           subject: widget.note.title,
           note: widget.note,
           onNoteCopied: () async {
-            await notesProvider.duplicateNote(widget.note.id!, copyLabel: l10n.noteCopy);
+            await notesProvider.duplicateNote(widget.note.id!,
+                copyLabel: l10n.noteCopy);
             widget.onNoteChanged();
             if (!context.mounted) return;
             UnifiedNotificationService().show(
@@ -179,7 +180,8 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
 
       case 'duplicate':
         Navigator.pop(context);
-        await notesProvider.duplicateNote(widget.note.id!, copyLabel: l10n.noteCopy);
+        await notesProvider.duplicateNote(widget.note.id!,
+            copyLabel: l10n.noteCopy);
         widget.onNoteChanged();
         if (!context.mounted) return;
         UnifiedNotificationService().show(
@@ -208,8 +210,8 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
             final rec = result['recurrence'] == 'none'
                 ? null
                 : result['recurrence'] as String;
-            await notesProvider.updateNote(
-                widget.note.copyWith(reminderDateTime: dt, recurrenceRule: rec));
+            await notesProvider.updateNote(widget.note
+                .copyWith(reminderDateTime: dt, recurrenceRule: rec));
             await NotificationService().scheduleNotification(
               id: widget.note.id!,
               title: widget.note.title,

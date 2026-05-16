@@ -134,13 +134,7 @@ class NoteSideEffectService {
   /// - Pinned note is deleted
   ///
   /// **Platform:** Android only
-  Future<void> updateWidgetSideEffect() async {
-    // Only handle widgets on Android
-    if (!Platform.isAndroid) return;
-
-    
-    try {} catch (_) {}
-  }
+  Future<void> updateWidgetSideEffect() async {}
 
   /// Check and update widget if note is pinned
   ///

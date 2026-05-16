@@ -97,8 +97,8 @@ class _ReminderDashboardState extends State<ReminderDashboard>
         ? notes
         : notes
             .where((n) =>
-                n.title.toLowerCase().contains(searchQuery) ||
-                n.content.toLowerCase().contains(searchQuery))
+                n.normalizedTitle.contains(Note.normalize(searchQuery)) ||
+                n.normalizedContent.contains(Note.normalize(searchQuery)))
             .toList();
     if (_sortBy == 'title') {
       filtered.sort((a, b) => a.title.compareTo(b.title));
@@ -160,7 +160,8 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                           ValueListenableBuilder<Set<int>>(
                             valueListenable: _selectedNoteIdsNotifier,
                             builder: (context, selectedIds, _) {
-                              final isDark = Theme.of(context).brightness == Brightness.dark;
+                              final isDark = Theme.of(context).brightness ==
+                                  Brightness.dark;
                               final inSelection = selectedIds.isNotEmpty;
                               if (inSelection) {
                                 return SliverAppBar(
@@ -169,47 +170,82 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                   titleSpacing: 0,
                                   title: SelectionActionBar(
                                     key: const ValueKey('selection'),
-                                    selectedIdsNotifier: _selectedNoteIdsNotifier,
+                                    selectedIdsNotifier:
+                                        _selectedNoteIdsNotifier,
                                     isDark: isDark,
                                     allPinned: false,
-                                    onClear: () => _selectedNoteIdsNotifier.value = {},
+                                    onClear: () =>
+                                        _selectedNoteIdsNotifier.value = {},
                                     onPin: () async {
-                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final provider =
+                                          Provider.of<NotesProvider>(context,
+                                              listen: false);
                                       final ids = List<int>.from(selectedIds);
                                       for (final id in ids) {
-                                        final note = provider.notes.firstWhere((n) => n.id == id);
-                                        await provider.updateNote(note.copyWith(isPinned: !note.isPinned, updatedAt: DateTime.now()));
+                                        final note = provider.notes
+                                            .firstWhere((n) => n.id == id);
+                                        await provider.updateNote(note.copyWith(
+                                            isPinned: !note.isPinned,
+                                            updatedAt: DateTime.now()));
                                       }
                                       _selectedNoteIdsNotifier.value = {};
                                       if (context.mounted) {
-                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesPinned}', type: NotificationType.success);
+                                        UnifiedNotificationService().show(
+                                            context: context,
+                                            message:
+                                                '${ids.length} ${strings.notesPinned}',
+                                            type: NotificationType.success);
                                       }
                                     },
                                     onArchive: () async {
-                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final provider =
+                                          Provider.of<NotesProvider>(context,
+                                              listen: false);
                                       final ids = List<int>.from(selectedIds);
                                       await provider.archiveNotes(ids);
                                       _selectedNoteIdsNotifier.value = {};
                                       if (context.mounted) {
-                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesArchived}', type: NotificationType.success);
+                                        UnifiedNotificationService().show(
+                                            context: context,
+                                            message:
+                                                '${ids.length} ${strings.notesArchived}',
+                                            type: NotificationType.success);
                                       }
                                     },
                                     onDelete: () async {
-                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final provider =
+                                          Provider.of<NotesProvider>(context,
+                                              listen: false);
                                       final ids = List<int>.from(selectedIds);
                                       await provider.trashNotes(ids);
                                       _selectedNoteIdsNotifier.value = {};
                                       if (context.mounted) {
-                                        UnifiedNotificationService().show(context: context, message: '${ids.length} ${strings.notesDeleted}', type: NotificationType.info);
+                                        UnifiedNotificationService().show(
+                                            context: context,
+                                            message:
+                                                '${ids.length} ${strings.notesDeleted}',
+                                            type: NotificationType.info);
                                       }
                                     },
                                     onShare: selectedIds.length == 1
                                         ? () {
-                                            final provider = Provider.of<NotesProvider>(context, listen: false);
-                                            final note = provider.notes.firstWhere((n) => n.id == selectedIds.first);
+                                            final provider =
+                                                Provider.of<NotesProvider>(
+                                                    context,
+                                                    listen: false);
+                                            final note = provider.notes
+                                                .firstWhere((n) =>
+                                                    n.id == selectedIds.first);
                                             _selectedNoteIdsNotifier.value = {};
-                                            final content = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
-                                            CustomShareSheet.show(context, '${note.title}\n\n$content', subject: note.title, note: note);
+                                            final content =
+                                                NoteCardUtils.fixNoteContent(
+                                                    note.content,
+                                                    maxChars:
+                                                        note.content.length);
+                                            CustomShareSheet.show(context,
+                                                '${note.title}\n\n$content',
+                                                subject: note.title,
+                                                note: note);
                                           }
                                         : null,
                                   ),
@@ -238,7 +274,8 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                               exitSearch();
                                             });
                                           } else {
-                                            setState(() => _isSearchMode = true);
+                                            setState(
+                                                () => _isSearchMode = true);
                                           }
                                         },
                                         trailing: Row(
@@ -246,27 +283,45 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                           children: [
                                             IconButton(
                                               icon: Icon(
-                                                _viewType == ViewType.listExpanded
+                                                _viewType ==
+                                                        ViewType.listExpanded
                                                     ? Icons.view_headline
                                                     : Icons.view_day,
                                               ),
                                               onPressed: () async {
                                                 setState(() {
-                                                  _viewType = _viewType == ViewType.listExpanded
+                                                  _viewType = _viewType ==
+                                                          ViewType.listExpanded
                                                       ? ViewType.listCompact
                                                       : ViewType.listExpanded;
                                                 });
-                                                await Provider.of<SettingsProvider>(context, listen: false)
-                                                    .setViewType('reminder', _viewType.name);
+                                                await Provider.of<
+                                                            SettingsProvider>(
+                                                        context,
+                                                        listen: false)
+                                                    .setViewType('reminder',
+                                                        _viewType.name);
                                               },
                                             ),
                                             PopupMenuButton<String>(
                                               icon: const Icon(Icons.sort),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                              onSelected: (v) => setState(() => _sortBy = v),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          12)),
+                                              onSelected: (v) =>
+                                                  setState(() => _sortBy = v),
                                               itemBuilder: (_) => [
-                                                _sortItem(context, 'date', Icons.access_time, strings.sortByDate),
-                                                _sortItem(context, 'title', Icons.sort_by_alpha, strings.sortByTitle),
+                                                _sortItem(
+                                                    context,
+                                                    'date',
+                                                    Icons.access_time,
+                                                    strings.sortByDate),
+                                                _sortItem(
+                                                    context,
+                                                    'title',
+                                                    Icons.sort_by_alpha,
+                                                    strings.sortByTitle),
                                               ],
                                             ),
                                           ],
@@ -274,12 +329,22 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                       ),
                                       TabBar(
                                         controller: _tabController,
-                                        indicatorColor: Theme.of(context).primaryColor,
-                                        labelColor: isDark ? Colors.white : Theme.of(context).primaryColor,
-                                        unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
-                                        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                                        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
-                                        physics: const NeverScrollableScrollPhysics(),
+                                        indicatorColor:
+                                            Theme.of(context).primaryColor,
+                                        labelColor: isDark
+                                            ? Colors.white
+                                            : Theme.of(context).primaryColor,
+                                        unselectedLabelColor: isDark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
+                                        labelStyle: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14),
+                                        unselectedLabelStyle: const TextStyle(
+                                            fontWeight: FontWeight.normal,
+                                            fontSize: 14),
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
                                         tabs: [
                                           Tab(text: strings.upcoming),
                                           Tab(text: strings.scheduled),
@@ -295,21 +360,25 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                           SliverFillRemaining(
                             child: Column(
                               children: [
-                                if (_showPermissionBanner && !_isCheckingPermissions)
+                                if (_showPermissionBanner &&
+                                    !_isCheckingPermissions)
                                   _BatteryBanner(
-                                    onDismiss: () => setState(() => _showPermissionBanner = false),
+                                    onDismiss: () => setState(
+                                        () => _showPermissionBanner = false),
                                   ),
                                 Expanded(
                                   child: TabBarView(
                                     controller: _tabController,
-                                    physics: const NeverScrollableScrollPhysics(),
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
                                     children: [
                                       _ReminderTabView(
                                         notes: upcoming,
                                         type: 'upcoming',
                                         viewType: _viewType,
                                         closeAllSlidables: _closeAllSlidables,
-                                        selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
+                                        selectedNoteIdsNotifier:
+                                            _selectedNoteIdsNotifier,
                                         onChanged: () => setState(() {}),
                                         strings: strings,
                                       ),
@@ -318,7 +387,8 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                         type: 'scheduled',
                                         viewType: _viewType,
                                         closeAllSlidables: _closeAllSlidables,
-                                        selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
+                                        selectedNoteIdsNotifier:
+                                            _selectedNoteIdsNotifier,
                                         onChanged: () => setState(() {}),
                                         strings: strings,
                                       ),
@@ -327,7 +397,8 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                         type: 'expired',
                                         viewType: _viewType,
                                         closeAllSlidables: _closeAllSlidables,
-                                        selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
+                                        selectedNoteIdsNotifier:
+                                            _selectedNoteIdsNotifier,
                                         onChanged: () => setState(() {}),
                                         strings: strings,
                                       ),
@@ -375,7 +446,8 @@ class _ReminderDashboardState extends State<ReminderDashboard>
     );
   }
 
-  PopupMenuItem<String> _sortItem(BuildContext context, String value, IconData icon, String label) {
+  PopupMenuItem<String> _sortItem(
+      BuildContext context, String value, IconData icon, String label) {
     final isSelected = _sortBy == value;
     final color = Theme.of(context).colorScheme.primary;
     return PopupMenuItem(
@@ -385,7 +457,10 @@ class _ReminderDashboardState extends State<ReminderDashboard>
           Icon(icon, size: 20, color: isSelected ? color : null),
           const SizedBox(width: 12),
           Text(label),
-          if (isSelected) ...[const Spacer(), Icon(Icons.check, size: 20, color: color)],
+          if (isSelected) ...[
+            const Spacer(),
+            Icon(Icons.check, size: 20, color: color)
+          ],
         ],
       ),
     );
@@ -427,7 +502,9 @@ class _BatteryBannerState extends State<_BatteryBanner> {
         children: [
           Icon(Icons.battery_alert, color: Colors.orange, size: 24),
           SizedBox(width: 12),
-          Expanded(child: Text('Battery Optimization', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
+          Expanded(
+              child: Text('Battery Optimization',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
           Icon(Icons.expand_more, size: 20),
         ],
       );
@@ -439,7 +516,10 @@ class _BatteryBannerState extends State<_BatteryBanner> {
             children: [
               const Icon(Icons.battery_alert, color: Colors.orange, size: 24),
               const SizedBox(width: 12),
-              const Expanded(child: Text('Battery Optimization', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
+              const Expanded(
+                  child: Text('Battery Optimization',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14))),
               IconButton(
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: () async {
@@ -451,13 +531,16 @@ class _BatteryBannerState extends State<_BatteryBanner> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text('Disable battery optimization to ensure reminders work reliably in the background', style: TextStyle(fontSize: 12)),
+          const Text(
+              'Disable battery optimization to ensure reminders work reliably in the background',
+              style: TextStyle(fontSize: 12)),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: openAppSettings,
             icon: const Icon(Icons.settings, size: 18),
             label: const Text('Open Settings'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange, foregroundColor: Colors.white),
           ),
         ],
       );
@@ -492,13 +575,21 @@ class _ReminderTabView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              type == 'upcoming' ? Icons.alarm_add : type == 'scheduled' ? Icons.event_repeat : Icons.alarm_off,
+              type == 'upcoming'
+                  ? Icons.alarm_add
+                  : type == 'scheduled'
+                      ? Icons.event_repeat
+                      : Icons.alarm_off,
               size: 80,
               color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
-              type == 'upcoming' ? strings.noUpcomingReminders : type == 'scheduled' ? strings.noScheduledReminders : strings.noExpiredReminders,
+              type == 'upcoming'
+                  ? strings.noUpcomingReminders
+                  : type == 'scheduled'
+                      ? strings.noScheduledReminders
+                      : strings.noExpiredReminders,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -506,27 +597,9 @@ class _ReminderTabView extends StatelessWidget {
       );
     }
 
-    if (viewType == ViewType.grid) {
-      return ListView.builder(
-        padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
-        itemCount: (notes.length / 2).ceil(),
-        itemBuilder: (context, rowIndex) {
-          final l = rowIndex * 2;
-          final r = l + 1;
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _buildCard(context, notes[l])),
-              const SizedBox(width: 8),
-              Expanded(child: r < notes.length ? _buildCard(context, notes[r]) : const SizedBox()),
-            ],
-          );
-        },
-      );
-    }
-
     return ListView.builder(
-      padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
+      padding: EdgeInsets.fromLTRB(
+          8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
       itemCount: notes.length,
       itemBuilder: (context, index) => _buildCard(context, notes[index]),
     );
@@ -540,39 +613,39 @@ class _ReminderTabView extends StatelessWidget {
         final selectionMode = selectedIds.isNotEmpty;
         return Consumer<SelectedNoteProvider>(
           builder: (context, sel, _) => SelectedNoteIndicator(
+            note: note,
+            child: NoteCardWidget(
               note: note,
-              child: NoteCardWidget(
-                note: note,
-                viewType: viewType,
-                closeAllSlidables: closeAllSlidables,
-                onNoteChanged: () {
-                  onChanged();
-                },
-                isSelected: isSelected,
-                selectionMode: selectionMode,
-                source: 'reminder_$type',
-                isFiltering: false,
-                isCurrentlyOpen: sel.selectedNote?.id == note.id,
-                onLongPress: () {
-                  if (selectedNoteIdsNotifier.value.isNotEmpty) return;
-                  selectedNoteIdsNotifier.value = {note.id!};
-                },
-                onTap: () {
-                  final current = selectedNoteIdsNotifier.value;
-                  if (current.isNotEmpty) {
-                    final newSet = Set<int>.from(current);
-                    if (newSet.contains(note.id)) {
-                      newSet.remove(note.id);
-                    } else {
-                      newSet.add(note.id!);
-                    }
-                    selectedNoteIdsNotifier.value = Set<int>.of(newSet);
+              viewType: viewType,
+              closeAllSlidables: closeAllSlidables,
+              onNoteChanged: () {
+                onChanged();
+              },
+              isSelected: isSelected,
+              selectionMode: selectionMode,
+              source: 'reminder_$type',
+              isFiltering: false,
+              isCurrentlyOpen: sel.selectedNote?.id == note.id,
+              onLongPress: () {
+                if (selectedNoteIdsNotifier.value.isNotEmpty) return;
+                selectedNoteIdsNotifier.value = {note.id!};
+              },
+              onTap: () {
+                final current = selectedNoteIdsNotifier.value;
+                if (current.isNotEmpty) {
+                  final newSet = Set<int>.from(current);
+                  if (newSet.contains(note.id)) {
+                    newSet.remove(note.id);
+                  } else {
+                    newSet.add(note.id!);
                   }
-                },
-              ),
+                  selectedNoteIdsNotifier.value = Set<int>.of(newSet);
+                }
+              },
             ),
-          );
-        },
-      );
+          ),
+        );
+      },
+    );
   }
 }

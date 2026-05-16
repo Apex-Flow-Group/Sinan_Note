@@ -51,23 +51,9 @@ class DesktopSelectionActions extends StatelessWidget {
     for (final id in ids) {
       final note = notesProvider.notes.firstWhere((n) => n.id == id);
       notesToRestore.add(note);
-      await notesProvider.updateNote(Note(
-        id: note.id,
-        title: note.title,
-        content: note.content,
-        createdAt: note.createdAt,
-        updatedAt: DateTime.now(),
-        colorIndex: note.colorIndex,
-        isArchived: note.isArchived,
-        isTrashed: note.isTrashed,
-        reminderDateTime: note.reminderDateTime,
-        isLocked: note.isLocked,
-        noteType: note.noteType,
-        recurrenceRule: note.recurrenceRule,
-        isCompleted: note.isCompleted,
-        isProfessional: note.isProfessional,
+      await notesProvider.updateNote(note.copyWith(
         isPinned: !note.isPinned,
-        isChecklist: note.isChecklist,
+        updatedAt: DateTime.now(),
       ));
     }
 

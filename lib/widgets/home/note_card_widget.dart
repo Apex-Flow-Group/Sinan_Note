@@ -215,26 +215,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   } else {
                     if (widget.note.isLocked && widget.source == 'locked') {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final decryptedNote = Note(
-                        id: widget.note.id,
-                        title: widget.note.title,
-                        content: widget.note.content,
-                        createdAt: widget.note.createdAt,
-                        updatedAt: widget.note.updatedAt,
-                        colorIndex: widget.note.colorIndex,
-                        isArchived: widget.note.isArchived,
-                        isTrashed: widget.note.isTrashed,
-                        reminderDateTime: widget.note.reminderDateTime,
-                        isLocked: false,
-                        noteType: widget.note.noteType,
-                        recurrenceRule: widget.note.recurrenceRule,
-                        isCompleted: widget.note.isCompleted,
-                        isProfessional: widget.note.isProfessional,
-                        isPinned: widget.note.isPinned,
-                        isChecklist: widget.note.isChecklist,
-                        categoryIds: widget.note.categoryIds,
-                        isHiddenFromHome: widget.note.isHiddenFromHome,
-                      );
+                      final decryptedNote =
+                          widget.note.copyWith(isLocked: false);
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -243,23 +225,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                             mode: mode,
                             skipAuthentication: true,
                             originallyLocked: true,
-                          ),
-                        ),
-                      );
-                      if ((result == true || result == null) && mounted) {
-                        widget.onNoteChanged();
-                      }
-                    } else if (widget.source == 'archive') {
-                      final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final result = await Navigator.push(
-                        context,
-                        EditorPageRoute(
-                          builder: (context) => NoteEditorImmersive(
-                            note: widget.note,
-                            mode: mode,
-                            readOnly: true,
-                            heroTag:
-                                'note_card_${widget.source}_${widget.note.id}',
                           ),
                         ),
                       );
@@ -536,22 +501,24 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                   ],
                                 ),
                               ),
-                            if (widget.viewType != ViewType.listCompact &&
-                                (widget.note.isHiddenFromHome ||
+                            if (widget.viewType != ViewType.listCompact)
+                              Builder(builder: (context) {
+                                final hideProFromHome = context
+                                    .read<CategoriesProvider>()
+                                    .hideProFromHome;
+                                final showChip = widget.note.isHiddenFromHome ||
                                     (widget.isFiltering &&
                                         widget.note.isProfessional &&
-                                        context
-                                            .read<CategoriesProvider>()
-                                            .hideProFromHome)))
-                              HiddenCategoriesChip(
-                                note: widget.note,
-                                titleColor: titleColor,
-                                isProHidden: widget.note.isProfessional &&
-                                    context
-                                        .read<CategoriesProvider>()
-                                        .hideProFromHome &&
-                                    !widget.note.isHiddenFromHome,
-                              ),
+                                        hideProFromHome);
+                                if (!showChip) return const SizedBox.shrink();
+                                return HiddenCategoriesChip(
+                                  note: widget.note,
+                                  titleColor: titleColor,
+                                  isProHidden: widget.note.isProfessional &&
+                                      hideProFromHome &&
+                                      !widget.note.isHiddenFromHome,
+                                );
+                              }),
                           ],
                         ),
                       ),

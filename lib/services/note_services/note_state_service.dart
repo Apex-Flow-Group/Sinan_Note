@@ -3,7 +3,7 @@
 import 'dart:async';
 
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 
 class NoteStateService {
   List<Note> _allNotes = [];
@@ -109,7 +109,7 @@ class NoteStateService {
     _allNotes.removeWhere((n) => n.id == id);
     _lockedNotes.removeWhere((n) => n.id == id);
     _invalidateCache();
-    GoogleDriveService.markDirty();
+    CloudSyncGateway.markDirty();
     _silentSync();
   }
 
@@ -126,13 +126,14 @@ class NoteStateService {
       return activeNotes;
     }
 
-    // ✅ Use cached notes for search (faster)
-    final lowerQuery = query.toLowerCase();
+    // استخدام النص المطبّع للبحث الذكي (يتجاهل التشكيل ويوحّد الألف)
+    final normalizedQuery = Note.normalize(query);
+
     final results = activeNotes
         .where((n) =>
-            n.title.toLowerCase().contains(lowerQuery) ||
-            n.content.toLowerCase().contains(lowerQuery))
-        .take(100) // ✅ Limit to 100 results
+            n.normalizedTitle.contains(normalizedQuery) ||
+            n.normalizedContent.contains(normalizedQuery))
+        .take(100)
         .toList();
 
     return results;
@@ -184,17 +185,17 @@ class NoteStateService {
 
   void _silentSync() {
     // تعليم أن هناك تغييرات تحتاج رفع
-    GoogleDriveService.markDirty();
+    CloudSyncGateway.markDirty();
 
     _syncDebounce?.cancel();
     _syncDebounce = Timer(const Duration(seconds: 5), () async {
       if (_isSyncing) return;
-      if (!GoogleDriveService.isSignedIn) return;
-      if (!GoogleDriveService.autoSyncEnabled.value) return;
+      if (!CloudSyncGateway.isSignedIn) return;
+      if (!CloudSyncGateway.autoSyncEnabled.value) return;
 
       try {
         _isSyncing = true;
-        await GoogleDriveService.smartSyncOnStartup();
+        await CloudSyncGateway.smartSync();
         // ✅ Refresh notes from database after sync completes
         if (onSyncCompleted != null) {
           await onSyncCompleted!();

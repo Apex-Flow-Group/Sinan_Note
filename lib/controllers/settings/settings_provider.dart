@@ -86,81 +86,89 @@ class SettingsProvider with ChangeNotifier {
     await _loadSettings();
   }
 
+  // ── SharedPreferences helper ──────────────────────────────────────────────
+
+  Future<void> _savePref(String key, dynamic value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value is bool) {
+      await prefs.setBool(key, value);
+    } else if (value is int) {
+      await prefs.setInt(key, value);
+    } else if (value is double) {
+      await prefs.setDouble(key, value);
+    } else if (value is String) {
+      await prefs.setString(key, value);
+    } else if (value is List<String>) {
+      await prefs.setStringList(key, value);
+    } else if (value == null) {
+      await prefs.remove(key);
+    }
+  }
+
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('themeMode', mode.index);
+    await _savePref('themeMode', mode.index);
   }
 
   Future<void> setTextScaleFactor(double scale) async {
     _textScaleFactor = scale;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('textScale', scale);
+    await _savePref('textScale', scale);
   }
 
   Future<void> setFontFamily(String family) async {
     _fontFamily = family;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('fontFamily', family);
+    await _savePref('fontFamily', family);
   }
 
   Future<void> setLanguage(String code) async {
     _languageCode = code;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language', code);
+    await _savePref('language', code);
   }
 
   Future<void> setSwipeRightAction(String action) async {
     _swipeRightAction = action;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('swipeRight', action);
+    await _savePref('swipeRight', action);
   }
 
   Future<void> setSwipeLeftAction(String action) async {
     _swipeLeftAction = action;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('swipeLeft', action);
+    await _savePref('swipeLeft', action);
   }
 
   Future<void> setSwipeCustomActions(List<String> actions) async {
     _swipeCustomActions = actions;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('swipeCustomActions', actions);
+    await _savePref('swipeCustomActions', actions);
   }
 
   Future<void> setSwipeEnabled(bool enabled) async {
     _swipeEnabled = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('swipeEnabled', enabled);
+    await _savePref('swipeEnabled', enabled);
   }
 
   Future<void> setDoubleTapToEdit(bool enabled) async {
     _doubleTapToEdit = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('doubleTapToEdit', enabled);
+    await _savePref('doubleTapToEdit', enabled);
   }
 
   Future<void> setHeroAnimationEnabled(bool enabled) async {
     _heroAnimationEnabled = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('heroAnimationEnabled', enabled);
+    await _savePref('heroAnimationEnabled', enabled);
   }
 
   Future<void> setPullToRefreshMode(String mode) async {
     _pullToRefreshMode = mode;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('pullToRefreshMode', mode);
+    await _savePref('pullToRefreshMode', mode);
   }
 
   Future<void> setViewType(String key, String type) async {
@@ -168,8 +176,7 @@ class SettingsProvider with ChangeNotifier {
       _viewType = type;
     }
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('viewType_$key', type);
+    await _savePref('viewType_$key', type);
   }
 
   Future<String> getViewType(String key) async {
@@ -180,29 +187,21 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setAppLockEnabled(bool enabled) async {
     _isAppLockEnabled = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('appLockEnabled', enabled);
-
-    if (!enabled) {
-      // عند تعطيل القفل: إعادة تعيين الجلسة
-      UnifiedLockService().resetSession();
-    }
-
+    await _savePref('appLockEnabled', enabled);
+    if (!enabled) UnifiedLockService().resetSession();
     _updateSecurityController();
   }
 
   Future<void> setBiometricLockEnabled(bool enabled) async {
     _biometricLockEnabled = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('biometricLockEnabled', enabled);
+    await _savePref('biometricLockEnabled', enabled);
   }
 
   Future<void> setCustomPinEnabled(bool enabled) async {
     _customPinEnabled = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('customPinEnabled', enabled);
+    await _savePref('customPinEnabled', enabled);
     if (!enabled) await UnifiedLockService().clearPin();
     _updateSecurityController();
   }
@@ -210,63 +209,51 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setHideContentInBackground(bool enabled) async {
     _hideContentInBackground = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hideContentInBackground', enabled);
-
-    // Update SecurityController with new privacy setting
+    await _savePref('hideContentInBackground', enabled);
     _updateSecurityController();
   }
 
   Future<void> setLockDelayEnabled(bool enabled) async {
     _lockDelayEnabled = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('lockDelayEnabled', enabled);
-
-    // Update SecurityController with new delay setting
+    await _savePref('lockDelayEnabled', enabled);
     _updateSecurityController();
   }
 
   Future<void> setLockDelaySeconds(int seconds) async {
     _lockDelaySeconds = seconds;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('lockDelaySeconds', seconds);
-
-    // Update SecurityController with new delay value
+    await _savePref('lockDelaySeconds', seconds);
     _updateSecurityController();
   }
 
   Future<void> setLockedIntroSeen(bool value) async {
     _hasSeenLockedIntro = value;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('seen_locked_intro', value);
+    await _savePref('seen_locked_intro', value);
   }
 
   Future<void> completeSetup() async {
     _isFirstLaunch = false;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('first_launch', false);
+    await _savePref('first_launch', false);
   }
 
   Future<void> resetSetup() async {
     _isFirstLaunch = true;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('first_launch');
+    await _savePref('first_launch', null);
   }
 
   Future<void> _loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Migration: Force disable hero animation for all users
       if (prefs.containsKey('heroAnimationEnabled')) {
         await prefs.setBool('heroAnimationEnabled', false);
       }
-      
+
       int? themeIndex = prefs.getInt('themeMode');
       if (themeIndex != null &&
           themeIndex >= 0 &&
@@ -335,8 +322,7 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setDefaultColorIndex(String mode, int index) async {
     _defaultColorIndices[mode] = index;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('colorIndex_$mode', index);
+    await _savePref('colorIndex_$mode', index);
   }
 
   void _updateSecurityController() {

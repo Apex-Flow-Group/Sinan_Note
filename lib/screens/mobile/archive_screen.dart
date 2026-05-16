@@ -46,8 +46,9 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
     var filtered = notes.where((note) {
       if (note.isLocked) return false;
       if (searchQuery.isEmpty) return true;
-      return note.title.toLowerCase().contains(searchQuery) ||
-          note.content.toLowerCase().contains(searchQuery);
+      final q = Note.normalize(searchQuery);
+      return note.normalizedTitle.contains(q) ||
+          note.normalizedContent.contains(q);
     }).toList();
 
     if (_sortBy == 'title') {

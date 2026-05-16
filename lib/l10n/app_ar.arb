@@ -453,6 +453,8 @@
   "supportMessage": "الرسالة",
   "checklistTitle": "عنوان القائمة",
   "checklistItemHint": "مهمة...",
+  "addItem": "إضافة عنصر",
+  "itemDeleted": "تم حذف العنصر",
   "sort": "ترتيب",
   "checklist": "قائمة مهام",
   "checklistMenu": "قائمة مهام",

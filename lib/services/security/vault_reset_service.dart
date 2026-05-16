@@ -71,10 +71,7 @@ class VaultResetService {
   bool get isRunning => _isRunning;
 
   /// مسار ملف قاعدة البيانات
-  Future<String> _getDbPath() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return p.join(dir.path, 'sinan_notes.isar');
-  }
+  Future<String> _getDbPath() => SqliteDatabaseService.getDbPath();
 
   /// مسار النسخة الاحتياطية
   Future<String> _getBackupPath() async {

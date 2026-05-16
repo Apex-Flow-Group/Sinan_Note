@@ -1,0 +1,16 @@
+name: refactoring_tool
+description: A structured code refactoring CLI tool for Sinan Note project.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  analyzer: ^6.0.0
+  args: ^2.4.0
+  path: ^1.8.0
+  glob: ^2.1.0
+
+dev_dependencies:
+  test: ^1.24.0

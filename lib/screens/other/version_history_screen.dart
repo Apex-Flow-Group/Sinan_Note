@@ -49,7 +49,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     _ctrl.loadNotes();
     _loadColWidths();
     _searchController.addListener(() {
-      _ctrl.searchQuery = _searchController.text.toLowerCase();
+      _ctrl.searchQuery = _searchController.text;
+      setState(() {});
     });
   }
 
@@ -254,7 +255,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                       isSearching: _isSearching,
                       searchController: _searchController,
                       onSearchChange: (q) =>
-                          setState(() => _ctrl.searchQuery = q.toLowerCase()),
+                          setState(() => _ctrl.searchQuery = q),
                       onToggleSearch: () => setState(() {
                         _isSearching = !_isSearching;
                         if (!_isSearching) _searchController.clear();

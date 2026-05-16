@@ -93,7 +93,10 @@ class SqliteDatabaseService implements NoteDbInterface {
     return _db!;
   }
 
-  static Future<String> _dbPath() async {
+  // ── DB Path ───────────────────────────────────────────────────────────────
+
+  /// مسار ملف قاعدة البيانات — مشترك مع BackupService و VaultResetService
+  static Future<String> getDbPath() async {
     if (_dbPathOverride != null) return _dbPathOverride!;
     if (Platform.isAndroid) {
       return p.join(await getDatabasesPath(), _dbName);
@@ -101,6 +104,8 @@ class SqliteDatabaseService implements NoteDbInterface {
     final dir = await getApplicationDocumentsDirectory();
     return p.join(dir.path, _dbName);
   }
+
+  static Future<String> _dbPath() => getDbPath();
 
   static Future<void> _createTables(Database db) async {
     await db.execute('''

@@ -24,32 +24,35 @@ class WidgetService {
       // 1. فحص النوت المثبتة أولاً
       final prefs = await SharedPreferences.getInstance();
       final savedNoteId = prefs.getInt('flutter.note_id') ?? 0;
-      
+
       if (savedNoteId > 0) {
         final specificNote = await _dbService.getNoteById(savedNoteId);
-        if (specificNote != null && 
-            !specificNote.isLocked && 
-            !specificNote.isTrashed && 
+        if (specificNote != null &&
+            !specificNote.isLocked &&
+            !specificNote.isTrashed &&
             !specificNote.isArchived &&
             !specificNote.isChecklist &&
             specificNote.noteType != 'checklist') {
           await updateNoteWidget(specificNote);
-          AppLogger.success('Note widget updated with pinned note ID: $savedNoteId', 'Widget');
+          AppLogger.success(
+              'Note widget updated with pinned note ID: $savedNoteId',
+              'Widget');
           return; // ✅ استخدام النوت المثبتة
         }
       }
-      
+
       // 2. فقط إذا لم توجد نوت مثبتة، استخدم المزامنة العامة
       final notes = await _dbService.getAllNotes();
-      
+
       // STRICT FILTER: Only NON-checklist notes (pinned first, then recent)
-      final validNotes = notes.where((note) =>
-          !note.isLocked &&
-          !note.isTrashed &&
-          !note.isArchived &&
-          !note.isChecklist &&
-          note.noteType != 'checklist'
-      ).toList();
+      final validNotes = notes
+          .where((note) =>
+              !note.isLocked &&
+              !note.isTrashed &&
+              !note.isArchived &&
+              !note.isChecklist &&
+              note.noteType != 'checklist')
+          .toList();
 
       // Sort: Pinned first, then by modified date
       validNotes.sort((a, b) {
@@ -60,20 +63,23 @@ class WidgetService {
 
       if (validNotes.isNotEmpty) {
         final note = validNotes.first;
-        final title = note.title.isEmpty ? (await _getUntitledText()) : note.title;
+        final title =
+            note.title.isEmpty ? (await _getUntitledText()) : note.title;
         final content = _formatNoteContent(note.content, 200);
 
         await HomeWidget.saveWidgetData<String>('title', title);
         await HomeWidget.saveWidgetData<String>('content', content);
         await HomeWidget.saveWidgetData<int>('note_id', note.id ?? 0);
       } else {
-        await HomeWidget.saveWidgetData<String>('title', await _getSelectNoteText());
-        await HomeWidget.saveWidgetData<String>('content', await _getTapToSelectText());
+        await HomeWidget.saveWidgetData<String>(
+            'title', await _getSelectNoteText());
+        await HomeWidget.saveWidgetData<String>(
+            'content', await _getTapToSelectText());
         await HomeWidget.saveWidgetData<int>('note_id', 0);
       }
 
       await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
-      
+
       AppLogger.success('Note widget updated with general sync', 'Widget');
     } catch (e) {
       AppLogger.error('Note widget update failed', 'Widget', e);
@@ -87,17 +93,21 @@ class WidgetService {
       // 1. فحص القائمة المثبتة أولاً
       final prefs = await SharedPreferences.getInstance();
       final savedChecklistId = prefs.getInt('flutter.checklist_note_id') ?? 0;
-      
+
       if (savedChecklistId > 0) {
-        final specificChecklist = await _dbService.getNoteById(savedChecklistId);
-        if (specificChecklist != null && 
-            !specificChecklist.isLocked && 
-            !specificChecklist.isTrashed && 
+        final specificChecklist =
+            await _dbService.getNoteById(savedChecklistId);
+        if (specificChecklist != null &&
+            !specificChecklist.isLocked &&
+            !specificChecklist.isTrashed &&
             !specificChecklist.isArchived &&
-            (specificChecklist.isChecklist || specificChecklist.noteType == 'checklist')) {
-          final title = specificChecklist.title.isEmpty ? 'Checklist' : specificChecklist.title;
+            (specificChecklist.isChecklist ||
+                specificChecklist.noteType == 'checklist')) {
+          final title = specificChecklist.title.isEmpty
+              ? 'Checklist'
+              : specificChecklist.title;
           final stats = _parseChecklistStats(specificChecklist.content);
-          
+
           await updateChecklistWidget(
             specificChecklist.id ?? 0,
             title,
@@ -106,21 +116,24 @@ class WidgetService {
             totalItems: stats['total'] ?? 0,
             completedItems: stats['completed'] ?? 0,
           );
-          AppLogger.success('Checklist widget updated with pinned list ID: $savedChecklistId', 'Widget');
+          AppLogger.success(
+              'Checklist widget updated with pinned list ID: $savedChecklistId',
+              'Widget');
           return; // ✅ استخدام القائمة المثبتة
         }
       }
-      
+
       // 2. فقط إذا لم توجد قائمة مثبتة، استخدم المزامنة العامة
       final notes = await _dbService.getAllNotes();
-      
+
       // STRICT FILTER: ONLY checklists (pinned first, then recent)
-      final validChecklists = notes.where((note) =>
-          !note.isLocked &&
-          !note.isTrashed &&
-          !note.isArchived &&
-          (note.isChecklist || note.noteType == 'checklist')
-      ).toList();
+      final validChecklists = notes
+          .where((note) =>
+              !note.isLocked &&
+              !note.isTrashed &&
+              !note.isArchived &&
+              (note.isChecklist || note.noteType == 'checklist'))
+          .toList();
 
       // Sort: Pinned first, then by modified date
       validChecklists.sort((a, b) {
@@ -145,7 +158,7 @@ class WidgetService {
       } else {
         await _resetChecklistWidget();
       }
-      
+
       AppLogger.success('Checklist widget updated with general sync', 'Widget');
     } catch (e) {
       AppLogger.error('Checklist widget update failed', 'Widget', e);
@@ -155,7 +168,7 @@ class WidgetService {
   /// Format note content (simple truncation)
   String _formatNoteContent(String content, int maxLength) {
     if (content.trim().isEmpty) return 'Empty note';
-    
+
     // إذا كان Delta JSON → استخرج النص العادي
     String plainText = content;
     if (content.trimLeft().startsWith('[')) {
@@ -170,7 +183,7 @@ class WidgetService {
         plainText = buffer.toString().trimRight();
       } catch (_) {}
     }
-    
+
     if (plainText.trim().isEmpty) return 'Empty note';
     return plainText.length > maxLength
         ? '${plainText.substring(0, maxLength)}...'
@@ -180,7 +193,7 @@ class WidgetService {
   /// SNAPSHOT STRATEGY: Generate simple text snapshot for widget persistence
   String _generateChecklistSnapshot(String content) {
     if (content.trim().isEmpty) return 'Empty checklist';
-    
+
     try {
       final decoded = jsonDecode(content);
       List items = [];
@@ -204,7 +217,6 @@ class WidgetService {
     }
   }
 
-
   /// Parse checklist statistics
   Map<String, int> _parseChecklistStats(String content) {
     try {
@@ -227,10 +239,7 @@ class WidgetService {
   }
 
   Future<void> updateChecklistWidget(
-      int noteId, 
-      String title, 
-      String content, 
-      int colorIndex,
+      int noteId, String title, String content, int colorIndex,
       {int totalItems = 0, int completedItems = 0}) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
@@ -244,10 +253,12 @@ class WidgetService {
         // 🔥 CRITICAL: Save simple text snapshot for persistence
         await HomeWidget.saveWidgetData<int>('checklist_note_id', noteId);
         await HomeWidget.saveWidgetData<String>('checklist_title', title);
-        await HomeWidget.saveWidgetData<String>('checklist_preview', textSnapshot); // NEW: Simple text
+        await HomeWidget.saveWidgetData<String>(
+            'checklist_preview', textSnapshot); // NEW: Simple text
         await HomeWidget.saveWidgetData<int>('checklist_total', totalItems);
-        await HomeWidget.saveWidgetData<int>('checklist_completed', completedItems);
-        
+        await HomeWidget.saveWidgetData<int>(
+            'checklist_completed', completedItems);
+
         // حفظ في SharedPreferences أيضاً للتأكد (مثل NoteWidget)
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('flutter.checklist_note_id', noteId);
@@ -265,8 +276,10 @@ class WidgetService {
 
   Future<void> _resetChecklistWidget() async {
     await HomeWidget.saveWidgetData<int>('checklist_note_id', 0);
-    await HomeWidget.saveWidgetData<String>('checklist_title', await _getSelectListText());
-    await HomeWidget.saveWidgetData<String>('checklist_preview', await _getTapToSelectText()); // Use preview key
+    await HomeWidget.saveWidgetData<String>(
+        'checklist_title', await _getSelectListText());
+    await HomeWidget.saveWidgetData<String>(
+        'checklist_preview', await _getTapToSelectText()); // Use preview key
     await HomeWidget.saveWidgetData<int>('checklist_total', 0);
     await HomeWidget.saveWidgetData<int>('checklist_completed', 0);
   }
@@ -275,13 +288,14 @@ class WidgetService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
     try {
-      final title = note.title.isEmpty ? (await _getUntitledText()) : note.title;
+      final title =
+          note.title.isEmpty ? (await _getUntitledText()) : note.title;
       final content = _formatNoteContent(note.content, 200);
 
       await HomeWidget.saveWidgetData<String>('title', title);
       await HomeWidget.saveWidgetData<String>('content', content);
       await HomeWidget.saveWidgetData<int>('note_id', note.id ?? 0);
-      
+
       // حفظ في SharedPreferences أيضاً للتأكد
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('flutter.note_id', note.id ?? 0);
@@ -339,7 +353,8 @@ class WidgetService {
 
     // 🛑 CRITICAL FIX: Skip if note ID is invalid
     if (note.id == null || note.id == 0) {
-      AppLogger.warning('Skipping widget update: Invalid note ID (${note.id})', 'Widget');
+      AppLogger.warning(
+          'Skipping widget update: Invalid note ID (${note.id})', 'Widget');
       return;
     }
 
@@ -371,33 +386,23 @@ class WidgetService {
   }
 
   // Helper methods for localized text
-  static Future<String> _getUntitledText() async {
+  static Future<String> _getLocalizedText(String arText, String enText) async {
     final settings = SettingsProvider();
     await settings.ensureInitialized();
-    return settings.locale?.languageCode == 'ar' ? 'بدون عنوان' : 'Untitled';
+    return settings.locale?.languageCode == 'ar' ? arText : enText;
   }
 
-  static Future<String> _getSelectNoteText() async {
-    final settings = SettingsProvider();
-    await settings.ensureInitialized();
-    return settings.locale?.languageCode == 'ar'
-        ? 'اختر ملاحظة'
-        : 'Select Note';
-  }
+  static Future<String> _getUntitledText() =>
+      _getLocalizedText('بدون عنوان', 'Untitled');
 
-  static Future<String> _getTapToSelectText() async {
-    final settings = SettingsProvider();
-    await settings.ensureInitialized();
-    return settings.locale?.languageCode == 'ar'
-        ? 'اضغط هنا للتحديد +'
-        : 'Tap to select +';
-  }
+  static Future<String> _getSelectNoteText() =>
+      _getLocalizedText('اختر ملاحظة', 'Select Note');
 
-  static Future<String> _getSelectListText() async {
-    final settings = SettingsProvider();
-    await settings.ensureInitialized();
-    return settings.locale?.languageCode == 'ar' ? 'اختر قائمة' : 'Select List';
-  }
+  static Future<String> _getTapToSelectText() =>
+      _getLocalizedText('اضغط هنا للتحديد +', 'Tap to select +');
+
+  static Future<String> _getSelectListText() =>
+      _getLocalizedText('اختر قائمة', 'Select List');
 }
 
 /// Background callback for widget actions

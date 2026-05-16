@@ -11,7 +11,7 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
 
   void initSearch() {
     searchController.addListener(() {
-      if (mounted) setState(() => searchQuery = searchController.text.toLowerCase());
+      if (mounted) setState(() => searchQuery = searchController.text);
     });
   }
 

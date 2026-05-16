@@ -48,9 +48,18 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     searchController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _providerRef = Provider.of<NotesProvider>(context, listen: false);
+      _providerRef!.addListener(_onProviderChanged);
       _loadLockedNotes();
       _providerRef!.loadNotes();
     });
+  }
+
+  void _onProviderChanged() {
+    // إعادة تحميل الملاحظات المقفلة عند أي تغيير في الـ provider
+    // (مثل إضافة ملاحظة جديدة من المحرر)
+    if (mounted && !_isLoading) {
+      _loadLockedNotes();
+    }
   }
 
   @override
@@ -60,6 +69,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
 
   @override
   void dispose() {
+    _providerRef?.removeListener(_onProviderChanged);
     WidgetsBinding.instance.removeObserver(this);
     _closeAllSlidables.dispose();
     super.dispose();
@@ -340,13 +350,13 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       );
 
   Widget _buildNotesList(AppLocalizations l10n) {
-    final query = searchController.text.toLowerCase();
+    final query = Note.normalize(searchController.text);
     final filtered = _decryptedNotes
         .where((n) => !n.isArchived && !n.isTrashed)
         .where((n) =>
             query.isEmpty ||
-            n.title.toLowerCase().contains(query) ||
-            n.content.toLowerCase().contains(query))
+            n.normalizedTitle.contains(query) ||
+            n.normalizedContent.contains(query))
         .toList();
 
     if (filtered.isEmpty) {

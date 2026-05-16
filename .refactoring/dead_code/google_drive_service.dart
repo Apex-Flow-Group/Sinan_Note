@@ -110,7 +110,8 @@ class GoogleDriveService {
       // لا يوجد تاريخ رفع محلي — جهاز جديد أو بعد استعادة backup
       // ادمج مع Drive بدل Overwrite — يحمي النوتات المحلية ويدمجها مع Drive
       if (lastUpload == null) {
-        AppLogger.info('First sync on this device → silent merge', 'GoogleDrive');
+        AppLogger.info(
+            'First sync on this device → silent merge', 'GoogleDrive');
         await _silentMerge();
         return;
       }
@@ -403,7 +404,8 @@ class GoogleDriveService {
       // حفظ MD5 بعد الرفع الناجح — أساس Fast Path
       final uploadedFile = await GoogleDriveAuth.findFile(fileName);
       if (uploadedFile?.md5Checksum != null) {
-        await prefs.setString('last_known_drive_md5', uploadedFile!.md5Checksum!);
+        await prefs.setString(
+            'last_known_drive_md5', uploadedFile!.md5Checksum!);
       }
 
       // مسح deleted_ids بعد الرفع — تم تطبيقها بنجاح
@@ -490,7 +492,8 @@ class GoogleDriveService {
       // مسح deleted_ids المحلية — بعد Download لا تعد موثوقة
       final prefs = await _getPrefs();
       await prefs.remove('deleted_note_ids');
-      await prefs.setInt('last_upload_timestamp', _lastSyncTime!.millisecondsSinceEpoch);
+      await prefs.setInt(
+          'last_upload_timestamp', _lastSyncTime!.millisecondsSinceEpoch);
       _hasPendingChanges = false;
       AppLogger.success(
           'Downloaded ${regularNotes.length} notes', 'GoogleDrive');
@@ -550,17 +553,6 @@ class GoogleDriveService {
     } catch (e) {
       AppLogger.error('Get Drive notes count error', 'GoogleDrive', e);
       return 0;
-    }
-  }
-
-  Future<DateTime?> checkForRemoteUpdates() async {
-    if (GoogleDriveAuth.driveApi == null) throw Exception('Not signed in');
-    try {
-      final file = await GoogleDriveAuth.findFile('sinan_backup.gz');
-      return file?.modifiedTime;
-    } catch (e) {
-      AppLogger.error('Check updates error', 'GoogleDrive', e);
-      return null;
     }
   }
 }

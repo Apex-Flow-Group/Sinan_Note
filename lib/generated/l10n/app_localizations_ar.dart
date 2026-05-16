@@ -1344,6 +1344,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checklistItemHint => 'مهمة...';
 
   @override
+  String get addItem => 'إضافة عنصر';
+
+  @override
+  String get itemDeleted => 'تم حذف العنصر';
+
+  @override
   String get sort => 'ترتيب';
 
   @override

@@ -102,8 +102,8 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
         .toList();
     if (searchQuery.isNotEmpty) {
       filtered = filtered.where((note) {
-        return note.title.toLowerCase().contains(searchQuery) ||
-            note.content.toLowerCase().contains(searchQuery);
+        return note.normalizedTitle.contains(Note.normalize(searchQuery)) ||
+            note.normalizedContent.contains(Note.normalize(searchQuery));
       }).toList();
     }
     if (_sortBy == 'title') {
@@ -153,86 +153,81 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                             automaticallyImplyLeading: false,
                             titleSpacing: 0,
                             title: SelectionActionBar(
-                                    key: const ValueKey('selection'),
-                                    selectedIdsNotifier:
-                                        _selectedNoteIdsNotifier,
-                                    isDark: isDark,
-                                    allPinned: false,
-                                    onClear: () =>
-                                        _selectedNoteIdsNotifier.value = {},
-                                    onPin: () async {
+                              key: const ValueKey('selection'),
+                              selectedIdsNotifier: _selectedNoteIdsNotifier,
+                              isDark: isDark,
+                              allPinned: false,
+                              onClear: () =>
+                                  _selectedNoteIdsNotifier.value = {},
+                              onPin: () async {
+                                final provider = Provider.of<NotesProvider>(
+                                    context,
+                                    listen: false);
+                                final ids = List<int>.from(selectedIds);
+                                for (final id in ids) {
+                                  final note = provider.notes
+                                      .firstWhere((n) => n.id == id);
+                                  await provider.updateNote(note.copyWith(
+                                      isPinned: !note.isPinned,
+                                      updatedAt: DateTime.now()));
+                                }
+                                _selectedNoteIdsNotifier.value = {};
+                                if (context.mounted) {
+                                  UnifiedNotificationService().show(
+                                      context: context,
+                                      message:
+                                          '${ids.length} ${strings.notesPinned}',
+                                      type: NotificationType.success);
+                                }
+                              },
+                              onArchive: () async {
+                                final provider = Provider.of<NotesProvider>(
+                                    context,
+                                    listen: false);
+                                final ids = List<int>.from(selectedIds);
+                                await provider.archiveNotes(ids);
+                                _selectedNoteIdsNotifier.value = {};
+                                if (context.mounted) {
+                                  UnifiedNotificationService().show(
+                                      context: context,
+                                      message:
+                                          '${ids.length} ${strings.notesArchived}',
+                                      type: NotificationType.success);
+                                }
+                              },
+                              onDelete: () async {
+                                final provider = Provider.of<NotesProvider>(
+                                    context,
+                                    listen: false);
+                                final ids = List<int>.from(selectedIds);
+                                await provider.trashNotes(ids);
+                                _selectedNoteIdsNotifier.value = {};
+                                if (context.mounted) {
+                                  UnifiedNotificationService().show(
+                                      context: context,
+                                      message:
+                                          '${ids.length} ${strings.notesDeleted}',
+                                      type: NotificationType.info);
+                                }
+                              },
+                              onShare: selectedIds.length == 1
+                                  ? () {
                                       final provider =
                                           Provider.of<NotesProvider>(context,
                                               listen: false);
-                                      final ids = List<int>.from(selectedIds);
-                                      for (final id in ids) {
-                                        final note = provider.notes
-                                            .firstWhere((n) => n.id == id);
-                                        await provider.updateNote(note.copyWith(
-                                            isPinned: !note.isPinned,
-                                            updatedAt: DateTime.now()));
-                                      }
+                                      final note = provider.notes.firstWhere(
+                                          (n) => n.id == selectedIds.first);
                                       _selectedNoteIdsNotifier.value = {};
-                                      if (context.mounted) {
-                                        UnifiedNotificationService().show(
-                                            context: context,
-                                            message:
-                                                '${ids.length} ${strings.notesPinned}',
-                                            type: NotificationType.success);
-                                      }
-                                    },
-                                    onArchive: () async {
-                                      final provider =
-                                          Provider.of<NotesProvider>(context,
-                                              listen: false);
-                                      final ids = List<int>.from(selectedIds);
-                                      await provider.archiveNotes(ids);
-                                      _selectedNoteIdsNotifier.value = {};
-                                      if (context.mounted) {
-                                        UnifiedNotificationService().show(
-                                            context: context,
-                                            message:
-                                                '${ids.length} ${strings.notesArchived}',
-                                            type: NotificationType.success);
-                                      }
-                                    },
-                                    onDelete: () async {
-                                      final provider =
-                                          Provider.of<NotesProvider>(context,
-                                              listen: false);
-                                      final ids = List<int>.from(selectedIds);
-                                      await provider.trashNotes(ids);
-                                      _selectedNoteIdsNotifier.value = {};
-                                      if (context.mounted) {
-                                        UnifiedNotificationService().show(
-                                            context: context,
-                                            message:
-                                                '${ids.length} ${strings.notesDeleted}',
-                                            type: NotificationType.info);
-                                      }
-                                    },
-                                    onShare: selectedIds.length == 1
-                                        ? () {
-                                            final provider =
-                                                Provider.of<NotesProvider>(
-                                                    context,
-                                                    listen: false);
-                                            final note = provider.notes
-                                                .firstWhere((n) =>
-                                                    n.id == selectedIds.first);
-                                            _selectedNoteIdsNotifier.value = {};
-                                            final content =
-                                                NoteCardUtils.fixNoteContent(
-                                                    note.content,
-                                                    maxChars:
-                                                        note.content.length);
-                                            CustomShareSheet.show(context,
-                                                '${note.title}\n\n$content',
-                                                subject: note.title,
-                                                note: note);
-                                          }
-                                        : null,
-                                  ),
+                                      final content =
+                                          NoteCardUtils.fixNoteContent(
+                                              note.content,
+                                              maxChars: note.content.length);
+                                      CustomShareSheet.show(
+                                          context, '${note.title}\n\n$content',
+                                          subject: note.title, note: note);
+                                    }
+                                  : null,
+                            ),
                           );
                         }
                         return SliverAppBar(
@@ -286,7 +281,8 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                   PopupMenuButton<String>(
                                     icon: const Icon(Icons.sort),
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                     onSelected: (value) {
                                       setState(() => _sortBy = value);
                                       _syncNotes();
@@ -370,7 +366,8 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
 
                         if (_viewType == ViewType.grid) {
                           return SliverPadding(
-                            padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
+                            padding: EdgeInsets.fromLTRB(8, 8, 8,
+                                MediaQuery.of(context).padding.bottom + 100),
                             sliver: SliverMasonryGrid.count(
                               crossAxisCount: 2,
                               mainAxisSpacing: 8,
@@ -384,7 +381,8 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
 
                         // listCompact أو listExpanded
                         return SliverPadding(
-                          padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
+                          padding: EdgeInsets.fromLTRB(8, 8, 8,
+                              MediaQuery.of(context).padding.bottom + 100),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) => _buildCard(notes[index]),

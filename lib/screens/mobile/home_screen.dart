@@ -12,7 +12,7 @@ import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/mobile/home_screen_widgets.dart';
 import 'package:apex_note/screens/mobile/home_scrollbar.dart';
 import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;
@@ -64,14 +64,16 @@ class _HomeScreenState extends State<HomeScreen> {
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
   bool _isSearchActive = false;
   ViewType _viewType = ViewType.listCompact;
-  Timer? _debounce;
   final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
+  String _pullToRefreshMode =
+      'disabled'; // cached — يُحدَّث في didChangeDependencies
 
   @override
   void initState() {
     super.initState();
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     _viewType = _parseViewType(settings.viewType);
+    _pullToRefreshMode = settings.pullToRefreshMode;
     _viewTypeNotifier = ValueNotifier(_viewType.name);
     _selectedNoteIdsNotifier = ValueNotifier({});
     _loadViewType();
@@ -113,6 +115,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // تحديث الـ cache عند تغيير الـ settings (مثل تغيير pull-to-refresh mode)
+    _pullToRefreshMode =
+        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
+  }
+
   ViewType _parseViewType(String type) {
     switch (type) {
       case 'grid':
@@ -137,8 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onSearchChanged() {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {});
+    // البحث يُعالَج مباشرة في NotesFilterController عبر searchController listener
+    // لا حاجة لـ debounce هنا
   }
 
   void _exitSearchMode() {
@@ -215,11 +225,11 @@ class _HomeScreenState extends State<HomeScreen> {
         final pullToSyncEnabled = (await SharedPreferences.getInstance())
                 .getBool('google_drive_pull_to_refresh') ??
             false;
-        if (GoogleDriveService.isSignedIn &&
-            GoogleDriveService.autoSyncEnabled.value &&
+        if (CloudSyncGateway.isSignedIn &&
+            CloudSyncGateway.autoSyncEnabled.value &&
             pullToSyncEnabled) {
-          await GoogleDriveService.smartSyncOnStartup();
-          while (GoogleDriveService.isSyncing.value) {
+          await CloudSyncGateway.smartSync();
+          while (CloudSyncGateway.isSyncing.value) {
             await Future.delayed(const Duration(milliseconds: 200));
           }
         }
@@ -248,8 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
     // Don't show pull indicator when pull-to-refresh is disabled
-    final mode =
-        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
+    final mode = _pullToRefreshMode;
     if (mode == 'disabled') return;
 
     final offset = _scrollController.offset;

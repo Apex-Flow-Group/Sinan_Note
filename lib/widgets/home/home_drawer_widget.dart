@@ -11,9 +11,9 @@ import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
 import 'package:apex_note/screens/other/about_screen.dart';
 import 'package:apex_note/screens/other/support_form_screen.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/app_dialog.dart';
 import 'package:apex_note/widgets/home/categories_panel.dart';
@@ -23,11 +23,8 @@ import 'package:provider/provider.dart';
 
 enum _CatMode { normal, delete, edit }
 
-/// ظٹط¨ظ‚ظ‰ ط­ظٹط§ظ‹ ط·ظˆظ„ ط¹ظ…ط± ط§ظ„طھط·ط¨ظٹظ‚ â€” ظ„ط§ ظٹط¶ظٹط¹ ط¹ظ†ط¯ ط¥ط؛ظ„ط§ظ‚ ط§ظ„ظ€ Drawer
+/// يبقى حياً طول عمر التطبيق — لا يضيع عند إغلاق الـ Drawer
 final _activeExtraNotifier = ValueNotifier<String?>(null);
-
-/// ط­ط§ظ„ط© ط§ظ„ط®ط²ظ†ط© â€” ظ…ط±ط¦ظٹط© ظ„ظƒظ„ ط§ظ„ظ€ widgets
-final vaultOpenNotifier = ValueNotifier<bool>(false);
 
 /// ضبط حالة تفعيل الخزنة في الـ Drawer من الخارج
 void setDrawerVaultActive(bool active) {
@@ -171,7 +168,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       !Platform.isLinux &&
                       !Platform.isMacOS)
                     ValueListenableBuilder<bool>(
-                      valueListenable: GoogleDriveService.autoSyncEnabled,
+                      valueListenable: CloudSyncGateway.autoSyncEnabled,
                       builder: (context, autoSync, _) => _buildDrawerItem(
                         context,
                         icon: Icons.cloud_sync_rounded,

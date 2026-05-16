@@ -1,5 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/feature_info.dart';
@@ -136,6 +137,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     if (!mounted) return;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     await settings.setLockedIntroSeen(true);
+    if (!mounted) return;
+    // تأكيد فتح جلسة الخزنة بعد الإعداد
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    notesProvider.unlockVault();
     if (!mounted) return;
     Navigator.pushReplacement(
       context,

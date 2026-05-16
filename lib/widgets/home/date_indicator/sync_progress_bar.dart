@@ -1,6 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/services/cloud/google_drive_service.dart';
+import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:flutter/material.dart';
 
 /// شريط موحّد للسحب والتحديث والمزامنة
@@ -27,7 +27,7 @@ class SyncProgressBar extends StatelessWidget {
 
     // Priority 1: Google Drive syncing
     return ValueListenableBuilder<bool>(
-      valueListenable: GoogleDriveService.isSyncing,
+      valueListenable: CloudSyncGateway.isSyncing,
       builder: (context, syncing, _) {
         if (syncing) {
           return _Bar(

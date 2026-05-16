@@ -926,6 +926,13 @@ class RenderEditableTextLine extends RenderEditableBox {
     }
     line = l;
     _containsCursor = null;
+    // إعادة attach المؤشر إذا أصبح هذا السطر يحتوي على الـ cursor بعد تغيير الـ line node
+    // (formatSelection يُعيد بناء الـ line مما يُغيّر documentOffset فيختفي المؤشر)
+    if (!_attachedToCursorController && attached && containsCursor()) {
+      cursorCont.addListener(markNeedsLayout);
+      cursorCont.color.addListener(safeMarkNeedsPaint);
+      _attachedToCursorController = true;
+    }
     markNeedsLayout();
   }
 
@@ -967,11 +974,14 @@ class RenderEditableTextLine extends RenderEditableBox {
   }
 
   bool containsCursor() {
-    return _containsCursor ??= cursorCont.isFloatingCursorActive
+    // لا نُخزّن النتيجة — documentOffset يتغيّر ديناميكياً عند تغيير nodes سابقة
+    // والـ cache يُعطي نتيجة خاطئة مما يُخفي المؤشر على السطر الفارغ
+    _containsCursor = cursorCont.isFloatingCursorActive
         ? line
             .containsOffset(cursorCont.floatingCursorTextPosition.value!.offset)
         : textSelection.isCollapsed &&
             line.containsOffset(textSelection.baseOffset);
+    return _containsCursor!;
   }
 
   RenderBox? _updateChild(
