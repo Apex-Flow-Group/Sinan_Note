@@ -73,16 +73,19 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     title: l10n.home,
                     scheme: scheme,
                     isDark: isDark,
-                    isActive: currentRoute == '/' &&
-                        activeExtra == null &&
-                        context
-                                .watch<CategoriesProvider>()
-                                .selectedCategoryId ==
-                            null,
+                    isActive:
+                        (currentRoute == '/main' || currentRoute == '/') &&
+                            activeExtra == null &&
+                            context
+                                    .watch<CategoriesProvider>()
+                                    .selectedCategoryId ==
+                                null,
                     onTap: () {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.settings.name == '/main' || route.isFirst);
+                      Navigator.pop(context); // إغلاق الـ Drawer
+                      // العودة للرئيسية من أي شاشة
+                      Navigator.of(context, rootNavigator: true).popUntil(
+                          (route) =>
+                              route.settings.name == '/main' || route.isFirst);
                     },
                   ),
                   // â”€â”€â”€ ط²ط± ط§ظ„طھطµظ†ظٹظپط§طھ â”€â”€â”€
@@ -119,8 +122,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.settings.name == '/main' || route.isFirst);
+                      Navigator.of(context, rootNavigator: true).popUntil(
+                          (route) =>
+                              route.settings.name == '/main' || route.isFirst);
                       await Navigator.of(context, rootNavigator: true)
                           .pushNamed('/archive');
                       if (!context.mounted) return;
@@ -137,8 +141,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.settings.name == '/main' || route.isFirst);
+                      Navigator.of(context, rootNavigator: true).popUntil(
+                          (route) =>
+                              route.settings.name == '/main' || route.isFirst);
                       await Navigator.of(context, rootNavigator: true)
                           .pushNamed('/trash');
                       if (!context.mounted) return;
@@ -182,8 +187,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                           if (!context.mounted) return;
-                          Navigator.of(context, rootNavigator: true)
-                              .popUntil((route) => route.settings.name == '/main' || route.isFirst);
+                          Navigator.of(context, rootNavigator: true).popUntil(
+                              (route) =>
+                                  route.settings.name == '/main' ||
+                                  route.isFirst);
                           await Navigator.of(context, rootNavigator: true)
                               .pushNamed('/drive');
                         },
@@ -201,8 +208,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.settings.name == '/main' || route.isFirst);
+                      Navigator.of(context, rootNavigator: true).popUntil(
+                          (route) =>
+                              route.settings.name == '/main' || route.isFirst);
                       await Navigator.of(context, rootNavigator: true)
                           .pushNamed('/history');
                     },
@@ -217,8 +225,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.settings.name == '/main' || route.isFirst);
+                      Navigator.of(context, rootNavigator: true).popUntil(
+                          (route) =>
+                              route.settings.name == '/main' || route.isFirst);
                       await Navigator.of(context, rootNavigator: true)
                           .pushNamed('/settings');
                       if (!context.mounted) return;
@@ -248,7 +257,13 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     children: [
                       GestureDetector(
                         onTap: () {
+                          _activeExtraNotifier.value = null;
                           Navigator.pop(context);
+                          if (!context.mounted) return;
+                          Navigator.of(context, rootNavigator: true).popUntil(
+                              (route) =>
+                                  route.settings.name == '/main' ||
+                                  route.isFirst);
                           AppDialog.show(context, const SupportFormScreen());
                         },
                         child: Icon(Icons.support_agent_rounded,
@@ -257,7 +272,13 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () {
+                          _activeExtraNotifier.value = null;
                           Navigator.pop(context);
+                          if (!context.mounted) return;
+                          Navigator.of(context, rootNavigator: true).popUntil(
+                              (route) =>
+                                  route.settings.name == '/main' ||
+                                  route.isFirst);
                           AppDialog.show(context, const AboutScreen());
                         },
                         child: Icon(Icons.info_outline_rounded,
@@ -279,8 +300,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     final catProvider = context.watch<CategoriesProvider>();
     final selectedId = catProvider.selectedCategoryId;
     final hasSelection = selectedId != null;
-    final isOnHome = (ModalRoute.of(context)?.settings.name ?? '/') == '/' &&
-        _activeExtraNotifier.value == null;
+    final isOnHome =
+        ((ModalRoute.of(context)?.settings.name ?? '/') == '/main' ||
+                (ModalRoute.of(context)?.settings.name ?? '/') == '/') &&
+            _activeExtraNotifier.value == null;
     final selectedName = hasSelection
         ? (selectedId == kProCategoryId
             ? AppLocalizations.of(context)!.professional

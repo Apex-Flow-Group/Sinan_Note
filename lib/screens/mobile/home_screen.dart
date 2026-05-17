@@ -30,7 +30,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:apex_note/screens/mobile/home_screen_widgets.dart';
 
-enum ViewType { grid, listExpanded, listCompact }
+enum ViewType { listCompact, listExpanded, grid }
 
 class HomeScreen extends StatefulWidget {
   final String? sharedText;
@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late final ValueNotifier<String> _viewTypeNotifier;
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
   bool _isSearchActive = false;
-  ViewType _viewType = ViewType.listCompact;
+  ViewType _viewType = ViewType.listExpanded;
   final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
   String _pullToRefreshMode =
       'disabled'; // cached — يُحدَّث في didChangeDependencies
@@ -129,8 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
         return ViewType.grid;
       case 'listExpanded':
         return ViewType.listExpanded;
-      default:
+      case 'listCompact':
         return ViewType.listCompact;
+      default:
+        return ViewType.listExpanded;
     }
   }
 

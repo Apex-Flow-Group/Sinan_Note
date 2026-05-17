@@ -270,6 +270,16 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                     });
                     currentTabIndexNotifier.value = index;
                   },
+                  onHomeTap: () {
+                    // العودة للرئيسية: التأكد أن التبويب 0 نشط
+                    if (_currentIndex != 0) {
+                      setState(() => _currentIndex = 0);
+                      currentTabIndexNotifier.value = 0;
+                    } else {
+                      // نشط بالفعل — أرسل إشارة للعودة للرئيسية
+                      tabToHomeNotifier.value++;
+                    }
+                  },
                   isScrollHidden: false,
                   isDrawerOpen: _isDrawerOpen,
                   isRTL: isRTL,

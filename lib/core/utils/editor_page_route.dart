@@ -13,16 +13,7 @@ class EditorPageRoute<T> extends PageRouteBuilder<T> {
           reverseTransitionDuration: const Duration(milliseconds: 380),
           opaque: true,
           pageBuilder: (context, animation, secondaryAnimation) =>
-              // نُزيل الـ bottom padding من MediaQuery داخل الـ route
-              // هذا يُخبر Hero بأن المنطقة السفلية (BottomNavBar) خارج حدوده
-              MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              padding: MediaQuery.of(context).padding.copyWith(bottom: 0),
-              viewPadding:
-                  MediaQuery.of(context).viewPadding.copyWith(bottom: 0),
-            ),
-            child: builder(context),
-          ),
+              builder(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             final fadeCurve = CurvedAnimation(
               parent: animation,

@@ -3,7 +3,6 @@
 import 'dart:math';
 
 import 'package:apex_note/core/theme/app_theme.dart';
-
 import 'package:flutter/material.dart';
 
 class GlowingSearchField extends StatefulWidget {
@@ -88,8 +87,7 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                       barColor,
                     ],
                     stops: const [0.0, 0.4, 0.6, 1.0],
-                    transform:
-                        GradientRotation(_waveController.value * 2 * pi),
+                    transform: GradientRotation(_waveController.value * 2 * pi),
                   )
                 : null,
             boxShadow: [
@@ -133,50 +131,53 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                         ),
                       ),
                     ),
-                    if (widget.onViewToggle != null || widget.onFilterTap != null)
+                    if (widget.onViewToggle != null ||
+                        widget.onFilterTap != null)
                       ClipRect(
-                          child: AnimatedSize(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOutCubic,
-                            child: SizedBox(
-                              width: _focusNode.hasFocus ? 0 : null,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                physics: const NeverScrollableScrollPhysics(),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (widget.onViewToggle != null)
-                                      ValueListenableBuilder<String>(
-                                        valueListenable: widget.viewTypeNotifier,
-                                        builder: (context, viewType, _) {
-                                          return IconButton(
-                                            icon: Icon(
-                                              viewType == 'listExpanded'
-                                                  ? Icons.view_headline
-                                                  : viewType == 'listCompact'
-                                                      ? Icons.grid_view
-                                                      : Icons.view_day,
-                                              color: contentColor.withValues(alpha: 0.7),
-                                            ),
-                                            onPressed: widget.onViewToggle,
-                                            splashRadius: 24,
-                                          );
-                                        },
-                                      ),
-                                    if (widget.onFilterTap != null)
-                                      IconButton(
-                                        icon: Icon(Icons.filter_list_rounded,
-                                            color: contentColor.withValues(alpha: 0.7)),
-                                        onPressed: widget.onFilterTap,
-                                        splashRadius: 24,
-                                      ),
-                                  ],
-                                ),
+                        child: AnimatedSize(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOutCubic,
+                          child: SizedBox(
+                            width: _focusNode.hasFocus ? 0 : null,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (widget.onViewToggle != null)
+                                    ValueListenableBuilder<String>(
+                                      valueListenable: widget.viewTypeNotifier,
+                                      builder: (context, viewType, _) {
+                                        return IconButton(
+                                          icon: Icon(
+                                            viewType == 'listCompact'
+                                                ? Icons.view_day
+                                                : viewType == 'listExpanded'
+                                                    ? Icons.grid_view
+                                                    : Icons.view_headline,
+                                            color: contentColor.withValues(
+                                                alpha: 0.7),
+                                          ),
+                                          onPressed: widget.onViewToggle,
+                                          splashRadius: 24,
+                                        );
+                                      },
+                                    ),
+                                  if (widget.onFilterTap != null)
+                                    IconButton(
+                                      icon: Icon(Icons.filter_list_rounded,
+                                          color: contentColor.withValues(
+                                              alpha: 0.7)),
+                                      onPressed: widget.onFilterTap,
+                                      splashRadius: 24,
+                                    ),
+                                ],
                               ),
                             ),
                           ),
                         ),
+                      ),
                   ],
                 ),
               ),

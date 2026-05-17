@@ -12,6 +12,9 @@ class SideNavRail extends StatelessWidget {
   final bool isDrawerOpen;
   final bool isRTL;
 
+  /// يُستدعى عند الضغط على Home وهو نشط بالفعل
+  final VoidCallback? onHomeTap;
+
   const SideNavRail({
     super.key,
     required this.currentIndex,
@@ -19,6 +22,7 @@ class SideNavRail extends StatelessWidget {
     required this.isScrollHidden,
     required this.isDrawerOpen,
     required this.isRTL,
+    this.onHomeTap,
   });
 
   @override
@@ -42,9 +46,8 @@ class SideNavRail extends StatelessWidget {
           child: Container(
             width: 100,
             decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme.surface
-                  .withValues(alpha: 0.85),
+              color:
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -55,7 +58,13 @@ class SideNavRail extends StatelessWidget {
             ),
             child: NavigationRail(
               selectedIndex: currentIndex,
-              onDestinationSelected: onDestinationSelected,
+              onDestinationSelected: (index) {
+                if (index == 0 && currentIndex == 0) {
+                  onHomeTap?.call();
+                } else {
+                  onDestinationSelected(index);
+                }
+              },
               backgroundColor: Colors.transparent,
               selectedIconTheme: IconThemeData(
                 color: Theme.of(context).colorScheme.primary,
@@ -84,9 +93,21 @@ class SideNavRail extends StatelessWidget {
               ),
               destinations: [
                 NavigationRailDestination(
-                  icon: const Icon(Icons.grid_view_rounded),
-                  selectedIcon: const Icon(Icons.grid_view_rounded),
-                  label: Text(l10n.home),
+                  icon: GestureDetector(
+                    onTap: currentIndex == 0 ? onHomeTap : null,
+                    behavior: HitTestBehavior.translucent,
+                    child: const Icon(Icons.grid_view_rounded),
+                  ),
+                  selectedIcon: GestureDetector(
+                    onTap: onHomeTap,
+                    behavior: HitTestBehavior.translucent,
+                    child: const Icon(Icons.grid_view_rounded),
+                  ),
+                  label: GestureDetector(
+                    onTap: currentIndex == 0 ? onHomeTap : null,
+                    behavior: HitTestBehavior.translucent,
+                    child: Text(l10n.home),
+                  ),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.alarm_rounded),
