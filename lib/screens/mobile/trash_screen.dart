@@ -236,7 +236,6 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                       if (_isSearchActive) {
                         _exitSearch();
                       } else {
-                        setState(() => searchController.text = '');
                         toggleSearch();
                       }
                     },

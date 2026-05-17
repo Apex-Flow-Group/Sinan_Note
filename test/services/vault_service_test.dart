@@ -110,10 +110,12 @@ void main() {
       expect(await VaultService.recoverWithCode(''), isFalse);
     });
 
-    test('بعد الاسترداد يمكن تغيير كلمة المرور', () async {
+    test('بعد الاسترداد يمكن تغيير كلمة المرور عبر setPasswordAfterRecovery',
+        () async {
       final code = await VaultService.setupVault('OldPass');
       await VaultService.recoverWithCode(code);
-      final changed = await VaultService.changePassword('', 'NewPass123');
+      // بعد recoverWithCode الخزنة مفتوحة — نستخدم setPasswordAfterRecovery
+      final changed = await VaultService.setPasswordAfterRecovery('NewPass123');
       expect(changed, isTrue);
       expect(await VaultService.unlockWithPassword('NewPass123'), isTrue);
       expect(await VaultService.unlockWithPassword('OldPass'), isFalse);
@@ -208,7 +210,8 @@ void main() {
     });
 
     test('تشفير JSON يعمل بشكل صحيح', () async {
-      const json = '{"title":"مهام","items":[{"id":"1","text":"مهمة","isDone":false}]}';
+      const json =
+          '{"title":"مهام","items":[{"id":"1","text":"مهمة","isDone":false}]}';
       final encrypted = await VaultService.encryptWithMasterKey(json);
       final decrypted = await VaultService.decryptWithMasterKey(encrypted);
       expect(decrypted, equals(json));
@@ -261,7 +264,8 @@ void main() {
       final backupData = await VaultService.getVaultDataForBackup();
       await VaultService.clearVault();
 
-      final restored = await VaultService.restoreVaultDataFromBackup(backupData!);
+      final restored =
+          await VaultService.restoreVaultDataFromBackup(backupData!);
       expect(restored, isTrue);
 
       // يجب أن يعمل الاسترداد بنفس الكود

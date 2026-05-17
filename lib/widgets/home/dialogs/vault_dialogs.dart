@@ -1,8 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/vault_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/vault_reset_screen.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
@@ -99,12 +99,7 @@ class VaultDialogs {
               subtitle: Text(l10n.resetVaultSubtitle),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const VaultResetScreen(),
-                  ),
-                );
+                VaultNavigator.toReset(context);
               },
             ),
             const Divider(height: 1),
@@ -347,7 +342,7 @@ class VaultDialogs {
         type: NotificationType.success,
       );
 
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.of(context, rootNavigator: true).popUntil((route) => route.settings.name == '/main' || route.isFirst);
     } catch (e) {
       if (!context.mounted) return;
       UnifiedNotificationService().show(

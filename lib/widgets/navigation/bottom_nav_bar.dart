@@ -21,7 +21,8 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final appBarColor = AppTheme.secondaryBackground(Theme.of(context).colorScheme);
+    final appBarColor =
+        AppTheme.secondaryBackground(Theme.of(context).colorScheme);
 
     return AnimatedSlide(
       duration: const Duration(milliseconds: 300),

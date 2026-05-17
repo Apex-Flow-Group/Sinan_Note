@@ -8,7 +8,6 @@ import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:apex_note/screens/shared/settings/settings_utils.dart';
 import 'package:apex_note/screens/shared/settings/widgets/hero_animation_info_sheet.dart';
 import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -229,7 +228,7 @@ class BetaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode || PlatformHelper.isDesktopPlatform) return const SizedBox.shrink();
+    if (PlatformHelper.isDesktopPlatform) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
     return SettingsSectionCard(

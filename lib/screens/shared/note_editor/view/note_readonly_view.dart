@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+import 'dart:ui' show lerpDouble;
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
@@ -637,20 +638,42 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
 
     final heroTag = widget.heroTag ?? 'note_card_${note.id}';
-    final heroEnabled = Provider.of<SettingsProvider>(context, listen: false)
+    final heroEnabled = Provider.of<SettingsProvider>(context, listen: true)
         .heroAnimationEnabled;
     final heroCard = heroEnabled
         ? Hero(
             tag: heroTag,
             transitionOnUserGestures: false,
-            createRectTween: (begin, end) => RectTween(begin: begin, end: end),
-            flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) =>
-                FadeTransition(
-              opacity: direction == HeroFlightDirection.push
-                  ? animation
-                  : ReverseAnimation(animation),
-              child: Material(color: Colors.transparent, child: noteCard),
+            createRectTween: (begin, end) =>
+                MaterialRectArcTween(begin: begin, end: end),
+            placeholderBuilder: (context, heroSize, child) => SizedBox(
+              width: heroSize.width,
+              height: heroSize.height,
             ),
+            flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) {
+              final curved = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+                reverseCurve: Curves.easeInCubic,
+              );
+              return AnimatedBuilder(
+                animation: curved,
+                builder: (context, _) {
+                  final radius = BorderRadius.circular(
+                    direction == HeroFlightDirection.push
+                        ? lerpDouble(16, 0, curved.value)!
+                        : lerpDouble(0, 16, curved.value)!,
+                  );
+                  return Material(
+                    color: Colors.transparent,
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: noteCard,
+                    ),
+                  );
+                },
+              );
+            },
             child: noteCard,
           )
         : noteCard;

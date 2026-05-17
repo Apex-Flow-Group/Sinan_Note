@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:ui' show lerpDouble;
+
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -115,29 +117,41 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         child: widget.child,
       );
       if (widget.heroTag != null) {
-        final heroEnabled =
-            Provider.of<SettingsProvider>(context, listen: false)
-                .heroAnimationEnabled;
+        final heroEnabled = Provider.of<SettingsProvider>(context, listen: true)
+            .heroAnimationEnabled;
         if (!heroEnabled) return container;
         return Hero(
           tag: widget.heroTag!,
           transitionOnUserGestures: false,
-          createRectTween: (begin, end) => RectTween(begin: begin, end: end),
+          createRectTween: (begin, end) =>
+              MaterialRectArcTween(begin: begin, end: end),
+          placeholderBuilder: (context, heroSize, child) => SizedBox(
+            width: heroSize.width,
+            height: heroSize.height,
+          ),
           flightShuttleBuilder:
               (flightContext, animation, direction, fromCtx, toCtx) {
             final curved = CurvedAnimation(
               parent: animation,
-              curve: Curves.easeOut,
+              curve: Curves.easeOutCubic,
               reverseCurve: Curves.easeInCubic,
             );
-            return FadeTransition(
-              opacity: direction == HeroFlightDirection.push
-                  ? curved
-                  : ReverseAnimation(curved),
-              child: Material(
-                color: Colors.transparent,
-                child: container,
-              ),
+            return AnimatedBuilder(
+              animation: curved,
+              builder: (context, _) {
+                final radius = BorderRadius.circular(
+                  direction == HeroFlightDirection.push
+                      ? lerpDouble(16, 0, curved.value)!
+                      : lerpDouble(0, 16, curved.value)!,
+                );
+                return Material(
+                  color: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: radius,
+                    child: container,
+                  ),
+                );
+              },
             );
           },
           child: container,

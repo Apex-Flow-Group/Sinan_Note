@@ -80,6 +80,9 @@ class NotesProvider extends ChangeNotifier {
     }
   }
 
+  /// تحميل الملاحظات في الخلفية عند أول تشغيل.
+  /// يستخدم fire-and-forget لعدم تأخير الـ UI.
+  /// للتحميل المتزامن استخدم [refreshAllNotes] مباشرة.
   Future<void> loadNotes({bool force = false}) async {
     if (_isLoading) return;
     if (!force && _stateService.isInitialDataLoaded) return;
@@ -121,8 +124,6 @@ class NotesProvider extends ChangeNotifier {
     return id;
   }
 
-  Future<int> insertNote(Note note) async => addNote(note);
-
   Future<int> updateNote(Note note, {bool silent = false}) async {
     Note noteToUpdate = note;
     if (note.isLocked && note.content.isNotEmpty) {
@@ -160,16 +161,27 @@ class NotesProvider extends ChangeNotifier {
   Future<int> archiveNote(int id) async {
     await _sideEffectService.cancelReminderSideEffect(id);
     final result = await _dbService.archiveNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) _stateService.updateNote(note);
+    // copyWith على الملاحظة الموجودة في الـ state — بدلاً من قراءة DB إضافية
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isArchived: true,
+        updatedAt: DateTime.now(),
+      ));
+    }
     notifyListeners();
     return result;
   }
 
   Future<int> unarchiveNote(int id) async {
     final result = await _dbService.unarchiveNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) _stateService.updateNote(note);
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isArchived: false,
+        updatedAt: DateTime.now(),
+      ));
+    }
     notifyListeners();
     return result;
   }
@@ -177,17 +189,26 @@ class NotesProvider extends ChangeNotifier {
   Future<int> trashNote(int id) async {
     await _sideEffectService.cancelReminderSideEffect(id);
     final result = await _dbService.trashNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) _stateService.updateNote(note);
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isTrashed: true,
+        updatedAt: DateTime.now(),
+      ));
+    }
     notifyListeners();
     return result;
   }
 
   Future<int> restoreNote(int id) async {
     final result = await _dbService.restoreNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) {
-      _stateService.updateNote(note);
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isTrashed: false,
+        isArchived: false,
+        updatedAt: DateTime.now(),
+      ));
       _stateService.sortNotes(immediate: true);
     }
     notifyListeners();
@@ -233,7 +254,7 @@ class NotesProvider extends ChangeNotifier {
     _stateService.updateNote(updated);
     _refreshStamp++;
     notifyListeners();
-    await refreshAllNotes();
+    // لا حاجة لـ refreshAllNotes() — _stateService.updateNote() يُحدّث الـ state مباشرة
   }
 
   Future<int> duplicateNote(int id, {String copyLabel = 'Copy'}) async {

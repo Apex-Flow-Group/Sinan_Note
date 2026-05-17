@@ -1,6 +1,6 @@
-{
+﻿{
   "startDate": "2026-05-15T14:27:27.224427",
-  "lastUpdated": "2026-05-16T18:00:00.000000",
+  "lastUpdated": "2026-05-17T16:00:00.000000",
   "totalCoreFiles": 63,
   "completedCoreFiles": 63,
   "totalFunctionUnits": 502,
@@ -762,7 +762,31 @@
     "bugsFixed": 5,
     "deadCodeRemoved": 8,
     "arabicSearchFixed": 10,
-    "testsPassingFinal": 450
+    "testsPassingFinal": 469,
+    "uiRefactoringPhase": {
+      "status": "completed_with_known_blocker",
+      "filesInspected": 14,
+      "issuesFound": 32,
+      "issuesFixed": 26,
+      "issuesRemaining": 6,
+      "knownBlockers": [
+        {
+          "code": "NAV-HERO",
+          "description": "Hero يطير فوق BottomNavBar وشريط الإشعارات",
+          "reason": "Navigator.overlay فوق كل شيء في widget tree",
+          "attempts": 6,
+          "status": "disabled_in_code",
+          "solution": "go_router ShellRoute",
+          "docs": ".refactoring/ui/findings/navigation.md"
+        }
+      ],
+      "rounds": {
+        "round1_security": "completed_2026-05-17",
+        "round2_improvement": "completed_2026-05-17",
+        "round3_navigation": "completed_2026-05-17_partial"
+      },
+      "nextStep": "go_router_migration"
+    }
   },
   "recentlyReviewed": [
     {

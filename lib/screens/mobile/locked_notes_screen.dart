@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/core/utils/search_mixin.dart';
+import 'package:apex_note/core/utils/vault_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -75,7 +76,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     super.dispose();
   }
 
-  final bool _isAuthenticating = false;
+  // يُضبط على true أثناء أي عملية مصادقة (dialog بيومتري/PIN)
+  // يمنع didChangeAppLifecycleState من إغلاق الشاشة أثناء المصادقة
+  bool _isAuthenticating = false;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -92,7 +95,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       _providerRef?.clearLockedSession(notify: false);
       setDrawerVaultActive(false);
       if (mounted) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        VaultNavigator.exitVault(context);
       }
     }
   }
@@ -171,6 +174,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final selected = <int>{};
     if (!mounted) return;
 
+    _isAuthenticating = true;
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -187,6 +191,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         },
       ),
     );
+    if (mounted) _isAuthenticating = false;
   }
 
   @override
@@ -204,7 +209,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           // رجوع لأول شاشة في الـ stack (MainLayout) بدلاً من VaultEntryScreen
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              VaultNavigator.exitVault(context);
             }
           });
           return;
@@ -286,16 +291,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                   return SearchableHeader(
                     title: l10n.locked,
                     icon: Icons.lock_outline_rounded,
-                    isSearching: searchController.text.isNotEmpty,
+                    isSearching: isSearchActive,
                     searchController: searchController,
                     onSearchChange: (q) => setState(() {}),
-                    onToggleSearch: () => setState(() {
-                      if (searchController.text.isNotEmpty) {
-                        searchController.clear();
-                      } else {
-                        searchController.text = ' ';
-                      }
-                    }),
+                    onToggleSearch: () => toggleSearch(),
                     leading: Builder(
                       builder: (ctx) => IconButton(
                         icon: const Icon(Icons.menu),
@@ -350,7 +349,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       );
 
   Widget _buildNotesList(AppLocalizations l10n) {
-    final query = Note.normalize(searchController.text);
+    final query = Note.normalize(searchController.text.trim());
     final filtered = _decryptedNotes
         .where((n) => !n.isArchived && !n.isTrashed)
         .where((n) =>
@@ -409,6 +408,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void _confirmAction(String title, String content, String confirmLabel,
       Future<void> Function() onConfirm) {
     final l10n = AppLocalizations.of(context)!;
+    // نضبط _isAuthenticating لمنع lifecycle من إغلاق الشاشة أثناء الـ dialog
+    _isAuthenticating = true;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -416,7 +417,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         content: Text(content),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: Text(l10n.cancel)),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -426,7 +430,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) _isAuthenticating = false;
+    });
   }
 }
 

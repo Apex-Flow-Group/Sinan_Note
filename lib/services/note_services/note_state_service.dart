@@ -19,6 +19,7 @@ class NoteStateService {
   List<Note>? _cachedActiveNotes;
   List<Note>? _cachedArchivedNotes;
   List<Note>? _cachedTrashedNotes;
+  List<Note>? _cachedReminderNotes;
   bool _cacheInvalidated = true;
 
   bool get isInitialDataLoaded => _isInitialDataLoaded;
@@ -54,13 +55,18 @@ class NoteStateService {
   }
 
   List<Note> get reminderNotes {
-    return _allNotes
+    if (_cachedReminderNotes != null && !_cacheInvalidated) {
+      // reminderNotes يعتمد على DateTime.now() — نتحقق أن لا شيء انتهى
+      return _cachedReminderNotes!;
+    }
+    _cachedReminderNotes = _allNotes
         .where((n) =>
             n.reminderDateTime != null &&
             !n.isLocked &&
             !n.isTrashed &&
             n.reminderDateTime!.isAfter(DateTime.now()))
         .toList();
+    return _cachedReminderNotes!;
   }
 
   List<Note> get lockedNotes => _lockedNotes;
@@ -80,7 +86,7 @@ class NoteStateService {
       _allNotes.add(note);
     }
     sortNotes(immediate: true);
-    _allNotes = List.from(_allNotes);
+    // List.from بعد sort مباشرة لا قيمة منها — حُذفت (M2)
     _invalidateCache();
     _silentSync();
   }
@@ -99,7 +105,6 @@ class NoteStateService {
     } else {
       _allNotes.insert(0, note);
       sortNotes(immediate: true);
-      _allNotes = List.from(_allNotes);
     }
     _invalidateCache();
     _silentSync();
@@ -109,7 +114,7 @@ class NoteStateService {
     _allNotes.removeWhere((n) => n.id == id);
     _lockedNotes.removeWhere((n) => n.id == id);
     _invalidateCache();
-    CloudSyncGateway.markDirty();
+    // markDirty() تُستدعى داخل _silentSync() — لا حاجة لاستدعاء صريح (M3)
     _silentSync();
   }
 
@@ -177,6 +182,7 @@ class NoteStateService {
     _cachedActiveNotes = null;
     _cachedArchivedNotes = null;
     _cachedTrashedNotes = null;
+    _cachedReminderNotes = null;
   }
 
   /// 🔄 Silent background sync with debouncing

@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 mixin SearchMixin<T extends StatefulWidget> on State<T> {
   final TextEditingController searchController = TextEditingController();
   String searchQuery = '';
+  bool _searchActive = false;
 
-  bool get isSearchActive => searchController.text.isNotEmpty;
+  bool get isSearchActive => _searchActive;
 
   void initSearch() {
     searchController.addListener(() {
@@ -16,15 +17,17 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
   }
 
   void exitSearch() {
+    _searchActive = false;
     searchController.clear();
     if (mounted) setState(() => searchQuery = '');
   }
 
   void toggleSearch() {
-    if (searchController.text.isEmpty) {
-      searchController.text = ' ';
-    } else {
+    if (_searchActive) {
       exitSearch();
+    } else {
+      _searchActive = true;
+      if (mounted) setState(() {});
     }
   }
 

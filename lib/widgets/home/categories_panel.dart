@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
@@ -157,7 +157,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
               onTap: () {
                 provider.selectCategory(null);
                 Navigator.pop(context);
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.of(context, rootNavigator: true).popUntil((route) => route.settings.name == '/main' || route.isFirst);
                 widget.onCategorySelected?.call();
               },
             ),
@@ -170,7 +170,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
               onTap: () {
                 provider.selectCategory(kProCategoryId);
                 Navigator.pop(context);
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.of(context, rootNavigator: true).popUntil((route) => route.settings.name == '/main' || route.isFirst);
                 widget.onCategorySelected?.call();
               },
             ),
@@ -204,7 +204,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                   } else {
                     provider.selectCategory(cat.id);
                     Navigator.pop(context);
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    Navigator.of(context, rootNavigator: true).popUntil((route) => route.settings.name == '/main' || route.isFirst);
                     widget.onCategorySelected?.call();
                   }
                 },

@@ -55,7 +55,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     _autoSyncOnStartup();
     tabToHomeNotifier.addListener(_onBackToHome);
 
-    // ربط callback تحديث الكتالوجات بعد المزامنة التلقائية
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notesProvider = Provider.of<NotesProvider>(context, listen: false);
       final categoriesProvider =
@@ -64,13 +63,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           () => categoriesProvider.refreshCategories();
     });
 
-    // ⚠️ قفل الاتجاه للموبايل فقط
     WidgetsBinding.instance.addPostFrameCallback((_) {
       PlatformHelper.lockOrientationForMobile(context);
     });
 
-    // ✅ Cache screens to prevent unnecessary rebuilds
-    // Each screen is created once and reused
     _cachedScreens = [
       NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
@@ -96,7 +92,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     ];
   }
 
-  /// 🔄 Auto-sync on app startup
   Future<void> _autoSyncOnStartup() async {
     await CloudSyncGateway.initializeSignIn();
 
@@ -130,26 +125,27 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     }
   }
 
-  /// 🔒 Security: Lock screen when vault is locked
   void _onSecurityChanged() {
-    if (_securityController.isLocked && mounted) {
+    if (!_securityController.isLocked || !mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
               const SplashScreen(),
+          settings: const RouteSettings(name: '/splash'),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),
       );
-    }
+    });
   }
 
-  /// 📜 Auto-hide navigation on scroll (home screen only)
   void _handleScrollNotification(bool isScrollingDown) {
     if (_currentIndex != 0 || _isDrawerOpen) return;
 
     final isLargeScreen = PlatformHelper.shouldUseDesktopLayout(context);
-    if (isLargeScreen) return; // Don't hide on tablets/desktop
+    if (isLargeScreen) return;
 
     if (isScrollingDown && !_isScrollHidden) {
       setState(() => _isScrollHidden = true);
@@ -187,13 +183,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        // إذا كنا في تبويب غير الرئيسية → ارجع للتبويب الأول
         if (_currentIndex != 0) {
           setState(() => _currentIndex = 0);
           currentTabIndexNotifier.value = 0;
           return;
         }
-        // نحن في الرئيسية → double-back للخروج
         final now = DateTime.now();
         if (_lastBackPress == null ||
             now.difference(_lastBackPress!) > const Duration(seconds: 2)) {

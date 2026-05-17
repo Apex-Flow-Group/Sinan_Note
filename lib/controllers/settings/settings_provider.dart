@@ -249,11 +249,6 @@ class SettingsProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Migration: Force disable hero animation for all users
-      if (prefs.containsKey('heroAnimationEnabled')) {
-        await prefs.setBool('heroAnimationEnabled', false);
-      }
-
       int? themeIndex = prefs.getInt('themeMode');
       if (themeIndex != null &&
           themeIndex >= 0 &&
@@ -271,6 +266,10 @@ class SettingsProvider with ChangeNotifier {
       _doubleTapToEdit = prefs.getBool('doubleTapToEdit') ?? true;
       _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
           ['delete', 'archive', 'share'];
+      _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
+      // Hero Animation معطّل حتى يُحل NAV-HERO (Shell Route)
+      // الـ Hero يطير فوق BottomNavBar وشريط الإشعارات بسبب Navigator overlay
+      // راجع: .refactoring/ui/findings/navigation.md
       _heroAnimationEnabled = false;
       _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'disabled';
       _viewType = prefs.getString('viewType') ?? 'listCompact';

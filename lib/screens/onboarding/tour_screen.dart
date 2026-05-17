@@ -43,6 +43,7 @@ class _TourScreenState extends State<TourScreen> {
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => const MainLayoutScreen(),
+        settings: const RouteSettings(name: '/main'),
         transitionsBuilder: (_, animation, __, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 400),
@@ -82,7 +83,9 @@ class _TourScreenState extends State<TourScreen> {
                               color: Color(0xFFFFD700), size: 36),
                           const SizedBox(height: 12),
                           Text(
-                            isAr ? 'كل ما تحتاجه في مكان واحد' : 'Everything you need in one place',
+                            isAr
+                                ? 'كل ما تحتاجه في مكان واحد'
+                                : 'Everything you need in one place',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -103,11 +106,27 @@ class _TourScreenState extends State<TourScreen> {
                         title: l10n.tourPage1Title,
                         subtitle: l10n.tourPage1Desc,
                         items: [
-                          _Item(Icons.notes_rounded, isAr ? 'ملاحظة نصية بسيطة وسريعة' : 'Simple plain text note'),
+                          _Item(
+                              Icons.notes_rounded,
+                              isAr
+                                  ? 'ملاحظة نصية بسيطة وسريعة'
+                                  : 'Simple plain text note'),
                           _Item(Icons.format_paint_rounded, l10n.tourRichNote),
-                          _Item(Icons.code_rounded, isAr ? 'محرر كود مع تمييز الصياغة' : 'Code editor with syntax highlighting'),
-                          _Item(Icons.alarm_rounded, isAr ? 'تذكير بتاريخ ووقت محدد' : 'Reminder with date and time'),
-                          _Item(Icons.check_box_rounded, isAr ? 'قائمة مهام تفاعلية' : 'Interactive checklist'),
+                          _Item(
+                              Icons.code_rounded,
+                              isAr
+                                  ? 'محرر كود مع تمييز الصياغة'
+                                  : 'Code editor with syntax highlighting'),
+                          _Item(
+                              Icons.alarm_rounded,
+                              isAr
+                                  ? 'تذكير بتاريخ ووقت محدد'
+                                  : 'Reminder with date and time'),
+                          _Item(
+                              Icons.check_box_rounded,
+                              isAr
+                                  ? 'قائمة مهام تفاعلية'
+                                  : 'Interactive checklist'),
                         ],
                       ),
                       _TourSection(
@@ -115,10 +134,12 @@ class _TourScreenState extends State<TourScreen> {
                         title: l10n.tourPage8Title,
                         subtitle: l10n.tourPage8Desc,
                         items: [
-                          _Item(Icons.create_new_folder_outlined, l10n.tourCatCreate),
+                          _Item(Icons.create_new_folder_outlined,
+                              l10n.tourCatCreate),
                           _Item(Icons.filter_list_rounded, l10n.tourCatFilter),
                           _Item(Icons.edit_outlined, l10n.tourCatEdit),
-                          _Item(Icons.playlist_add_check_rounded, l10n.tourCatAssign),
+                          _Item(Icons.playlist_add_check_rounded,
+                              l10n.tourCatAssign),
                         ],
                       ),
                       _TourSection(
@@ -126,9 +147,21 @@ class _TourScreenState extends State<TourScreen> {
                         title: l10n.tourPage3Title,
                         subtitle: l10n.tourPage3Desc,
                         items: [
-                          _Item(Icons.today_rounded, isAr ? 'تذكيرات لمرة واحدة' : 'One-time reminders'),
-                          _Item(Icons.repeat_rounded, isAr ? 'تذكيرات متكررة يومياً أو أسبوعياً' : 'Daily or weekly recurring reminders'),
-                          _Item(Icons.notifications_active_rounded, isAr ? 'إشعار فوري في الوقت المحدد' : 'Instant notification at set time'),
+                          _Item(
+                              Icons.today_rounded,
+                              isAr
+                                  ? 'تذكيرات لمرة واحدة'
+                                  : 'One-time reminders'),
+                          _Item(
+                              Icons.repeat_rounded,
+                              isAr
+                                  ? 'تذكيرات متكررة يومياً أو أسبوعياً'
+                                  : 'Daily or weekly recurring reminders'),
+                          _Item(
+                              Icons.notifications_active_rounded,
+                              isAr
+                                  ? 'إشعار فوري في الوقت المحدد'
+                                  : 'Instant notification at set time'),
                         ],
                       ),
                       _TourSection(
@@ -136,9 +169,15 @@ class _TourScreenState extends State<TourScreen> {
                         title: l10n.tourPage4Title,
                         subtitle: l10n.tourPage4Desc,
                         items: [
-                          _Item(Icons.enhanced_encryption_rounded, l10n.encryptionUsed),
-                          _Item(Icons.fingerprint_rounded, l10n.authenticateWithBiometric),
-                          _Item(Icons.cloud_off_rounded, isAr ? 'الخزنة محلية فقط — لا تُرفع أبداً' : 'Vault is local only — never uploaded'),
+                          _Item(Icons.enhanced_encryption_rounded,
+                              l10n.encryptionUsed),
+                          _Item(Icons.fingerprint_rounded,
+                              l10n.authenticateWithBiometric),
+                          _Item(
+                              Icons.cloud_off_rounded,
+                              isAr
+                                  ? 'الخزنة محلية فقط — لا تُرفع أبداً'
+                                  : 'Vault is local only — never uploaded'),
                         ],
                       ),
                       _TourSection(
@@ -146,9 +185,14 @@ class _TourScreenState extends State<TourScreen> {
                         title: l10n.tourPage5Title,
                         subtitle: l10n.tourPage5Desc,
                         items: [
-                          _Item(Icons.cloud_upload_rounded, l10n.tourGoogleDriveSync),
+                          _Item(Icons.cloud_upload_rounded,
+                              l10n.tourGoogleDriveSync),
                           _Item(Icons.merge_rounded, l10n.tourSmartMerge),
-                          _Item(Icons.devices_rounded, isAr ? 'مزامنة بين أجهزة متعددة' : 'Sync across multiple devices'),
+                          _Item(
+                              Icons.devices_rounded,
+                              isAr
+                                  ? 'مزامنة بين أجهزة متعددة'
+                                  : 'Sync across multiple devices'),
                         ],
                       ),
                       _TourSection(
@@ -159,7 +203,8 @@ class _TourScreenState extends State<TourScreen> {
                           _Item(Icons.palette_rounded, l10n.noteColors),
                           _Item(Icons.history_rounded, l10n.tourVersionHistory),
                           _Item(Icons.widgets_rounded, l10n.tourHomeWidget),
-                          _Item(Icons.swap_horiz_rounded, l10n.tourNoteConversion),
+                          _Item(Icons.swap_horiz_rounded,
+                              l10n.tourNoteConversion),
                         ],
                       ),
 
@@ -375,14 +420,11 @@ class _AgreementSection extends StatelessWidget {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isAgreed
-                      ? const Color(0xFFFFD700)
-                      : Colors.transparent,
+                  color:
+                      isAgreed ? const Color(0xFFFFD700) : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: isAgreed
-                        ? const Color(0xFFFFD700)
-                        : Colors.white38,
+                    color: isAgreed ? const Color(0xFFFFD700) : Colors.white38,
                     width: 2,
                   ),
                 ),

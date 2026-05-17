@@ -37,6 +37,10 @@ class _LockedNotesScreenResponsiveState
         listen: false,
       );
       selectedNoteProvider.clearSelection();
+
+      // جلب الملاحظات المقفلة المفككة للعرض في desktop
+      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+      notesProvider.fetchLockedNotes();
     });
   }
 
@@ -112,9 +116,10 @@ class _LockedNotesScreenResponsiveState
         // Master Panel - قائمة الملاحظات المقفلة
         masterPanel: Consumer<NotesProvider>(
           builder: (context, notesProvider, child) {
-            // الحصول على الملاحظات المقفلة فقط
-            var notes = notesProvider.notes
-                .where((note) => note.isLocked && !note.isTrashed)
+            // lockedNotes تحتوي على الملاحظات المفككة بعد fetchLockedNotes()
+            // بخلاف notes (activeNotes) التي تحتوي محتوى مشفر
+            var notes = notesProvider.lockedNotes
+                .where((note) => !note.isTrashed)
                 .toList();
 
             // تطبيق البحث

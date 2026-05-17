@@ -358,10 +358,16 @@ class VaultResetService {
   }
 
   void _emit(VaultResetProgress progress) {
-    _progressController.add(progress);
+    if (!_progressController.isClosed) {
+      _progressController.add(progress);
+    }
   }
 
+  /// لا يُستدعى عادةً لأن VaultResetService Singleton يعيش طوال عمر التطبيق.
+  /// يُستدعى فقط في الاختبارات.
   void dispose() {
-    _progressController.close();
+    if (!_isRunning) {
+      _progressController.close();
+    }
   }
 }

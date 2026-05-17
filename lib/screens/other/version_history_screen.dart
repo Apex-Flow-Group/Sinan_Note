@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
@@ -241,7 +241,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           _ctrl.clearNote();
           _animateToPage(0);
         } else {
-          Navigator.of(context).popUntil((r) => r.isFirst);
+          Navigator.of(context, rootNavigator: true).popUntil((r) => r.settings.name == '/main' || r.isFirst);
         }
       },
       child: Scaffold(

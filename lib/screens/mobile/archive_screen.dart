@@ -210,7 +210,6 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                       if (_isSearchActive) {
                         _exitSearch();
                       } else {
-                        setState(() => searchController.text = '');
                         toggleSearch();
                       }
                     },

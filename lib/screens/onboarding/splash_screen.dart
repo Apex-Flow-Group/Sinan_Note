@@ -156,6 +156,7 @@ class _SplashScreenState extends State<SplashScreen> {
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
               const MainLayoutScreen(),
+          settings: const RouteSettings(name: '/main'),
           transitionDuration: const Duration(milliseconds: 300),
           reverseTransitionDuration: Duration.zero,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {

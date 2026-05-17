@@ -2,10 +2,10 @@
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/vault_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/feature_info.dart';
 import 'package:apex_note/screens/auth/vault_intro_pages.dart';
-import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +33,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   bool _codeSaved = false;
   bool _hasBiometrics = false;
 
-  int get _totalPages => 4;
+  // عدد الصفحات يعتمد على وجود البيومتري — يُحسب ديناميكياً في build()
+  // لا تستخدم _totalPages مباشرة — استخدم pageCount في build()
+  static const int _pagesWithBiometrics = 4;
+  static const int _pagesWithoutBiometrics = 3;
 
   @override
   void initState() {
@@ -106,7 +109,8 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
       } catch (e) {
         if (!mounted) return;
         Navigator.pop(context);
-        setState(() => _errorText = 'Setup failed');
+        setState(
+            () => _errorText = AppLocalizations.of(context)!.decryptionFailed);
       }
       return;
     }
@@ -124,7 +128,8 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
       return;
     }
 
-    if (_currentPage == _totalPages - 1) {
+    if (_currentPage ==
+        (_hasBiometrics ? _pagesWithBiometrics : _pagesWithoutBiometrics) - 1) {
       await _finishSetup(enableBiometric: true);
       return;
     }
@@ -138,18 +143,15 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     await settings.setLockedIntroSeen(true);
     if (!mounted) return;
-    // تأكيد فتح جلسة الخزنة بعد الإعداد
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     notesProvider.unlockVault();
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LockedNotesScreen()),
-    );
+    VaultNavigator.toLockedNotes(context);
   }
 
   void _nextPage() {
-    if (_currentPage < _totalPages - 1) {
+    final pageCount =
+        _hasBiometrics ? _pagesWithBiometrics : _pagesWithoutBiometrics;
+    if (_currentPage < pageCount - 1) {
       _pageController.nextPage(
           duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     }
@@ -159,7 +161,8 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final pageCount = _hasBiometrics ? _totalPages : _totalPages - 1;
+    final pageCount =
+        _hasBiometrics ? _pagesWithBiometrics : _pagesWithoutBiometrics;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,

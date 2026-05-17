@@ -129,7 +129,8 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
       return;
     }
     if (password != confirm) {
-      setState(() => _passwordError = 'Passwords do not match');
+      setState(() =>
+          _passwordError = AppLocalizations.of(context)!.passwordMismatch);
       return;
     }
 

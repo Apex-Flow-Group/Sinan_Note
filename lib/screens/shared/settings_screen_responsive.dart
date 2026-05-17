@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
@@ -70,7 +70,7 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context).popUntil((r) => r.isFirst);
+        if (!didPop) Navigator.of(context, rootNavigator: true).popUntil((r) => r.settings.name == '/main' || r.isFirst);
       },
       child: Scaffold(
         drawer: HomeDrawerWidget(

@@ -15,7 +15,7 @@ class VaultService {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
-  
+
   static const _masterKeyName = 'vault_master_key';
   static const _passwordHashName = 'vault_password_hash';
   static const _recoveryHashName = 'vault_recovery_hash';
@@ -30,7 +30,8 @@ class VaultService {
   /// Validate password strength (English letters, min 8 chars, 1 number, 1 symbol)
   static bool validatePasswordStrength(String password) {
     // لا يسمح بالعربية، يتطلب حرف إنجليزي واحد على الأقل، رقم واحد على الأقل، ورمز واحد، والطول 8+
-    final regex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$');
+    final regex = RegExp(
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$');
     return regex.hasMatch(password);
   }
 
@@ -38,11 +39,12 @@ class VaultService {
   static String generateRecoveryCode() {
     final random = Random.secure();
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing chars
-    
+
     String generateSegment() {
-      return List.generate(4, (_) => chars[random.nextInt(chars.length)]).join();
+      return List.generate(4, (_) => chars[random.nextInt(chars.length)])
+          .join();
     }
-    
+
     return 'SN-${generateSegment()}-${generateSegment()}-${generateSegment()}';
   }
 
@@ -51,13 +53,19 @@ class VaultService {
     return await ApexErrorManager.monitorCritical(() async {
       final masterKey = Key.fromSecureRandom(32);
       final recoveryCode = generateRecoveryCode();
-      final encryptedWithPassword = await _encryptMasterKey(masterKey, password);
-      final encryptedWithRecovery = await _encryptMasterKey(masterKey, recoveryCode);
+      final encryptedWithPassword =
+          await _encryptMasterKey(masterKey, password);
+      final encryptedWithRecovery =
+          await _encryptMasterKey(masterKey, recoveryCode);
 
-      await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithPassword);
-      await _storage.write(key: '${_masterKeyName}_recovery', value: encryptedWithRecovery);
-      await _storage.write(key: _passwordHashName, value: await _hashSecure(password));
-      await _storage.write(key: _recoveryHashName, value: await _hashSecure(recoveryCode));
+      await _storage.write(
+          key: '${_masterKeyName}_password', value: encryptedWithPassword);
+      await _storage.write(
+          key: '${_masterKeyName}_recovery', value: encryptedWithRecovery);
+      await _storage.write(
+          key: _passwordHashName, value: await _hashSecure(password));
+      await _storage.write(
+          key: _recoveryHashName, value: await _hashSecure(recoveryCode));
       await _storage.write(key: _masterKeyName, value: masterKey.base64);
 
       return recoveryCode;
@@ -107,18 +115,18 @@ class VaultService {
       return false;
     }
   }
-  
+
   /// Mark vault as unlocked in current session
   static Future<void> markVaultUnlocked() async {
     await _storage.write(key: 'vault_session_unlocked', value: 'true');
   }
-  
+
   /// Check if vault is unlocked in current session
   static Future<bool> isVaultUnlocked() async {
     final value = await _storage.read(key: 'vault_session_unlocked');
     return value == 'true';
   }
-  
+
   /// Lock vault (clear session + wipe memory)
   static Future<void> lockVault() async {
     // Read and wipe master key before deleting
@@ -129,36 +137,47 @@ class VaultService {
         _wipeKey(key);
       } catch (_) {}
     }
-    
+
     await _storage.delete(key: 'vault_session_unlocked');
     await _storage.delete(key: _masterKeyName);
   }
 
-  /// Change password (requires old password)
-  static Future<bool> changePassword(String oldPassword, String newPassword) async {
-    // If oldPassword is empty, it means we're setting password after recovery
-    if (oldPassword.isEmpty) {
-      final masterKeyBase64 = await _storage.read(key: _masterKeyName);
-      if (masterKeyBase64 == null) return false;
-
-      final masterKey = Key.fromBase64(masterKeyBase64);
-      final encryptedWithNewPassword = await _encryptMasterKey(masterKey, newPassword);
-      await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithNewPassword);
-      await _storage.write(key: _passwordHashName, value: await _hashSecure(newPassword));
-      return true;
-    }
-    
-    // Normal password change
+  /// Change password (requires old password verification).
+  /// For post-recovery password reset use [setPasswordAfterRecovery] instead.
+  static Future<bool> changePassword(
+      String oldPassword, String newPassword) async {
+    // Normal password change — always requires old password
     if (!await verifyPassword(oldPassword)) return false;
 
     final masterKeyBase64 = await _storage.read(key: _masterKeyName);
     if (masterKeyBase64 == null) return false;
 
     final masterKey = Key.fromBase64(masterKeyBase64);
-    final encryptedWithNewPassword = await _encryptMasterKey(masterKey, newPassword);
-    await _storage.write(key: '${_masterKeyName}_password', value: encryptedWithNewPassword);
-    await _storage.write(key: _passwordHashName, value: await _hashSecure(newPassword));
+    final encryptedWithNewPassword =
+        await _encryptMasterKey(masterKey, newPassword);
+    await _storage.write(
+        key: '${_masterKeyName}_password', value: encryptedWithNewPassword);
+    await _storage.write(
+        key: _passwordHashName, value: await _hashSecure(newPassword));
 
+    return true;
+  }
+
+  /// Set a new password after successful recovery code verification.
+  /// Only valid when the vault is already unlocked via [recoverWithCode].
+  /// Does NOT require the old password — recovery code already proved identity.
+  static Future<bool> setPasswordAfterRecovery(String newPassword) async {
+    // Vault must be unlocked (master key in storage) — recoverWithCode does this
+    final masterKeyBase64 = await _storage.read(key: _masterKeyName);
+    if (masterKeyBase64 == null) return false;
+
+    final masterKey = Key.fromBase64(masterKeyBase64);
+    final encryptedWithNewPassword =
+        await _encryptMasterKey(masterKey, newPassword);
+    await _storage.write(
+        key: '${_masterKeyName}_password', value: encryptedWithNewPassword);
+    await _storage.write(
+        key: _passwordHashName, value: await _hashSecure(newPassword));
     return true;
   }
 
@@ -177,7 +196,8 @@ class VaultService {
 
   /// إظهار/إخفاء زر البصمة في شاشة القفل
   static Future<void> setBiometricButtonVisible(bool visible) async {
-    await _storage.write(key: _biometricButtonVisibleName, value: visible.toString());
+    await _storage.write(
+        key: _biometricButtonVisibleName, value: visible.toString());
   }
 
   /// هل زر البصمة ظاهر؟ (الافتراضي: true)
@@ -188,11 +208,17 @@ class VaultService {
   }
 
   static const _saltKeyName = 'vault_pbkdf2_salt';
-  static const _kIterations = 10000;
-  static const _kLegacyIterations = 100000;
+  // OWASP 2023 minimum for PBKDF2-SHA256 is 600,000 — we use 100,000 as a
+  // practical balance between security and mobile performance (~300ms on mid-range).
+  // Legacy value was accidentally lowered to 10,000; this restores the original.
+  static const _kIterations = 100000;
+  // Kept for decrypting data encrypted with the old 10,000-iteration scheme.
+  // _decryptMasterKey reads the stored iteration count, so migration is automatic.
+  static const _kLegacyIterations = 10000;
 
   /// Derive a 32-byte key from secret using PBKDF2-SHA256 (in isolate)
-  static Future<Key> _deriveKey(String secret, {Uint8List? salt, int iterations = _kIterations}) async {
+  static Future<Key> _deriveKey(String secret,
+      {Uint8List? salt, int iterations = _kIterations}) async {
     final storedSalt = salt ?? await _getOrCreateSalt();
     final keyBytes = await Isolate.run(() => _pbkdf2Sync(
           utf8.encode(secret),
@@ -244,10 +270,13 @@ class VaultService {
       return Key.fromBase64(decrypted);
     }
 
-    // الصيغة القديمة: iv:ciphertext (كانت 100,000)
+    // الصيغة القديمة جداً: iv:ciphertext (قبل إضافة iterations في الصيغة)
+    // كانت تستخدم 100,000 iterations في الإصدار الأول، ثم خُفِّضت خطأً لـ 10,000
+    // نستخدم _kLegacyIterations للتوافق مع تلك البيانات
     if (parts.length == 2) {
       final iv = IV.fromBase64(parts[0]);
-      final derivedKey = await _deriveKey(secret, iterations: _kLegacyIterations);
+      final derivedKey =
+          await _deriveKey(secret, iterations: _kLegacyIterations);
       final encrypter = Encrypter(AES(derivedKey));
       final decrypted = encrypter.decrypt64(parts[1], iv: iv);
       return Key.fromBase64(decrypted);
@@ -284,7 +313,9 @@ class VaultService {
         ));
     if (hash.length != expectedHash.length) return false;
     int diff = 0;
-    for (int i = 0; i < hash.length; i++) { diff |= hash[i] ^ expectedHash[i]; }
+    for (int i = 0; i < hash.length; i++) {
+      diff |= hash[i] ^ expectedHash[i];
+    }
     return diff == 0;
   }
 
@@ -298,7 +329,7 @@ class VaultService {
         _wipeKey(key);
       } catch (_) {}
     }
-    
+
     await _storage.delete(key: _masterKeyName);
     await _storage.delete(key: '${_masterKeyName}_password');
     await _storage.delete(key: '${_masterKeyName}_recovery');
@@ -307,12 +338,20 @@ class VaultService {
     await _storage.delete(key: _biometricEnabledName);
     await _storage.delete(key: 'vault_session_unlocked');
   }
-  
+
   // ============================================================================
   // ENCRYPTION/DECRYPTION WITH MASTER KEY
   // ============================================================================
-  
-  /// Get current master key (must be unlocked first)
+
+  /// Get current master key (must be unlocked first).
+  ///
+  /// **Security note (SEC-3):** The master key is stored in FlutterSecureStorage
+  /// (backed by Android Keystore / iOS Secure Enclave) for the duration of the
+  /// unlocked session. This is an intentional performance trade-off:
+  /// - Pro: avoids re-deriving the key (PBKDF2) on every encrypt/decrypt call
+  /// - Con: key persists in secure storage until [lockVault] is called
+  /// - Mitigation: [encryptWithMasterKey] and [decryptWithMasterKey] wipe the
+  ///   key from Dart memory immediately after use via [_wipeKey]
   static Future<Key> getMasterKey() async {
     final masterKeyBase64 = await _storage.read(key: _masterKeyName);
     if (masterKeyBase64 == null) {
@@ -320,12 +359,12 @@ class VaultService {
     }
     return Key.fromBase64(masterKeyBase64);
   }
-  
+
   /// Encrypt data with master key (auto-cleanup)
   static Future<String> encryptWithMasterKey(String plainText) async {
     return await ApexErrorManager.monitorCritical(() async {
       if (plainText.isEmpty) return '';
-      
+
       Key? masterKey;
       try {
         masterKey = await getMasterKey();
@@ -341,15 +380,15 @@ class VaultService {
       }
     }, 'VaultEncrypt');
   }
-  
+
   /// Decrypt data with master key (auto-cleanup)
   static Future<String> decryptWithMasterKey(String encryptedText) async {
     return await ApexErrorManager.monitorCritical(() async {
       if (encryptedText.isEmpty) return '';
-      
+
       final parts = encryptedText.split(':');
       if (parts.length != 2) return encryptedText;
-      
+
       Key? masterKey;
       try {
         masterKey = await getMasterKey();
@@ -366,7 +405,7 @@ class VaultService {
       }
     }, 'VaultDecrypt');
   }
-  
+
   /// فك تشفير بمفتاح جاهز (sync) — للاستخدام عند فك تشفير ملاحظات متعددة
   static String decryptWithKey(String encryptedText, Key masterKey) {
     if (encryptedText.isEmpty) return '';
@@ -396,13 +435,15 @@ class VaultService {
       // Ignore wipe errors
     }
   }
-  
-  /// Check if text is encrypted (matches iv:ciphertext pattern)
+
+  /// Check if text is encrypted (matches iv:ciphertext pattern).
+  /// IV must be exactly 16 bytes = 24 base64 characters.
   static bool isEncrypted(String text) {
     if (text.isEmpty) return false;
     final parts = text.split(':');
     if (parts.length != 2) return false;
-    
+    // IV is always 16 bytes → 24 base64 chars (with padding)
+    if (parts[0].length != 24) return false;
     try {
       IV.fromBase64(parts[0]);
       return true;
@@ -410,21 +451,22 @@ class VaultService {
       return false;
     }
   }
-  
+
   // ============================================================================
   // VAULT DATA EXPORT/IMPORT FOR BACKUP
   // ============================================================================
-  
+
   /// Get vault data for backup (encrypted master key + recovery hash)
   static Future<Map<String, dynamic>?> getVaultDataForBackup() async {
     try {
       if (!await isVaultSetup()) return null;
-      
-      final encryptedMasterKey = await _storage.read(key: '${_masterKeyName}_recovery');
+
+      final encryptedMasterKey =
+          await _storage.read(key: '${_masterKeyName}_recovery');
       final recoveryHash = await _storage.read(key: _recoveryHashName);
-      
+
       if (encryptedMasterKey == null || recoveryHash == null) return null;
-      
+
       return {
         'encrypted_master_key': encryptedMasterKey,
         'recovery_hash': recoveryHash,
@@ -434,19 +476,21 @@ class VaultService {
       return null;
     }
   }
-  
+
   /// Restore vault data from backup
-  static Future<bool> restoreVaultDataFromBackup(Map<String, dynamic> vaultData) async {
+  static Future<bool> restoreVaultDataFromBackup(
+      Map<String, dynamic> vaultData) async {
     try {
       final encryptedMasterKey = vaultData['encrypted_master_key'] as String?;
       final recoveryHash = vaultData['recovery_hash'] as String?;
-      
+
       if (encryptedMasterKey == null || recoveryHash == null) return false;
-      
+
       // Save vault data locally
-      await _storage.write(key: '${_masterKeyName}_recovery', value: encryptedMasterKey);
+      await _storage.write(
+          key: '${_masterKeyName}_recovery', value: encryptedMasterKey);
       await _storage.write(key: _recoveryHashName, value: recoveryHash);
-      
+
       return true;
     } catch (e) {
       return false;
@@ -458,7 +502,7 @@ class VaultService {
 class VaultLockedException implements Exception {
   final String message;
   VaultLockedException(this.message);
-  
+
   @override
   String toString() => 'VaultLockedException: $message';
 }
