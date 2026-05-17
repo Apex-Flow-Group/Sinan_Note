@@ -147,6 +147,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final isLargeScreen = PlatformHelper.shouldUseDesktopLayout(context);
     if (isLargeScreen) return;
 
+    // إذا الإعداد معطّل → الشريط ثابت دائماً
+    final hideOnScroll =
+        Provider.of<SettingsProvider>(context, listen: false).hideNavOnScroll;
+    if (!hideOnScroll) return;
+
     if (isScrollingDown && !_isScrollHidden) {
       setState(() => _isScrollHidden = true);
       bottomNavHiddenNotifier.value = true;

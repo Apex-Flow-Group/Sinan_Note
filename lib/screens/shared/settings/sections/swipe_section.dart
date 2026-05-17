@@ -21,10 +21,23 @@ class SwipeSection extends StatelessWidget {
         ? systemLocale
         : settings.languageCode;
 
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
     return SettingsSectionCard(
       title: l10n.swipeGestures,
       icon: Icons.swipe_rounded,
       children: [
+        SwitchListTile(
+          secondary: const Icon(Icons.vertical_align_bottom_rounded),
+          title: Text(isAr ? 'إخفاء الشريط عند السكرول' : 'Hide bar on scroll'),
+          subtitle: Text(
+            isAr
+                ? 'يُخفي الشريط السفلي وشريط البحث عند السكرول للأسفل'
+                : 'Hides bottom bar and search bar when scrolling down',
+          ),
+          value: settings.hideNavOnScroll,
+          onChanged: settings.setHideNavOnScroll,
+        ),
         SwitchListTile(
           secondary: const Icon(Icons.swipe),
           title: Text(l10n.swipeGesturesDesc),

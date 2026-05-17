@@ -2,12 +2,11 @@
 
 import 'dart:io';
 
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/main.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -268,14 +267,11 @@ class NotificationService {
       final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null && navigatorKey.currentState != null) {
-        navigatorKey.currentState!.push(
-          MaterialPageRoute(
-            builder: (context) => NoteEditorImmersive(
-              note: note,
-              mode: NoteCardUtils.getNoteMode(note),
-              readOnly: true,
-            ),
-          ),
+        AppNavigator.toEditorViaKey(
+          navigatorKey,
+          note: note,
+          mode: NoteCardUtils.getNoteMode(note),
+          readOnly: true,
         );
       }
     } catch (e) {

@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 
 import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/core/utils/vault_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_entry_screen.dart';
@@ -80,9 +81,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () {
                       Navigator.pop(context); // إغلاق الـ Drawer
                       // العودة للرئيسية من أي شاشة
-                      Navigator.of(context, rootNavigator: true).popUntil(
-                          (route) =>
-                              route.settings.name == '/main' || route.isFirst);
+                      AppNavigator.popToMain(context);
                     },
                   ),
                   // â”€â”€â”€ ط²ط± ط§ظ„طھطµظ†ظٹظپط§طھ â”€â”€â”€
@@ -119,11 +118,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil(
-                          (route) =>
-                              route.settings.name == '/main' || route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/archive');
+                      AppNavigator.popToMain(context);
+                      await AppNavigator.toArchive(context);
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },
@@ -138,11 +134,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil(
-                          (route) =>
-                              route.settings.name == '/main' || route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/trash');
+                      AppNavigator.popToMain(context);
+                      await AppNavigator.toTrash(context);
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },
@@ -184,12 +177,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                           if (!context.mounted) return;
-                          Navigator.of(context, rootNavigator: true).popUntil(
-                              (route) =>
-                                  route.settings.name == '/main' ||
-                                  route.isFirst);
-                          await Navigator.of(context, rootNavigator: true)
-                              .pushNamed('/drive');
+                          AppNavigator.popToMain(context);
+                          await AppNavigator.toDrive(context);
                         },
                       ),
                     ),
@@ -205,11 +194,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil(
-                          (route) =>
-                              route.settings.name == '/main' || route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/history');
+                      AppNavigator.popToMain(context);
+                      await AppNavigator.toHistory(context);
                     },
                   ),
                   _buildDrawerItem(
@@ -222,11 +208,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     onTap: () async {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).popUntil(
-                          (route) =>
-                              route.settings.name == '/main' || route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/settings');
+                      AppNavigator.popToMain(context);
+                      await AppNavigator.toSettings(context);
                       if (!context.mounted) return;
                       widget.onNotesChanged();
                     },

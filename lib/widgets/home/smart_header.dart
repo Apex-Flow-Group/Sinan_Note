@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
@@ -53,19 +54,22 @@ class _SmartHeaderState extends State<SmartHeader>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hideOnScroll =
+        Provider.of<SettingsProvider>(context, listen: false).hideNavOnScroll;
 
     return ValueListenableBuilder<Set<int>>(
       valueListenable: widget.selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
         return SliverPersistentHeader(
           pinned: true,
-          floating: true,
+          floating: hideOnScroll, // floating فقط عندما الإخفاء مفعّل
           delegate: SmoothSearchHeaderDelegate(
             expandedHeight: 68.0,
             statusBarHeight: MediaQuery.of(context).padding.top,
             selectionMode: selectedIds.isNotEmpty,
             isSearchActive: widget.isSearchActive,
             tickerProvider: this,
+            hideOnScroll: hideOnScroll,
             selectionBar: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),

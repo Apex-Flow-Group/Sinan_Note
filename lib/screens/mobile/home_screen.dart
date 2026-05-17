@@ -6,12 +6,12 @@ import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/mobile/home_screen_widgets.dart';
 import 'package:apex_note/screens/mobile/home_scrollbar.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/add_menu_widget.dart'
@@ -97,17 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final settings = Provider.of<SettingsProvider>(context, listen: false);
         final notesProvider =
             Provider.of<NotesProvider>(context, listen: false);
-        Navigator.push(
+        AppNavigator.toEditor(
           context,
-          MaterialPageRoute(
-            builder: (_) => NoteEditorImmersive(
-              mode: NoteMode.code,
-              note: notesProvider.createSharedNote(
-                title: l10n.importedFile,
-                content: widget.sharedText!,
-                colorIndex: settings.getDefaultColorIndex('professional'),
-              ),
-            ),
+          mode: NoteMode.code,
+          note: notesProvider.createSharedNote(
+            title: l10n.importedFile,
+            content: widget.sharedText!,
+            colorIndex: settings.getDefaultColorIndex('professional'),
           ),
         );
       }
@@ -177,12 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? [categories.selectedCategoryId!]
           : [],
     );
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => NoteEditorImmersive(mode: mode, note: note),
-      ),
-    );
+    await AppNavigator.toEditor(context, note: note, mode: mode);
     if (mounted) {
       await Provider.of<NotesProvider>(context, listen: false)
           .refreshAllNotes();

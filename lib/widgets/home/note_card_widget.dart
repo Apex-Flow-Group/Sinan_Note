@@ -6,13 +6,12 @@ import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/adaptive_color.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/editor_page_route.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/desktop/note_context_menu.dart';
@@ -217,33 +216,24 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
                       final decryptedNote =
                           widget.note.copyWith(isLocked: false);
-                      final result = await Navigator.push(
+                      final result = await AppNavigator.toEditor(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => NoteEditorImmersive(
-                            note: decryptedNote,
-                            mode: mode,
-                            skipAuthentication: true,
-                            originallyLocked: true,
-                          ),
-                        ),
+                        note: decryptedNote,
+                        mode: mode,
+                        skipAuthentication: true,
+                        originallyLocked: true,
                       );
                       if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
                       }
                     } else {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final result = await Navigator.push(
+                      final result = await AppNavigator.toEditor(
                         context,
-                        EditorPageRoute(
-                          builder: (context) => NoteEditorImmersive(
-                            note: widget.note,
-                            mode: mode,
-                            readOnly: true,
-                            heroTag:
-                                'note_card_${widget.source}_${widget.note.id}',
-                          ),
-                        ),
+                        note: widget.note,
+                        mode: mode,
+                        readOnly: true,
+                        heroTag: 'note_card_${widget.source}_${widget.note.id}',
                       );
                       if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();

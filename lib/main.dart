@@ -7,6 +7,7 @@ import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
@@ -19,7 +20,6 @@ import 'package:apex_note/screens/onboarding/cinematic_intro_screen.dart';
 import 'package:apex_note/screens/onboarding/splash_screen.dart';
 import 'package:apex_note/screens/other/version_history_screen.dart';
 import 'package:apex_note/screens/other/widget_selection_screen.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
 import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:apex_note/services/app_update_service.dart';
@@ -217,14 +217,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     if (savedNote == null) return;
 
     // Open editor on top of MainLayoutScreen
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (context) => NoteEditorImmersive(
-          mode: mode,
-          note: savedNote,
-        ),
-      ),
-    );
+    AppNavigator.toEditorViaKey(navigatorKey, note: savedNote, mode: mode);
   }
 
   NoteMode _detectNoteMode(String text) {
@@ -291,20 +284,17 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null) {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => NoteEditorImmersive(
-              note: note,
-              mode: NoteCardUtils.getNoteMode(note),
-              readOnly: true,
-            ),
-          ),
+        AppNavigator.toEditorViaKey(
+          navigatorKey,
+          note: note,
+          mode: NoteCardUtils.getNoteMode(note),
+          readOnly: true,
         );
       } else {
-        navigatorKey.currentState?.pushNamed('/widget_selection');
+        AppNavigator.toWidgetSelectionViaKey(navigatorKey);
       }
     } catch (e) {
-      navigatorKey.currentState?.pushNamed('/widget_selection');
+      AppNavigator.toWidgetSelectionViaKey(navigatorKey);
     }
   }
 

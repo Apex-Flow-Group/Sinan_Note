@@ -202,6 +202,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   void _navigateToVault() async {
     setState(() => _unlocked = true);
     await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
     VaultNavigator.toLockedNotes(context);
   }
 

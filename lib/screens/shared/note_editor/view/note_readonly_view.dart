@@ -623,7 +623,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           ? EdgeInsets.fromLTRB(12, isLandscape ? 8 : 16, 12, 8)
           : isMarkdown
               ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
-              : const EdgeInsets.symmetric(horizontal: 12),
+              : const EdgeInsets.fromLTRB(12, 2, 12, 2),
       decoration: BoxDecoration(
         color: noteColor,
         borderRadius: BorderRadius.circular(16),

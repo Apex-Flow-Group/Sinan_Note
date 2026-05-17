@@ -4,10 +4,10 @@ import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/theme/app_theme.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
 import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/home/home_drawer_widget.dart';
@@ -130,7 +130,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
-          Navigator.of(context, rootNavigator: true).popUntil((route) => route.settings.name == '/main' || route.isFirst);
+          Navigator.of(context, rootNavigator: true).popUntil(
+              (route) => route.settings.name == '/main' || route.isFirst);
         }
       },
       child: Scaffold(
@@ -330,12 +331,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
               final categoriesProvider =
                   Provider.of<CategoriesProvider>(context, listen: false);
               final syncSuccessMsg = l10n.syncSuccess;
-              final result = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const GoogleDriveSyncPage(),
-                ),
-              );
+              final result = await AppNavigator.toGoogleDriveSync(context);
               if (result == true && mounted) {
                 await notesProvider.refreshAllNotes(force: true);
                 if (!mounted) return;

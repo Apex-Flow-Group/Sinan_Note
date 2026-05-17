@@ -319,6 +319,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       }
     }
 
+    _recalcProgress();
+
     // 🎯 Filter empty ghost items
     final realItems = _items
         .where((item) => !item.isGhost || item.text.trim().isNotEmpty)
@@ -431,26 +433,32 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
         }
       }
 
+      _recalcProgress();
       setState(() {});
     } finally {
       _isUndoRedoAction = false;
     }
   }
 
-  double get _progress {
-    if (_items.isEmpty) return 0.0;
-    final done = _items.where((e) => e.isDone).length;
-    return done / _items.length;
-  }
-
+  double _progress = 0.0;
   double _lastProgress = 0.0;
+
+  void _recalcProgress() {
+    _lastProgress = _progress;
+    if (_items.isEmpty) {
+      _progress = 0.0;
+    } else {
+      final done = _items.where((e) => e.isDone).length;
+      _progress = done / _items.length;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bool isLightColor = widget.backgroundColor.computeLuminance() > 0.5;
     final Color textColor = isLightColor ? Colors.black87 : Colors.white;
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
 
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -534,7 +542,6 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                         duration: const Duration(milliseconds: 400),
                         curve: Curves.easeOutCubic,
                         builder: (_, value, __) {
-                          _lastProgress = value;
                           return LinearProgressIndicator(
                             value: value,
                             backgroundColor: textColor.withValues(alpha: 0.1),
@@ -543,6 +550,9 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                             ),
                             minHeight: 6,
                           );
+                        },
+                        onEnd: () {
+                          _lastProgress = _progress;
                         },
                       ),
                     ),

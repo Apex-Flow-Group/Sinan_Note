@@ -65,3 +65,39 @@ _(سيُملأ أثناء التحليل)_
 تحديث جميع التسميات لتعكس الواقع: `notes_summary` بدلاً من `isar`، و`── NOTES SUMMARY ──` في التقرير.
 
 ### التحقق: ✅ 330/330 unit
+
+
+## 5. تقطيع السكرول في محرر الـ Checklist — scrollProgress يُعيد بناء الـ header
+
+**تاريخ الاكتشاف:** 2026-05-17
+**الحالة:** ⚠️ مشكلة معروفة — إصلاح جزئي مُطبَّق
+
+### الملفات المتأثرة
+- `lib/screens/shared/note_editor.dart` — `NotificationListener` يُحدّث `scrollProgress`
+- `lib/screens/shared/note_editor/core/editor_header_builder.dart` — `ValueListenableBuilder` يُعيد بناء الـ header
+- `lib/widgets/editor/apex_editor_header.dart` — كان يحتوي 4-5 `TweenAnimationBuilder`
+
+### المشكلة
+عند السكرول في محرر الـ Checklist، أول ~120px (3 عناصر تقريباً) تُسبب تقطيع فظيع:
+
+1. `NotificationListener<ScrollNotification>` يُطلق في كل scroll frame (~60/ثانية)
+2. يُحدّث `scrollProgress.value` (ValueNotifier)
+3. `ValueListenableBuilder` في `EditorHeaderBuilder` يُعيد بناء الـ header بالكامل
+4. `ApexEditorHeader` كان يحتوي 4-5 `TweenAnimationBuilder` — كل واحد يُعاد إنشاؤه مع كل rebuild
+5. بعد 120px يثبت `scrollProgress` على 1.0 ولا يُطلق rebuilds → السكرول يصبح سلس
+
+### الإصلاح الجزئي المُطبَّق
+1. **`note_editor.dart`**: quantize `scrollProgress` إلى 5 خطوات فقط (0.0, 0.2, 0.4, 0.6, 0.8, 1.0) بدلاً من قيمة مستمرة — يقلل الـ rebuilds من ~60 إلى ~5 أثناء السكرول
+2. **`apex_editor_header.dart`**: حذف 4-5 `TweenAnimationBuilder` (كانت fade-in لمرة واحدة) — يجعل كل rebuild رخيص
+
+### الأثر الجانبي
+تأثير تغيير لون الـ header أصبح متقطع (5 خطوات) بدلاً من تدريجي سلس.
+
+### الحل المثالي (لم يُنفَّذ)
+فصل طبقة اللون عن محتوى الـ header:
+- `ColoredBox` يتغير مع `scrollProgress` (repaint فقط — رخيص)
+- محتوى الـ header (أيقونات، عنوان) يُبنى مرة واحدة ولا يُعاد بناؤه
+
+هذا يتطلب إعادة هيكلة `ApexEditorHeader` ليقبل `backgroundColor` كـ `ValueNotifier<Color>` أو فصل الخلفية عن المحتوى في `EditorHeaderBuilder`.
+
+**التقييم: 5** — قابل للتنفيذ لكن يحتاج تغيير في بنية الـ header.

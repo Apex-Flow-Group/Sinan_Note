@@ -24,6 +24,7 @@ class SettingsProvider with ChangeNotifier {
 
   // Pull-to-refresh mode: 'full' | 'normal' | 'disabled'
   String _pullToRefreshMode = 'disabled';
+  bool _hideNavOnScroll = false;
   bool _hideContentInBackground = false;
   bool _lockDelayEnabled = false;
   int _lockDelaySeconds = 30;
@@ -60,6 +61,7 @@ class SettingsProvider with ChangeNotifier {
   bool get customPinEnabled => _customPinEnabled;
   bool get biometricLockEnabled => _biometricLockEnabled;
   String get pullToRefreshMode => _pullToRefreshMode;
+  bool get hideNavOnScroll => _hideNavOnScroll;
   bool get hideContentInBackground => _hideContentInBackground;
   bool get lockDelayEnabled => _lockDelayEnabled;
   int get lockDelaySeconds => _lockDelaySeconds;
@@ -171,6 +173,12 @@ class SettingsProvider with ChangeNotifier {
     await _savePref('pullToRefreshMode', mode);
   }
 
+  Future<void> setHideNavOnScroll(bool enabled) async {
+    _hideNavOnScroll = enabled;
+    notifyListeners();
+    await _savePref('hideNavOnScroll', enabled);
+  }
+
   Future<void> setViewType(String key, String type) async {
     if (key == 'home') {
       _viewType = type;
@@ -268,6 +276,7 @@ class SettingsProvider with ChangeNotifier {
           ['delete', 'archive', 'share'];
       _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
       _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'disabled';
+      _hideNavOnScroll = prefs.getBool('hideNavOnScroll') ?? false;
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');
       if (homeViewType != null) {

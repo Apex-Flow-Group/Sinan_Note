@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/core/utils/logger.dart';
 import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/core/utils/vault_navigator.dart';
@@ -9,7 +10,6 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:apex_note/screens/mobile/vault_import_sheet.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:apex_note/services/security/vault_reset_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
@@ -112,15 +112,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final provider = Provider.of<NotesProvider>(context, listen: false);
     final note = provider.createDefaultLockedNote(mode: mode);
 
-    await Navigator.push(
+    await AppNavigator.toEditor(
       context,
-      MaterialPageRoute(
-        builder: (context) => NoteEditorImmersive(
-          mode: mode,
-          skipAuthentication: true,
-          note: note,
-        ),
-      ),
+      note: note,
+      mode: mode,
+      skipAuthentication: true,
     );
 
     if (mounted) await _loadLockedNotes();

@@ -1,6 +1,6 @@
 name: apex_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.2.0+3379
+version: 3.2.0+3380
 publish_to: none
 
 environment:

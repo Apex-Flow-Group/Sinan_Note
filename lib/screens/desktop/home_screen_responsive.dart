@@ -4,6 +4,7 @@ import 'package:apex_note/controllers/categories/categories_provider.dart';
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/shortcuts/app_shortcuts.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
@@ -297,7 +298,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                       Provider.of<NotesProvider>(context, listen: false);
                   await notesProvider.loadNotes(force: true);
                 },
-                onSettings: () => Navigator.pushNamed(context, '/settings'),
+                onSettings: () => AppNavigator.toSettings(context),
               ),
               Consumer<NotesProvider>(
                 builder: (_, notes, __) => notes.isLoading

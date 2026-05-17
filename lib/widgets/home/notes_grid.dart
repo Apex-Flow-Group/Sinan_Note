@@ -3,10 +3,10 @@
 import 'dart:convert';
 
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/core/utils/checklist_formatter.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/models/note.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/widgets/effects/premium_card_effect.dart';
 import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
@@ -103,12 +103,7 @@ class _NotesGridState extends State<NotesGrid> {
         return GestureDetector(
           onTap: () async {
             final mode = NoteCardUtils.getNoteMode(note);
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => NoteEditorImmersive(note: note, mode: mode),
-              ),
-            );
+            await AppNavigator.toEditor(context, note: note, mode: mode);
             if (mounted) {
               widget.onRefresh();
             }

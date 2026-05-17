@@ -84,11 +84,6 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         : baseBorderColor;
 
     if (!widget.enableMotion) {
-      // Ambient glow: ظل بلون النوتة نفسها يعطي إضاءة خلفية خفيفة
-      final Color ambientColor = widget.baseColor.withValues(
-        alpha: brightness == Brightness.light ? 0.55 : 0.40,
-      );
-
       final container = Container(
         decoration: BoxDecoration(
           color: widget.baseColor,
@@ -97,19 +92,11 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
               ? Border.all(color: effectiveBorderColor, width: 0.5)
               : null,
           boxShadow: [
-            // الظل الأساسي (عمق)
             BoxShadow(
               color: Colors.black.withValues(
-                  alpha: brightness == Brightness.light ? 0.10 : 0.30),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-            // الإضاءة الخلفية بلون النوتة
-            BoxShadow(
-              color: ambientColor,
-              blurRadius: brightness == Brightness.light ? 18 : 22,
-              spreadRadius: brightness == Brightness.light ? -2 : -1,
-              offset: const Offset(0, 4),
+                  alpha: brightness == Brightness.light ? 0.10 : 0.28),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -117,8 +104,9 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         child: widget.child,
       );
       if (widget.heroTag != null) {
-        final heroEnabled = Provider.of<SettingsProvider>(context, listen: true)
-            .heroAnimationEnabled;
+        final heroEnabled =
+            Provider.of<SettingsProvider>(context, listen: false)
+                .heroAnimationEnabled;
         if (!heroEnabled) return container;
         return Hero(
           tag: widget.heroTag!,
@@ -165,10 +153,6 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         animation: _glowAnimation!,
         builder: (context, child) {
           final br = Theme.of(context).brightness;
-          final Color ambientColor = widget.baseColor.withValues(
-            alpha: (br == Brightness.light ? 0.45 : 0.35) +
-                _glowAnimation!.value * 0.20,
-          );
           return Container(
             decoration: BoxDecoration(
               color: widget.baseColor,
@@ -179,19 +163,11 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
                       width: 0.5)
                   : null,
               boxShadow: [
-                // الظل الأساسي
                 BoxShadow(
                   color: Colors.black
-                      .withValues(alpha: br == Brightness.light ? 0.10 : 0.30),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-                // الإضاءة الخلفية تتنفس مع الحركة
-                BoxShadow(
-                  color: ambientColor,
-                  blurRadius: 18 + _glowAnimation!.value * 10,
-                  spreadRadius: -2 + _glowAnimation!.value * 2,
-                  offset: const Offset(0, 4),
+                      .withValues(alpha: br == Brightness.light ? 0.10 : 0.28),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),

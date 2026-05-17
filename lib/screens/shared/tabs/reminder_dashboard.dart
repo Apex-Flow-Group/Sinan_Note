@@ -2,6 +2,7 @@
 
 import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
+import 'package:apex_note/core/utils/app_navigator.dart';
 import 'package:apex_note/core/utils/search_mixin.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/main.dart' show tabToHomeNotifier;
@@ -9,7 +10,6 @@ import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/screens/shared/note_editor.dart';
 import 'package:apex_note/services/notification_service.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:apex_note/widgets/common/custom_share_sheet.dart';
@@ -429,17 +429,12 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                       NoteMode.rich => 'rich',
                       _ => 'simple',
                     };
-                    await Navigator.push(
+                    await AppNavigator.toEditor(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => NoteEditorImmersive(
-                          mode: mode,
-                          note: notesProvider.createDefaultNote(
-                            mode: mode,
-                            colorIndex:
-                                settings.getDefaultColorIndex(colorMode),
-                          ),
-                        ),
+                      mode: mode,
+                      note: notesProvider.createDefaultNote(
+                        mode: mode,
+                        colorIndex: settings.getDefaultColorIndex(colorMode),
                       ),
                     );
                   },
