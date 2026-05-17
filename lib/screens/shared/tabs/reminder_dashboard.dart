@@ -418,20 +418,26 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                   onToggle: () => setState(() => _showAddMenu = !_showAddMenu),
                   onModeSelected: (mode) async {
                     setState(() => _showAddMenu = false);
+                    final settings =
+                        Provider.of<SettingsProvider>(context, listen: false);
+                    final notesProvider =
+                        Provider.of<NotesProvider>(context, listen: false);
+                    final colorMode = switch (mode) {
+                      NoteMode.reminder => 'reminder',
+                      NoteMode.code => 'professional',
+                      NoteMode.checklist => 'checklist',
+                      NoteMode.rich => 'rich',
+                      _ => 'simple',
+                    };
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => NoteEditorImmersive(
                           mode: mode,
-                          note: Note(
-                            title: '',
-                            content: '',
-                            createdAt: DateTime.now(),
-                            updatedAt: DateTime.now(),
-                            colorIndex: 0,
-                            noteType: mode.name,
-                            isChecklist: mode == NoteMode.checklist,
-                            isProfessional: mode == NoteMode.code,
+                          note: notesProvider.createDefaultNote(
+                            mode: mode,
+                            colorIndex:
+                                settings.getDefaultColorIndex(colorMode),
                           ),
                         ),
                       ),

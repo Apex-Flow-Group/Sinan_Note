@@ -7,14 +7,11 @@ import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/utils/vault_navigator.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:apex_note/screens/auth/vault_entry_screen.dart';
-import 'package:apex_note/screens/other/about_screen.dart';
-import 'package:apex_note/screens/other/support_form_screen.dart';
 import 'package:apex_note/services/cloud/google_drive_auth.dart';
 import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:apex_note/services/security/vault_service.dart';
 import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
 import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/app_dialog.dart';
 import 'package:apex_note/widgets/home/categories_panel.dart';
 import 'package:apex_note/widgets/home/drawer_widgets.dart';
 import 'package:flutter/material.dart';
@@ -244,49 +241,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 top: 12,
                 bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '© 2025 Apex Flow Group',
-                    style:
-                        TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          _activeExtraNotifier.value = null;
-                          Navigator.pop(context);
-                          if (!context.mounted) return;
-                          Navigator.of(context, rootNavigator: true).popUntil(
-                              (route) =>
-                                  route.settings.name == '/main' ||
-                                  route.isFirst);
-                          AppDialog.show(context, const SupportFormScreen());
-                        },
-                        child: Icon(Icons.support_agent_rounded,
-                            size: 18, color: scheme.onSurfaceVariant),
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          _activeExtraNotifier.value = null;
-                          Navigator.pop(context);
-                          if (!context.mounted) return;
-                          Navigator.of(context, rootNavigator: true).popUntil(
-                              (route) =>
-                                  route.settings.name == '/main' ||
-                                  route.isFirst);
-                          AppDialog.show(context, const AboutScreen());
-                        },
-                        child: Icon(Icons.info_outline_rounded,
-                            size: 18, color: scheme.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Text(
+                '© 2025 Apex Flow Group',
+                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
               ),
             ),
           ],

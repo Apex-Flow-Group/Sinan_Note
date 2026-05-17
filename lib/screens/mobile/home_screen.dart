@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadViewType();
     widget.onRegisterModeHandler?.call(_navigateToEditor);
 
-    _searchController.addListener(_onSearchChanged);
+    // _searchController listener محذوف — البحث يُعالَج في NotesFilterController مباشرة
     _searchFocusNode.addListener(() {
       if (mounted) {
         final newState =
@@ -95,18 +95,17 @@ class _HomeScreenState extends State<HomeScreen> {
       if (widget.sharedText != null) {
         final l10n = AppLocalizations.of(context)!;
         final settings = Provider.of<SettingsProvider>(context, listen: false);
+        final notesProvider =
+            Provider.of<NotesProvider>(context, listen: false);
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => NoteEditorImmersive(
               mode: NoteMode.code,
-              note: Note(
+              note: notesProvider.createSharedNote(
                 title: l10n.importedFile,
                 content: widget.sharedText!,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
                 colorIndex: settings.getDefaultColorIndex('professional'),
-                noteType: NoteMode.code.name,
               ),
             ),
           ),
@@ -148,11 +147,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onSearchChanged() {
-    // البحث يُعالَج مباشرة في NotesFilterController عبر searchController listener
-    // لا حاجة لـ debounce هنا
-  }
-
   void _exitSearchMode() {
     _searchController.clear();
     _searchFocusNode.unfocus();
@@ -168,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
     isMenuOpenNotifier.value = false;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final categories = Provider.of<CategoriesProvider>(context, listen: false);
-    final selectedCatId = categories.selectedCategoryId;
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final colorMode = switch (mode) {
       NoteMode.reminder => 'reminder',
       NoteMode.code => 'professional',
@@ -176,23 +170,17 @@ class _HomeScreenState extends State<HomeScreen> {
       NoteMode.rich => 'rich',
       _ => 'simple',
     };
+    final note = notesProvider.createDefaultNote(
+      mode: mode,
+      colorIndex: settings.getDefaultColorIndex(colorMode),
+      categoryIds: categories.selectedCategoryId != null
+          ? [categories.selectedCategoryId!]
+          : [],
+    );
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => NoteEditorImmersive(
-          mode: mode,
-          note: Note(
-            title: '',
-            content: '',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            colorIndex: settings.getDefaultColorIndex(colorMode),
-            noteType: mode.name,
-            isChecklist: mode == NoteMode.checklist,
-            isProfessional: mode == NoteMode.code,
-            categoryIds: selectedCatId != null ? [selectedCatId] : [],
-          ),
-        ),
+        builder: (_) => NoteEditorImmersive(mode: mode, note: note),
       ),
     );
     if (mounted) {

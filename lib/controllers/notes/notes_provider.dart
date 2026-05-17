@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:apex_note/models/note.dart';
+import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/services/note_services/note_batch_operations_service.dart';
 import 'package:apex_note/services/note_services/note_security_service.dart';
 import 'package:apex_note/services/note_services/note_side_effect_service.dart';
@@ -102,6 +103,90 @@ class NotesProvider extends ChangeNotifier {
   Future<void> fetchArchivedNotes() async => await refreshAllNotes();
 
   List<Note> searchNotes(String query) => _stateService.searchNotes(query);
+
+  // ─── Factory Methods ──────────────────────────────────────────────────────
+
+  /// ينشئ ملاحظة افتراضية جاهزة للمحرر — سيد القصر يبني، الأميرة تطلب فقط.
+  ///
+  /// [mode]          : نوع الملاحظة
+  /// [colorIndex]    : لون الملاحظة (من SettingsProvider.getDefaultColorIndex)
+  /// [categoryIds]   : تصنيفات مختارة مسبقاً (اختياري)
+  Note createDefaultNote({
+    required NoteMode mode,
+    required int colorIndex,
+    List<int>? categoryIds,
+  }) {
+    return Note(
+      title: '',
+      content: '',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: colorIndex,
+      noteType: mode.name,
+      isChecklist: mode == NoteMode.checklist,
+      isProfessional: mode == NoteMode.code,
+      categoryIds: categoryIds ?? [],
+    );
+  }
+
+  /// ينشئ ملاحظة من نص مشارك (Share Intent) — كود مستورد من خارج التطبيق.
+  Note createSharedNote({
+    required String title,
+    required String content,
+    required int colorIndex,
+  }) {
+    return Note(
+      title: title,
+      content: content,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: colorIndex,
+      noteType: NoteMode.code.name,
+    );
+  }
+
+  ///
+  /// يتولى تحديد [noteType] و [initialContent] بناءً على [mode].
+  Note createDefaultLockedNote({required NoteMode mode}) {
+    final String noteType;
+    final bool isChecklist;
+    final bool isProfessional;
+    final String initialContent;
+
+    switch (mode) {
+      case NoteMode.checklist:
+        noteType = 'checklist';
+        isChecklist = true;
+        isProfessional = false;
+        initialContent = '{"title":"","items":[]}';
+        break;
+      case NoteMode.code:
+        noteType = 'code';
+        isChecklist = false;
+        isProfessional = true;
+        initialContent = '';
+        break;
+      default:
+        noteType = 'simple';
+        isChecklist = false;
+        isProfessional = false;
+        initialContent = '';
+    }
+
+    return Note(
+      title: '',
+      content: initialContent,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: 0,
+      noteType: noteType,
+      isLocked: true,
+      isChecklist: isChecklist,
+      isProfessional: isProfessional,
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   Future<int> addNote(Note note) async {
     Note noteToInsert = note;
@@ -223,6 +308,8 @@ class NotesProvider extends ChangeNotifier {
       return await addNote(note);
     }
   }
+
+  // insertNote حُذف — استخدم addNote مباشرة (P4)
 
   Future<void> convertNoteType(
     int id, {

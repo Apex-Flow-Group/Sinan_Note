@@ -24,6 +24,7 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
 
   Future<void> _checkVaultStatus() async {
     final hasNewVault = await VaultService.isVaultSetup();
+    if (!mounted) return;
 
     if (!hasNewVault) {
       VaultNavigator.toIntro(context);
@@ -31,6 +32,8 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     }
 
     final biometricEnabled = await VaultService.isBiometricEnabled();
+    if (!mounted) return;
+
     if (biometricEnabled) {
       await _authenticateWithBiometric();
     } else {
@@ -41,14 +44,15 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
   Future<void> _authenticateWithBiometric() async {
     // إذا تمت المصادقة مسبقاً عبر قفل التطبيق → دخول مباشر
     if (UnifiedLockService().isAuthenticatedThisSession) {
+      if (!mounted) return;
       VaultNavigator.toLockedNotes(context);
       return;
     }
 
     final lockType = await UnifiedLockService().getLockType();
+    if (!mounted) return;
 
     if (lockType == LockType.pin) {
-      if (!mounted) return;
       final hasPinAlready = await UnifiedLockService().hasPinSet();
       if (!mounted) return;
       VaultNavigator.toPinLock(
@@ -61,6 +65,7 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
 
     final authenticated =
         await UnifiedLockService().authenticate(context: 'vault_entry');
+    if (!mounted) return;
 
     if (authenticated) {
       VaultNavigator.toLockedNotes(context);

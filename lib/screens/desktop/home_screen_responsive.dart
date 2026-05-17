@@ -5,7 +5,6 @@ import 'package:apex_note/controllers/notes/notes_provider.dart';
 import 'package:apex_note/controllers/settings/settings_provider.dart';
 import 'package:apex_note/core/shortcuts/app_shortcuts.dart';
 import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
 import 'package:apex_note/models/note_mode.dart';
 import 'package:apex_note/providers/selected_note_provider.dart';
 import 'package:apex_note/screens/mobile/home_screen.dart';
@@ -398,29 +397,21 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     final selectedNoteProvider =
         Provider.of<SelectedNoteProvider>(context, listen: false);
     final categories = Provider.of<CategoriesProvider>(context, listen: false);
-    final selectedCatId = categories.selectedCategoryId;
 
-    String colorMode = 'simple';
-    if (mode == NoteMode.reminder) {
-      colorMode = 'reminder';
-    } else if (mode == NoteMode.code) {
-      colorMode = 'professional';
-    } else if (mode == NoteMode.checklist) {
-      colorMode = 'checklist';
-    } else if (mode == NoteMode.rich) {
-      colorMode = 'rich';
-    }
+    final colorMode = switch (mode) {
+      NoteMode.reminder => 'reminder',
+      NoteMode.code => 'professional',
+      NoteMode.checklist => 'checklist',
+      NoteMode.rich => 'rich',
+      _ => 'simple',
+    };
 
-    final newNote = Note(
-      title: '',
-      content: '',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+    final newNote = notesProvider.createDefaultNote(
+      mode: mode,
       colorIndex: settings.getDefaultColorIndex(colorMode),
-      noteType: mode.name,
-      isChecklist: mode == NoteMode.checklist,
-      isProfessional: mode == NoteMode.code,
-      categoryIds: selectedCatId != null ? [selectedCatId] : [],
+      categoryIds: categories.selectedCategoryId != null
+          ? [categories.selectedCategoryId!]
+          : [],
     );
 
     final noteId = await notesProvider.addOrUpdateNote(newNote, silent: true);

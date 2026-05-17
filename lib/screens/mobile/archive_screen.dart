@@ -26,6 +26,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
   String _sortBy = 'date';
   bool _selectionMode = false;
   final Set<int> _selectedNoteIds = {};
+  final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
 
   @override
   void dispose() {
+    _closeAllSlidables.dispose();
     UnifiedNotificationService().commitAll();
     super.dispose();
   }
@@ -297,7 +299,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
                               child: NoteCardWidget(
                                 note: note,
                                 viewType: _viewType,
-                                closeAllSlidables: ValueNotifier<int>(0),
+                                closeAllSlidables: _closeAllSlidables,
                                 onNoteChanged: () {
                                   Provider.of<NotesProvider>(context,
                                           listen: false)

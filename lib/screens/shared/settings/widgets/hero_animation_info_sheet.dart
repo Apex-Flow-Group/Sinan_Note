@@ -89,15 +89,4 @@ class HeroAnimationInfoSheet {
       ),
     );
   }
-
-  static Widget _issueRow(String text) => Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('• ', style: TextStyle(color: Colors.orange)),
-            Expanded(child: Text(text, style: const TextStyle(fontSize: 12))),
-          ],
-        ),
-      );
 }
