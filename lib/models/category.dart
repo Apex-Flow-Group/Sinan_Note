@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 class NoteCategory {
   int id;
@@ -7,3 +7,7 @@ class NoteCategory {
 
   NoteCategory({this.id = 0, required this.name, this.sortOrder = 0});
 }
+
+
+
+

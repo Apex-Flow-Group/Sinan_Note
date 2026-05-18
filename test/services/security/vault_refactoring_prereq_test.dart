@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🔐 VAULT REFACTORING PRE-REQUISITE TESTS
 //
 // هذه الاختبارات يجب أن تنجح قبل وبعد كل تعديل في الجولة 1.
@@ -8,11 +8,10 @@
 //   - changePassword('') السلوك الحالي والمتوقع بعد الإصلاح
 //   - AUTH1: _isAuthenticating behavior
 
-import 'package:apex_note/services/security/vault_service.dart';
+
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:sinan_note/services/security/vault_service.dart';
 import '../../test_setup.dart';
-
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -322,3 +321,4 @@ void main() {
     );
   });
 }
+

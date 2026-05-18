@@ -1,16 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:io';
 
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
 /// نتيجة عملية إعادة تعيين الخزنة
 enum VaultResetStatus {
@@ -371,3 +371,4 @@ class VaultResetService {
     }
   }
 }
+

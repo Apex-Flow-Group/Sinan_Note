@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_controller.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/google_drive_sync_controller.dart';
 
 class SyncConflictWidget extends StatelessWidget {
   const SyncConflictWidget({super.key});
@@ -162,3 +163,4 @@ class SyncConflictWidget extends StatelessWidget {
     );
   }
 }
+

@@ -1,17 +1,18 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/shared/settings/sections/data_about_sections.dart';
-import 'package:apex_note/screens/shared/settings/sections/general_section.dart';
-import 'package:apex_note/screens/shared/settings/sections/security_section.dart';
-import 'package:apex_note/screens/shared/settings/sections/swipe_section.dart';
-import 'package:apex_note/screens/shared/settings_screen.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/shared/settings/sections/data_about_sections.dart';
+import 'package:sinan_note/screens/shared/settings/sections/general_section.dart';
+import 'package:sinan_note/screens/shared/settings/sections/security_section.dart';
+import 'package:sinan_note/screens/shared/settings/sections/swipe_section.dart';
+import 'package:sinan_note/screens/shared/settings_screen.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
 class SettingsScreenResponsive extends StatelessWidget {
   const SettingsScreenResponsive({super.key});
@@ -160,3 +161,4 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
         children: [child],
       );
 }
+

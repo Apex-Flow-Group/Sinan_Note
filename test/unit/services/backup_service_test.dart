@@ -1,15 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/backup_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
-import '../../test_setup.dart';
-
+import 'dart:convert';import 'package:flutter_test/flutter_test.dart';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/storage/backup_service.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sqflite_common_ffi/sqflite_ffi.dart';import '../../test_setup.dart';
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -121,3 +112,4 @@ void main() {
     });
   });
 }
+

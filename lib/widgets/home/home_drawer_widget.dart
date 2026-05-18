@@ -2,21 +2,21 @@
 
 import 'dart:io' show Platform;
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/core/utils/vault_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/vault_entry_screen.dart';
-import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/categories_panel.dart';
-import 'package:apex_note/widgets/home/drawer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
+import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/categories_panel.dart';
+import 'package:sinan_note/widgets/home/drawer_widgets.dart';
 
 enum _CatMode { normal, delete, edit }
 
@@ -437,26 +437,21 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
       VaultNavigator.toIntro(context);
       _activeExtraNotifier.value = null;
       widget.onNotesChanged();
-    } else {
-      final biometricEnabled = await VaultService.isBiometricEnabled();
-      final hasBiometrics = await BiometricService.hasBiometrics();
+      return;
+    }
+
+    final hasBiometrics = await BiometricService.hasBiometrics();
+    final biometricEnabled = await VaultService.isBiometricEnabled();
+    if (!context.mounted) return;
+
+    if (biometricEnabled && hasBiometrics) {
+      Navigator.of(context).pop();
+      final authenticated = await BiometricService.authenticate();
       if (!context.mounted) return;
 
-      if (biometricEnabled && hasBiometrics) {
-        Navigator.of(context).pop();
-        final authenticated = await BiometricService.authenticate();
-        if (!context.mounted) return;
-
-        if (authenticated) {
-          VaultNavigator.toLockedNotes(context);
-          _activeExtraNotifier.value = null;
-          widget.onNotesChanged();
-        } else {
-          _activeExtraNotifier.value = null;
-        }
+      if (authenticated) {
+        VaultNavigator.toLockedNotes(context);
       } else {
-        Navigator.pop(context);
-        if (!context.mounted) return;
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -464,11 +459,22 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
             settings: const RouteSettings(name: '/vault/entry'),
           ),
         );
-        _activeExtraNotifier.value = null;
-        if (!context.mounted) return;
-        widget.onNotesChanged();
       }
+    } else {
+      Navigator.pop(context);
+      if (!context.mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const VaultEntryScreen(),
+          settings: const RouteSettings(name: '/vault/entry'),
+        ),
+      );
     }
+
+    _activeExtraNotifier.value = null;
+    if (!context.mounted) return;
+    widget.onNotesChanged();
   }
 
   Widget _buildDrawerItem(

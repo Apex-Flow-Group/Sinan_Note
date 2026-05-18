@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🐛 Bug Condition Tests — توحيد نظام القفل
 //
 // هذه الاختبارات تثبت أن الخلل تم إصلاحه عبر UnifiedLockService.
@@ -6,11 +6,12 @@
 //
 // **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
 
-import 'package:apex_note/services/security/unified_lock_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -215,3 +216,4 @@ void main() {
     );
   });
 }
+

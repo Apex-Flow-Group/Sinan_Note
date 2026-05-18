@@ -1,15 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/quill_migration.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
-import 'package:apex_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
-import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
-import 'package:apex_note/widgets/editor/quill_editor_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
+import 'package:sinan_note/screens/shared/note_editor/widgets/code_editor_widget.dart';
+import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
+import 'package:sinan_note/widgets/editor/quill_editor_widget.dart';
 
 class EditorContentBuilder {
   static Widget build({
@@ -86,3 +87,4 @@ class EditorContentBuilder {
     }
   }
 }
+

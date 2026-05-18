@@ -1,16 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/core/utils/text_direction_utils.dart';
-import 'package:apex_note/widgets/editor/quill_editor_state_mixin.dart';
-import 'package:apex_note/widgets/editor/tear/tear.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_quill/quill_delta.dart';
-import 'package:markdown/markdown.dart' as md;
-
+import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter/services.dart'; import 'package:flutter_quill/flutter_quill.dart'; import 'package:flutter_quill/quill_delta.dart';import 'package:markdown/markdown.dart' as md; import 'package:sinan_note/core/utils/text_direction_utils.dart'; import 'package:sinan_note/widgets/editor/quill_editor_state_mixin.dart'; import 'package:sinan_note/widgets/editor/tear/tear.dart';
 class QuillEditorController {
   final QuillController quillController;
   final FocusNode focusNode;
@@ -513,3 +503,4 @@ class QuillEditorController {
     });
   }
 }
+

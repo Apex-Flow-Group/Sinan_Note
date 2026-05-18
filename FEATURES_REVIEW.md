@@ -1,4 +1,4 @@
-# ✅ قائمة مراجعة المميزات — Sinan Note 3.1.0+3369
+# ✅ قائمة مراجعة المميزات — Sinan Note 3.2.0+3380
 > للمراجعة قبل الإطلاق النهائي — ضع ✅ أمام كل ميزة بعد التحقق منها
 
 ---
@@ -408,6 +408,18 @@
 
 ---
 
+## 19b. تقسيم الملفات الكبيرة (Fat Screens Refactor)
+
+| الملف | الحجم قبل | الحجم بعد | الحالة |
+|-------|-----------|-----------|--------|
+| `note_readonly_view.dart` | 944 سطر | ~320 سطر | ✅ منجز |
+| `readonly_content.dart` | — | ~160 سطر | ✅ ملف جديد |
+| `trash_floating_sheet.dart` | — | ~130 سطر | ✅ ملف جديد |
+| `note_editor.dart` | 831 سطر | — | ⏳ مؤجل — يحتاج widget tests |
+| `backup_wizard_screen.dart` | 706 سطر | — | ⏳ مؤجل — يحتاج فهم تدفق الـ wizard |
+
+---
+
 ## 20. أخرى
 
 | # | الميزة | الحالة |
@@ -456,55 +468,59 @@
 ### إحصاءات آخر تشغيل
 | المقياس | القيمة |
 |---------|--------|
-| إجمالي الاختبارات | 359 |
-| ملفات الاختبار | 25 |
-| إجمالي الأسطر | 4,605 |
+| إجمالي الاختبارات | 469 |
+| ملفات الاختبار | 29 |
+| إجمالي الأسطر | ~5,200 |
+| النتيجة | ✅ 469/469 نجح — صفر فشل |
 
-### فئة 1 — بيئة Linux (فشل بيئي) — ✅ لا تحتاج إصلاح
-هذه الاختبارات تعتمد على `libisar.so` الذي لا يعمل في بيئة unit test على Linux.
-تعمل بشكل صحيح على الجهاز الفعلي.
+### لا توجد اختبارات فاشلة
 
-| الملف | السبب |
-|-------|-------|
-| `isar_database_service_test.dart` | يحتاج Isar native binary |
-| `notes_provider_integration_test.dart` | يحتاج Isar native binary |
-| `note_batch_operations_service_test.dart` | يحتاج Isar native binary |
-| `backup_service_test.dart` | يحتاج Isar native binary |
-| `note_editor_integration_test.dart` | يحتاج Isar native binary |
+جميع الاختبارات تنجح. المعلومات السابقة عن فشل بيئي (Isar) كانت من مرحلة قديمة قبل الترحيل لـ SQLite:
 
-### فئة 2 — اختبارات قديمة — ⚠️ تحتاج تحديث
+- `isar_database_service_test.dart` — **غير موجود** في المشروع (حُذف بعد الترحيل لـ SQLite)
+- `backup_service_test.dart`، `note_batch_operations_service_test.dart`، `notes_provider_integration_test.dart`، `note_editor_integration_test.dart` — كلها تستخدم **SQLite + sqflite_ffi** وتنجح ✅
+- `language_detector_test.dart` — تتوقع `'Python'` (PascalCase) وهو ما يُرجعه الكود فعلاً ✅
+- `editor_state_manager_test.dart` — تستخدم `updateContent()` و `customTitle =` مباشرة وتنجح ✅
 
-**`language_detector_test.dart`**
-الاختبارات تتوقع lowercase مثل `'python'` لكن الكود يُرجع `'Python'` (PascalCase).
-الكود صحيح — الاختبارات لم تُحدَّث.
+### اختبار واحد skip قديم
 
-**`editor_state_manager_test.dart` (5 فشل)**
-الاختبارات تتوقع `hasChanges()` يُرجع `true` مباشرة، لكن المنطق يتطلب `markDirty()` أولاً.
-الكود صحيح — الاختبارات لم تُحدَّث.
+| الملف | الاختبار | السبب |
+|-------|---------|-------|
+| `vault_refactoring_prereq_test.dart` | `'بعد إصلاح SEC-1: التحقق من أن iterations = 100,000'` | `skip: 'ينتظر تنفيذ إصلاح SEC-1'` — الإصلاح تم فعلاً، الـ skip أصبح قديماً |
 
-### الاختبارات الناجحة — ✅ مغطاة
+### جميع الاختبارات — ✅
 
-| الملف | الحالة |
-|-------|--------|
-| `note_state_service_test.dart` | ✅ |
-| `note_side_effect_service_test.dart` | ✅ |
-| `note_crud_service_test.dart` | ✅ |
-| `note_security_service_test.dart` | ✅ |
-| `vault_service_test.dart` | ✅ |
-| `smart_analyzer_test.dart` | ✅ |
-| `notification_service_test.dart` | ✅ |
-| `google_drive_service_test.dart` | ✅ |
-| `biometric_service_test.dart` | ✅ |
-| `code_executor_test.dart` | ✅ |
-| `encryption_service_test.dart` | ✅ |
-| `preservation_behavior_test.dart` | ✅ |
-| `unified_lock_bug_test.dart` | ✅ |
-| `language_detector_test.dart` | ✅ (جزئي) |
-| `editor_state_manager_test.dart` | ✅ (جزئي) |
-| `widget_property_tests.dart` | ✅ |
-| `scroll_test.dart` | ✅ |
-| `memory_leak_test.dart` | ✅ |
-| `performance_benchmarks_test.dart` | ✅ |
+| الملف | النوع | الحالة |
+|-------|-------|--------|
+| `note_state_service_test.dart` | unit | ✅ |
+| `note_side_effect_service_test.dart` | unit | ✅ |
+| `note_crud_service_test.dart` | unit | ✅ |
+| `note_security_service_test.dart` | unit | ✅ |
+| `note_batch_operations_service_test.dart` | unit | ✅ |
+| `sqlite_database_service_test.dart` | unit | ✅ |
+| `backup_service_test.dart` | unit | ✅ |
+| `sync_duplication_test.dart` | unit | ✅ |
+| `google_drive_service_test.dart` | unit | ✅ |
+| `smart_analyzer_test.dart` | unit | ✅ |
+| `notification_service_test.dart` | unit | ✅ |
+| `biometric_service_test.dart` | unit | ✅ |
+| `code_executor_test.dart` | unit | ✅ |
+| `encryption_service_test.dart` | unit | ✅ |
+| `language_detector_test.dart` | unit | ✅ |
+| `core_services_test.dart` | unit | ✅ |
+| `note_model_test.dart` | unit | ✅ |
+| `editor_state_manager_test.dart` | unit | ✅ |
+| `vault_service_test.dart` | security | ✅ |
+| `preservation_behavior_test.dart` | security | ✅ |
+| `unified_lock_bug_test.dart` | security | ✅ |
+| `vault_refactoring_prereq_test.dart` | security | ✅ (اختبار واحد skip) |
+| `notes_provider_integration_test.dart` | integration | ✅ |
+| `note_editor_integration_test.dart` | integration | ✅ |
+| `widget_property_tests.dart` | property | ✅ |
+| `scroll_test.dart` | widget | ✅ |
+| `memory_leak_test.dart` | memory | ✅ |
+| `performance_benchmarks_test.dart` | performance | ✅ |
+| `test_setup.dart` | setup | ✅ |
 
 ---
 

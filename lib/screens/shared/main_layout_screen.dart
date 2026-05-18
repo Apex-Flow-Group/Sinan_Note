@@ -1,28 +1,30 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/platform_helper.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/main.dart'
-    show tabToHomeNotifier, currentTabIndexNotifier, bottomNavHiddenNotifier;
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/desktop/code_tab_responsive.dart';
-import 'package:apex_note/screens/desktop/home_screen_responsive.dart';
-import 'package:apex_note/screens/desktop/reminder_dashboard_responsive.dart';
-import 'package:apex_note/screens/onboarding/splash_screen.dart';
-import 'package:apex_note/services/security/security_gate.dart';
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart';
-import 'package:apex_note/widgets/navigation/bottom_nav_bar.dart';
-import 'package:apex_note/widgets/navigation/side_nav_rail.dart';
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart'
+    show tabToHomeNotifier, currentTabIndexNotifier, bottomNavHiddenNotifier;
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/desktop/code_tab_responsive.dart';
+import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';
+import 'package:sinan_note/screens/desktop/reminder_dashboard_responsive.dart';
+import 'package:sinan_note/screens/onboarding/splash_screen.dart';
+import 'package:sinan_note/services/security/security_gate.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart';
+import 'package:sinan_note/widgets/navigation/bottom_nav_bar.dart';
+import 'package:sinan_note/widgets/navigation/side_nav_rail.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   final String? sharedText;
@@ -296,3 +298,4 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     );
   }
 }
+

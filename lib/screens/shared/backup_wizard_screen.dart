@@ -1,13 +1,14 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/shared/settings/database_restore_handler.dart';
-import 'package:apex_note/screens/shared/settings/json_import_handler.dart';
-import 'package:apex_note/services/storage/backup_service.dart';
-import 'package:apex_note/services/storage/storage_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/shared/settings/database_restore_handler.dart';
+import 'package:sinan_note/screens/shared/settings/json_import_handler.dart';
+import 'package:sinan_note/services/storage/backup_service.dart';
+import 'package:sinan_note/services/storage/storage_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 class BackupWizardScreen extends StatefulWidget {
   const BackupWizardScreen({super.key});
@@ -713,3 +714,4 @@ class _SideItem extends StatelessWidget {
     );
   }
 }
+

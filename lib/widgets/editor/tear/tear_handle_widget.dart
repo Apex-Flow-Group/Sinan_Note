@@ -1,10 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/widgets/editor/tear/tear_magnifier.dart';
-import 'package:apex_note/widgets/editor/tear/tear_painters.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/widgets/editor/tear/tear_magnifier.dart';
+import 'package:sinan_note/widgets/editor/tear/tear_painters.dart';
 
 class TearHandleWidget extends StatefulWidget {
   const TearHandleWidget({
@@ -183,3 +184,4 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
     );
   }
 }
+

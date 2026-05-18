@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 class ApexMagnifier extends StatelessWidget {
   const ApexMagnifier({required this.dragPosition, super.key});
@@ -141,3 +143,4 @@ class _TeardropShadowPainter extends CustomPainter {
 
 Widget apexMagnifierBuilder(Offset dragPosition) =>
     ApexMagnifier(dragPosition: dragPosition);
+

@@ -1,15 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/pin_lock_screen.dart';
-import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
-import 'package:apex_note/screens/shared/settings/settings_utils.dart';
-import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
+import 'package:sinan_note/screens/shared/settings/settings_dialogs.dart';
+import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
+import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
 
 class SecuritySection extends StatelessWidget {
   const SecuritySection({super.key});
@@ -147,3 +148,4 @@ class SecuritySection extends StatelessWidget {
     );
   }
 }
+

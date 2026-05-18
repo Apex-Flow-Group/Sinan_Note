@@ -1,11 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/widgets/editor/tear/tear_handle_widget.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-
+import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter_quill/flutter_quill.dart';import 'package:sinan_note/widgets/editor/tear/tear_handle_widget.dart';
 /// المنطق والتحكم في دمعة المؤشر المفرد
 class CursorTearHandle {
   final QuillController controller;
@@ -139,3 +134,4 @@ class CursorTearHandle {
     _restartTimer();
   }
 }
+

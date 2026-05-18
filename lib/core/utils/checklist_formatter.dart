@@ -1,7 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
-
 /// Checklist item model
 class ChecklistItem {
   final dynamic id;
@@ -154,3 +153,4 @@ class ChecklistFormatter {
     }
   }
 }
+

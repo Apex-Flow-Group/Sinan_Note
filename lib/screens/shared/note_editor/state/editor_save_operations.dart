@@ -1,13 +1,14 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/quill_migration.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/screens/shared/note_editor/state/editor_save_manager.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/screens/shared/note_editor/state/editor_save_manager.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 /// High-level save orchestration for the note editor.
 ///
@@ -261,3 +262,4 @@ class EditorSaveOperations {
     return QuillMigration.toPlainText(coordinator.quillController!);
   }
 }
+

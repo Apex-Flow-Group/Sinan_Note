@@ -2091,4 +2091,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unlockWithBiometricDesc => 'استخدم البصمة أو الوجه';
+
+  @override
+  String get redo => 'إعادة';
+
+  @override
+  String get bold => 'عريض';
+
+  @override
+  String get italic => 'مائل';
+
+  @override
+  String get underline => 'تحته خط';
+
+  @override
+  String get strikethrough => 'يتوسطه خط';
+
+  @override
+  String get rename => 'إعادة تسمية';
+
+  @override
+  String get selectAll => 'تحديد الكل';
+
+  @override
+  String get duplicate => 'تكرار';
+
+  @override
+  String get toggleView => 'تبديل العرض';
 }

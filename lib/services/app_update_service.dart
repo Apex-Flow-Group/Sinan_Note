@@ -1,9 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:in_app_update/in_app_update.dart';
-
+import 'dart:io';import 'package:in_app_update/in_app_update.dart';
 /// In-App Update Service — يستخدم Google Play Core API
 /// Flexible: يحمّل في الخلفية ويعرض bottom sheet
 /// Immediate: يجبر المستخدم على التحديث (للتحديثات الحرجة)
@@ -49,3 +46,4 @@ class AppUpdateService {
     } catch (_) {}
   }
 }
+

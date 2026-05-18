@@ -1,12 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/constants/app_text_styles.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/widgets/editor/apex_magnifier.dart';
-import 'package:apex_note/widgets/editor/quill_editor_controller.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/widgets/editor/apex_magnifier.dart';
+import 'package:sinan_note/widgets/editor/quill_editor_controller.dart';
 
 class QuillEditorWidget extends StatefulWidget {
   final QuillController quillController;
@@ -413,3 +414,4 @@ class _UnknownEmbedBuilder extends EmbedBuilder {
 }
 
 const _unknownEmbedBuilder = _UnknownEmbedBuilder();
+

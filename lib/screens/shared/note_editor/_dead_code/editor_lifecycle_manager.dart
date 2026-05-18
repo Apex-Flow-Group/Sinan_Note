@@ -1,17 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/controllers/editor/editor_state_manager.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/flutter_code_editor.dart';
-
+import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter_code_editor/flutter_code_editor.dart';import 'package:sinan_note/controllers/editor/editor_state_manager.dart'; import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/models/note_mode.dart'; import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart'; import 'package:sinan_note/services/unified_notification_service.dart'; import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 /// Manages editor lifecycle events and content changes
 class EditorHandlerLifecycleManager {
   /// Handle content change with autosave
@@ -154,3 +143,4 @@ class EditorHandlerLifecycleManager {
     // This method exists for future manual cleanup if needed
   }
 }
+

@@ -1,10 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/version_history_service.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/services/version_history_service.dart';
 
 const double kColMin = 200.0;
 const double kColMax = 480.0;
@@ -124,3 +125,4 @@ class VersionHistoryController extends ChangeNotifier {
     }
   }
 }
+

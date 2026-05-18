@@ -1,10 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/vault_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/widgets/vault_desktop_wrapper.dart';
 
 /// نقطة الدخول الرئيسية للخزنة.
 /// تتحقق من الحالة وتُفوّض التنقل لـ [VaultNavigator].
@@ -32,23 +34,20 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     }
 
     final biometricEnabled = await VaultService.isBiometricEnabled();
+    // تحقق من أن الجهاز يدعم البصمة فعلياً (ويندوز/لينكس لا يدعمان)
+    final hasBiometrics = await BiometricService.hasBiometrics();
     if (!mounted) return;
 
-    if (biometricEnabled) {
+    if (biometricEnabled && hasBiometrics) {
+      // الجهاز يدعم البصمة وهي مفعّلة → جرّب البصمة
       await _authenticateWithBiometric();
     } else {
+      // ويندوز/لينكس أو البصمة معطلة → شاشة كلمة مرور الخزنة مباشرة
       VaultNavigator.toUnlock(context);
     }
   }
 
   Future<void> _authenticateWithBiometric() async {
-    // إذا تمت المصادقة مسبقاً عبر قفل التطبيق → دخول مباشر
-    if (UnifiedLockService().isAuthenticatedThisSession) {
-      if (!mounted) return;
-      VaultNavigator.toLockedNotes(context);
-      return;
-    }
-
     final lockType = await UnifiedLockService().getLockType();
     if (!mounted) return;
 
@@ -58,7 +57,9 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
       VaultNavigator.toPinLock(
         context,
         isSetup: !hasPinAlready,
-        onSuccess: () => VaultNavigator.toLockedNotes(context),
+        onSuccess: () {
+          VaultNavigator.toLockedNotes(context);
+        },
       );
       return;
     }
@@ -80,34 +81,36 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+      body: VaultDesktopWrapper(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_outline,
+                  size: 50,
+                  color: Colors.orange,
+                ),
               ),
-              child: const Icon(
-                Icons.lock_outline,
-                size: 50,
-                color: Colors.orange,
+              const SizedBox(height: 24),
+              const CircularProgressIndicator(color: Colors.orange),
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context)!.verifyingIdentity,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(color: Colors.orange),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.verifyingIdentity,
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.grey[300] : Colors.grey[700],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,11 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/feature_info.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/widgets/common/copy_code_button.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/feature_info.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/widgets/common/copy_code_button.dart';
 
 final _vaultPasswordFormatter = FilteringTextInputFormatter.allow(
   RegExp(r'[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]'),
@@ -442,3 +443,4 @@ class VaultBiometricPage extends StatelessWidget {
     );
   }
 }
+

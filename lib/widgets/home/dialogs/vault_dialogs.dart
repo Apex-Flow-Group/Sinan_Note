@@ -1,17 +1,18 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/vault_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
+
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/vault_reset_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class VaultDialogs {
   static void showSettings(BuildContext context) {
@@ -563,3 +564,4 @@ class VaultDialogs {
     );
   }
 }
+

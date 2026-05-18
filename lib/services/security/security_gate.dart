@@ -1,11 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:apex_note/services/security/unified_lock_service.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
+import 'dart:io';import 'package:flutter/material.dart'; import 'package:flutter/services.dart';import 'package:sinan_note/services/security/unified_lock_service.dart';
 /// Immutable security configuration
 class SecurityConfig {
   final bool lockEnabled;
@@ -208,6 +203,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 }
+
 
 
 

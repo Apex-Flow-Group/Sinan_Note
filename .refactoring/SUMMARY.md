@@ -115,6 +115,24 @@
 
 ---
 
+### الجولة 8 — تقسيم note_readonly_view.dart
+
+| الملف | التعديل | الاختبارات |
+|-------|---------|-----------|
+| `note_readonly_view.dart` | استخراج `TrashFloatingSheet` لملف مستقل | ✅ صفر أخطاء |
+| `note_readonly_view.dart` | استخراج `ReadOnlyContent` + `_UnknownEmbedBuilder` لملف مستقل | ✅ صفر أخطاء |
+| `note_readonly_view.dart` | دمج `_stripMarkdown` المكررة في static method واحدة | ✅ صفر أخطاء |
+
+**النتيجة:** 944 سطر → ~320 سطر (ثلث الحجم الأصلي)
+
+| الملف الجديد | الأسطر | المسؤولية |
+|------------|--------|------------|
+| `trash_floating_sheet.dart` | ~130 | Sheet المهملات العائم |
+| `readonly_content.dart` | ~160 | عرض المحتوى حسب النوع |
+| `note_readonly_view.dart` | ~320 | الإجراءات + build |
+
+---
+
 ## ريفاكتور الواجهة — نموذج العائلة السعيدة (2026-05-17)
 
 ### الفلسفة
@@ -271,6 +289,7 @@ NoteStateService ──► NotesProvider ──► VaultNavigator ──► UI S
 | `note_editor.dart` (831 سطر) | ملف ضخم — يحتاج widget tests أولاً | 7+ | مراجعة مستقبلية |
 | `google_drive_merge.dart` | يجمع business logic مع UI dialogs | 7 | فصل `_DriveConflictResolver` عن الـ dialog |
 | `google_drive_service.dart` | منطق دمج معقد — لا اختبارات تغطية | 8 | إعادة هيكلة بعد إضافة اختبارات |
+| `backup_wizard_screen.dart` (706 سطر) | يحتاج فهم تدفق الـ wizard | 5 | مراجعة مستقبلية |
 
 ### الخطة المقترحة لـ `google_drive_service.dart`
 ```
@@ -289,29 +308,61 @@ GoogleDriveService
 
 **المشكلة:** Hero Animation يطير فوق BottomNavBar وشريط الإشعارات.
 
-**السبب:** `Navigator.overlay` فوق كل الـ widgets في الـ widget tree.
+**السبب:** `Navigator.overlay` فوق كل الـ widgets في الـ widget tree. `BottomNavBar` في `Positioned(bottom:0)` داخل `Stack` في `Scaffold.body` — والـ Hero يطير في `Overlay` الـ root navigator فوق الـ `Stack`.
 
-**ما جُرِّب ولم ينجح (6 محاولات):**
+**ما جُرِّب ولم ينجح:**
 - `opaque: true` في `EditorPageRoute`
 - `Material` wrapper في `transitionsBuilder`
-- `MediaQuery.removePadding` في `pageBuilder`
+- `MediaQuery.copyWith(bottom: 0)` في `pageBuilder` ← كسر SafeArea في المحرر/العارض
 - `bottomNavHiddenNotifier = true` قبل الانتقال
-- نقل BottomNavBar إلى `Scaffold.bottomNavigationBar`
-- Nested Navigator في `body` — كسر الـ FAB والتبويب الجانبي
 
-**الحل الصحيح (لم يُنفَّذ):**
-```
-MaterialApp.router (go_router)
-└── ShellRoute
-    ├── BottomNavBar  ← خارج Hero overlay
-    └── child: الشاشة الحالية
-        └── Hero يطير هنا فقط ✅
-```
+**ما جُرِّب وكسر المعمارية (go_router migration):**
+- `StatefulShellRoute` + `MainShell` — كسر نموذج العائلة السعيدة كاملاً
+- SmartHeader خرج من `CustomScrollView` وفقد collapse/floating
+- BottomNavBar احتاج `BranchObserver` hack
+- 5 مشاكل جديدة (SHELL-1 إلى SHELL-5) مقابل مشكلة واحدة
+- **القرار: تراجعنا عن go_router كاملاً** — commit `9049c90` هو نقطة الرجوع
 
-**الوضع الحالي:** Hero Animation مُعطَّل بالقوة في `settings_provider.dart`:
+**الحل الصحيح (لم يُنفَّذ بعد):**
+
+نقل `BottomNavBar` من `Stack` إلى `Scaffold.bottomNavigationBar`:
+
 ```dart
-_heroAnimationEnabled = false; // ينتظر go_router ShellRoute
+// MainLayoutScreen — قبل
+Scaffold(
+  body: Stack(
+    children: [
+      IndexedStack(...),
+      Positioned(bottom: 0, child: BottomNavBar(...)),  // ← Hero يطير فوقه
+      AddMenuWidget(...),
+    ],
+  ),
+)
+
+// MainLayoutScreen — بعد
+Scaffold(
+  bottomNavigationBar: showBottomBar && !isLargeScreen
+      ? BottomNavBar(...)   // ← خارج body، Hero لا يطير فوقه ✅
+      : null,
+  body: Stack(
+    children: [
+      IndexedStack(...),
+      AddMenuWidget(...),   // ← يحتاج bottom padding = kBottomNavHeight
+    ],
+  ),
+)
 ```
+
+**لماذا يعمل:** `Scaffold.bottomNavigationBar` خارج `body`. الـ Hero يطير داخل `body` فقط — لا يتجاوز `bottomNavigationBar`.
+
+**التأثيرات الجانبية التي تحتاج معالجة:**
+1. إخفاء BottomNavBar عند الـ scroll — `AnimatedSlide` يظل يعمل لكن `Scaffold` يحجز المساحة. الحل: `AnimatedContainer(height: isHidden ? 0 : kBottomNavHeight)` أو `PreferredSize`.
+2. `AddMenuWidget` يحتاج `bottom: kBottomNavHeight` بدلاً من `bottom: 0`.
+3. `MediaQuery.removeViewInsets(removeBottom: true)` على `body` — يجب مراجعة تأثيره بعد النقل.
+
+**الوضع الحالي:** Hero Animation مُفعَّلة (إعداد يُحفظ بشكل صحيح بعد إزالة override في `settings_provider.dart`). المستخدم يستطيع تفعيلها من الإعدادات — لكن ستطير فوق BottomNavBar حتى يُطبَّق الحل.
+
+---
 
 ### 🟡 مشاكل منخفضة الأولوية
 
@@ -352,4 +403,6 @@ _heroAnimationEnabled = false; // ينتظر go_router ShellRoute
 
 ## الخطوة القادمة
 
-**go_router migration** — شرط لحل NAV-HERO وتفعيل Hero Animation للمستخدمين.
+**NAV-HERO** — نقل `BottomNavBar` من `Stack` إلى `Scaffold.bottomNavigationBar` في `MainLayoutScreen`.
+
+هذا الحل لا يحتاج go_router ولا يكسر نموذج العائلة السعيدة. راجع قسم "NAV-HERO" أعلاه للتفاصيل.

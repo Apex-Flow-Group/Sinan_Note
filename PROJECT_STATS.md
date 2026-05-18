@@ -1,5 +1,5 @@
 # 📊 تقرير إحصاءات المشروع — Sinan Note
-> تاريخ التقرير: مايو 2026 | الإصدار: 3.1.0+3369
+> تاريخ التقرير: مايو 2026 | الإصدار: 3.2.0+3380
 
 ---
 
@@ -8,14 +8,14 @@
 | الحقل | القيمة |
 |-------|--------|
 | اسم المشروع | Sinan Note (apex_note) |
-| الإصدار | 3.1.0+3369 |
+| الإصدار | 3.2.0+3380 |
 | إطار العمل | Flutter 3.0+ / Dart 3.0+ |
 | المنصات | Android · Linux · Windows |
 | compileSdk | 36 |
 | targetSdk | 35 |
 | تاريخ أول commit | ديسمبر 2025 |
 | تاريخ آخر commit | مايو 2026 |
-| إجمالي الـ commits | 148+ commit |
+| إجمالي الـ commits | 162 commit |
 
 ---
 
@@ -23,14 +23,14 @@
 
 | المجلد | عدد الملفات | الأسطر |
 |--------|-------------|--------|
-| `lib/screens/` | 93 | 21,134 |
-| `lib/widgets/` | 78 | 15,419 |
-| `lib/services/` | 37 | 6,563 |
+| `lib/screens/` | 94 | 21,134 |
+| `lib/widgets/` | 79 | 15,419 |
+| `lib/services/` | 39 | 6,563 |
 | `lib/controllers/` | 4 | 1,041 |
-| `lib/core/` | 14 | 935 |
+| `lib/core/` | 16 | 935 |
 | `lib/models/` | 6 | 309 |
-| `lib/providers/` | 1 | — |
-| **المجموع** | **~233 ملف** | **~46,000** |
+| `lib/providers/` | 2 | — |
+| **المجموع** | **244 ملف** | **~53,144** |
 
 ---
 
@@ -40,21 +40,24 @@
 
 | النوع | العدد | الأسطر |
 |-------|-------|--------|
-| Dart (مكتوب يدوياً) | 237 | 52,328 |
+| Dart (مكتوب يدوياً) | 244 | 53,144 |
 | Dart (مولّد `.g.dart`) | 0 | 0 |
 | Dart (ترجمات `l10n`) | — | 1,400 |
 | ARB (ملفات الترجمة) | 2 | 1,400 |
-| **إجمالي Dart** | **237** | **~53,728** |
+| **إجمالي Dart** | **244** | **~54,544** |
 
 ### أكبر 15 ملفاً (مكتوب يدوياً)
 
 | الملف | الأسطر |
 |-------|--------|
-| `screens/shared/note_editor.dart` | 699 |
-| `screens/mobile/locked_notes_screen.dart` | 684 |
-| `screens/shared/note_editor/view/note_readonly_view.dart` | 682 |
+| `screens/shared/note_editor/view/note_readonly_view.dart` | ~320 |
+| `screens/shared/note_editor/view/readonly_content.dart` | ~160 |
+| `screens/shared/note_editor/view/trash_floating_sheet.dart` | ~130 |
+| `screens/shared/note_editor/view/readonly_checklist_view.dart` | موجود مسبقاً |
+| `screens/shared/note_editor.dart` | 831 |
 | `screens/auth/pin_lock_screen.dart` | 635 |
 | `screens/auth/vault_reset_screen.dart` | 590 |
+| `screens/shared/backup_wizard_screen.dart` | 706 |
 | `widgets/editor/checklist_editor.dart` | 582 |
 | `widgets/home/note_card_widget.dart` | 572 |
 | `widgets/home/dialogs/vault_dialogs.dart` | 564 |
@@ -62,7 +65,6 @@
 | `screens/shared/tabs/reminder_dashboard.dart` | 549 |
 | `screens/onboarding/tour_screen.dart` | 508 |
 | `widgets/home/categories_panel.dart` | 508 |
-| `screens/shared/backup_wizard_screen.dart` | 508 |
 | `screens/other/support_form_screen.dart` | 504 |
 | `screens/shared/note_editor/core/editor_toolbar_builder.dart` | 502 |
 
@@ -72,11 +74,11 @@
 
 | المقياس | القيمة |
 |---------|--------|
-| StatefulWidget | 95 |
-| StatelessWidget | 88 |
-| إجمالي الـ Widgets | 183 |
-| ملفات تستخدم Provider | 59 |
-| مفاتيح الترجمة (AR + EN) | ~679 مفتاح |
+| StatefulWidget | 97 |
+| StatelessWidget | 90 |
+| إجمالي الـ Widgets | 187 |
+| ملفات تستخدم Provider | 62 |
+| مفاتيح الترجمة (AR + EN) | ~695 مفتاح |
 
 ---
 
@@ -161,9 +163,9 @@
 
 | اللغة | الملف | الأسطر |
 |-------|-------|--------|
-| العربية | `app_ar.arb` | 700 |
-| الإنجليزية | `app_en.arb` | 700 |
-| **إجمالي المفاتيح** | | **~679 مفتاح** |
+| العربية | `app_ar.arb` | ~720 |
+| الإنجليزية | `app_en.arb` | ~720 |
+| **إجمالي المفاتيح** | | **~695 مفتاح** |
 
 ---
 
@@ -173,10 +175,10 @@
 
 | المقياس | القيمة |
 |---------|--------|
-| ملفات الاختبار | 25 ملف |
-| إجمالي أسطر الاختبارات | 4,605 سطر |
-| نسبة الاختبارات للكود | ~9% |
-| إجمالي الاختبارات | 359 |
+| ملفات الاختبار | 29 ملف |
+| إجمالي أسطر الاختبارات | ~5,200 سطر |
+| نسبة الاختبارات للكود | ~10% |
+| إجمالي الاختبارات | 469 |
 
 ### أكبر ملفات الاختبار
 
@@ -189,7 +191,7 @@
 | `integration/note_editor_integration_test.dart` | 302 |
 | `integration/notes_provider_integration_test.dart` | 296 |
 | `services/vault_service_test.dart` | 291 |
-| `unit/services/isar_database_service_test.dart` | 279 |
+| `unit/services/sqlite_database_service_test.dart` | 279 |
 | `unit/services/note_state_service_test.dart` | 272 |
 | `unit/services/note_side_effect_service_test.dart` | 238 |
 
@@ -197,7 +199,7 @@
 
 | النوع | الملفات | الأسطر |
 |-------|---------|--------|
-| Unit (services) | 14 | 2,682 |
+| Unit (services) | 16 | ~3,100 |
 | Unit (controllers) | 1 | 349 |
 | Integration | 2 | 598 |
 | Security | 2 | 396 |
@@ -205,24 +207,24 @@
 | Performance | 1 | 96 |
 | Property | 1 | 60 |
 | Memory | 1 | 170 |
-| Setup + Vault | 2 | 219 |
-| **المجموع** | **25** | **4,605** |
+| Setup + Vault | 4 | ~396 |
+| **المجموع** | **29** | **~5,200** |
 
 ---
 
 ## ✅ ملخص للإطلاق
 
 ```
-الكود المكتوب يدوياً  : 52,328 سطر في 237 ملف
-إجمالي كود Dart       : ~53,728 سطر في 237 ملف
-المجلدات              : 62 مجلد
-الـ Widgets           : 183 (95 Stateful + 88 Stateless)
+الكود المكتوب يدوياً  : 53,144 سطر في 244 ملف
+إجمالي كود Dart       : ~54,544 سطر في 244 ملف
+المجلدات              : 62+ مجلد
+الـ Widgets           : 187 (97 Stateful + 90 Stateless)
 التبعيات              : 33 حزمة
 الأصول               : 9 ملفات (5 خطوط + 2 أيقونة + 2 متجر)
-الترجمة               : عربي + إنجليزي (~679 مفتاح)
-الـ commits           : 148+ commit (ديسمبر 2025 → مايو 2026)
-الإصدار               : 3.1.0+3369
-الاختبارات            : 359 اختبار في 4,605 سطر
+الترجمة               : عربي + إنجليزي (~695 مفتاح)
+الـ commits           : 162 commit (ديسمبر 2025 → مايو 2026)
+الإصدار               : 3.2.0+3380
+الاختبارات            : 469 اختبار في ~5,200 سطر
 ```
 
 ---

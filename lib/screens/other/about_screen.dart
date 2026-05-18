@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -328,3 +329,4 @@ class _AboutScreenState extends State<AboutScreen> {
     );
   }
 }
+

@@ -1,27 +1,27 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/shortcuts/app_shortcuts.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart';
-import 'package:apex_note/widgets/desktop/desktop_menu_bar.dart';
-import 'package:apex_note/widgets/desktop/desktop_selection_actions.dart';
-import 'package:apex_note/widgets/details_panel.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart';
-import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
-import 'package:apex_note/widgets/home/dialogs/filter_sheet.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/widgets/home/note_locator_button.dart';
-import 'package:apex_note/widgets/home/notes_grid_view.dart';
-import 'package:apex_note/widgets/master_details_layout.dart';
-import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/shortcuts/app_shortcuts.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart';
+import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
+import 'package:sinan_note/widgets/desktop/desktop_selection_actions.dart';
+import 'package:sinan_note/widgets/details_panel.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart';
+import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
+import 'package:sinan_note/widgets/home/note_locator_button.dart';
+import 'package:sinan_note/widgets/home/notes_grid_view.dart';
+import 'package:sinan_note/widgets/master_details_layout.dart';
+import 'package:sinan_note/widgets/responsive_layout_wrapper.dart';
 
 /// نسخة Responsive من HomeScreen تدعم نمط Master-Details
 ///
@@ -157,45 +157,31 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   Widget _buildMasterDetailsLayout(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Shortcuts(
-      shortcuts: const <ShortcutActivator, Intent>{
-        AppShortcuts.newNote: NewNoteIntent(),
-        AppShortcuts.search: SearchIntent(),
-        AppShortcuts.codeNote: CodeNoteIntent(),
-        AppShortcuts.checklist: ChecklistIntent(),
-        AppShortcuts.reminder: ReminderIntent(),
-        AppShortcuts.refresh: RefreshIntent(),
-      },
-      child: Actions(
-        actions: <Type, Action<Intent>>{
-          NewNoteIntent: CallbackAction<NewNoteIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.simple),
-          ),
-          SearchIntent: CallbackAction<SearchIntent>(
-            onInvoke: (_) {
-              FocusScope.of(context).requestFocus(FocusNode());
-              return null;
-            },
-          ),
-          CodeNoteIntent: CallbackAction<CodeNoteIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.code),
-          ),
-          ChecklistIntent: CallbackAction<ChecklistIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.checklist),
-          ),
-          ReminderIntent: CallbackAction<ReminderIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.reminder),
-          ),
-          RefreshIntent: CallbackAction<RefreshIntent>(
-            onInvoke: (_) {
-              Provider.of<NotesProvider>(context, listen: false)
-                  .loadNotes(force: true);
-              return null;
-            },
-          ),
+    return ShortcutScope(
+      bindings: {
+        AppShortcuts.newNote: () => _navigateToNewNote(NoteMode.simple),
+        AppShortcuts.richNote: () => _navigateToNewNote(NoteMode.rich),
+        AppShortcuts.codeNote: () => _navigateToNewNote(NoteMode.code),
+        AppShortcuts.checklist: () => _navigateToNewNote(NoteMode.checklist),
+        AppShortcuts.reminder: () => _navigateToNewNote(NoteMode.reminder),
+        AppShortcuts.search: () =>
+            FocusScope.of(context).requestFocus(_searchFocusNode),
+        AppShortcuts.refresh: () =>
+            Provider.of<NotesProvider>(context, listen: false)
+                .loadNotes(force: true),
+        AppShortcuts.settings: () => AppNavigator.toSettings(context),
+        AppShortcuts.toggleView: () {
+          setState(() {
+            int currentIndex = _desktopViewTypes.indexOf(_viewType);
+            int nextIndex = (currentIndex + 1) % _desktopViewTypes.length;
+            _viewType = _desktopViewTypes[nextIndex];
+            _viewTypeNotifier.value = _viewType.name;
+          });
+          Provider.of<SettingsProvider>(context, listen: false)
+              .setViewType('home', _viewType.name);
         },
-        child: _buildMasterDetailsScaffold(context, l10n),
-      ),
+      },
+      child: _buildMasterDetailsScaffold(context, l10n),
     );
   }
 

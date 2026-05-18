@@ -1,11 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/widgets/editor/checklist_editor.dart';
-import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
-import 'package:flutter/material.dart';
-
+import 'dart:convert';import 'package:flutter/material.dart';import 'package:sinan_note/widgets/editor/checklist_editor.dart'; import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 /// Checklist editor widget with JSON-based task management
 class ChecklistEditorWidget extends StatelessWidget {
   final TextEditingController contentController;
@@ -64,3 +59,4 @@ class ChecklistEditorWidget extends StatelessWidget {
     );
   }
 }
+

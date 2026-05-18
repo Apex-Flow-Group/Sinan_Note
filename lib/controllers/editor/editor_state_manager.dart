@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 /// Manager for centralized editor state management
 ///
@@ -255,3 +255,7 @@ class EditorStateManager {
         ')';
   }
 }
+
+
+
+

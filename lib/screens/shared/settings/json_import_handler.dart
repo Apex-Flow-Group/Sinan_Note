@@ -3,17 +3,17 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/screens/shared/settings/backup_validators.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/backup_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/screens/shared/settings/backup_validators.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/storage/backup_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 class JsonImportHandler {
   static Future<void> handle(
@@ -192,3 +192,4 @@ class JsonImportHandler {
     );
   }
 }
+

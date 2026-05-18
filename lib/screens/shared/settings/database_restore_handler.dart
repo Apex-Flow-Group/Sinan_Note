@@ -1,20 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/shared/settings/backup_validators.dart';
-import 'package:apex_note/services/storage/backup_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
-import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
-
+import 'dart:io';import 'package:flutter/material.dart';import 'package:path/path.dart' as p; import 'package:path_provider/path_provider.dart'; import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/notes/notes_provider.dart'; import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/screens/shared/settings/backup_validators.dart'; import 'package:sinan_note/services/storage/backup_service.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/unified_notification_service.dart'; import 'package:sinan_note/widgets/common/app_bottom_sheet.dart'; import 'package:sqflite/sqflite.dart';
 class DatabaseRestoreHandler {
   static Future<void> handle(
     BuildContext context,
@@ -279,3 +265,4 @@ class DatabaseRestoreHandler {
     return p.join(dir.path, 'sinan_notes.db');
   }
 }
+

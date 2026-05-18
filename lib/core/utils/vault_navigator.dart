@@ -1,11 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
-import 'package:apex_note/screens/auth/pin_lock_screen.dart';
-import 'package:apex_note/screens/auth/vault_reset_screen.dart';
-import 'package:apex_note/screens/auth/vault_unlock_screen.dart';
-import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/screens/auth/locked_notes_intro_screen.dart';
+import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
+import 'package:sinan_note/screens/auth/vault_reset_screen.dart';
+import 'package:sinan_note/screens/auth/vault_unlock_screen.dart';
+import 'package:sinan_note/screens/desktop/locked_notes_screen_responsive.dart';
 
 /// مركز تنقل الخزنة — مصدر واحد لكل انتقالات الخزنة.
 ///
@@ -30,7 +30,7 @@ abstract class VaultNavigator {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => const LockedNotesScreen(),
+        builder: (_) => const LockedNotesScreenResponsive(),
         settings: const RouteSettings(name: '/vault/locked'),
       ),
     );

@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/widgets/home/categories_panel.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/widgets/home/categories_panel.dart';
 
 class CategoriesPanelWrapper extends StatefulWidget {
   final CatPanelMode mode;
@@ -121,3 +122,4 @@ class DrawerModeBtn extends StatelessWidget {
     );
   }
 }
+

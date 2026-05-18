@@ -1,7 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/exceptions.dart';
-import 'package:apex_note/services/security/vault_service.dart';
+
+
+import 'package:sinan_note/models/exceptions.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
 
 class Note {
   int? id;
@@ -195,3 +197,4 @@ class Note {
 }
 
 const _undefined = Object();
+

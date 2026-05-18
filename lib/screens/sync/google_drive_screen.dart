@@ -1,19 +1,20 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
-import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/sync/google_drive/google_drive_handlers.dart';
+import 'package:sinan_note/screens/sync/google_drive/google_drive_widgets.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
 class GoogleDriveScreen extends StatefulWidget {
   final bool isDesktopLayout;
@@ -494,3 +495,4 @@ class _GoogleDriveDesktopMasterDetailsState
     );
   }
 }
+

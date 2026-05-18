@@ -1,12 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/widgets/note_list_tile.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/widgets/note_list_tile.dart';
 
 /// Widget يعرض قائمة الملاحظات في Master Panel
 /// 
@@ -237,3 +238,4 @@ class MasterPanel extends StatelessWidget {
     );
   }
 }
+

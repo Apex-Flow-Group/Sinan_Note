@@ -1,31 +1,30 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:convert';
-
-import 'package:apex_note/controllers/editor/editor_state_manager.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/constants/app_text_styles.dart';
-import 'package:apex_note/core/utils/apex_smart_controller.dart';
-import 'package:apex_note/core/utils/bidi_cursor_middleware.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
-import 'package:apex_note/core/utils/text_direction_utils.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_storage_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/utils/note_editor_utils.dart';
-import 'package:apex_note/services/clipboard_guard.dart';
-import 'package:apex_note/services/content_guard.dart';
-import 'package:apex_note/services/language_detector.dart';
-import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/core/utils/apex_smart_controller.dart';
+import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_storage_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/utils/note_editor_utils.dart';
+import 'package:sinan_note/services/clipboard_guard.dart';
+import 'package:sinan_note/services/content_guard.dart';
+import 'package:sinan_note/services/language_detector.dart';
+import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 
 /// Central coordinator for all editor operations
 class EditorCoordinator {
@@ -304,3 +303,4 @@ class EditorCoordinator {
     codeFieldFocusNode.dispose();
   }
 }
+

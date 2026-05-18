@@ -1,19 +1,18 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
 import '../test_setup.dart';
-
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -417,3 +416,4 @@ void main() {
     });
   });
 }
+

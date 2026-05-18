@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 /// Unified Notification Service
 /// نظام إشعارات موحد وشامل لجميع أنواع الإشعارات
@@ -337,6 +337,8 @@ class UnifiedNotificationService {
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         if (config.actionLabel != null && config.onAction != null)

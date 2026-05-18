@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/text_direction_utils.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 /// Standalone widget for rendering a single checklist item.
 ///
@@ -180,3 +181,4 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
     return content;
   }
 }
+

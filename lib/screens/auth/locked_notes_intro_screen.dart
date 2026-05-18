@@ -1,15 +1,15 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/vault_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/feature_info.dart';
-import 'package:apex_note/screens/auth/vault_intro_pages.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/feature_info.dart';
+import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
 
 const double _kMaxContentWidth = 600.0;
 
@@ -177,65 +177,96 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: _kMaxContentWidth),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      physics: _currentPage == 1 || _currentPage == 2
-                          ? const NeverScrollableScrollPhysics()
-                          : null,
-                      onPageChanged: (index) {
-                        FocusScope.of(context).unfocus();
-                        setState(() => _currentPage = index);
-                      },
-                      itemCount: pageCount,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return VaultFeaturesPage(
-                              isDark: isDark, features: _getFeatures(l10n));
-                        }
-                        if (index == 1) {
-                          return VaultPasswordPage(
-                            isDark: isDark,
-                            passwordController: _passwordController,
-                            confirmController: _confirmController,
-                            obscurePassword: _obscurePassword,
-                            obscureConfirm: _obscureConfirm,
-                            errorText: _errorText,
-                            onTogglePassword: () => setState(
-                                () => _obscurePassword = !_obscurePassword),
-                            onToggleConfirm: () => setState(
-                                () => _obscureConfirm = !_obscureConfirm),
-                            onChanged: () => setState(() => _errorText = null),
-                            onSubmit: _handleNext,
-                          );
-                        }
-                        if (index == 2) {
-                          return VaultRecoveryPage(
-                            isDark: isDark,
-                            recoveryCode: _recoveryCode,
-                            codeSaved: _codeSaved,
-                            errorText: _errorText,
-                            onCodeSavedChanged: (val) =>
-                                setState(() => _codeSaved = val ?? false),
-                          );
-                        }
-                        if (index == 3) {
-                          return VaultBiometricPage(isDark: isDark);
-                        }
-                        return const SizedBox();
-                      },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth >= 600;
+              final content = Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktop ? 480 : _kMaxContentWidth,
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: PageView.builder(
+                          controller: _pageController,
+                          physics: _currentPage == 1 || _currentPage == 2
+                              ? const NeverScrollableScrollPhysics()
+                              : null,
+                          onPageChanged: (index) {
+                            FocusScope.of(context).unfocus();
+                            setState(() => _currentPage = index);
+                          },
+                          itemCount: pageCount,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return VaultFeaturesPage(
+                                  isDark: isDark, features: _getFeatures(l10n));
+                            }
+                            if (index == 1) {
+                              return VaultPasswordPage(
+                                isDark: isDark,
+                                passwordController: _passwordController,
+                                confirmController: _confirmController,
+                                obscurePassword: _obscurePassword,
+                                obscureConfirm: _obscureConfirm,
+                                errorText: _errorText,
+                                onTogglePassword: () => setState(
+                                    () => _obscurePassword = !_obscurePassword),
+                                onToggleConfirm: () => setState(
+                                    () => _obscureConfirm = !_obscureConfirm),
+                                onChanged: () =>
+                                    setState(() => _errorText = null),
+                                onSubmit: _handleNext,
+                              );
+                            }
+                            if (index == 2) {
+                              return VaultRecoveryPage(
+                                isDark: isDark,
+                                recoveryCode: _recoveryCode,
+                                codeSaved: _codeSaved,
+                                errorText: _errorText,
+                                onCodeSavedChanged: (val) =>
+                                    setState(() => _codeSaved = val ?? false),
+                              );
+                            }
+                            if (index == 3) {
+                              return VaultBiometricPage(isDark: isDark);
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                      ),
+                      _buildIndicators(pageCount),
+                      _buildBottomButton(isDark, pageCount, l10n),
+                    ],
+                  ),
+                ),
+              );
+
+              if (!isDesktop) return content;
+
+              return Center(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                  child: SizedBox(
+                    width: 480,
+                    child: Card(
+                      elevation: 3,
+                      shadowColor: Colors.black26,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: content,
+                      ),
                     ),
                   ),
-                  _buildIndicators(pageCount),
-                  _buildBottomButton(isDark, pageCount, l10n),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -273,12 +304,16 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             ? _codeSaved && _recoveryCode != null
             : true;
 
+    // على Desktop/أجهزة بدون بصمة: الصفحة الأخيرة هي Recovery Code
+    // → الزر يكون "متابعة" وليس "تفعيل البصمة"
+    final bool showBiometricButton = isLastPage && _hasBiometrics;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isLastPage && _hasBiometrics)
+          if (showBiometricButton)
             TextButton(
               onPressed: () async {
                 await VaultService.setBiometricEnabled(false);
@@ -291,13 +326,15 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             height: 52,
             child: ElevatedButton.icon(
               onPressed: isButtonEnabled
-                  ? (isLastPage
+                  ? (showBiometricButton
                       ? () => _finishSetup(enableBiometric: true)
                       : _handleNext)
                   : null,
-              icon: Icon(isLastPage ? Icons.fingerprint : Icons.arrow_forward),
+              icon: Icon(showBiometricButton
+                  ? Icons.fingerprint
+                  : Icons.arrow_forward),
               label: Text(
-                isLastPage
+                showBiometricButton
                     ? l10n.enableBiometricAccess
                     : (_currentPage == 2 ? l10n.continueAction : l10n.next),
                 style:

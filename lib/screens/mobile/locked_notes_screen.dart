@@ -1,26 +1,27 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/core/utils/search_mixin.dart';
-import 'package:apex_note/core/utils/vault_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/screens/mobile/vault_import_sheet.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
-import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/searchable_header.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart';
-import 'package:apex_note/widgets/home/dialogs/vault_dialogs.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart'
-    show HomeDrawerWidget, setDrawerVaultActive;
-import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/core/utils/search_mixin.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/services/security/vault_reset_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/searchable_header.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart';
+import 'package:sinan_note/widgets/home/dialogs/vault_dialogs.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart'
+    show HomeDrawerWidget, setDrawerVaultActive;
+import 'package:sinan_note/widgets/home/note_card_widget.dart';
 
 class LockedNotesScreen extends StatefulWidget {
   const LockedNotesScreen({super.key});
@@ -43,10 +44,12 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    setDrawerVaultActive(true);
     initSearch();
     searchController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // setDrawerVaultActive هنا وليس في initState مباشرة —
+      // لأنها تُعدّل ValueNotifier وتُطلق notifyListeners أثناء الـ build
+      setDrawerVaultActive(true);
       _providerRef = Provider.of<NotesProvider>(context, listen: false);
       _providerRef!.addListener(_onProviderChanged);
       _loadLockedNotes();
@@ -86,8 +89,21 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         UnifiedLockService().isVaultOperation) {
       return;
     }
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
+
+    // على Desktop: نُغلق الخزنة عند تصغير النافذة أو إخفائها
+    // hidden = تصغير على Windows/macOS
+    // paused = خلفية على Mobile
+    // inactive = فقدان التركيز (نتجاهله على Desktop)
+    final bool shouldLock;
+    if (PlatformHelper.isDesktopPlatform) {
+      shouldLock = state == AppLifecycleState.paused ||
+          state == AppLifecycleState.hidden;
+    } else {
+      shouldLock = state == AppLifecycleState.paused ||
+          state == AppLifecycleState.inactive;
+    }
+
+    if (shouldLock) {
       if (_showAddMenu) {
         setState(() => _showAddMenu = false);
       }

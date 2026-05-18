@@ -1,18 +1,19 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
-import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
+import 'package:sinan_note/widgets/editor/reminder_picker_sheet.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
 class SwipeCustomSheet {
   static Future<void> show(
@@ -243,3 +244,4 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
     }
   }
 }
+

@@ -1,10 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/services/language_detector.dart';
+
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:sinan_note/services/language_detector.dart';
 import '../../test_setup.dart';
-
 void main() {
   setUpAll(() {
     initializeTestEnvironment();
@@ -117,3 +116,4 @@ def hello():
     });
   });
 }
+

@@ -1,10 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/services/security/security_gate.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/services/security/security_gate.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
 
 class SettingsProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
@@ -24,7 +24,8 @@ class SettingsProvider with ChangeNotifier {
 
   // Pull-to-refresh mode: 'full' | 'normal' | 'disabled'
   String _pullToRefreshMode = 'disabled';
-  bool _hideNavOnScroll = false;
+  bool _hideNavOnScroll = true;
+  bool _hideSearchOnScroll = false;
   bool _hideContentInBackground = false;
   bool _lockDelayEnabled = false;
   int _lockDelaySeconds = 30;
@@ -62,6 +63,7 @@ class SettingsProvider with ChangeNotifier {
   bool get biometricLockEnabled => _biometricLockEnabled;
   String get pullToRefreshMode => _pullToRefreshMode;
   bool get hideNavOnScroll => _hideNavOnScroll;
+  bool get hideSearchOnScroll => _hideSearchOnScroll;
   bool get hideContentInBackground => _hideContentInBackground;
   bool get lockDelayEnabled => _lockDelayEnabled;
   int get lockDelaySeconds => _lockDelaySeconds;
@@ -179,6 +181,12 @@ class SettingsProvider with ChangeNotifier {
     await _savePref('hideNavOnScroll', enabled);
   }
 
+  Future<void> setHideSearchOnScroll(bool enabled) async {
+    _hideSearchOnScroll = enabled;
+    notifyListeners();
+    await _savePref('hideSearchOnScroll', enabled);
+  }
+
   Future<void> setViewType(String key, String type) async {
     if (key == 'home') {
       _viewType = type;
@@ -276,7 +284,8 @@ class SettingsProvider with ChangeNotifier {
           ['delete', 'archive', 'share'];
       _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
       _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'disabled';
-      _hideNavOnScroll = prefs.getBool('hideNavOnScroll') ?? false;
+      _hideNavOnScroll = prefs.getBool('hideNavOnScroll') ?? true;
+      _hideSearchOnScroll = prefs.getBool('hideSearchOnScroll') ?? false;
       _viewType = prefs.getString('viewType') ?? 'listCompact';
       final homeViewType = prefs.getString('viewType_home');
       if (homeViewType != null) {

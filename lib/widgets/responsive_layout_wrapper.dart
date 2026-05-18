@@ -1,7 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/platform_helper.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 
 /// Widget رئيسي يحدد أي Layout يجب عرضه بناءً على نوع الجهاز وحجم الشاشة
 /// 
@@ -45,3 +46,4 @@ class ResponsiveLayoutWrapper extends StatelessWidget {
     );
   }
 }
+

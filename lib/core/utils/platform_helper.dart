@@ -1,10 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
+import 'dart:io';import 'package:flutter/material.dart'; import 'package:flutter/services.dart';
 /// Helper class للتحقق من نوع الجهاز والتخطيط المناسب
 class PlatformHelper {
   /// التحقق من أن الجهاز هو Desktop حقيقي (Linux/Windows/macOS)
@@ -72,3 +68,4 @@ class PlatformHelper {
     ]);
   }
 }
+

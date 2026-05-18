@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
 
 /// Widget لعرض عنصر واحد في قائمة الملاحظات (Master Panel)
 /// 
@@ -117,3 +118,4 @@ class NoteListTile extends StatelessWidget {
     return DateFormat('dd/MM/yyyy').format(date);
   }
 }
+

@@ -2101,4 +2101,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unlockWithBiometricDesc => 'Use fingerprint or face recognition';
+
+  @override
+  String get redo => 'Redo';
+
+  @override
+  String get bold => 'Bold';
+
+  @override
+  String get italic => 'Italic';
+
+  @override
+  String get underline => 'Underline';
+
+  @override
+  String get strikethrough => 'Strikethrough';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get selectAll => 'Select All';
+
+  @override
+  String get duplicate => 'Duplicate';
+
+  @override
+  String get toggleView => 'Toggle View';
 }

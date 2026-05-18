@@ -1,8 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/editor/editor_state_manager.dart';
-import 'package:apex_note/models/note.dart';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
+import 'package:sinan_note/models/note.dart';
 
 void main() {
   group('EditorStateManager', () {
@@ -425,3 +426,4 @@ void main() {
     });
   });
 }
+

@@ -1,11 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/widgets/home/note_card_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/widgets/home/note_card_widget.dart';
 
 class NoteCardWrapper extends StatefulWidget {
   final Note note;
@@ -132,3 +133,4 @@ class _NoteCardWrapperState extends State<NoteCardWrapper> {
     );
   }
 }
+

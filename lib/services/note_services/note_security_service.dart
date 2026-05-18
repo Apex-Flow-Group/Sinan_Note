@@ -1,13 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/note_services/note_db_interface.dart';
-import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:encrypt/encrypt.dart';
-
+import 'dart:convert';import 'package:encrypt/encrypt.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/note_services/note_db_interface.dart'; import 'package:sinan_note/services/note_services/note_state_service.dart'; import 'package:sinan_note/services/security/vault_service.dart';
 class NoteSecurityService {
   bool _isVaultUnlocked = false;
   DateTime? _vaultUnlockedAt;
@@ -131,3 +124,4 @@ class NoteSecurityService {
     }
   }
 }
+

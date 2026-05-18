@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 /// حالات صفحة المزامنة
 enum SyncStep {
@@ -20,3 +20,7 @@ enum SyncStep {
   /// خطأ
   error,
 }
+
+
+
+

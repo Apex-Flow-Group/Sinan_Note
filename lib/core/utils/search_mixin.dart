@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 /// Mixin يوحّد منطق البحث المتكرر في الشاشات البسيطة
 mixin SearchMixin<T extends StatefulWidget> on State<T> {
@@ -37,3 +39,4 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
     super.dispose();
   }
 }
+

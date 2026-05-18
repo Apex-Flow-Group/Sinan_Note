@@ -1,8 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
 
 class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double expandedHeight;
@@ -87,3 +88,4 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
     return true;
   }
 }
+

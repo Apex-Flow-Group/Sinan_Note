@@ -1,7 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 
 /// شريط موحّد للسحب والتحديث والمزامنة
 class SyncProgressBar extends StatelessWidget {
@@ -163,3 +164,4 @@ class _Bar extends StatelessWidget {
     );
   }
 }
+

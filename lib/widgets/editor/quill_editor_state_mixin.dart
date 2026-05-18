@@ -1,12 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/core/utils/text_direction_utils.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-
+import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter/services.dart'; import 'package:flutter_quill/flutter_quill.dart';import 'package:sinan_note/core/utils/text_direction_utils.dart';
 /// Mixin يحتوي على كل منطق الـ state الخاص بمحرر Quill:
 /// - اتجاه النص (RTL/LTR)
 /// - التشكيل
@@ -403,3 +397,4 @@ class StableScrollController extends ScrollController {
     return super.animateTo(offset, duration: duration, curve: curve);
   }
 }
+

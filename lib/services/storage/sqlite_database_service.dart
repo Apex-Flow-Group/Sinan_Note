@@ -1,17 +1,17 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:io';
 
-import 'package:apex_note/core/utils/note_content_utils.dart';
-import 'package:apex_note/models/category.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
-import 'package:apex_note/services/note_services/note_db_interface.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/models/category.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
+import 'package:sinan_note/services/note_services/note_db_interface.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqliteDatabaseService implements NoteDbInterface {
@@ -627,3 +627,4 @@ class SqliteDatabaseService implements NoteDbInterface {
   @override
   Future<void> runLegacyHistoryCleanup() async {}
 }
+

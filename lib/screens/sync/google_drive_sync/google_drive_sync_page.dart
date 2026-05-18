@@ -1,15 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_controller.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/sync_step.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_conflict_widget.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_progress_widget.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_sign_in_widget.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/widgets/sync_success_widget.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/google_drive_sync_controller.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/sync_step.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_conflict_widget.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_progress_widget.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_sign_in_widget.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_success_widget.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 class GoogleDriveSyncPage extends StatelessWidget {
   const GoogleDriveSyncPage({super.key});
@@ -152,3 +153,4 @@ class _GoogleDriveSyncPageContentState
     );
   }
 }
+

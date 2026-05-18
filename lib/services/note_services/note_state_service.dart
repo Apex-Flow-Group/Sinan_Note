@@ -1,10 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
-
+import 'dart:async';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 class NoteStateService {
   List<Note> _allNotes = [];
   List<Note> _lockedNotes = [];
@@ -216,3 +212,4 @@ class NoteStateService {
     });
   }
 }
+

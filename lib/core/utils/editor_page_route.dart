@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 /// Route فتح العارض/المحرر.
 ///
@@ -24,3 +26,4 @@ class EditorPageRoute<T> extends PageRouteBuilder<T> {
           },
         );
 }
+

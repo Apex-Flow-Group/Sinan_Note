@@ -1,11 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui';
-
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:flutter/material.dart';
-
+import 'dart:ui';import 'package:flutter/material.dart';import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note_mode.dart';
 // Global notifier for menu state
 final ValueNotifier<bool> isMenuOpenNotifier = ValueNotifier<bool>(false);
 
@@ -333,3 +328,4 @@ class _AnimatedMenuItem extends StatelessWidget {
     );
   }
 }
+

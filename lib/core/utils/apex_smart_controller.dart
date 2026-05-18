@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 /// ApexSmartController - Text controller with stability-first approach
 ///
@@ -20,3 +22,4 @@ class ApexSmartController extends TextEditingController {
   // Future: Add utility methods here if needed for text analysis
   // (without affecting visual rendering)
 }
+

@@ -1,13 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/models/category.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'dart:async';import 'package:flutter/material.dart';import 'package:shared_preferences/shared_preferences.dart'; import 'package:sinan_note/models/category.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 const int kMaxCategories = 20;
 const int kMaxCategoryNameLength = 20;
 const int kProCategoryId = -1;
@@ -153,3 +146,4 @@ class CategoriesProvider extends ChangeNotifier {
 
   Future<void> refreshCategories() async => await _load();
 }
+

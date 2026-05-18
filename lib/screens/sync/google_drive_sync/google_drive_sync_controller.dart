@@ -1,11 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/sync_step.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/sync_step.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 
 class GoogleDriveSyncController extends ChangeNotifier {
   SyncStep _currentStep = SyncStep.signIn;
@@ -177,3 +178,4 @@ class GoogleDriveSyncController extends ChangeNotifier {
     snackBarMessage = null;
   }
 }
+

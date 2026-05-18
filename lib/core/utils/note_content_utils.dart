@@ -1,7 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
+
+
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
 
 /// نقطة واحدة لتحويل محتوى النوت لنص قابل للعرض
 /// يحل مشكلة Delta JSON الخام الذي يظهر بشكل غير مقروء
@@ -36,3 +38,4 @@ class NoteContentUtils {
     return result;
   }
 }
+

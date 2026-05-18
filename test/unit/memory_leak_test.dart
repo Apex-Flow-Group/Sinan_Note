@@ -1,15 +1,14 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // ⚡ MEMORY & PERFORMANCE — اختبارات تسريب الذاكرة والأداء
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/storage/compression_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/note_services/note_state_service.dart';
+import 'package:sinan_note/services/storage/compression_service.dart';
 import '../test_setup.dart';
-
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -203,3 +202,4 @@ void main() {
     });
   });
 }
+

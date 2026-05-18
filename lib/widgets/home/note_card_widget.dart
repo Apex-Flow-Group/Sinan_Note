@@ -1,30 +1,30 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui' as ui;
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/desktop/note_context_menu.dart';
-import 'package:apex_note/widgets/effects/premium_card_effect.dart';
-import 'package:apex_note/widgets/home/note_card/hidden_categories_chip.dart';
-import 'package:apex_note/widgets/home/note_card/slidable_auto_closer.dart';
-import 'package:apex_note/widgets/home/note_card_actions.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/desktop/note_context_menu.dart';
+import 'package:sinan_note/widgets/effects/premium_card_effect.dart';
+import 'package:sinan_note/widgets/home/note_card/hidden_categories_chip.dart';
+import 'package:sinan_note/widgets/home/note_card/slidable_auto_closer.dart';
+import 'package:sinan_note/widgets/home/note_card_actions.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
 class NoteCardWidget extends StatefulWidget {
   final Note note;
@@ -294,7 +294,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 8),
-                                              widget.note.isLocked
+                                              // في شاشة الخزنة (source == 'locked') الملاحظة مفككة مسبقاً
+                                              // → نعرض المحتوى الفعلي بدلاً من "محتوى محمي"
+                                              (widget.note.isLocked &&
+                                                      widget.source != 'locked')
                                                   ? Text(
                                                       l10n.protectedContent,
                                                       maxLines: 1,

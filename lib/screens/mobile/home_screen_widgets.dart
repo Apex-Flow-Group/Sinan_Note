@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/widgets/home/date_indicator_bar.dart';
-import 'package:apex_note/widgets/home/note_locator_button.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/widgets/home/date_indicator_bar.dart';
+import 'package:sinan_note/widgets/home/note_locator_button.dart';
 
 class HomeScreenPopScope extends StatelessWidget {
   final bool canPop;
@@ -150,3 +151,4 @@ class _FadeInBarState extends State<_FadeInBar>
     );
   }
 }
+

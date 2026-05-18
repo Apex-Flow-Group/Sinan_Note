@@ -1,16 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/storage/compression_service.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/storage/compression_service.dart';
 
 /// Transport layer — مسؤول فقط عن رفع/تنزيل bytes من/إلى Google Drive.
 /// لا يقرر، لا يدمج، لا يعرف شيئاً عن النوتات.
@@ -172,3 +172,4 @@ class SyncTransport {
     }
   }
 }
+

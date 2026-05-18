@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 class ApexEditorHeader extends StatelessWidget {
   final Color backgroundColor;
@@ -125,3 +127,4 @@ class ApexEditorHeader extends StatelessWidget {
     );
   }
 }
+

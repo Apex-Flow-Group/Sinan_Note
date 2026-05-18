@@ -1,11 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:crypto/crypto.dart';
-
+import 'dart:convert';import 'package:crypto/crypto.dart'; import 'package:sinan_note/models/note_version.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 /// Ultra-Smart Version Control Service
 /// Philosophy: ONE meaningful version per editing session
 class VersionControlService {
@@ -238,3 +233,4 @@ class _ChangeSignificance {
     required this.reason,
   });
 }
+

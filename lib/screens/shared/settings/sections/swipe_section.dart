@@ -1,12 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
-import 'package:apex_note/screens/shared/settings/settings_utils.dart';
-import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/shared/settings/settings_dialogs.dart';
+import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
+import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
 
 class SwipeSection extends StatelessWidget {
   const SwipeSection({super.key});
@@ -27,17 +28,60 @@ class SwipeSection extends StatelessWidget {
       title: l10n.swipeGestures,
       icon: Icons.swipe_rounded,
       children: [
-        SwitchListTile(
-          secondary: const Icon(Icons.vertical_align_bottom_rounded),
-          title: Text(isAr ? 'إخفاء الشريط عند السكرول' : 'Hide bar on scroll'),
-          subtitle: Text(
-            isAr
-                ? 'يُخفي الشريط السفلي وشريط البحث عند السكرول للأسفل'
-                : 'Hides bottom bar and search bar when scrolling down',
+        if (!PlatformHelper.isDesktopPlatform) ...[
+          // ─── شريط البحث ─────────────────────────────────────────────────
+          ListTile(
+            leading: const Icon(Icons.search_rounded),
+            title: Text(isAr ? 'شريط البحث بالرئيسية' : 'Home search bar'),
+            trailing: SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(
+                  value: false,
+                  label: Text(isAr ? 'ثابت' : 'Fixed',
+                      style: const TextStyle(fontSize: 12)),
+                ),
+                ButtonSegment(
+                  value: true,
+                  label: Text(isAr ? 'متحرك' : 'Animated',
+                      style: const TextStyle(fontSize: 12)),
+                ),
+              ],
+              selected: {settings.hideSearchOnScroll},
+              onSelectionChanged: (val) =>
+                  settings.setHideSearchOnScroll(val.first),
+              style: const ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
           ),
-          value: settings.hideNavOnScroll,
-          onChanged: settings.setHideNavOnScroll,
-        ),
+          // ─── شريط التنقل السفلي ─────────────────────────────────────────
+          ListTile(
+            leading: const Icon(Icons.vertical_align_bottom_rounded),
+            title: Text(isAr ? 'شريط التنقل السفلي' : 'Bottom navigation bar'),
+            trailing: SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(
+                  value: false,
+                  label: Text(isAr ? 'ثابت' : 'Fixed',
+                      style: const TextStyle(fontSize: 12)),
+                ),
+                ButtonSegment(
+                  value: true,
+                  label: Text(isAr ? 'متحرك' : 'Animated',
+                      style: const TextStyle(fontSize: 12)),
+                ),
+              ],
+              selected: {settings.hideNavOnScroll},
+              onSelectionChanged: (val) =>
+                  settings.setHideNavOnScroll(val.first),
+              style: const ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+        ],
         SwitchListTile(
           secondary: const Icon(Icons.swipe),
           title: Text(l10n.swipeGesturesDesc),

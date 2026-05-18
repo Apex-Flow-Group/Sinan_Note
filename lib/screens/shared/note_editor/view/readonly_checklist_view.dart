@@ -1,12 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/text_direction_utils.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:flutter/material.dart';
-
+import 'dart:convert';import 'package:flutter/material.dart';import 'package:sinan_note/core/utils/checklist_formatter.dart'; import 'package:sinan_note/core/utils/text_direction_utils.dart'; import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 class ReadOnlyChecklistView extends StatefulWidget {
   final EditorCoordinator coordinator;
   final Color textColor;
@@ -208,3 +202,4 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
     );
   }
 }
+

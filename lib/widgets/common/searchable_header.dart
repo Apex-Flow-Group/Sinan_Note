@@ -1,8 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
 
 /// شريط بحث موحد — مطابق لـ SearchableHeader في نسخة Native
 /// فريم مستدير يحتوي أيقونة بحث + عنوان، عند الضغط يتحول لحقل بحث
@@ -253,3 +254,4 @@ class _SearchableHeaderState extends State<SearchableHeader>
     return locale == 'ar' ? 'ابحث في الملاحظات' : 'Search notes';
   }
 }
+

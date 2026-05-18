@@ -1,19 +1,18 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/search/smart_search_service.dart';
-import 'package:apex_note/services/security/rate_limiter_service.dart';
-import 'package:apex_note/services/storage/compression_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/version_control_service.dart';
-import 'package:apex_note/services/version_history_service.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/services/search/smart_search_service.dart';
+import 'package:sinan_note/services/security/rate_limiter_service.dart';
+import 'package:sinan_note/services/storage/compression_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/version_control_service.dart';
+import 'package:sinan_note/services/version_history_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
 import '../../test_setup.dart';
-
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -501,3 +500,4 @@ void main() {
     });
   });
 }
+

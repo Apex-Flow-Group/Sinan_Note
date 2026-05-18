@@ -1,29 +1,30 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/core/utils/search_mixin.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/main.dart' show tabToHomeNotifier;
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/common/searchable_header.dart';
-import 'package:apex_note/widgets/common/selected_note_indicator.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
-import 'package:apex_note/widgets/home/note_card_widget.dart';
-import 'package:apex_note/widgets/home/selection_action_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/search_mixin.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show tabToHomeNotifier;
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/common/searchable_header.dart';
+import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
+import 'package:sinan_note/widgets/home/note_card_widget.dart';
+import 'package:sinan_note/widgets/home/selection_action_bar.dart';
 
 class ReminderDashboard extends StatefulWidget {
   const ReminderDashboard({super.key});
@@ -650,3 +651,4 @@ class _ReminderTabView extends StatelessWidget {
     );
   }
 }
+

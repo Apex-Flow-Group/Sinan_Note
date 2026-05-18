@@ -1,11 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/models/category.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/sync/sync_transport.dart';
+
+
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/models/category.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/sync/sync_transport.dart';
 
 /// محرك المزامنة — يحتوي على كل منطق الدمج والقرارات.
 /// لا يعرف شيئاً عن Google Drive مباشرة — يتحدث مع [SyncTransport] فقط.
@@ -282,3 +284,4 @@ class SyncEngine {
     }
   }
 }
+

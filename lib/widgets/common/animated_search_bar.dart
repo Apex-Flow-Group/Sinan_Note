@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 /// شريط بحث متحرك يتوسع ليدفع العنوان ويتقلص عند الإغلاق
 class AnimatedSearchBar extends StatefulWidget {
@@ -122,3 +124,4 @@ class AnimatedSearchBarState extends State<AnimatedSearchBar>
     );
   }
 }
+

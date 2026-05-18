@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 /// Language detection service with performance optimizations
 ///
@@ -254,3 +254,7 @@ class LanguageDetector {
     return sortedScores.first.key;
   }
 }
+
+
+
+

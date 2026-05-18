@@ -1,5 +1,6 @@
-import 'package:apex_note/generated/l10n/app_localizations.dart';
+﻿
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 class SelectionActionBar extends StatelessWidget {
   final ValueNotifier<Set<int>> selectedIdsNotifier;  // 🔥 FIX: Use notifier directly
@@ -186,3 +187,4 @@ class SelectionActionBar extends StatelessWidget {
     );
   }
 }
+

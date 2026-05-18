@@ -1,8 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/providers/master_width_provider.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/providers/master_width_provider.dart';
 
 /// Widget يعرض Master Panel و Details Panel جنباً إلى جنب مع إمكانية تغيير الحجم
 ///
@@ -212,3 +213,4 @@ class _MasterDetailsRow extends StatelessWidget {
     );
   }
 }
+

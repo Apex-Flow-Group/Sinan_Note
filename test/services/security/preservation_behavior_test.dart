@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🛡️ Preservation Behavior Tests — الحفاظ على السلوك الأساسي
 //
 // هذه الاختبارات تؤكد السلوك الأساسي الذي يجب الحفاظ عليه بعد الإصلاح.
@@ -6,10 +6,11 @@
 //
 // **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6**
 
-import 'package:apex_note/services/security/vault_service.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -228,3 +229,4 @@ void main() {
     );
   });
 }
+

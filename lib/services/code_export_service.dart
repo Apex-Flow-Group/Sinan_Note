@@ -1,10 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:apex_note/services/language_detector.dart';
-import 'package:path_provider/path_provider.dart';
-
+import 'dart:io';import 'package:path_provider/path_provider.dart'; import 'package:sinan_note/services/language_detector.dart';
 /// يحفظ ملف الكود مباشرة في مجلد التحميلات بالامتداد الصحيح
 class CodeExportService {
   /// يحفظ الكود في Downloads ويُرجع مسار الملف المحفوظ
@@ -69,3 +65,4 @@ class CodeExportService {
     return getApplicationDocumentsDirectory();
   }
 }
+

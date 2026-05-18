@@ -1,7 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 
 /// زر نسخ الكود مع animation علامة صح — بدون SnackBar
 class CopyCodeButton extends StatefulWidget {
@@ -112,3 +114,4 @@ class _CopyCodeButtonState extends State<CopyCodeButton>
     );
   }
 }
+

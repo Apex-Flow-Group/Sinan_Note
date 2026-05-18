@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/widgets.dart';
+
 
 /// معالجة اتجاه النص — مصدر واحد للعارض والمحرر
 class TextDirectionUtils {
@@ -50,3 +52,4 @@ class TextDirectionUtils {
     return rtlCount >= ltrCount ? TextDirection.rtl : TextDirection.ltr;
   }
 }
+

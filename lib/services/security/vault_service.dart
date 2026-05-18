@@ -5,11 +5,11 @@ import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pointycastle/export.dart' as pc;
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 
 class VaultService {
   static const _storage = FlutterSecureStorage(
@@ -30,8 +30,12 @@ class VaultService {
   /// Validate password strength (English letters, min 8 chars, 1 number, 1 symbol)
   static bool validatePasswordStrength(String password) {
     // لا يسمح بالعربية، يتطلب حرف إنجليزي واحد على الأقل، رقم واحد على الأقل، ورمز واحد، والطول 8+
-    final regex = RegExp(
-        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$');
+    // الرموز المقبولة: !@#$%^&*()-_=+[]{};:'",.<>/?\\|`~
+    final regex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+\[\]{};:'
+        "'"
+        r'",./<>?\\|`~])[A-Za-z\d!@#$%^&*()\-_=+\[\]{};:'
+        "'"
+        r'",./<>?\\|`~]{8,}$');
     return regex.hasMatch(password);
   }
 

@@ -1,15 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/platform_helper.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/shared/settings/font_family_sheet.dart';
-import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
-import 'package:apex_note/screens/shared/settings/settings_utils.dart';
-import 'package:apex_note/screens/shared/settings/widgets/hero_animation_info_sheet.dart';
-import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/shared/settings/font_family_sheet.dart';
+import 'package:sinan_note/screens/shared/settings/settings_dialogs.dart';
+import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
+import 'package:sinan_note/screens/shared/settings/widgets/hero_animation_info_sheet.dart';
+import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
 
 class GeneralSection extends StatelessWidget {
   final bool showBetaSeparate;
@@ -228,12 +229,14 @@ class BetaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isDesktopPlatform) return const SizedBox.shrink();
+    // يظهر فقط في وضع التطوير (debug) — مخفي في الإنتاج تلقائياً
+    if (!kDebugMode) return const SizedBox.shrink();
+
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
     return SettingsSectionCard(
-      title: 'Key Debug',
-      icon: Icons.developer_mode_outlined,
+      title: 'Beta',
+      icon: Icons.science_outlined,
       children: [
         SwitchListTile(
           title: Text(l10n.heroAnimation),

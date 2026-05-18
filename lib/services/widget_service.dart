@@ -1,14 +1,14 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
 class WidgetService {
   static final WidgetService _instance = WidgetService._internal();
@@ -417,3 +417,4 @@ void _widgetBackgroundCallback(Uri? uri) async {
     }
   }
 }
+

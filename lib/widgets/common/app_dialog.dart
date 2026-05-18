@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 /// يفتح الشاشة كـ Dialog عائم على الشاشات الكبيرة (>= 800px)
 /// وكـ push عادي على الشاشات الصغيرة
@@ -53,3 +55,4 @@ class AppDialog {
     );
   }
 }
+

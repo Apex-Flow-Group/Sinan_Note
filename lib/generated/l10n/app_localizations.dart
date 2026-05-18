@@ -4135,6 +4135,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use fingerprint or face recognition'**
   String get unlockWithBiometricDesc;
+
+  /// No description provided for @redo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get redo;
+
+  /// No description provided for @bold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get bold;
+
+  /// No description provided for @italic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get italic;
+
+  /// No description provided for @underline.
+  ///
+  /// In en, this message translates to:
+  /// **'Underline'**
+  String get underline;
+
+  /// No description provided for @strikethrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get strikethrough;
+
+  /// No description provided for @rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get selectAll;
+
+  /// No description provided for @duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicate;
+
+  /// No description provided for @toggleView.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle View'**
+  String get toggleView;
 }
 
 class _AppLocalizationsDelegate

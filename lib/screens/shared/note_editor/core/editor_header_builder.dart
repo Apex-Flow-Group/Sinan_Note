@@ -1,13 +1,14 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/widgets/editor/apex_editor_header.dart';
-import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
-import 'package:apex_note/widgets/editor/editor_selection_panel.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/widgets/editor/apex_editor_header.dart';
+import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
+import 'package:sinan_note/widgets/editor/editor_selection_panel.dart';
 
 class EditorHeaderBuilder {
   static Widget build({
@@ -176,3 +177,4 @@ class EditorHeaderBuilder {
     );
   }
 }
+

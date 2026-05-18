@@ -1,6 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/constants/app_text_styles.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/github.dart';
@@ -26,6 +26,7 @@ import 'package:highlight/languages/swift.dart';
 import 'package:highlight/languages/typescript.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:highlight/languages/yaml.dart';
+import 'package:sinan_note/core/constants/app_text_styles.dart';
 
 class CodeEditor extends StatefulWidget {
   final CodeController controller;
@@ -219,3 +220,4 @@ class _CodeEditorState extends State<CodeEditor> {
     return baseTheme;
   }
 }
+

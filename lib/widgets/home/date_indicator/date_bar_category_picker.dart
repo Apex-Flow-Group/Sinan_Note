@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class DateBarCategoryPickerSheet {
   static void show(
@@ -120,3 +121,4 @@ class DateBarCategoryPickerSheet {
     );
   }
 }
+

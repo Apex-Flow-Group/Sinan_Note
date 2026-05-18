@@ -1,17 +1,17 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/common/glowing_search_field.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
-import 'package:apex_note/widgets/home/selection_action_bar.dart';
-import 'package:apex_note/widgets/home/smooth_search_header_delegate.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/common/glowing_search_field.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
+import 'package:sinan_note/widgets/home/selection_action_bar.dart';
+import 'package:sinan_note/widgets/home/smooth_search_header_delegate.dart';
 
 class SmartHeader extends StatefulWidget {
   final ValueNotifier<Set<int>> selectedNoteIdsNotifier;
@@ -54,8 +54,8 @@ class _SmartHeaderState extends State<SmartHeader>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hideOnScroll =
-        Provider.of<SettingsProvider>(context, listen: false).hideNavOnScroll;
+    final hideOnScroll = Provider.of<SettingsProvider>(context, listen: false)
+        .hideSearchOnScroll;
 
     return ValueListenableBuilder<Set<int>>(
       valueListenable: widget.selectedNoteIdsNotifier,

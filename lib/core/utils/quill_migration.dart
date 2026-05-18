@@ -1,12 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/core/utils/text_direction_utils.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_quill/quill_delta.dart';
-
+import 'dart:convert';import 'package:flutter/widgets.dart'; import 'package:flutter_quill/flutter_quill.dart'; import 'package:flutter_quill/quill_delta.dart';import 'package:sinan_note/core/utils/text_direction_utils.dart';
 /// Top-level function — تعمل في isolate منفصل عبر compute()
 /// تبني Delta JSON من محتوى النوت (نص عادي أو Delta موجود)
 String buildDeltaJsonForIsolate(String content) {
@@ -195,3 +189,4 @@ class QuillMigration {
     }
   }
 }
+

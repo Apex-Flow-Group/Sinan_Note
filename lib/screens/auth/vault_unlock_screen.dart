@@ -1,14 +1,15 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/vault_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/vault_intro_pages.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/vault_desktop_wrapper.dart';
 
 final _passwordFormatter = FilteringTextInputFormatter.allow(
   RegExp(r'[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:,.<>/?\\|`~"]'),
@@ -227,54 +228,56 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
               isDark ? Brightness.light : Brightness.dark,
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            24,
-            24,
-            24,
-            MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!_showNewPasswordMode) const SizedBox(height: 20),
-              if (!_showRecoveryMode && !_showNewPasswordMode)
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: _unlocked
-                        ? Colors.green.withValues(alpha: 0.15)
-                        : Colors.orange.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Icon(
-                      _unlocked ? Icons.lock_open : Icons.lock_outline,
-                      key: ValueKey(_unlocked),
-                      size: 50,
-                      color: _unlocked ? Colors.green : Colors.orange,
+      body: VaultDesktopWrapper(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              24,
+              24,
+              24,
+              MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!_showNewPasswordMode) const SizedBox(height: 20),
+                if (!_showRecoveryMode && !_showNewPasswordMode)
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: _unlocked
+                          ? Colors.green.withValues(alpha: 0.15)
+                          : Colors.orange.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(
+                        _unlocked ? Icons.lock_open : Icons.lock_outline,
+                        key: ValueKey(_unlocked),
+                        size: 50,
+                        color: _unlocked ? Colors.green : Colors.orange,
+                      ),
                     ),
                   ),
-                ),
-              if (!_showNewPasswordMode) const SizedBox(height: 32),
-              if (!_showRecoveryMode && !_showNewPasswordMode)
-                _buildPasswordMode(l10n)
-              else if (_showRecoveryMode)
-                _buildRecoveryMode(l10n)
-              else
-                _buildNewPasswordMode(l10n),
-              if (_errorText != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _errorText!,
-                  style: const TextStyle(color: Colors.red, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
+                if (!_showNewPasswordMode) const SizedBox(height: 32),
+                if (!_showRecoveryMode && !_showNewPasswordMode)
+                  _buildPasswordMode(l10n)
+                else if (_showRecoveryMode)
+                  _buildRecoveryMode(l10n)
+                else
+                  _buildNewPasswordMode(l10n),
+                if (_errorText != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorText!,
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

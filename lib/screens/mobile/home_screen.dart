@@ -1,34 +1,33 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
-
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/mobile/home_screen_widgets.dart';
-import 'package:apex_note/screens/mobile/home_scrollbar.dart';
-import 'package:apex_note/services/sync/cloud_sync_gateway.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart'
-    show isMenuOpenNotifier;
-import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
-import 'package:apex_note/widgets/home/dialogs/filter_sheet.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/widgets/home/note_locator_button.dart';
-import 'package:apex_note/widgets/home/notes_grid_view.dart';
-import 'package:apex_note/widgets/home/smart_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
+import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart'
+    show isMenuOpenNotifier;
+import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
+import 'package:sinan_note/widgets/home/note_locator_button.dart';
+import 'package:sinan_note/widgets/home/notes_grid_view.dart';
+import 'package:sinan_note/widgets/home/smart_header.dart';
 
-export 'package:apex_note/screens/mobile/home_screen_widgets.dart';
+export 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
 
 enum ViewType { listCompact, listExpanded, grid }
 
@@ -451,3 +450,4 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 }
+

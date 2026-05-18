@@ -3,32 +3,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/core/utils/app_navigator.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/providers/master_width_provider.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/desktop/archive_screen_responsive.dart';
-import 'package:apex_note/screens/desktop/locked_notes_screen_responsive.dart';
-import 'package:apex_note/screens/desktop/trash_screen_responsive.dart';
-import 'package:apex_note/screens/onboarding/cinematic_intro_screen.dart';
-import 'package:apex_note/screens/onboarding/splash_screen.dart';
-import 'package:apex_note/screens/other/version_history_screen.dart';
-import 'package:apex_note/screens/other/widget_selection_screen.dart';
-import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
-import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
-import 'package:apex_note/services/app_update_service.dart';
-import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/content_guard.dart';
-import 'package:apex_note/services/security/security_gate.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/widget_service.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
@@ -36,8 +10,33 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/master_width_provider.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/desktop/archive_screen_responsive.dart';
+import 'package:sinan_note/screens/desktop/locked_notes_screen_responsive.dart';
+import 'package:sinan_note/screens/desktop/trash_screen_responsive.dart';
+import 'package:sinan_note/screens/onboarding/cinematic_intro_screen.dart';
+import 'package:sinan_note/screens/onboarding/splash_screen.dart';
+import 'package:sinan_note/screens/other/version_history_screen.dart';
+import 'package:sinan_note/screens/other/widget_selection_screen.dart';
+import 'package:sinan_note/screens/shared/settings_screen_responsive.dart';
+import 'package:sinan_note/screens/sync/google_drive_screen_responsive.dart';
+import 'package:sinan_note/services/app_update_service.dart';
+import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/content_guard.dart';
+import 'package:sinan_note/services/security/security_gate.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
 // Global navigator key for error feedback
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -438,3 +437,5 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
     }
   }
 }
+
+

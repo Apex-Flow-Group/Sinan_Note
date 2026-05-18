@@ -1,11 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui' show lerpDouble;
-
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
+import 'dart:ui' show lerpDouble;import 'package:flutter/material.dart';import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart';
 class PremiumCardEffect extends StatefulWidget {
   final Widget child;
   final Color baseColor;
@@ -179,3 +174,4 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
     );
   }
 }
+

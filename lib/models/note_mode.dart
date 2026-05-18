@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 enum NoteMode { simple, rich, code, reminder, checklist }
 
@@ -29,3 +29,7 @@ extension NoteModeExtension on NoteMode {
     }
   }
 }
+
+
+
+

@@ -1,7 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note.dart';
+
 import 'package:flutter/foundation.dart';
+import 'package:sinan_note/models/note.dart';
 
 /// Provider لإدارة حالة الملاحظة المختارة في نمط Master-Details
 /// 
@@ -40,3 +41,4 @@ class SelectedNoteProvider extends ChangeNotifier {
     return _selectedNote?.id == noteId;
   }
 }
+

@@ -1,13 +1,7 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // DB Inspector — يعرض تقرير كامل عن SQLite
 
-import 'dart:io';
-
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:sqflite/sqflite.dart';
-
+import 'dart:io';import 'package:flutter/material.dart'; import 'package:flutter/services.dart';import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sqflite/sqflite.dart';
 class DbInspectorService {
   static Future<void> showReport(BuildContext context) async {
     final report = await _buildReport();
@@ -253,3 +247,4 @@ class _ReportSheet extends StatelessWidget {
     return buf.toString();
   }
 }
+

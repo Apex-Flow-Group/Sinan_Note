@@ -1,11 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/editor_page_route.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/editor_page_route.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor.dart';
+import 'package:sinan_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
 
 /// مركز التنقل العام — مصدر واحد لكل انتقالات التطبيق.
 ///
@@ -166,3 +167,4 @@ abstract class AppNavigator {
     key.currentState?.pushNamed('/widget_selection');
   }
 }
+
