@@ -1,2 +1,8 @@
+
+┌─────────────────────────────────────────────────────────┐
+│ A new version of Flutter is available!                  │
+│                                                         │
+│ To update to the latest version, run "flutter upgrade". │
+└─────────────────────────────────────────────────────────┘
 Analyzing lib...                                                
-No issues found! (ran in 1.9s)
+No issues found! (ran in 6.6s)
