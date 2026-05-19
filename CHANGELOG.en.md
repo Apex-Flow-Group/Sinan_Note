@@ -32,6 +32,8 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - Desktop no longer shows encrypted notes (reads `lockedNotes` instead of `activeNotes`)
 - Sync time translation works in both Arabic and English
 - Hardcoded `'No notes'` text → `l10n.noNotes`
+- **Fixed window growing on each launch on Windows** — DPI scaling was doubling size on every open/close
+- **Fixed toggle button border radius in Arabic** — rounded corners now follow text direction (RTL/LTR)
 
 ### ⚡ Performance
 - Removed colored shadow (`blurRadius: 18`) from every card — noticeable scroll improvement
