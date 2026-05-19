@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/widgets/editor/code_editor_toolbar.dart';
@@ -58,6 +57,7 @@ class EditorToolbarFactory {
     VoidCallback? onConvertToRich,
     VoidCallback? onConvertToCode,
     VoidCallback? onConvertToSimple,
+    VoidCallback? onAddItem,
   }) {
     switch (mode) {
       case NoteMode.code:
@@ -83,6 +83,7 @@ class EditorToolbarFactory {
           hasContent: hasContent,
           onUndo: onUndo,
           onRedo: onRedo,
+          onAddItem: onAddItem,
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
           onReminderTap: onReminderTap,
           onShareTap: onShareTap ?? () {},
@@ -292,4 +293,3 @@ class _SimpleToolbar extends StatelessWidget {
     );
   }
 }
-

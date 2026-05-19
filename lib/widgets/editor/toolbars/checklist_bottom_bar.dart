@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/widgets/editor/toolbars/editor_options_menu.dart';
 
@@ -10,6 +9,7 @@ class ChecklistBottomBar extends StatelessWidget {
   final bool hasContent;
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
+  final VoidCallback? onAddItem;
   final VoidCallback onBackgroundColorTap;
   final VoidCallback? onReminderTap;
   final VoidCallback onShareTap;
@@ -25,6 +25,7 @@ class ChecklistBottomBar extends StatelessWidget {
     required this.hasContent,
     this.onUndo,
     this.onRedo,
+    this.onAddItem,
     required this.onBackgroundColorTap,
     this.onReminderTap,
     required this.onShareTap,
@@ -47,24 +48,34 @@ class ChecklistBottomBar extends StatelessWidget {
             Row(
               children: [
                 IconButton(
+                  icon: Icon(Icons.playlist_add_rounded, color: textColor),
+                  onPressed: onAddItem,
+                  padding: const EdgeInsets.all(6),
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
+                ),
+                IconButton(
                   icon: Icon(Icons.palette_outlined, color: textColor),
                   onPressed: onBackgroundColorTap,
                   padding: const EdgeInsets.all(6),
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
                 IconButton(
                   icon: Icon(Icons.undo_rounded,
                       color: onUndo != null ? textColor : Colors.grey),
                   onPressed: onUndo,
                   padding: const EdgeInsets.all(6),
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
                 IconButton(
                   icon: Icon(Icons.redo_rounded,
                       color: onRedo != null ? textColor : Colors.grey),
                   onPressed: onRedo,
                   padding: const EdgeInsets.all(6),
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
               ],
             ),
@@ -116,4 +127,3 @@ class ChecklistBottomBar extends StatelessWidget {
     );
   }
 }
-

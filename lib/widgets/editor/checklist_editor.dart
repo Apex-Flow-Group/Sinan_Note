@@ -1,6 +1,18 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:flutter/material.dart'; import 'package:flutter/services.dart';import 'package:sinan_note/core/constants/app_text_styles.dart'; import 'package:sinan_note/core/utils/checklist_formatter.dart'; import 'package:sinan_note/core/utils/text_direction_utils.dart'; import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/services/unified_notification_service.dart'; import 'package:sinan_note/widgets/common/app_bottom_sheet.dart'; import 'package:sinan_note/widgets/editor/checklist_item_widget.dart'; import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
+import 'package:sinan_note/widgets/editor/checklist_item_widget.dart';
+import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
+
 class ChecklistEditor extends StatefulWidget {
   final String initialContent;
   final String? initialTitle; // ← العنوان الأصلي للنوتة كـ fallback
@@ -8,6 +20,7 @@ class ChecklistEditor extends StatefulWidget {
   final Color backgroundColor;
   final VoidCallback? onUndoRedoChanged;
   final Function(ChecklistUndoRedoController)? onUndoRedoControllerCreated;
+  final Function(VoidCallback addItem)? onAddItemCreated;
   final bool readOnly;
 
   const ChecklistEditor({
@@ -18,6 +31,7 @@ class ChecklistEditor extends StatefulWidget {
     this.initialTitle,
     this.onUndoRedoChanged,
     this.onUndoRedoControllerCreated,
+    this.onAddItemCreated,
     this.readOnly = false,
   });
 
@@ -31,6 +45,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   final Map<String, FocusNode> _focusNodes = {};
   final Map<String, VoidCallback> _listeners = {};
   final TextEditingController _titleController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   // Undo/Redo support
   final List<String> _history = [];
@@ -48,6 +63,10 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     _titleDirection = TextDirectionUtils.getDirection(_titleController.text);
     _titleController.addListener(_notifyParent);
     _titleController.addListener(_onTitleChanged);
+    // Expose addItem to parent
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onAddItemCreated?.call(() => _addNewItem(autoFocus: true));
+    });
   }
 
   void _onTitleChanged() {
@@ -132,17 +151,23 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
     _focusNodes[item.id]!.addListener(() {
       if (_focusNodes[item.id]!.hasFocus) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          final context = _focusNodes[item.id]!.context;
-          if (context != null && context.mounted) {
-            Scrollable.ensureVisible(
-              context,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignment: 0.5,
-            );
-          }
-        });
+        // If it's the last item, scroll to max extent to show add button
+        final isLastItem = _items.isNotEmpty && _items.last.id == item.id;
+        if (isLastItem) {
+          _scrollToBottomAfterKeyboard();
+        } else {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            final context = _focusNodes[item.id]!.context;
+            if (context != null && context.mounted) {
+              Scrollable.ensureVisible(
+                context,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                alignment: 0.5,
+              );
+            }
+          });
+        }
       }
     });
   }
@@ -165,13 +190,51 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
     if (autoFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _focusNodes[newItem.id]?.requestFocus();
+        final focusNode = _focusNodes[newItem.id];
+        if (focusNode != null) {
+          focusNode.requestFocus();
+          // Wait for keyboard to fully appear then scroll
+          _scrollToBottomAfterKeyboard();
+        }
       });
     }
 
     // Only notify parent if not a ghost item or if ghost item gets content
     if (!isGhostItem) {
       _notifyParent();
+    }
+  }
+
+  /// Scrolls to ensure the focused item is visible above the toolbar
+  void _scrollToBottomAfterKeyboard() {
+    for (final delay in [200, 500, 800]) {
+      Future.delayed(Duration(milliseconds: delay), () {
+        if (!mounted) return;
+        // Find the currently focused item and ensure it's visible
+        for (final item in _items) {
+          final focusNode = _focusNodes[item.id];
+          if (focusNode != null && focusNode.hasFocus) {
+            final ctx = focusNode.context;
+            if (ctx != null && ctx.mounted) {
+              Scrollable.ensureVisible(
+                ctx,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+                alignment: 0.8,
+              );
+              return;
+            }
+          }
+        }
+        // If focused item context not available (not rendered yet), scroll to bottom
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        }
+      });
     }
   }
 
@@ -446,9 +509,9 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     final l10n = AppLocalizations.of(context)!;
     final bool isLightColor = widget.backgroundColor.computeLuminance() > 0.5;
     final Color textColor = isLightColor ? Colors.black87 : Colors.white;
-    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
 
     return CustomScrollView(
+      controller: _scrollController,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       physics: const ClampingScrollPhysics(),
       slivers: [
@@ -585,16 +648,14 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                   );
                 },
         ),
-        SliverPadding(padding: EdgeInsets.only(bottom: keyboardHeight)),
         // زر إضافة item واحد في أسفل القائمة
         if (!widget.readOnly)
           SliverToBoxAdapter(
             child: Padding(
-              padding:
-                  EdgeInsets.fromLTRB(12, 4, 12, keyboardHeight > 0 ? 8 : 24),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
               child: TextButton.icon(
                 onPressed: () => _addNewItem(autoFocus: true),
-                icon: Icon(Icons.add_rounded,
+                icon: Icon(Icons.add_circle_outline_rounded,
                     size: 18, color: textColor.withValues(alpha: 0.5)),
                 label: Text(
                   l10n.addItem,
@@ -611,6 +672,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
               ),
             ),
           ),
+        // Extra space so the last item + add button can scroll above the toolbar
+        const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
       ],
     );
   }
@@ -673,6 +736,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     // 🛑 CRITICAL: Remove title listeners BEFORE clearing
     _titleController.removeListener(_notifyParent);
     _titleController.removeListener(_onTitleChanged);
@@ -711,4 +775,3 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     super.dispose();
   }
 }
-

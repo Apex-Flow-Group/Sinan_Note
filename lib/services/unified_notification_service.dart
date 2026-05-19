@@ -210,7 +210,13 @@ class UnifiedNotificationService {
       executedEarlyNotifier: pendingAction.executedEarly,
     );
 
-    _showNotification(context, config);
+    _showNotification(context, config, onDismissed: () {
+      // عند السحب: نفذ الإجراء فوراً إذا لم يُنفذ بعد
+      final action = _pendingActions.remove(actionKey);
+      if (action != null && !action.executedEarly.value) {
+        action.execute();
+      }
+    });
   }
 
   /// عرض إشعار مع إجراء مخصص
@@ -274,7 +280,8 @@ class UnifiedNotificationService {
   }
 
   /// عرض الإشعار الفعلي
-  void _showNotification(BuildContext context, NotificationConfig config) {
+  void _showNotification(BuildContext context, NotificationConfig config,
+      {VoidCallback? onDismissed}) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1024;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
@@ -298,7 +305,7 @@ class UnifiedNotificationService {
         ? SnackBarBehavior.fixed
         : SnackBarBehavior.floating;
 
-    messenger.showSnackBar(
+    final snackBarController = messenger.showSnackBar(
       SnackBar(
         content: _buildContent(context, config, messenger),
         backgroundColor: _getBackgroundColor(config.type, context),
@@ -311,11 +318,18 @@ class UnifiedNotificationService {
             ? margin
             : null,
         duration: config.duration,
-        dismissDirection: config.dismissible
-            ? DismissDirection.horizontal
-            : DismissDirection.none,
+        dismissDirection: DismissDirection.down,
       ),
     );
+
+    // Handle swipe dismiss for undo notifications
+    if (onDismissed != null) {
+      snackBarController.closed.then((reason) {
+        if (reason == SnackBarClosedReason.swipe) {
+          onDismissed();
+        }
+      });
+    }
   }
 
   /// بناء محتوى الإشعار

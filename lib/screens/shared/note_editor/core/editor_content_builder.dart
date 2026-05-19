@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
@@ -61,6 +60,9 @@ class EditorContentBuilder {
         onUndoRedoControllerCreated: onUndoRedoControllerCreated,
         onUndoRedoChanged: onUndoRedoChanged,
         onChecklistTitleChanged: onChecklistTitleChanged,
+        onAddItemCreated: (addItem) {
+          coordinator.checklistAddItem = addItem;
+        },
         onContentChanged: () {
           coordinator.stateManager.markDirty();
         },
@@ -87,4 +89,3 @@ class EditorContentBuilder {
     }
   }
 }
-
