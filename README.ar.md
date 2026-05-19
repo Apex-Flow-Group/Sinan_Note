@@ -16,8 +16,10 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B.svg?logo=flutter)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)](#)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)](#الترخيص)
+[![SinanAi](https://img.shields.io/badge/SinanAi.net-التطبيقات%20المبتكرة-orange.svg)](https://sinanai.net/en)
+[![Apex Flow](https://img.shields.io/badge/Apex%20Flow%20Group-الرسمي-blueviolet.svg)](https://apexflow.now/en)
 
-[Google Play](#) · [الميزات](#الميزات) · [هيكل المشروع](#هيكل-المشروع) · [التشغيل](#التشغيل-السريع)
+[Google Play](https://play.google.com/apps/internaltest/4701054794307352165) · [الميزات](#الميزات) · [هيكل المشروع](#هيكل-المشروع) · [التشغيل](#التشغيل-السريع)
 
 </div>
 
@@ -167,3 +169,11 @@ Copyright © 2025–2026 Apex Flow Group. All rights reserved.
 ```
 
 هذا المشروع مرخص بشكل خاص. جميع الحقوق محفوظة لـ Apex Flow Group.
+
+---
+
+<div align="center">
+
+**[SinanAi.net](https://sinanai.net/en) — التطبيقات المبتكرة &nbsp;·&nbsp; [Apex Flow Group](https://apexflow.now/en) — الرسمي**
+
+</div>

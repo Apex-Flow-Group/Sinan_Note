@@ -1386,7 +1386,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get officialVersion => 'نسخة رسمية - Google Play';
 
   @override
-  String get sinanAiNet => 'SinanAi.net — التطبيقات الناشئة';
+  String get sinanAiNet => 'SinanAi.net — التطبيقات المبتكرة';
 
   @override
   String get importantLinks => 'الروابط المهمة';

@@ -144,9 +144,13 @@ class _AboutScreenState extends State<AboutScreen> {
                 Icons.link_rounded,
                 [
                   _buildLinkTile(l10n.appPageGooglePlay, Icons.shop_rounded,
-                      'https://play.google.com/store/apps/dev?id=5409981776310932919'),
-                  _buildLinkTile(l10n.sinanAiNet, Icons.language_rounded,
-                      'https://sinanai.net'),
+                      'https://play.google.com/apps/internaltest/4701054794307352165'),
+                  _buildLinkTile(
+                      l10n.sinanAiNet,
+                      Icons.language_rounded,
+                      isArabic
+                          ? 'https://sinanai.net'
+                          : 'https://sinanai.net/en'),
                   _buildLinkTile(l10n.githubRepository, Icons.code_rounded,
                       'https://github.com/Apex-Flow-Group/Sinan_Note'),
                   _buildLinkTile(

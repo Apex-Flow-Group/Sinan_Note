@@ -16,8 +16,10 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B.svg?logo=flutter)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)](#)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)](#license)
+[![SinanAi](https://img.shields.io/badge/SinanAi.net-Innovative%20Apps-orange.svg)](https://sinanai.net/en)
+[![Apex Flow](https://img.shields.io/badge/Apex%20Flow%20Group-Official-blueviolet.svg)](https://apexflow.now/en)
 
-[Google Play](#) · [Features](#features) · [Project Structure](#project-structure) · [Getting Started](#getting-started)
+[Google Play](https://play.google.com/apps/internaltest/4701054794307352165) · [Features](#features) · [Project Structure](#project-structure) · [Getting Started](#getting-started)
 
 </div>
 
@@ -167,3 +169,11 @@ Copyright © 2025–2026 Apex Flow Group. All rights reserved.
 ```
 
 This project is proprietary. All rights reserved by Apex Flow Group.
+
+---
+
+<div align="center">
+
+**[SinanAi.net](https://sinanai.net/en) — Innovative Apps &nbsp;·&nbsp; [Apex Flow Group](https://apexflow.now/en) — Official**
+
+</div>

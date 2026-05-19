@@ -66,8 +66,8 @@ class AboutSection extends StatelessWidget {
           title: Text(l10n.shareApp),
           onTap: () {
             final msg = currentLang == 'ar'
-                ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
-                : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
+                ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً:\nhttps://play.google.com/apps/internaltest/4701054794307352165'
+                : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/apps/internaltest/4701054794307352165';
             CustomShareSheet.show(context, msg, appShare: true);
           },
         ),
