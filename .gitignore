@@ -30,6 +30,18 @@ migrate_working_dir/
 # Archive folder
 archive/
 
+# Store assets (screenshots for Play Store — kept externally)
+store_assets/
+
+# Installer binaries
+installer/
+
+# Refactoring tool and docs (kept externally)
+.refactoring/
+refactoring_tool/
+docs/
+scripts/
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
