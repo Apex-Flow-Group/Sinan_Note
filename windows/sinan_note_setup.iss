@@ -5,7 +5,8 @@
 #define AppPublisher "Apex Flow Group"
 #define AppURL "https://sinanai.net"
 #define AppExeName "sinan_note.exe"
-#define SourceDir "build\windows\x64\runner\Release"
+#define ProjectDir "C:\Users\aljaw\Documents\GitHub\Sinan_Note_G"
+#define SourceDir ProjectDir + "\build\windows\x64\runner\Release"
 #define AppVersion GetVersionNumbersString(SourceDir + "\" + AppExeName)
 
 [Setup]
@@ -19,9 +20,9 @@ AppUpdatesURL={#AppURL}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 AllowNoIcons=yes
-OutputDir=installer
+OutputDir={#ProjectDir}\installer
 OutputBaseFilename=SinanNote_Setup_{#AppVersion}
-SetupIconFile=windows\runner\resources\app_icon.ico
+SetupIconFile={#ProjectDir}\windows\runner\resources\app_icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
