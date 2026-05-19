@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
-import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
@@ -47,6 +46,57 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
   _CatMode _catMode = _CatMode.normal;
   bool _isAdding = false;
 
+  /// يُعيد تعيين حالة الخزنة في الـ Drawer عند الانتقال لشاشة أخرى.
+  void _exitVaultIfActive(String destination) {
+    if (_activeExtraNotifier.value == 'vault') {
+      _activeExtraNotifier.value = null;
+    }
+  }
+
+  /// يُغلق الـ Drawer ويتنقل للوجهة المطلوبة بأمان.
+  /// يحفظ reference للـ navigator قبل pop لتجنب مشكلة context unmounted.
+  Future<void> _navigateFromDrawer(
+    BuildContext context, {
+    required String destination,
+    required String routeName,
+  }) async {
+    _exitVaultIfActive(destination);
+
+    // نحفظ reference للـ root navigator
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+
+    // نتحقق هل نحن داخل الخزنة
+    bool isInVault = false;
+    rootNavigator.popUntil((route) {
+      if (route.settings.name == '/vault/locked' ||
+          route.settings.name == '/vault/unlock' ||
+          route.settings.name == '/vault/entry') {
+        isInVault = true;
+      }
+      return true;
+    });
+
+    // إغلاق الـ Drawer
+    final scaffoldState = Scaffold.maybeOf(context);
+    if (scaffoldState != null && scaffoldState.isDrawerOpen) {
+      scaffoldState.closeDrawer();
+    }
+
+    if (isInVault) {
+      // LockedNotesScreen فيها postFrameCallback يعمل exitVault عند pop.
+      // نعمل pop للخزنة ثم ننتظر حتى ينتهي الـ postFrameCallback.
+      rootNavigator.popUntil(
+        (route) => route.settings.name == '/main' || route.isFirst,
+      );
+      // ننتظر حتى ينتهي postFrameCallback في LockedNotesScreen
+      await WidgetsBinding.instance.endOfFrame;
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    // التنقل للوجهة
+    await rootNavigator.pushNamed(routeName);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -78,10 +128,18 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                                     .watch<CategoriesProvider>()
                                     .selectedCategoryId ==
                                 null,
-                    onTap: () {
-                      Navigator.pop(context); // إغلاق الـ Drawer
-                      // العودة للرئيسية من أي شاشة
-                      AppNavigator.popToMain(context);
+                    onTap: () async {
+                      _exitVaultIfActive('Home');
+                      final rootNavigator =
+                          Navigator.of(context, rootNavigator: true);
+                      final scaffoldState = Scaffold.maybeOf(context);
+                      if (scaffoldState != null && scaffoldState.isDrawerOpen) {
+                        scaffoldState.closeDrawer();
+                      }
+                      rootNavigator.popUntil(
+                        (route) =>
+                            route.settings.name == '/main' || route.isFirst,
+                      );
                     },
                   ),
                   // â”€â”€â”€ ط²ط± ط§ظ„طھطµظ†ظٹظپط§طھ â”€â”€â”€
@@ -116,11 +174,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/archive',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      AppNavigator.popToMain(context);
-                      await AppNavigator.toArchive(context);
-                      if (!context.mounted) return;
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'Archive',
+                        routeName: '/archive',
+                      );
+                      if (!mounted) return;
                       widget.onNotesChanged();
                     },
                   ),
@@ -132,11 +191,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/trash',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      AppNavigator.popToMain(context);
-                      await AppNavigator.toTrash(context);
-                      if (!context.mounted) return;
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'Trash',
+                        routeName: '/trash',
+                      );
+                      if (!mounted) return;
                       widget.onNotesChanged();
                     },
                   ),
@@ -175,10 +235,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         isDark: isDark,
                         isActive: currentRoute == '/drive',
                         onTap: () async {
-                          Navigator.of(context, rootNavigator: true).pop();
-                          if (!context.mounted) return;
-                          AppNavigator.popToMain(context);
-                          await AppNavigator.toDrive(context);
+                          await _navigateFromDrawer(
+                            context,
+                            destination: 'Google Drive',
+                            routeName: '/drive',
+                          );
                         },
                       ),
                     ),
@@ -192,10 +253,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/history',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      AppNavigator.popToMain(context);
-                      await AppNavigator.toHistory(context);
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'History',
+                        routeName: '/history',
+                      );
                     },
                   ),
                   _buildDrawerItem(
@@ -206,11 +268,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/settings',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      AppNavigator.popToMain(context);
-                      await AppNavigator.toSettings(context);
-                      if (!context.mounted) return;
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'Settings',
+                        routeName: '/settings',
+                      );
+                      if (!mounted) return;
                       widget.onNotesChanged();
                     },
                   ),
@@ -445,15 +508,20 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     if (!context.mounted) return;
 
     if (biometricEnabled && hasBiometrics) {
-      Navigator.of(context).pop();
+      // البصمة أولاً قبل إغلاق الـ Drawer — حتى يبقى context mounted
       final authenticated = await BiometricService.authenticate();
       if (!context.mounted) return;
 
+      // نحفظ reference للـ navigator قبل إغلاق الـ Drawer
+      final navigator = Navigator.of(context, rootNavigator: true);
+
+      // إغلاق الـ Drawer
+      Navigator.of(context).pop();
+
       if (authenticated) {
-        VaultNavigator.toLockedNotes(context);
+        VaultNavigator.pushLockedNotes(navigator);
       } else {
-        await Navigator.push(
-          context,
+        await navigator.push(
           MaterialPageRoute(
             builder: (_) => const VaultEntryScreen(),
             settings: const RouteSettings(name: '/vault/entry'),
@@ -461,10 +529,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
         );
       }
     } else {
+      final navigator = Navigator.of(context, rootNavigator: true);
       Navigator.pop(context);
-      if (!context.mounted) return;
-      await Navigator.push(
-        context,
+      await navigator.push(
         MaterialPageRoute(
           builder: (_) => const VaultEntryScreen(),
           settings: const RouteSettings(name: '/vault/entry'),

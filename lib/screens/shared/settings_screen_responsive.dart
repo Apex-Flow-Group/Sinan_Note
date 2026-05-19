@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -69,10 +68,7 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
     ];
 
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context, rootNavigator: true).popUntil((r) => r.settings.name == '/main' || r.isFirst);
-      },
+      canPop: true,
       child: Scaffold(
         drawer: HomeDrawerWidget(
           onBackupTap: () {},
@@ -161,4 +157,3 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
         children: [child],
       );
 }
-

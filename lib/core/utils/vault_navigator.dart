@@ -25,10 +25,23 @@ abstract class VaultNavigator {
   static const String mainLayoutRouteName = '/main';
 
   /// الانتقال لشاشة الملاحظات المقفلة (يستبدل الشاشة الحالية)
+  /// الانتقال لشاشة الملاحظات المقفلة (يستبدل الشاشة الحالية)
   static void toLockedNotes(BuildContext context) {
     if (!context.mounted) return;
     Navigator.pushReplacement(
       context,
+      MaterialPageRoute(
+        builder: (_) => const LockedNotesScreenResponsive(),
+        settings: const RouteSettings(name: '/vault/locked'),
+      ),
+    );
+  }
+
+  /// فتح الخزنة فوق الشاشة الحالية (push بدلاً من pushReplacement).
+  /// يُستخدم من الـ Drawer حيث نحتاج الحفاظ على `/main` في الـ stack
+  /// حتى يعمل [exitVault] بشكل صحيح.
+  static void pushLockedNotes(NavigatorState navigator) {
+    navigator.push(
       MaterialPageRoute(
         builder: (_) => const LockedNotesScreenResponsive(),
         settings: const RouteSettings(name: '/vault/locked'),

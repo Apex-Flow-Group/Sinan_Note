@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -221,11 +220,13 @@ class _PinLockScreenState extends State<PinLockScreen>
         return;
       }
 
+      setState(() => _loading = true);
       await UnifiedLockService().setPin(_pin);
       UnifiedLockService().markAuthenticated();
       await RateLimiterService.reset();
       _successHandled = true;
       widget.onSuccess?.call();
+      if (mounted) setState(() => _loading = false);
     } else {
       setState(() => _loading = true);
       try {
@@ -826,4 +827,3 @@ class _PinLockScreenState extends State<PinLockScreen>
     );
   }
 }
-

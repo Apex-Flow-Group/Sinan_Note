@@ -23,67 +23,65 @@ class SwipeSection extends StatelessWidget {
         : settings.languageCode;
 
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final primary = Theme.of(context).colorScheme.primary;
 
     return SettingsSectionCard(
       title: l10n.swipeGestures,
       icon: Icons.swipe_rounded,
       children: [
         if (!PlatformHelper.isDesktopPlatform) ...[
-          // ─── شريط البحث ─────────────────────────────────────────────────
-          ListTile(
-            leading: const Icon(Icons.search_rounded),
-            title: Text(isAr ? 'شريط البحث بالرئيسية' : 'Home search bar'),
-            trailing: SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(
-                  value: false,
-                  label: Text(isAr ? 'ثابت' : 'Fixed',
-                      style: const TextStyle(fontSize: 12)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.search_rounded, color: primary),
+                    const SizedBox(width: 16),
+                    Text(isAr ? 'شريط البحث بالرئيسية' : 'Home search bar',
+                        style: Theme.of(context).textTheme.bodyLarge),
+                  ],
                 ),
-                ButtonSegment(
-                  value: true,
-                  label: Text(isAr ? 'متحرك' : 'Animated',
-                      style: const TextStyle(fontSize: 12)),
+                const SizedBox(height: 8),
+                _ToggleButtons(
+                  value: settings.hideSearchOnScroll,
+                  labelFalse: isAr ? 'ثابت' : 'Fixed',
+                  labelTrue: isAr ? 'متحرك' : 'Animated',
+                  onChanged: settings.setHideSearchOnScroll,
                 ),
               ],
-              selected: {settings.hideSearchOnScroll},
-              onSelectionChanged: (val) =>
-                  settings.setHideSearchOnScroll(val.first),
-              style: const ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
             ),
           ),
+          const SizedBox(height: 4),
           // ─── شريط التنقل السفلي ─────────────────────────────────────────
-          ListTile(
-            leading: const Icon(Icons.vertical_align_bottom_rounded),
-            title: Text(isAr ? 'شريط التنقل السفلي' : 'Bottom navigation bar'),
-            trailing: SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(
-                  value: false,
-                  label: Text(isAr ? 'ثابت' : 'Fixed',
-                      style: const TextStyle(fontSize: 12)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.more_horiz_rounded, color: primary),
+                    const SizedBox(width: 16),
+                    Text(isAr ? 'شريط التنقل السفلي' : 'Bottom navigation bar',
+                        style: Theme.of(context).textTheme.bodyLarge),
+                  ],
                 ),
-                ButtonSegment(
-                  value: true,
-                  label: Text(isAr ? 'متحرك' : 'Animated',
-                      style: const TextStyle(fontSize: 12)),
+                const SizedBox(height: 8),
+                _ToggleButtons(
+                  value: settings.hideNavOnScroll,
+                  labelFalse: isAr ? 'ثابت' : 'Fixed',
+                  labelTrue: isAr ? 'متحرك' : 'Animated',
+                  onChanged: settings.setHideNavOnScroll,
                 ),
               ],
-              selected: {settings.hideNavOnScroll},
-              onSelectionChanged: (val) =>
-                  settings.setHideNavOnScroll(val.first),
-              style: const ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
             ),
           ),
+          const SizedBox(height: 4),
         ],
         SwitchListTile(
-          secondary: const Icon(Icons.swipe),
+          secondary: Icon(Icons.swipe, color: primary),
           title: Text(l10n.swipeGesturesDesc),
           subtitle: Text(settings.swipeEnabled ? l10n.enabled : l10n.disabled),
           value: settings.swipeEnabled,
@@ -93,24 +91,28 @@ class SwipeSection extends StatelessWidget {
           ListTile(
             contentPadding:
                 const EdgeInsetsDirectional.only(start: 72, end: 16),
-            leading: const Icon(Icons.swipe_right_rounded),
+            leading: Icon(Icons.swipe_right_rounded, color: primary),
             title: Text(l10n.swipeRight),
             subtitle: Text(SettingsUtils.getSwipeActionText(
                 settings.swipeRightAction, l10n)),
             trailing: Icon(
-                SettingsUtils.getSwipeActionIcon(settings.swipeRightAction)),
+                SettingsUtils.getSwipeActionIcon(settings.swipeRightAction),
+                color: SettingsUtils.getSwipeActionColor(
+                    settings.swipeRightAction)),
             onTap: () => SettingsDialogs.showSwipeActionDialog(
                 context, settings, true, currentLang),
           ),
           ListTile(
             contentPadding:
                 const EdgeInsetsDirectional.only(start: 72, end: 16),
-            leading: const Icon(Icons.swipe_left_rounded),
+            leading: Icon(Icons.swipe_left_rounded, color: primary),
             title: Text(l10n.swipeLeft),
             subtitle: Text(SettingsUtils.getSwipeActionText(
                 settings.swipeLeftAction, l10n)),
             trailing: Icon(
-                SettingsUtils.getSwipeActionIcon(settings.swipeLeftAction)),
+                SettingsUtils.getSwipeActionIcon(settings.swipeLeftAction),
+                color: SettingsUtils.getSwipeActionColor(
+                    settings.swipeLeftAction)),
             onTap: () => SettingsDialogs.showSwipeActionDialog(
                 context, settings, false, currentLang),
           ),
@@ -119,7 +121,7 @@ class SwipeSection extends StatelessWidget {
             ListTile(
               contentPadding:
                   const EdgeInsetsDirectional.only(start: 72, end: 16),
-              leading: const Icon(Icons.bolt_rounded),
+              leading: Icon(Icons.bolt_rounded, color: primary),
               title: Text(l10n.custom),
               subtitle: Text(
                   '${settings.swipeCustomActions.length} ${l10n.selected}'),
@@ -129,6 +131,123 @@ class SwipeSection extends StatelessWidget {
             ),
         ],
       ],
+    );
+  }
+}
+
+/// زران متساويا الحجم — تأثير لون بدون أيقونة صح
+class _ToggleButtons extends StatelessWidget {
+  final bool value;
+  final String labelFalse;
+  final String labelTrue;
+  final ValueChanged<bool> onChanged;
+
+  const _ToggleButtons({
+    required this.value,
+    required this.labelFalse,
+    required this.labelTrue,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: SizedBox(
+        width: 200,
+        height: 36,
+        child: Row(
+          children: [
+            Expanded(
+              child: _Btn(
+                label: labelFalse,
+                selected: !value,
+                isFirst: true,
+                isLast: false,
+                cs: cs,
+                onTap: () => onChanged(false),
+              ),
+            ),
+            Expanded(
+              child: _Btn(
+                label: labelTrue,
+                selected: value,
+                isFirst: false,
+                isLast: true,
+                cs: cs,
+                onTap: () => onChanged(true),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Btn extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final bool isFirst;
+  final bool isLast;
+  final ColorScheme cs;
+  final VoidCallback onTap;
+
+  const _Btn({
+    required this.label,
+    required this.selected,
+    required this.isFirst,
+    required this.isLast,
+    required this.cs,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.horizontal(
+      left: isFirst ? const Radius.circular(18) : Radius.zero,
+      right: isLast ? const Radius.circular(18) : Radius.zero,
+    );
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected
+              ? cs.primary.withValues(alpha: 0.18)
+              : cs.surfaceContainerHighest,
+          borderRadius: radius,
+          border: Border(
+            top: BorderSide(
+                color: selected ? cs.primary : cs.outlineVariant,
+                width: selected ? 1.5 : 1),
+            bottom: BorderSide(
+                color: selected ? cs.primary : cs.outlineVariant,
+                width: selected ? 1.5 : 1),
+            left: isFirst
+                ? BorderSide(
+                    color: selected ? cs.primary : cs.outlineVariant,
+                    width: selected ? 1.5 : 1)
+                : BorderSide.none,
+            right: isLast
+                ? BorderSide(
+                    color: selected ? cs.primary : cs.outlineVariant,
+                    width: selected ? 1.5 : 1)
+                : BorderSide.none,
+          ),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected ? cs.primary : cs.onSurfaceVariant,
+          ),
+        ),
+      ),
     );
   }
 }

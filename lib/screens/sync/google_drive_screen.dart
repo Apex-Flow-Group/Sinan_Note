@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -114,6 +113,11 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settingsProvider = Provider.of<SettingsProvider>(context);
@@ -128,13 +132,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
         : l10n.never;
 
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.of(context, rootNavigator: true).popUntil(
-              (route) => route.settings.name == '/main' || route.isFirst);
-        }
-      },
+      canPop: true,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.googleDriveSync),
@@ -495,4 +493,3 @@ class _GoogleDriveDesktopMasterDetailsState
     );
   }
 }
-

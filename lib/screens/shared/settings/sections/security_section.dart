@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
@@ -19,14 +18,13 @@ class SecuritySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
+    final primary = Theme.of(context).colorScheme.primary;
     return SettingsSectionCard(
       title: l10n.security,
       icon: Icons.shield_rounded,
       children: [
         SwitchListTile(
-          secondary: Icon(Icons.lock_rounded, color: primaryColor),
+          secondary: Icon(Icons.lock_rounded, color: primary),
           title: Text(l10n.appLock),
           subtitle:
               Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
@@ -94,8 +92,7 @@ class SecuritySection extends StatelessWidget {
               return Column(
                 children: [
                   SwitchListTile(
-                    secondary: Icon(Icons.fingerprint_rounded,
-                        color: Theme.of(context).colorScheme.primary),
+                    secondary: Icon(Icons.fingerprint_rounded, color: primary),
                     title: Text(l10n.unlockWithBiometric),
                     subtitle: Text(l10n.unlockWithBiometricDesc),
                     value: settings.biometricLockEnabled,
@@ -120,7 +117,7 @@ class SecuritySection extends StatelessWidget {
           Column(
             children: [
               ListTile(
-                leading: Icon(Icons.timer_outlined, color: primaryColor),
+                leading: Icon(Icons.timer_outlined, color: primary),
                 title: Text(l10n.lockDelay),
                 subtitle: Text(
                   settings.lockDelayEnabled
@@ -138,7 +135,7 @@ class SecuritySection extends StatelessWidget {
             ],
           ),
         SwitchListTile(
-          secondary: Icon(Icons.visibility_off_rounded, color: primaryColor),
+          secondary: Icon(Icons.visibility_off_rounded, color: primary),
           title: Text(l10n.hideContentInBackground),
           subtitle: Text(l10n.applyBlurEffect),
           value: settings.hideContentInBackground,
@@ -148,4 +145,3 @@ class SecuritySection extends StatelessWidget {
     );
   }
 }
-

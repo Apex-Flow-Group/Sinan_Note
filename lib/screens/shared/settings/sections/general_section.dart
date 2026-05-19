@@ -20,10 +20,11 @@ class GeneralSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
+    final primary = Theme.of(context).colorScheme.primary;
 
     final tiles = <Widget>[
       ListTile(
-        leading: const Icon(Icons.language),
+        leading: Icon(Icons.language, color: primary),
         title: Text(l10n.language),
         subtitle:
             Text(SettingsUtils.getLanguageText(settings.languageCode, l10n)),
@@ -31,13 +32,13 @@ class GeneralSection extends StatelessWidget {
             SettingsDialogs.showLanguageDialog(context, settings, l10n),
       ),
       ListTile(
-        leading: const Icon(Icons.brightness_6),
+        leading: Icon(Icons.brightness_6, color: primary),
         title: Text(l10n.theme),
         subtitle: Text(SettingsUtils.getThemeText(settings.themeMode, l10n)),
         onTap: () => SettingsDialogs.showThemeDialog(context, settings),
       ),
       ListTile(
-        leading: const Icon(Icons.format_size),
+        leading: Icon(Icons.format_size, color: primary),
         title: Text(l10n.fontSize),
         subtitle: Text("${(settings.textScaleFactor * 100).round()}%"),
         trailing: SizedBox(
@@ -52,7 +53,7 @@ class GeneralSection extends StatelessWidget {
         ),
       ),
       ListTile(
-        leading: const Icon(Icons.font_download_outlined),
+        leading: Icon(Icons.font_download_outlined, color: primary),
         title: Text(l10n.fontFamily),
         subtitle: Text(_fontFamilyLabel(settings.fontFamily, l10n)),
         onTap: () => _showFontFamilySheet(context, settings, l10n),
@@ -62,7 +63,7 @@ class GeneralSection extends StatelessWidget {
           secondary: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.auto_awesome_outlined),
+              Icon(Icons.auto_awesome_outlined, color: primary),
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: () => HeroAnimationInfoSheet.show(context, l10n),
@@ -78,7 +79,7 @@ class GeneralSection extends StatelessWidget {
           onChanged: settings.setHeroAnimationEnabled,
         ),
       ListTile(
-        leading: const Icon(Icons.swipe_down_rounded),
+        leading: Icon(Icons.swipe_down_rounded, color: primary),
         title: Text(_pullToRefreshTitle(context, settings.pullToRefreshMode)),
         subtitle:
             Text(_pullToRefreshSubtitle(context, settings.pullToRefreshMode)),
@@ -86,7 +87,7 @@ class GeneralSection extends StatelessWidget {
       ),
       // ── إعدادات المحرر ──────────────────────────────────────────
       SwitchListTile(
-        secondary: const Icon(Icons.touch_app_rounded),
+        secondary: Icon(Icons.touch_app_rounded, color: primary),
         title: Text(l10n.doubleTapToEdit),
         subtitle: Text(l10n.doubleTapToEditDesc),
         value: settings.doubleTapToEdit,

@@ -37,6 +37,7 @@ import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 // Global navigator key for error feedback
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -437,5 +438,3 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
     }
   }
 }
-
-

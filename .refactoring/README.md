@@ -169,6 +169,10 @@
 | 2026-05-16 | `security_gate.dart` | استبدال `_isAndroid()` الهشة بـ `Platform.isAndroid` مباشرة + `import 'dart:io'` | ✅ 451/451 |
 | 2026-05-16 | `google_drive_handlers.dart` | إصلاح بق `formatDateTime` — `'m ago'`, `'h ago'`, `'d ago'` hardcoded إنجليزي — نص عربي/إنجليزي حسب `isAr` | ✅ 450/450 |
 | 2026-05-16 | `notes_sliver_view.dart` | إصلاح `'No notes'` hardcoded — استبدالها بـ `l10n.noNotes` | ✅ 450/450 |
+| 2026-05-19 | `home_drawer_widget.dart` + `vault_navigator.dart` | إصلاح بق: فتح الخزنة بالبصمة من الـ Drawer — context unmounted بعد pop. البصمة أولاً ثم pop + `VaultNavigator.pushLockedNotes` | ✅ |
+| 2026-05-19 | `home_drawer_widget.dart` | إصلاح بق: التنقل من الـ Drawer أثناء وجود الخزنة مفتوحة — `LockedNotesScreen.postFrameCallback` كان يعمل `exitVault` بعد push الوجهة الجديدة فيُزيلها. الحل: `endOfFrame × 2` قبل push | ✅ |
+| 2026-05-19 | `google_drive_screen.dart` + `settings_screen_responsive.dart` | إصلاح بق: `PopScope(canPop: false)` مع `popUntil('/main')` كان يُزيل الشاشة الجديدة بعد push من الـ Drawer. الحل: `canPop: true` | ✅ |
+| 2026-05-19 | `pin_lock_screen.dart` | إصلاح بق: بعد ضبط PIN من الإعدادات تخرج من الإعدادات — race condition بين `setPin()` و `SecurityController._updateSecurityController()`. الحل: `setState(() => _loading = true)` قبل `setPin()` | ✅ |
 
 
 ## الملفات المرجعية
