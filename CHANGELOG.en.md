@@ -4,6 +4,20 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.1] — 2026-05 | Bug Fixes & UX Improvements
+
+### ✨ New Features
+- **Add item button in bottom toolbar** — quick checklist item addition without scrolling to end
+- **Swipe to dismiss notifications** — all snackbars support swipe-down to dismiss
+- **Immediate execution on undo snackbar swipe** — action executes instantly instead of waiting for timer
+
+### 🔧 Bug Fixes
+- **Fixed duplicate app in Recent Apps** — removed `taskAffinity=""` from AndroidManifest
+- **Fixed checklist scroll with keyboard** — new item and add button now appear above the bottom bar
+- **Smart scroll on item addition** — multiple attempts (200/500/800ms) to wait for keyboard animation
+
+---
+
 ## [3.2.0] — 2026-05 | Full Refactoring + Security Improvements
 
 > 50+ changes, 8 refactoring rounds, 469/469 tests passing.
