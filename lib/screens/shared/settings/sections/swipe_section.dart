@@ -205,36 +205,24 @@ class _Btn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.horizontal(
-      left: isFirst ? const Radius.circular(18) : Radius.zero,
-      right: isLast ? const Radius.circular(18) : Radius.zero,
+    final radius = BorderRadiusDirectional.horizontal(
+      start: isFirst ? const Radius.circular(18) : Radius.zero,
+      end: isLast ? const Radius.circular(18) : Radius.zero,
     );
     return GestureDetector(
       onTap: onTap,
       child: Container(
         alignment: Alignment.center,
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: selected
               ? cs.primary.withValues(alpha: 0.18)
               : cs.surfaceContainerHighest,
-          borderRadius: radius,
-          border: Border(
-            top: BorderSide(
-                color: selected ? cs.primary : cs.outlineVariant,
-                width: selected ? 1.5 : 1),
-            bottom: BorderSide(
-                color: selected ? cs.primary : cs.outlineVariant,
-                width: selected ? 1.5 : 1),
-            left: isFirst
-                ? BorderSide(
-                    color: selected ? cs.primary : cs.outlineVariant,
-                    width: selected ? 1.5 : 1)
-                : BorderSide.none,
-            right: isLast
-                ? BorderSide(
-                    color: selected ? cs.primary : cs.outlineVariant,
-                    width: selected ? 1.5 : 1)
-                : BorderSide.none,
+          shape: RoundedRectangleBorder(
+            borderRadius: radius,
+            side: BorderSide(
+              color: selected ? cs.primary : cs.outlineVariant,
+              width: selected ? 1.5 : 1,
+            ),
           ),
         ),
         child: Text(
