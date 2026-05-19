@@ -1,5 +1,6 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <flutter_windows.h>
 #include <windows.h>
 
 #include "flutter_window.h"
@@ -26,11 +27,16 @@ static void SaveWindowState(HWND hwnd) {
                    reinterpret_cast<const BYTE*>(&maximized), sizeof(DWORD));
 
   if (wp.showCmd != SW_SHOWMAXIMIZED) {
+    // Get DPI to save logical (unscaled) values
+    HMONITOR monitor = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
+    double scale = dpi / 96.0;
+
     RECT& r = wp.rcNormalPosition;
-    DWORD x = static_cast<DWORD>(r.left);
-    DWORD y = static_cast<DWORD>(r.top);
-    DWORD w = static_cast<DWORD>(r.right - r.left);
-    DWORD h = static_cast<DWORD>(r.bottom - r.top);
+    DWORD x = static_cast<DWORD>(static_cast<int>(r.left / scale));
+    DWORD y = static_cast<DWORD>(static_cast<int>(r.top / scale));
+    DWORD w = static_cast<DWORD>(static_cast<int>((r.right - r.left) / scale));
+    DWORD h = static_cast<DWORD>(static_cast<int>((r.bottom - r.top) / scale));
     ::RegSetValueExW(key, L"X", 0, REG_DWORD,
                      reinterpret_cast<const BYTE*>(&x), sizeof(DWORD));
     ::RegSetValueExW(key, L"Y", 0, REG_DWORD,
