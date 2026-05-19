@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -68,7 +67,9 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Title ──
               Text(
-                isAr ? 'سطح المكتب والمزامنة الذكية' : 'Desktop & Smart Sync',
+                isAr
+                    ? 'تحديث شامل وتحسينات جوهرية'
+                    : 'Major Update & Core Improvements',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -113,8 +114,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'تحديث كبير يجلب تجربة سطح مكتب احترافية، مزامنة أذكى مع Google Drive، وتحسينات جذرية في العارض والسلة.'
-                            : 'A major update bringing a professional desktop experience, smarter Google Drive sync, and deep improvements to the viewer and trash.',
+                            ? 'تحديث كبير يجلب تجربة سطح مكتب احترافية، أمان أعلى للخزنة، قائمة مهام محسّنة، وتحسينات شاملة في الأداء والتفاعل.'
+                            : 'A major update bringing stronger vault security, an improved checklist, smarter swipe actions, and deep performance improvements.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -148,52 +149,67 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Features ──
               _FeatureRow(
-                icon: Icons.desktop_windows_rounded,
+                icon: Icons.security_rounded,
                 color: Colors.indigo,
-                title: isAr ? 'سطح مكتب Master-Details' : 'Master-Details Desktop',
+                title:
+                    isAr ? 'خزنة أقوى وأكثر أماناً' : 'Stronger Vault Security',
                 subtitle: isAr
-                    ? 'عرض القائمة والمحتوى جنباً إلى جنب مع اختصارات لوحة المفاتيح'
-                    : 'Side-by-side list and content with full keyboard shortcuts',
+                    ? 'تشفير PBKDF2 بـ 100,000 تكرار + إصلاح ظهور أول ملاحظة فوراً'
+                    : 'PBKDF2 with 100,000 iterations + first note appears instantly',
               ),
               _FeatureRow(
-                icon: Icons.cloud_sync_rounded,
-                color: Colors.blue,
-                title: isAr ? 'مزامنة MD5 Fast Path' : 'MD5 Fast Path Sync',
+                icon: Icons.checklist_rounded,
+                color: Colors.green,
+                title: isAr ? 'قائمة المهام محسّنة' : 'Improved Checklist',
                 subtitle: isAr
-                    ? 'المزامنة تتخطى الدمج تلقائياً إذا لم يتغير Drive — أسرع وأذكى'
-                    : 'Sync skips merge automatically if Drive is unchanged — faster and smarter',
+                    ? 'سحب يساراً للحذف مع تراجع، زر إضافة واحد في الأسفل، تصميم أنظف'
+                    : 'Swipe left to delete with undo, single add button, cleaner design',
               ),
               _FeatureRow(
-                icon: Icons.delete_sweep_rounded,
-                color: Colors.red,
-                title: isAr ? 'عارض السلة المحسّن' : 'Improved Trash Viewer',
-                subtitle: isAr
-                    ? 'شريط سفلي قابل للسحب + منع التعديل للملاحظات المحذوفة'
-                    : 'Swipeable bottom sheet + edit blocked for trashed notes',
-              ),
-              _FeatureRow(
-                icon: Icons.palette_rounded,
+                icon: Icons.touch_app_rounded,
                 color: Colors.orange,
-                title: isAr ? 'تغيير اللون من العارض' : 'Color Picker in Viewer',
+                title: isAr ? 'سحب الكارد المخصص' : 'Custom Card Swipe',
                 subtitle: isAr
-                    ? 'غيّر لون الملاحظة مباشرة من شاشة العرض بدون فتح المحرر'
-                    : 'Change note color directly from the read-only view',
-              ),
-              _FeatureRow(
-                icon: Icons.swap_horiz_rounded,
-                color: Colors.teal,
-                title: isAr ? 'تحويل النوع من العارض' : 'Convert Type in Viewer',
-                subtitle: isAr
-                    ? 'حوّل الملاحظة بين النصي والكود والـ Rich Text من شريط الإجراءات'
-                    : 'Convert between text, code, and rich text from the action bar',
+                    ? 'أضف تذكيراً أو تصنيفاً أو انسخ الملاحظة مباشرة من السحب'
+                    : 'Add reminder, category, or duplicate note directly from swipe',
               ),
               _FeatureRow(
                 icon: Icons.check_box_rounded,
-                color: Colors.green,
-                title: isAr ? 'Checkbox تفاعلي في Rich Note' : 'Interactive Checkbox in Rich Note',
+                color: Colors.teal,
+                title: isAr
+                    ? 'Checkbox تفاعلي في Rich Note'
+                    : 'Interactive Checkbox in Rich Note',
                 subtitle: isAr
-                    ? 'الضغط على الـ checkbox يُبدّل حالته مباشرة بألوان النوتة'
-                    : 'Tap checkbox to toggle it instantly with note colors',
+                    ? 'اضغط على الـ checkbox لتبديل حالته مباشرة بألوان الملاحظة'
+                    : 'Tap to toggle checkbox instantly with note accent colors',
+              ),
+              _FeatureRow(
+                icon: Icons.code_rounded,
+                color: Colors.blue,
+                title: isAr
+                    ? 'محرر الكود — معاينة وتحميل'
+                    : 'Code Editor — Preview & Download',
+                subtitle: isAr
+                    ? 'SVG كصورة حقيقية، JSON منسق، تحميل بالامتداد الصحيح للتنزيلات'
+                    : 'SVG as real image, formatted JSON, download with correct extension',
+              ),
+              _FeatureRow(
+                icon: Icons.speed_rounded,
+                color: Colors.purple,
+                title: isAr
+                    ? 'أداء أسرع وسكرول أسلس'
+                    : 'Faster Performance & Smoother Scroll',
+                subtitle: isAr
+                    ? 'حذف الظلال الثقيلة من الكاردات + تحسينات شاملة في إعادة البناء'
+                    : 'Removed heavy card shadows + comprehensive rebuild optimizations',
+              ),
+              _FeatureRow(
+                icon: Icons.bug_report_rounded,
+                color: Colors.red,
+                title: isAr ? 'إصلاحات متعددة' : 'Multiple Bug Fixes',
+                subtitle: isAr
+                    ? 'إصلاح ترجمة وقت المزامنة، SnackBar خارج الشاشة، وغيرها'
+                    : 'Fixed sync time translation, off-screen SnackBar, and more',
               ),
 
               const SizedBox(height: 20),
@@ -201,12 +217,14 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Privacy Policy update notice ──
               InkWell(
                 onTap: () => launchUrl(
-                  Uri.parse('https://apexflow.now/ar/projects/sinan-note/privacy'),
+                  Uri.parse(
+                      'https://apexflow.now/ar/projects/sinan-note/privacy'),
                   mode: LaunchMode.externalApplication,
                 ),
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: scheme.primaryContainer.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(14),
@@ -368,4 +386,3 @@ class _FeatureRow extends StatelessWidget {
     );
   }
 }
-
