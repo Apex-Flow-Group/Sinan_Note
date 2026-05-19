@@ -144,7 +144,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 Icons.link_rounded,
                 [
                   _buildLinkTile(l10n.appPageGooglePlay, Icons.shop_rounded,
-                      'https://play.google.com/apps/internaltest/4701054794307352165'),
+                      'https://play.google.com/store/apps/dev?id=5409981776310932919'),
                   _buildLinkTile(
                       l10n.sinanAiNet,
                       Icons.language_rounded,

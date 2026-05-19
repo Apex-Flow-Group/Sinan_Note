@@ -19,7 +19,7 @@
 [![SinanAi](https://img.shields.io/badge/SinanAi.net-التطبيقات%20المبتكرة-orange.svg)](https://sinanai.net/en)
 [![Apex Flow](https://img.shields.io/badge/Apex%20Flow%20Group-الرسمي-blueviolet.svg)](https://apexflow.now/en)
 
-[Google Play](https://play.google.com/apps/internaltest/4701054794307352165) · [الميزات](#الميزات) · [هيكل المشروع](#هيكل-المشروع) · [التشغيل](#التشغيل-السريع)
+[Google Play](https://play.google.com/store/apps/dev?id=5409981776310932919) · [الميزات](#الميزات) · [هيكل المشروع](#هيكل-المشروع) · [التشغيل](#التشغيل-السريع)
 
 </div>
 
