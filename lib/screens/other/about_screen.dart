@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -149,7 +148,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   _buildLinkTile(l10n.sinanAiNet, Icons.language_rounded,
                       'https://sinanai.net'),
                   _buildLinkTile(l10n.githubRepository, Icons.code_rounded,
-                      'https://github.com/apexflow/sinan-note'),
+                      'https://github.com/Apex-Flow-Group/Sinan_Note'),
                   _buildLinkTile(
                       l10n.privacyPolicy,
                       Icons.privacy_tip_outlined,
@@ -329,4 +328,3 @@ class _AboutScreenState extends State<AboutScreen> {
     );
   }
 }
-
