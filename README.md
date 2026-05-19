@@ -1,97 +1,103 @@
+<div align="left">
+
+[🇸🇦 العربية](README.ar.md)
+
+</div>
+
 <div align="center">
 
 <img src="assets/images/app_icon.png" width="100" alt="Sinan Note Icon"/>
 
-# Sinan Note | سنان نوت
+# Sinan Note
 
-**تطبيق تدوين ملاحظات آمن وسريع — مبني بـ Flutter**
+**A fast, secure note-taking app — built with Flutter**
 
 [![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/Apex-Flow-Group/Sinan_Note/releases)
 [![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B.svg?logo=flutter)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)](#)
-[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](#الترخيص)
+[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](#license)
 
-[Google Play](#) · [الميزات](#الميزات) · [هيكل المشروع](#هيكل-المشروع) · [التشغيل](#التشغيل-السريع)
+[Google Play](#) · [Features](#features) · [Project Structure](#project-structure) · [Getting Started](#getting-started)
 
 </div>
 
 ---
 
-## الميزات
+## Features
 
-| الميزة | التفاصيل |
-|--------|---------|
-| 🔐 خزنة ذكية | تشفير AES-256 + مصادقة بيومترية + PBKDF2 (100,000 iterations) |
-| 💻 محرر كود | 26 لغة برمجية مع syntax highlighting تلقائي |
-| 👁️ معاينة الكود | SVG كصورة حقيقية، JSON منسق، preview لكل اللغات |
-| 📥 تحميل الكود | حفظ مباشر في التنزيلات بالامتداد الصحيح |
-| 📝 أنواع الملاحظات | نص / كود / قائمة مهام / تذكير / rich text |
-| 🌍 ثنائي اللغة | عربي وإنجليزي مع دعم RTL/LTR تلقائي |
-| 🎨 Material You | ألوان ديناميكية + وضع ليلي/نهاري |
-| 🔄 Google Drive | مزامنة تلقائية مع merge ذكي وحل التعارضات |
-| 🗂️ كتالوجات | تنظيم الملاحظات في مجموعات مع Drawer ذكي |
-| 🖥️ سطح مكتب | تخطيط Master-Details للشاشات الكبيرة |
-| 📱 Home Widget | عرض التذكيرات على الشاشة الرئيسية |
-| 🕐 تاريخ الإصدارات | تتبع تعديلات كل ملاحظة (حتى 5 نسخ) |
+| Feature | Details |
+|---------|---------|
+| 🔐 Smart Vault | AES-256 encryption + biometric auth + PBKDF2 (100,000 iterations) |
+| 💻 Code Editor | 26 programming languages with automatic syntax highlighting |
+| 👁️ Code Preview | SVG as real image, formatted JSON, preview for all languages |
+| 📥 Code Download | Save directly to Downloads with the correct file extension |
+| 📝 Note Types | Plain text / Code / Checklist / Reminder / Rich text |
+| 🌍 Bilingual | Arabic and English with automatic RTL/LTR detection |
+| 🎨 Material You | Dynamic colors + dark/light mode |
+| 🔄 Google Drive | Auto-sync with smart merge and conflict resolution |
+| 🗂️ Catalogs | Organize notes into groups with a smart Drawer |
+| 🖥️ Desktop | Master-Details layout for large screens |
+| 📱 Home Widget | Display reminders on the home screen |
+| 🕐 Version History | Track edits for every note (up to 5 versions) |
 
 ---
 
-## هيكل المشروع
+## Project Structure
 
 ```
 lib/
-├── controllers/          # إدارة الحالة (Provider)
+├── controllers/          # State management (Provider)
 │   ├── categories/       # CategoriesProvider
 │   ├── editor/           # EditorStateManager
 │   ├── notes/            # NotesProvider
 │   └── settings/         # SettingsProvider
-├── core/                 # ثوابت، ثيمات، أدوات مشتركة
+├── core/                 # Constants, themes, shared utilities
 │   ├── constants/
-│   ├── shortcuts/        # اختصارات لوحة المفاتيح
+│   ├── shortcuts/        # Keyboard shortcuts
 │   ├── theme/
 │   └── utils/            # NoteContentUtils, VaultNavigator, ...
-├── models/               # نماذج البيانات (SQLite)
+├── models/               # Data models (SQLite)
 ├── screens/
-│   ├── auth/             # الخزنة: دخول، إعادة تعيين، بيومتري
-│   ├── desktop/          # تخطيطات Responsive للشاشات الكبيرة
-│   ├── mobile/           # الشاشات الرئيسية للموبايل
-│   ├── onboarding/       # Splash، Tour، What's New
+│   ├── auth/             # Vault: entry, reset, biometric
+│   ├── desktop/          # Responsive layouts for large screens
+│   ├── mobile/           # Main mobile screens
+│   ├── onboarding/       # Splash, Tour, What's New
 │   ├── shared/
-│   │   ├── note_editor/  # محرر الملاحظات (مقسّم لـ 9 مجلدات)
-│   │   ├── settings/     # الإعدادات (مقسّمة)
-│   │   └── tabs/         # Code Tab، Reminder Dashboard
+│   │   ├── note_editor/  # Note editor (split into 9 sub-folders)
+│   │   ├── settings/     # Settings (split)
+│   │   └── tabs/         # Code Tab, Reminder Dashboard
 │   └── sync/             # Google Drive
-├── services/             # منطق الأعمال
+├── services/             # Business logic
 │   ├── cloud/            # Google Drive Auth + Merge
-│   ├── security/         # تشفير + بيومتري + Rate Limiter
+│   ├── security/         # Encryption + Biometric + Rate Limiter
 │   ├── storage/          # SQLite + Backup + DB Inspector
 │   ├── sync/             # Cloud Sync Gateway
 │   └── note_services/    # CRUD + Security + Side Effects
-└── widgets/              # مكونات الواجهة
-    ├── editor/           # Toolbar، CodeEditor، ChecklistEditor
-    ├── home/             # NoteCard، Grid، Drawer، SmartHeader
-    └── common/           # مكونات مشتركة
+└── widgets/              # UI components
+    ├── editor/           # Toolbar, CodeEditor, ChecklistEditor
+    ├── home/             # NoteCard, Grid, Drawer, SmartHeader
+    └── common/           # Shared components
 ```
 
 ---
 
-## قاعدة البيانات
+## Database
 
-التطبيق يستخدم **SQLite** (sqflite) كقاعدة بيانات رئيسية:
+The app uses **SQLite** (sqflite) as the primary database:
 
 ```
 SQLite (sinan_notes.db)
-├── notes              — الملاحظات الرئيسية
-├── categories         — الكتالوجات
-├── note_versions      — تاريخ الإصدارات
-└── deleted_notes      — سجل الحذف للمزامنة الذكية
+├── notes              — Main notes
+├── categories         — Catalogs
+├── note_versions      — Version history
+└── deleted_notes      — Deletion log for smart sync
 ```
 
-> قاعدة البيانات جاهزة للانتقال لـ React Native بنفس الـ schema.
+> The schema is ready for migration to React Native.
 
 ---
 
-## التشغيل السريع
+## Getting Started
 
 ```bash
 git clone https://github.com/Apex-Flow-Group/Sinan_Note.git
@@ -100,64 +106,64 @@ flutter pub get
 flutter run
 ```
 
-### متطلبات البناء
+### Build Requirements
 
-| المتطلب | الإصدار |
-|---------|---------|
+| Requirement | Version |
+|-------------|---------|
 | Flutter SDK | 3.0+ |
 | Dart SDK | 3.0+ |
 | Android SDK | compileSdk 36 / targetSdk 35 |
 
-### تشغيل الاختبارات
+### Running Tests
 
 ```bash
 flutter test
 flutter analyze
 ```
 
-> **469 اختبار** — 100% نجاح ✅
+> **469 tests** — 100% passing ✅
 
 ---
 
-## الأمان
+## Security
 
-بنية التشفير في الخزنة:
+Vault encryption architecture:
 
 ```
-طبقة 1 — كلمة المرور
-    PBKDF2-SHA256 (100,000 iterations) → مفتاح مشتق (32 bytes)
+Layer 1 — Password
+    PBKDF2-SHA256 (100,000 iterations) → derived key (32 bytes)
 
-طبقة 2 — Master Key
-    AES-256-CBC → مخزّن في FlutterSecureStorage (Android Keystore)
+Layer 2 — Master Key
+    AES-256-CBC → stored in FlutterSecureStorage (Android Keystore)
 
-طبقة 3 — محتوى الملاحظة
-    AES-256-CBC + IV عشوائي → "iv_base64:ciphertext_base64"
+Layer 3 — Note Content
+    AES-256-CBC + random IV → "iv_base64:ciphertext_base64"
 ```
 
-- Rate Limiter تصاعدي: 5 محاولات → قفل 15 دقيقة → 60 دقيقة
-- الخزنة لا تُرفع إلى Google Drive أبداً
-- Clipboard Guard يمنع نسخ المحتوى المشفر
+- Progressive rate limiter: 5 attempts → 15 min lockout → 60 min
+- Vault notes are never uploaded to Google Drive
+- Clipboard Guard prevents copying encrypted content
 
 ---
 
-## الإحصاءات
+## Stats
 
-| المقياس | القيمة |
-|---------|--------|
-| ملفات Dart | 244 ملف |
-| أسطر الكود | ~53,144 سطر |
+| Metric | Value |
+|--------|-------|
+| Dart files | 244 files |
+| Lines of code | ~53,144 lines |
 | Widgets | 187 (97 Stateful + 90 Stateless) |
-| اختبارات | 469 اختبار |
-| مفاتيح الترجمة | ~695 مفتاح (AR + EN) |
-| التبعيات | 33 حزمة |
-| Commits | 162+ commit |
+| Tests | 469 tests |
+| Translation keys | ~695 keys (AR + EN) |
+| Dependencies | 33 packages |
+| Commits | 162+ commits |
 
 ---
 
-## الترخيص
+## License
 
 ```
 Copyright © 2025–2026 Apex Flow Group. All rights reserved.
 ```
 
-هذا المشروع مرخص بشكل خاص. جميع الحقوق محفوظة لـ Apex Flow Group.
+This project is proprietary. All rights reserved by Apex Flow Group.
