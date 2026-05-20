@@ -5,13 +5,16 @@ class BiometricService {
   static final LocalAuthentication _auth = LocalAuthentication();
 
   /// التحقق من دعم الجهاز للمصادقة البيومترية
+  /// يُرجع true فقط إذا كان الجهاز يدعم البصمة ولديه credentials مسجّلة فعلاً
   static Future<bool> hasBiometrics() async {
     if (Platform.isLinux || Platform.isWindows) return false;
     try {
-      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate =
-          canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
-      return canAuthenticate;
+      // الجهاز يدعم البصمة hardware
+      final bool canCheck = await _auth.canCheckBiometrics;
+      if (!canCheck) return false;
+      // توجد بصمة مسجّلة فعلاً على الجهاز
+      final List<BiometricType> available = await _auth.getAvailableBiometrics();
+      return available.isNotEmpty;
     } on PlatformException catch (e) {
       AppLogger.debug("Biometric check error: $e");
       return false;
