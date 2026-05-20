@@ -394,6 +394,315 @@ void main() {
       });
     });
 
+    group('autosave guard — isSaving', () {
+      test('isSaving يمنع hasChanges من التأثير على منطق الحفظ الخارجي', () {
+        manager.loadFromNote(noteContent: 'محتوى', noteTitle: 'عنوان');
+        manager.markDirty();
+        expect(manager.hasChanges(), true);
+
+        manager.isSaving = true;
+        // hasChanges لا تزال true — الـ guard في EditorSaveOperations وليس هنا
+        expect(manager.hasChanges(), true);
+        expect(manager.isSaving, true);
+      });
+
+      test('isSaving يُعاد تعيينه بعد الحفظ', () {
+        manager.isSaving = true;
+        manager.isSaving = false;
+        expect(manager.isSaving, false);
+      });
+
+      test('isSaving لا يؤثر على isDirty', () {
+        manager.markDirty();
+        manager.isSaving = true;
+        expect(manager.isDirty, true);
+        manager.isSaving = false;
+        expect(manager.isDirty, true); // isDirty يبقى حتى updateSnapshot
+      });
+    });
+
+    group('isDirty مقابل snapshot', () {
+      test('markDirty يُعيّن isDirty بدون تغيير snapshot', () {
+        manager.loadFromNote(noteContent: 'أصلي', noteTitle: 'عنوان');
+        expect(manager.isDirty, false);
+
+        manager.markDirty();
+        expect(manager.isDirty, true);
+        // snapshot لم يتغير — originalContent لا يزال 'أصلي'
+        expect(manager.originalContent, 'أصلي');
+      });
+
+      test('markClean يُصفّر isDirty بدون تحديث snapshot', () {
+        manager.loadFromNote(noteContent: 'أصلي', noteTitle: 'عنوان');
+        manager.markDirty();
+        manager.content = 'جديد';
+
+        manager.markClean();
+        expect(manager.isDirty, false);
+        // لكن hasChanges قد تظل true إذا تغير العنوان
+        manager.customTitle = 'عنوان مختلف';
+        expect(manager.hasChanges(), true); // title تغير
+      });
+
+      test('updateSnapshot يُصفّر isDirty ويحدث كل الحقول', () {
+        manager.loadFromNote(
+          noteContent: 'أصلي',
+          noteTitle: 'عنوان',
+          noteColorIndex: 0,
+          noteReminderDateTime: null,
+          noteRecurrenceRule: null,
+        );
+
+        manager.content = 'جديد';
+        manager.customTitle = 'عنوان جديد';
+        manager.colorIndex = 5;
+        manager.reminderDateTime = DateTime(2025, 6, 1);
+        manager.recurrenceRule = 'FREQ=WEEKLY';
+        manager.markDirty();
+
+        manager.updateSnapshot();
+
+        expect(manager.isDirty, false);
+        expect(manager.originalContent, 'جديد');
+        expect(manager.originalTitle, 'عنوان جديد');
+        expect(manager.originalColorIndex, 5);
+        expect(manager.originalReminderDateTime, DateTime(2025, 6, 1));
+        expect(manager.originalRecurrenceRule, 'FREQ=WEEKLY');
+        expect(manager.hasChanges(), false);
+      });
+
+      test('autosave لا يستدعي updateSnapshot — isDirty يبقى true', () {
+        // هذا يحاكي سلوك EditorSaveOperations.saveToDatabase مع isManualSave=false
+        manager.loadFromNote(noteContent: 'أصلي', noteTitle: 'عنوان');
+        manager.markDirty();
+
+        // autosave: isManualSave=false → لا يستدعي updateSnapshot
+        // نحاكي ذلك مباشرة
+        final savedWithoutSnapshot = () {
+          // حفظ بدون updateSnapshot
+          manager.isSaving = false;
+        };
+        savedWithoutSnapshot();
+
+        // isDirty لا يزال true — الـ snapshot لم يتحدث
+        expect(manager.isDirty, true);
+        expect(manager.hasChanges(), true);
+      });
+
+      test('manual save يستدعي updateSnapshot — isDirty يصبح false', () {
+        manager.loadFromNote(noteContent: 'أصلي', noteTitle: 'عنوان');
+        manager.markDirty();
+        manager.content = 'محتوى جديد';
+
+        // manual save: isManualSave=true → يستدعي updateSnapshot
+        manager.updateSnapshot();
+
+        expect(manager.isDirty, false);
+        expect(manager.hasChanges(), false);
+      });
+    });
+
+    group('categoryIds و isHiddenFromHome', () {
+      test('loadFromNote يحمّل categoryIds بشكل صحيح', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteCategoryIds: [1, 2, 3],
+        );
+        expect(manager.categoryIds, [1, 2, 3]);
+      });
+
+      test('categoryIds فارغة بالافتراضي', () {
+        manager.loadFromNote(noteContent: 'محتوى');
+        expect(manager.categoryIds, isEmpty);
+      });
+
+      test('isHiddenFromHome يُحمَّل بشكل صحيح', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteIsHiddenFromHome: true,
+        );
+        expect(manager.isHiddenFromHome, true);
+      });
+
+      test('تغيير categoryIds يُعيّن isDirty', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteCategoryIds: [1],
+        );
+        manager.categoryIds = [1, 2];
+        manager.markDirty();
+        expect(manager.hasChanges(), true);
+      });
+
+      test('loadFromNote ينسخ categoryIds بدون reference مشترك', () {
+        final original = [1, 2, 3];
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteCategoryIds: original,
+        );
+        original.add(4); // تعديل القائمة الأصلية
+        expect(manager.categoryIds, [1, 2, 3]); // لا يتأثر
+      });
+    });
+
+    group('checklist title مقابل customTitle', () {
+      test('checklist: checklistTitle يُعيَّن و customTitle يبقى null', () {
+        manager.loadFromNote(
+          noteContent: '{"title":"مهام","items":[]}',
+          noteTitle: 'مهام',
+          isChecklist: true,
+        );
+        expect(manager.checklistTitle, 'مهام');
+        expect(manager.customTitle, null);
+      });
+
+      test('simple: customTitle يُعيَّن و checklistTitle يبقى null', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteTitle: 'عنوان',
+          isChecklist: false,
+        );
+        expect(manager.customTitle, 'عنوان');
+        expect(manager.checklistTitle, null);
+      });
+
+      test('hasChanges تقرأ checklistTitle عند isChecklist', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteTitle: 'مهام',
+          isChecklist: true,
+        );
+        expect(manager.hasChanges(), false);
+
+        manager.checklistTitle = 'مهام محدثة';
+        expect(manager.hasChanges(), true);
+      });
+
+      test('originalTitle يُحدَّث من checklistTitle عند updateSnapshot', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteTitle: 'مهام',
+          isChecklist: true,
+        );
+        manager.checklistTitle = 'مهام جديدة';
+        manager.updateSnapshot();
+        expect(manager.originalTitle, 'مهام جديدة');
+        expect(manager.hasChanges(), false);
+      });
+    });
+
+    group('clear', () {
+      test('clear يُعيد كل الحقول للقيم الافتراضية', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteTitle: 'عنوان',
+          noteColorIndex: 5,
+          noteReminderDateTime: DateTime(2025, 1, 1),
+          noteRecurrenceRule: 'FREQ=DAILY',
+          noteCategoryIds: [1, 2],
+          noteIsHiddenFromHome: true,
+        );
+        manager.markDirty();
+        manager.isSaving = true;
+        manager.canUndo = true;
+        manager.canRedo = true;
+
+        manager.clear();
+
+        expect(manager.content, '');
+        expect(manager.customTitle, null);
+        expect(manager.checklistTitle, null);
+        expect(manager.colorIndex, 0);
+        expect(manager.isDirty, false);
+        expect(manager.isSaving, false);
+        expect(manager.hasContent, false);
+        expect(manager.canUndo, false);
+        expect(manager.canRedo, false);
+        expect(manager.reminderDateTime, null);
+        expect(manager.recurrenceRule, null);
+        expect(manager.originalContent, '');
+        expect(manager.originalTitle, '');
+        expect(manager.originalColorIndex, 0);
+        expect(manager.hasChanges(), false);
+      });
+
+      test('clear ثم loadFromNote يعمل بشكل صحيح', () {
+        manager.loadFromNote(noteContent: 'قديم', noteTitle: 'قديم');
+        manager.markDirty();
+        manager.clear();
+
+        manager.loadFromNote(noteContent: 'جديد', noteTitle: 'جديد');
+        expect(manager.content, 'جديد');
+        expect(manager.hasChanges(), false);
+        expect(manager.isDirty, false);
+      });
+    });
+
+    group('تسلسل autosave الحقيقي', () {
+      test('كتابة → dirty → autosave بدون snapshot → كتابة → dirty لا يزال', () {
+        // يحاكي: المستخدم يكتب → autosave يحفظ → يكتب مجدداً
+        manager.loadFromNote(noteContent: 'نص أولي', noteTitle: '');
+
+        // كتابة أولى
+        manager.updateContent('نص أولي + إضافة');
+        expect(manager.isDirty, true);
+
+        // autosave يحفظ بدون updateSnapshot
+        manager.isSaving = true;
+        manager.isSaving = false;
+        // isDirty لا يزال true
+        expect(manager.isDirty, true);
+
+        // كتابة ثانية
+        manager.updateContent('نص أولي + إضافة + المزيد');
+        expect(manager.isDirty, true);
+        expect(manager.hasChanges(), true);
+      });
+
+      test('manual save → updateSnapshot → لا تغييرات', () {
+        manager.loadFromNote(noteContent: 'نص', noteTitle: 'عنوان');
+        manager.updateContent('نص محدث');
+        manager.customTitle = 'عنوان محدث';
+        manager.colorIndex = 3;
+
+        // manual save
+        manager.updateSnapshot();
+
+        expect(manager.hasChanges(), false);
+        expect(manager.isDirty, false);
+        expect(manager.originalContent, 'نص محدث');
+        expect(manager.originalTitle, 'عنوان محدث');
+        expect(manager.originalColorIndex, 3);
+      });
+
+      test('تغيير اللون فقط يُكتشف كتغيير', () {
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteTitle: 'عنوان',
+          noteColorIndex: 2,
+        );
+        expect(manager.hasChanges(), false);
+
+        manager.colorIndex = 7;
+        // isDirty لا يزال false لكن colorIndex تغير
+        expect(manager.isDirty, false);
+        expect(manager.hasChanges(), true); // يكتشف عبر colorIndex != originalColorIndex
+      });
+
+      test('إزالة reminder تُكتشف كتغيير حتى بدون isDirty', () {
+        final reminder = DateTime(2025, 12, 31);
+        manager.loadFromNote(
+          noteContent: 'محتوى',
+          noteReminderDateTime: reminder,
+        );
+        expect(manager.hasChanges(), false);
+
+        manager.reminderDateTime = null;
+        expect(manager.isDirty, false); // لم نستدعِ markDirty
+        expect(manager.hasChanges(), true); // يكتشف عبر reminderDateTime != original
+      });
+    });
+
     group('Performance', () {
       test('hasChanges is fast for large content', () {
         final largeContent = 'A' * 100000;

@@ -15,6 +15,12 @@ class VersionControlService {
 
   final SqliteDatabaseService _db = SqliteDatabaseService();
 
+  /// للاختبارات فقط — يمسح جميع الجلسات النشطة
+  static void clearAllSessions() {
+    _sessionSnapshots.clear();
+    _sessionStartTimes.clear();
+  }
+
   /// Start editing session - Take snapshot
   void startEditingSession(int noteId, String title, String content) {
     _sessionSnapshots[noteId] = _generateHash(title + content);
