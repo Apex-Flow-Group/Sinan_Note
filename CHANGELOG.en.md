@@ -24,6 +24,10 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - **`validateVaultPassword()`** unifies 3 validation functions into one
 
 ### 🔧 Bug Fixes
+- **Fixed lost edits on lock** — editor saves content immediately on background instead of waiting for autosave timer
+- **Fixed editor destroyed on lock trigger** — lock screen pushes on top of the stack instead of replacing everything with SplashScreen
+- **Fixed biometric prompt shown 3 times** — unified auth flow via `forceUnlock()` directly after `PinLockScreen` success
+- **Fixed biometric toggle in settings** — only shown when a fingerprint is actually enrolled on the device (hardware alone is not enough)
 - **Fixed duplicate app in Recent Apps** — removed `taskAffinity=""` from AndroidManifest
 - **Fixed checklist scroll with keyboard** — new item and add button now appear above the bottom bar
 - **Smart scroll on item addition** — multiple attempts (200/500/800ms) to wait for keyboard animation
@@ -47,6 +51,11 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - `SqliteDatabaseService.getDbPath()` static — unified DB path across 3 files
 - `settings_provider.dart` — `_savePref()` helper removes 15+ repeated calls
 - Removed 10 dead code instances (ValueNotifiers, empty listeners, unused functions)
+- **Version history limit** — raised from 5 to 20 versions per note
+- **`SecurityController.forceUnlock()`** — direct unlock without re-triggering authentication
+
+### 🧪 Tests
+- 127 new tests covering: `EditorSaveManager`, `VersionControlService` (edge cases), `EditorStateManager` (autosave sequence)
 
 ---
 
