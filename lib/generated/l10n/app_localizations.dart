@@ -2807,7 +2807,7 @@ abstract class AppLocalizations {
   /// No description provided for @sinanAiNet.
   ///
   /// In en, this message translates to:
-  /// **'SinanAi.net — Emerging Apps'**
+  /// **'SinanAi.net — Innovative Apps'**
   String get sinanAiNet;
 
   /// No description provided for @importantLinks.

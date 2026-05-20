@@ -62,10 +62,22 @@ abstract class VaultNavigator {
   }
 
   /// الانتقال لشاشة إعداد الخزنة لأول مرة (يستبدل الشاشة الحالية)
+  /// يُستخدم من VaultEntryScreen حيث /main موجود في الـ stack
   static void toIntro(BuildContext context) {
     if (!context.mounted) return;
     Navigator.pushReplacement(
       context,
+      MaterialPageRoute(
+        builder: (_) => const LockedNotesIntroScreen(),
+        settings: const RouteSettings(name: '/vault/intro'),
+      ),
+    );
+  }
+
+  /// فتح شاشة الجولة فوق الشاشة الحالية (push بدلاً من pushReplacement).
+  /// يُستخدم من الـ Drawer مباشرة حيث /main هو الشاشة الحالية.
+  static void pushIntro(NavigatorState navigator) {
+    navigator.push(
       MaterialPageRoute(
         builder: (_) => const LockedNotesIntroScreen(),
         settings: const RouteSettings(name: '/vault/intro'),

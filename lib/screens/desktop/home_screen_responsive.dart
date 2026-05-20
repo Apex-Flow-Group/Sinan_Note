@@ -9,6 +9,7 @@ import 'package:sinan_note/core/shortcuts/app_shortcuts.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/master_width_provider.dart';
 import 'package:sinan_note/providers/selected_note_provider.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart';
 import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
@@ -90,7 +91,13 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   }
 
   void _buildCachedPanels() {
-    _cachedDetailsPanel = const DetailsPanel();
+    _cachedDetailsPanel = ValueListenableBuilder<Set<int>>(
+      valueListenable: _selectedNoteIdsNotifier,
+      builder: (context, selectedIds, _) => DetailsPanel(
+        selectedIds: selectedIds,
+        onClearSelection: () => _selectedNoteIdsNotifier.value = {},
+      ),
+    );
   }
 
   ViewType _parseViewType(String type) {
@@ -190,9 +197,10 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
-        final bool hasSelection = selectedIds.isNotEmpty;
 
-        return Scaffold(
+        return Stack(
+          children: [
+            Scaffold(
           resizeToAvoidBottomInset: false,
           drawer: HomeDrawerWidget(
             onBackupTap: () {
@@ -207,28 +215,36 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
             },
             onNotesChanged: () {},
           ),
-          appBar: AppBar(
-            scrolledUnderElevation: 0,
-            elevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            leading: hasSelection
-                ? IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      _selectedNoteIdsNotifier.value = {};
-                    },
-                  )
-                : Builder(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight),
+            child: AppBar(
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              titleSpacing: NavigationToolbar.kMiddleSpacing,
+              leading: ClipRect(
+                child: AnimatedSlide(
+                  offset: selectedIds.isNotEmpty
+                      ? const Offset(0, -1)
+                      : Offset.zero,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: Builder(
                     builder: (context) => IconButton(
                       icon: const Icon(Icons.menu),
-                      onPressed: () {
-                        Scaffold.of(context).openDrawer();
-                      },
+                      onPressed: () => Scaffold.of(context).openDrawer(),
                     ),
                   ),
-            title: hasSelection
-                ? Text('${selectedIds.length} ${l10n.selected}')
-                : Consumer<CategoriesProvider>(
+                ),
+              ),
+              title: ClipRect(
+                child: AnimatedSlide(
+                  offset: selectedIds.isNotEmpty
+                      ? const Offset(0, -1)
+                      : Offset.zero,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: Consumer<CategoriesProvider>(
                     builder: (context, cats, _) {
                       final selectedId = cats.selectedCategoryId;
                       if (selectedId == null) {
@@ -269,9 +285,24 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                       );
                     },
                   ),
-            actions: hasSelection
-                ? _buildSelectionActions(context, selectedIds)
-                : _buildSearchActions(context),
+                ),
+              ),
+              actions: [
+                ClipRect(
+                  child: AnimatedSlide(
+                    offset: selectedIds.isNotEmpty
+                        ? const Offset(0, -1)
+                        : Offset.zero,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: _buildSearchActions(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           body: Column(
             children: [
@@ -324,7 +355,27 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
               ),
             ],
           ),
-        );
+            ), // Scaffold
+            Positioned(
+              top: 0,
+              left: 0,
+              child: Consumer<MasterWidthProvider>(
+                builder: (context, masterWidth, _) => AnimatedSlide(
+                  offset: selectedIds.isNotEmpty
+                      ? Offset.zero
+                      : const Offset(0, -1),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: _SelectionBar(
+                    width: masterWidth.width,
+                    selectedIds: selectedIds,
+                    onClearSelection: () => _selectedNoteIdsNotifier.value = {},
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ); // Stack
       },
     );
   }
@@ -365,15 +416,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     ];
   }
 
-  List<Widget> _buildSelectionActions(
-      BuildContext context, Set<int> selectedIds) {
-    return [
-      DesktopSelectionActions(
-        selectedIds: selectedIds,
-        onClearSelection: () => _selectedNoteIdsNotifier.value = {},
-      ),
-    ];
-  }
 
   /// إنشاء ملاحظة جديدة واختيارها تلقائياً
   Future<void> _navigateToNewNote(NoteMode mode) async {
@@ -452,26 +494,102 @@ class _SearchFieldState extends State<_SearchField> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final showClear =
         widget.controller.text.isNotEmpty || widget.focusNode.hasFocus;
 
-    return TextField(
-      controller: widget.controller,
-      focusNode: widget.focusNode,
-      decoration: InputDecoration(
-        hintText: widget.hint,
-        border: InputBorder.none,
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: Opacity(
-          opacity: showClear ? 1.0 : 0.0,
-          child: IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: showClear
-                ? () {
-                    widget.controller.clear();
-                    widget.focusNode.unfocus();
-                  }
-                : null,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Container(
+          height: 36,
+          decoration: BoxDecoration(
+            color: isDark
+                ? colorScheme.onSurface.withValues(alpha: 0.06)
+                : colorScheme.onSurface.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: TextField(
+            controller: widget.controller,
+            focusNode: widget.focusNode,
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              border: InputBorder.none,
+              prefixIcon: const Icon(Icons.search, size: 18),
+              suffixIcon: Opacity(
+                opacity: showClear ? 1.0 : 0.0,
+                child: IconButton(
+                  icon: const Icon(Icons.clear, size: 16),
+                  onPressed: showClear
+                      ? () {
+                          widget.controller.clear();
+                          widget.focusNode.unfocus();
+                        }
+                      : null,
+                ),
+              ),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectionBar extends StatelessWidget {
+  final Set<int> selectedIds;
+  final VoidCallback onClearSelection;
+  final double width;
+
+  const _SelectionBar({
+    required this.selectedIds,
+    required this.onClearSelection,
+    required this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        width: width,
+        height: kToolbarHeight,
+        child: ClipRect(
+          child: AnimatedSlide(
+            offset: selectedIds.isNotEmpty
+                ? Offset.zero
+                : const Offset(0, -1),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: onClearSelection,
+                  ),
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      '${selectedIds.length} ${l10n.selected}',
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DesktopSelectionActions(
+                    selectedIds: selectedIds,
+                    onClearSelection: onClearSelection,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

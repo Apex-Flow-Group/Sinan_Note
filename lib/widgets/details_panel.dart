@@ -20,11 +20,15 @@ import 'package:sinan_note/widgets/home/note_card_utils.dart';
 /// - الاستماع لتغييرات الملاحظة المختارة من Provider
 /// - مسح الاختيار عند حذف/نقل الملاحظة
 class DetailsPanel extends StatefulWidget {
-  final bool forceEditMode; // 🔥 فرض وضع التعديل
+  final bool forceEditMode;
+  final Set<int> selectedIds;
+  final VoidCallback? onClearSelection;
 
   const DetailsPanel({
     super.key,
     this.forceEditMode = false,
+    this.selectedIds = const {},
+    this.onClearSelection,
   });
 
   @override

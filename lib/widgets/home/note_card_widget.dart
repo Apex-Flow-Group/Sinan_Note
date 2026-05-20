@@ -140,10 +140,21 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     final noteColor = _baseColor;
     final Color titleColor = _titleColor;
     final Color contentColor = _contentColor;
+    final bool isTrash = widget.source == 'trash';
+    final bool isArchive = widget.source == 'archive';
     final bool enableSwipe = !widget.selectionMode &&
-        settings.swipeEnabled &&
-        !widget.note.isLocked &&
-        widget.source != 'archive';
+        (isTrash || isArchive || (settings.swipeEnabled && !widget.note.isLocked));
+
+    final String rightAction = isTrash
+        ? 'restore'
+        : isArchive
+            ? 'unarchive'
+            : settings.swipeRightAction;
+    final String leftAction = isTrash
+        ? 'permanent_delete'
+        : isArchive
+            ? 'trash_from_archive'
+            : settings.swipeLeftAction;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -159,7 +170,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 dragDismissible: false,
                 children: [
                   NoteCardActions.buildCustomSlidableAction(
-                    action: settings.swipeRightAction,
+                    action: rightAction,
                     context: context,
                     borderRadius: const BorderRadius.horizontal(
                         left: Radius.circular(16)),
@@ -176,7 +187,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 dragDismissible: false,
                 children: [
                   NoteCardActions.buildCustomSlidableAction(
-                    action: settings.swipeLeftAction,
+                    action: leftAction,
                     context: context,
                     borderRadius: const BorderRadius.horizontal(
                         right: Radius.circular(16)),

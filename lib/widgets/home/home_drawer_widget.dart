@@ -495,9 +495,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     _activeExtraNotifier.value = 'vault';
 
     if (!settings.hasSeenLockedIntro) {
+      final navigator = Navigator.of(context, rootNavigator: true);
       Navigator.pop(context);
       if (!context.mounted) return;
-      VaultNavigator.toIntro(context);
+      VaultNavigator.pushIntro(navigator);
       _activeExtraNotifier.value = null;
       widget.onNotesChanged();
       return;

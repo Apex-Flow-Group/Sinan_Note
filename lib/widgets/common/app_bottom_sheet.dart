@@ -48,11 +48,15 @@ class AppBottomSheet extends StatelessWidget {
     bool isScrollControlled = false,
     bool useSafeArea = true,
   }) {
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
     return showModalBottomSheet<T>(
       context: context,
       isDismissible: isDismissible,
       isScrollControlled: isScrollControlled,
       useSafeArea: useSafeArea,
+      constraints: isDesktop
+          ? const BoxConstraints(maxWidth: 480)
+          : null,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
