@@ -15,10 +15,10 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart'
     show tabToHomeNotifier, currentTabIndexNotifier, bottomNavHiddenNotifier;
 import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/desktop/code_tab_responsive.dart';
 import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/reminder_dashboard_responsive.dart';
-import 'package:sinan_note/screens/onboarding/splash_screen.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
@@ -131,11 +131,20 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     if (!_securityController.isLocked || !mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
+      final settings =
+          Provider.of<SettingsProvider>(context, listen: false);
+      Navigator.of(context).push(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              const SplashScreen(),
-          settings: const RouteSettings(name: '/splash'),
+              PinLockScreen(
+                isSetup: false,
+                autoBiometric: settings.biometricLockEnabled,
+                onSuccess: () {
+                  Navigator.of(context).pop();
+                  _securityController.requestUnlock();
+                },
+              ),
+          settings: const RouteSettings(name: '/lock'),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),

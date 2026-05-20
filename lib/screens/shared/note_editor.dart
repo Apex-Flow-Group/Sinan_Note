@@ -186,7 +186,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      // Save version history when app goes to background
+      // حفظ المحتوى فوراً قبل أي شيء آخر
+      _coordinator.autosaveTimer?.cancel();
+      if (_coordinator.stateManager.hasChanges() &&
+          !_coordinator.stateManager.isSaving &&
+          !_isReadOnly) {
+        _saveNoteToDatabase();
+      }
       _endVersionSession();
     } else if (state == AppLifecycleState.resumed) {
       // Restart session when app comes back
