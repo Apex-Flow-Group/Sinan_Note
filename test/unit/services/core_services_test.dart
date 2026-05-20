@@ -268,7 +268,7 @@ void main() {
         );
       }
 
-      expect((await db.getNoteHistory(id)).length, lessThanOrEqualTo(5));
+      expect((await db.getNoteHistory(id)).length, lessThanOrEqualTo(20));
     });
 
     // ── حالات الحافة الحقيقية ─────────────────────────────────────────────
@@ -294,17 +294,17 @@ void main() {
       await service.endEditingSession(
         noteId: id,
         title: '',
-        content: base + ' ' + 'X' * 50, // تغيير كبير لحفظ الإصدار الأول
+        content: '$base ${'X' * 50}', // تغيير كبير لحفظ الإصدار الأول
       );
       expect((await db.getNoteHistory(id)).length, 1);
 
       // الآن تغيير صغير جداً (1 حرف فقط) — لا يجب أن يُحفظ
-      final savedContent = base + ' ' + 'X' * 50;
+      final savedContent = '$base ${'X' * 50}';
       service.startEditingSession(id, '', savedContent);
       await service.endEditingSession(
         noteId: id,
         title: '',
-        content: savedContent + 'Z', // +1 حرف فقط
+        content: '${savedContent}Z', // +1 حرف فقط
       );
       // لا يجب أن يزيد عن 1 إصدار
       expect((await db.getNoteHistory(id)).length, 1);
@@ -333,15 +333,15 @@ void main() {
       await service.endEditingSession(
         noteId: id,
         title: 'Title',
-        content: 'v1 ' + 'A' * 100,
+        content: 'v1 ${'A' * 100}',
       );
 
       // جلسة 2 — المحتوى مختلف عن آخر إصدار محفوظ
-      service.startEditingSession(id, 'Title', 'v1 ' + 'A' * 100);
+      service.startEditingSession(id, 'Title', 'v1 ${'A' * 100}');
       await service.endEditingSession(
         noteId: id,
         title: 'Title',
-        content: 'v2 ' + 'B' * 100,
+        content: 'v2 ${'B' * 100}',
       );
 
       final history = await db.getNoteHistory(id);
@@ -369,13 +369,13 @@ void main() {
 
       service.startEditingSession(id, 'Title', 'v0');
       // استدعاء ثانٍ يُعيد تعيين snapshot للمحتوى الجديد
-      service.startEditingSession(id, 'Title', 'v1 ' + 'A' * 100);
+      service.startEditingSession(id, 'Title', 'v1 ${'A' * 100}');
 
       // الآن endEditingSession يقارن بـ snapshot الثاني
       await service.endEditingSession(
         noteId: id,
         title: 'Title',
-        content: 'v1 ' + 'A' * 100, // نفس snapshot الثاني — لا تغيير
+        content: 'v1 ${'A' * 100}', // نفس snapshot الثاني — لا تغيير
       );
       expect(await db.getNoteHistory(id), isEmpty);
     });
@@ -404,7 +404,7 @@ void main() {
         await service.endEditingSession(
           noteId: id,
           title: 'Note Updated',
-          content: 'Updated Content ' + 'X' * 100,
+          content: 'Updated Content ${'X' * 100}',
         );
       }
 
@@ -446,7 +446,7 @@ void main() {
         await service.smartLogVersion(
           noteId: id,
           title: 'Title',
-          content: 'Version $i ' + 'X' * 50,
+          content: 'Version $i ${'X' * 50}',
           isManualAction: true,
           forceLog: true,
         );

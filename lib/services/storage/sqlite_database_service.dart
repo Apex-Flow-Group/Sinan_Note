@@ -452,7 +452,7 @@ class SqliteDatabaseService implements NoteDbInterface {
 
   // ── Version Control ───────────────────────────────────────────────────────
 
-  static const int _maxVersionsPerNote = 5;
+  static const int _maxVersionsPerNote = 20;
 
   @override
   Future<void> logNoteVersion(NoteVersion version) async {

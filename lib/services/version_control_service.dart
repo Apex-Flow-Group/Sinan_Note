@@ -7,7 +7,7 @@ class VersionControlService {
   // Smart settings — balanced for real usage
   static const int _minSignificantChange = 20; // 20 chars minimum
   static const double _minChangePercentage = 0.05; // 5% change minimum
-  static const int _maxVersionsPerNote = 5; // Keep only 5 versions max
+  static const int _maxVersionsPerNote = 20; // Keep 20 versions per note
 
   // Session tracking (in-memory)
   static final Map<int, String> _sessionSnapshots = {};
