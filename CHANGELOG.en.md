@@ -4,6 +4,21 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.1] — 2026-05 | Open Source + Targeted Fixes
+
+> A new chapter begins — the code is now open to the world on GitHub.
+
+### 🌍 Open Source
+- **Sinan Note is now open source** — code available on [GitHub](https://github.com/Apex-Flow-Group/Sinan_Note) to explore, learn, and contribute
+
+### 🔧 Bug Fixes
+- **Fixed hide option when catalog is cleared** — deselecting the last catalog resets the hide toggle to false automatically
+- **Fixed hidden notes with empty catalog** — automatic DB migration (v5) repairs affected notes on first launch
+- **Fixed cursor position after paste** — cursor now moves to end of pasted text instead of keeping old selection
+- **Fixed immediate sync on auto-sync enable** — app triggers sync right after the option is turned on
+
+---
+
 ## [3.2.0] — 2026-05 | Full Refactoring + Security Improvements
 
 > 50+ changes, 8 refactoring rounds, 469/469 tests passing.

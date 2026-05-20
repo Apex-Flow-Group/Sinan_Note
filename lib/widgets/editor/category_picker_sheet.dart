@@ -109,6 +109,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
                         onChanged: (_) => setState(() {
                           if (checked) {
                             _selected.remove(cat.id);
+                            if (_selected.isEmpty) _hideFromHome = false;
                           } else {
                             _selected.add(cat.id);
                           }

@@ -85,11 +85,7 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
     } catch (_) {
       return;
     }
-    final local = re.globalToLocal(globalPos);
-    // نستخدم الموضع المحلي مباشرة — getPositionForOffset يتعامل مع الـ scroll
-    // تعويض بسيط: الإصبع يكون على الدمعة (أسفل الكرسر) فنرفع قليلاً
-    final targetLocal = Offset(local.dx, local.dy - widget.lineHeight * 0.5);
-    final pos = re.getPositionForOffset(targetLocal);
+    final pos = re.getPositionForOffset(Offset(globalPos.dx, globalPos.dy - widget.lineHeight));
 
     if (pos.offset != _lastOffset) {
       _lastOffset = pos.offset;

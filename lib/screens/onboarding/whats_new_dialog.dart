@@ -147,6 +147,101 @@ class WhatsNewDialog extends StatelessWidget {
               ]),
               const SizedBox(height: 14),
 
+              // ── GitHub Open Source ──
+              InkWell(
+                onTap: () => launchUrl(
+                  Uri.parse('https://github.com/Apex-Flow-Group/Sinan_Note'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [
+                              const Color(0xFF1a1a2e).withValues(alpha: 0.9),
+                              const Color(0xFF16213e).withValues(alpha: 0.9),
+                            ]
+                          : [
+                              const Color(0xFF24292e).withValues(alpha: 0.06),
+                              const Color(0xFF0366d6).withValues(alpha: 0.06),
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : const Color(0xFF24292e).withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : const Color(0xFF24292e).withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.code_rounded,
+                          size: 22,
+                          color: isDark ? Colors.white : const Color(0xFF24292e),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isAr
+                                  ? '🎉 سينان نوت أصبح مفتوح المصدر!'
+                                  : '🎉 Sinan Note is now Open Source!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF24292e),
+                                height: 1.3,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isAr
+                                  ? 'الكود متاح على GitHub — استكشف، تعلّم، أو شارك في البناء'
+                                  : 'Code is live on GitHub — explore, learn, or contribute',
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.4,
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.6)
+                                    : const Color(0xFF24292e)
+                                        .withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.open_in_new_rounded,
+                        size: 16,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.4)
+                            : const Color(0xFF24292e).withValues(alpha: 0.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
               // ── Features ──
               _FeatureRow(
                 icon: Icons.security_rounded,

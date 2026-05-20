@@ -699,7 +699,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                     ChangeSource.local,
                   );
                 } else {
-                  ctrl.replaceText(offset, deleteLen, text, null);
+                  ctrl.replaceText(offset, deleteLen, text,
+                      TextSelection.collapsed(offset: offset + text.length));
                 }
               },
               onSaveTap: () async {

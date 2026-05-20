@@ -55,6 +55,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     await CloudSyncGateway.setAutoSync(value);
     if (!mounted) return;
     setState(() => _autoSync = value);
+    if (value && CloudSyncGateway.isSignedIn) {
+      await _handleSync();
+    }
   }
 
   Future<void> _savePullToRefreshSetting(bool value) async {

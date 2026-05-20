@@ -1,6 +1,6 @@
 name: sinan_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.2.0+3386
+version: 3.2.1+3387
 publish_to: none
 
 environment:

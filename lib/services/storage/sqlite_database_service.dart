@@ -20,7 +20,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   static Completer<Database>? _initCompleter;
 
   static const _dbName = 'sinan_notes.db';
-  static const _dbVersion = 4;
+  static const _dbVersion = 5;
 
   factory SqliteDatabaseService() {
     _instance ??= SqliteDatabaseService._();
@@ -70,6 +70,10 @@ class SqliteDatabaseService implements NoteDbInterface {
           // v4: add noteType column to note_versions if missing
           if (oldVersion < 4) {
             await _migrateToV4(db);
+          }
+          // v5: fix notes with isHiddenFromHome=1 but no categories
+          if (oldVersion < 5) {
+            await _migrateToV5(db);
           }
         },
       );
@@ -165,6 +169,14 @@ class SqliteDatabaseService implements NoteDbInterface {
         'CREATE INDEX IF NOT EXISTS idx_notes_reminder  ON notes (reminderDateTime)');
     await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_versions_noteId ON note_versions (noteId)');
+  }
+
+  static Future<void> _migrateToV5(Database db) async {
+    try {
+      await db.execute(
+        "UPDATE notes SET isHiddenFromHome = 0 WHERE isHiddenFromHome = 1 AND (categoryIds IS NULL OR categoryIds = '')",
+      );
+    } catch (_) {}
   }
 
   /// v4 migration: add noteType column to note_versions if it doesn't exist.
