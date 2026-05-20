@@ -20,6 +20,7 @@ import 'package:sinan_note/screens/desktop/code_tab_responsive.dart';
 import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/reminder_dashboard_responsive.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
@@ -127,12 +128,16 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     }
   }
 
+  bool _lockScreenVisible = false;
+
   void _onSecurityChanged() {
     if (!_securityController.isLocked || !mounted) return;
+    // منع فتح شاشة قفل مكررة
+    if (_lockScreenVisible) return;
+    _lockScreenVisible = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final settings =
-          Provider.of<SettingsProvider>(context, listen: false);
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
       Navigator.of(context).push(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
@@ -140,15 +145,18 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                 isSetup: false,
                 autoBiometric: settings.biometricLockEnabled,
                 onSuccess: () {
+                  // مارك الجلسة وافتح القفل مباشرة — بدون requestUnlock
+                  UnifiedLockService().markAuthenticated();
+                  _securityController.forceUnlock();
+                  _lockScreenVisible = false;
                   Navigator.of(context).pop();
-                  _securityController.requestUnlock();
                 },
               ),
           settings: const RouteSettings(name: '/lock'),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),
-      );
+      ).then((_) => _lockScreenVisible = false);
     });
   }
 

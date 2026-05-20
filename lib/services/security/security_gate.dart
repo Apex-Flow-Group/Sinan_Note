@@ -172,6 +172,13 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     await _authenticate();
   }
 
+  /// Direct unlock after successful UI authentication (no biometric re-prompt)
+  void forceUnlock() {
+    _isLocked = false;
+    _pausedTime = null;
+    notifyListeners();
+  }
+
   /// Manual lock trigger (for logout/settings)
   void lock() {
     _isLocked = true;
