@@ -42,7 +42,6 @@ Future<int?> _saveNote({
   int colorIndex = 0,
   bool isLocked = false,
   String noteType = 'simple',
-  bool isAutoSave = true,
 }) async {
   // نبني NotesProvider وهمي عبر duck-typing — EditorSaveManager يقبل NotesProvider
   // لذا نستدعي saveNote مباشرة بعد استخراج المنطق

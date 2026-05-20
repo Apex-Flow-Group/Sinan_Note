@@ -478,10 +478,10 @@ void main() {
 
         // autosave: isManualSave=false → لا يستدعي updateSnapshot
         // نحاكي ذلك مباشرة
-        final savedWithoutSnapshot = () {
+        void savedWithoutSnapshot() {
           // حفظ بدون updateSnapshot
           manager.isSaving = false;
-        };
+        }
         savedWithoutSnapshot();
 
         // isDirty لا يزال true — الـ snapshot لم يتحدث
