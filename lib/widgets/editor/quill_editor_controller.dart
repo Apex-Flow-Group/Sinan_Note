@@ -25,7 +25,9 @@ class QuillEditorController {
 
   TextDirection textDirection = TextDirection.rtl;
   String _lastPlainText = '';
+  int _lastPlainTextHash = 0;
   StreamSubscription? _docChangeSub;
+  Timer? _onChangedDebounce;
 
   // ── tashkeel ───────────────────────────────────────────────────────────────
   static const _harakat = {
@@ -82,6 +84,7 @@ class QuillEditorController {
 
   void dispose() {
     _suppressBar = true;
+    _onChangedDebounce?.cancel();
     selectionBarActive.value = false;
     tearHandle.dispose();
     focusNode.removeListener(onFocusChanged);
@@ -212,19 +215,21 @@ class QuillEditorController {
       return;
     }
 
+    _onChangedDebounce?.cancel();
+    _onChangedDebounce = Timer(const Duration(milliseconds: 50), _processOnChanged);
+  }
+
+  void _processOnChanged() {
+    if (isFormatting || isPasting || isDirectionFormatting || isHandlingEnter) return;
+
     final plainText = quillController.document.toPlainText();
-    if (plainText == _lastPlainText) return;
+    final newHash = plainText.hashCode;
+    if (newHash == _lastPlainTextHash && plainText == _lastPlainText) return;
     _lastPlainText = plainText;
+    _lastPlainTextHash = newHash;
 
     final selection = quillController.selection;
     if (!selection.isValid || plainText.trim().isEmpty) return;
-
-    final docLength = plainText.length;
-    if (!selection.isCollapsed &&
-        selection.start == 0 &&
-        selection.end >= docLength - 1) {
-      return;
-    }
 
     final offset = selection.baseOffset.clamp(0, plainText.length);
     final lineStart = plainText.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
@@ -235,7 +240,7 @@ class QuillEditorController {
     );
 
     if (currentLine.isEmpty) {
-      final prevDir = getPrevNonEmptyLineDirection(plainText, offset);
+      final prevDir = _getPrevNonEmptyLineDirFast(plainText, lineStart);
       if (textDirection != prevDir) {
         textDirection = prevDir;
         rebuild();
@@ -247,7 +252,7 @@ class QuillEditorController {
     final hasExplicitDir = RegExp(r'[\u0600-\u06FF]').hasMatch(currentLine) ||
         RegExp(r'[a-zA-Z]').hasMatch(currentLine);
     final effectiveDir = !hasExplicitDir
-        ? getPrevNonEmptyLineDirection(plainText, offset)
+        ? _getPrevNonEmptyLineDirFast(plainText, lineStart)
         : newDir;
     final isRtl = effectiveDir == TextDirection.rtl;
     final currentAttr =
@@ -256,9 +261,7 @@ class QuillEditorController {
 
     if (hasExplicitDir && currentIsRtl != !isRtl) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (isFormatting || isDirectionFormatting || isDraggingSelection) {
-          return;
-        }
+        if (isFormatting || isDirectionFormatting || isDraggingSelection) return;
         applyDirectionFormat(() {
           if (isRtl) {
             quillController.formatSelection(const DirectionAttribute(null));
@@ -290,14 +293,21 @@ class QuillEditorController {
   }
 
   TextDirection getPrevNonEmptyLineDirection(String text, int offset) {
-    final currentLineStart =
-        text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
-    if (currentLineStart <= 0) return TextDirection.rtl;
-    final prevLines = text.substring(0, currentLineStart).split('\n');
-    for (int i = prevLines.length - 1; i >= 0; i--) {
-      if (prevLines[i].trim().isNotEmpty) {
-        return TextDirectionUtils.getDirection(prevLines[i]);
+    return _getPrevNonEmptyLineDirFast(text,
+        text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0));
+  }
+
+  /// نسخة سريعة — تمشي للخلف بدون split
+  TextDirection _getPrevNonEmptyLineDirFast(String text, int lineStartIndex) {
+    int end = lineStartIndex; // نهاية السطر السابق (الـ \n)
+    while (end > 0) {
+      final start = text.lastIndexOf('\n', end - 1);
+      final line = text.substring(start < 0 ? 0 : start + 1, end);
+      if (line.trim().isNotEmpty) {
+        return TextDirectionUtils.getDirection(line);
       }
+      end = start < 0 ? 0 : start;
+      if (start < 0) break;
     }
     return TextDirection.rtl;
   }

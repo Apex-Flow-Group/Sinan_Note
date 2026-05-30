@@ -163,7 +163,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
         if (!context.mounted) return;
         CustomShareSheet.show(
           context,
-          '${widget.note.title}\n\n${NoteCardUtils.fixNoteContent(widget.note.content)}',
+          '${widget.note.title}\n\n${NoteCardUtils.fixNoteContent(widget.note.content, maxChars: null)}',
           subject: widget.note.title,
           note: widget.note,
           onNoteCopied: () async {

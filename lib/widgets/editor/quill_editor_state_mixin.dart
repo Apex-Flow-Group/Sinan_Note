@@ -172,14 +172,20 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
   }
 
   TextDirection getPrevNonEmptyLineDirection(String text, int offset) {
-    final currentLineStart =
-        text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
-    if (currentLineStart <= 0) return TextDirection.rtl;
-    final prevLines = text.substring(0, currentLineStart).split('\n');
-    for (int i = prevLines.length - 1; i >= 0; i--) {
-      if (prevLines[i].trim().isNotEmpty) {
-        return TextDirectionUtils.getDirection(prevLines[i]);
+    final lineStart = text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
+    return _getPrevNonEmptyLineDirFast(text, lineStart);
+  }
+
+  TextDirection _getPrevNonEmptyLineDirFast(String text, int lineStartIndex) {
+    int end = lineStartIndex;
+    while (end > 0) {
+      final start = text.lastIndexOf('\n', end - 1);
+      final line = text.substring(start < 0 ? 0 : start + 1, end);
+      if (line.trim().isNotEmpty) {
+        return TextDirectionUtils.getDirection(line);
       }
+      end = start < 0 ? 0 : start;
+      if (start < 0) break;
     }
     return TextDirection.rtl;
   }
@@ -302,6 +308,9 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
       final line = lines[i];
       final isLast = i == lines.length - 1;
       final len = line.length;
+      final isRtl =
+          TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') ==
+              TextDirection.rtl;
       if (len > 0) {
         quillController.formatText(pos, len, const ColorAttribute(null));
         quillController.formatText(pos, len, const BackgroundAttribute(null));
@@ -315,9 +324,6 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
       }
       pos += len;
       if (!isLast) {
-        final isRtl =
-            TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') ==
-                TextDirection.rtl;
         quillController.formatText(pos, 1, const AlignAttribute(null));
         quillController.formatText(
           pos,
@@ -327,8 +333,9 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
         pos += 1;
       }
     }
-    isPasting = false;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      isPasting = false;
       if (!stableScrollController.hasClients) return;
       final scrollPos = stableScrollController.position;
       if (scrollPos.pixels < scrollPos.maxScrollExtent - 100) return;

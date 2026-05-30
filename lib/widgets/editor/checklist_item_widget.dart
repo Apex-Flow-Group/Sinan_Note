@@ -3,7 +3,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/checklist_formatter.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 /// Standalone widget for rendering a single checklist item.
@@ -46,30 +45,9 @@ class ChecklistItemWidget extends StatefulWidget {
 
 class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
     with AutomaticKeepAliveClientMixin {
-  late TextDirection _textDirection;
-
   @override
   bool get wantKeepAlive => true;
 
-  @override
-  void initState() {
-    super.initState();
-    _textDirection = TextDirectionUtils.getDirection(widget.controller.text);
-    widget.controller.addListener(_onTextChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onTextChanged);
-    super.dispose();
-  }
-
-  void _onTextChanged() {
-    final newDir = TextDirectionUtils.getDirection(widget.controller.text);
-    if (newDir != _textDirection) {
-      setState(() => _textDirection = newDir);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,10 +103,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
             child: TextField(
               controller: widget.controller,
               focusNode: widget.focusNode,
-              textDirection: _textDirection,
-              textAlign: _textDirection == TextDirection.rtl
-                  ? TextAlign.right
-                  : TextAlign.left,
+              textAlign: TextAlign.start,
               textAlignVertical: TextAlignVertical.center,
               maxLines: null,
               readOnly: widget.readOnly,

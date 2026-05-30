@@ -4,6 +4,28 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.2] — 2026-06 | Editor & UX Fixes
+
+### ✨ New Features
+- **Catalog button in multi-select bar** — assign notes to catalogs directly from the selection toolbar (home, code tab, reminders tab)
+- **Smart multi-select catalog logic** — single note opens its actual catalog state; multiple notes open empty picker and merge (add-only) without overwriting existing catalogs
+
+### 🔧 Bug Fixes
+- **Fixed share truncating note content** — all share paths now pass full content without the 300-char limit
+- **Fixed catalog button in readonly view not reflecting saved state** — `_currentNote` now updates on refresh so the icon shows the correct state
+- **Fixed checklist dispose crash** — removed `controller.clear()` calls in dispose that triggered removed listeners causing `NoSuchMethodError`
+- **Fixed paste button icon not changing** — `SmartEditorToolbar` (rich/reminder modes) now toggles between paste and close icons when selection bar opens
+- **Fixed text direction resetting to LTR after save** — `fixDeltaDirections` no longer recalculates paragraph directions; only cleans legacy `align:right` attributes
+- **Fixed paste direction stopping mid-text** — `isPasting` flag cleared in `addPostFrameCallback` so `onChanged` cannot interfere during formatting
+- **Fixed checklist item direction** — removed fixed `textDirection` from `TextField` so Flutter auto-detects direction per line
+
+### ⚡ Performance
+- **Debounced `onChanged` (50ms)** — direction logic batched after typing pauses instead of running on every keystroke
+- **Fast hash comparison before full string diff** — `hashCode` short-circuits expensive comparison on large documents
+- **`getPrevNonEmptyLineDirection` rewritten** — replaced `substring + split('\n')` with backward `lastIndexOf` scan; critical for long texts and novels
+
+---
+
 ## [3.2.1] — 2026-05 | Open Source + Targeted Fixes
 
 > A new chapter begins — the code is now open to the world on GitHub.

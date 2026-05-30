@@ -125,6 +125,7 @@ class EditorToolbarFactory {
           onRedo: onRedo,
           onCalculate: onCalculate ?? () {},
           onPaste: onPaste,
+          selectionBarActive: selectionBarActive,
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
           onReminderTap: onReminderTap ?? () {},
           onShareTap: onShareTap ?? () {},

@@ -61,7 +61,7 @@ class NoteCardUtils {
     return hsl.withLightness((hsl.lightness - 0.15).clamp(0.0, 1.0)).toColor();
   }
 
-  static String fixNoteContent(String content, {int maxChars = 300}) =>
+  static String fixNoteContent(String content, {int? maxChars = 300}) =>
       NoteContentUtils.toDisplayText(content, maxChars: maxChars);
 
   static String getDisplayTitle(Note note) {

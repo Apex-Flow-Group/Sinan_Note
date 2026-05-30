@@ -62,14 +62,10 @@ class QuillMigration {
   }
 
   /// إصلاح اتجاهات فقرات Delta محفوظة مسبقاً
-  /// يمر على كل op من نوع \n ويصحح direction/align بناءً على نص الفقرة
-  /// يُنظف أيضاً align:right المتبقية من إصدارات قديمة
+  /// يُنظف فقط align:right المتبقية من إصدارات قديمة — لا يُعيد حساب الاتجاهات
   static Delta fixDeltaDirections(Delta original) {
     final ops = original.toList();
     final fixed = Delta();
-    String paragraphText = '';
-    String lastNonEmptyDir =
-        ''; // آخر فقرة غير فارغة — لتوريث اتجاه الأسطر الفارغة
 
     for (final op in ops) {
       if (!op.isInsert) {
@@ -80,13 +76,12 @@ class QuillMigration {
 
       final data = op.data;
 
-      // embed (صورة، إلخ) — نمررها كما هي
       if (data is! String) {
         fixed.insert(data, op.attributes);
         continue;
       }
 
-      // تنظيف align:right من attributes النصية (إرث من إصدارات قديمة)
+      // تنظيف align:right فقط من attributes
       Map<String, dynamic>? cleanAttrs;
       if (op.attributes != null) {
         cleanAttrs = Map<String, dynamic>.from(op.attributes!);
@@ -94,35 +89,7 @@ class QuillMigration {
         if (cleanAttrs.isEmpty) cleanAttrs = null;
       }
 
-      // نص عادي — نقسمه على \n
-      final segments = data.split('\n');
-      for (int i = 0; i < segments.length; i++) {
-        final seg = segments[i];
-        if (seg.isNotEmpty) {
-          paragraphText += seg;
-          fixed.insert(seg, cleanAttrs);
-        }
-
-        if (i < segments.length - 1) {
-          // هذا \n — نصحح اتجاه الفقرة
-          // إذا كانت الفقرة فارغة — نرث اتجاه آخر فقرة غير فارغة
-          final dirText =
-              paragraphText.isNotEmpty ? paragraphText : lastNonEmptyDir;
-          final isRtl =
-              TextDirectionUtils.getDirection(dirText) == TextDirection.rtl;
-          final attrs = Map<String, dynamic>.from(op.attributes ?? {});
-          if (isRtl) {
-            attrs.remove('direction');
-            attrs.remove('align');
-          } else {
-            attrs['direction'] = 'rtl';
-            attrs.remove('align');
-          }
-          fixed.insert('\n', attrs.isEmpty ? null : attrs);
-          if (paragraphText.isNotEmpty) lastNonEmptyDir = paragraphText;
-          paragraphText = '';
-        }
-      }
+      fixed.insert(data, cleanAttrs);
     }
 
     return fixed;

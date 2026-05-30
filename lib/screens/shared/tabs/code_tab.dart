@@ -19,6 +19,7 @@ import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
+import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sinan_note/widgets/home/note_card_widget.dart';
@@ -222,12 +223,37 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                       final content =
                                           NoteCardUtils.fixNoteContent(
                                               note.content,
-                                              maxChars: note.content.length);
+                                              maxChars: null);
                                       CustomShareSheet.show(
                                           context, '${note.title}\n\n$content',
                                           subject: note.title, note: note);
                                     }
                                   : null,
+                              onCategory: () async {
+                                final provider = Provider.of<NotesProvider>(context, listen: false);
+                                final ids = List<int>.from(selectedIds);
+                                final isSingle = ids.length == 1;
+                                final firstNote = provider.notes.firstWhere((n) => n.id == ids.first);
+                                final result = await CategoryPickerSheet.show(
+                                  context,
+                                  isSingle ? firstNote.categoryIds : [],
+                                  isHiddenFromHome: isSingle ? firstNote.isHiddenFromHome : false,
+                                );
+                                if (result == null || !context.mounted) return;
+                                final newCatIds = (result['categoryIds'] as List).cast<int>();
+                                final newHidden = result['isHiddenFromHome'] as bool;
+                                for (final id in ids) {
+                                  final note = provider.notes.firstWhere((n) => n.id == id);
+                                  final merged = isSingle
+                                      ? newCatIds
+                                      : {...note.categoryIds, ...newCatIds}.toList();
+                                  await provider.updateNote(note.copyWith(
+                                    categoryIds: merged,
+                                    isHiddenFromHome: isSingle ? newHidden : (note.isHiddenFromHome || newHidden),
+                                  ));
+                                }
+                                _selectedNoteIdsNotifier.value = {};
+                              },
                             ),
                           );
                         }

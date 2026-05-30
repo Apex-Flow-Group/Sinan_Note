@@ -191,7 +191,7 @@ class NoteCardActions {
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          final plainContent = NoteCardUtils.fixNoteContent(note.content);
+          final plainContent = NoteCardUtils.fixNoteContent(note.content, maxChars: null);
           CustomShareSheet.show(
             context,
             '${note.title}\n\n$plainContent',

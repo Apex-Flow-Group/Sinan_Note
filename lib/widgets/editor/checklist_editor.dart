@@ -740,7 +740,6 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     // 🛑 CRITICAL: Remove title listeners BEFORE clearing
     _titleController.removeListener(_notifyParent);
     _titleController.removeListener(_onTitleChanged);
-    _titleController.clear();
     _titleController.dispose();
 
     // 🛑 CRITICAL: Remove ALL item listeners BEFORE clearing to prevent empty save
@@ -752,9 +751,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     }
     _listeners.clear();
 
-    // Now safe to clear and dispose
+    // Now safe to dispose
     for (var controller in _controllers.values) {
-      controller.clear();
       controller.dispose();
     }
     _controllers.clear();

@@ -68,8 +68,8 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Title ──
               Text(
                 isAr
-                    ? 'تحديث شامل وتحسينات جوهرية'
-                    : 'Major Update & Core Improvements',
+                    ? 'إصلاحات المحرر وتحسينات التجربة'
+                    : 'Editor Fixes & Experience Improvements',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -114,8 +114,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'تحديث كبير يجلب تجربة سطح مكتب احترافية، أمان أعلى للخزنة، قائمة مهام محسّنة، وتحسينات شاملة في الأداء والتفاعل.'
-                            : 'A major update bringing stronger vault security, an improved checklist, smarter swipe actions, and deep performance improvements.',
+                            ? 'إصلاحات دقيقة في المحرر، اتجاه النص، والمشاركة — مع تحسينات أداء تجعل المحرر أسرع مع النصوص الطويلة.'
+                            : 'Precise fixes in the editor, text direction, and sharing — plus performance improvements that make the editor faster with long texts.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -243,6 +243,38 @@ class WhatsNewDialog extends StatelessWidget {
               const SizedBox(height: 14),
 
               // ── Features ──
+              _FeatureRow(
+                icon: Icons.label_rounded,
+                color: Colors.teal,
+                title: isAr ? 'كتالوج من التحديد المتعدد' : 'Catalog in Multi-Select',
+                subtitle: isAr
+                    ? 'عيّن عدة ملاحظات لكتالوج دفعة واحدة من شريط التحديد'
+                    : 'Assign multiple notes to a catalog at once from the selection bar',
+              ),
+              _FeatureRow(
+                icon: Icons.share_rounded,
+                color: Colors.blue,
+                title: isAr ? 'مشاركة المحتوى كاملاً' : 'Full Content Sharing',
+                subtitle: isAr
+                    ? 'إصلاح قطع المحتوى عند المشاركة — الملاحظة تُرسل كاملة'
+                    : 'Fixed content truncation on share — full note is always sent',
+              ),
+              _FeatureRow(
+                icon: Icons.speed_rounded,
+                color: Colors.purple,
+                title: isAr ? 'محرر أسرع مع النصوص الطويلة' : 'Faster Editor for Long Texts',
+                subtitle: isAr
+                    ? 'debounce + hash comparison + مسح سريع للخلف — أداء أفضل مع الروايات'
+                    : 'Debounce + hash comparison + fast backward scan — better with novels',
+              ),
+              _FeatureRow(
+                icon: Icons.format_textdirection_r_to_l_rounded,
+                color: Colors.orange,
+                title: isAr ? 'اتجاه النص محفوظ بعد الحفظ' : 'Text Direction Preserved After Save',
+                subtitle: isAr
+                    ? 'إصلاح عودة الاتجاه لليسار بعد الحفظ، وتوقف اتجاه اللصق في المنتصف'
+                    : 'Fixed direction resetting to LTR after save and paste direction stopping mid-text',
+              ),
               _FeatureRow(
                 icon: Icons.security_rounded,
                 color: Colors.indigo,

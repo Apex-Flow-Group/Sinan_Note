@@ -277,7 +277,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final note = _currentNote;
     final content = note.isChecklist
         ? ChecklistFormatter.formatForSharing(note.title, note.content)
-        : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content)}';
+        : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content, maxChars: null)}';
     CustomShareSheet.show(context, content, subject: note.title, note: note);
   }
 
@@ -384,8 +384,10 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         .cast<Note?>()
         .firstWhere((n) => n?.id == _currentNote.id, orElse: () => null);
     if (updated != null) {
-      setState(() =>
-          widget.coordinator.stateManager.colorIndex = updated.colorIndex);
+      setState(() {
+        _currentNote = updated;
+        widget.coordinator.stateManager.colorIndex = updated.colorIndex;
+      });
     }
   }
 

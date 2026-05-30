@@ -73,7 +73,7 @@ class NoteContextMenu extends StatelessWidget {
       case 'share':
         if (context.mounted) {
           final plainContent = NoteCardUtils.fixNoteContent(note.content,
-              maxChars: note.content.length);
+              maxChars: null);
           CustomShareSheet.show(
             context,
             '${note.title}\n\n$plainContent',
