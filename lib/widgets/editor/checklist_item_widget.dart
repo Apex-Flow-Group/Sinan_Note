@@ -1,8 +1,8 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 /// Standalone widget for rendering a single checklist item.
@@ -48,6 +48,37 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
   @override
   bool get wantKeepAlive => true;
 
+  TextDirection _textDirection = TextDirection.rtl;
+
+  @override
+  void initState() {
+    super.initState();
+    _textDirection = TextDirectionUtils.getDirection(widget.controller.text);
+    widget.controller.addListener(_updateDirection);
+  }
+
+  @override
+  void didUpdateWidget(covariant ChecklistItemWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_updateDirection);
+      widget.controller.addListener(_updateDirection);
+      _textDirection = TextDirectionUtils.getDirection(widget.controller.text);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_updateDirection);
+    super.dispose();
+  }
+
+  void _updateDirection() {
+    final newDir = TextDirectionUtils.getDirection(widget.controller.text);
+    if (newDir != _textDirection) {
+      setState(() => _textDirection = newDir);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +134,10 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
             child: TextField(
               controller: widget.controller,
               focusNode: widget.focusNode,
-              textAlign: TextAlign.start,
+              textDirection: _textDirection,
+              textAlign: _textDirection == TextDirection.rtl
+                  ? TextAlign.right
+                  : TextAlign.left,
               textAlignVertical: TextAlignVertical.center,
               maxLines: null,
               readOnly: widget.readOnly,
@@ -156,4 +190,3 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
     return content;
   }
 }
-

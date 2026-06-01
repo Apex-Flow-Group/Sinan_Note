@@ -1,6 +1,16 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter/services.dart'; import 'package:flutter_quill/flutter_quill.dart'; import 'package:flutter_quill/quill_delta.dart';import 'package:markdown/markdown.dart' as md; import 'package:sinan_note/core/utils/text_direction_utils.dart'; import 'package:sinan_note/widgets/editor/quill_editor_state_mixin.dart'; import 'package:sinan_note/widgets/editor/tear/tear.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
+import 'package:markdown/markdown.dart' as md;
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'package:sinan_note/widgets/editor/quill_editor_state_mixin.dart';
+import 'package:sinan_note/widgets/editor/tear/tear.dart';
+
 class QuillEditorController {
   final QuillController quillController;
   final FocusNode focusNode;
@@ -186,10 +196,14 @@ class QuillEditorController {
         : TextDirectionUtils.getDirection(prevLine);
 
     isHandlingEnter = true;
+    // Apply direction immediately (synchronously) to prevent a frame where
+    // the new line has inherited direction attribute causing getDirectionOfNode
+    // to flip it, which places the cursor at the wrong side (x=0 in LTR).
+    if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
+      applyEnterDirection(dir);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isHandlingEnter = false;
-      if (isFormatting || isDirectionFormatting || isDraggingSelection) return;
-      applyEnterDirection(dir);
       scrollToCursor();
     });
   }
@@ -216,11 +230,14 @@ class QuillEditorController {
     }
 
     _onChangedDebounce?.cancel();
-    _onChangedDebounce = Timer(const Duration(milliseconds: 50), _processOnChanged);
+    _onChangedDebounce =
+        Timer(const Duration(milliseconds: 50), _processOnChanged);
   }
 
   void _processOnChanged() {
-    if (isFormatting || isPasting || isDirectionFormatting || isHandlingEnter) return;
+    if (isFormatting || isPasting || isDirectionFormatting || isHandlingEnter) {
+      return;
+    }
 
     final plainText = quillController.document.toPlainText();
     final newHash = plainText.hashCode;
@@ -261,7 +278,9 @@ class QuillEditorController {
 
     if (hasExplicitDir && currentIsRtl != !isRtl) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (isFormatting || isDirectionFormatting || isDraggingSelection) return;
+        if (isFormatting || isDirectionFormatting || isDraggingSelection) {
+          return;
+        }
         applyDirectionFormat(() {
           if (isRtl) {
             quillController.formatSelection(const DirectionAttribute(null));
@@ -293,8 +312,8 @@ class QuillEditorController {
   }
 
   TextDirection getPrevNonEmptyLineDirection(String text, int offset) {
-    return _getPrevNonEmptyLineDirFast(text,
-        text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0));
+    return _getPrevNonEmptyLineDirFast(
+        text, text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0));
   }
 
   /// نسخة سريعة — تمشي للخلف بدون split
@@ -505,12 +524,13 @@ class QuillEditorController {
         ? getPrevNonEmptyLineDirection(plainText, offset)
         : TextDirectionUtils.getDirection(currentLine);
     isHandlingEnter = true;
+    // Apply direction immediately to prevent cursor disappearing on empty RTL lines
+    if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
+      applyEnterDirection(dir);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isHandlingEnter = false;
-      if (isFormatting || isDirectionFormatting || isDraggingSelection) return;
-      applyEnterDirection(dir);
       scrollToCursor();
     });
   }
 }
-

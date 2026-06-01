@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/widgets/editor/toolbars/editor_options_menu.dart';
 
@@ -114,7 +113,7 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       decoration: BoxDecoration(
         color: widget.backgroundColor,
       ),
@@ -182,7 +181,8 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
                           widget.onPaste,
                         ),
                       )
-                    : _buildIconBtn(Icons.content_paste_rounded, widget.onPaste),
+                    : _buildIconBtn(
+                        Icons.content_paste_rounded, widget.onPaste),
                 _buildIconBtn(Icons.text_fields_rounded,
                     () => setState(() => _currentMode = ToolbarMode.format)),
                 _buildIconBtn(Icons.palette_outlined,
@@ -266,9 +266,11 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
                     isActive: widget.isBoldActive),
                 _buildIconBtn(Icons.format_italic_rounded, widget.onItalic,
                     isActive: widget.isItalicActive),
-                _buildIconBtn(Icons.format_underlined_rounded, widget.onUnderline,
+                _buildIconBtn(
+                    Icons.format_underlined_rounded, widget.onUnderline,
                     isActive: widget.isUnderlineActive),
-                _buildIconBtn(Icons.strikethrough_s_rounded, widget.onStrikethrough,
+                _buildIconBtn(
+                    Icons.strikethrough_s_rounded, widget.onStrikethrough,
                     isActive: widget.isStrikethroughActive),
                 _buildIconBtn(Icons.title_rounded, widget.onH1,
                     isActive: widget.isH1Active),
@@ -276,7 +278,8 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
                     isActive: widget.isH2Active),
                 _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList,
                     isActive: widget.isListActive),
-                _buildIconBtn(Icons.format_list_numbered_rounded, widget.onOrderedList,
+                _buildIconBtn(
+                    Icons.format_list_numbered_rounded, widget.onOrderedList,
                     isActive: widget.isOrderedListActive),
                 _buildIconBtn(Icons.format_quote_rounded, widget.onBlockquote,
                     isActive: widget.isBlockquoteActive),
@@ -347,10 +350,9 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
         child: Icon(icon, color: effectiveColor, size: 22),
       ),
       onPressed: onTap,
-      splashRadius: 24,
-      padding: const EdgeInsets.all(6),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      splashRadius: 22,
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
     );
   }
 }
-

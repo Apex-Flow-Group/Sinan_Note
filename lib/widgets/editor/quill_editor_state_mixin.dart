@@ -1,6 +1,12 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter/services.dart'; import 'package:flutter_quill/flutter_quill.dart';import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+
 /// Mixin يحتوي على كل منطق الـ state الخاص بمحرر Quill:
 /// - اتجاه النص (RTL/LTR)
 /// - التشكيل
@@ -102,10 +108,13 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
     final dir = getLineDirection(plainText, prevLineOffset);
 
     isHandlingEnter = true;
+    // Apply direction immediately to prevent cursor disappearing on empty RTL lines
+    if (!isFormatting && !isDirectionFormatting) {
+      applyEnterDirection(dir);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isHandlingEnter = false;
-      if (!mounted || isFormatting || isDirectionFormatting) return;
-      applyEnterDirection(dir);
+      if (!mounted) return;
       scrollToCursor();
     });
   }
@@ -384,10 +393,13 @@ mixin QuillEditorStateMixin<T extends StatefulWidget> on State<T> {
         quillController.selection.baseOffset.clamp(0, plainText.length);
     final dir = getLineDirection(plainText, offset);
     isHandlingEnter = true;
+    // Apply direction immediately to prevent cursor disappearing on empty RTL lines
+    if (!isFormatting && !isDirectionFormatting) {
+      applyEnterDirection(dir);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isHandlingEnter = false;
-      if (!mounted || isFormatting || isDirectionFormatting) return;
-      applyEnterDirection(dir);
+      if (!mounted) return;
       scrollToCursor();
     });
   }
@@ -404,4 +416,3 @@ class StableScrollController extends ScrollController {
     return super.animateTo(offset, duration: duration, curve: curve);
   }
 }
-

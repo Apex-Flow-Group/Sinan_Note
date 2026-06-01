@@ -204,7 +204,7 @@ class _SimpleToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       decoration: BoxDecoration(
         color: backgroundColor,
       ),
@@ -213,24 +213,29 @@ class _SimpleToolbar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                _buildIconBtn(Icons.calculate_outlined, onCalculate),
-                selectionBarActive != null
-                    ? ValueListenableBuilder<bool>(
-                        valueListenable: selectionBarActive!,
-                        builder: (_, isActive, __) => _buildIconBtn(
-                          isActive
-                              ? Icons.close_rounded
-                              : Icons.content_paste_rounded,
-                          onPaste,
-                        ),
-                      )
-                    : _buildIconBtn(Icons.content_paste_rounded, onPaste),
-                _buildIconBtn(Icons.palette_outlined, onBackgroundColorTap),
-                _buildIconBtn(Icons.undo_rounded, onUndo),
-                _buildIconBtn(Icons.redo_rounded, onRedo),
-              ],
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildIconBtn(Icons.calculate_outlined, onCalculate),
+                    selectionBarActive != null
+                        ? ValueListenableBuilder<bool>(
+                            valueListenable: selectionBarActive!,
+                            builder: (_, isActive, __) => _buildIconBtn(
+                              isActive
+                                  ? Icons.close_rounded
+                                  : Icons.content_paste_rounded,
+                              onPaste,
+                            ),
+                          )
+                        : _buildIconBtn(Icons.content_paste_rounded, onPaste),
+                    _buildIconBtn(Icons.palette_outlined, onBackgroundColorTap),
+                    _buildIconBtn(Icons.undo_rounded, onUndo),
+                    _buildIconBtn(Icons.redo_rounded, onRedo),
+                  ],
+                ),
+              ),
             ),
             Builder(
               builder: (ctx) => Material(
@@ -288,9 +293,9 @@ class _SimpleToolbar extends StatelessWidget {
     return IconButton(
       icon: Icon(icon, color: effectiveColor, size: 22),
       onPressed: onTap,
-      splashRadius: 24,
-      padding: const EdgeInsets.all(6),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      splashRadius: 22,
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
     );
   }
 }

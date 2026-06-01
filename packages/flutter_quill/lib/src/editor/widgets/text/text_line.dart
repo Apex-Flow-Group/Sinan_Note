@@ -290,6 +290,15 @@ class _TextLineState extends State<TextLine> {
       nodes = LinkedList<Node>()..add(leaf.QuillText());
     }
 
+    // Fix RTL cursor on empty lines: RenderParagraph.getOffsetForCaret returns
+    // x=0 for empty text regardless of textDirection. Adding a Right-to-Left Mark
+    // (U+200F) forces the paragraph to recognize RTL direction and place the
+    // caret at the correct (right) side. This is a known Flutter issue where
+    // the cursor jumps to the left on new empty lines in RTL text.
+    if (nodes.isEmpty && !kIsWeb && widget.textDirection == TextDirection.rtl) {
+      nodes = LinkedList<Node>()..add(leaf.QuillText('\u200F'));
+    }
+
     final isComposingRangeOutOfLine = !widget.composingRange.isValid ||
         widget.composingRange.isCollapsed ||
         (widget.composingRange.start < widget.line.documentOffset ||

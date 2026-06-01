@@ -38,46 +38,51 @@ class ChecklistBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       decoration: BoxDecoration(color: backgroundColor),
       child: SafeArea(
         top: false,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.playlist_add_rounded, color: textColor),
-                  onPressed: onAddItem,
-                  padding: const EdgeInsets.all(6),
-                  constraints:
-                      const BoxConstraints(minWidth: 36, minHeight: 36),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.playlist_add_rounded, color: textColor),
+                      onPressed: onAddItem,
+                      padding: const EdgeInsets.all(4),
+                      constraints:
+                          const BoxConstraints(minWidth: 34, minHeight: 34),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.palette_outlined, color: textColor),
+                      onPressed: onBackgroundColorTap,
+                      padding: const EdgeInsets.all(4),
+                      constraints:
+                          const BoxConstraints(minWidth: 34, minHeight: 34),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.undo_rounded,
+                          color: onUndo != null ? textColor : Colors.grey),
+                      onPressed: onUndo,
+                      padding: const EdgeInsets.all(4),
+                      constraints:
+                          const BoxConstraints(minWidth: 34, minHeight: 34),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.redo_rounded,
+                          color: onRedo != null ? textColor : Colors.grey),
+                      onPressed: onRedo,
+                      padding: const EdgeInsets.all(4),
+                      constraints:
+                          const BoxConstraints(minWidth: 34, minHeight: 34),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: Icon(Icons.palette_outlined, color: textColor),
-                  onPressed: onBackgroundColorTap,
-                  padding: const EdgeInsets.all(6),
-                  constraints:
-                      const BoxConstraints(minWidth: 36, minHeight: 36),
-                ),
-                IconButton(
-                  icon: Icon(Icons.undo_rounded,
-                      color: onUndo != null ? textColor : Colors.grey),
-                  onPressed: onUndo,
-                  padding: const EdgeInsets.all(6),
-                  constraints:
-                      const BoxConstraints(minWidth: 36, minHeight: 36),
-                ),
-                IconButton(
-                  icon: Icon(Icons.redo_rounded,
-                      color: onRedo != null ? textColor : Colors.grey),
-                  onPressed: onRedo,
-                  padding: const EdgeInsets.all(6),
-                  constraints:
-                      const BoxConstraints(minWidth: 36, minHeight: 36),
-                ),
-              ],
+              ),
             ),
             Flexible(
               child: Material(

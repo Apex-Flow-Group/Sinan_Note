@@ -190,11 +190,35 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
     if (autoFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final focusNode = _focusNodes[newItem.id];
-        if (focusNode != null) {
-          focusNode.requestFocus();
-          // Wait for keyboard to fully appear then scroll
-          _scrollToBottomAfterKeyboard();
+        if (!mounted) return;
+        // First scroll to bottom so the new item gets rendered
+        if (_scrollController.hasClients) {
+          _scrollController
+              .animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          )
+              .then((_) {
+            if (!mounted) return;
+            // After scroll completes and item is in viewport, request focus
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              final focusNode = _focusNodes[newItem.id];
+              if (focusNode != null) {
+                focusNode.requestFocus();
+                // Ensure the item is fully visible after keyboard appears
+                _scrollToNewItemAfterKeyboard(newItem.id);
+              }
+            });
+          });
+        } else {
+          // Fallback if scroll controller not attached
+          final focusNode = _focusNodes[newItem.id];
+          if (focusNode != null) {
+            focusNode.requestFocus();
+            _scrollToBottomAfterKeyboard();
+          }
         }
       });
     }
@@ -227,6 +251,36 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
           }
         }
         // If focused item context not available (not rendered yet), scroll to bottom
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
+
+  /// Scrolls to a specific newly added item after keyboard appears
+  void _scrollToNewItemAfterKeyboard(String itemId) {
+    for (final delay in [200, 500, 800]) {
+      Future.delayed(Duration(milliseconds: delay), () {
+        if (!mounted) return;
+        final focusNode = _focusNodes[itemId];
+        if (focusNode != null) {
+          final ctx = focusNode.context;
+          if (ctx != null && ctx.mounted) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+              alignment: 0.8,
+            );
+            return;
+          }
+        }
+        // Fallback: scroll to bottom
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
