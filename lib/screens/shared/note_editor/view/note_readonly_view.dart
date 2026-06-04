@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:ui' show lerpDouble;
@@ -16,6 +16,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/screens/shared/note_editor/view/reading_mode_view.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/trash_floating_sheet.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/read_only_bars.dart';
@@ -61,6 +62,8 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   late Note _currentNote;
   late NoteMode _currentMode;
   int _quillKey = 0;
+
+  static const _readingModeMinLength = 600;
 
   static bool _looksLikeMarkdown(String text) => RegExp(
         r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
@@ -250,6 +253,36 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     } else if (mounted && Navigator.canPop(context)) {
       Navigator.pop(context, true);
     }
+  }
+
+  void _openReadingMode() {
+    final note = _currentNote;
+    final noteColor = widget.coordinator.getBackgroundColor(context);
+    final textColor =
+        noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+
+    final String plainContent;
+    if (_currentMode == NoteMode.rich &&
+        widget.coordinator.quillController != null) {
+      plainContent =
+          widget.coordinator.quillController!.document.toPlainText();
+    } else {
+      plainContent = widget.coordinator.codeController?.text ??
+          widget.coordinator.contentController.text;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReadingModeView(
+          noteId: note.id!,
+          textColor: textColor,
+          noteColor: noteColor,
+          plainContent: plainContent,
+          isMarkdown: note.noteType == 'markdown',
+        ),
+      ),
+    );
   }
 
   Future<void> _onReminder() async {
@@ -489,6 +522,14 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
 
     final canMarkdown = _currentNote.noteType == 'markdown';
 
+    // زر وضع القراءة — يظهر فقط إذا المحتوى > 600 حرف وليس checklist أو code
+    final contentForLength = widget.coordinator.codeController?.text ??
+        widget.coordinator.contentController.text;
+    final canReadingMode = _currentMode != NoteMode.checklist &&
+        _currentMode != NoteMode.code &&
+        contentForLength.length >= _readingModeMinLength &&
+        _currentNote.id != null;
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: AppTheme.scaffoldBackground(scheme),
@@ -504,6 +545,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         onMarkdownToggle: canMarkdown
             ? () => setState(() => _showMarkdown = !_showMarkdown)
             : null,
+        onReadingMode: canReadingMode ? _openReadingMode : null,
       ),
       body: Builder(builder: (ctx) {
         final canDoubleTap = !note.isTrashed &&
@@ -570,4 +612,3 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
   }
 }
-

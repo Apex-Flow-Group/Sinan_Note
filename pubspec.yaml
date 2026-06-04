@@ -1,10 +1,6 @@
 name: sinan_note
 description: "Sinan Note - Your sharp and reliable companion."
-<<<<<<< Updated upstream
-version: 3.2.2+3389
-=======
-version: 3.2.0+3384
->>>>>>> Stashed changes
+version: 3.2.2+3390
 publish_to: none
 
 environment:

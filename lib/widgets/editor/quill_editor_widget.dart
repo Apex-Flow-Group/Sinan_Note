@@ -265,7 +265,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: ListenableBuilder(
-                listenable: widget.quillController,
+                listenable: Listenable.merge([
+                  // نستمع فقط لتغير المحتوى (isEmpty) وليس كل selection
+                  widget.quillController,
+                ]),
                 builder: (context, child) {
                   final ops =
                       widget.quillController.document.toDelta().toList();
@@ -274,6 +277,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           (ops.first.isInsert &&
                               ops.first.data == '\n' &&
                               ops.first.attributes == null));
+                  if (_ctrl.isDraggingSelection) {
+                    // أثناء السحب: لا نعيد بناء الـ Stack
+                    return child!;
+                  }
                   return Stack(
                     fit: StackFit.expand,
                     alignment: AlignmentDirectional.topStart,

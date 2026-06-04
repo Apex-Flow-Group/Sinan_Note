@@ -2128,4 +2128,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toggleView => 'Toggle View';
+
+  @override
+  String get readingMode => 'Reading Mode';
+
+  @override
+  String get saveReadingPosition => 'Save Position';
+
+  @override
+  String get readingPositionSaved => 'Position saved';
+
+  @override
+  String get readingProgress => 'Progress';
+
+  @override
+  String get comfortableFont => 'Comfortable font';
 }

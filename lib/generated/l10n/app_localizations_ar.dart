@@ -2118,4 +2118,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get toggleView => 'تبديل العرض';
+
+  @override
+  String get readingMode => 'وضع القراءة';
+
+  @override
+  String get saveReadingPosition => 'حفظ موضع القراءة';
+
+  @override
+  String get readingPositionSaved => 'تم حفظ الموضع';
+
+  @override
+  String get readingProgress => 'التقدم';
+
+  @override
+  String get comfortableFont => 'خط مريح';
 }

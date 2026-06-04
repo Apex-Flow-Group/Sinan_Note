@@ -25,6 +25,7 @@ class ReadOnlyBars {
     required Future<void> Function() onRefresh,
     VoidCallback? onMarkdownToggle,
     VoidCallback? onReminder,
+    VoidCallback? onReadingMode,
     bool showMarkdown = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -50,6 +51,12 @@ class ReadOnlyBars {
               overflow: TextOverflow.ellipsis,
             ),
             actions: [
+              if (onReadingMode != null)
+                IconButton(
+                  icon: const Icon(Icons.menu_book_rounded),
+                  tooltip: AppLocalizations.of(context)!.readingMode,
+                  onPressed: onReadingMode,
+                ),
               if (onMarkdownToggle != null)
                 IconButton(
                   icon: Icon(

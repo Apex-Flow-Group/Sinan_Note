@@ -62,7 +62,7 @@ class ChecklistFormatter {
   /// Format checklist for display (read-only text)
   static String toDisplayText(String content) {
     final items = parseJson(content);
-    if (items.isEmpty) return content;
+    if (items.isEmpty) return '';
 
     return items.map((item) {
       final checkbox = item.isDone ? '☑' : '☐';

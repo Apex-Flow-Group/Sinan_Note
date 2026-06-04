@@ -716,5 +716,15 @@
   "duplicate": "تكرار",
   "@duplicate": {},
   "toggleView": "تبديل العرض",
-  "@toggleView": {}
+  "@toggleView": {},
+  "readingMode": "وضع القراءة",
+  "@readingMode": {},
+  "saveReadingPosition": "حفظ موضع القراءة",
+  "@saveReadingPosition": {},
+  "readingPositionSaved": "تم حفظ الموضع",
+  "@readingPositionSaved": {},
+  "readingProgress": "التقدم",
+  "@readingProgress": {},
+  "comfortableFont": "خط مريح",
+  "@comfortableFont": {}
 }

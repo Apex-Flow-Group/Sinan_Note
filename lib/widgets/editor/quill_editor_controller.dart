@@ -31,6 +31,7 @@ class QuillEditorController {
   bool isDirectionFormatting = false;
   bool isHandlingEnter = false;
   bool isDraggingSelection = false;
+  bool isDraggingTear = false;
   bool _suppressBar = false;
 
   TextDirection textDirection = TextDirection.rtl;
@@ -85,6 +86,13 @@ class QuillEditorController {
     quillController.addListener(tearHandle.onSelectionChanged);
     focusNode.addListener(onFocusChanged);
     _docChangeSub = quillController.document.changes.listen(onDocumentChange);
+
+    tearHandle.onDragStarted = () => isDraggingTear = true;
+    tearHandle.onDragEnded = () {
+      isDraggingTear = false;
+      // نعالج الاتجاه مرة واحدة بعد انتهاء السحب
+      _processOnChanged();
+    };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isLoading = false;
@@ -160,7 +168,8 @@ class QuillEditorController {
         isPasting ||
         isLoading ||
         isDirectionFormatting ||
-        isDraggingSelection) {
+        isDraggingSelection ||
+        isDraggingTear) {
       return;
     }
     if (change.source != ChangeSource.local) return;
@@ -214,21 +223,10 @@ class QuillEditorController {
         isPasting ||
         isKeyboardOpening ||
         isDirectionFormatting ||
-        isHandlingEnter) {
+        isHandlingEnter ||
+        isDraggingSelection) {
       return;
     }
-
-    final sel = quillController.selection;
-
-    if (!sel.isCollapsed) {
-      isDraggingSelection = true;
-      return;
-    }
-    if (isDraggingSelection) {
-      isDraggingSelection = false;
-      return;
-    }
-
     _onChangedDebounce?.cancel();
     _onChangedDebounce =
         Timer(const Duration(milliseconds: 50), _processOnChanged);

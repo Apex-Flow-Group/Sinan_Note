@@ -9,6 +9,7 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 ### ✨ New Features
 - **Catalog button in multi-select bar** — assign notes to catalogs directly from the selection toolbar (home, code tab, reminders tab)
 - **Smart multi-select catalog logic** — single note opens its actual catalog state; multiple notes open empty picker and merge (add-only) without overwriting existing catalogs
+- **Reading Mode** — button in readonly toolbar opens a comfortable reading view for long notes (600+ chars, supports Markdown)
 
 ### 🔧 Bug Fixes
 - **Fixed share truncating note content** — all share paths now pass full content without the 300-char limit
@@ -18,11 +19,15 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - **Fixed text direction resetting to LTR after save** — `fixDeltaDirections` no longer recalculates paragraph directions; only cleans legacy `align:right` attributes
 - **Fixed paste direction stopping mid-text** — `isPasting` flag cleared in `addPostFrameCallback` so `onChanged` cannot interfere during formatting
 - **Fixed checklist item direction** — removed fixed `textDirection` from `TextField` so Flutter auto-detects direction per line
+- **Fixed raw JSON showing in empty checklist cards** — `toDisplayText` now returns empty string instead of raw JSON when checklist has no items
+- **Fixed home widget opening selection screen instead of note** — `NoteWidgetProvider` and `ChecklistWidgetProvider` now open the note directly when `noteId > 0`; root cause was keys being read without the correct prefix
 
 ### ⚡ Performance
 - **Debounced `onChanged` (50ms)** — direction logic batched after typing pauses instead of running on every keystroke
 - **Fast hash comparison before full string diff** — `hashCode` short-circuits expensive comparison on large documents
 - **`getPrevNonEmptyLineDirection` rewritten** — replaced `substring + split('\n')` with backward `lastIndexOf` scan; critical for long texts and novels
+- **Cursor tear handle rewritten with `ValueNotifier`** — replaced `setState` with `ValueNotifier` + 16ms throttle to reduce rebuilds during drag
+- **Removed editor performance debug prints** — stripped `debugPrint` and `Stopwatch` from `QuillEditorController` and `CursorTearHandle`
 
 ---
 

@@ -716,5 +716,15 @@
   "duplicate": "Duplicate",
   "@duplicate": {},
   "toggleView": "Toggle View",
-  "@toggleView": {}
+  "@toggleView": {},
+  "readingMode": "Reading Mode",
+  "@readingMode": {},
+  "saveReadingPosition": "Save Position",
+  "@saveReadingPosition": {},
+  "readingPositionSaved": "Position saved",
+  "@readingPositionSaved": {},
+  "readingProgress": "Progress",
+  "@readingProgress": {},
+  "comfortableFont": "Comfortable font",
+  "@comfortableFont": {}
 }

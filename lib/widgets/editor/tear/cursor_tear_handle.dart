@@ -13,6 +13,9 @@ class CursorTearHandle {
   bool _dragging = false;
   bool _suppressRebuild = false;
 
+  VoidCallback? onDragStarted;
+  VoidCallback? onDragEnded;
+
   CursorTearHandle({
     required this.controller,
     required this.editorKey,
@@ -110,20 +113,16 @@ class CursorTearHandle {
           _dragging = true;
           _suppressRebuild = true;
           _hideTimer?.cancel();
-          // تعليق وميض المؤشر وإبقائه ظاهراً ثابتاً أثناء السحب
+          onDragStarted?.call();
           final state = editorKey.currentState;
-          if (state != null) {
-            state.cursorCont.suspended = true;
-          }
+          if (state != null) state.cursorCont.suspended = true;
         },
         onDragEnd: () {
           _dragging = false;
           _suppressRebuild = false;
-          // إلغاء التعليق — يعود الوميض الطبيعي
+          onDragEnded?.call();
           final state = editorKey.currentState;
-          if (state != null) {
-            state.cursorCont.suspended = false;
-          }
+          if (state != null) state.cursorCont.suspended = false;
           WidgetsBinding.instance.addPostFrameCallback((_) => _showAtCaret());
         },
         onDismiss: _forceHide,

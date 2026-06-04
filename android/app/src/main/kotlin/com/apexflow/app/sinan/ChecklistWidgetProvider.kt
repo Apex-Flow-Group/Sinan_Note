@@ -24,11 +24,10 @@ class ChecklistWidgetProvider : HomeWidgetProvider() {
                 val noteId = widgetData.getInt("checklist_note_id", 0)
                 val totalItems = widgetData.getInt("checklist_total", 0)
                 val completedItems = widgetData.getInt("checklist_completed", 0)
-                
+
                 setTextViewText(R.id.checklist_title, title)
-                setTextViewText(R.id.checklist_content, preview) // Use simple text snapshot
-                
-                // Show progress if available
+                setTextViewText(R.id.checklist_content, preview)
+
                 if (totalItems > 0) {
                     val progressText = "$completedItems / $totalItems"
                     setTextViewText(R.id.checklist_progress, progressText)
@@ -36,26 +35,28 @@ class ChecklistWidgetProvider : HomeWidgetProvider() {
                 } else {
                     setViewVisibility(R.id.checklist_progress, android.view.View.GONE)
                 }
-                
-                // System theme colors are applied via widget_background drawable
-                
+
                 val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 } else {
                     PendingIntent.FLAG_UPDATE_CURRENT
                 }
-                
-                // Always open selection screen with filter
-                val selectIntent = Intent(context, MainActivity::class.java).apply {
-                    action = "com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET"
-                    putExtra("widget_type", "checklist")
-                    putExtra("current_note_id", noteId)
+
+                val clickIntent = Intent(context, MainActivity::class.java).apply {
+                    if (noteId > 0) {
+                        action = "com.apexflow.app.sinan.ACTION_VIEW_NOTE"
+                        putExtra("note_id", noteId)
+                    } else {
+                        action = "com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET"
+                        putExtra("widget_type", "checklist")
+                        putExtra("current_note_id", noteId)
+                    }
                     setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }
-                val pendingIntent = PendingIntent.getActivity(context, widgetId, selectIntent, flags)
+                val pendingIntent = PendingIntent.getActivity(context, widgetId, clickIntent, flags)
                 setOnClickPendingIntent(R.id.widget_card, pendingIntent)
             }
-            
+
             appWidgetManager.updateAppWidget(widgetId, views)
         }
     }

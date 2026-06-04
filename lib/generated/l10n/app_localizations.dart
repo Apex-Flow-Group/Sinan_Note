@@ -4189,6 +4189,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Toggle View'**
   String get toggleView;
+
+  /// No description provided for @readingMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Mode'**
+  String get readingMode;
+
+  /// No description provided for @saveReadingPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Position'**
+  String get saveReadingPosition;
+
+  /// No description provided for @readingPositionSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Position saved'**
+  String get readingPositionSaved;
+
+  /// No description provided for @readingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get readingProgress;
+
+  /// No description provided for @comfortableFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable font'**
+  String get comfortableFont;
 }
 
 class _AppLocalizationsDelegate
