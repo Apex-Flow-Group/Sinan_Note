@@ -1,6 +1,11 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter_quill/flutter_quill.dart';import 'package:sinan_note/widgets/editor/tear/tear_handle_widget.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/widgets/editor/tear/tear_handle_widget.dart';
+
 /// المنطق والتحكم في دمعة المؤشر المفرد
 class CursorTearHandle {
   final QuillController controller;
@@ -49,7 +54,14 @@ class CursorTearHandle {
     }
 
     _lastSel = sel;
-    _showAtCaret();
+    // تأخير العرض لما بعد اكتمال الـ layout حتى يكون موقع الكرسر محدّث
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // تحقق أن السيلكشن لم يتغير أثناء الانتظار
+      if (_dragging || _suppressRebuild) return;
+      final currentSel = controller.selection;
+      if (currentSel != sel) return;
+      _showAtCaret();
+    });
   }
 
   void hide() {
@@ -133,4 +145,3 @@ class CursorTearHandle {
     _restartTimer();
   }
 }
-

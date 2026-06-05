@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -11,6 +12,7 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
@@ -261,14 +263,25 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final textColor =
         noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
 
-    final String plainContent;
-    if (_currentMode == NoteMode.rich &&
-        widget.coordinator.quillController != null) {
-      plainContent =
-          widget.coordinator.quillController!.document.toPlainText();
+    // نمرر Delta JSON للحفاظ على التنسيق في وضع القراءة
+    final String? deltaJson;
+    if (widget.coordinator.quillController != null) {
+      deltaJson =
+          QuillMigration.toDeltaJson(widget.coordinator.quillController!);
     } else {
+      final raw = widget.coordinator.contentController.text;
+      deltaJson = QuillMigration.isDelta(raw) ? raw : null;
+    }
+
+    final String plainContent;
+    if (widget.coordinator.quillController != null) {
+      plainContent = widget.coordinator.quillController!.document.toPlainText();
+    } else if (_currentMode == NoteMode.code) {
       plainContent = widget.coordinator.codeController?.text ??
           widget.coordinator.contentController.text;
+    } else {
+      plainContent = NoteContentUtils.toDisplayText(
+          widget.coordinator.contentController.text);
     }
 
     Navigator.push(
@@ -279,6 +292,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           textColor: textColor,
           noteColor: noteColor,
           plainContent: plainContent,
+          deltaJson: deltaJson,
           isMarkdown: note.noteType == 'markdown',
         ),
       ),

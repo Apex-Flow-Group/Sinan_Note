@@ -1,6 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -8,67 +12,82 @@ import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
 // ─── ثوابت التقسيم ───────────────────────────────────────────────
-const _charsPerPage = 1800;
 const _linesPerPage = 22;
 
-// ─── Regex للفصول: # العنوان | الفصل/Chapter | --- | فراغ مزدوج ─
-final _chapterRegex = RegExp(
-  r'(^#{1,6} .+$|^(الفصل|الجزء|القسم|Chapter|Part|Section)\b.+$|^-{3,}$)',
-  multiLine: true,
-);
+// ─── تقسيم Delta لصفحات مع الحفاظ على التنسيق ─────────────────────
+List<Delta> _splitDeltaIntoPages(Delta delta) {
+  final pages = <Delta>[];
+  var currentPage = Delta();
+  int lineCount = 0;
 
-// ─── تقسيم النص الذكي ────────────────────────────────────────────
-List<String> splitIntoPages(String text) {
-  if (text.isEmpty) return [''];
+  for (final op in delta.toList()) {
+    if (!op.isInsert) continue;
+    final data = op.data;
 
-  // أولاً: قسّم عند الفصول المكتشفة
-  final chapterSplits = <String>[];
-  int last = 0;
-  for (final match in _chapterRegex.allMatches(text)) {
-    if (match.start > last) {
-      chapterSplits.add(text.substring(last, match.start).trim());
+    if (data is! String) {
+      // embed (صورة، إلخ) — أضفها للصفحة الحالية
+      currentPage.insert(data, op.attributes);
+      continue;
     }
-    last = match.start;
-  }
-  chapterSplits.add(text.substring(last).trim());
-  chapterSplits.removeWhere((s) => s.isEmpty);
 
-  // ثانياً: لكل قطعة، قسّمها بالأحرف والأسطر
-  final pages = <String>[];
-  for (final chunk in chapterSplits) {
-    pages.addAll(_splitChunk(chunk));
+    // قسّم النص عند الأسطر الجديدة
+    final parts = data.split('\n');
+    for (int i = 0; i < parts.length; i++) {
+      final isLastPart = i == parts.length - 1;
+      final text = parts[i];
+
+      if (text.isNotEmpty) {
+        currentPage.insert(text, op.attributes);
+      }
+
+      if (!isLastPart) {
+        // هذا سطر جديد — يحمل attributes الـ block (direction, align, list, header...)
+        currentPage.insert('\n', op.attributes);
+        lineCount++;
+
+        if (lineCount >= _linesPerPage) {
+          // أنهِ الصفحة الحالية
+          pages.add(currentPage);
+          currentPage = Delta();
+          lineCount = 0;
+        }
+      }
+    }
   }
-  return pages.isEmpty ? [''] : pages;
+
+  // أضف ما تبقى كصفحة أخيرة
+  if (currentPage.isNotEmpty) {
+    // تأكد أن الـ Delta ينتهي بـ \n (مطلوب لـ Document)
+    final lastOp = currentPage.toList().last;
+    if (lastOp.data is! String || !(lastOp.data as String).endsWith('\n')) {
+      currentPage.insert('\n');
+    }
+    pages.add(currentPage);
+  }
+
+  return pages.isEmpty ? [Delta()..insert('\n')] : pages;
 }
 
-List<String> _splitChunk(String text) {
+// ─── تقسيم نص عادي لصفحات ─────────────────────────────────────────
+List<String> _splitPlainIntoPages(String text) {
+  if (text.isEmpty) return [''];
   final lines = text.split('\n');
   final pages = <String>[];
   final buffer = StringBuffer();
   int lineCount = 0;
-  int charCount = 0;
-
-  void flush() {
-    final page = buffer.toString().trim();
-    if (page.isNotEmpty) pages.add(page);
-    buffer.clear();
-    lineCount = 0;
-    charCount = 0;
-  }
 
   for (final line in lines) {
-    final lineLen = line.length + 1;
-    final wouldExceed =
-        lineCount >= _linesPerPage || charCount + lineLen > _charsPerPage;
-
-    if (wouldExceed && buffer.isNotEmpty) flush();
-
+    if (lineCount >= _linesPerPage && buffer.isNotEmpty) {
+      pages.add(buffer.toString().trimRight());
+      buffer.clear();
+      lineCount = 0;
+    }
     buffer.writeln(line);
     lineCount++;
-    charCount += lineLen;
   }
-  flush();
-  return pages;
+  final remaining = buffer.toString().trimRight();
+  if (remaining.isNotEmpty) pages.add(remaining);
+  return pages.isEmpty ? [''] : pages;
 }
 
 // ─── Widget الرئيسي ──────────────────────────────────────────────
@@ -77,6 +96,7 @@ class ReadingModeView extends StatefulWidget {
   final Color textColor;
   final Color noteColor;
   final String? plainContent;
+  final String? deltaJson;
   final bool isMarkdown;
 
   const ReadingModeView({
@@ -85,6 +105,7 @@ class ReadingModeView extends StatefulWidget {
     required this.textColor,
     required this.noteColor,
     this.plainContent,
+    this.deltaJson,
     this.isMarkdown = false,
   });
 
@@ -98,7 +119,11 @@ class _ReadingModeViewState extends State<ReadingModeView> {
   bool _comfortableFont = false;
   int _currentPage = 0;
   int _savedPage = 0;
-  late List<String> _pages;
+
+  // صفحات Delta منسقة أو نص عادي
+  List<Delta>? _deltaPages;
+  List<String>? _plainPages;
+  int _totalPages = 1;
 
   static const _minFont = 14.0;
   static const _maxFont = 28.0;
@@ -107,9 +132,25 @@ class _ReadingModeViewState extends State<ReadingModeView> {
   @override
   void initState() {
     super.initState();
-    _pages = _buildPages();
+    _buildPages();
     _pageController = PageController();
     _loadSavedPage();
+  }
+
+  void _buildPages() {
+    if (widget.isMarkdown || widget.deltaJson == null) {
+      _plainPages = _splitPlainIntoPages(widget.plainContent ?? '');
+      _totalPages = _plainPages!.length;
+    } else {
+      try {
+        final delta = Delta.fromJson(jsonDecode(widget.deltaJson!) as List);
+        _deltaPages = _splitDeltaIntoPages(delta);
+        _totalPages = _deltaPages!.length;
+      } catch (_) {
+        _plainPages = _splitPlainIntoPages(widget.plainContent ?? '');
+        _totalPages = _plainPages!.length;
+      }
+    }
   }
 
   @override
@@ -118,19 +159,15 @@ class _ReadingModeViewState extends State<ReadingModeView> {
     super.dispose();
   }
 
-  List<String> _buildPages() {
-    return splitIntoPages(widget.plainContent ?? '');
-  }
-
   Future<void> _loadSavedPage() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getInt('$_prefKeyPrefix${widget.noteId}') ?? 0;
     if (!mounted) return;
-    final page = saved.clamp(0, _pages.length - 1);
+    final page = saved.clamp(0, _totalPages - 1);
     setState(() => _savedPage = page);
     if (page > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _pageController.jumpToPage(page);
+        if (_pageController.hasClients) _pageController.jumpToPage(page);
       });
     }
   }
@@ -179,7 +216,7 @@ class _ReadingModeViewState extends State<ReadingModeView> {
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
-        '${l10n.readingMode}  ${_currentPage + 1}/${_pages.length}',
+        '${l10n.readingMode}  ${_currentPage + 1}/$_totalPages',
         style: TextStyle(
           color: widget.textColor,
           fontSize: 15,
@@ -211,8 +248,7 @@ class _ReadingModeViewState extends State<ReadingModeView> {
                 : widget.textColor.withValues(alpha: 0.7),
           ),
           tooltip: l10n.comfortableFont,
-          onPressed: () =>
-              setState(() => _comfortableFont = !_comfortableFont),
+          onPressed: () => setState(() => _comfortableFont = !_comfortableFont),
         ),
         const SizedBox(width: 4),
       ],
@@ -224,15 +260,14 @@ class _ReadingModeViewState extends State<ReadingModeView> {
       controller: _pageController,
       physics: const BouncingScrollPhysics(),
       onPageChanged: (i) => setState(() => _currentPage = i),
-      itemCount: _pages.length,
+      itemCount: _totalPages,
       itemBuilder: (context, index) => _buildPage(index),
     );
   }
 
   Widget _buildPage(int index) {
-    final pageText = _pages[index];
-
     if (widget.isMarkdown) {
+      final pageText = _plainPages![index];
       return SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -243,17 +278,211 @@ class _ReadingModeViewState extends State<ReadingModeView> {
       );
     }
 
-    return _PlainPage(
-      text: pageText,
-      textColor: widget.textColor,
-      fontSize: _fontSize,
-      comfortableFont: _comfortableFont,
+    if (_deltaPages != null) {
+      return _buildQuillPage(_deltaPages![index]);
+    }
+
+    return _buildPlainPage(_plainPages![index]);
+  }
+
+  Widget _buildQuillPage(Delta pageDelta) {
+    final fontFamily = _comfortableFont ? 'Georgia' : null;
+
+    Document doc;
+    try {
+      doc = Document.fromDelta(pageDelta);
+    } catch (_) {
+      // إذا فشل بناء الـ Document، اعرض كنص عادي
+      final text = pageDelta
+          .toList()
+          .where((op) => op.isInsert && op.data is String)
+          .map((op) => op.data as String)
+          .join();
+      return _buildPlainPage(text);
+    }
+
+    final controller = QuillController(
+      document: doc,
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    controller.readOnly = true;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: DefaultTextStyle.merge(
+        style: TextStyle(fontFamily: fontFamily),
+        child: QuillEditor(
+          controller: controller,
+          focusNode: FocusNode(),
+          scrollController: ScrollController(),
+          config: QuillEditorConfig(
+            autoFocus: false,
+            expands: true,
+            scrollable: true,
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            showCursor: false,
+            enableInteractiveSelection: true,
+            checkBoxReadOnly: true,
+            customStyles: DefaultStyles(
+              paragraph: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize,
+                  fontFamily: fontFamily,
+                  height: 1.8,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                VerticalSpacing.zero,
+                VerticalSpacing.zero,
+                null,
+              ),
+              lists: DefaultListBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize,
+                  fontFamily: fontFamily,
+                  height: 1.8,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                VerticalSpacing.zero,
+                VerticalSpacing.zero,
+                null,
+                null,
+              ),
+              leading: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize,
+                  fontFamily: fontFamily,
+                  height: 1.8,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                VerticalSpacing.zero,
+                VerticalSpacing.zero,
+                null,
+              ),
+              h1: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize + 8,
+                  fontFamily: fontFamily,
+                  fontWeight: FontWeight.bold,
+                  height: 1.6,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(8, 4),
+                VerticalSpacing.zero,
+                null,
+              ),
+              h2: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize + 5,
+                  fontFamily: fontFamily,
+                  fontWeight: FontWeight.bold,
+                  height: 1.6,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(6, 3),
+                VerticalSpacing.zero,
+                null,
+              ),
+              h3: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize + 3,
+                  fontFamily: fontFamily,
+                  fontWeight: FontWeight.bold,
+                  height: 1.6,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(4, 2),
+                VerticalSpacing.zero,
+                null,
+              ),
+              code: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize - 2,
+                  fontFamily: 'monospace',
+                  height: 1.5,
+                  color: widget.textColor.withValues(alpha: 0.85),
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(4, 4),
+                VerticalSpacing.zero,
+                BoxDecoration(
+                  color: widget.textColor.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              quote: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: _fontSize,
+                  fontFamily: fontFamily,
+                  fontStyle: FontStyle.italic,
+                  height: 1.8,
+                  color: widget.textColor.withValues(alpha: 0.8),
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(4, 4),
+                VerticalSpacing.zero,
+                BoxDecoration(
+                  border: BorderDirectional(
+                    start: BorderSide(
+                      color: widget.textColor.withValues(alpha: 0.3),
+                      width: 3,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlainPage(String text) {
+    final paragraphs = text.split('\n');
+    final fontFamily = _comfortableFont ? 'Georgia' : null;
+
+    final firstNonEmpty =
+        paragraphs.firstWhere((p) => p.trim().isNotEmpty, orElse: () => '');
+    final pageDir = TextDirectionUtils.getDirectionForParagraph(firstNonEmpty);
+
+    return Directionality(
+      textDirection: pageDir,
+      child: ListView.builder(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        itemCount: paragraphs.length,
+        itemBuilder: (_, i) {
+          final para = paragraphs[i];
+          final dir = TextDirectionUtils.getDirectionForParagraph(para);
+          return Directionality(
+            textDirection: dir,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                para,
+                style: TextStyle(
+                  fontSize: _fontSize,
+                  height: 1.8,
+                  color: widget.textColor,
+                  fontFamily: fontFamily,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildBottomBar(AppLocalizations l10n, ColorScheme scheme) {
-    final progress = _pages.length > 1 ? _currentPage / (_pages.length - 1) : 1.0;
-    final savedProgress = _pages.length > 1 ? _savedPage / (_pages.length - 1) : 0.0;
+    final progress = _totalPages > 1 ? _currentPage / (_totalPages - 1) : 1.0;
+    final savedProgress =
+        _totalPages > 1 ? _savedPage / (_totalPages - 1) : 0.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -284,8 +513,7 @@ class _ReadingModeViewState extends State<ReadingModeView> {
                         minHeight: 6,
                         backgroundColor:
                             widget.textColor.withValues(alpha: 0.12),
-                        valueColor:
-                            AlwaysStoppedAnimation(scheme.primary),
+                        valueColor: AlwaysStoppedAnimation(scheme.primary),
                       ),
                     ),
                     if (_savedPage > 0)
@@ -309,16 +537,18 @@ class _ReadingModeViewState extends State<ReadingModeView> {
                   // أزرار التنقل
                   IconButton(
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
                     icon: Icon(Icons.chevron_left_rounded,
                         color: _currentPage > 0
                             ? widget.textColor
                             : widget.textColor.withValues(alpha: 0.3)),
-                    onPressed:
-                        _currentPage > 0 ? () => _goToPage(_currentPage - 1) : null,
+                    onPressed: _currentPage > 0
+                        ? () => _goToPage(_currentPage - 1)
+                        : null,
                   ),
                   Text(
-                    '${_currentPage + 1} / ${_pages.length}',
+                    '${_currentPage + 1} / $_totalPages',
                     style: TextStyle(
                       fontSize: 13,
                       color: widget.textColor.withValues(alpha: 0.7),
@@ -327,12 +557,13 @@ class _ReadingModeViewState extends State<ReadingModeView> {
                   ),
                   IconButton(
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
                     icon: Icon(Icons.chevron_right_rounded,
-                        color: _currentPage < _pages.length - 1
+                        color: _currentPage < _totalPages - 1
                             ? widget.textColor
                             : widget.textColor.withValues(alpha: 0.3)),
-                    onPressed: _currentPage < _pages.length - 1
+                    onPressed: _currentPage < _totalPages - 1
                         ? () => _goToPage(_currentPage + 1)
                         : null,
                   ),
@@ -389,58 +620,3 @@ class _ReadingModeViewState extends State<ReadingModeView> {
     );
   }
 }
-
-// ─── صفحة النص العادي مع اتجاه كل فقرة ──────────────────────────
-class _PlainPage extends StatelessWidget {
-  final String text;
-  final Color textColor;
-  final double fontSize;
-  final bool comfortableFont;
-
-  const _PlainPage({
-    required this.text,
-    required this.textColor,
-    required this.fontSize,
-    required this.comfortableFont,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final paragraphs = text.split('\n');
-    final fontFamily = comfortableFont ? 'Georgia' : null;
-
-    // اتجاه الصفحة من أول فقرة غير فارغة
-    final firstNonEmpty = paragraphs.firstWhere((p) => p.trim().isNotEmpty, orElse: () => '');
-    final pageDir = TextDirectionUtils.getDirectionForParagraph(firstNonEmpty);
-
-    return Directionality(
-      textDirection: pageDir,
-      child: ListView.builder(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        itemCount: paragraphs.length,
-        itemBuilder: (_, i) {
-          final para = paragraphs[i];
-          final dir = TextDirectionUtils.getDirectionForParagraph(para);
-          return Directionality(
-            textDirection: dir,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                para,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  height: 1.8,
-                  color: textColor,
-                  fontFamily: fontFamily,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-

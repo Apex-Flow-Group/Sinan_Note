@@ -1,8 +1,6 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/widgets.dart';
-
 
 /// معالجة اتجاه النص — مصدر واحد للعارض والمحرر
 class TextDirectionUtils {
@@ -12,17 +10,20 @@ class TextDirectionUtils {
     r'\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
   );
 
-  // رموز وأحرف تُتجاهل عند تحديد الاتجاه
-  static final _neutralRegex = RegExp(
-    r'^[\s\n\r\t!@#$%^&*()+\-_=+\[\]{}|;:".,<>?/\\`~\d]*',
+  // أول حرف أبجدي فعلي (عربي أو إنجليزي) — يتجاهل كل ما قبله
+  static final _firstLetterRegex = RegExp(
+    r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF'
+    r'\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF'
+    r'a-zA-Z]',
   );
 
-  /// يحدد اتجاه النص بناءً على أول حرف مؤثر (يتجاهل الرموز والأرقام)
+  /// يحدد اتجاه النص بناءً على أول حرف أبجدي فعلي
+  /// يتجاهل: أرقام، رموز، ترقيم (#، -، •، :)، فراغات
   static TextDirection getDirection(String text) {
     if (text.isEmpty) return TextDirection.rtl;
-    final stripped = text.replaceAll(_neutralRegex, '');
-    if (stripped.isEmpty) return TextDirection.rtl;
-    return _rtlRegex.hasMatch(stripped[0])
+    final match = _firstLetterRegex.firstMatch(text);
+    if (match == null) return TextDirection.rtl;
+    return _rtlRegex.hasMatch(match.group(0)!)
         ? TextDirection.rtl
         : TextDirection.ltr;
   }
@@ -52,4 +53,3 @@ class TextDirectionUtils {
     return rtlCount >= ltrCount ? TextDirection.rtl : TextDirection.ltr;
   }
 }
-
