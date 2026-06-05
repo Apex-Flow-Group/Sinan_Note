@@ -29,21 +29,21 @@ class QuillNumberPoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // نحدد اتجاه النص من الـ Directionality الأب (المحدد في text_block.dart)
     final dir = Directionality.of(context);
+    final isLtr = dir == TextDirection.ltr;
 
-    // النص دائماً LTR لتجنب عكس الأرقام والنقطة بواسطة BiDi engine
-    final label = withDot ? '$index.' : index;
+    // في LTR: "1."  في RTL: ".1" (التقليد العربي)
+    final label = withDot ? (isLtr ? '$index.' : '.$index') : index;
 
+    // النص دائماً LTR لمنع BiDi engine من عكس الأرقام
     final child = Directionality(
       textDirection: TextDirection.ltr,
       child: Text(label, style: style, textAlign: textAlign),
     );
 
     return Container(
-      alignment: dir == TextDirection.ltr
-          ? AlignmentDirectional.topStart
-          : AlignmentDirectional.topEnd,
+      alignment:
+          isLtr ? AlignmentDirectional.topStart : AlignmentDirectional.topEnd,
       width: width,
       padding: EdgeInsetsDirectional.only(end: padding),
       color: backgroundColor,
