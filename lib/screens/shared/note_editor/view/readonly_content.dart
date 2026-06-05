@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +21,7 @@ class ReadOnlyContent extends StatelessWidget {
   final bool isTrashed;
   final int quillKey;
   final Future<void> Function({bool isManualSave}) onSave;
+  final DateTime? reminderDateTime;
 
   const ReadOnlyContent({
     super.key,
@@ -34,10 +34,39 @@ class ReadOnlyContent extends StatelessWidget {
     required this.isTrashed,
     required this.quillKey,
     required this.onSave,
+    this.reminderDateTime,
   });
 
   @override
   Widget build(BuildContext context) {
+    final reminder = reminderDateTime;
+    final hasReminder = reminder != null;
+    // ارتفاع الـ badge + padding أسفله
+    const badgeBottomPadding = 60.0;
+
+    Widget content =
+        _buildContent(context, hasReminder ? badgeBottomPadding : 0);
+
+    if (!hasReminder) return content;
+
+    return Stack(
+      children: [
+        content,
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _ReminderBadge(
+            reminderDateTime: reminder,
+            textColor: textColor,
+            noteColor: noteColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent(BuildContext context, double extraBottomPadding) {
     if (mode == NoteMode.checklist) {
       return ReadOnlyChecklistView(
         coordinator: coordinator,
@@ -53,7 +82,7 @@ class ReadOnlyContent extends StatelessWidget {
       final content = coordinator.codeController?.text ??
           coordinator.contentController.text;
       return Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 80),
+        padding: EdgeInsets.only(top: 12, bottom: 80 + extraBottomPadding),
         child: MarkdownViewer(content: content, textColor: textColor),
       );
     }
@@ -68,7 +97,8 @@ class ReadOnlyContent extends StatelessWidget {
           child: Directionality(
             textDirection: TextDirection.ltr,
             child: Padding(
-              padding: const EdgeInsets.only(top: 20, bottom: 80),
+              padding:
+                  EdgeInsets.only(top: 20, bottom: 80 + extraBottomPadding),
               child: SelectableText(
                 content,
                 style: TextStyle(
@@ -105,7 +135,8 @@ class ReadOnlyContent extends StatelessWidget {
               autoFocus: false,
               expands: true,
               scrollable: true,
-              padding: const EdgeInsets.only(top: 20, bottom: 40),
+              padding:
+                  EdgeInsets.only(top: 20, bottom: 40 + extraBottomPadding),
               showCursor: false,
               enableInteractiveSelection: false,
               checkBoxReadOnly: true,
@@ -205,3 +236,94 @@ class _UnknownEmbedBuilder extends EmbedBuilder {
 
 const _unknownEmbedBuilder = _UnknownEmbedBuilder();
 
+// ─── Reminder Badge ───────────────────────────────────────────────
+class _ReminderBadge extends StatelessWidget {
+  final DateTime reminderDateTime;
+  final Color textColor;
+  final Color noteColor;
+
+  const _ReminderBadge({
+    required this.reminderDateTime,
+    required this.textColor,
+    required this.noteColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final now = DateTime.now();
+    final diff = reminderDateTime.difference(now);
+    final isPast = diff.isNegative;
+
+    String timeText;
+    if (isPast) {
+      final ago = now.difference(reminderDateTime);
+      if (ago.inMinutes < 60) {
+        timeText =
+            isAr ? 'منذ ${ago.inMinutes} دقيقة' : '${ago.inMinutes}m ago';
+      } else if (ago.inHours < 24) {
+        timeText = isAr ? 'منذ ${ago.inHours} ساعة' : '${ago.inHours}h ago';
+      } else {
+        timeText = isAr ? 'منذ ${ago.inDays} يوم' : '${ago.inDays}d ago';
+      }
+    } else if (diff.inMinutes < 60) {
+      timeText =
+          isAr ? 'خلال ${diff.inMinutes} دقيقة' : 'In ${diff.inMinutes}m';
+    } else if (diff.inHours < 24) {
+      timeText = isAr ? 'خلال ${diff.inHours} ساعة' : 'In ${diff.inHours}h';
+    } else if (diff.inDays == 1) {
+      timeText = isAr ? 'غداً' : 'Tomorrow';
+    } else {
+      timeText = isAr ? 'بعد ${diff.inDays} أيام' : 'In ${diff.inDays}d';
+    }
+
+    final hour = reminderDateTime.hour.toString().padLeft(2, '0');
+    final minute = reminderDateTime.minute.toString().padLeft(2, '0');
+    final d = reminderDateTime;
+    final dateStr = '${d.day}/${d.month}/${d.year}  $hour:$minute';
+
+    final isDark = noteColor.computeLuminance() < 0.5;
+    final bgColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.06);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.18)
+        : Colors.black.withValues(alpha: 0.1);
+    final iconColor = isPast
+        ? textColor.withValues(alpha: 0.45)
+        : textColor.withValues(alpha: 0.8);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isPast ? Icons.alarm_off_rounded : Icons.alarm_rounded,
+            size: 16,
+            color: iconColor,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              '$timeText  •  $dateStr',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: textColor.withValues(alpha: isPast ? 0.45 : 0.75),
+                height: 1.2,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
