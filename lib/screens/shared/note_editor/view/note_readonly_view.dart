@@ -584,7 +584,34 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               )
             : inner;
 
-        if (!note.isTrashed) return content;
+        if (!note.isTrashed) {
+          // إذا كان النوت به تذكير — أضف floating reminder widget
+          final reminder = _currentNote.reminderDateTime;
+          if (reminder != null && !reminder.isBefore(DateTime.now())) {
+            return Stack(
+              children: [
+                Padding(
+                  // safe area للـ reminder widget (~72px)
+                  padding: EdgeInsets.only(
+                      bottom: 72 + MediaQuery.of(ctx).padding.bottom),
+                  child: content,
+                ),
+                Positioned(
+                  left: widget.sidePadding,
+                  right: widget.sidePadding,
+                  bottom: MediaQuery.of(ctx).padding.bottom + 12,
+                  child: _ReminderFloatingBadge(
+                    reminderDateTime: reminder,
+                    textColor: textColor,
+                    noteColor: noteColor,
+                    fadeAnimation: barsFade,
+                  ),
+                ),
+              ],
+            );
+          }
+          return content;
+        }
 
         return Stack(
           children: [
@@ -623,6 +650,101 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
                   _currentNote.isProfessional ? 'code' : _currentNote.noteType,
               isChecklist: _currentNote.isChecklist,
             ),
+    );
+  }
+}
+
+// ─── Floating Reminder Badge ──────────────────────────────────────
+class _ReminderFloatingBadge extends StatelessWidget {
+  final DateTime reminderDateTime;
+  final Color textColor;
+  final Color noteColor;
+  final Animation<double> fadeAnimation;
+
+  const _ReminderFloatingBadge({
+    required this.reminderDateTime,
+    required this.textColor,
+    required this.noteColor,
+    required this.fadeAnimation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final now = DateTime.now();
+    final diff = reminderDateTime.difference(now);
+
+    String timeText;
+    if (diff.inMinutes < 60) {
+      timeText =
+          isAr ? 'خلال ${diff.inMinutes} دقيقة' : 'In ${diff.inMinutes} min';
+    } else if (diff.inHours < 24) {
+      timeText = isAr ? 'خلال ${diff.inHours} ساعة' : 'In ${diff.inHours}h';
+    } else if (diff.inDays == 1) {
+      timeText = isAr ? 'غداً' : 'Tomorrow';
+    } else if (diff.inDays < 7) {
+      timeText = isAr ? 'بعد ${diff.inDays} أيام' : 'In ${diff.inDays} days';
+    } else {
+      // تاريخ كامل
+      final d = reminderDateTime;
+      timeText = '${d.day}/${d.month}/${d.year}';
+    }
+
+    // ساعة:دقيقة
+    final hour = reminderDateTime.hour.toString().padLeft(2, '0');
+    final minute = reminderDateTime.minute.toString().padLeft(2, '0');
+    final timeOfDay = '$hour:$minute';
+
+    final isDark = noteColor.computeLuminance() < 0.5;
+    final bgColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.08);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.2)
+        : Colors.black.withValues(alpha: 0.12);
+
+    return FadeTransition(
+      opacity: fadeAnimation,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ColorFilter.mode(
+            noteColor.withValues(alpha: 0.3),
+            BlendMode.srcOver,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: borderColor),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.alarm_rounded,
+                  size: 18,
+                  color: textColor.withValues(alpha: 0.85),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    '$timeText  •  $timeOfDay',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: textColor.withValues(alpha: 0.85),
+                      height: 1.3,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
