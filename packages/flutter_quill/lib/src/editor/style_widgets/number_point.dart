@@ -9,6 +9,7 @@ class QuillNumberPoint extends StatelessWidget {
     required this.style,
     required this.width,
     required this.attrs,
+    this.textDirection,
     this.textAlign,
     this.withDot = true,
     this.padding = 0.0,
@@ -26,10 +27,11 @@ class QuillNumberPoint extends StatelessWidget {
   final double padding;
   final Color? backgroundColor;
   final TextAlign? textAlign;
+  final TextDirection? textDirection;
 
   @override
   Widget build(BuildContext context) {
-    final dir = Directionality.of(context);
+    final dir = textDirection ?? Directionality.of(context);
     final isLtr = dir == TextDirection.ltr;
 
     // في LTR: "1."  في RTL: ".1" (التقليد العربي)

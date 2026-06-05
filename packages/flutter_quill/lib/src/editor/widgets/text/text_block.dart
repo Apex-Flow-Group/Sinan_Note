@@ -334,7 +334,9 @@ class EditableTextBlock extends StatelessWidget {
     }
 
     if (isOrdered) {
-      return _wrapLeading(numberPointLeading(leadingConfig), nodeTextDirection);
+      return _wrapLeading(
+          numberPointLeading(leadingConfig, textDirection: nodeTextDirection),
+          nodeTextDirection);
     }
 
     if (isUnordered) {
