@@ -178,6 +178,19 @@ class QuillEditorController {
         ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
     if (!isOnlyNewline) return;
 
+    // إذا كنا في قائمة — ورّث الاتجاه من الـ block الحالي بدون إعادة حساب
+    final currentAttrs = quillController.getSelectionStyle().attributes;
+    final isList = currentAttrs['list'] != null;
+    if (isList) {
+      isHandlingEnter = true;
+      // فقط نُعيد تطبيق الاتجاه الحالي للقائمة (ورث تلقائياً)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        isHandlingEnter = false;
+        scrollToCursor();
+      });
+      return;
+    }
+
     final plainText = quillController.document.toPlainText();
     final cursorOffset =
         quillController.selection.baseOffset.clamp(0, plainText.length);
@@ -236,22 +249,35 @@ class QuillEditorController {
       lineEnd < 0 ? plainText.length : lineEnd,
     );
 
+    // إذا كان الـ block قائمة (list) — لا نتدخل في اتجاهه
+    // الاتجاه يُحدد عند التحميل بـ fixDeltaDirections ويثبت لكل القائمة
+    final blockAttrs = quillController.getSelectionStyle().attributes;
+    final isList = blockAttrs['list'] != null;
+    if (isList) {
+      // فقط نحدّث textDirection للـ widget بناءً على الـ attribute الموجود
+      final currentAttr = blockAttrs['direction'];
+      final blockIsLtr = currentAttr?.value == 'rtl';
+      final blockDir = blockIsLtr ? TextDirection.ltr : TextDirection.rtl;
+      if (blockDir != textDirection) {
+        textDirection = blockDir;
+        rebuild();
+      }
+      return;
+    }
+
     // اتجاه السطر الحالي
     final effectiveDir = currentLine.trim().isEmpty
         ? _getPrevNonEmptyLineDirFast(plainText, lineStart)
         : TextDirectionUtils.getDirection(currentLine);
 
     final isRtl = effectiveDir == TextDirection.rtl;
-    final currentAttr =
-        quillController.getSelectionStyle().attributes['direction'];
-    final currentIsLtr =
-        currentAttr?.value == 'rtl'; // rtl attribute = LTR في context هو RTL
+    final currentAttr = blockAttrs['direction'];
+    final currentIsLtr = currentAttr?.value == 'rtl';
 
     // طبّق فقط إذا يوجد حرف صريح (عربي أو إنجليزي) في السطر
     final hasExplicitDir =
         RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(currentLine);
     if (hasExplicitDir && currentIsLtr == isRtl) {
-      // الـ attribute الحالي لا يتطابق مع الاتجاه المطلوب — صحّح
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isFormatting || isDirectionFormatting || isDraggingSelection) {
           return;
