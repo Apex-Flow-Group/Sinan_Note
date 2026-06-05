@@ -12,81 +12,114 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
-// ─── ثوابت التقسيم ───────────────────────────────────────────────
-const _linesPerPage = 18;
+// ─── عدد أحرف الصفحة الافتراضي ──────────────────────────────────
+const _charsPerPage = 900;
 
-// ─── تقسيم Delta لصفحات مع الحفاظ على التنسيق ─────────────────────
-List<Delta> _splitDeltaIntoPages(Delta delta) {
-  final pages = <Delta>[];
-  var currentPage = Delta();
-  int lineCount = 0;
-
-  for (final op in delta.toList()) {
-    if (!op.isInsert) continue;
-    final data = op.data;
-
-    if (data is! String) {
-      // embed (صورة، إلخ) — أضفها للصفحة الحالية
-      currentPage.insert(data, op.attributes);
-      continue;
-    }
-
-    // قسّم النص عند الأسطر الجديدة
-    final parts = data.split('\n');
-    for (int i = 0; i < parts.length; i++) {
-      final isLastPart = i == parts.length - 1;
-      final text = parts[i];
-
-      if (text.isNotEmpty) {
-        currentPage.insert(text, op.attributes);
-      }
-
-      if (!isLastPart) {
-        // هذا سطر جديد — يحمل attributes الـ block (direction, align, list, header...)
-        currentPage.insert('\n', op.attributes);
-        lineCount++;
-
-        if (lineCount >= _linesPerPage) {
-          // أنهِ الصفحة الحالية
-          pages.add(currentPage);
-          currentPage = Delta();
-          lineCount = 0;
-        }
-      }
-    }
+// ─── إيجاد نقطة قطع آمنة لا تكسر الكلمة ─────────────────────────
+/// يرجع index القطع بأقرب مسافة أو \n قبل [limit]
+int _safeBreak(String text, int limit) {
+  if (limit >= text.length) return text.length;
+  // ابحث للخلف عن مسافة أو سطر جديد
+  for (int i = limit; i > 0; i--) {
+    final c = text[i - 1];
+    if (c == ' ' || c == '\n' || c == '\u200B') return i;
   }
+  // لا يوجد مسافة — اقطع عند الحد مباشرة
+  return limit;
+}
 
-  // أضف ما تبقى كصفحة أخيرة
-  if (currentPage.isNotEmpty) {
-    // تأكد أن الـ Delta ينتهي بـ \n (مطلوب لـ Document)
-    final lastOp = currentPage.toList().last;
-    if (lastOp.data is! String || !(lastOp.data as String).endsWith('\n')) {
-      currentPage.insert('\n');
+// ─── تقسيم Delta لصفحات (حرف-محدود مع كسر الكلمة) ───────────────
+List<Delta> _splitDeltaIntoPages(Delta delta,
+    {int charsPerPage = _charsPerPage}) {
+  // استخرج النص الكامل مع تتبع موضع كل op
+  final allOps = delta.toList().where((op) => op.isInsert).toList();
+
+  // ابنِ النص الكامل كـ plain string لتحديد نقاط القطع
+  final fullText = StringBuffer();
+  for (final op in allOps) {
+    if (op.data is String) fullText.write(op.data as String);
+  }
+  final text = fullText.toString();
+  if (text.isEmpty) return [Delta()..insert('\n')];
+
+  // حدد نقاط القطع
+  final breakPoints = <int>[0];
+  int pos = 0;
+  while (pos < text.length) {
+    int next = pos + charsPerPage;
+    if (next >= text.length) {
+      break;
     }
-    pages.add(currentPage);
+    // اقطع عند مسافة أو \n آمنة
+    final bp = _safeBreak(text, next);
+    breakPoints.add(bp);
+    pos = bp;
+  }
+  breakPoints.add(text.length);
+
+  // أنشئ Delta لكل صفحة
+  final pages = <Delta>[];
+  for (int p = 0; p < breakPoints.length - 1; p++) {
+    final start = breakPoints[p];
+    final end = breakPoints[p + 1];
+    if (start >= end) continue;
+
+    final page = Delta();
+    int charPos = 0;
+
+    for (final op in allOps) {
+      if (op.data is! String) {
+        // embed — أضفه للصفحة الأولى فقط
+        if (p == 0) page.insert(op.data, op.attributes);
+        continue;
+      }
+      final opText = op.data as String;
+      final opStart = charPos;
+      final opEnd = charPos + opText.length;
+      charPos = opEnd;
+
+      if (opEnd <= start || opStart >= end) continue;
+
+      final sliceStart = (start - opStart).clamp(0, opText.length);
+      final sliceEnd = (end - opStart).clamp(0, opText.length);
+      final slice = opText.substring(sliceStart, sliceEnd);
+      if (slice.isNotEmpty) {
+        page.insert(slice, op.attributes);
+      }
+    }
+
+    // تأكد أن الصفحة تنتهي بـ \n
+    if (page.isNotEmpty) {
+      final lastOp = page.toList().last;
+      if (lastOp.data is! String || !(lastOp.data as String).endsWith('\n')) {
+        page.insert('\n');
+      }
+      pages.add(page);
+    }
   }
 
   return pages.isEmpty ? [Delta()..insert('\n')] : pages;
 }
 
-List<String> _splitPlainIntoPages(String text) {
+// ─── تقسيم نص عادي لصفحات (حرف-محدود مع كسر الكلمة) ─────────────
+List<String> _splitPlainIntoPages(String text,
+    {int charsPerPage = _charsPerPage}) {
   if (text.isEmpty) return [''];
-  final lines = text.split('\n');
-  final pages = <String>[];
-  final buffer = StringBuffer();
-  int lineCount = 0;
 
-  for (final line in lines) {
-    if (lineCount >= _linesPerPage && buffer.isNotEmpty) {
-      pages.add(buffer.toString().trimRight());
-      buffer.clear();
-      lineCount = 0;
+  final pages = <String>[];
+  int pos = 0;
+
+  while (pos < text.length) {
+    int next = pos + charsPerPage;
+    if (next >= text.length) {
+      pages.add(text.substring(pos).trimRight());
+      break;
     }
-    buffer.writeln(line);
-    lineCount++;
+    final bp = _safeBreak(text, next);
+    pages.add(text.substring(pos, bp).trimRight());
+    pos = bp;
   }
-  final remaining = buffer.toString().trimRight();
-  if (remaining.isNotEmpty) pages.add(remaining);
+
   return pages.isEmpty ? [''] : pages;
 }
 
@@ -132,8 +165,8 @@ class _ReadingModeViewState extends State<ReadingModeView> {
   @override
   void initState() {
     super.initState();
-    _buildPages();
     _pageController = PageController();
+    _buildPages();
     _loadSavedPage();
   }
 
@@ -144,7 +177,6 @@ class _ReadingModeViewState extends State<ReadingModeView> {
     } else {
       try {
         final rawDelta = Delta.fromJson(jsonDecode(widget.deltaJson!) as List);
-        // صحّح اتجاهات الـ blocks قبل التقسيم
         final fixedDelta = QuillMigration.fixDeltaDirections(rawDelta);
         _deltaPages = _splitDeltaIntoPages(fixedDelta);
         _totalPages = _deltaPages!.length;
@@ -230,14 +262,30 @@ class _ReadingModeViewState extends State<ReadingModeView> {
           icon: Icon(Icons.text_decrease_rounded, color: widget.textColor),
           tooltip: 'A-',
           onPressed: _fontSize > _minFont
-              ? () => setState(() => _fontSize -= 2)
+              ? () {
+                  setState(() {
+                    _fontSize -= 2;
+                    _deltaPages = null;
+                    _plainPages = null;
+                    _buildPages();
+                    _currentPage = _currentPage.clamp(0, _totalPages - 1);
+                  });
+                }
               : null,
         ),
         IconButton(
           icon: Icon(Icons.text_increase_rounded, color: widget.textColor),
           tooltip: 'A+',
           onPressed: _fontSize < _maxFont
-              ? () => setState(() => _fontSize += 2)
+              ? () {
+                  setState(() {
+                    _fontSize += 2;
+                    _deltaPages = null;
+                    _plainPages = null;
+                    _buildPages();
+                    _currentPage = _currentPage.clamp(0, _totalPages - 1);
+                  });
+                }
               : null,
         ),
         IconButton(
