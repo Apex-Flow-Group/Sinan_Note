@@ -299,6 +299,15 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
   }
 
+  Future<void> _removeReminder() async {
+    if (_currentNote.id == null) return;
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final updated = _currentNote.copyWith(reminderDateTime: null);
+    await provider.updateNote(updated);
+    if (!mounted) return;
+    setState(() => _currentNote = updated);
+  }
+
   Future<void> _onReminder() async {
     final note = _currentNote;
     final provider = Provider.of<NotesProvider>(context, listen: false);
@@ -492,6 +501,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         onSave: widget.onSave,
         reminderDateTime:
             _currentNote.isTrashed ? null : _currentNote.reminderDateTime,
+        onRemoveReminder: _currentNote.isTrashed ? null : _removeReminder,
       ),
     );
 

@@ -22,6 +22,7 @@ class ReadOnlyContent extends StatelessWidget {
   final int quillKey;
   final Future<void> Function({bool isManualSave}) onSave;
   final DateTime? reminderDateTime;
+  final VoidCallback? onRemoveReminder;
 
   const ReadOnlyContent({
     super.key,
@@ -35,6 +36,7 @@ class ReadOnlyContent extends StatelessWidget {
     required this.quillKey,
     required this.onSave,
     this.reminderDateTime,
+    this.onRemoveReminder,
   });
 
   @override
@@ -60,6 +62,7 @@ class ReadOnlyContent extends StatelessWidget {
             reminderDateTime: reminder,
             textColor: textColor,
             noteColor: noteColor,
+            onRemove: onRemoveReminder,
           ),
         ),
       ],
@@ -241,11 +244,13 @@ class _ReminderBadge extends StatelessWidget {
   final DateTime reminderDateTime;
   final Color textColor;
   final Color noteColor;
+  final VoidCallback? onRemove;
 
   const _ReminderBadge({
     required this.reminderDateTime,
     required this.textColor,
     required this.noteColor,
+    this.onRemove,
   });
 
   @override
@@ -323,6 +328,17 @@ class _ReminderBadge extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (onRemove != null) ...[
+            const SizedBox(width: 6),
+            GestureDetector(
+              onTap: onRemove,
+              child: Icon(
+                Icons.close_rounded,
+                size: 15,
+                color: textColor.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
         ],
       ),
     );
