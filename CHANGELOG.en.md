@@ -21,6 +21,14 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - **Fixed checklist item direction** — removed fixed `textDirection` from `TextField` so Flutter auto-detects direction per line
 - **Fixed raw JSON showing in empty checklist cards** — `toDisplayText` now returns empty string instead of raw JSON when checklist has no items
 - **Fixed home widget opening selection screen instead of note** — `NoteWidgetProvider` and `ChecklistWidgetProvider` now open the note directly when `noteId > 0`; root cause was keys being read without the correct prefix
+- **Fixed tear handle position after pressing Enter** — delayed `_showAtCaret` with `addPostFrameCallback` until layout completes for the new line
+- **Fixed reading mode showing plain unformatted text** — passing full Delta JSON to preserve formatting (bold, lists, headers)
+- **Fixed text direction detection with numbered text** — replaced manual regex with `Bidi.detectRtlDirectionality` that correctly ignores numbers and symbols
+- **Fixed list direction flipping mid-list** — lists retain the direction of the first item throughout all items
+- **Fixed list number position in flutter_quill** — leading now uses block direction instead of parent direction
+- **Fixed list number format** — LTR: `1.` on left, RTL: `.1` on right
+- **Fixed raw content in readonly view** — `_openReadingMode` uses `quillController` directly instead of raw `contentController.text`
+- **Fixed stored Delta block directions** — `fixDeltaDirections` corrects each block's direction based on its content on load
 
 ### ⚡ Performance
 - **Debounced `onChanged` (50ms)** — direction logic batched after typing pauses instead of running on every keystroke
@@ -28,6 +36,11 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - **`getPrevNonEmptyLineDirection` rewritten** — replaced `substring + split('\n')` with backward `lastIndexOf` scan; critical for long texts and novels
 - **Cursor tear handle rewritten with `ValueNotifier`** — replaced `setState` with `ValueNotifier` + 16ms throttle to reduce rebuilds during drag
 - **Removed editor performance debug prints** — stripped `debugPrint` and `Stopwatch` from `QuillEditorController` and `CursorTearHandle`
+
+### 📖 Reading Mode
+- **Character-based page splitting with word awareness** — 900 chars per page, breaks at nearest space
+- **Improved swipe sensitivity** — `ClampingScrollPhysics` releases vertical scroll immediately
+- **Stronger swipe required for page navigation** — raised `minFlingVelocity` to prevent accidental page turns
 
 ---
 
