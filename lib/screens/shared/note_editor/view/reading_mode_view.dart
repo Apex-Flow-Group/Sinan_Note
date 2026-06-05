@@ -308,9 +308,7 @@ class _ReadingModeViewState extends State<ReadingModeView> {
   Widget _buildPageView() {
     return PageView.builder(
       controller: _pageController,
-      // ClampingScrollPhysics يحرر gesture العمودي بسرعة
-      // بعد انتهاء الحركة الأفقية
-      physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
+      physics: const _StiffPageScrollPhysics(),
       onPageChanged: (i) => setState(() => _currentPage = i),
       itemCount: _totalPages,
       itemBuilder: (context, index) => _buildPage(index),
@@ -671,6 +669,26 @@ class _ReadingModeViewState extends State<ReadingModeView> {
       ),
     );
   }
+}
+
+// ─── PageScrollPhysics بعتبة أعلى للتنقل بين الصفحات ─────────────
+// يتطلب سحب أقوى للانتقال للصفحة التالية/السابقة
+class _StiffPageScrollPhysics extends PageScrollPhysics {
+  const _StiffPageScrollPhysics()
+      : super(parent: const ClampingScrollPhysics());
+
+  @override
+  _StiffPageScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return const _StiffPageScrollPhysics();
+  }
+
+  // رفع الحد الأدنى لسرعة السحب (الافتراضي ~365 px/s)
+  @override
+  double get minFlingVelocity => 800.0;
+
+  // رفع نسبة المسافة المطلوبة للانتقال (الافتراضي 0.5 من عرض الصفحة)
+  @override
+  double get dragStartDistanceMotionThreshold => 3.5;
 }
 
 // (end of file)
