@@ -283,15 +283,16 @@ class _ReminderBadge extends StatelessWidget {
     final dateStr = '${d.day}/${d.month}/${d.year}  $hour:$minute';
 
     final isDark = noteColor.computeLuminance() < 0.5;
+    // خلفية معتمة بلون النوتة + طبقة خفيفة للتمييز
     final bgColor = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.06);
+        ? Color.alphaBlend(Colors.white.withValues(alpha: 0.15), noteColor)
+        : Color.alphaBlend(Colors.black.withValues(alpha: 0.1), noteColor);
     final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.18)
-        : Colors.black.withValues(alpha: 0.1);
+        ? Colors.white.withValues(alpha: 0.25)
+        : Colors.black.withValues(alpha: 0.18);
     final iconColor = isPast
-        ? textColor.withValues(alpha: 0.45)
-        : textColor.withValues(alpha: 0.8);
+        ? textColor.withValues(alpha: 0.6)
+        : textColor.withValues(alpha: 0.9);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
@@ -316,7 +317,7 @@ class _ReminderBadge extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: textColor.withValues(alpha: isPast ? 0.45 : 0.75),
+                color: textColor.withValues(alpha: isPast ? 0.6 : 0.9),
                 height: 1.2,
               ),
               overflow: TextOverflow.ellipsis,
