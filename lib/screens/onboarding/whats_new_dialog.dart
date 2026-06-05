@@ -68,8 +68,8 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Title ──
               Text(
                 isAr
-                    ? 'إصلاحات المحرر وتحسينات التجربة'
-                    : 'Editor Fixes & Experience Improvements',
+                    ? 'وضع القراءة وإصلاحات القوائم'
+                    : 'Reading Mode & List Fixes',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -114,8 +114,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'إصلاحات دقيقة في المحرر، اتجاه النص، والمشاركة — مع تحسينات أداء تجعل المحرر أسرع مع النصوص الطويلة.'
-                            : 'Precise fixes in the editor, text direction, and sharing — plus performance improvements that make the editor faster with long texts.',
+                            ? 'وضع قراءة مريح للملاحظات الطويلة، إصلاح اتجاه القوائم المرقمة، وتحسينات دقيقة في المحرر.'
+                            : 'Comfortable reading mode for long notes, fixed numbered list direction, and precise editor improvements.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -191,7 +191,8 @@ class WhatsNewDialog extends StatelessWidget {
                         child: Icon(
                           Icons.code_rounded,
                           size: 22,
-                          color: isDark ? Colors.white : const Color(0xFF24292e),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF24292e),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -244,99 +245,36 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Features ──
               _FeatureRow(
-                icon: Icons.label_rounded,
+                icon: Icons.menu_book_rounded,
                 color: Colors.teal,
-                title: isAr ? 'كتالوج من التحديد المتعدد' : 'Catalog in Multi-Select',
+                title: isAr ? 'وضع القراءة' : 'Reading Mode',
                 subtitle: isAr
-                    ? 'عيّن عدة ملاحظات لكتالوج دفعة واحدة من شريط التحديد'
-                    : 'Assign multiple notes to a catalog at once from the selection bar',
+                    ? 'شاشة قراءة مريحة للملاحظات الطويلة — صفحات، تحكم بالخط، حفظ الموضع'
+                    : 'Comfortable reading screen for long notes — pages, font control, position saving',
               ),
               _FeatureRow(
-                icon: Icons.share_rounded,
-                color: Colors.blue,
-                title: isAr ? 'مشاركة المحتوى كاملاً' : 'Full Content Sharing',
-                subtitle: isAr
-                    ? 'إصلاح قطع المحتوى عند المشاركة — الملاحظة تُرسل كاملة'
-                    : 'Fixed content truncation on share — full note is always sent',
-              ),
-              _FeatureRow(
-                icon: Icons.speed_rounded,
-                color: Colors.purple,
-                title: isAr ? 'محرر أسرع مع النصوص الطويلة' : 'Faster Editor for Long Texts',
-                subtitle: isAr
-                    ? 'debounce + hash comparison + مسح سريع للخلف — أداء أفضل مع الروايات'
-                    : 'Debounce + hash comparison + fast backward scan — better with novels',
-              ),
-              _FeatureRow(
-                icon: Icons.format_textdirection_r_to_l_rounded,
+                icon: Icons.format_list_numbered_rounded,
                 color: Colors.orange,
-                title: isAr ? 'اتجاه النص محفوظ بعد الحفظ' : 'Text Direction Preserved After Save',
+                title: isAr ? 'إصلاح القوائم المرقمة' : 'Fixed Numbered Lists',
                 subtitle: isAr
-                    ? 'إصلاح عودة الاتجاه لليسار بعد الحفظ، وتوقف اتجاه اللصق في المنتصف'
-                    : 'Fixed direction resetting to LTR after save and paste direction stopping mid-text',
+                    ? 'الرقم في موضعه الصحيح — LTR يسار، RTL يمين — واتجاه ثابت للقائمة كاملاً'
+                    : 'Number in correct position — LTR left, RTL right — consistent direction throughout',
               ),
               _FeatureRow(
-                icon: Icons.security_rounded,
-                color: Colors.indigo,
-                title:
-                    isAr ? 'خزنة أقوى وأكثر أماناً' : 'Stronger Vault Security',
-                subtitle: isAr
-                    ? 'تشفير PBKDF2 بـ 100,000 تكرار + إصلاح ظهور أول ملاحظة فوراً'
-                    : 'PBKDF2 with 100,000 iterations + first note appears instantly',
-              ),
-              _FeatureRow(
-                icon: Icons.checklist_rounded,
-                color: Colors.green,
-                title: isAr ? 'قائمة المهام محسّنة' : 'Improved Checklist',
-                subtitle: isAr
-                    ? 'سحب يساراً للحذف مع تراجع، زر إضافة واحد في الأسفل، تصميم أنظف'
-                    : 'Swipe left to delete with undo, single add button, cleaner design',
-              ),
-              _FeatureRow(
-                icon: Icons.touch_app_rounded,
-                color: Colors.orange,
-                title: isAr ? 'سحب الكارد المخصص' : 'Custom Card Swipe',
-                subtitle: isAr
-                    ? 'أضف تذكيراً أو تصنيفاً أو انسخ الملاحظة مباشرة من السحب'
-                    : 'Add reminder, category, or duplicate note directly from swipe',
-              ),
-              _FeatureRow(
-                icon: Icons.check_box_rounded,
-                color: Colors.teal,
-                title: isAr
-                    ? 'Checkbox تفاعلي في Rich Note'
-                    : 'Interactive Checkbox in Rich Note',
-                subtitle: isAr
-                    ? 'اضغط على الـ checkbox لتبديل حالته مباشرة بألوان الملاحظة'
-                    : 'Tap to toggle checkbox instantly with note accent colors',
-              ),
-              _FeatureRow(
-                icon: Icons.code_rounded,
-                color: Colors.blue,
-                title: isAr
-                    ? 'محرر الكود — معاينة وتحميل'
-                    : 'Code Editor — Preview & Download',
-                subtitle: isAr
-                    ? 'SVG كصورة حقيقية، JSON منسق، تحميل بالامتداد الصحيح للتنزيلات'
-                    : 'SVG as real image, formatted JSON, download with correct extension',
-              ),
-              _FeatureRow(
-                icon: Icons.speed_rounded,
+                icon: Icons.water_drop_rounded,
                 color: Colors.purple,
-                title: isAr
-                    ? 'أداء أسرع وسكرول أسلس'
-                    : 'Faster Performance & Smoother Scroll',
+                title: isAr ? 'إصلاح دمعة المؤشر' : 'Fixed Cursor Handle',
                 subtitle: isAr
-                    ? 'حذف الظلال الثقيلة من الكاردات + تحسينات شاملة في إعادة البناء'
-                    : 'Removed heavy card shadows + comprehensive rebuild optimizations',
+                    ? 'الدمعة تظهر تحت المؤشر عند الانتقال لسطر جديد'
+                    : 'Handle appears below cursor when moving to a new line',
               ),
               _FeatureRow(
                 icon: Icons.bug_report_rounded,
                 color: Colors.red,
                 title: isAr ? 'إصلاحات متعددة' : 'Multiple Bug Fixes',
                 subtitle: isAr
-                    ? 'إصلاح ترجمة وقت المزامنة، SnackBar خارج الشاشة، وغيرها'
-                    : 'Fixed sync time translation, off-screen SnackBar, and more',
+                    ? 'اتجاه النص مع الأرقام، عرض المحتوى في العارض، وغيرها'
+                    : 'Text direction with numbers, content display in readonly, and more',
               ),
 
               const SizedBox(height: 20),
