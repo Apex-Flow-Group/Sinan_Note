@@ -68,8 +68,10 @@ class QuillMigration {
   }
 
   /// إصلاح اتجاهات فقرات Delta محفوظة مسبقاً
-  /// يُصحح direction attribute لكل سطر بناءً على محتواه
-  /// مع Directionality(rtl): عربي=null، إنجليزي=direction:'rtl'
+  /// القواعد:
+  /// - فقرات عادية: تأخذ اتجاهها من محتواها (Bidi)
+  /// - قوائم (list) وعناوين (header): تأخذ اتجاههم من أول بند/سطر في المجموعة
+  /// - مع Directionality(rtl): عربي=null، إنجليزي=direction:'rtl'
   static Delta fixDeltaDirections(Delta original) {
     final ops = original.toList();
     final result = Delta();
@@ -77,27 +79,65 @@ class QuillMigration {
     final lineBuffer = StringBuffer();
     final pendingOps = <Operation>[];
 
+    // اتجاه آخر قائمة مرقمة/نقطية — يستمر حتى تنتهي القائمة
+    String? currentListType; // 'ordered', 'bullet', 'checked', 'unchecked'
+    bool? listIsLtr; // اتجاه القائمة الحالية
+
     void flushLine(Operation newlineOp) {
       final lineText = lineBuffer.toString();
 
-      // بناء attributes النهائية — نبدأ من attrs الـ newline
       Map<String, dynamic>? attrs;
       if (newlineOp.attributes != null) {
         attrs = Map<String, dynamic>.from(newlineOp.attributes!);
-        // تنظيف align:right من إصدارات قديمة
         if (attrs['align'] == 'right') attrs.remove('align');
       }
 
-      // تصحيح direction فقط إذا السطر فيه حروف صريحة
-      if (lineText.trim().isNotEmpty) {
-        final isLtr =
-            TextDirectionUtils.getDirection(lineText) == TextDirection.ltr;
-        if (isLtr) {
-          // إنجليزي → direction:'rtl' (= اعكس = LTR)
-          attrs ??= {};
-          attrs['direction'] = 'rtl';
+      final listType = attrs?['list'] as String?;
+      final isListBlock = listType != null;
+
+      bool isLtr;
+
+      if (isListBlock) {
+        // هل هذه قائمة جديدة أم استمرار لنفس القائمة؟
+        if (currentListType != listType || listIsLtr == null) {
+          // بند أول — حدد الاتجاه من محتوى هذا البند
+          if (lineText.trim().isEmpty) {
+            isLtr = listIsLtr ?? false; // ورّث من القائمة السابقة
+          } else {
+            isLtr =
+                TextDirectionUtils.getDirection(lineText) == TextDirection.ltr;
+          }
+          currentListType = listType;
+          listIsLtr = isLtr;
         } else {
-          // عربي → احذف direction إذا كان خاطئاً
+          // استمرار القائمة — ورّث اتجاه القائمة
+          isLtr = listIsLtr!;
+        }
+      } else {
+        // ليست قائمة — أعد ضبط حالة القائمة
+        currentListType = null;
+        listIsLtr = null;
+
+        if (lineText.trim().isEmpty) {
+          // سطر فارغ — لا نغير اتجاهه
+          for (final op in pendingOps) {
+            result.insert(op.data, op.attributes);
+          }
+          result.insert('\n', attrs?.isEmpty == true ? null : attrs);
+          lineBuffer.clear();
+          pendingOps.clear();
+          return;
+        }
+
+        isLtr = TextDirectionUtils.getDirection(lineText) == TextDirection.ltr;
+      }
+
+      // طبّق direction attribute
+      if (lineText.trim().isNotEmpty || isListBlock) {
+        if (isLtr) {
+          attrs ??= {};
+          attrs['direction'] = 'rtl'; // = LTR في سياق RTL parent
+        } else {
           attrs?.remove('direction');
         }
       }
