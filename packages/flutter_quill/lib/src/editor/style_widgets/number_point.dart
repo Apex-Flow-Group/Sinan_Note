@@ -29,29 +29,25 @@ class QuillNumberPoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!attrs.containsKey(Attribute.indent.key) && indentLevelCounts.isEmpty) {
-      return Container(
-        alignment: AlignmentDirectional.topEnd,
-        width: width,
-        padding: EdgeInsetsDirectional.only(end: padding),
-        color: backgroundColor,
-        child: Text(
-          withDot ? '$index.' : index,
-          style: style,
-          textAlign: textAlign,
-        ),
-      );
-    }
+    // نحدد اتجاه النص من الـ Directionality الأب (المحدد في text_block.dart)
+    final dir = Directionality.of(context);
+
+    // النص دائماً LTR لتجنب عكس الأرقام والنقطة بواسطة BiDi engine
+    final label = withDot ? '$index.' : index;
+
+    final child = Directionality(
+      textDirection: TextDirection.ltr,
+      child: Text(label, style: style, textAlign: textAlign),
+    );
+
     return Container(
-      alignment: AlignmentDirectional.topEnd,
+      alignment: dir == TextDirection.ltr
+          ? AlignmentDirectional.topStart
+          : AlignmentDirectional.topEnd,
       width: width,
       padding: EdgeInsetsDirectional.only(end: padding),
       color: backgroundColor,
-      child: Text(
-        withDot ? '$index.' : index,
-        style: style,
-        textAlign: textAlign,
-      ),
+      child: child,
     );
   }
 }
