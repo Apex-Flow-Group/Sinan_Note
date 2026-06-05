@@ -308,7 +308,9 @@ class _ReadingModeViewState extends State<ReadingModeView> {
   Widget _buildPageView() {
     return PageView.builder(
       controller: _pageController,
-      physics: const BouncingScrollPhysics(),
+      // ClampingScrollPhysics يحرر gesture العمودي بسرعة
+      // بعد انتهاء الحركة الأفقية
+      physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
       onPageChanged: (i) => setState(() => _currentPage = i),
       itemCount: _totalPages,
       itemBuilder: (context, index) => _buildPage(index),
@@ -670,3 +672,5 @@ class _ReadingModeViewState extends State<ReadingModeView> {
     );
   }
 }
+
+// (end of file)
