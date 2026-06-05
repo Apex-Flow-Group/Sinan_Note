@@ -1,6 +1,12 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:flutter/widgets.dart'; import 'package:flutter_quill/flutter_quill.dart'; import 'package:flutter_quill/quill_delta.dart';import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'dart:convert';
+
+import 'package:flutter/widgets.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+
 /// Top-level function — تعمل في isolate منفصل عبر compute()
 /// تبني Delta JSON من محتوى النوت (نص عادي أو Delta موجود)
 String buildDeltaJsonForIsolate(String content) {
@@ -62,37 +68,87 @@ class QuillMigration {
   }
 
   /// إصلاح اتجاهات فقرات Delta محفوظة مسبقاً
-  /// يُنظف فقط align:right المتبقية من إصدارات قديمة — لا يُعيد حساب الاتجاهات
+  /// يُصحح direction attribute لكل سطر بناءً على محتواه
+  /// مع Directionality(rtl): عربي=null، إنجليزي=direction:'rtl'
   static Delta fixDeltaDirections(Delta original) {
     final ops = original.toList();
-    final fixed = Delta();
+    final result = Delta();
+
+    final lineBuffer = StringBuffer();
+    final pendingOps = <Operation>[];
+
+    void flushLine(Operation newlineOp) {
+      final lineText = lineBuffer.toString();
+
+      // بناء attributes النهائية — نبدأ من attrs الـ newline
+      Map<String, dynamic>? attrs;
+      if (newlineOp.attributes != null) {
+        attrs = Map<String, dynamic>.from(newlineOp.attributes!);
+        // تنظيف align:right من إصدارات قديمة
+        if (attrs['align'] == 'right') attrs.remove('align');
+      }
+
+      // تصحيح direction فقط إذا السطر فيه حروف صريحة
+      if (lineText.trim().isNotEmpty) {
+        final isLtr =
+            TextDirectionUtils.getDirection(lineText) == TextDirection.ltr;
+        if (isLtr) {
+          // إنجليزي → direction:'rtl' (= اعكس = LTR)
+          attrs ??= {};
+          attrs['direction'] = 'rtl';
+        } else {
+          // عربي → احذف direction إذا كان خاطئاً
+          attrs?.remove('direction');
+        }
+      }
+
+      for (final op in pendingOps) {
+        result.insert(op.data, op.attributes);
+      }
+      result.insert('\n', attrs?.isEmpty == true ? null : attrs);
+
+      lineBuffer.clear();
+      pendingOps.clear();
+    }
 
     for (final op in ops) {
       if (!op.isInsert) {
-        if (op.isDelete) fixed.delete(op.length!);
-        if (op.isRetain) fixed.retain(op.length!, op.attributes);
+        if (op.isDelete) result.delete(op.length!);
+        if (op.isRetain) result.retain(op.length!, op.attributes);
         continue;
       }
 
       final data = op.data;
-
       if (data is! String) {
-        fixed.insert(data, op.attributes);
+        pendingOps.add(op);
         continue;
       }
 
-      // تنظيف align:right فقط من attributes
-      Map<String, dynamic>? cleanAttrs;
-      if (op.attributes != null) {
-        cleanAttrs = Map<String, dynamic>.from(op.attributes!);
-        if (cleanAttrs['align'] == 'right') cleanAttrs.remove('align');
-        if (cleanAttrs.isEmpty) cleanAttrs = null;
-      }
+      final parts = data.split('\n');
+      for (int i = 0; i < parts.length; i++) {
+        final text = parts[i];
+        final isLastPart = i == parts.length - 1;
 
-      fixed.insert(data, cleanAttrs);
+        if (text.isNotEmpty) {
+          lineBuffer.write(text);
+          pendingOps.add(Operation.insert(text, op.attributes));
+        }
+
+        if (!isLastPart) {
+          flushLine(Operation.insert('\n', op.attributes));
+        }
+      }
     }
 
-    return fixed;
+    // ما تبقى بدون newline
+    if (pendingOps.isNotEmpty) {
+      for (final op in pendingOps) {
+        result.insert(op.data, op.attributes);
+      }
+      result.insert('\n');
+    }
+
+    return result;
   }
 
   /// بناء Delta مع اتجاه لكل فقرة
@@ -156,4 +212,3 @@ class QuillMigration {
     }
   }
 }
-

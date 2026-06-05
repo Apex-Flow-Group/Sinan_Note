@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
@@ -66,93 +67,6 @@ List<Delta> _splitDeltaIntoPages(Delta delta) {
   }
 
   return pages.isEmpty ? [Delta()..insert('\n')] : pages;
-}
-
-// ─── إصلاح اتجاهات الـ Delta قبل العرض ──────────────────────────
-/// يفحص كل سطر في الـ Delta ويضيف direction attribute صحيح
-/// بناءً على محتوى السطر — يتجاهل الأرقام والرموز
-Delta _fixDeltaDirections(Delta delta) {
-  final ops = delta.toList();
-  final result = Delta();
-
-  // نجمع نص كل سطر لتحديد اتجاهه
-  final lineBuffer = StringBuffer();
-  // نجمع ops الـ inline للسطر الحالي
-  final pendingOps = <Operation>[];
-
-  void flushLine(Operation newlineOp) {
-    final lineText = lineBuffer.toString();
-    final dir = TextDirectionUtils.getDirection(lineText);
-    final isLtr = dir == TextDirection.ltr;
-
-    // الأصل: null = RTL، 'rtl' attr = LTR (في سياق Directionality.rtl)
-    // نقرأ الـ attribute الحالي للـ newline
-    final existingDir = newlineOp.attributes?['direction'];
-    final existingIsLtr = existingDir == 'rtl';
-
-    // بناء attributes الـ newline مع direction صحيح
-    Map<String, dynamic>? newAttrs;
-    if (newlineOp.attributes != null) {
-      newAttrs = Map<String, dynamic>.from(newlineOp.attributes!);
-    }
-
-    if (lineText.trim().isEmpty) {
-      // سطر فارغ — لا نغير اتجاهه
-    } else if (isLtr && !existingIsLtr) {
-      // نص إنجليزي لكن بدون direction:rtl → أضفه
-      newAttrs ??= {};
-      newAttrs['direction'] = 'rtl';
-    } else if (!isLtr && existingIsLtr) {
-      // نص عربي لكن فيه direction:rtl خاطئ → احذفه
-      newAttrs?.remove('direction');
-    }
-
-    // أضف الـ inline ops
-    for (final op in pendingOps) {
-      result.insert(op.data, op.attributes);
-    }
-    // أضف الـ newline مع الـ attributes المصححة
-    result.insert('\n', newAttrs?.isEmpty == true ? null : newAttrs);
-
-    lineBuffer.clear();
-    pendingOps.clear();
-  }
-
-  for (final op in ops) {
-    if (!op.isInsert) continue;
-    final data = op.data;
-
-    if (data is! String) {
-      pendingOps.add(op);
-      continue;
-    }
-
-    final parts = data.split('\n');
-    for (int i = 0; i < parts.length; i++) {
-      final text = parts[i];
-      final isLastPart = i == parts.length - 1;
-
-      if (text.isNotEmpty) {
-        lineBuffer.write(text);
-        pendingOps.add(Operation.insert(text, op.attributes));
-      }
-
-      if (!isLastPart) {
-        // هذا سطر جديد — أنشئ op وهمي للـ newline يحمل attributes الـ block
-        flushLine(Operation.insert('\n', op.attributes));
-      }
-    }
-  }
-
-  // إذا كان في النهاية محتوى بدون newline أخيرة
-  if (pendingOps.isNotEmpty) {
-    for (final op in pendingOps) {
-      result.insert(op.data, op.attributes);
-    }
-    result.insert('\n');
-  }
-
-  return result;
 }
 
 List<String> _splitPlainIntoPages(String text) {
@@ -231,7 +145,7 @@ class _ReadingModeViewState extends State<ReadingModeView> {
       try {
         final rawDelta = Delta.fromJson(jsonDecode(widget.deltaJson!) as List);
         // صحّح اتجاهات الـ blocks قبل التقسيم
-        final fixedDelta = _fixDeltaDirections(rawDelta);
+        final fixedDelta = QuillMigration.fixDeltaDirections(rawDelta);
         _deltaPages = _splitDeltaIntoPages(fixedDelta);
         _totalPages = _deltaPages!.length;
       } catch (_) {
