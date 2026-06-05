@@ -13,7 +13,7 @@ import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
 // ─── ثوابت التقسيم ───────────────────────────────────────────────
-const _linesPerPage = 22;
+const _linesPerPage = 18;
 
 // ─── تقسيم Delta لصفحات مع الحفاظ على التنسيق ─────────────────────
 List<Delta> _splitDeltaIntoPages(Delta delta) {
