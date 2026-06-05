@@ -23,6 +23,7 @@ class ReadOnlyContent extends StatelessWidget {
   final Future<void> Function({bool isManualSave}) onSave;
   final DateTime? reminderDateTime;
   final VoidCallback? onRemoveReminder;
+  final VoidCallback? onEditReminder;
 
   const ReadOnlyContent({
     super.key,
@@ -37,6 +38,7 @@ class ReadOnlyContent extends StatelessWidget {
     required this.onSave,
     this.reminderDateTime,
     this.onRemoveReminder,
+    this.onEditReminder,
   });
 
   @override
@@ -63,6 +65,7 @@ class ReadOnlyContent extends StatelessWidget {
             textColor: textColor,
             noteColor: noteColor,
             onRemove: onRemoveReminder,
+            onEdit: onEditReminder,
           ),
         ),
       ],
@@ -245,12 +248,14 @@ class _ReminderBadge extends StatelessWidget {
   final Color textColor;
   final Color noteColor;
   final VoidCallback? onRemove;
+  final VoidCallback? onEdit;
 
   const _ReminderBadge({
     required this.reminderDateTime,
     required this.textColor,
     required this.noteColor,
     this.onRemove,
+    this.onEdit,
   });
 
   @override
@@ -260,6 +265,7 @@ class _ReminderBadge extends StatelessWidget {
     final diff = reminderDateTime.difference(now);
     final isPast = diff.isNegative;
 
+    // نص الوقت النسبي
     String timeText;
     if (isPast) {
       final ago = now.difference(reminderDateTime);
@@ -288,58 +294,91 @@ class _ReminderBadge extends StatelessWidget {
     final dateStr = '${d.day}/${d.month}/${d.year}  $hour:$minute';
 
     final isDark = noteColor.computeLuminance() < 0.5;
-    // خلفية معتمة بلون النوتة + طبقة خفيفة للتمييز
     final bgColor = isDark
         ? Color.alphaBlend(Colors.white.withValues(alpha: 0.15), noteColor)
         : Color.alphaBlend(Colors.black.withValues(alpha: 0.1), noteColor);
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.25)
         : Colors.black.withValues(alpha: 0.18);
-    final iconColor = isPast
-        ? textColor.withValues(alpha: 0.6)
-        : textColor.withValues(alpha: 0.9);
+    final dimText = textColor.withValues(alpha: isPast ? 0.55 : 0.85);
+    final dimIcon = textColor.withValues(alpha: 0.45);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isPast ? Icons.alarm_off_rounded : Icons.alarm_rounded,
-            size: 16,
-            color: iconColor,
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              '$timeText  •  $dateStr',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: textColor.withValues(alpha: isPast ? 0.6 : 0.9),
-                height: 1.2,
+          // ── فريم التذكير ─────────────────────────────
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              child: Row(
+                children: [
+                  Icon(
+                    isPast ? Icons.alarm_off_rounded : Icons.alarm_rounded,
+                    size: 16,
+                    color: dimText,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '$timeText  •  $dateStr',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: dimText,
+                        height: 1.2,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (onRemove != null) ...[
-            const SizedBox(width: 6),
-            GestureDetector(
-              onTap: onRemove,
-              child: Icon(
-                Icons.close_rounded,
-                size: 15,
-                color: textColor.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
+
+          // ── فاصل ─────────────────────────────────────
+          Container(width: 1, height: 30, color: borderColor),
+
+          // ── زر التعديل ────────────────────────────────
+          if (onEdit != null)
+            _IconBtn(icon: Icons.tune_rounded, color: dimIcon, onTap: onEdit!),
+
+          // ── فاصل ─────────────────────────────────────
+          if (onEdit != null && onRemove != null)
+            Container(width: 1, height: 30, color: borderColor),
+
+          // ── زر الحذف ──────────────────────────────────
+          if (onRemove != null)
+            _IconBtn(
+                icon: Icons.delete_outline_rounded,
+                color: dimIcon,
+                onTap: onRemove!),
         ],
+      ),
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  const _IconBtn(
+      {required this.icon, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(icon, size: 18, color: color),
       ),
     );
   }

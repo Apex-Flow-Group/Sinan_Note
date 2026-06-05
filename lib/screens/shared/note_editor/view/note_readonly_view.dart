@@ -502,6 +502,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         reminderDateTime:
             _currentNote.isTrashed ? null : _currentNote.reminderDateTime,
         onRemoveReminder: _currentNote.isTrashed ? null : _removeReminder,
+        onEditReminder: _currentNote.isTrashed ? null : _onReminder,
       ),
     );
 
