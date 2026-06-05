@@ -42,6 +42,12 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - **Improved swipe sensitivity** — `ClampingScrollPhysics` releases vertical scroll immediately
 - **Stronger swipe required for page navigation** — raised `minFlingVelocity` to prevent accidental page turns
 
+### 🔔 Reminder Badge
+- **Reminder badge in readonly view** — shows at bottom of note when a reminder is set (past or future)
+- **Three-section design** — reminder info | edit button | delete button
+- **Smart relative time** — "In X min / Tomorrow / X days ago..."
+- **Content protected** — automatic padding prevents text hiding under the badge
+
 ---
 
 ## [3.2.1] — 2026-05 | Open Source + Targeted Fixes
