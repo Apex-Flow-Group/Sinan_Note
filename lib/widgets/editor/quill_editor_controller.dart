@@ -35,8 +35,6 @@ class QuillEditorController {
   bool _suppressBar = false;
 
   TextDirection textDirection = TextDirection.rtl;
-  String _lastPlainText = '';
-  int _lastPlainTextHash = 0;
   StreamSubscription? _docChangeSub;
   Timer? _onChangedDebounce;
 
@@ -78,7 +76,6 @@ class QuillEditorController {
   void init(bool readOnly) {
     quillController.readOnly = readOnly;
     final initialText = quillController.document.toPlainText();
-    _lastPlainText = initialText;
     textDirection = TextDirectionUtils.getDirection(initialText);
 
     quillController.addListener(onChanged);
@@ -164,14 +161,7 @@ class QuillEditorController {
 
   // ── document change ────────────────────────────────────────────────────────
   void onDocumentChange(DocChange change) {
-    if (isFormatting ||
-        isPasting ||
-        isLoading ||
-        isDirectionFormatting ||
-        isDraggingSelection ||
-        isDraggingTear) {
-      return;
-    }
+    if (isLoading || isDraggingTear) return;
     if (change.source != ChangeSource.local) return;
 
     if (!tearHandle.isDragging) tearHandle.onTextChanged();
@@ -183,6 +173,7 @@ class QuillEditorController {
       return;
     }
 
+    // تطبيق اتجاه السطر الجديد عند Enter فقط
     final isOnlyNewline =
         ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
     if (!isOnlyNewline) return;
@@ -191,8 +182,6 @@ class QuillEditorController {
     final cursorOffset =
         quillController.selection.baseOffset.clamp(0, plainText.length);
 
-    // الـ cursor الآن في السطر الجديد الفارغ — نقرأ اتجاه السطر السابق
-    // نجد بداية السطر السابق (قبل الـ \n الذي أُدرج للتو)
     final newlinePos = cursorOffset > 0 ? cursorOffset - 1 : 0;
     final prevLineStart =
         newlinePos > 0 ? plainText.lastIndexOf('\n', newlinePos - 1) : -1;
@@ -205,9 +194,6 @@ class QuillEditorController {
         : TextDirectionUtils.getDirection(prevLine);
 
     isHandlingEnter = true;
-    // Apply direction immediately (synchronously) to prevent a frame where
-    // the new line has inherited direction attribute causing getDirectionOfNode
-    // to flip it, which places the cursor at the wrong side (x=0 in LTR).
     if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
       applyEnterDirection(dir);
     }
@@ -238,10 +224,6 @@ class QuillEditorController {
     }
 
     final plainText = quillController.document.toPlainText();
-    final newHash = plainText.hashCode;
-    if (newHash == _lastPlainTextHash && plainText == _lastPlainText) return;
-    _lastPlainText = plainText;
-    _lastPlainTextHash = newHash;
 
     final selection = quillController.selection;
     if (!selection.isValid || plainText.trim().isEmpty) return;
@@ -254,27 +236,22 @@ class QuillEditorController {
       lineEnd < 0 ? plainText.length : lineEnd,
     );
 
-    if (currentLine.isEmpty) {
-      final prevDir = _getPrevNonEmptyLineDirFast(plainText, lineStart);
-      if (textDirection != prevDir) {
-        textDirection = prevDir;
-        rebuild();
-      }
-      return;
-    }
-
-    final newDir = TextDirectionUtils.getDirection(currentLine);
-    final hasExplicitDir = RegExp(r'[\u0600-\u06FF]').hasMatch(currentLine) ||
-        RegExp(r'[a-zA-Z]').hasMatch(currentLine);
-    final effectiveDir = !hasExplicitDir
+    // اتجاه السطر الحالي
+    final effectiveDir = currentLine.trim().isEmpty
         ? _getPrevNonEmptyLineDirFast(plainText, lineStart)
-        : newDir;
+        : TextDirectionUtils.getDirection(currentLine);
+
     final isRtl = effectiveDir == TextDirection.rtl;
     final currentAttr =
         quillController.getSelectionStyle().attributes['direction'];
-    final currentIsRtl = currentAttr?.value == 'rtl';
+    final currentIsLtr =
+        currentAttr?.value == 'rtl'; // rtl attribute = LTR في context هو RTL
 
-    if (hasExplicitDir && currentIsRtl != !isRtl) {
+    // طبّق فقط إذا يوجد حرف صريح (عربي أو إنجليزي) في السطر
+    final hasExplicitDir =
+        RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(currentLine);
+    if (hasExplicitDir && currentIsLtr == isRtl) {
+      // الـ attribute الحالي لا يتطابق مع الاتجاه المطلوب — صحّح
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isFormatting || isDirectionFormatting || isDraggingSelection) {
           return;
@@ -282,11 +259,10 @@ class QuillEditorController {
         applyDirectionFormat(() {
           if (isRtl) {
             quillController.formatSelection(const DirectionAttribute(null));
-            quillController.formatSelection(const AlignAttribute(null));
           } else {
             quillController.formatSelection(Attribute.rtl);
-            quillController.formatSelection(const AlignAttribute(null));
           }
+          quillController.formatSelection(const AlignAttribute(null));
         });
       });
     }
