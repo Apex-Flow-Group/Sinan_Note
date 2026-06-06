@@ -713,6 +713,8 @@
   "@rename": {},
   "selectAll": "Select All",
   "@selectAll": {},
+  "noteDuplicated": "Note duplicated",
+  "@noteDuplicated": {},
   "duplicate": "Duplicate",
   "@duplicate": {},
   "toggleView": "Toggle View",

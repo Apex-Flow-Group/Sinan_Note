@@ -713,6 +713,8 @@
   "@rename": {},
   "selectAll": "تحديد الكل",
   "@selectAll": {},
+  "noteDuplicated": "تم إنشاء نسخة من الملاحظة",
+  "@noteDuplicated": {},
   "duplicate": "تكرار",
   "@duplicate": {},
   "toggleView": "تبديل العرض",

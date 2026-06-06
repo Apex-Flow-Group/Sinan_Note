@@ -1,17 +1,17 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_checklist_view.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
-/// يعرض محتوى الملاحظة في وضع القراءة حسب النوع
-class ReadOnlyContent extends StatelessWidget {
+/// يعرض محتوى الملاحظة في وضع العرض حسب النوع
+class ReadOnlyContent extends StatefulWidget {
   final NoteMode mode;
   final EditorCoordinator coordinator;
   final Color textColor;
@@ -42,15 +42,63 @@ class ReadOnlyContent extends StatelessWidget {
   });
 
   @override
+  State<ReadOnlyContent> createState() => _ReadOnlyContentState();
+}
+
+class _ReadOnlyContentState extends State<ReadOnlyContent> {
+  String? _plainText;
+
+  @override
+  void initState() {
+    super.initState();
+    _extractPlainText();
+  }
+
+  @override
+  void didUpdateWidget(ReadOnlyContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.quillKey != widget.quillKey) {
+      _extractPlainText();
+    }
+  }
+
+  Future<void> _extractPlainText() async {
+    if (widget.mode == NoteMode.checklist ||
+        widget.mode == NoteMode.code ||
+        widget.showMarkdown) {
+      return;
+    }
+
+    final raw = widget.coordinator.contentController.text;
+
+    // نستخرج النص في postFrameCallback لعدم تجميد أول frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      String text;
+      if (raw.trimLeft().startsWith('[')) {
+        try {
+          text = (jsonDecode(raw) as List)
+              .where((op) => op is Map && op['insert'] is String)
+              .map((op) => op['insert'] as String)
+              .join()
+              .trimRight();
+        } catch (_) {
+          text = raw.trimRight();
+        }
+      } else {
+        text = raw.trimRight();
+      }
+      setState(() => _plainText = text);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final reminder = reminderDateTime;
+    final reminder = widget.reminderDateTime;
     final hasReminder = reminder != null;
-    // ارتفاع الـ badge + padding أسفله
-    const badgeBottomPadding = 60.0;
+    const double badgeBottomPadding = 60.0;
 
-    Widget content =
-        _buildContent(context, hasReminder ? badgeBottomPadding : 0);
-
+    final content = _buildContent(context, hasReminder ? badgeBottomPadding : 0);
     if (!hasReminder) return content;
 
     return Stack(
@@ -62,10 +110,10 @@ class ReadOnlyContent extends StatelessWidget {
           bottom: 0,
           child: _ReminderBadge(
             reminderDateTime: reminder,
-            textColor: textColor,
-            noteColor: noteColor,
-            onRemove: onRemoveReminder,
-            onEdit: onEditReminder,
+            textColor: widget.textColor,
+            noteColor: widget.noteColor,
+            onRemove: widget.onRemoveReminder,
+            onEdit: widget.onEditReminder,
           ),
         ),
       ],
@@ -73,45 +121,44 @@ class ReadOnlyContent extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, double extraBottomPadding) {
-    if (mode == NoteMode.checklist) {
+    if (widget.mode == NoteMode.checklist) {
       return ReadOnlyChecklistView(
-        coordinator: coordinator,
-        textColor: textColor,
-        noteColor: noteColor,
-        scrollController: scrollController,
-        onSave: onSave,
-        isTrashed: isTrashed,
+        coordinator: widget.coordinator,
+        textColor: widget.textColor,
+        noteColor: widget.noteColor,
+        scrollController: widget.scrollController,
+        onSave: widget.onSave,
+        isTrashed: widget.isTrashed,
       );
     }
 
-    if (showMarkdown) {
-      final content = coordinator.codeController?.text ??
-          coordinator.contentController.text;
+    if (widget.showMarkdown) {
+      final content = widget.coordinator.codeController?.text ??
+          widget.coordinator.contentController.text;
       return Padding(
         padding: EdgeInsets.only(top: 12, bottom: 80 + extraBottomPadding),
-        child: MarkdownViewer(content: content, textColor: textColor),
+        child: MarkdownViewer(content: content, textColor: widget.textColor),
       );
     }
 
-    if (mode == NoteMode.code) {
-      final content = coordinator.codeController?.text ??
-          coordinator.contentController.text;
+    if (widget.mode == NoteMode.code) {
+      final content = widget.coordinator.codeController?.text ??
+          widget.coordinator.contentController.text;
       return ScrollbarTheme(
         data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
         child: SingleChildScrollView(
-          controller: scrollController,
+          controller: widget.scrollController,
           child: Directionality(
             textDirection: TextDirection.ltr,
             child: Padding(
-              padding:
-                  EdgeInsets.only(top: 20, bottom: 80 + extraBottomPadding),
+              padding: EdgeInsets.only(top: 20, bottom: 80 + extraBottomPadding),
               child: SelectableText(
                 content,
                 style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 14,
                     height: 1.6,
-                    color: textColor),
+                    color: widget.textColor),
               ),
             ),
           ),
@@ -119,128 +166,44 @@ class ReadOnlyContent extends StatelessWidget {
       );
     }
 
-    final qc = coordinator.quillController;
-    if (qc == null) return const SizedBox.shrink();
+    // ── وضع العرض: plain text بدل QuillEditor ──────────────────────
+    if (_plainText == null) {
+      return const Center(child: CircularProgressIndicator.adaptive());
+    }
 
     final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
-    qc.readOnly = true;
+    const double fontSize = AppFontSize.noteBody;
+    final paragraphs = _plainText!.split('\n');
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: DefaultTextStyle.merge(
-        style: TextStyle(fontFamily: fontFamily),
-        child: ScrollbarTheme(
-          data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
-          child: QuillEditor(
-            key: ValueKey(quillKey),
-            controller: qc,
-            focusNode: coordinator.textFieldFocusNode,
-            scrollController: ScrollController(),
-            config: QuillEditorConfig(
-              unknownEmbedBuilder: _unknownEmbedBuilder,
-              autoFocus: false,
-              expands: true,
-              scrollable: true,
-              padding:
-                  EdgeInsets.only(top: 20, bottom: 40 + extraBottomPadding),
-              showCursor: false,
-              enableInteractiveSelection: false,
-              checkBoxReadOnly: true,
-              // ignore: experimental_member_use
-              customLeadingBlockBuilder: (node, config) =>
-                  _buildCheckboxLeading(config, textColor),
-              customStyles: DefaultStyles(
-                leading: _blockStyle(context, fontFamily, textColor),
-                lists: _listStyle(context, fontFamily, textColor),
-                paragraph: _blockStyle(context, fontFamily, textColor),
+    return ScrollbarTheme(
+      data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
+      child: ListView.builder(
+        controller: widget.scrollController,
+        padding: EdgeInsets.only(top: 20, bottom: 40 + extraBottomPadding),
+        itemCount: paragraphs.length,
+        itemBuilder: (_, i) {
+          final para = paragraphs[i];
+          final dir = TextDirectionUtils.getDirectionForParagraph(para);
+          return Directionality(
+            textDirection: dir,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: SelectableText(
+                para,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontFamily: fontFamily,
+                  height: AppLineHeight.body(1.0, fontFamily),
+                  color: widget.textColor,
+                ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  static DefaultTextBlockStyle _blockStyle(
-      BuildContext context, String? fontFamily, Color textColor) {
-    return DefaultTextBlockStyle(
-      TextStyle(
-        fontSize: AppFontSize.noteBody,
-        fontFamily: fontFamily,
-        height: AppLineHeight.body(
-          Provider.of<SettingsProvider>(context, listen: false).textScaleFactor,
-          fontFamily,
-        ),
-        color: textColor,
-      ),
-      HorizontalSpacing.zero,
-      VerticalSpacing.zero,
-      VerticalSpacing.zero,
-      null,
-    );
-  }
-
-  static DefaultListBlockStyle _listStyle(
-      BuildContext context, String? fontFamily, Color textColor) {
-    return DefaultListBlockStyle(
-      TextStyle(
-        fontSize: AppFontSize.noteBody,
-        fontFamily: fontFamily,
-        height: AppLineHeight.body(
-          Provider.of<SettingsProvider>(context, listen: false).textScaleFactor,
-          fontFamily,
-        ),
-        color: textColor,
-      ),
-      HorizontalSpacing.zero,
-      VerticalSpacing.zero,
-      VerticalSpacing.zero,
-      null,
-      null,
-    );
-  }
-
-  static Widget? _buildCheckboxLeading(LeadingConfig config, Color textColor) {
-    final isCheck = config.attribute == Attribute.checked ||
-        config.attribute == Attribute.unchecked;
-    if (!isCheck) return null;
-
-    final isChecked = config.value;
-    final size = config.lineSize ?? 16.0;
-
-    return Container(
-      alignment: AlignmentDirectional.centerEnd,
-      padding: EdgeInsetsDirectional.only(end: size / 2),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: isChecked ? Colors.green : Colors.transparent,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isChecked ? Colors.green : textColor.withValues(alpha: 0.5),
-            width: 1.5,
-          ),
-        ),
-        child: isChecked
-            ? Icon(Icons.check, size: size * 0.75, color: Colors.white)
-            : null,
+          );
+        },
       ),
     );
   }
 }
-
-class _UnknownEmbedBuilder extends EmbedBuilder {
-  const _UnknownEmbedBuilder();
-  @override
-  String get key => '__unknown__';
-  @override
-  Widget build(BuildContext context, EmbedContext embedContext) =>
-      const SizedBox.shrink();
-}
-
-const _unknownEmbedBuilder = _UnknownEmbedBuilder();
 
 // ─── Reminder Badge ───────────────────────────────────────────────
 class _ReminderBadge extends StatelessWidget {
@@ -265,21 +228,18 @@ class _ReminderBadge extends StatelessWidget {
     final diff = reminderDateTime.difference(now);
     final isPast = diff.isNegative;
 
-    // نص الوقت النسبي
     String timeText;
     if (isPast) {
       final ago = now.difference(reminderDateTime);
       if (ago.inMinutes < 60) {
-        timeText =
-            isAr ? 'منذ ${ago.inMinutes} دقيقة' : '${ago.inMinutes}m ago';
+        timeText = isAr ? 'منذ ${ago.inMinutes} دقيقة' : '${ago.inMinutes}m ago';
       } else if (ago.inHours < 24) {
         timeText = isAr ? 'منذ ${ago.inHours} ساعة' : '${ago.inHours}h ago';
       } else {
         timeText = isAr ? 'منذ ${ago.inDays} يوم' : '${ago.inDays}d ago';
       }
     } else if (diff.inMinutes < 60) {
-      timeText =
-          isAr ? 'خلال ${diff.inMinutes} دقيقة' : 'In ${diff.inMinutes}m';
+      timeText = isAr ? 'خلال ${diff.inMinutes} دقيقة' : 'In ${diff.inMinutes}m';
     } else if (diff.inHours < 24) {
       timeText = isAr ? 'خلال ${diff.inHours} ساعة' : 'In ${diff.inHours}h';
     } else if (diff.inDays == 1) {
@@ -312,7 +272,6 @@ class _ReminderBadge extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // ── فريم التذكير ─────────────────────────────
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
@@ -340,19 +299,11 @@ class _ReminderBadge extends StatelessWidget {
               ),
             ),
           ),
-
-          // ── فاصل ─────────────────────────────────────
           Container(width: 1, height: 30, color: borderColor),
-
-          // ── زر التعديل ────────────────────────────────
           if (onEdit != null)
             _IconBtn(icon: Icons.tune_rounded, color: dimIcon, onTap: onEdit!),
-
-          // ── فاصل ─────────────────────────────────────
           if (onEdit != null && onRemove != null)
             Container(width: 1, height: 30, color: borderColor),
-
-          // ── زر الحذف ──────────────────────────────────
           if (onRemove != null)
             _IconBtn(
                 icon: Icons.delete_outline_rounded,
@@ -368,8 +319,7 @@ class _IconBtn extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  const _IconBtn(
-      {required this.icon, required this.color, required this.onTap});
+  const _IconBtn({required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

@@ -124,7 +124,7 @@ List<String> _splitPlainIntoPages(String text,
 }
 
 // ─── Widget الرئيسي ──────────────────────────────────────────────
-class ReadingModeView extends StatefulWidget {
+class BookModeView extends StatefulWidget {
   final int noteId;
   final Color textColor;
   final Color noteColor;
@@ -132,7 +132,7 @@ class ReadingModeView extends StatefulWidget {
   final String? deltaJson;
   final bool isMarkdown;
 
-  const ReadingModeView({
+  const BookModeView({
     super.key,
     required this.noteId,
     required this.textColor,
@@ -143,10 +143,10 @@ class ReadingModeView extends StatefulWidget {
   });
 
   @override
-  State<ReadingModeView> createState() => _ReadingModeViewState();
+  State<BookModeView> createState() => _BookModeViewState();
 }
 
-class _ReadingModeViewState extends State<ReadingModeView> {
+class _BookModeViewState extends State<BookModeView> {
   late final PageController _pageController;
   double _fontSize = 18;
   bool _comfortableFont = false;

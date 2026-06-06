@@ -18,7 +18,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:sinan_note/screens/shared/note_editor/view/reading_mode_view.dart';
+import 'package:sinan_note/screens/shared/note_editor/view/book_mode_view.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/trash_floating_sheet.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/read_only_bars.dart';
@@ -65,7 +65,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   late NoteMode _currentMode;
   int _quillKey = 0;
 
-  static const _readingModeMinLength = 600;
+  static const _bookModeMinLength = 600;
 
   static bool _looksLikeMarkdown(String text) => RegExp(
         r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
@@ -257,7 +257,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     }
   }
 
-  void _openReadingMode() {
+  void _openBookMode() {
     final note = _currentNote;
     final noteColor = widget.coordinator.getBackgroundColor(context);
     final textColor =
@@ -287,7 +287,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ReadingModeView(
+        builder: (_) => BookModeView(
           noteId: note.id!,
           textColor: textColor,
           noteColor: noteColor,
@@ -331,10 +331,28 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
 
   Future<void> _onShare() async {
     final note = _currentNote;
+    final l10n = AppLocalizations.of(context)!;
     final content = note.isChecklist
         ? ChecklistFormatter.formatForSharing(note.title, note.content)
         : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content, maxChars: null)}';
-    CustomShareSheet.show(context, content, subject: note.title, note: note);
+    CustomShareSheet.show(
+      context,
+      content,
+      subject: note.title,
+      note: note,
+      onNoteCopied: () async {
+        if (note.id == null || !mounted) return;
+        final provider = Provider.of<NotesProvider>(context, listen: false);
+        await provider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
+        if (!mounted) return;
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.noteDuplicated,
+          type: NotificationType.success,
+          duration: const Duration(seconds: 2),
+        );
+      },
+    );
   }
 
   Future<void> _onArchive() async {
@@ -552,9 +570,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     // زر وضع القراءة — يظهر فقط إذا المحتوى > 600 حرف وليس checklist أو code
     final contentForLength = widget.coordinator.codeController?.text ??
         widget.coordinator.contentController.text;
-    final canReadingMode = _currentMode != NoteMode.checklist &&
+    final canBookMode = _currentMode != NoteMode.checklist &&
         _currentMode != NoteMode.code &&
-        contentForLength.length >= _readingModeMinLength &&
+        contentForLength.length >= _bookModeMinLength &&
         _currentNote.id != null;
 
     return Scaffold(
@@ -572,7 +590,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         onMarkdownToggle: canMarkdown
             ? () => setState(() => _showMarkdown = !_showMarkdown)
             : null,
-        onReadingMode: canReadingMode ? _openReadingMode : null,
+        onReadingMode: canBookMode ? _openBookMode : null,
       ),
       body: Builder(builder: (ctx) {
         final canDoubleTap = !note.isTrashed &&

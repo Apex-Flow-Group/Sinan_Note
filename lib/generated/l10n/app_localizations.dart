@@ -4178,6 +4178,12 @@ abstract class AppLocalizations {
   /// **'Select All'**
   String get selectAll;
 
+  /// No description provided for @noteDuplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Note duplicated'**
+  String get noteDuplicated;
+
   /// No description provided for @duplicate.
   ///
   /// In en, this message translates to:

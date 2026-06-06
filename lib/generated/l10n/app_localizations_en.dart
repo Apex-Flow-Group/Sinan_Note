@@ -2124,6 +2124,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAll => 'Select All';
 
   @override
+  String get noteDuplicated => 'Note duplicated';
+
+  @override
   String get duplicate => 'Duplicate';
 
   @override

@@ -9,6 +9,9 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 ### ⚡ Performance
 - **Fixed app freeze on large text paste** — intercepted paste event and built Delta in a separate Isolate via a virtual Document, then handed it to Quill in a single compose call. Eliminates ANR dialogs on all devices
 - **Fixed app freeze on share from external apps** — shared text builds Delta in Isolate before opening the editor, using the same mechanism as paste
+- **Removed QuillEditor from View Mode** — replaced with SelectableText + ListView.builder per paragraph. Fixes scroll lag and cursor tap on long notes
+- **Fixed duplicate note confirmation message** — replaced misleading “note copied” message with “note duplicated”
+- **Renamed Reading Mode to Book Mode** — renamed reading_mode_view.dart to book_mode_view.dart and updated all references
 
 ---
 

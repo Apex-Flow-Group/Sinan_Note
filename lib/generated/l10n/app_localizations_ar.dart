@@ -2114,6 +2114,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectAll => 'تحديد الكل';
 
   @override
+  String get noteDuplicated => 'تم إنشاء نسخة من الملاحظة';
+
+  @override
   String get duplicate => 'تكرار';
 
   @override
