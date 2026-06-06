@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dynamic_color/dynamic_color.dart';
@@ -138,6 +139,9 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
     if (sharedText != null && sharedText.isNotEmpty) {
       _openEditorWithSharedText(sharedText);
+    } else if (action == 'com.apexflow.app.sinan.ACTION_OPEN_SINAN_FILE') {
+      final filePath = data['file_path'] as String?;
+      if (filePath != null) _importSinanFile(filePath);
     } else if (action ==
         'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
       navigatorKey.currentState?.push(
@@ -223,17 +227,57 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     AppNavigator.toEditorViaKey(navigatorKey, note: savedNote, mode: mode);
   }
 
+  void _importSinanFile(String filePath) async {
+    try {
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+
+      while (!settings.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 50));
+        if (!mounted) return;
+      }
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+
+      final file = File(filePath);
+      if (!await file.exists()) return;
+      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+
+      final note = Note(
+        title: json['title'] as String? ?? '',
+        content: json['content'] as String? ?? '',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        colorIndex: json['colorIndex'] as int? ?? 0,
+        noteType: json['noteType'] as String? ?? 'simple',
+        isProfessional: json['noteType'] == 'code',
+        isChecklist: json['noteType'] == 'checklist',
+      );
+
+      final savedId = await notesProvider.addOrUpdateNote(note, silent: true);
+      final dbService = SqliteDatabaseService();
+      final savedNote = await dbService.getNoteById(savedId);
+      if (!mounted || savedNote == null) return;
+
+      AppNavigator.toEditorViaKey(
+        navigatorKey,
+        note: savedNote,
+        mode: NoteCardUtils.getNoteMode(savedNote),
+      );
+      try { await file.delete(); } catch (_) {}
+    } catch (_) {}
+  }
+
   NoteMode _detectNoteMode(String text) {
     // Checklist patterns
     final checklistPatterns = [
       RegExp(r'^\s*[-*]\s*\[[ xX]\]', multiLine: true),
       RegExp(r'^\s*\d+\.\s*\[[ xX]\]', multiLine: true),
     ];
-
     for (final pattern in checklistPatterns) {
-      if (pattern.hasMatch(text)) {
-        return NoteMode.checklist;
-      }
+      if (pattern.hasMatch(text)) return NoteMode.checklist;
     }
 
     // Code patterns
@@ -243,42 +287,30 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       RegExp(r'(public|private|void|int|String)\s'),
       RegExp(r'[{};]\s*$', multiLine: true),
     ];
-
     for (final pattern in codePatterns) {
-      if (pattern.hasMatch(text)) {
-        return NoteMode.code;
-      }
+      if (pattern.hasMatch(text)) return NoteMode.code;
     }
 
-    // Rich text patterns (HTML/Markdown)
+    // Rich text patterns
     final richPatterns = [
       RegExp(r'<[^>]+>'),
       RegExp(r'\*\*[^*]+\*\*'),
       RegExp(r'__[^_]+__'),
       RegExp(r'^#{1,6}\s', multiLine: true),
     ];
-
     for (final pattern in richPatterns) {
-      if (pattern.hasMatch(text)) {
-        return NoteMode.rich;
-      }
+      if (pattern.hasMatch(text)) return NoteMode.rich;
     }
-
     return NoteMode.simple;
   }
 
   String _getModeString(NoteMode mode) {
     switch (mode) {
-      case NoteMode.code:
-        return 'professional';
-      case NoteMode.rich:
-        return 'rich';
-      case NoteMode.reminder:
-        return 'reminder';
-      case NoteMode.checklist:
-        return 'checklist';
-      default:
-        return 'simple';
+      case NoteMode.code: return 'professional';
+      case NoteMode.rich: return 'rich';
+      case NoteMode.reminder: return 'reminder';
+      case NoteMode.checklist: return 'checklist';
+      default: return 'simple';
     }
   }
 

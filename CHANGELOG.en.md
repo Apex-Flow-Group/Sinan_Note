@@ -4,7 +4,10 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
-## [3.2.3] — 2026-06 | Paste Performance
+## [3.2.3] — 2026-06 | Paste Performance + Apex Sharing
+
+### ✨ New Features
+- **Share notes via Apex Transfer** — new button in the share sheet sends the note to nearby devices over the local network without internet
 
 ### ⚡ Performance
 - **Fixed app freeze on large text paste** — intercepted paste event and built Delta in a separate Isolate via a virtual Document, then handed it to Quill in a single compose call. Eliminates ANR dialogs on all devices
