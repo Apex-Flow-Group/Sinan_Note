@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
-import 'package:markdown/markdown.dart' as md;
 import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'package:sinan_note/widgets/editor/paste_handler.dart';
 import 'package:sinan_note/widgets/editor/quill_editor_state_mixin.dart';
 import 'package:sinan_note/widgets/editor/tear/tear.dart';
 
@@ -398,91 +398,49 @@ class QuillEditorController {
   }
 
   // ── paste ──────────────────────────────────────────────────────────────────
-  bool _looksLikeMarkdown(String text) {
-    return RegExp(
-      r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
-      multiLine: true,
-    ).hasMatch(text);
-  }
-
   Future<void> pastePlainText({bool markdownEnabled = false}) async {
-    isPasting = true;
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
-    if (text == null || text.isEmpty) {
-      isPasting = false;
-      return;
-    }
+    if (text == null || text.isEmpty) return;
+
+    isPasting = true;
+    quillController.readOnly = true;
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+    rebuild();
 
     final sel = quillController.selection;
     final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
     final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
 
-    if (markdownEnabled && _looksLikeMarkdown(text)) {
-      final mdDelta = MarkdownToDelta(
-        markdownDocument: md.Document(encodeHtml: false),
-      ).convert(text);
+    try {
+      final pasteDelta = await buildDeltaInIsolate(text);
 
-      // بناء delta للإدراج عند الـ offset
       final insertDelta = Delta();
-      if (deleteLen > 0) {
-        insertDelta
-          ..retain(offset)
-          ..delete(deleteLen);
-      } else {
-        insertDelta.retain(offset);
-      }
-      for (final op in mdDelta.toList()) {
-        insertDelta.push(op);
+      if (offset > 0) insertDelta.retain(offset);
+      if (deleteLen > 0) insertDelta.delete(deleteLen);
+      for (final op in pasteDelta.toList()) {
+        // نتجاهل الـ trailing newline الذي يضيفه Document
+        if (op.isInsert) insertDelta.push(op);
       }
 
       quillController.compose(
         insertDelta,
-        TextSelection.collapsed(offset: offset + mdDelta.length - 1),
+        TextSelection.collapsed(offset: offset + text.length - deleteLen),
         ChangeSource.local,
       );
-
+    } finally {
       isPasting = false;
-    } else {
-      quillController.replaceText(offset, deleteLen, text, null);
-
-      final lines = text.split('\n');
-      int pos = offset;
-      for (int i = 0; i < lines.length; i++) {
-        final line = lines[i];
-        final isLast = i == lines.length - 1;
-        final len = line.length;
-        if (len > 0) {
-          quillController.formatText(pos, len, const ColorAttribute(null));
-          quillController.formatText(pos, len, const BackgroundAttribute(null));
-          quillController.formatText(
-              pos, len, Attribute.clone(Attribute.bold, null));
-          quillController.formatText(
-              pos, len, Attribute.clone(Attribute.italic, null));
-          quillController.formatText(
-              pos, len, Attribute.clone(Attribute.underline, null));
-          quillController.formatText(pos, len, const SizeAttribute(null));
-        }
-        pos += len;
-        if (!isLast) {
-          final isRtl =
-              TextDirectionUtils.getDirection(line.isNotEmpty ? line : '') ==
-                  TextDirection.rtl;
-          quillController.formatText(pos, 1, const AlignAttribute(null));
-          quillController.formatText(
-              pos, 1, isRtl ? const DirectionAttribute(null) : Attribute.rtl);
-          pos += 1;
-        }
-      }
-      isPasting = false;
+      quillController.readOnly = false;
+      rebuild();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!scrollController.hasClients) return;
+        final p = scrollController.position;
+        if (p.pixels < p.maxScrollExtent - 100) return;
+        scrollController.animateTo(p.maxScrollExtent,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut);
+      });
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!scrollController.hasClients) return;
-      final p = scrollController.position;
-      if (p.pixels < p.maxScrollExtent - 100) return;
-      scrollController.animateTo(p.maxScrollExtent,
-          duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
-    });
   }
 
   // ── keyboard ───────────────────────────────────────────────────────────────

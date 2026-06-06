@@ -301,6 +301,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                             ),
                           ),
                         ),
+                      if (_ctrl.isPasting)
+                        const Positioned.fill(
+                          child: AbsorbPointer(),
+                        ),
                     ],
                   );
                 },

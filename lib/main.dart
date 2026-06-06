@@ -31,10 +31,10 @@ import 'package:sinan_note/screens/shared/settings_screen_responsive.dart';
 import 'package:sinan_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:sinan_note/services/app_update_service.dart';
 import 'package:sinan_note/services/cloud/google_drive_auth.dart';
-import 'package:sinan_note/services/content_guard.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/widgets/editor/paste_handler.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -185,13 +185,16 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     if (!mounted) return;
 
     final isUrl = Uri.tryParse(text)?.hasScheme ?? false;
-    final content = isUrl
-        ? text
-        : (text.length > kMaxSharedTextLength
-            ? text.substring(0, kMaxSharedTextLength)
-            : text);
+    final mode = isUrl ? NoteMode.simple : _detectNoteMode(text);
 
-    final mode = isUrl ? NoteMode.simple : _detectNoteMode(content);
+    // بناء Delta في Isolate قبل فتح المحرر
+    String content;
+    if (!isUrl) {
+      final delta = await buildDeltaInIsolate(text);
+      content = delta.toJson().toString();
+    } else {
+      content = text;
+    }
 
     // Create and save note to database FIRST
     final newNote = Note(
