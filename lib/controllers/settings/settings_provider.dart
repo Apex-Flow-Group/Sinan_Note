@@ -282,7 +282,7 @@ class SettingsProvider with ChangeNotifier {
       _doubleTapToEdit = prefs.getBool('doubleTapToEdit') ?? true;
       _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
           ['delete', 'archive', 'share'];
-      _heroAnimationEnabled = false; // مُعطَّل دائماً — لا يعمل في الإنتاج
+      _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
       _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'disabled';
       _hideNavOnScroll = prefs.getBool('hideNavOnScroll') ?? true;
       _hideSearchOnScroll = prefs.getBool('hideSearchOnScroll') ?? false;

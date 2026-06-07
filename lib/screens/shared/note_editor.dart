@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
@@ -17,6 +17,7 @@ import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_build_methods.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
+import 'package:sinan_note/screens/shared/note_editor/handlers/editor_menu_handlers.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_save_operations.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:sinan_note/services/keyboard/editor_command_bus.dart';
@@ -53,11 +54,26 @@ class NoteEditorImmersive extends StatefulWidget {
 }
 
 class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
-    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
+    with
+        AutomaticKeepAliveClientMixin,
+        WidgetsBindingObserver,
+        EditorMenuHandlersMixin<NoteEditorImmersive> {
   late EditorCoordinator _coordinator;
   AppLocalizations? _l10nRef;
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
+
+  // ── EditorMenuHandlersMixin interface ──────────────────────────────
+  @override
+  EditorCoordinator get menuCoordinator => _coordinator;
+  @override
+  int? get menuNoteId => _coordinator.savedNoteId ?? widget.note?.id;
+  @override
+  bool Function() get menuIsMounted => () => mounted;
+  @override
+  void Function(VoidCallback) get menuSetState => setState;
+  @override
+  Future<void> Function() get menuHandleBack => _handleBack;
 
   static bool _looksLikeMarkdown(String text) => RegExp(
         r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
@@ -111,22 +127,25 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         widget.mode == NoteMode.rich) {
       // ط£ظˆظ„ 20 ط³ط·ط± ط¬ط§ظ‡ط²ط© ظپظˆط±ط§ظ‹ â€” ط§ظ„ظ…ط­ط±ط± ظٹظپطھط­ ط¨ط¯ظˆظ† طھط¬ظ…ط¯
       _isQuillReady = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await _coordinator.initializeQuillAsync();
-        if (mounted) {
-          // ط£ط¹ط¯ ط±ط¨ط· ط§ظ„ظ€ listener ط¨ط¹ط¯ ط§ط³طھط¨ط¯ط§ظ„ ط§ظ„ظ€ controller ط¨ط§ظ„ظƒط§ظ…ظ„
-          _quillChangesSubscription?.cancel();
-          _quillChangesSubscription =
-              _coordinator.quillController!.document.changes.listen((_) {
-            _onQuillContentChanged();
-            _updateUndoRedoState();
-          });
-          // تحديث الـ toolbar عند تغيير الـ selection (لإظهار حالة Bold/Italic/إلخ)
-          _coordinator.quillController!.addListener(_onQuillSelectionChanged);
-          // طھط­ط¯ظٹط« طµط§ظ…طھ â€” ط¨ط¯ظˆظ† loading indicator
-          setState(() {});
-        }
-      });
+      // Skip async Quill init in readOnly mode to prevent flicker after Hero animation
+      if (!_isReadOnly) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await _coordinator.initializeQuillAsync();
+          if (mounted) {
+            // ط£ط¹ط¯ ط±ط¨ط· ط§ظ„ظ€ listener ط¨ط¹ط¯ ط§ط³طھط¨ط¯ط§ظ„ ط§ظ„ظ€ controller ط¨ط§ظ„ظƒط§ظ…ظ„
+            _quillChangesSubscription?.cancel();
+            _quillChangesSubscription =
+                _coordinator.quillController!.document.changes.listen((_) {
+              _onQuillContentChanged();
+              _updateUndoRedoState();
+            });
+            // تحديث الـ toolbar عند تغيير الـ selection (لإظهار حالة Bold/Italic/إلخ)
+            _coordinator.quillController!.addListener(_onQuillSelectionChanged);
+            // طھط­ط¯ظٹط« طµط§ظ…طھ â€” ط¨ط¯ظˆظ† loading indicator
+            setState(() {});
+          }
+        });
+      }
     } else {
       _isQuillReady = true;
     }
@@ -371,6 +390,25 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _updateUndoRedoState();
   }
 
+  /// Initialize Quill controller when transitioning from readOnly to edit mode
+  void _initQuillForEdit() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _coordinator.initializeQuillAsync();
+      if (mounted) {
+        _quillChangesSubscription?.cancel();
+        if (_coordinator.quillController != null) {
+          _quillChangesSubscription =
+              _coordinator.quillController!.document.changes.listen((_) {
+            _onQuillContentChanged();
+            _updateUndoRedoState();
+          });
+          _coordinator.quillController!.addListener(_onQuillSelectionChanged);
+        }
+        setState(() {});
+      }
+    });
+  }
+
   void _onQuillContentChanged() {
     // ظ„ط§ ظ†ط­ظپط¸ ط£ط«ظ†ط§ط، طھط­ظ…ظٹظ„ ط§ظ„ظ†ظˆطھط© â€” طھط؛ظٹظٹط±ط§طھ _fixDeltaDirections ظ„ظٹط³طھ ظ…ظ† ط§ظ„ظ…ط³طھط®ط¯ظ…
     if (_coordinator.stateManager.isLoading) return;
@@ -572,6 +610,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 widget.note!.title.isNotEmpty &&
                 widget.note!.title != 'Untitled') {
               _coordinator.stateManager.customTitle = widget.note!.title;
+            }
+            // Initialize Quill async if it was skipped in readOnly mode
+            if (_currentMode == NoteMode.simple ||
+                _currentMode == NoteMode.rich ||
+                _currentMode == NoteMode.reminder) {
+              _initQuillForEdit();
             }
           }
           setState(() => _isReadOnly = false);
@@ -888,20 +932,21 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
       // ── إدارة الملاحظة ─────────────────────────────────────────────
       case EditorCommand.archive:
-        _handleMenuArchive();
+        handleMenuArchive();
       case EditorCommand.pin:
-        _handleMenuPin();
+        handleMenuPin();
       case EditorCommand.duplicate:
-        _handleMenuDuplicate();
+        handleMenuDuplicate();
       case EditorCommand.delete:
-        _handleMenuDelete();
+        handleMenuDelete();
       case EditorCommand.category:
-        _handleMenuCategory();
+        handleMenuCategory();
     }
   }
 
   /// أرشفة الملاحظة مع snackbar تراجع
-  Future<void> _handleMenuArchive() async {
+  @override
+  Future<void> handleMenuArchive() async {
     final noteId = _coordinator.savedNoteId ?? widget.note?.id;
     if (noteId == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -921,7 +966,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   /// تثبيت/إلغاء تثبيت الملاحظة مع snackbar
-  Future<void> _handleMenuPin() async {
+  @override
+  Future<void> handleMenuPin() async {
     final noteId = _coordinator.savedNoteId ?? widget.note?.id;
     if (noteId == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -941,7 +987,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   /// تكرار الملاحظة مع snackbar
-  Future<void> _handleMenuDuplicate() async {
+  @override
+  Future<void> handleMenuDuplicate() async {
     final noteId = _coordinator.savedNoteId ?? widget.note?.id;
     if (noteId == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -957,7 +1004,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   /// حذف الملاحظة — bottom sheet تأكيد مع snackbar تراجع
-  Future<void> _handleMenuDelete() async {
+  @override
+  Future<void> handleMenuDelete() async {
     final noteId = _coordinator.savedNoteId ?? widget.note?.id;
     if (noteId == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -1042,7 +1090,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   /// فتح منتقي الكتالوج
-  Future<void> _handleMenuCategory() async {
+  @override
+  Future<void> handleMenuCategory() async {
     if (!mounted) return;
     final current = _coordinator.stateManager.categoryIds;
     final result = await CategoryPickerSheet.show(
@@ -1188,19 +1237,19 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       // ─── إدارة الملاحظة (تعمل حتى في وضع القراءة) ────────────────────
       AppShortcuts.archive: () {
         final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) _handleMenuArchive();
+        if (noteId != null) handleMenuArchive();
       },
       AppShortcuts.pin: () {
         final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) _handleMenuPin();
+        if (noteId != null) handleMenuPin();
       },
       AppShortcuts.duplicate: () {
         final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) _handleMenuDuplicate();
+        if (noteId != null) handleMenuDuplicate();
       },
       AppShortcuts.delete: () {
         final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) _handleMenuDelete();
+        if (noteId != null) handleMenuDelete();
       },
     };
   }

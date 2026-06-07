@@ -11,6 +11,7 @@ import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 class CustomShareSheet {
   static void show(BuildContext context, String text,
       {String? subject,
@@ -95,7 +96,9 @@ class CustomShareSheet {
                         if (result != null) {
                           UnifiedNotificationService().show(
                             context: context,
-                            message: isArabic ? 'تم حفظ الملف بنجاح' : 'File saved successfully',
+                            message: isArabic
+                                ? 'تم حفظ الملف بنجاح'
+                                : 'File saved successfully',
                             type: NotificationType.success,
                             duration: const Duration(seconds: 2),
                           );
@@ -105,7 +108,9 @@ class CustomShareSheet {
                         Navigator.pop(context);
                         UnifiedNotificationService().show(
                           context: context,
-                          message: isArabic ? 'فشل حفظ الملف' : 'Failed to save file',
+                          message: isArabic
+                              ? 'فشل حفظ الملف'
+                              : 'Failed to save file',
                           type: NotificationType.error,
                         );
                       }
@@ -129,7 +134,9 @@ class CustomShareSheet {
                     if (context.mounted) {
                       UnifiedNotificationService().show(
                         context: context,
-                        message: isArabic ? 'تم النسخ إلى الحافظة' : strings.textCopiedToClipboard,
+                        message: isArabic
+                            ? 'تم النسخ إلى الحافظة'
+                            : strings.textCopiedToClipboard,
                         type: NotificationType.success,
                         duration: const Duration(seconds: 2),
                       );
@@ -153,7 +160,7 @@ class CustomShareSheet {
               const SizedBox(height: 16),
               _ApexSendTile(
                 isArabic: isArabic,
-                onTap: () => _sendViaApex(context, note!, isArabic),
+                onTap: () => _sendViaApex(context, note, isArabic),
                 colorScheme: colorScheme,
               ),
             ],
@@ -169,7 +176,8 @@ class CustomShareSheet {
     return ext.startsWith('.') ? ext.substring(1) : ext;
   }
 
-  static void _sendViaApex(BuildContext context, Note note, bool isArabic) async {
+  static void _sendViaApex(
+      BuildContext context, Note note, bool isArabic) async {
     Navigator.pop(context);
     try {
       final tmp = await getTemporaryDirectory();
@@ -252,7 +260,9 @@ class _ApexSendTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isArabic ? 'إرسال عبر Apex Transfer' : 'Send via Apex Transfer',
+                      isArabic
+                          ? 'إرسال عبر Apex Transfer'
+                          : 'Send via Apex Transfer',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -353,4 +363,3 @@ class _ShareOptionState extends State<_ShareOption> {
     );
   }
 }
-

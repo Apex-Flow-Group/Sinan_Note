@@ -1,10 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/widgets/pin_numpad_key.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/services/security/rate_limiter_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
@@ -626,11 +627,26 @@ class _PinLockScreenState extends State<PinLockScreen>
           padding: EdgeInsets.symmetric(horizontal: padH),
           child: Column(
             children: [
-              _numRow(['1', '2', '3'], isDark, keySize, spacing),
+              PinNumpadRow(
+                  digits: const ['1', '2', '3'],
+                  isDark: isDark,
+                  keySize: keySize,
+                  spacing: spacing,
+                  onDigit: _onDigit),
               SizedBox(height: spacing),
-              _numRow(['4', '5', '6'], isDark, keySize, spacing),
+              PinNumpadRow(
+                  digits: const ['4', '5', '6'],
+                  isDark: isDark,
+                  keySize: keySize,
+                  spacing: spacing,
+                  onDigit: _onDigit),
               SizedBox(height: spacing),
-              _numRow(['7', '8', '9'], isDark, keySize, spacing),
+              PinNumpadRow(
+                  digits: const ['7', '8', '9'],
+                  isDark: isDark,
+                  keySize: keySize,
+                  spacing: spacing,
+                  onDigit: _onDigit),
               SizedBox(height: spacing),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -639,36 +655,36 @@ class _PinLockScreenState extends State<PinLockScreen>
                     width: keySize,
                     height: keySize,
                     child: _biometricAvailable && !widget.isSetup
-                        ? _numpadKey(
-                            child:
-                                const Icon(Icons.fingerprint_rounded, size: 26),
+                        ? PinNumpadKey(
                             onTap: _tryBiometric,
                             isDark: isDark,
                             color: Colors.teal,
                             size: keySize,
+                            child:
+                                const Icon(Icons.fingerprint_rounded, size: 26),
                           )
                         : const SizedBox.shrink(),
                   ),
-                  _numpadKey(
+                  PinNumpadKey(
+                    onTap: () => _onDigit('0'),
+                    isDark: isDark,
+                    size: keySize,
                     child: Text('0',
                         style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,
                             color: isDark ? Colors.white : Colors.black87)),
-                    onTap: () => _onDigit('0'),
-                    isDark: isDark,
-                    size: keySize,
                   ),
                   SizedBox(
                     width: keySize,
                     height: keySize,
-                    child: _numpadKey(
-                      child: const Icon(Icons.backspace_rounded, size: 22),
+                    child: PinNumpadKey(
                       onTap: _onDelete,
                       onLongPress: () => setState(() => _pin = ''),
                       isDark: isDark,
                       color: Colors.red,
                       size: keySize,
+                      child: const Icon(Icons.backspace_rounded, size: 22),
                     ),
                   ),
                 ],
@@ -770,60 +786,5 @@ class _PinLockScreenState extends State<PinLockScreen>
   Color get _iconColor {
     if (!widget.isSetup) return Colors.blue;
     return _isConfirmStep ? Colors.green : Colors.blue;
-  }
-
-  Widget _numRow(
-      List<String> digits, bool isDark, double keySize, double spacing) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: digits
-          .map((d) => _numpadKey(
-                child: Text(d,
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.black87)),
-                onTap: () => _onDigit(d),
-                isDark: isDark,
-                size: keySize,
-              ))
-          .toList(),
-    );
-  }
-
-  Widget _numpadKey({
-    required Widget child,
-    required VoidCallback onTap,
-    VoidCallback? onLongPress,
-    required bool isDark,
-    Color? color,
-    required double size,
-  }) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Material(
-        color: color != null
-            ? color.withValues(alpha: 0.08)
-            : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
-        borderRadius: BorderRadius.circular(size / 2),
-        elevation: isDark ? 0 : 1,
-        shadowColor: Colors.black12,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(size / 2),
-          onTap: onTap,
-          onLongPress: onLongPress,
-          splashColor: (color ?? Colors.blue).withValues(alpha: 0.15),
-          highlightColor: (color ?? Colors.blue).withValues(alpha: 0.08),
-          child: Center(
-            child: IconTheme(
-              data: IconThemeData(
-                  color: color ?? (isDark ? Colors.white : Colors.black87)),
-              child: child,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

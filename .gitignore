@@ -125,3 +125,6 @@ full_report.txt
 full_report_v2.txt
 .refactoring/scan_notes_provider.txt
 *.scan.txt
+
+# Local analysis reports (not for repo)
+REPORT_*.md

@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +7,7 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/settings/sections/data_about_sections.dart';
 import 'package:sinan_note/screens/shared/settings/sections/general_section.dart';
+import 'package:sinan_note/screens/shared/settings/sections/motion_navigation_section.dart';
 import 'package:sinan_note/screens/shared/settings/sections/security_section.dart';
 import 'package:sinan_note/screens/shared/settings/sections/swipe_section.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
@@ -59,6 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       bottom: MediaQuery.of(context).padding.bottom + 16),
                   children: [
                     const GeneralSection(showBetaSeparate: true),
+                    const MotionNavigationSection(),
                     const BetaSection(),
                     const SwipeSection(),
                     const SecuritySection(),
@@ -84,6 +85,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: const [
                   GeneralSection(),
                   SizedBox(height: 24),
+                  MotionNavigationSection(),
+                  SizedBox(height: 24),
                   SwipeSection(),
                 ],
               ),
@@ -106,4 +109,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

@@ -62,7 +62,7 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
     }
   }
 
-  Future<void> _extractPlainText() async {
+  void _extractPlainText() {
     if (widget.mode == NoteMode.checklist ||
         widget.mode == NoteMode.code ||
         widget.showMarkdown) {
@@ -71,25 +71,25 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
 
     final raw = widget.coordinator.contentController.text;
 
-    // نستخرج النص في postFrameCallback لعدم تجميد أول frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      String text;
-      if (raw.trimLeft().startsWith('[')) {
-        try {
-          text = (jsonDecode(raw) as List)
-              .where((op) => op is Map && op['insert'] is String)
-              .map((op) => op['insert'] as String)
-              .join()
-              .trimRight();
-        } catch (_) {
-          text = raw.trimRight();
-        }
-      } else {
-        text = raw.trimRight();
+    // استخراج النص بشكل متزامن لمنع ظهور loading indicator
+    if (raw.trimLeft().startsWith('[')) {
+      try {
+        _plainText = (jsonDecode(raw) as List)
+            .where((op) => op is Map && op['insert'] is String)
+            .map((op) => op['insert'] as String)
+            .join()
+            .trimRight();
+      } catch (_) {
+        _plainText = raw.trimRight();
       }
-      setState(() => _plainText = text);
-    });
+    } else {
+      _plainText = raw.trimRight();
+    }
+
+    // إذا استُدعيت بعد البناء الأول (مثل didUpdateWidget)، نحدّث الواجهة
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -98,7 +98,8 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
     final hasReminder = reminder != null;
     const double badgeBottomPadding = 60.0;
 
-    final content = _buildContent(context, hasReminder ? badgeBottomPadding : 0);
+    final content =
+        _buildContent(context, hasReminder ? badgeBottomPadding : 0);
     if (!hasReminder) return content;
 
     return Stack(
@@ -151,7 +152,8 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
           child: Directionality(
             textDirection: TextDirection.ltr,
             child: Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 80 + extraBottomPadding),
+              padding:
+                  EdgeInsets.only(top: 20, bottom: 80 + extraBottomPadding),
               child: SelectableText(
                 content,
                 style: TextStyle(
@@ -232,14 +234,16 @@ class _ReminderBadge extends StatelessWidget {
     if (isPast) {
       final ago = now.difference(reminderDateTime);
       if (ago.inMinutes < 60) {
-        timeText = isAr ? 'منذ ${ago.inMinutes} دقيقة' : '${ago.inMinutes}m ago';
+        timeText =
+            isAr ? 'منذ ${ago.inMinutes} دقيقة' : '${ago.inMinutes}m ago';
       } else if (ago.inHours < 24) {
         timeText = isAr ? 'منذ ${ago.inHours} ساعة' : '${ago.inHours}h ago';
       } else {
         timeText = isAr ? 'منذ ${ago.inDays} يوم' : '${ago.inDays}d ago';
       }
     } else if (diff.inMinutes < 60) {
-      timeText = isAr ? 'خلال ${diff.inMinutes} دقيقة' : 'In ${diff.inMinutes}m';
+      timeText =
+          isAr ? 'خلال ${diff.inMinutes} دقيقة' : 'In ${diff.inMinutes}m';
     } else if (diff.inHours < 24) {
       timeText = isAr ? 'خلال ${diff.inHours} ساعة' : 'In ${diff.inHours}h';
     } else if (diff.inDays == 1) {
@@ -319,7 +323,8 @@ class _IconBtn extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  const _IconBtn({required this.icon, required this.color, required this.onTap});
+  const _IconBtn(
+      {required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

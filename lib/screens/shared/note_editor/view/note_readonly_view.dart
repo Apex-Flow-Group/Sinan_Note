@@ -525,7 +525,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
 
     final heroTag = widget.heroTag ?? 'note_card_${note.id}';
-    final heroEnabled = Provider.of<SettingsProvider>(context, listen: true)
+    final heroEnabled = Provider.of<SettingsProvider>(context, listen: false)
         .heroAnimationEnabled;
     final heroCard = heroEnabled
         ? Hero(

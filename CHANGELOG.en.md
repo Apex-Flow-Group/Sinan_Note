@@ -4,6 +4,35 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.4] — 2026-06 | Refactoring & Architecture
+
+### 🏗️ Refactoring
+
+**Widget deep link — cold start fix**
+- `_openNoteById()` now waits for `settings.isInitialized` + 500ms before navigating, matching the pattern already used in `_openEditorWithSharedText`. Fixes the race condition where the widget tap arrived before `SplashScreen` finished and the pushed route was overwritten by `pushReplacement`.
+
+**Hero animation flicker fix**
+- Async Quill initialization (`initializeQuillAsync`) is now skipped in read-only mode on cold open. Quill is initialized lazily the moment the user enters edit mode via `_initQuillForEdit()`.
+- `readonly_content.dart`: plain-text extraction moved from `addPostFrameCallback` to synchronous `initState`, eliminating the one-frame flash of `CircularProgressIndicator`.
+- `note_readonly_view.dart`: `listen: true` → `listen: false` for `heroAnimationEnabled` getter.
+
+**Hero animation setting persistence fix**
+- `settings_provider.dart`: `_heroAnimationEnabled` was hard-coded to `false` on every load, ignoring SharedPreferences. Now reads `prefs.getBool('heroAnimationEnabled') ?? false`.
+
+**Motion & Navigation settings section**
+- Extracted `Hero Animation`, `Pull to Refresh`, and `Double Tap to Edit` controls from `GeneralSection` into a dedicated `MotionNavigationSection` widget (`motion_navigation_section.dart`).
+- `settings_screen.dart` updated to include the new section between General and Beta.
+
+**File splitting — Single Responsibility**
+- `note_editor.dart` (1235 → ~1095 lines): menu action methods extracted into `EditorMenuHandlersMixin` (`editor_menu_handlers.dart`). Mixed into `_NoteEditorImmersiveState` via `with`.
+- `pin_lock_screen.dart` (829 → ~730 lines): `_numpadKey` and `_numRow` extracted into `PinNumpadKey` / `PinNumpadRow` stateless widgets (`pin_numpad_key.dart`).
+- `backup_wizard_screen.dart` (717 → ~483 lines): `_FlowCard`, `_SectionHeader`, `_OptionTile`, `_ActionBtn`, `_SideItem` extracted to `backup_wizard_widgets.dart` with public names.
+- `unified_notification_service.dart`: `_buildContent`, `_buildActionButton`, `_buildProgressWithUndo`, `_getBackgroundColor`, `_getIcon` extracted to `NotificationSnackBar` class (`notification_snack_bar.dart`). Service is now pure orchestration with no Flutter widget construction.
+- `note_card_actions.dart`: `_PermanentDeleteSheet` extracted to `permanent_delete_sheet.dart` (`widgets/common/`).
+- `categories_panel.dart`: `_ProCategoryTile` (stateful, independent expansion state) extracted to `pro_category_tile.dart` (`widgets/home/`).
+
+---
+
 ## [3.2.3] — 2026-06 | Paste Performance + Apex Sharing
 
 ### ✨ New Features

@@ -4,6 +4,35 @@
 
 ---
 
+## [3.2.4] — 2026-06 | إعادة هيكلة وبنية
+
+### 🏗️ إعادة هيكلة
+
+**إصلاح فتح الويدجت عند إغلاق التطبيق (cold start)**
+- `_openNoteById()` تنتظر الآن `settings.isInitialized` + 500ms قبل التنقل، بنفس النمط المستخدم في `_openEditorWithSharedText`. يُصلح race condition كان يُسبب كتابة `pushReplacement` من `SplashScreen` فوق الـ route المدفوع من ضغطة الويدجت.
+
+**إصلاح وميض Hero Animation**
+- تهيئة Quill غير المتزامنة (`initializeQuillAsync`) تُؤجَّل الآن في وضع القراءة ولا تُنفَّذ حتى يدخل المستخدم وضع التعديل عبر `_initQuillForEdit()`.
+- `readonly_content.dart`: استخراج النص النقي نُقل من `addPostFrameCallback` إلى `initState` بشكل متزامن، مما يُلغي وميض `CircularProgressIndicator` لفريم واحد.
+- `note_readonly_view.dart`: `listen: true` → `listen: false` لقراءة `heroAnimationEnabled`.
+
+**إصلاح عدم حفظ إعداد Hero Animation**
+- `settings_provider.dart`: كانت `_heroAnimationEnabled` مُضبوطة على `false` ثابتاً عند كل تحميل متجاهلةً SharedPreferences. أصبحت تقرأ `prefs.getBool('heroAnimationEnabled') ?? false`.
+
+**قسم "الحركة والتنقل" في الإعدادات**
+- استخراج إعدادات Hero Animation وسحب للتحديث والضغط المزدوج للتعديل من `GeneralSection` إلى `MotionNavigationSection` مستقل (`motion_navigation_section.dart`).
+- تحديث `settings_screen.dart` لإدراج القسم الجديد بين General وBeta.
+
+**تقسيم الملفات — مبدأ المسؤولية الواحدة**
+- `note_editor.dart` (1235 → ~1095 سطر): methods إجراءات القائمة استُخرجت إلى `EditorMenuHandlersMixin` (`editor_menu_handlers.dart`) وأُدمجت عبر `with`.
+- `pin_lock_screen.dart` (829 → ~730 سطر): `_numpadKey` و`_numRow` استُخرجا إلى `PinNumpadKey` / `PinNumpadRow` (`pin_numpad_key.dart`).
+- `backup_wizard_screen.dart` (717 → ~483 سطر): الكلاسات المساعدة `_FlowCard` وغيرها نُقلت إلى `backup_wizard_widgets.dart` بأسماء عامة.
+- `unified_notification_service.dart`: methods بناء الـ widget (`_buildContent`، `_buildActionButton`، `_buildProgressWithUndo`، `_getBackgroundColor`، `_getIcon`) استُخرجت إلى كلاس `NotificationSnackBar` (`notification_snack_bar.dart`). الـ service أصبح orchestration بحت بدون أي Flutter widget building.
+- `note_card_actions.dart`: `_PermanentDeleteSheet` استُخرجت إلى `permanent_delete_sheet.dart` (`widgets/common/`).
+- `categories_panel.dart`: `_ProCategoryTile` (StatefulWidget مستقل) استُخرج إلى `pro_category_tile.dart` (`widgets/home/`).
+
+---
+
 ## [3.2.3] — 2026-06 | أداء اللصق + مشاركة عبر Apex
 
 ### ✨ ميزات جديدة

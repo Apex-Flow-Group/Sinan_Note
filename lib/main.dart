@@ -243,7 +243,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
       final file = File(filePath);
       if (!await file.exists()) return;
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
 
       final note = Note(
         title: json['title'] as String? ?? '',
@@ -266,7 +267,9 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
         note: savedNote,
         mode: NoteCardUtils.getNoteMode(savedNote),
       );
-      try { await file.delete(); } catch (_) {}
+      try {
+        await file.delete();
+      } catch (_) {}
     } catch (_) {}
   }
 
@@ -306,16 +309,36 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
   String _getModeString(NoteMode mode) {
     switch (mode) {
-      case NoteMode.code: return 'professional';
-      case NoteMode.rich: return 'rich';
-      case NoteMode.reminder: return 'reminder';
-      case NoteMode.checklist: return 'checklist';
-      default: return 'simple';
+      case NoteMode.code:
+        return 'professional';
+      case NoteMode.rich:
+        return 'rich';
+      case NoteMode.reminder:
+        return 'reminder';
+      case NoteMode.checklist:
+        return 'checklist';
+      default:
+        return 'simple';
     }
   }
 
   void _openNoteById(int noteId) async {
     try {
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+
+      // انتظار اكتمال التهيئة (قاعدة البيانات + SplashScreen)
+      while (!settings.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 50));
+        if (!mounted) return;
+      }
+
+      // انتظار إضافي لضمان أن MainLayoutScreen حلّت محل SplashScreen
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+
       final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null) {
