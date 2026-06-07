@@ -1,18 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/main.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/data/latest_all.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-
+import 'dart:io';import 'package:flutter_local_notifications/flutter_local_notifications.dart'; import 'package:flutter_timezone/flutter_timezone.dart';import 'package:sinan_note/core/utils/app_navigator.dart'; import 'package:sinan_note/core/utils/logger.dart'; import 'package:sinan_note/main.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/widgets/home/note_card_utils.dart'; import 'package:timezone/data/latest_all.dart' as tz; import 'package:timezone/timezone.dart' as tz;
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -24,14 +12,15 @@ class NotificationService {
   Future<void> initialize() async {
     // تهيئة المناطق الزمنية
     tz.initializeTimeZones();
-    
+
     // كشف توقيت جهاز المستخدم الحالي
     try {
       final String timeZoneName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timeZoneName));
       AppLogger.success('Timezone set to: $timeZoneName', 'Notification');
     } catch (e) {
-      AppLogger.warning('Failed to set local timezone, using UTC fallback', 'Notification');
+      AppLogger.warning(
+          'Failed to set local timezone, using UTC fallback', 'Notification');
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
 
@@ -154,14 +143,16 @@ class NotificationService {
       final hasExactAlarmPerm = await checkExactAlarmPermission();
 
       if (!hasNotificationPerm || !hasExactAlarmPerm) {
-        AppLogger.warning('Missing permissions: Notification=$hasNotificationPerm, ExactAlarm=$hasExactAlarmPerm', 'Notification');
+        AppLogger.warning(
+            'Missing permissions: Notification=$hasNotificationPerm, ExactAlarm=$hasExactAlarmPerm',
+            'Notification');
         // Request permissions if missing
         await requestNotificationPermissions();
-        
+
         // Verify again
         final recheckNotif = await checkNotificationPermission();
         final recheckAlarm = await checkExactAlarmPermission();
-        
+
         if (!recheckNotif || !recheckAlarm) {
           throw Exception('Notification permissions denied');
         }
@@ -232,8 +223,9 @@ class NotificationService {
           );
         }
       }
-      
-      AppLogger.success('Notification scheduled: ID=$id, Time=$scheduledTime', 'Notification');
+
+      AppLogger.success('Notification scheduled: ID=$id, Time=$scheduledTime',
+          'Notification');
     } catch (e) {
       AppLogger.error('Failed to schedule notification', 'Notification', e);
       rethrow;
@@ -247,10 +239,6 @@ class NotificationService {
       // Ignore errors when canceling non-existent notifications
       AppLogger.debug('Could not cancel notification $id', 'Notification');
     }
-  }
-
-  Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
   }
 
   static void _onNotificationTapped(NotificationResponse response) async {
@@ -268,14 +256,11 @@ class NotificationService {
       final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null && navigatorKey.currentState != null) {
-        navigatorKey.currentState!.push(
-          MaterialPageRoute(
-            builder: (context) => NoteEditorImmersive(
-              note: note,
-              mode: NoteCardUtils.getNoteMode(note),
-              readOnly: true,
-            ),
-          ),
+        AppNavigator.toEditorViaKey(
+          navigatorKey,
+          note: note,
+          mode: NoteCardUtils.getNoteMode(note),
+          readOnly: true,
         );
       }
     } catch (e) {
@@ -283,3 +268,4 @@ class NotificationService {
     }
   }
 }
+

@@ -1,18 +1,17 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
 class BackupService {
   String _backupFileName() {
@@ -20,21 +19,14 @@ class BackupService {
     return 'SinanNote_Backup_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}.db';
   }
 
-  Future<String> _getDbFilePath() async {
-    if (Platform.isAndroid) {
-      final dbDir = await getDatabasesPath();
-      return join(dbDir, 'sinan_notes.db');
-    }
-    final dir = await getApplicationDocumentsDirectory();
-    return join(dir.path, 'sinan_notes.db');
-  }
+  Future<String> _getDbFilePath() => SqliteDatabaseService.getDbPath();
 
   Future<void> exportDatabase() async {
     await ApexErrorManager.monitorCritical(() async {
       final dbPath = await _getDbFilePath();
-      if (!await File(dbPath).exists())
-        // ignore: curly_braces_in_flow_control_structures
+      if (!await File(dbPath).exists()) {
         throw Exception('ملف قاعدة البيانات غير موجود');
+      }
 
       final fileName = _backupFileName();
       final tempDir = await getTemporaryDirectory();
@@ -146,6 +138,12 @@ class BackupService {
         await dbService.upsertNote(note);
       }
 
+      // مسح sync state — بعد الاستعادة الجهاز يجب أن يرفع لـ Drive أولاً
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('last_upload_timestamp');
+      await prefs.remove('last_known_drive_md5');
+      await prefs.remove('deleted_note_ids');
+
       AppLogger.debug(
           '[Replace] Database replaced with ${notesData.length} notes');
     }, 'Backup_Replace');
@@ -187,6 +185,13 @@ class BackupService {
       }
 
       AppLogger.debug('[Merge] Merged $merged notes');
+
+      // مسح sync state — بعد الدمج الجهاز يجب أن يرفع لـ Drive أولاً
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('last_upload_timestamp');
+      await prefs.remove('last_known_drive_md5');
+      await prefs.remove('deleted_note_ids');
+
       return merged;
     }, 'Backup_Merge');
   }
@@ -225,3 +230,4 @@ class BackupService {
     }
   }
 }
+

@@ -1,10 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
-import 'package:apex_note/widgets/editor/tear/tear_handle_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/widgets/editor/tear/tear_handle_widget.dart';
 
 /// المنطق والتحكم في دمعة المؤشر المفرد
 class CursorTearHandle {
@@ -17,6 +17,9 @@ class CursorTearHandle {
   TextSelection? _lastSel;
   bool _dragging = false;
   bool _suppressRebuild = false;
+
+  VoidCallback? onDragStarted;
+  VoidCallback? onDragEnded;
 
   CursorTearHandle({
     required this.controller,
@@ -51,7 +54,14 @@ class CursorTearHandle {
     }
 
     _lastSel = sel;
-    _showAtCaret();
+    // تأخير العرض لما بعد اكتمال الـ layout حتى يكون موقع الكرسر محدّث
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // تحقق أن السيلكشن لم يتغير أثناء الانتظار
+      if (_dragging || _suppressRebuild) return;
+      final currentSel = controller.selection;
+      if (currentSel != sel) return;
+      _showAtCaret();
+    });
   }
 
   void hide() {
@@ -115,20 +125,16 @@ class CursorTearHandle {
           _dragging = true;
           _suppressRebuild = true;
           _hideTimer?.cancel();
-          // تعليق وميض المؤشر وإبقائه ظاهراً ثابتاً أثناء السحب
+          onDragStarted?.call();
           final state = editorKey.currentState;
-          if (state != null) {
-            state.cursorCont.suspended = true;
-          }
+          if (state != null) state.cursorCont.suspended = true;
         },
         onDragEnd: () {
           _dragging = false;
           _suppressRebuild = false;
-          // إلغاء التعليق — يعود الوميض الطبيعي
+          onDragEnded?.call();
           final state = editorKey.currentState;
-          if (state != null) {
-            state.cursorCont.suspended = false;
-          }
+          if (state != null) state.cursorCont.suspended = false;
           WidgetsBinding.instance.addPostFrameCallback((_) => _showAtCaret());
         },
         onDismiss: _forceHide,

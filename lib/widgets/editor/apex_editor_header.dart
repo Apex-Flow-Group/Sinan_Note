@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
+
 
 class ApexEditorHeader extends StatelessWidget {
   final Color backgroundColor;
@@ -79,75 +81,45 @@ class ApexEditorHeader extends StatelessWidget {
               ),
             ),
             if (onReminderTap != null)
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                builder: (_, t, child) => Opacity(opacity: t, child: child),
-                child: IconButton(
-                  icon: Icon(
-                    hasReminder
-                        ? Icons.alarm_on_rounded
-                        : Icons.alarm_add_rounded,
-                    color: hasReminder
-                        ? Colors.orange
-                        : textColor.withValues(alpha: 0.7),
-                    size: 22,
-                  ),
-                  onPressed: onReminderTap,
-                  splashRadius: 24,
-                  tooltip: 'تذكير',
+              IconButton(
+                icon: Icon(
+                  hasReminder
+                      ? Icons.alarm_on_rounded
+                      : Icons.alarm_add_rounded,
+                  color: hasReminder
+                      ? Colors.orange
+                      : textColor.withValues(alpha: 0.7),
+                  size: 22,
                 ),
+                onPressed: onReminderTap,
+                splashRadius: 24,
+                tooltip: 'تذكير',
               ),
             if (onCategoryTap != null)
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                builder: (_, t, child) => Opacity(opacity: t, child: child),
-                child: IconButton(
-                  icon: Icon(Icons.label_rounded,
-                      color: textColor.withValues(alpha: 0.7), size: 22),
-                  onPressed: onCategoryTap,
-                  splashRadius: 24,
-                ),
+              IconButton(
+                icon: Icon(Icons.label_rounded,
+                    color: textColor.withValues(alpha: 0.7), size: 22),
+                onPressed: onCategoryTap,
+                splashRadius: 24,
               ),
             if (hasHistory)
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                builder: (_, t, child) => Opacity(opacity: t, child: child),
-                child: IconButton(
-                  icon: Icon(Icons.history_rounded, color: textColor, size: 22),
-                  onPressed: onHistoryTap,
-                  splashRadius: 24,
-                ),
+              IconButton(
+                icon: Icon(Icons.history_rounded, color: textColor, size: 22),
+                onPressed: onHistoryTap,
+                splashRadius: 24,
               ),
             if (onEditTap != null)
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                builder: (_, t, child) => Opacity(opacity: t, child: child),
-                child: IconButton(
-                  icon: Icon(Icons.edit_rounded, color: textColor, size: 24),
-                  onPressed: onEditTap,
-                  splashRadius: 24,
-                  tooltip: 'تعديل',
-                ),
+              IconButton(
+                icon: Icon(Icons.edit_rounded, color: textColor, size: 24),
+                onPressed: onEditTap,
+                splashRadius: 24,
+                tooltip: 'تعديل',
               )
             else if (onSaveTap != null)
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                builder: (_, t, child) => Opacity(opacity: t, child: child),
-                child: IconButton(
-                  icon: Icon(Icons.check_rounded, color: textColor, size: 24),
-                  onPressed: onSaveTap,
-                  splashRadius: 24,
-                ),
+              IconButton(
+                icon: Icon(Icons.check_rounded, color: textColor, size: 24),
+                onPressed: onSaveTap,
+                splashRadius: 24,
               ),
           ],
         ),
@@ -155,3 +127,4 @@ class ApexEditorHeader extends StatelessWidget {
     );
   }
 }
+

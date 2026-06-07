@@ -1,12 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/constants/app_text_styles.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/widgets/editor/apex_magnifier.dart';
-import 'package:apex_note/widgets/editor/quill_editor_controller.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/widgets/editor/apex_magnifier.dart';
+import 'package:sinan_note/widgets/editor/quill_editor_controller.dart';
 
 class QuillEditorWidget extends StatefulWidget {
   final QuillController quillController;
@@ -247,7 +248,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         ),
       },
       child: Focus(
-        onKeyEvent: (_, event) => _ctrl.handleKeyEvent(event, markdownEnabled: widget.markdownPaste),
+        onKeyEvent: (_, event) =>
+            _ctrl.handleKeyEvent(event, markdownEnabled: widget.markdownPaste),
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () {
@@ -263,11 +265,22 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: ListenableBuilder(
-                listenable: widget.quillController,
+                listenable: Listenable.merge([
+                  // نستمع فقط لتغير المحتوى (isEmpty) وليس كل selection
+                  widget.quillController,
+                ]),
                 builder: (context, child) {
-                  final ops = widget.quillController.document.toDelta().toList();
+                  final ops =
+                      widget.quillController.document.toDelta().toList();
                   final isEmpty = ops.length <= 1 &&
-                      (ops.isEmpty || (ops.first.isInsert && ops.first.data == '\n' && ops.first.attributes == null));
+                      (ops.isEmpty ||
+                          (ops.first.isInsert &&
+                              ops.first.data == '\n' &&
+                              ops.first.attributes == null));
+                  if (_ctrl.isDraggingSelection) {
+                    // أثناء السحب: لا نعيد بناء الـ Stack
+                    return child!;
+                  }
                   return Stack(
                     fit: StackFit.expand,
                     alignment: AlignmentDirectional.topStart,
@@ -288,6 +301,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                             ),
                           ),
                         ),
+                      if (_ctrl.isPasting)
+                        const Positioned.fill(
+                          child: AbsorbPointer(),
+                        ),
                     ],
                   );
                 },
@@ -307,7 +324,11 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       placeholder: '',
                       checkBoxReadOnly: widget.readOnly,
                       requestKeyboardFocusOnCheckListChanged: false,
-                      // ignore: experimental_member_use
+
+                      // ignore: experimental_member_use, invalid_use_of_visible_for_testing_member, invalid_annotation_target
+                      // flutter_quill: customLeadingBlockBuilder is @experimental but is the only
+                      // supported API for custom checkbox rendering — no stable alternative exists.
+                      // ignore: experimental_member_use, invalid_use_of_visible_for_testing_member
                       customLeadingBlockBuilder: _buildCheckboxLeading,
                       onTapUp: _onTapUp,
                       onTapDown: _onTapDown,
@@ -404,3 +425,4 @@ class _UnknownEmbedBuilder extends EmbedBuilder {
 }
 
 const _unknownEmbedBuilder = _UnknownEmbedBuilder();
+

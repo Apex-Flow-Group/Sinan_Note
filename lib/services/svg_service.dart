@@ -1,12 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-
+import 'dart:io';import 'package:flutter/material.dart'; import 'package:flutter_svg/flutter_svg.dart';import 'package:path_provider/path_provider.dart'; import 'package:share_plus/share_plus.dart';
 /// SVG Service - Preview and export SVG files
 class SvgService {
   /// يعرض الـ SVG داخل التطبيق في bottom sheet
@@ -132,3 +126,4 @@ class _SvgPreviewSheet extends StatelessWidget {
     }
   }
 }
+

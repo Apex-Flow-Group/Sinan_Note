@@ -1,10 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/widgets/editor/tear/tear_magnifier.dart';
-import 'package:apex_note/widgets/editor/tear/tear_painters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/widgets/editor/tear/tear_magnifier.dart';
+import 'package:sinan_note/widgets/editor/tear/tear_painters.dart';
 
 class TearHandleWidget extends StatefulWidget {
   const TearHandleWidget({
@@ -44,6 +44,8 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
   double _lineBottom = 0;
   bool _dragging = false;
   int _lastOffset = -1;
+  int _lastDragMs = 0;
+  late final ValueNotifier<({Offset pos, double lineTop, double lineBottom})> _magNotifier;
   static const double _kHandleW = 22.0;
   static const double _kHandleH = 34.0;
   static const double _kHit = 48.0;
@@ -54,7 +56,11 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
     _pos = widget.initialPos;
     _lineTop = _pos.dy - widget.lineHeight;
     _lineBottom = _pos.dy;
-
+    _magNotifier = ValueNotifier((
+      pos: _pos,
+      lineTop: _lineTop,
+      lineBottom: _lineBottom,
+    ));
     _anim = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
     _scale = CurvedAnimation(parent: _anim, curve: Curves.easeOutBack);
@@ -64,6 +70,7 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
   @override
   void dispose() {
     _anim.dispose();
+    _magNotifier.dispose();
     super.dispose();
   }
 
@@ -75,6 +82,10 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
   }
 
   void _updateDrag(Offset globalPos) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastDragMs < 16) return;
+    _lastDragMs = now;
+
     final state = widget.editorKey.currentState;
     if (state == null) return;
 
@@ -84,18 +95,17 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
     } catch (_) {
       return;
     }
-    final local = re.globalToLocal(globalPos);
-    final lineH = widget.lineHeight;
-    final scrollOffset = re.offset?.pixels ?? 0.0;
-    // إزاحة لتعويض أن الإصبع على الدمعة (أسفل الكرسر)
-    final viewportDy = local.dy - scrollOffset + 8;
-    final lineIndex = (viewportDy / lineH).floor();
-    final targetLocal = Offset(local.dx, lineIndex * lineH + lineH / 2);
-    final pos = re.getPositionForOffset(targetLocal);
+
+    final pos = re.getPositionForOffset(
+        Offset(globalPos.dx, globalPos.dy - widget.lineHeight));
 
     if (pos.offset != _lastOffset) {
       _lastOffset = pos.offset;
       HapticFeedback.selectionClick();
+      widget.controller.updateSelection(
+        TextSelection.collapsed(offset: pos.offset),
+        ChangeSource.local,
+      );
     }
 
     try {
@@ -105,7 +115,6 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
       final caretGlobalX = re.localToGlobal(Offset(r.center.dx, 0)).dx;
       final newPos = Offset(caretGlobalX, _lineBottom);
 
-      // أخفِ الدمعة إذا خرج الكرسر عن المنطقة المرئية (تحت الكيبورد)
       final screenH = MediaQuery.of(context).size.height;
       final keyboardTop = screenH - MediaQuery.of(context).viewInsets.bottom;
       if (newPos.dy > keyboardTop) {
@@ -114,13 +123,9 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
       }
 
       if (!mounted) return;
-      setState(() => _pos = newPos);
+      _pos = newPos;
+      _magNotifier.value = (pos: newPos, lineTop: _lineTop, lineBottom: _lineBottom);
     } catch (_) {}
-
-    widget.controller.updateSelection(
-      TextSelection.collapsed(offset: pos.offset),
-      ChangeSource.local,
-    );
   }
 
   void _endDrag() {
@@ -154,34 +159,38 @@ class _TearHandleWidgetState extends State<TearHandleWidget>
       onPointerCancel: (e) {
         if (_dragging) _endDrag();
       },
-      child: Stack(
-        children: [
-          if (_dragging)
-            TearMagnifier(
-              pos: _pos,
-              lineTop: _lineTop,
-              lineBottom: _lineBottom,
-              bgColor: widget.bgColor,
+      child: ValueListenableBuilder(
+        valueListenable: _magNotifier,
+        builder: (_, v, child) => Stack(
+          children: [
+            if (_dragging)
+              TearMagnifier(
+                pos: v.pos,
+                lineTop: v.lineTop,
+                lineBottom: v.lineBottom,
+                bgColor: widget.bgColor,
+              ),
+            Positioned(
+              left: v.pos.dx - _kHit / 2,
+              top: v.pos.dy - 2,
+              child: child!,
             ),
-          Positioned(
-            left: _pos.dx - _kHit / 2,
-            top: _pos.dy - 2,
-            child: SizedBox(
-              width: _kHit,
-              height: _kHit,
-              child: Center(
-                child: ScaleTransition(
-                  scale: _scale,
-                  alignment: Alignment.center,
-                  child: CustomPaint(
-                    painter: TearPainter(color: color),
-                    size: const Size(_kHandleW, _kHandleH),
-                  ),
-                ),
+          ],
+        ),
+        child: SizedBox(
+          width: _kHit,
+          height: _kHit,
+          child: Center(
+            child: ScaleTransition(
+              scale: _scale,
+              alignment: Alignment.center,
+              child: CustomPaint(
+                painter: TearPainter(color: color),
+                size: const Size(_kHandleW, _kHandleH),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

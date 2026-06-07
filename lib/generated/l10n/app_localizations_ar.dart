@@ -1344,6 +1344,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checklistItemHint => 'مهمة...';
 
   @override
+  String get addItem => 'إضافة عنصر';
+
+  @override
+  String get itemDeleted => 'تم حذف العنصر';
+
+  @override
   String get sort => 'ترتيب';
 
   @override
@@ -1380,7 +1386,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get officialVersion => 'نسخة رسمية - Google Play';
 
   @override
-  String get sinanAiNet => 'SinanAi.net — التطبيقات الناشئة';
+  String get sinanAiNet => 'SinanAi.net — التطبيقات المبتكرة';
 
   @override
   String get importantLinks => 'الروابط المهمة';
@@ -2085,4 +2091,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unlockWithBiometricDesc => 'استخدم البصمة أو الوجه';
+
+  @override
+  String get redo => 'إعادة';
+
+  @override
+  String get bold => 'عريض';
+
+  @override
+  String get italic => 'مائل';
+
+  @override
+  String get underline => 'تحته خط';
+
+  @override
+  String get strikethrough => 'يتوسطه خط';
+
+  @override
+  String get rename => 'إعادة تسمية';
+
+  @override
+  String get selectAll => 'تحديد الكل';
+
+  @override
+  String get noteDuplicated => 'تم إنشاء نسخة من الملاحظة';
+
+  @override
+  String get duplicate => 'تكرار';
+
+  @override
+  String get toggleView => 'تبديل العرض';
+
+  @override
+  String get readingMode => 'وضع القراءة';
+
+  @override
+  String get saveReadingPosition => 'حفظ موضع القراءة';
+
+  @override
+  String get readingPositionSaved => 'تم حفظ الموضع';
+
+  @override
+  String get readingProgress => 'التقدم';
+
+  @override
+  String get comfortableFont => 'خط مريح';
 }

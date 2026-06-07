@@ -1,9 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
+import 'dart:ui' show lerpDouble;import 'package:flutter/material.dart';import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart';
 class PremiumCardEffect extends StatefulWidget {
   final Widget child;
   final Color baseColor;
@@ -82,11 +79,6 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         : baseBorderColor;
 
     if (!widget.enableMotion) {
-      // Ambient glow: ظل بلون النوتة نفسها يعطي إضاءة خلفية خفيفة
-      final Color ambientColor = widget.baseColor.withValues(
-        alpha: brightness == Brightness.light ? 0.55 : 0.40,
-      );
-
       final container = Container(
         decoration: BoxDecoration(
           color: widget.baseColor,
@@ -95,19 +87,11 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
               ? Border.all(color: effectiveBorderColor, width: 0.5)
               : null,
           boxShadow: [
-            // الظل الأساسي (عمق)
             BoxShadow(
               color: Colors.black.withValues(
-                  alpha: brightness == Brightness.light ? 0.10 : 0.30),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-            // الإضاءة الخلفية بلون النوتة
-            BoxShadow(
-              color: ambientColor,
-              blurRadius: brightness == Brightness.light ? 18 : 22,
-              spreadRadius: brightness == Brightness.light ? -2 : -1,
-              offset: const Offset(0, 4),
+                  alpha: brightness == Brightness.light ? 0.10 : 0.28),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -122,22 +106,35 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         return Hero(
           tag: widget.heroTag!,
           transitionOnUserGestures: false,
-          createRectTween: (begin, end) => RectTween(begin: begin, end: end),
+          createRectTween: (begin, end) =>
+              MaterialRectArcTween(begin: begin, end: end),
+          placeholderBuilder: (context, heroSize, child) => SizedBox(
+            width: heroSize.width,
+            height: heroSize.height,
+          ),
           flightShuttleBuilder:
               (flightContext, animation, direction, fromCtx, toCtx) {
             final curved = CurvedAnimation(
               parent: animation,
-              curve: Curves.easeOut,
+              curve: Curves.easeOutCubic,
               reverseCurve: Curves.easeInCubic,
             );
-            return FadeTransition(
-              opacity: direction == HeroFlightDirection.push
-                  ? curved
-                  : ReverseAnimation(curved),
-              child: Material(
-                color: Colors.transparent,
-                child: container,
-              ),
+            return AnimatedBuilder(
+              animation: curved,
+              builder: (context, _) {
+                final radius = BorderRadius.circular(
+                  direction == HeroFlightDirection.push
+                      ? lerpDouble(16, 0, curved.value)!
+                      : lerpDouble(0, 16, curved.value)!,
+                );
+                return Material(
+                  color: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: radius,
+                    child: container,
+                  ),
+                );
+              },
             );
           },
           child: container,
@@ -151,10 +148,6 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
         animation: _glowAnimation!,
         builder: (context, child) {
           final br = Theme.of(context).brightness;
-          final Color ambientColor = widget.baseColor.withValues(
-            alpha: (br == Brightness.light ? 0.45 : 0.35) +
-                _glowAnimation!.value * 0.20,
-          );
           return Container(
             decoration: BoxDecoration(
               color: widget.baseColor,
@@ -165,19 +158,11 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
                       width: 0.5)
                   : null,
               boxShadow: [
-                // الظل الأساسي
                 BoxShadow(
                   color: Colors.black
-                      .withValues(alpha: br == Brightness.light ? 0.10 : 0.30),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-                // الإضاءة الخلفية تتنفس مع الحركة
-                BoxShadow(
-                  color: ambientColor,
-                  blurRadius: 18 + _glowAnimation!.value * 10,
-                  spreadRadius: -2 + _glowAnimation!.value * 2,
-                  offset: const Offset(0, 4),
+                      .withValues(alpha: br == Brightness.light ? 0.10 : 0.28),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -189,3 +174,4 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
     );
   }
 }
+

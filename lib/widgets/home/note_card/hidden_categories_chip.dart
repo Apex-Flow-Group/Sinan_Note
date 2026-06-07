@@ -1,10 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class HiddenCategoriesChip extends StatefulWidget {
   final Note note;
@@ -202,3 +203,4 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
     );
   }
 }
+

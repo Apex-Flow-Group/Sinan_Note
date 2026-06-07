@@ -1,10 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 
-import 'package:apex_note/widgets/editor/checklist_editor.dart';
-import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/widgets/editor/checklist_editor.dart';
+import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 
 /// Checklist editor widget with JSON-based task management
 class ChecklistEditorWidget extends StatelessWidget {
@@ -15,6 +15,7 @@ class ChecklistEditorWidget extends StatelessWidget {
   final VoidCallback onUndoRedoChanged;
   final Function(String) onChecklistTitleChanged;
   final VoidCallback onContentChanged;
+  final Function(VoidCallback addItem)? onAddItemCreated;
   final bool readOnly;
   final String? noteTitle; // ← العنوان الأصلي للنوتة
 
@@ -27,6 +28,7 @@ class ChecklistEditorWidget extends StatelessWidget {
     required this.onUndoRedoChanged,
     required this.onChecklistTitleChanged,
     required this.onContentChanged,
+    this.onAddItemCreated,
     this.readOnly = false,
     this.noteTitle,
   });
@@ -47,6 +49,7 @@ class ChecklistEditorWidget extends StatelessWidget {
         readOnly: readOnly,
         onUndoRedoControllerCreated: onUndoRedoControllerCreated,
         onUndoRedoChanged: onUndoRedoChanged,
+        onAddItemCreated: onAddItemCreated,
         onChanged: (jsonContent) {
           contentController.text = jsonContent;
           onContentChanged();

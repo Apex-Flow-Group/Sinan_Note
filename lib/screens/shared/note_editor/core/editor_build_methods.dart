@@ -1,17 +1,18 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // Re-exports — use the specific builders directly for new code.
 
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_content_builder.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_header_builder.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_toolbar_builder.dart';
-import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_content_builder.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_header_builder.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_toolbar_builder.dart';
+import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 
 export 'editor_content_builder.dart';
 export 'editor_header_builder.dart';
@@ -136,3 +137,4 @@ class EditorBuildMethods {
         scrollProgress: scrollProgress,
       );
 }
+

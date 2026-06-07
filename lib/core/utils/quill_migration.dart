@@ -1,11 +1,33 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 
-import 'package:apex_note/core/utils/text_direction_utils.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+
+/// Top-level function — تعمل في isolate منفصل عبر compute()
+/// تبني Delta JSON من محتوى النوت (نص عادي أو Delta موجود)
+String buildDeltaJsonForIsolate(String content) {
+  if (content.isEmpty) {
+    final delta = Delta()..insert('\n');
+    return jsonEncode(delta.toJson());
+  }
+
+  if (content.trimLeft().startsWith('[')) {
+    try {
+      final rawDelta = Delta.fromJson(jsonDecode(content) as List);
+      final fixed = QuillMigration.fixDeltaDirections(rawDelta);
+      return jsonEncode(fixed.toJson());
+    } catch (_) {
+      // fall through to plain text
+    }
+  }
+
+  final delta = QuillMigration.buildDeltaWithDirections(content);
+  return jsonEncode(delta.toJson());
+}
 
 /// Converts plain text or existing Delta JSON to a Quill Document
 class QuillMigration {
@@ -25,7 +47,7 @@ class QuillMigration {
     if (content.trimLeft().startsWith('[')) {
       try {
         final rawDelta = Delta.fromJson(jsonDecode(content) as List);
-        final delta = _fixDeltaDirections(rawDelta);
+        final delta = fixDeltaDirections(rawDelta);
         final doc = Document.fromDelta(delta);
         return QuillController(
           document: doc,
@@ -37,7 +59,7 @@ class QuillMigration {
     }
 
     // Plain text → Delta with per-paragraph direction
-    final delta = _buildDeltaWithDirections(content);
+    final delta = buildDeltaWithDirections(content);
     final doc = Document.fromDelta(delta);
     return QuillController(
       document: doc,
@@ -46,74 +68,131 @@ class QuillMigration {
   }
 
   /// إصلاح اتجاهات فقرات Delta محفوظة مسبقاً
-  /// يمر على كل op من نوع \n ويصحح direction/align بناءً على نص الفقرة
-  /// يُنظف أيضاً align:right المتبقية من إصدارات قديمة
-  static Delta _fixDeltaDirections(Delta original) {
+  /// القواعد:
+  /// - فقرات عادية: تأخذ اتجاهها من محتواها (Bidi)
+  /// - قوائم (list) وعناوين (header): تأخذ اتجاههم من أول بند/سطر في المجموعة
+  /// - مع Directionality(rtl): عربي=null، إنجليزي=direction:'rtl'
+  static Delta fixDeltaDirections(Delta original) {
     final ops = original.toList();
-    final fixed = Delta();
-    String paragraphText = '';
-    String lastNonEmptyDir =
-        ''; // آخر فقرة غير فارغة — لتوريث اتجاه الأسطر الفارغة
+    final result = Delta();
+
+    final lineBuffer = StringBuffer();
+    final pendingOps = <Operation>[];
+
+    // اتجاه آخر قائمة مرقمة/نقطية — يستمر حتى تنتهي القائمة
+    String? currentListType; // 'ordered', 'bullet', 'checked', 'unchecked'
+    bool? listIsLtr; // اتجاه القائمة الحالية
+
+    void flushLine(Operation newlineOp) {
+      final lineText = lineBuffer.toString();
+
+      Map<String, dynamic>? attrs;
+      if (newlineOp.attributes != null) {
+        attrs = Map<String, dynamic>.from(newlineOp.attributes!);
+        if (attrs['align'] == 'right') attrs.remove('align');
+      }
+
+      final listType = attrs?['list'] as String?;
+      final isListBlock = listType != null;
+
+      bool isLtr;
+
+      if (isListBlock) {
+        // هل هذه قائمة جديدة أم استمرار لنفس القائمة؟
+        if (currentListType != listType || listIsLtr == null) {
+          // بند أول — حدد الاتجاه من محتوى هذا البند
+          if (lineText.trim().isEmpty) {
+            isLtr = listIsLtr ?? false; // ورّث من القائمة السابقة
+          } else {
+            isLtr =
+                TextDirectionUtils.getDirection(lineText) == TextDirection.ltr;
+          }
+          currentListType = listType;
+          listIsLtr = isLtr;
+        } else {
+          // استمرار القائمة — ورّث اتجاه القائمة
+          isLtr = listIsLtr!;
+        }
+      } else {
+        // ليست قائمة — أعد ضبط حالة القائمة
+        currentListType = null;
+        listIsLtr = null;
+
+        if (lineText.trim().isEmpty) {
+          // سطر فارغ — لا نغير اتجاهه
+          for (final op in pendingOps) {
+            result.insert(op.data, op.attributes);
+          }
+          result.insert('\n', attrs?.isEmpty == true ? null : attrs);
+          lineBuffer.clear();
+          pendingOps.clear();
+          return;
+        }
+
+        isLtr = TextDirectionUtils.getDirection(lineText) == TextDirection.ltr;
+      }
+
+      // طبّق direction attribute
+      if (lineText.trim().isNotEmpty || isListBlock) {
+        if (isLtr) {
+          attrs ??= {};
+          attrs['direction'] = 'rtl'; // = LTR في سياق RTL parent
+        } else {
+          attrs?.remove('direction');
+        }
+      }
+
+      for (final op in pendingOps) {
+        result.insert(op.data, op.attributes);
+      }
+      result.insert('\n', attrs?.isEmpty == true ? null : attrs);
+
+      lineBuffer.clear();
+      pendingOps.clear();
+    }
 
     for (final op in ops) {
       if (!op.isInsert) {
-        if (op.isDelete) fixed.delete(op.length!);
-        if (op.isRetain) fixed.retain(op.length!, op.attributes);
+        if (op.isDelete) result.delete(op.length!);
+        if (op.isRetain) result.retain(op.length!, op.attributes);
         continue;
       }
 
       final data = op.data;
-
-      // embed (صورة، إلخ) — نمررها كما هي
       if (data is! String) {
-        fixed.insert(data, op.attributes);
+        pendingOps.add(op);
         continue;
       }
 
-      // تنظيف align:right من attributes النصية (إرث من إصدارات قديمة)
-      Map<String, dynamic>? cleanAttrs;
-      if (op.attributes != null) {
-        cleanAttrs = Map<String, dynamic>.from(op.attributes!);
-        if (cleanAttrs['align'] == 'right') cleanAttrs.remove('align');
-        if (cleanAttrs.isEmpty) cleanAttrs = null;
-      }
+      final parts = data.split('\n');
+      for (int i = 0; i < parts.length; i++) {
+        final text = parts[i];
+        final isLastPart = i == parts.length - 1;
 
-      // نص عادي — نقسمه على \n
-      final segments = data.split('\n');
-      for (int i = 0; i < segments.length; i++) {
-        final seg = segments[i];
-        if (seg.isNotEmpty) {
-          paragraphText += seg;
-          fixed.insert(seg, cleanAttrs);
+        if (text.isNotEmpty) {
+          lineBuffer.write(text);
+          pendingOps.add(Operation.insert(text, op.attributes));
         }
 
-        if (i < segments.length - 1) {
-          // هذا \n — نصحح اتجاه الفقرة
-          // إذا كانت الفقرة فارغة — نرث اتجاه آخر فقرة غير فارغة
-          final dirText =
-              paragraphText.isNotEmpty ? paragraphText : lastNonEmptyDir;
-          final isRtl =
-              TextDirectionUtils.getDirection(dirText) == TextDirection.rtl;
-          final attrs = Map<String, dynamic>.from(op.attributes ?? {});
-          if (isRtl) {
-            attrs.remove('direction');
-            attrs.remove('align');
-          } else {
-            attrs['direction'] = 'rtl';
-            attrs.remove('align');
-          }
-          fixed.insert('\n', attrs.isEmpty ? null : attrs);
-          if (paragraphText.isNotEmpty) lastNonEmptyDir = paragraphText;
-          paragraphText = '';
+        if (!isLastPart) {
+          flushLine(Operation.insert('\n', op.attributes));
         }
       }
     }
 
-    return fixed;
+    // ما تبقى بدون newline
+    if (pendingOps.isNotEmpty) {
+      for (final op in pendingOps) {
+        result.insert(op.data, op.attributes);
+      }
+      result.insert('\n');
+    }
+
+    return result;
   }
 
   /// بناء Delta مع اتجاه لكل فقرة
-  static Delta _buildDeltaWithDirections(String content) {
+  static Delta buildDeltaWithDirections(String content) {
     final delta = Delta();
     final paragraphs = content.split('\n');
 

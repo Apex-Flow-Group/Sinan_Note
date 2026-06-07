@@ -1,13 +1,14 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/quill_migration.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/screens/shared/note_editor/state/editor_save_manager.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/screens/shared/note_editor/state/editor_save_manager.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 /// High-level save orchestration for the note editor.
 ///
@@ -68,9 +69,26 @@ class EditorSaveOperations {
         }
       }
 
-      // Empty content → trash
+      // Empty content → trash (فقط إذا كانت ملاحظة جديدة أو المحتوى كان فارغاً أصلاً)
       if (contentToSave.trim().isEmpty && !isNewLockedNote) {
         final noteId = coordinator.savedNoteId ?? existingNote?.id;
+        // إذا كانت الملاحظة موجودة مسبقاً وتغير اللون فقط — لا نرميها
+        final isColorOnlyChange = noteId != null &&
+            coordinator.stateManager.colorIndex !=
+                coordinator.stateManager.originalColorIndex;
+        if (isColorOnlyChange) {
+          // حفظ اللون فقط بدون رمي في السلة
+          await coordinator.notesProviderRef!.updateNote(
+            existingNote!.copyWith(
+              colorIndex: coordinator.stateManager.colorIndex,
+              updatedAt: DateTime.now(),
+            ),
+            silent: false,
+          );
+          coordinator.stateManager.markClean();
+          coordinator.stateManager.isSaving = false;
+          return true;
+        }
         if (noteId != null) {
           await coordinator.notesProviderRef!.trashNote(noteId);
         }
@@ -139,6 +157,10 @@ class EditorSaveOperations {
 
     if (content.trim().isEmpty && title.trim().isEmpty) return;
 
+    final notificationService = UnifiedNotificationService();
+    final savedMessage = l10n?.noteSaved ?? '';
+    final ctx = context;
+
     final saved = await saveToDatabase(
       coordinator: coordinator,
       mode: mode,
@@ -151,13 +173,15 @@ class EditorSaveOperations {
     );
 
     if (saved && isMounted()) {
-      UnifiedNotificationService().show(
-        // ignore: use_build_context_synchronously
-        context: context,
-        message: l10n!.noteSaved,
-        type: NotificationType.success,
-        duration: const Duration(seconds: 1),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!isMounted()) return;
+        notificationService.show(
+          context: ctx,
+          message: savedMessage,
+          type: NotificationType.success,
+          duration: const Duration(seconds: 1),
+        );
+      });
     }
   }
 
@@ -238,3 +262,4 @@ class EditorSaveOperations {
     return QuillMigration.toPlainText(coordinator.quillController!);
   }
 }
+

@@ -1,27 +1,27 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
-import 'package:apex_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
-import 'package:apex_note/services/code_export_service.dart';
-import 'package:apex_note/services/code_preview_service.dart';
-import 'package:apex_note/services/svg_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/editor/markdown_viewer.dart';
-import 'package:apex_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
+import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
+import 'package:sinan_note/services/code_export_service.dart';
+import 'package:sinan_note/services/code_preview_service.dart';
+import 'package:sinan_note/services/svg_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
+import 'package:sinan_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 
 class EditorToolbarBuilder {
   static Widget build({
@@ -184,7 +184,8 @@ class EditorToolbarBuilder {
                                   minChildSize: 0.4,
                                   builder: (_, sc) => Container(
                                     decoration: BoxDecoration(
-                                      color: coordinator.getBackgroundColor(context),
+                                      color: coordinator
+                                          .getBackgroundColor(context),
                                       borderRadius: const BorderRadius.vertical(
                                           top: Radius.circular(20)),
                                     ),
@@ -192,10 +193,13 @@ class EditorToolbarBuilder {
                                       children: [
                                         const SizedBox(height: 12),
                                         Container(
-                                          width: 40, height: 4,
+                                          width: 40,
+                                          height: 4,
                                           decoration: BoxDecoration(
-                                            color: finalTextColor.withValues(alpha: 0.3),
-                                            borderRadius: BorderRadius.circular(2),
+                                            color: finalTextColor.withValues(
+                                                alpha: 0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(2),
                                           ),
                                         ),
                                         const SizedBox(height: 8),
@@ -355,7 +359,9 @@ class EditorToolbarBuilder {
                     HapticFeedback.lightImpact();
                     final qc = coordinator.quillController;
                     if (qc == null) return;
-                    final isUnderline = qc.getSelectionStyle().attributes['underline']?.value == true;
+                    final isUnderline =
+                        qc.getSelectionStyle().attributes['underline']?.value ==
+                            true;
                     qc.formatSelection(isUnderline
                         ? Attribute.clone(Attribute.underline, null)
                         : Attribute.underline);
@@ -364,7 +370,9 @@ class EditorToolbarBuilder {
                     HapticFeedback.lightImpact();
                     final qc = coordinator.quillController;
                     if (qc == null) return;
-                    final isStrike = qc.getSelectionStyle().attributes['strike']?.value == true;
+                    final isStrike =
+                        qc.getSelectionStyle().attributes['strike']?.value ==
+                            true;
                     qc.formatSelection(isStrike
                         ? Attribute.clone(Attribute.strikeThrough, null)
                         : Attribute.strikeThrough);
@@ -373,7 +381,9 @@ class EditorToolbarBuilder {
                     HapticFeedback.lightImpact();
                     final qc = coordinator.quillController;
                     if (qc == null) return;
-                    final isOrdered = qc.getSelectionStyle().attributes['list']?.value == 'ordered';
+                    final isOrdered =
+                        qc.getSelectionStyle().attributes['list']?.value ==
+                            'ordered';
                     qc.formatSelection(isOrdered
                         ? Attribute.clone(Attribute.ol, null)
                         : Attribute.ol);
@@ -382,7 +392,11 @@ class EditorToolbarBuilder {
                     HapticFeedback.lightImpact();
                     final qc = coordinator.quillController;
                     if (qc == null) return;
-                    final isQuote = qc.getSelectionStyle().attributes['blockquote']?.value == true;
+                    final isQuote = qc
+                            .getSelectionStyle()
+                            .attributes['blockquote']
+                            ?.value ==
+                        true;
                     qc.formatSelection(isQuote
                         ? Attribute.clone(Attribute.blockQuote, null)
                         : Attribute.blockQuote);
@@ -491,6 +505,12 @@ class EditorToolbarBuilder {
                       onColorPaletteTap();
                     }
                   },
+                  onAddItem: mode == NoteMode.checklist
+                      ? () {
+                          HapticFeedback.lightImpact();
+                          coordinator.checklistAddItem?.call();
+                        }
+                      : null,
                 ),
               ),
             ),

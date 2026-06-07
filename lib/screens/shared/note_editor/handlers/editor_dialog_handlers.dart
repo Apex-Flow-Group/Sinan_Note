@@ -1,22 +1,23 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/editor/editor_state_manager.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/color_picker_sheet.dart';
-import 'package:apex_note/widgets/common/rename_dialog.dart';
-import 'package:apex_note/widgets/editor/note_history_sheet.dart';
-import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
+import 'package:sinan_note/widgets/common/rename_dialog.dart';
+import 'package:sinan_note/widgets/editor/note_history_sheet.dart';
+import 'package:sinan_note/widgets/editor/reminder_picker_sheet.dart';
 
 /// Handles all dialog interactions for the note editor
 class EditorDialogHandlers {
@@ -305,3 +306,4 @@ class EditorDialogHandlers {
     }
   }
 }
+

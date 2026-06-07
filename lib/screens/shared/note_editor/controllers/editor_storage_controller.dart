@@ -1,12 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
 
 /// Handles all storage operations (save, load, encryption)
 class EditorStorageController {
@@ -37,8 +38,8 @@ class EditorStorageController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('last_font_size', fontSize);
       await prefs.setInt('last_note_color', _colorToInt(backgroundColor));
-      // ignore: empty_catches
-    } catch (e) {}
+      
+    } catch (_) {}
   }
 
   /// Authenticate user for locked notes
@@ -136,3 +137,4 @@ class EditorStorageController {
     }
   }
 }
+

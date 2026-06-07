@@ -1,6 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/exceptions.dart';
+
+
+import 'package:sinan_note/models/exceptions.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
 
 class Note {
   int? id;
@@ -48,11 +51,11 @@ class Note {
     normalizedTitle = normalize(title);
     normalizedContent = normalize(content);
   }
-  
+
   /// Normalize Arabic text for smart search
   static String normalize(String text) {
     if (text.isEmpty) return '';
-    
+
     return text
         // Remove diacritics
         .replaceAll(RegExp(r'[\u064B-\u065F]'), '')
@@ -65,12 +68,8 @@ class Note {
         .toLowerCase();
   }
 
-  /// Check if content is encrypted (iv:ciphertext pattern)
-  bool get isEncrypted {
-    if (content.isEmpty) return false;
-    final parts = content.split(':');
-    return parts.length == 2 && parts[0].length >= 16;
-  }
+  /// Check if content is encrypted (delegates to VaultService for consistent detection)
+  bool get isEncrypted => VaultService.isEncrypted(content);
 
   /// Immutable copy with updated fields
   Note copyWith({
@@ -102,10 +101,14 @@ class Note {
       colorIndex: colorIndex ?? this.colorIndex,
       isArchived: isArchived ?? this.isArchived,
       isTrashed: isTrashed ?? this.isTrashed,
-      reminderDateTime: reminderDateTime == _undefined ? this.reminderDateTime : reminderDateTime as DateTime?,
+      reminderDateTime: reminderDateTime == _undefined
+          ? this.reminderDateTime
+          : reminderDateTime as DateTime?,
       isLocked: isLocked ?? this.isLocked,
       noteType: noteType ?? this.noteType,
-      recurrenceRule: recurrenceRule == _undefined ? this.recurrenceRule : recurrenceRule as String?,
+      recurrenceRule: recurrenceRule == _undefined
+          ? this.recurrenceRule
+          : recurrenceRule as String?,
       isCompleted: isCompleted ?? this.isCompleted,
       isProfessional: isProfessional ?? this.isProfessional,
       isPinned: isPinned ?? this.isPinned,
@@ -158,7 +161,8 @@ class Note {
         content: map['content'] ?? '',
         createdAt: DateTime.parse(map['createdAt']),
         updatedAt: DateTime.parse(map['updatedAt']),
-        colorIndex: _parseColorIndex(map['colorIndex'] ?? map['colorValue'] ?? 0),
+        colorIndex:
+            _parseColorIndex(map['colorIndex'] ?? map['colorValue'] ?? 0),
         isArchived: (map['isArchived'] ?? 0) == 1,
         isTrashed: (map['isTrashed'] ?? 0) == 1,
         reminderDateTime: map['reminderDateTime'] != null
@@ -171,7 +175,8 @@ class Note {
         isProfessional: (map['isProfessional'] ?? 0) == 1,
         isPinned: (map['isPinned'] ?? 0) == 1,
         isChecklist: (map['isChecklist'] ?? 0) == 1,
-        categoryIds: map['categoryIds'] != null && (map['categoryIds'] as String).isNotEmpty
+        categoryIds: map['categoryIds'] != null &&
+                (map['categoryIds'] as String).isNotEmpty
             ? (map['categoryIds'] as String).split(',').map(int.parse).toList()
             : [],
         isHiddenFromHome: (map['isHiddenFromHome'] ?? 0) == 1,
@@ -192,3 +197,4 @@ class Note {
 }
 
 const _undefined = Object();
+

@@ -1,19 +1,18 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/services/storage/compression_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/storage/compression_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 
 class GoogleDriveMerge {
   static Future<bool> mergeWithDrive(
@@ -23,7 +22,8 @@ class GoogleDriveMerge {
     if (GoogleDriveAuth.driveApi == null) throw Exception('Not signed in');
 
     try {
-      final file = await GoogleDriveAuth.findFile('sinan_backup.gz'); // Flutter يكتب/يقرأ .gz فقط
+      final file = await GoogleDriveAuth.findFile(
+          'sinan_backup.gz'); // Flutter يكتب/يقرأ .gz فقط
       if (file == null) {
         return await uploadFn(context);
       }
@@ -52,8 +52,8 @@ class GoogleDriveMerge {
         return true;
       }
 
-      // Smart merge — استخدم المنطق الكامل من _silentMerge
-      await GoogleDriveService.silentMerge();
+      // Smart merge — استخدم المنطق الكامل من silentMerge
+      await CloudSyncGateway.silentMerge();
       AppLogger.success('Smart merge completed', 'GoogleDrive');
       return true;
     } catch (e) {
@@ -78,9 +78,8 @@ class GoogleDriveMerge {
     final dynamic jsonData = jsonDecode(json);
     await tempFile.delete();
 
-    final List<dynamic> notesList = jsonData is Map<String, dynamic>
-        ? (jsonData['notes'] ?? [])
-        : jsonData;
+    final List<dynamic> notesList =
+        jsonData is Map<String, dynamic> ? (jsonData['notes'] ?? []) : jsonData;
 
     return notesList.map((m) => Note.fromMap(m)).toList();
   }
@@ -155,3 +154,4 @@ class GoogleDriveMerge {
     );
   }
 }
+

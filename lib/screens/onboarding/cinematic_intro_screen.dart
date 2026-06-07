@@ -1,14 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:math';
-
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/screens/onboarding/tour_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-// ignore: use_key_in_widget_constructors
+import 'dart:math';import 'package:flutter/material.dart';import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart'; import 'package:sinan_note/screens/onboarding/tour_screen.dart';
 class CinematicIntroScreen extends StatefulWidget {
+  const CinematicIntroScreen({super.key});
+
   @override
   State<CinematicIntroScreen> createState() => _CinematicIntroScreenState();
 }
@@ -442,3 +437,4 @@ class _ButtonPainter extends CustomPainter {
   @override
   bool shouldRepaint(_ButtonPainter oldDelegate) => true;
 }
+

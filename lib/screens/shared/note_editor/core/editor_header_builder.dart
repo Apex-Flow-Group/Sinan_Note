@@ -1,13 +1,14 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/widgets/editor/apex_editor_header.dart';
-import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
-import 'package:apex_note/widgets/editor/editor_selection_panel.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/widgets/editor/apex_editor_header.dart';
+import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
+import 'package:sinan_note/widgets/editor/editor_selection_panel.dart';
 
 class EditorHeaderBuilder {
   static Widget build({
@@ -127,10 +128,53 @@ class EditorHeaderBuilder {
         );
 
     if (scrollProgress == null) return buildContainer(base);
-    return ValueListenableBuilder<double>(
-      valueListenable: scrollProgress,
-      builder: (_, progress, __) =>
-          buildContainer(Color.lerp(base, scrolled, progress)!),
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: ValueListenableBuilder<double>(
+        valueListenable: scrollProgress,
+        child: selectionBarActive != null
+            ? ValueListenableBuilder<bool>(
+                valueListenable: selectionBarActive,
+                builder: (_, isBarActive, __) => Stack(
+                  children: [
+                    AnimatedOpacity(
+                      opacity: isBarActive ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 120),
+                      child: buildHeaderWidget(base),
+                    ),
+                    if (isBarActive)
+                      Positioned.fill(child: buildSelectionBar(base)),
+                  ],
+                ),
+              )
+            : buildHeaderWidget(base),
+        builder: (_, progress, child) {
+          if (progress <= 0.0) return child!;
+          final bg = progress >= 1.0
+              ? scrolled
+              : Color.lerp(base, scrolled, progress)!;
+          if (selectionBarActive != null) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: selectionBarActive,
+              builder: (_, isBarActive, __) => Stack(
+                children: [
+                  AnimatedOpacity(
+                    opacity: isBarActive ? 0.0 : 1.0,
+                    duration: const Duration(milliseconds: 120),
+                    child: buildHeaderWidget(bg),
+                  ),
+                  if (isBarActive)
+                    Positioned.fill(child: buildSelectionBar(bg)),
+                ],
+              ),
+            );
+          }
+          return buildHeaderWidget(bg);
+        },
+      ),
     );
   }
 }
+

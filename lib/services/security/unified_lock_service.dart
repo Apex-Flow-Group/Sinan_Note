@@ -1,11 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:typed_data';
-
-import 'package:apex_note/services/security/biometric_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pointycastle/export.dart' as pc;
+import 'package:sinan_note/services/security/biometric_service.dart';
 
 /// نوع المصادقة المستخدم
 enum LockType { biometric, pin, none }
@@ -148,3 +147,4 @@ class UnifiedLockService {
     return pbkdf2.process(Uint8List.fromList(utf8.encode(pin)));
   }
 }
+

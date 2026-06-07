@@ -1,15 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
-
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomShareSheet {
   static void show(BuildContext context, String text,
@@ -68,23 +69,21 @@ class CustomShareSheet {
             ),
             const SizedBox(height: 24),
 
-            // Share options - horizontal row
+            // 4 options in one row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 if (!appShare)
                   _ShareOption(
                     icon: Icons.file_download_outlined,
-                    label: isArabic ? 'حفظ كملف' : 'Save File',
+                    label: isArabic ? 'حفظ' : 'Save',
                     onTap: () async {
-                      // لا نُغلق الـ sheet مبكراً — ننتظر نتيجة الحفظ أولاً
                       try {
                         final extension =
                             note != null ? _getFileExtension(note) : 'txt';
                         final fileName = subject?.isEmpty ?? true
                             ? 'note.$extension'
                             : '${subject!.replaceAll(RegExp(r'[<>:"/\|?*]'), '_')}.$extension';
-
                         final bytes = Uint8List.fromList(utf8.encode(text));
                         final result = await FilePicker.platform.saveFile(
                           dialogTitle: isArabic ? 'حفظ الملف' : 'Save File',
@@ -92,11 +91,8 @@ class CustomShareSheet {
                           type: FileType.any,
                           bytes: bytes,
                         );
-
                         if (!context.mounted) return;
-                        Navigator.pop(
-                            context); // أغلق الـ sheet بعد انتهاء العملية
-
+                        Navigator.pop(context);
                         if (result != null) {
                           UnifiedNotificationService().show(
                             context: context,
@@ -106,8 +102,6 @@ class CustomShareSheet {
                             type: NotificationType.success,
                             duration: const Duration(seconds: 2),
                           );
-                        } else {
-                          // المستخدم ألغى الحفظ — لا نعرض شيئاً
                         }
                       } catch (e) {
                         if (!context.mounted) return;
@@ -160,7 +154,17 @@ class CustomShareSheet {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+
+            // Send via Apex - full width tile
+            if (note != null) ...[
+              const SizedBox(height: 16),
+              _ApexSendTile(
+                isArabic: isArabic,
+                onTap: () => _sendViaApex(context, note, isArabic),
+                colorScheme: colorScheme,
+              ),
+            ],
+            const SizedBox(height: 4),
           ],
         ),
       ),
@@ -169,8 +173,124 @@ class CustomShareSheet {
 
   static String _getFileExtension(Note note) {
     final ext = NoteCardUtils.getFileExtension(note.content, note.noteType);
-    // strip leading dot
     return ext.startsWith('.') ? ext.substring(1) : ext;
+  }
+
+  static void _sendViaApex(
+      BuildContext context, Note note, bool isArabic) async {
+    Navigator.pop(context);
+    try {
+      final tmp = await getTemporaryDirectory();
+      final safeTitle = (note.title.isEmpty ? 'note' : note.title)
+          .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+          .trim();
+      final filePath = '${tmp.path}/$safeTitle.sinan';
+
+      await File(filePath).writeAsString(jsonEncode({
+        'title': note.title,
+        'content': note.content,
+        'noteType': note.noteType,
+        'colorIndex': note.colorIndex,
+        'createdAt': note.createdAt.toIso8601String(),
+      }));
+
+      const apexPackage = 'com.apexflow.tools.transfer';
+
+      // Use MethodChannel via the existing platform channel in main.dart
+      // We call openApexWithFile which handles FileProvider + explicit Intent
+      const channel = MethodChannel('com.apexflow.app.sinan/widget');
+      try {
+        await channel.invokeMethod('openApexWithFile', {'path': filePath});
+        return;
+      } catch (_) {
+        // Apex not installed - open Play Store
+      }
+
+      if (!context.mounted) return;
+      final storeUri = Uri.parse(
+          'https://play.google.com/store/apps/details?id=$apexPackage');
+      await launchUrl(storeUri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: isArabic ? 'فشل الإرسال عبر Apex' : 'Failed to send via Apex',
+        type: NotificationType.error,
+      );
+    }
+  }
+}
+
+class _ApexSendTile extends StatelessWidget {
+  final bool isArabic;
+  final VoidCallback onTap;
+  final ColorScheme colorScheme;
+
+  const _ApexSendTile({
+    required this.isArabic,
+    required this.onTap,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colorScheme.primaryContainer,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.send_rounded,
+                    color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isArabic
+                          ? 'إرسال عبر Apex Transfer'
+                          : 'Send via Apex Transfer',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isArabic
+                          ? 'شارك الملاحظة عبر الشبكة المحلية بدون إنترنت'
+                          : 'Share note over local network without internet',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onPrimaryContainer
+                            .withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: colorScheme.onPrimaryContainer.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

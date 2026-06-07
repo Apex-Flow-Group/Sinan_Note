@@ -1,7 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/providers/master_width_provider.dart';
 
 /// Widget يعرض Master Panel و Details Panel جنباً إلى جنب مع إمكانية تغيير الحجم
 ///
@@ -9,7 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// - Master Panel (اليسار): قائمة الملاحظات
 /// - Details Panel (اليمين): محتوى الملاحظة المختارة
 ///
-/// يمكن سحب المقبض بين اللوحتين لتغيير النسبة
+/// العرض مشترك بين جميع الشاشات عبر [MasterWidthProvider] —
+/// تغييره في أي شاشة يُطبَّق فوراً على الكل ويُحفظ تلقائياً.
 ///
 /// ✅ OPTIMIZED: يستخدم RepaintBoundary لعزل إعادة الرسم
 class MasterDetailsLayout extends StatefulWidget {
@@ -29,29 +32,8 @@ class MasterDetailsLayout extends StatefulWidget {
 }
 
 class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
-  // عرض بالـ pixel بدل ratio — لا يحتاج LayoutBuilder
-  double _masterWidth = 0;
   bool _isDragging = false;
   bool _initialized = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedWidth();
-  }
-
-  Future<void> _loadSavedWidth() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getDouble('master_panel_width');
-    if (mounted && saved != null) {
-      setState(() => _masterWidth = saved);
-    }
-  }
-
-  Future<void> _saveWidth() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('master_panel_width', _masterWidth);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +48,6 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: _MasterDetailsRow(
-        masterWidth: _masterWidth,
         isDragging: _isDragging,
         initialized: _initialized,
         initialRatio: widget.initialMasterWidthRatio,
@@ -77,27 +58,25 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
         onInit: (width) {
           if (!_initialized) {
             _initialized = true;
-            if (_masterWidth == 0) {
-              setState(
-                  () => _masterWidth = width * widget.initialMasterWidthRatio);
+            final provider =
+                Provider.of<MasterWidthProvider>(context, listen: false);
+            // إذا لم يُحفظ عرض مسبقاً، احسبه من الـ ratio
+            if (provider.width == 0) {
+              provider.setWidth(width * widget.initialMasterWidthRatio);
             }
           }
         },
         onDragStart: () => setState(() => _isDragging = true),
         onDragUpdate: (dx, totalWidth) {
-          setState(() {
-            // في RTL، الـ Row ينعكس فيصبح Master على اليمين
-            // لذلك نعكس اتجاه السحب ليتوافق مع الاتجاه المنطقي
-            final isRtl = Directionality.of(context) == TextDirection.rtl;
-            final effectiveDx = isRtl ? -dx : dx;
-            _masterWidth = (_masterWidth + effectiveDx)
-                .clamp(totalWidth * 0.2, totalWidth * 0.6);
-          });
+          final provider =
+              Provider.of<MasterWidthProvider>(context, listen: false);
+          final isRtl = Directionality.of(context) == TextDirection.rtl;
+          final effectiveDx = isRtl ? -dx : dx;
+          final newWidth = (provider.width + effectiveDx)
+              .clamp(totalWidth * 0.2, (totalWidth - 20) * 0.6);
+          provider.setWidth(newWidth);
         },
-        onDragEnd: () {
-          setState(() => _isDragging = false);
-          _saveWidth();
-        },
+        onDragEnd: () => setState(() => _isDragging = false),
       ),
     );
   }
@@ -105,7 +84,6 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
 
 // widget منفصل يحتوي LayoutBuilder مرة واحدة فقط عند التهيئة
 class _MasterDetailsRow extends StatelessWidget {
-  final double masterWidth;
   final bool isDragging;
   final bool initialized;
   final double initialRatio;
@@ -119,7 +97,6 @@ class _MasterDetailsRow extends StatelessWidget {
   final VoidCallback onDragEnd;
 
   const _MasterDetailsRow({
-    required this.masterWidth,
     required this.isDragging,
     required this.initialized,
     required this.initialRatio,
@@ -135,17 +112,22 @@ class _MasterDetailsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // LayoutBuilder فقط لمعرفة العرض الكلي — لا يُعيد بناء الأبناء
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
-        // نُخبر الـ parent بالعرض الكلي مرة واحدة فقط
+
         if (!initialized) {
           WidgetsBinding.instance
               .addPostFrameCallback((_) => onInit(totalWidth));
         }
-        final effectiveWidth =
+
+        // قراءة العرض من Provider المشترك — مع clamp لمنع الفيضان
+        final masterWidth = context.watch<MasterWidthProvider>().width;
+        final rawWidth =
             masterWidth == 0 ? totalWidth * initialRatio : masterWidth;
+        // ضمان أن العرض لا يتجاوز المساحة المتاحة (مع مراعاة الـ divider 20px)
+        final effectiveWidth =
+            rawWidth.clamp(totalWidth * 0.2, (totalWidth - 20) * 0.6);
 
         return Row(
           children: [
@@ -231,3 +213,4 @@ class _MasterDetailsRow extends StatelessWidget {
     );
   }
 }
+

@@ -1,15 +1,41 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/note_content_utils.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/services/language_detector.dart';
-import 'package:flutter/material.dart';
-
+import 'dart:convert';import 'package:flutter/material.dart';import 'package:sinan_note/core/utils/checklist_formatter.dart'; import 'package:sinan_note/core/utils/note_content_utils.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/models/note_mode.dart'; import 'package:sinan_note/services/language_detector.dart';
 class NoteCardUtils {
+  /// أنواع الملاحظات البرمجية — مصدر واحد للحقيقة
+  static const _codeNoteTypes = {
+    'python',
+    'javascript',
+    'typescript',
+    'java',
+    'dart',
+    'html',
+    'css',
+    'svg',
+    'sql',
+    'cpp',
+    'c',
+    'csharp',
+    'swift',
+    'kotlin',
+    'go',
+    'rust',
+    'php',
+    'ruby',
+    'bash',
+    'json',
+    'yaml',
+    'toml',
+    'xml',
+    'lua',
+    'r',
+    'dockerfile',
+    'code',
+    'pro',
+    'professional',
+    'markdown',
+  };
+
   static NoteMode getNoteMode(Note note) {
     if (note.isChecklist) {
       return NoteMode.checklist;
@@ -20,39 +46,7 @@ class NoteCardUtils {
       return NoteMode.code;
     }
 
-    final codeTypes = [
-      'python',
-      'javascript',
-      'typescript',
-      'java',
-      'dart',
-      'html',
-      'css',
-      'svg',
-      'sql',
-      'cpp',
-      'c',
-      'csharp',
-      'swift',
-      'kotlin',
-      'go',
-      'rust',
-      'php',
-      'ruby',
-      'bash',
-      'json',
-      'yaml',
-      'toml',
-      'xml',
-      'lua',
-      'r',
-      'dockerfile',
-      'code',
-      'pro',
-      'professional'
-    ];
-
-    if (codeTypes.contains(note.noteType)) {
+    if (_codeNoteTypes.contains(note.noteType)) {
       return NoteMode.code;
     } else {
       return NoteMode.values.firstWhere(
@@ -67,7 +61,7 @@ class NoteCardUtils {
     return hsl.withLightness((hsl.lightness - 0.15).clamp(0.0, 1.0)).toColor();
   }
 
-  static String fixNoteContent(String content, {int maxChars = 300}) =>
+  static String fixNoteContent(String content, {int? maxChars = 300}) =>
       NoteContentUtils.toDisplayText(content, maxChars: maxChars);
 
   static String getDisplayTitle(Note note) {
@@ -87,41 +81,8 @@ class NoteCardUtils {
   }
 
   static bool shouldShowExtension(String noteType) {
-    // Custom extensions always show
     if (noteType.startsWith('custom:')) return true;
-    final codeTypes = [
-      'pro',
-      'code',
-      'markdown',
-      'python',
-      'javascript',
-      'typescript',
-      'java',
-      'dart',
-      'html',
-      'css',
-      'svg',
-      'sql',
-      'cpp',
-      'c',
-      'csharp',
-      'swift',
-      'kotlin',
-      'go',
-      'rust',
-      'php',
-      'ruby',
-      'bash',
-      'json',
-      'yaml',
-      'toml',
-      'xml',
-      'lua',
-      'r',
-      'dockerfile',
-      'professional'
-    ];
-    return codeTypes.contains(noteType);
+    return _codeNoteTypes.contains(noteType);
   }
 
   static String getFileExtension(String content, String noteType) {
@@ -253,3 +214,4 @@ class NoteCardUtils {
     );
   }
 }
+

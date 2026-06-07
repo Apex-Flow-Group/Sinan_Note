@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 /// مكون مشترك لاختيار لون النوتة — Bottom Sheet
 ///
@@ -188,3 +189,4 @@ class _ColorCircle extends StatelessWidget {
     );
   }
 }
+

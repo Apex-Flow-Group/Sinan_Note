@@ -1,11 +1,18 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void initializeTestEnvironment() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  // تهيئة SQLite لبيئة الاختبار (Windows/Linux/macOS)
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+
   SharedPreferences.setMockInitialValues({});
 
   final messenger =
@@ -78,3 +85,4 @@ void initializeTestEnvironment() {
     },
   );
 }
+

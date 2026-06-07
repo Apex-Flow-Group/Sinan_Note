@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 class NoteVersion {
   int id;
@@ -27,3 +27,7 @@ class NoteVersion {
     this.noteType = 'simple',
   }) : id = 0;
 }
+
+
+
+

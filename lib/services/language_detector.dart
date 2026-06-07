@@ -1,11 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 /// Language detection service with performance optimizations
-/// 
+///
 /// ⚡ PERFORMANCE NOTE:
 /// For large code files (>2000 chars), this function samples the first 2000 characters.
 /// For real-time detection in UI, use with compute() to avoid blocking:
-/// 
+///
 /// ```dart
 /// final detected = await compute(LanguageDetector.detectLanguage, code);
 /// ```
@@ -43,9 +43,9 @@ class LanguageDetector {
     return _extensions[language] ?? '.txt';
   }
 
-  static String getExtensionForLanguage(String language) {
-    return _extensions[language] ?? '.txt';
-  }
+  /// Alias for [getFileExtension] — kept for API compatibility.
+  static String getExtensionForLanguage(String language) =>
+      getFileExtension(language);
 
   static String? getLanguageFromExtension(String extension) {
     final normalizedExt = extension.startsWith('.') ? extension : '.$extension';
@@ -66,17 +66,31 @@ class LanguageDetector {
     // Strong signatures - if found, language is certain
     if (sample.contains('<?php')) return 'PHP';
     if (sample.contains('<?xml')) return 'XML';
-    if (RegExp(r'<!DOCTYPE\s+html>', caseSensitive: false).hasMatch(sample)) return 'HTML';
-    if (sample.startsWith('#!/bin/bash') || sample.startsWith('#!/bin/sh')) return 'Bash';
-    if (sample.contains('<svg') || sample.contains('xmlns="http://www.w3.org/2000/svg"')) return 'SVG';
-    if (sample.startsWith('FROM ') || sample.contains('\nFROM ')) return 'Dockerfile';
-    if (RegExp(r'^\[\w+\]', multiLine: true).hasMatch(sample) && sample.contains(' = ')) return 'TOML';
+    if (RegExp(r'<!DOCTYPE\s+html>', caseSensitive: false).hasMatch(sample)) {
+      return 'HTML';
+    }
+    if (sample.startsWith('#!/bin/bash') || sample.startsWith('#!/bin/sh')) {
+      return 'Bash';
+    }
+    if (sample.contains('<svg') ||
+        sample.contains('xmlns="http://www.w3.org/2000/svg"')) {
+      return 'SVG';
+    }
+    if (sample.startsWith('FROM ') || sample.contains('\nFROM ')) {
+      return 'Dockerfile';
+    }
+    if (RegExp(r'^\[\w+\]', multiLine: true).hasMatch(sample) &&
+        sample.contains(' = ')) {
+      return 'TOML';
+    }
 
     final patterns = <String, List<MapEntry<RegExp, int>>>{
       'Dart': [
         MapEntry(RegExp(r'import\s+.package:flutter'), 15),
         MapEntry(RegExp(r'import\s+.package:'), 12),
-        MapEntry(RegExp(r'class\s+\w+\s+extends\s+(StatelessWidget|StatefulWidget)'), 15),
+        MapEntry(
+            RegExp(r'class\s+\w+\s+extends\s+(StatelessWidget|StatefulWidget)'),
+            15),
         MapEntry(RegExp(r'Widget\s+build\s*\('), 12),
         MapEntry(RegExp(r'setState\s*\(\s*\(\s*\)\s*\{'), 10),
         MapEntry(RegExp(r'void\s+main\s*\(\s*\)\s*\{'), 8),
@@ -229,7 +243,7 @@ class LanguageDetector {
     // If top score is significantly higher, return it
     var sortedScores = scores.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    
+
     if (sortedScores.length > 1) {
       // Require clear winner (at least 50% more than second)
       if (sortedScores[0].value < sortedScores[1].value * 1.5) {
@@ -240,3 +254,7 @@ class LanguageDetector {
     return sortedScores.first.key;
   }
 }
+
+
+
+

@@ -1,11 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 class DesktopSelectionActions extends StatelessWidget {
   final Set<int> selectedIds;
@@ -51,23 +52,9 @@ class DesktopSelectionActions extends StatelessWidget {
     for (final id in ids) {
       final note = notesProvider.notes.firstWhere((n) => n.id == id);
       notesToRestore.add(note);
-      await notesProvider.updateNote(Note(
-        id: note.id,
-        title: note.title,
-        content: note.content,
-        createdAt: note.createdAt,
-        updatedAt: DateTime.now(),
-        colorIndex: note.colorIndex,
-        isArchived: note.isArchived,
-        isTrashed: note.isTrashed,
-        reminderDateTime: note.reminderDateTime,
-        isLocked: note.isLocked,
-        noteType: note.noteType,
-        recurrenceRule: note.recurrenceRule,
-        isCompleted: note.isCompleted,
-        isProfessional: note.isProfessional,
+      await notesProvider.updateNote(note.copyWith(
         isPinned: !note.isPinned,
-        isChecklist: note.isChecklist,
+        updatedAt: DateTime.now(),
       ));
     }
 
@@ -125,3 +112,4 @@ class DesktopSelectionActions extends StatelessWidget {
     }
   }
 }
+

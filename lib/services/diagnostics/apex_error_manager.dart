@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
+
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
 
 /// مدير الأخطاء - واجهة بسيطة للاستخدام مع تغذية راجعة للمستخدم
 class ApexErrorManager {
@@ -85,3 +86,4 @@ class ApexErrorManager {
     }
   }
 }
+

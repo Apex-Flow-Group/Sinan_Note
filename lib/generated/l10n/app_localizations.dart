@@ -2720,6 +2720,18 @@ abstract class AppLocalizations {
   /// **'Task...'**
   String get checklistItemHint;
 
+  /// No description provided for @addItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get addItem;
+
+  /// No description provided for @itemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Item deleted'**
+  String get itemDeleted;
+
   /// No description provided for @sort.
   ///
   /// In en, this message translates to:
@@ -2795,7 +2807,7 @@ abstract class AppLocalizations {
   /// No description provided for @sinanAiNet.
   ///
   /// In en, this message translates to:
-  /// **'SinanAi.net — Emerging Apps'**
+  /// **'SinanAi.net — Innovative Apps'**
   String get sinanAiNet;
 
   /// No description provided for @importantLinks.
@@ -4123,6 +4135,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use fingerprint or face recognition'**
   String get unlockWithBiometricDesc;
+
+  /// No description provided for @redo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get redo;
+
+  /// No description provided for @bold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get bold;
+
+  /// No description provided for @italic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get italic;
+
+  /// No description provided for @underline.
+  ///
+  /// In en, this message translates to:
+  /// **'Underline'**
+  String get underline;
+
+  /// No description provided for @strikethrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get strikethrough;
+
+  /// No description provided for @rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get selectAll;
+
+  /// No description provided for @noteDuplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Note duplicated'**
+  String get noteDuplicated;
+
+  /// No description provided for @duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicate;
+
+  /// No description provided for @toggleView.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle View'**
+  String get toggleView;
+
+  /// No description provided for @readingMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Mode'**
+  String get readingMode;
+
+  /// No description provided for @saveReadingPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Position'**
+  String get saveReadingPosition;
+
+  /// No description provided for @readingPositionSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Position saved'**
+  String get readingPositionSaved;
+
+  /// No description provided for @readingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get readingProgress;
+
+  /// No description provided for @comfortableFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable font'**
+  String get comfortableFont;
 }
 
 class _AppLocalizationsDelegate

@@ -1,122 +1,31 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:apex_note/controllers/editor/editor_state_manager.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/constants/app_text_styles.dart';
-import 'package:apex_note/core/utils/apex_smart_controller.dart';
-import 'package:apex_note/core/utils/bidi_cursor_middleware.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
-import 'package:apex_note/core/utils/text_direction_utils.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/controllers/editor_storage_controller.dart';
-import 'package:apex_note/screens/shared/note_editor/utils/note_editor_utils.dart';
-import 'package:apex_note/services/clipboard_guard.dart';
-import 'package:apex_note/services/content_guard.dart';
-import 'package:apex_note/services/language_detector.dart';
-import 'package:apex_note/widgets/editor/checklist_undo_redo_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:provider/provider.dart';
-
-/// دالة تعمل في isolate منفصل — تبني Delta JSON من النص
-/// لا تعتمد على أي Flutter widgets أو BuildContext
-String _buildDeltaJsonInIsolate(String content) {
-  if (content.isEmpty) {
-    final delta = Delta()..insert('\n');
-    return jsonEncode(delta.toJson());
-  }
-
-  // Delta JSON موجود مسبقاً — أصلح الاتجاهات فقط
-  if (content.trimLeft().startsWith('[')) {
-    try {
-      final rawDelta = Delta.fromJson(jsonDecode(content) as List);
-      final fixed = _fixDeltaDirectionsIsolate(rawDelta);
-      return jsonEncode(fixed.toJson());
-    } catch (_) {
-      // fall through
-    }
-  }
-
-  // نص عادي → Delta
-  final delta = _buildDeltaWithDirectionsIsolate(content);
-  return jsonEncode(delta.toJson());
-}
-
-/// نسخة من _fixDeltaDirections تعمل في isolate (بدون Flutter imports)
-Delta _fixDeltaDirectionsIsolate(Delta original) {
-  final ops = original.toList();
-  final fixed = Delta();
-  String paragraphText = '';
-  String lastNonEmptyDir = '';
-
-  for (final op in ops) {
-    if (!op.isInsert) {
-      if (op.isDelete) fixed.delete(op.length!);
-      if (op.isRetain) fixed.retain(op.length!, op.attributes);
-      continue;
-    }
-    final data = op.data;
-    if (data is! String) {
-      fixed.insert(data, op.attributes);
-      continue;
-    }
-    Map<String, dynamic>? cleanAttrs;
-    if (op.attributes != null) {
-      cleanAttrs = Map<String, dynamic>.from(op.attributes!);
-      if (cleanAttrs['align'] == 'right') cleanAttrs.remove('align');
-      if (cleanAttrs.isEmpty) cleanAttrs = null;
-    }
-    final segments = data.split('\n');
-    for (int i = 0; i < segments.length; i++) {
-      final seg = segments[i];
-      if (seg.isNotEmpty) {
-        paragraphText += seg;
-        fixed.insert(seg, cleanAttrs);
-      }
-      if (i < segments.length - 1) {
-        final dirText =
-            paragraphText.isNotEmpty ? paragraphText : lastNonEmptyDir;
-        final isRtl =
-            TextDirectionUtils.getDirection(dirText) == TextDirection.rtl;
-        final attrs = Map<String, dynamic>.from(op.attributes ?? {});
-        if (isRtl) {
-          attrs.remove('direction');
-          attrs.remove('align');
-        } else {
-          attrs['direction'] = 'rtl';
-          attrs.remove('align');
-        }
-        fixed.insert('\n', attrs.isEmpty ? null : attrs);
-        if (paragraphText.isNotEmpty) lastNonEmptyDir = paragraphText;
-        paragraphText = '';
-      }
-    }
-  }
-  return fixed;
-}
-
-/// نسخة من _buildDeltaWithDirections تعمل في isolate
-Delta _buildDeltaWithDirectionsIsolate(String content) {
-  final delta = Delta();
-  final paragraphs = content.split('\n');
-  for (int i = 0; i < paragraphs.length; i++) {
-    final paragraph = paragraphs[i];
-    final isRtl =
-        TextDirectionUtils.getDirection(paragraph) == TextDirection.rtl;
-    if (paragraph.isNotEmpty) delta.insert(paragraph);
-    delta.insert('\n', isRtl ? null : {'direction': 'rtl'});
-  }
-  return delta;
-}
+import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/core/utils/apex_smart_controller.dart';
+import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/controllers/editor_storage_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/utils/note_editor_utils.dart';
+import 'package:sinan_note/services/clipboard_guard.dart';
+import 'package:sinan_note/services/content_guard.dart';
+import 'package:sinan_note/services/language_detector.dart';
+import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 
 /// Central coordinator for all editor operations
 class EditorCoordinator {
@@ -129,6 +38,7 @@ class EditorCoordinator {
   final UndoHistoryController undoController = UndoHistoryController();
   final UndoHistoryController codeUndoController = UndoHistoryController();
   ChecklistUndoRedoController? checklistUndoRedo;
+  VoidCallback? checklistAddItem;
   final FocusNode textFieldFocusNode = FocusNode();
   final FocusNode codeFieldFocusNode = FocusNode();
 
@@ -252,7 +162,7 @@ class EditorCoordinator {
     // نوتة فارغة — لا شيء لبناؤه
     if (initialText.isEmpty) return;
 
-    final deltaJson = await compute(_buildDeltaJsonInIsolate, initialText);
+    final deltaJson = await compute(buildDeltaJsonForIsolate, initialText);
 
     final delta = Delta.fromJson(jsonDecode(deltaJson) as List);
     final doc = Document.fromDelta(delta);

@@ -1,17 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/note_services/note_batch_operations_service.dart';
-import 'package:apex_note/services/note_services/note_security_service.dart';
-import 'package:apex_note/services/note_services/note_side_effect_service.dart';
-import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/version_control_service.dart';
-import 'package:flutter/widgets.dart';
-
+import 'dart:async';import 'package:flutter/widgets.dart';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/models/note_mode.dart'; import 'package:sinan_note/services/note_services/note_batch_operations_service.dart'; import 'package:sinan_note/services/note_services/note_security_service.dart'; import 'package:sinan_note/services/note_services/note_side_effect_service.dart'; import 'package:sinan_note/services/note_services/note_state_service.dart'; import 'package:sinan_note/services/security/vault_service.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/version_control_service.dart';
 class NotesProvider extends ChangeNotifier {
   late final NoteStateService _stateService;
   late final SqliteDatabaseService _dbService;
@@ -37,6 +26,7 @@ class NotesProvider extends ChangeNotifier {
   }
 
   bool get isInitialDataLoaded => _stateService.isInitialDataLoaded;
+  NoteStateService get stateService => _stateService;
   List<Note> get activeNotes => _stateService.activeNotes;
   List<Note> get notes => activeNotes;
   List<Note> get archivedNotes => _stateService.archivedNotes;
@@ -79,6 +69,9 @@ class NotesProvider extends ChangeNotifier {
     }
   }
 
+  /// تحميل الملاحظات في الخلفية عند أول تشغيل.
+  /// يستخدم fire-and-forget لعدم تأخير الـ UI.
+  /// للتحميل المتزامن استخدم [refreshAllNotes] مباشرة.
   Future<void> loadNotes({bool force = false}) async {
     if (_isLoading) return;
     if (!force && _stateService.isInitialDataLoaded) return;
@@ -94,11 +87,94 @@ class NotesProvider extends ChangeNotifier {
     return activeNotes;
   }
 
-  Future<void> fetchNotes() async => await refreshAllNotes();
   Future<void> fetchTrashedNotes() async => await refreshAllNotes();
   Future<void> fetchArchivedNotes() async => await refreshAllNotes();
 
   List<Note> searchNotes(String query) => _stateService.searchNotes(query);
+
+  // ─── Factory Methods ──────────────────────────────────────────────────────
+
+  /// ينشئ ملاحظة افتراضية جاهزة للمحرر — سيد القصر يبني، الأميرة تطلب فقط.
+  ///
+  /// [mode]          : نوع الملاحظة
+  /// [colorIndex]    : لون الملاحظة (من SettingsProvider.getDefaultColorIndex)
+  /// [categoryIds]   : تصنيفات مختارة مسبقاً (اختياري)
+  Note createDefaultNote({
+    required NoteMode mode,
+    required int colorIndex,
+    List<int>? categoryIds,
+  }) {
+    return Note(
+      title: '',
+      content: '',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: colorIndex,
+      noteType: mode.name,
+      isChecklist: mode == NoteMode.checklist,
+      isProfessional: mode == NoteMode.code,
+      categoryIds: categoryIds ?? [],
+    );
+  }
+
+  /// ينشئ ملاحظة من نص مشارك (Share Intent) — كود مستورد من خارج التطبيق.
+  Note createSharedNote({
+    required String title,
+    required String content,
+    required int colorIndex,
+  }) {
+    return Note(
+      title: title,
+      content: content,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: colorIndex,
+      noteType: NoteMode.code.name,
+    );
+  }
+
+  ///
+  /// يتولى تحديد [noteType] و [initialContent] بناءً على [mode].
+  Note createDefaultLockedNote({required NoteMode mode}) {
+    final String noteType;
+    final bool isChecklist;
+    final bool isProfessional;
+    final String initialContent;
+
+    switch (mode) {
+      case NoteMode.checklist:
+        noteType = 'checklist';
+        isChecklist = true;
+        isProfessional = false;
+        initialContent = '{"title":"","items":[]}';
+        break;
+      case NoteMode.code:
+        noteType = 'code';
+        isChecklist = false;
+        isProfessional = true;
+        initialContent = '';
+        break;
+      default:
+        noteType = 'simple';
+        isChecklist = false;
+        isProfessional = false;
+        initialContent = '';
+    }
+
+    return Note(
+      title: '',
+      content: initialContent,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      colorIndex: 0,
+      noteType: noteType,
+      isLocked: true,
+      isChecklist: isChecklist,
+      isProfessional: isProfessional,
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   Future<int> addNote(Note note) async {
     Note noteToInsert = note;
@@ -120,8 +196,6 @@ class NotesProvider extends ChangeNotifier {
     notifyListeners();
     return id;
   }
-
-  Future<int> insertNote(Note note) async => addNote(note);
 
   Future<int> updateNote(Note note, {bool silent = false}) async {
     Note noteToUpdate = note;
@@ -160,16 +234,27 @@ class NotesProvider extends ChangeNotifier {
   Future<int> archiveNote(int id) async {
     await _sideEffectService.cancelReminderSideEffect(id);
     final result = await _dbService.archiveNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) _stateService.updateNote(note);
+    // copyWith على الملاحظة الموجودة في الـ state — بدلاً من قراءة DB إضافية
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isArchived: true,
+        updatedAt: DateTime.now(),
+      ));
+    }
     notifyListeners();
     return result;
   }
 
   Future<int> unarchiveNote(int id) async {
     final result = await _dbService.unarchiveNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) _stateService.updateNote(note);
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isArchived: false,
+        updatedAt: DateTime.now(),
+      ));
+    }
     notifyListeners();
     return result;
   }
@@ -177,17 +262,26 @@ class NotesProvider extends ChangeNotifier {
   Future<int> trashNote(int id) async {
     await _sideEffectService.cancelReminderSideEffect(id);
     final result = await _dbService.trashNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) _stateService.updateNote(note);
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isTrashed: true,
+        updatedAt: DateTime.now(),
+      ));
+    }
     notifyListeners();
     return result;
   }
 
   Future<int> restoreNote(int id) async {
     final result = await _dbService.restoreNote(id);
-    final note = await _dbService.getNoteById(id);
-    if (note != null) {
-      _stateService.updateNote(note);
+    final existing = _stateService.getNoteById(id);
+    if (existing != null) {
+      _stateService.updateNote(existing.copyWith(
+        isTrashed: false,
+        isArchived: false,
+        updatedAt: DateTime.now(),
+      ));
       _stateService.sortNotes(immediate: true);
     }
     notifyListeners();
@@ -202,6 +296,8 @@ class NotesProvider extends ChangeNotifier {
       return await addNote(note);
     }
   }
+
+  // insertNote حُذف — استخدم addNote مباشرة (P4)
 
   Future<void> convertNoteType(
     int id, {
@@ -233,29 +329,21 @@ class NotesProvider extends ChangeNotifier {
     _stateService.updateNote(updated);
     _refreshStamp++;
     notifyListeners();
-    await refreshAllNotes();
+    // لا حاجة لـ refreshAllNotes() — _stateService.updateNote() يُحدّث الـ state مباشرة
   }
 
-  Future<int> duplicateNote(int id) async {
+  Future<int> duplicateNote(int id, {String copyLabel = 'Copy'}) async {
     final note = await _dbService.getNoteById(id);
-    if (note == null) {
-      return -1;
-    }
+    if (note == null) return -1;
 
-    // Create completely new note without ID
-    final copy = Note(
-      title: note.title.isEmpty ? 'Copy' : '${note.title} - Copy',
-      content: note.content,
+    final copy = note.copyWith(
+      id: null,
+      title: note.title.isEmpty ? copyLabel : '${note.title} - $copyLabel',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-      colorIndex: note.colorIndex,
-      noteType: note.noteType,
-      isChecklist: note.isChecklist,
-      isProfessional: note.isProfessional,
-      isLocked: note.isLocked,
-      categoryIds: note.categoryIds,
-      reminderDateTime: note.reminderDateTime,
-      recurrenceRule: note.recurrenceRule,
+      isPinned: false, // النسخة لا تُثبَّت تلقائياً
+      reminderDateTime: null, // التذكير لا يُنسخ
+      recurrenceRule: null,
     );
 
     final newId = await addNote(copy);
@@ -319,3 +407,4 @@ class NotesProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+

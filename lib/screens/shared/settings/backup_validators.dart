@@ -1,7 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:io';
+
+
 
 class BackupValidators {
   static const int _maxFileSizeBytes = 100 * 1024 * 1024; // 100 MB
@@ -51,3 +53,4 @@ class BackupValidators {
         fileName.endsWith('.db');
   }
 }
+

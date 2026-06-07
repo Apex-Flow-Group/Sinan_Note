@@ -1,12 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 📋 NOTE STATE SERVICE — اختبارات شاملة تشمل تسريب المزامنة
 
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/note_services/note_state_service.dart';
+
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/note_services/note_state_service.dart';
 import '../../test_setup.dart';
-
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -26,11 +25,41 @@ void main() {
   group('NoteStateService — Filtering', () {
     test('activeNotes يستثني المحذوفة والمؤرشفة والمقفلة', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Active', content: '', createdAt: now, updatedAt: now),
-        Note(id: 2, title: 'Archived', content: '', createdAt: now, updatedAt: now, isArchived: true),
-        Note(id: 3, title: 'Trashed', content: '', createdAt: now, updatedAt: now, isTrashed: true),
-        Note(id: 4, title: 'Locked', content: '', createdAt: now, updatedAt: now, isLocked: true),
-        Note(id: 5, title: 'Archived+Trashed', content: '', createdAt: now, updatedAt: now, isArchived: true, isTrashed: true),
+        Note(
+            id: 1,
+            title: 'Active',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+        Note(
+            id: 2,
+            title: 'Archived',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isArchived: true),
+        Note(
+            id: 3,
+            title: 'Trashed',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isTrashed: true),
+        Note(
+            id: 4,
+            title: 'Locked',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isLocked: true),
+        Note(
+            id: 5,
+            title: 'Archived+Trashed',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isArchived: true,
+            isTrashed: true),
       ]);
       expect(service.activeNotes.length, 1);
       expect(service.activeNotes.first.id, 1);
@@ -38,9 +67,29 @@ void main() {
 
     test('archivedNotes لا تشمل المحذوفة أو المقفلة', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Archived', content: '', createdAt: now, updatedAt: now, isArchived: true),
-        Note(id: 2, title: 'Archived+Trashed', content: '', createdAt: now, updatedAt: now, isArchived: true, isTrashed: true),
-        Note(id: 3, title: 'Archived+Locked', content: '', createdAt: now, updatedAt: now, isArchived: true, isLocked: true),
+        Note(
+            id: 1,
+            title: 'Archived',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isArchived: true),
+        Note(
+            id: 2,
+            title: 'Archived+Trashed',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isArchived: true,
+            isTrashed: true),
+        Note(
+            id: 3,
+            title: 'Archived+Locked',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isArchived: true,
+            isLocked: true),
       ]);
       expect(service.archivedNotes.length, 1);
       expect(service.archivedNotes.first.id, 1);
@@ -48,8 +97,21 @@ void main() {
 
     test('trashedNotes لا تشمل المقفلة', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Trashed', content: '', createdAt: now, updatedAt: now, isTrashed: true),
-        Note(id: 2, title: 'Trashed+Locked', content: '', createdAt: now, updatedAt: now, isTrashed: true, isLocked: true),
+        Note(
+            id: 1,
+            title: 'Trashed',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isTrashed: true),
+        Note(
+            id: 2,
+            title: 'Trashed+Locked',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isTrashed: true,
+            isLocked: true),
       ]);
       expect(service.trashedNotes.length, 1);
       expect(service.trashedNotes.first.id, 1);
@@ -59,10 +121,36 @@ void main() {
       final future = now.add(const Duration(days: 1));
       final past = now.subtract(const Duration(days: 1));
       service.updateAllNotes([
-        Note(id: 1, title: 'Future', content: '', createdAt: now, updatedAt: now, reminderDateTime: future),
-        Note(id: 2, title: 'Past', content: '', createdAt: now, updatedAt: now, reminderDateTime: past),
-        Note(id: 3, title: 'Locked+Future', content: '', createdAt: now, updatedAt: now, reminderDateTime: future, isLocked: true),
-        Note(id: 4, title: 'Trashed+Future', content: '', createdAt: now, updatedAt: now, reminderDateTime: future, isTrashed: true),
+        Note(
+            id: 1,
+            title: 'Future',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            reminderDateTime: future),
+        Note(
+            id: 2,
+            title: 'Past',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            reminderDateTime: past),
+        Note(
+            id: 3,
+            title: 'Locked+Future',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            reminderDateTime: future,
+            isLocked: true),
+        Note(
+            id: 4,
+            title: 'Trashed+Future',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            reminderDateTime: future,
+            isTrashed: true),
       ]);
       expect(service.reminderNotes.length, 1);
       expect(service.reminderNotes.first.id, 1);
@@ -75,11 +163,21 @@ void main() {
   group('NoteStateService — Cache Invalidation', () {
     test('الكاش يُحدَّث بعد updateNote', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Original', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Original',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
       ]);
       final before = service.activeNotes.first.title;
 
-      service.updateNote(Note(id: 1, title: 'Updated', content: '', createdAt: now, updatedAt: now));
+      service.updateNote(Note(
+          id: 1,
+          title: 'Updated',
+          content: '',
+          createdAt: now,
+          updatedAt: now));
       final after = service.activeNotes.first.title;
 
       expect(before, 'Original');
@@ -123,8 +221,20 @@ void main() {
   group('NoteStateService — Sorting', () {
     test('المثبتة تأتي أولاً دائماً', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Regular', content: '', createdAt: now, updatedAt: now, isPinned: false),
-        Note(id: 2, title: 'Pinned', content: '', createdAt: now, updatedAt: now.add(const Duration(seconds: -1)), isPinned: true),
+        Note(
+            id: 1,
+            title: 'Regular',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isPinned: false),
+        Note(
+            id: 2,
+            title: 'Pinned',
+            content: '',
+            createdAt: now,
+            updatedAt: now.add(const Duration(seconds: -1)),
+            isPinned: true),
       ]);
       // المثبتة أقدم لكن يجب أن تأتي أولاً
       expect(service.activeNotes.first.id, 2);
@@ -132,17 +242,39 @@ void main() {
 
     test('بين المثبتات: الأحدث أولاً', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Pinned Old', content: '', createdAt: now, updatedAt: now.subtract(const Duration(hours: 1)), isPinned: true),
-        Note(id: 2, title: 'Pinned New', content: '', createdAt: now, updatedAt: now, isPinned: true),
+        Note(
+            id: 1,
+            title: 'Pinned Old',
+            content: '',
+            createdAt: now,
+            updatedAt: now.subtract(const Duration(hours: 1)),
+            isPinned: true),
+        Note(
+            id: 2,
+            title: 'Pinned New',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isPinned: true),
       ]);
       expect(service.activeNotes.first.id, 2);
     });
 
     test('بين العادية: الأحدث أولاً', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Old', content: '', createdAt: now, updatedAt: now.subtract(const Duration(hours: 2))),
+        Note(
+            id: 1,
+            title: 'Old',
+            content: '',
+            createdAt: now,
+            updatedAt: now.subtract(const Duration(hours: 2))),
         Note(id: 2, title: 'New', content: '', createdAt: now, updatedAt: now),
-        Note(id: 3, title: 'Middle', content: '', createdAt: now, updatedAt: now.subtract(const Duration(hours: 1))),
+        Note(
+            id: 3,
+            title: 'Middle',
+            content: '',
+            createdAt: now,
+            updatedAt: now.subtract(const Duration(hours: 1))),
       ]);
       final ids = service.activeNotes.map((n) => n.id).toList();
       expect(ids, [2, 3, 1]);
@@ -156,7 +288,13 @@ void main() {
     test('البحث بنص فارغ يُرجع كل الملاحظات النشطة', () {
       service.updateAllNotes([
         Note(id: 1, title: 'A', content: '', createdAt: now, updatedAt: now),
-        Note(id: 2, title: 'B', content: '', createdAt: now, updatedAt: now, isTrashed: true),
+        Note(
+            id: 2,
+            title: 'B',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isTrashed: true),
       ]);
       expect(service.searchNotes('').length, 1);
     });
@@ -170,8 +308,18 @@ void main() {
 
     test('البحث في العنوان والمحتوى', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Flutter', content: 'Dart code', createdAt: now, updatedAt: now),
-        Note(id: 2, title: 'Python', content: 'Flask framework', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Flutter',
+            content: 'Dart code',
+            createdAt: now,
+            updatedAt: now),
+        Note(
+            id: 2,
+            title: 'Python',
+            content: 'Flask framework',
+            createdAt: now,
+            updatedAt: now),
       ]);
       expect(service.searchNotes('Dart').length, 1);
       expect(service.searchNotes('Flask').length, 1);
@@ -180,7 +328,12 @@ void main() {
 
     test('البحث غير حساس لحالة الأحرف', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Flutter Development', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Flutter Development',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
       ]);
       expect(service.searchNotes('flutter').length, 1);
       expect(service.searchNotes('FLUTTER').length, 1);
@@ -189,25 +342,87 @@ void main() {
 
     test('البحث لا يُرجع أكثر من 100 نتيجة', () {
       service.updateAllNotes(
-        List.generate(200, (i) => Note(
-          id: i + 1,
-          title: 'Note $i',
-          content: 'search_term',
-          createdAt: now,
-          updatedAt: now,
-        )),
+        List.generate(
+            200,
+            (i) => Note(
+                  id: i + 1,
+                  title: 'Note $i',
+                  content: 'search_term',
+                  createdAt: now,
+                  updatedAt: now,
+                )),
       );
       expect(service.searchNotes('search_term').length, 100);
     });
 
     test('البحث لا يُرجع ملاحظات مقفلة', () {
       service.updateAllNotes([
-        Note(id: 1, title: 'Public', content: 'secret', createdAt: now, updatedAt: now),
-        Note(id: 2, title: 'Locked', content: 'secret', createdAt: now, updatedAt: now, isLocked: true),
+        Note(
+            id: 1,
+            title: 'Public',
+            content: 'secret',
+            createdAt: now,
+            updatedAt: now),
+        Note(
+            id: 2,
+            title: 'Locked',
+            content: 'secret',
+            createdAt: now,
+            updatedAt: now,
+            isLocked: true),
       ]);
       final results = service.searchNotes('secret');
       expect(results.length, 1);
       expect(results.first.id, 1);
+    });
+
+    test('البحث يتجاهل التشكيل — يجد "أهلاً" بكتابة "اهلا"', () {
+      service.updateAllNotes([
+        Note(
+            id: 1,
+            title: 'أهلاً وسهلاً',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+      ]);
+      expect(service.searchNotes('اهلا').length, 1);
+      expect(service.searchNotes('أهلاً').length, 1);
+    });
+
+    test('البحث يوحّد الألف — يجد "إنجاز" بكتابة "انجاز"', () {
+      service.updateAllNotes([
+        Note(
+            id: 1,
+            title: 'إنجاز رائع',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+      ]);
+      expect(service.searchNotes('انجاز').length, 1);
+    });
+
+    test('البحث يوحّد التاء المربوطة — يجد "مدرسة" بكتابة "مدرسه"', () {
+      service.updateAllNotes([
+        Note(
+            id: 1,
+            title: 'مدرسة النجاح',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+      ]);
+      expect(service.searchNotes('مدرسه').length, 1);
+    });
+
+    test('البحث في المحتوى المطبّع', () {
+      service.updateAllNotes([
+        Note(
+            id: 1,
+            title: '',
+            content: 'مُحتوى مُهِمّ',
+            createdAt: now,
+            updatedAt: now),
+      ]);
+      expect(service.searchNotes('محتوى مهم').length, 1);
     });
   });
 
@@ -222,7 +437,12 @@ void main() {
         Note(id: 1, title: 'Test', content: '', createdAt: now, updatedAt: now),
       ]);
       service.updateNote(
-        Note(id: 1, title: 'Updated', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Updated',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
       );
       // انتظر أكثر من 5 ثوانٍ لا يمكن في الاختبار، لكن نتحقق أن لا استثناء
       await Future.delayed(const Duration(milliseconds: 100));
@@ -234,7 +454,8 @@ void main() {
         Note(id: 1, title: 'Test', content: '', createdAt: now, updatedAt: now),
       ]);
       // تشغيل عمليات تُنشئ timers
-      service.updateNote(Note(id: 1, title: 'U', content: '', createdAt: now, updatedAt: now));
+      service.updateNote(
+          Note(id: 1, title: 'U', content: '', createdAt: now, updatedAt: now));
       service.sortNotes(); // debounced timer
       expect(() => service.dispose(), returnsNormally);
     });
@@ -246,13 +467,23 @@ void main() {
 
     test('عمليات متزامنة على نفس الملاحظة لا تُسبب تعارضاً', () async {
       service.updateAllNotes([
-        Note(id: 1, title: 'Original', content: '', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Original',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
       ]);
 
       // تحديثات متزامنة
       final futures = List.generate(10, (i) async {
         service.updateNote(
-          Note(id: 1, title: 'Update $i', content: '', createdAt: now, updatedAt: now.add(Duration(milliseconds: i))),
+          Note(
+              id: 1,
+              title: 'Update $i',
+              content: '',
+              createdAt: now,
+              updatedAt: now.add(Duration(milliseconds: i))),
         );
       });
 
@@ -266,7 +497,12 @@ void main() {
 
       final addFutures = List.generate(5, (i) async {
         service.addNote(
-          Note(id: i + 1, title: 'Note $i', content: '', createdAt: now, updatedAt: now),
+          Note(
+              id: i + 1,
+              title: 'Note $i',
+              content: '',
+              createdAt: now,
+              updatedAt: now),
         );
       });
 
@@ -287,7 +523,13 @@ void main() {
   group('NoteStateService — Locked Notes', () {
     test('addNote مع isLocked يضيف للقائمة المقفلة فقط', () {
       service.addNote(
-        Note(id: 1, title: 'Locked', content: '', createdAt: now, updatedAt: now, isLocked: true),
+        Note(
+            id: 1,
+            title: 'Locked',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isLocked: true),
       );
       expect(service.lockedNotes.length, 1);
       expect(service.activeNotes.length, 0);
@@ -295,7 +537,13 @@ void main() {
 
     test('clearLockedNotes يمسح القائمة المقفلة', () {
       service.updateLockedNotes([
-        Note(id: 1, title: 'Locked', content: 'Secret', createdAt: now, updatedAt: now, isLocked: true),
+        Note(
+            id: 1,
+            title: 'Locked',
+            content: 'Secret',
+            createdAt: now,
+            updatedAt: now,
+            isLocked: true),
       ]);
       expect(service.lockedNotes.length, 1);
       service.clearLockedNotes();
@@ -304,10 +552,17 @@ void main() {
 
     test('removeNote يحذف من القائمة المقفلة', () {
       service.updateLockedNotes([
-        Note(id: 99, title: 'Locked', content: '', createdAt: now, updatedAt: now, isLocked: true),
+        Note(
+            id: 99,
+            title: 'Locked',
+            content: '',
+            createdAt: now,
+            updatedAt: now,
+            isLocked: true),
       ]);
       service.removeNote(99);
       expect(service.lockedNotes.length, 0);
     });
   });
 }
+

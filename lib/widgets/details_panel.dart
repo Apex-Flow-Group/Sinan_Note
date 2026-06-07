@@ -1,15 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/widgets/empty_details_view.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/shared/note_editor.dart';
+import 'package:sinan_note/widgets/empty_details_view.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
 /// Widget يعرض محتوى الملاحظة المختارة في Details Panel
 ///
@@ -19,11 +20,15 @@ import 'package:provider/provider.dart';
 /// - الاستماع لتغييرات الملاحظة المختارة من Provider
 /// - مسح الاختيار عند حذف/نقل الملاحظة
 class DetailsPanel extends StatefulWidget {
-  final bool forceEditMode; // 🔥 فرض وضع التعديل
+  final bool forceEditMode;
+  final Set<int> selectedIds;
+  final VoidCallback? onClearSelection;
 
   const DetailsPanel({
     super.key,
     this.forceEditMode = false,
+    this.selectedIds = const {},
+    this.onClearSelection,
   });
 
   @override
@@ -54,6 +59,7 @@ class _DetailsPanelState extends State<DetailsPanel> {
   }
 
   /// التحقق من حالة الملاحظة المختارة ومسح الاختيار إذا تم حذفها/نقلها
+  /// وتحديث الملاحظة المختارة إذا تغيّرت بياناتها (مثل اللون)
   void _checkSelectedNoteStatus() {
     if (!mounted) return;
 
@@ -73,17 +79,29 @@ class _DetailsPanelState extends State<DetailsPanel> {
           (note) => note.id == selectedNote.id,
         );
 
-        // مسح الاختيار إذا تم حذف/أرشفة/قفل الملاحظة
-        if (currentNote.isTrashed ||
-            currentNote.isArchived ||
-            currentNote.isLocked) {
+        // مسح الاختيار إذا تم أرشفة/قفل الملاحظة — لكن السلة تُعرض بوضع القراءة
+        if (currentNote.isArchived || currentNote.isLocked) {
           selectedNoteProvider.clearSelection();
+        } else if (_noteHasChanged(selectedNote, currentNote)) {
+          // 🔥 تحديث الملاحظة المختارة إذا تغيّرت بياناتها (لون، عنوان، إلخ)
+          selectedNoteProvider.selectNote(currentNote);
         }
       } else {
         // الملاحظة لم تعد موجودة - مسح الاختيار
         selectedNoteProvider.clearSelection();
       }
     }
+  }
+
+  /// مقارنة الملاحظتين بالقيم لا بالمرجع (Note لا يملك == operator)
+  bool _noteHasChanged(Note old, Note current) {
+    return old.colorIndex != current.colorIndex ||
+        old.title != current.title ||
+        old.content != current.content ||
+        old.updatedAt != current.updatedAt ||
+        old.isPinned != current.isPinned ||
+        old.isArchived != current.isArchived ||
+        old.isTrashed != current.isTrashed;
   }
 
   @override
@@ -140,7 +158,9 @@ class _DetailsPanelState extends State<DetailsPanel> {
         mode: mode,
         note: selectedNote,
         readOnly: selectedNote.id != null &&
-            (selectedNote.title.isNotEmpty || selectedNote.content.isNotEmpty),
+            (selectedNote.isTrashed ||
+                selectedNote.title.isNotEmpty ||
+                selectedNote.content.isNotEmpty),
         onClose: () {
           selectedNoteProvider.clearSelection();
         },
@@ -185,5 +205,5 @@ class _DetailsPanelState extends State<DetailsPanel> {
       );
     }
   }
-
 }
+

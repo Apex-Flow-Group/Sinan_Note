@@ -1,11 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/widgets/editor/code_editor_toolbar.dart';
-import 'package:apex_note/widgets/editor/smart_editor_toolbar.dart';
-import 'package:apex_note/widgets/editor/toolbars/checklist_bottom_bar.dart';
-import 'package:apex_note/widgets/editor/toolbars/editor_options_menu.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/widgets/editor/code_editor_toolbar.dart';
+import 'package:sinan_note/widgets/editor/smart_editor_toolbar.dart';
+import 'package:sinan_note/widgets/editor/toolbars/checklist_bottom_bar.dart';
+import 'package:sinan_note/widgets/editor/toolbars/editor_options_menu.dart';
 
 class EditorToolbarFactory {
   static Widget build({
@@ -57,6 +57,7 @@ class EditorToolbarFactory {
     VoidCallback? onConvertToRich,
     VoidCallback? onConvertToCode,
     VoidCallback? onConvertToSimple,
+    VoidCallback? onAddItem,
   }) {
     switch (mode) {
       case NoteMode.code:
@@ -82,6 +83,7 @@ class EditorToolbarFactory {
           hasContent: hasContent,
           onUndo: onUndo,
           onRedo: onRedo,
+          onAddItem: onAddItem,
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
           onReminderTap: onReminderTap,
           onShareTap: onShareTap ?? () {},
@@ -123,6 +125,7 @@ class EditorToolbarFactory {
           onRedo: onRedo,
           onCalculate: onCalculate ?? () {},
           onPaste: onPaste,
+          selectionBarActive: selectionBarActive,
           onBackgroundColorTap: onBackgroundColorTap ?? () {},
           onReminderTap: onReminderTap ?? () {},
           onShareTap: onShareTap ?? () {},
@@ -201,7 +204,7 @@ class _SimpleToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       decoration: BoxDecoration(
         color: backgroundColor,
       ),
@@ -210,24 +213,29 @@ class _SimpleToolbar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                _buildIconBtn(Icons.calculate_outlined, onCalculate),
-                selectionBarActive != null
-                    ? ValueListenableBuilder<bool>(
-                        valueListenable: selectionBarActive!,
-                        builder: (_, isActive, __) => _buildIconBtn(
-                          isActive
-                              ? Icons.close_rounded
-                              : Icons.content_paste_rounded,
-                          onPaste,
-                        ),
-                      )
-                    : _buildIconBtn(Icons.content_paste_rounded, onPaste),
-                _buildIconBtn(Icons.palette_outlined, onBackgroundColorTap),
-                _buildIconBtn(Icons.undo_rounded, onUndo),
-                _buildIconBtn(Icons.redo_rounded, onRedo),
-              ],
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildIconBtn(Icons.calculate_outlined, onCalculate),
+                    selectionBarActive != null
+                        ? ValueListenableBuilder<bool>(
+                            valueListenable: selectionBarActive!,
+                            builder: (_, isActive, __) => _buildIconBtn(
+                              isActive
+                                  ? Icons.close_rounded
+                                  : Icons.content_paste_rounded,
+                              onPaste,
+                            ),
+                          )
+                        : _buildIconBtn(Icons.content_paste_rounded, onPaste),
+                    _buildIconBtn(Icons.palette_outlined, onBackgroundColorTap),
+                    _buildIconBtn(Icons.undo_rounded, onUndo),
+                    _buildIconBtn(Icons.redo_rounded, onRedo),
+                  ],
+                ),
+              ),
             ),
             Builder(
               builder: (ctx) => Material(
@@ -285,9 +293,9 @@ class _SimpleToolbar extends StatelessWidget {
     return IconButton(
       icon: Icon(icon, color: effectiveColor, size: 22),
       onPressed: onTap,
-      splashRadius: 24,
-      padding: const EdgeInsets.all(6),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      splashRadius: 22,
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
     );
   }
 }

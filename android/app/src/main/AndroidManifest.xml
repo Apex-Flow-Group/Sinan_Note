@@ -28,7 +28,6 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -70,9 +69,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="file" />
                 <data android:scheme="content" />
+                <data android:mimeType="application/x-sinan" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
                 <data android:host="*" />
-                <data android:pathPattern="/.*\\.txt" />
-                <data android:pathPattern="/.*\\.py" />
+                <data android:pathPattern="/.*\.py" />
                 <data android:pathPattern="/.*\\.js" />
                 <data android:pathPattern="/.*\\.java" />
                 <data android:pathPattern="/.*\\.dart" />
@@ -95,6 +102,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <!-- Impeller: Auto-detect (let Flutter decide based on device) -->
         <!-- Set to false only if you face rendering issues on custom ROMs -->
 
@@ -171,5 +188,7 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="http"/>
         </intent>
+        <!-- Check if Apex Transfer is installed -->
+        <package android:name="com.apexflow.tools.transfer" />
     </queries>
 </manifest>

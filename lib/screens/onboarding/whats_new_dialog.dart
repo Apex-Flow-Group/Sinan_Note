@@ -1,7 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WhatsNewDialog extends StatelessWidget {
   final String version;
@@ -22,9 +23,7 @@ class WhatsNewDialog extends StatelessWidget {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 600;
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
@@ -69,8 +68,8 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Title ──
               Text(
                 isAr
-                    ? 'تحديث الأداء والاستقرار'
-                    : 'Performance & Stability Update',
+                    ? 'وضع القراءة وإصلاحات القوائم'
+                    : 'Reading Mode & List Fixes',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -115,8 +114,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'هذا التحديث يركّز على الاستقرار والسلاسة — إصلاحات مهمة لسجل التعديلات والمزامنة، مع تحسينات في واجهة المستخدم.'
-                            : 'This update focuses on stability and smoothness — important fixes for version history and sync, with UI improvements.',
+                            ? 'وضع قراءة مريح للملاحظات الطويلة، إصلاح اتجاه القوائم المرقمة، وتحسينات دقيقة في المحرر.'
+                            : 'Comfortable reading mode for long notes, fixed numbered list direction, and precise editor improvements.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -129,7 +128,7 @@ class WhatsNewDialog extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // ── Divider with label ──
+              // ── Divider ──
               Row(children: [
                 Expanded(child: Divider(color: scheme.outlineVariant)),
                 Padding(
@@ -148,49 +147,197 @@ class WhatsNewDialog extends StatelessWidget {
               ]),
               const SizedBox(height: 14),
 
+              // ── GitHub Open Source ──
+              InkWell(
+                onTap: () => launchUrl(
+                  Uri.parse('https://github.com/Apex-Flow-Group/Sinan_Note'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [
+                              const Color(0xFF1a1a2e).withValues(alpha: 0.9),
+                              const Color(0xFF16213e).withValues(alpha: 0.9),
+                            ]
+                          : [
+                              const Color(0xFF24292e).withValues(alpha: 0.06),
+                              const Color(0xFF0366d6).withValues(alpha: 0.06),
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : const Color(0xFF24292e).withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : const Color(0xFF24292e).withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.code_rounded,
+                          size: 22,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF24292e),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isAr
+                                  ? '🎉 سينان نوت أصبح مفتوح المصدر!'
+                                  : '🎉 Sinan Note is now Open Source!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF24292e),
+                                height: 1.3,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isAr
+                                  ? 'الكود متاح على GitHub — استكشف، تعلّم، أو شارك في البناء'
+                                  : 'Code is live on GitHub — explore, learn, or contribute',
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.4,
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.6)
+                                    : const Color(0xFF24292e)
+                                        .withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.open_in_new_rounded,
+                        size: 16,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.4)
+                            : const Color(0xFF24292e).withValues(alpha: 0.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
               // ── Features ──
               _FeatureRow(
-                icon: Icons.history_rounded,
+                icon: Icons.menu_book_rounded,
+                color: Colors.teal,
+                title: isAr ? 'وضع القراءة' : 'Reading Mode',
+                subtitle: isAr
+                    ? 'شاشة قراءة مريحة للملاحظات الطويلة — صفحات، تحكم بالخط، حفظ الموضع'
+                    : 'Comfortable reading screen for long notes — pages, font control, position saving',
+              ),
+              _FeatureRow(
+                icon: Icons.format_list_numbered_rounded,
                 color: Colors.orange,
-                title: isAr ? 'إصلاح سجل التعديلات' : 'Version History Fixed',
+                title: isAr ? 'إصلاح القوائم المرقمة' : 'Fixed Numbered Lists',
                 subtitle: isAr
-                    ? 'الهيستوري تُسجَّل الآن بشكل صحيح عند كل تعديل'
-                    : 'History now records correctly on every edit session',
+                    ? 'الرقم في موضعه الصحيح — LTR يسار، RTL يمين — واتجاه ثابت للقائمة كاملاً'
+                    : 'Number in correct position — LTR left, RTL right — consistent direction throughout',
               ),
               _FeatureRow(
-                icon: Icons.cloud_sync_rounded,
-                color: Colors.blue,
-                title: isAr ? 'مزامنة أذكى' : 'Smarter Sync',
-                subtitle: isAr
-                    ? 'المزامنة تعمل تلقائياً بعد كل إجراء (حذف، أرشفة، تذكير)'
-                    : 'Auto-sync triggers after every action (delete, archive, reminder)',
-              ),
-              _FeatureRow(
-                icon: Icons.notifications_rounded,
-                color: Colors.green,
-                title: isAr ? 'إشعارات موحّدة' : 'Unified Notifications',
-                subtitle: isAr
-                    ? 'كل الإشعارات بتصميم واحد متناسق في كل الشاشات'
-                    : 'All notifications now use a consistent design across screens',
-              ),
-              _FeatureRow(
-                icon: Icons.delete_sweep_rounded,
-                color: Colors.red,
-                title: isAr ? 'تجربة السلة الجديدة' : 'New Trash Experience',
-                subtitle: isAr
-                    ? 'شريط سفلي قابل للسحب لاستعادة أو حذف الملاحظات'
-                    : 'Swipeable bottom sheet to restore or permanently delete',
-              ),
-              _FeatureRow(
-                icon: Icons.storage_rounded,
+                icon: Icons.water_drop_rounded,
                 color: Colors.purple,
-                title: isAr ? 'ترقية قاعدة البيانات' : 'Database Upgrade',
+                title: isAr ? 'إصلاح دمعة المؤشر' : 'Fixed Cursor Handle',
                 subtitle: isAr
-                    ? 'إصلاح مشكلة عدم حفظ الهيستوري على الأجهزة المُحدَّثة'
-                    : 'Fixed history not saving on devices updated from older versions',
+                    ? 'الدمعة تظهر تحت المؤشر عند الانتقال لسطر جديد'
+                    : 'Handle appears below cursor when moving to a new line',
+              ),
+              _FeatureRow(
+                icon: Icons.bug_report_rounded,
+                color: Colors.red,
+                title: isAr ? 'إصلاحات متعددة' : 'Multiple Bug Fixes',
+                subtitle: isAr
+                    ? 'اتجاه النص مع الأرقام، عرض المحتوى في العارض، وغيرها'
+                    : 'Text direction with numbers, content display in readonly, and more',
               ),
 
               const SizedBox(height: 20),
+
+              // ── Privacy Policy update notice ──
+              InkWell(
+                onTap: () => launchUrl(
+                  Uri.parse(
+                      'https://apexflow.now/ar/projects/sinan-note/privacy'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: scheme.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.privacy_tip_rounded,
+                          size: 20, color: scheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isAr
+                                  ? 'تحديث سياسة الخصوصية'
+                                  : 'Privacy Policy Updated',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isAr
+                                  ? 'تم تحديث السياسة لتعكس المميزات الجديدة — اضغط للمراجعة'
+                                  : 'Policy updated to reflect new features — tap to review',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                height: 1.4,
+                                color: scheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.open_in_new_rounded,
+                          size: 16,
+                          color: scheme.primary.withValues(alpha: 0.7)),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
 
               // ── Thanks ──
               Container(
@@ -208,8 +355,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'شكراً لملاحظاتكم — كل إصلاح هنا جاء من تجربتكم الحقيقية.'
-                            : 'Thanks for your feedback — every fix here came from your real experience.',
+                            ? 'شكراً لملاحظاتكم — كل تحسين هنا جاء من تجربتكم الحقيقية.'
+                            : 'Thanks for your feedback — every improvement here came from your real experience.',
                         style: TextStyle(
                           fontSize: 12.5,
                           height: 1.6,

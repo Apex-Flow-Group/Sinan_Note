@@ -1,7 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+
 
 /// BiDi cursor correction middleware.
 /// Fixes cursor position when tapping on digit boundaries in Arabic text.
@@ -63,3 +65,4 @@ class BiDiCursorCorrectionMiddleware {
     controller.removeListener(_onSelectionChanged);
   }
 }
+

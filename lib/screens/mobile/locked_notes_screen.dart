@@ -1,26 +1,27 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/core/utils/search_mixin.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
-import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/searchable_header.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart';
-import 'package:apex_note/widgets/home/dialogs/vault_dialogs.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart'
-    show HomeDrawerWidget, setDrawerVaultActive;
-import 'package:apex_note/widgets/home/note_card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/core/utils/search_mixin.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/services/security/vault_reset_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/searchable_header.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart';
+import 'package:sinan_note/widgets/home/dialogs/vault_dialogs.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart'
+    show HomeDrawerWidget, setDrawerVaultActive;
+import 'package:sinan_note/widgets/home/note_card_widget.dart';
 
 class LockedNotesScreen extends StatefulWidget {
   const LockedNotesScreen({super.key});
@@ -43,14 +44,25 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    setDrawerVaultActive(true);
     initSearch();
     searchController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // setDrawerVaultActive هنا وليس في initState مباشرة —
+      // لأنها تُعدّل ValueNotifier وتُطلق notifyListeners أثناء الـ build
+      setDrawerVaultActive(true);
       _providerRef = Provider.of<NotesProvider>(context, listen: false);
+      _providerRef!.addListener(_onProviderChanged);
       _loadLockedNotes();
       _providerRef!.loadNotes();
     });
+  }
+
+  void _onProviderChanged() {
+    // إعادة تحميل الملاحظات المقفلة عند أي تغيير في الـ provider
+    // (مثل إضافة ملاحظة جديدة من المحرر)
+    if (mounted && !_isLoading) {
+      _loadLockedNotes();
+    }
   }
 
   @override
@@ -60,12 +72,15 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
 
   @override
   void dispose() {
+    _providerRef?.removeListener(_onProviderChanged);
     WidgetsBinding.instance.removeObserver(this);
     _closeAllSlidables.dispose();
     super.dispose();
   }
 
-  final bool _isAuthenticating = false;
+  // يُضبط على true أثناء أي عملية مصادقة (dialog بيومتري/PIN)
+  // يمنع didChangeAppLifecycleState من إغلاق الشاشة أثناء المصادقة
+  bool _isAuthenticating = false;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -74,15 +89,28 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         UnifiedLockService().isVaultOperation) {
       return;
     }
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
+
+    // على Desktop: نُغلق الخزنة عند تصغير النافذة أو إخفائها
+    // hidden = تصغير على Windows/macOS
+    // paused = خلفية على Mobile
+    // inactive = فقدان التركيز (نتجاهله على Desktop)
+    final bool shouldLock;
+    if (PlatformHelper.isDesktopPlatform) {
+      shouldLock = state == AppLifecycleState.paused ||
+          state == AppLifecycleState.hidden;
+    } else {
+      shouldLock = state == AppLifecycleState.paused ||
+          state == AppLifecycleState.inactive;
+    }
+
+    if (shouldLock) {
       if (_showAddMenu) {
         setState(() => _showAddMenu = false);
       }
       _providerRef?.clearLockedSession(notify: false);
       setDrawerVaultActive(false);
       if (mounted) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        VaultNavigator.exitVault(context);
       }
     }
   }
@@ -97,43 +125,14 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   }
 
   Future<void> _createLockedNote(NoteMode mode) async {
-    String noteType;
-    bool isChecklist = false, isProfessional = false;
-    String initialContent = '';
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final note = provider.createDefaultLockedNote(mode: mode);
 
-    switch (mode) {
-      case NoteMode.checklist:
-        noteType = 'checklist';
-        isChecklist = true;
-        initialContent = '{"title":"","items":[]}';
-        break;
-      case NoteMode.code:
-        noteType = 'code';
-        isProfessional = true;
-        break;
-      default:
-        noteType = 'simple';
-    }
-
-    await Navigator.push(
+    await AppNavigator.toEditor(
       context,
-      MaterialPageRoute(
-        builder: (context) => NoteEditorImmersive(
-          mode: mode,
-          skipAuthentication: true,
-          note: Note(
-            title: '',
-            content: initialContent,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            colorIndex: 0,
-            noteType: noteType,
-            isLocked: true,
-            isChecklist: isChecklist,
-            isProfessional: isProfessional,
-          ),
-        ),
-      ),
+      note: note,
+      mode: mode,
+      skipAuthentication: true,
     );
 
     if (mounted) await _loadLockedNotes();
@@ -161,10 +160,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final selected = <int>{};
     if (!mounted) return;
 
+    _isAuthenticating = true;
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (modalContext) => _ImportSheet(
+      builder: (modalContext) => VaultImportSheet(
         unlocked: unlocked,
         selected: selected,
         onConfirm: () async {
@@ -177,6 +177,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         },
       ),
     );
+    if (mounted) _isAuthenticating = false;
   }
 
   @override
@@ -194,7 +195,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           // رجوع لأول شاشة في الـ stack (MainLayout) بدلاً من VaultEntryScreen
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              VaultNavigator.exitVault(context);
             }
           });
           return;
@@ -276,16 +277,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                   return SearchableHeader(
                     title: l10n.locked,
                     icon: Icons.lock_outline_rounded,
-                    isSearching: searchController.text.isNotEmpty,
+                    isSearching: isSearchActive,
                     searchController: searchController,
                     onSearchChange: (q) => setState(() {}),
-                    onToggleSearch: () => setState(() {
-                      if (searchController.text.isNotEmpty) {
-                        searchController.clear();
-                      } else {
-                        searchController.text = ' ';
-                      }
-                    }),
+                    onToggleSearch: () => toggleSearch(),
                     leading: Builder(
                       builder: (ctx) => IconButton(
                         icon: const Icon(Icons.menu),
@@ -340,13 +335,13 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       );
 
   Widget _buildNotesList(AppLocalizations l10n) {
-    final query = searchController.text.toLowerCase();
+    final query = Note.normalize(searchController.text.trim());
     final filtered = _decryptedNotes
         .where((n) => !n.isArchived && !n.isTrashed)
         .where((n) =>
             query.isEmpty ||
-            n.title.toLowerCase().contains(query) ||
-            n.content.toLowerCase().contains(query))
+            n.normalizedTitle.contains(query) ||
+            n.normalizedContent.contains(query))
         .toList();
 
     if (filtered.isEmpty) {
@@ -399,6 +394,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void _confirmAction(String title, String content, String confirmLabel,
       Future<void> Function() onConfirm) {
     final l10n = AppLocalizations.of(context)!;
+    // نضبط _isAuthenticating لمنع lifecycle من إغلاق الشاشة أثناء الـ dialog
+    _isAuthenticating = true;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -406,7 +403,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         content: Text(content),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: Text(l10n.cancel)),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -416,318 +416,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) _isAuthenticating = false;
+    });
   }
 }
 
 // ─── Import Sheet ─────────────────────────────────────────────────────────────
-
-class _ImportSheet extends StatefulWidget {
-  final List<Note> unlocked;
-  final Set<int> selected;
-  final Future<void> Function() onConfirm;
-
-  const _ImportSheet({
-    required this.unlocked,
-    required this.selected,
-    required this.onConfirm,
-  });
-
-  @override
-  State<_ImportSheet> createState() => _ImportSheetState();
-}
-
-class _ImportSheetState extends State<_ImportSheet> {
-  final _searchCtrl = TextEditingController();
-  String? _filter; // null = الكل
-
-  static const _filterTypes = [
-    ('simple', Icons.notes_rounded, null),
-    ('rich', Icons.format_color_text, null),
-    ('checklist', Icons.checklist_rounded, null),
-    ('code', Icons.code_rounded, null),
-    ('reminder', Icons.alarm_rounded, null),
-  ];
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
-  }
-
-  String _typeKey(Note note) {
-    if (note.isChecklist || note.noteType == 'checklist') return 'checklist';
-    if (note.isProfessional || note.noteType == 'code') return 'code';
-    if (note.noteType == 'reminder') return 'reminder';
-    if (note.noteType == 'rich') return 'rich';
-    return 'simple';
-  }
-
-  (String, String) _displayInfo(Note note, AppLocalizations l10n) {
-    String title = note.title.isEmpty ? l10n.untitled : note.title;
-    String content;
-
-    if (note.isChecklist) {
-      try {
-        final decoded = jsonDecode(note.content);
-        if (decoded is Map) {
-          final t = (decoded['title'] ?? '').toString().trim();
-          if (t.isNotEmpty) title = t;
-          final items = decoded['items'] as List? ?? [];
-          content = items
-              .map((i) =>
-                  '${i['isDone'] == true ? '☑' : '☐'} ${i['text'] ?? ''}')
-              .join('  ');
-          if (content.isEmpty) content = '${items.length} items';
-        } else {
-          content = 'Checklist';
-        }
-      } catch (_) {
-        content = 'Checklist';
-      }
-    } else {
-      final raw = note.content.trim();
-      if (raw.startsWith('[') || raw.startsWith('{')) {
-        try {
-          final decoded = jsonDecode(raw);
-          if (decoded is List) {
-            content = decoded.map((op) => op['insert'] ?? '').join().trim();
-          } else {
-            content = raw;
-          }
-        } catch (_) {
-          content = raw;
-        }
-      } else {
-        content = raw;
-      }
-    }
-
-    return (title, content);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final query = _searchCtrl.text.trim().toLowerCase();
-
-    // أنواع موجودة فعلاً
-    final availableTypes = _filterTypes
-        .where((f) => widget.unlocked.any((n) => _typeKey(n) == f.$1))
-        .toList();
-
-    final filterLabels = {
-      'simple': l10n.simpleNote,
-      'rich': l10n.richNoteMenu,
-      'checklist': l10n.checklistNote,
-      'code': l10n.codeNote,
-      'reminder': l10n.reminder,
-    };
-
-    // تطبيق الفلتر والبحث
-    final visible = widget.unlocked.where((n) {
-      if (_filter != null && _typeKey(n) != _filter) return false;
-      if (query.isEmpty) return true;
-      final (title, content) = _displayInfo(n, l10n);
-      return title.toLowerCase().contains(query) ||
-          content.toLowerCase().contains(query);
-    }).toList();
-
-    return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.82,
-        child: Column(
-          children: [
-            // ─── Handle ───────────────────────────────────────────
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // ─── Title row ────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.importNotes,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  if (widget.selected.isNotEmpty)
-                    Text(
-                      '${widget.selected.length} ${l10n.selected}',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-
-            // ─── Search bar ───────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: TextField(
-                controller: _searchCtrl,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: l10n.searchNotes,
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  suffixIcon: _searchCtrl.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: scheme.onSurface.withValues(alpha: 0.07),
-                ),
-              ),
-            ),
-
-            // ─── Filter chips ─────────────────────────────────────
-            if (availableTypes.length >= 2)
-              SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4, right: 4),
-                      child: FilterChip(
-                        label: Text(l10n.clearFilter),
-                        selected: _filter == null,
-                        onSelected: (_) => setState(() => _filter = null),
-                        showCheckmark: false,
-                        selectedColor: scheme.primary,
-                        labelStyle: TextStyle(
-                          color: _filter == null
-                              ? scheme.onPrimary
-                              : scheme.onSurface,
-                          fontSize: 12,
-                          fontWeight: _filter == null
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                    ...availableTypes.map((f) {
-                      final isActive = _filter == f.$1;
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 4, right: 4),
-                        child: FilterChip(
-                          label: Text(filterLabels[f.$1] ?? f.$1),
-                          avatar: Icon(f.$2,
-                              size: 14,
-                              color: isActive
-                                  ? scheme.onPrimary
-                                  : scheme.onSurface),
-                          selected: isActive,
-                          onSelected: (_) =>
-                              setState(() => _filter = isActive ? null : f.$1),
-                          showCheckmark: false,
-                          selectedColor: scheme.primary,
-                          labelStyle: TextStyle(
-                            color:
-                                isActive ? scheme.onPrimary : scheme.onSurface,
-                            fontSize: 12,
-                            fontWeight:
-                                isActive ? FontWeight.w600 : FontWeight.normal,
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-
-            const Divider(height: 8),
-
-            // ─── List ─────────────────────────────────────────────
-            Expanded(
-              child: visible.isEmpty
-                  ? Center(
-                      child: Text(l10n.noResults,
-                          style: const TextStyle(color: Colors.grey)))
-                  : ListView.builder(
-                      itemCount: visible.length,
-                      itemBuilder: (context, i) {
-                        final note = visible[i];
-                        final isSelected = widget.selected.contains(note.id);
-                        final (title, content) = _displayInfo(note, l10n);
-                        return CheckboxListTile(
-                          value: isSelected,
-                          onChanged: (val) => setState(() {
-                            if (val == true) {
-                              widget.selected.add(note.id!);
-                            } else {
-                              widget.selected.remove(note.id);
-                            }
-                          }),
-                          title: Text(title,
-                              maxLines: 1, overflow: TextOverflow.ellipsis),
-                          subtitle: Text(content,
-                              maxLines: 2, overflow: TextOverflow.ellipsis),
-                          secondary: Icon(
-                            _filterTypes
-                                .firstWhere((f) => f.$1 == _typeKey(note),
-                                    orElse: () => _filterTypes.first)
-                                .$2,
-                            size: 20,
-                            color: scheme.onSurface.withValues(alpha: 0.5),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-
-            // ─── Confirm button ───────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: SafeArea(
-                child: ElevatedButton.icon(
-                  onPressed: widget.selected.isEmpty ? null : widget.onConfirm,
-                  icon: const Icon(Icons.lock),
-                  label: Text(l10n.lockNotesCount(widget.selected.length)),
-                  style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// نُقل إلى vault_import_sheet.dart (UI1)

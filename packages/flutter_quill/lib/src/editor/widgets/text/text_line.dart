@@ -290,6 +290,15 @@ class _TextLineState extends State<TextLine> {
       nodes = LinkedList<Node>()..add(leaf.QuillText());
     }
 
+    // Fix RTL cursor on empty lines: RenderParagraph.getOffsetForCaret returns
+    // x=0 for empty text regardless of textDirection. Adding a Right-to-Left Mark
+    // (U+200F) forces the paragraph to recognize RTL direction and place the
+    // caret at the correct (right) side. This is a known Flutter issue where
+    // the cursor jumps to the left on new empty lines in RTL text.
+    if (nodes.isEmpty && !kIsWeb && widget.textDirection == TextDirection.rtl) {
+      nodes = LinkedList<Node>()..add(leaf.QuillText('\u200F'));
+    }
+
     final isComposingRangeOutOfLine = !widget.composingRange.isValid ||
         widget.composingRange.isCollapsed ||
         (widget.composingRange.start < widget.line.documentOffset ||
@@ -926,6 +935,13 @@ class RenderEditableTextLine extends RenderEditableBox {
     }
     line = l;
     _containsCursor = null;
+    // إعادة attach المؤشر إذا أصبح هذا السطر يحتوي على الـ cursor بعد تغيير الـ line node
+    // (formatSelection يُعيد بناء الـ line مما يُغيّر documentOffset فيختفي المؤشر)
+    if (!_attachedToCursorController && attached && containsCursor()) {
+      cursorCont.addListener(markNeedsLayout);
+      cursorCont.color.addListener(safeMarkNeedsPaint);
+      _attachedToCursorController = true;
+    }
     markNeedsLayout();
   }
 
@@ -967,11 +983,14 @@ class RenderEditableTextLine extends RenderEditableBox {
   }
 
   bool containsCursor() {
-    return _containsCursor ??= cursorCont.isFloatingCursorActive
+    // لا نُخزّن النتيجة — documentOffset يتغيّر ديناميكياً عند تغيير nodes سابقة
+    // والـ cache يُعطي نتيجة خاطئة مما يُخفي المؤشر على السطر الفارغ
+    _containsCursor = cursorCont.isFloatingCursorActive
         ? line
             .containsOffset(cursorCont.floatingCursorTextPosition.value!.offset)
         : textSelection.isCollapsed &&
             line.containsOffset(textSelection.baseOffset);
+    return _containsCursor!;
   }
 
   RenderBox? _updateChild(

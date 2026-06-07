@@ -88,16 +88,62 @@ class MainActivity: FlutterFragmentActivity() {
                         }
                         else -> null
                     }
+
+                    // Handle .sinan file from Apex
+                    val filePath = if (action == Intent.ACTION_VIEW) {
+                        startIntent?.data?.let { uri ->
+                            val path = uri.path
+                            if (path?.endsWith(".sinan") == true) path else null
+                        }
+                    } else null
                     
                     val data = mapOf(
-                        "action" to action,
+                        "action" to (if (filePath != null) "com.apexflow.app.sinan.ACTION_OPEN_SINAN_FILE" else action),
                         "note_id" to noteId,
                         "current_note_id" to currentNoteId,
                         "widget_type" to widgetType,
-                        "shared_text" to sharedText
+                        "shared_text" to sharedText,
+                        "file_path" to filePath
                     )
                     result.success(data)
                     startIntent = null
+                }
+                "isPackageInstalled" -> {
+                    val pkg = call.argument<String>("package") ?: ""
+                    val installed = try {
+                        packageManager.getPackageInfo(pkg, 0)
+                        true
+                    } catch (_: Exception) { false }
+                    result.success(installed)
+                }
+                "openApexWithFile" -> {
+                    val path = call.argument<String>("path") ?: ""
+                    val file = java.io.File(path)
+                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                        this, "${packageName}.fileprovider", file
+                    )
+                    // Pass both URI and raw path so Apex can read it
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "application/x-sinan")
+                        setPackage("com.apexflow.tools.transfer")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        putExtra("sinan_file_path", path)
+                    }
+                    try {
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("NOT_INSTALLED", "Apex not installed", null)
+                    }
+                }
+                "openUrl" -> {
+                    val url = call.argument<String>("url") ?: ""
+                    val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    result.success(true)
                 }
                 else -> result.notImplemented()
             }

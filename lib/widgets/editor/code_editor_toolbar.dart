@@ -1,8 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 class CodeEditorToolbar extends StatelessWidget {
   final Color backgroundColor;
@@ -42,7 +42,7 @@ class CodeEditorToolbar extends StatelessWidget {
         Theme.of(context).platform == TargetPlatform.windows;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       decoration: BoxDecoration(
         color: backgroundColor,
       ),
@@ -78,7 +78,8 @@ class CodeEditorToolbar extends StatelessWidget {
                               size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            detectedLanguage != null && detectedLanguage!.startsWith('custom:')
+                            detectedLanguage != null &&
+                                    detectedLanguage!.startsWith('custom:')
                                 ? '.${detectedLanguage!.substring(7)}'
                                 : (detectedLanguage ?? 'Auto'),
                             style: TextStyle(
@@ -99,10 +100,8 @@ class CodeEditorToolbar extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (onConvertToSimple != null || onConvertToRich != null)
-                    _buildIconBtn(
-                        Icons.swap_horiz_rounded,
-                        () => _showConvertMenu(context),
-                        Colors.teal),
+                    _buildIconBtn(Icons.swap_horiz_rounded,
+                        () => _showConvertMenu(context), Colors.teal),
                   if (onBackgroundColorTap != null)
                     _buildIconBtn(
                         Icons.color_lens, onBackgroundColorTap, Colors.purple),
@@ -224,7 +223,8 @@ class CodeEditorToolbar extends StatelessWidget {
           children: [
             const SizedBox(height: 8),
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey[400],
                 borderRadius: BorderRadius.circular(2),
@@ -235,13 +235,20 @@ class CodeEditorToolbar extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.note_rounded, color: Colors.teal),
                 title: Text(l10n.simpleNotes),
-                onTap: () { Navigator.pop(ctx); onConvertToSimple!(); },
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onConvertToSimple!();
+                },
               ),
             if (onConvertToRich != null)
               ListTile(
-                leading: const Icon(Icons.text_fields_rounded, color: Colors.teal),
+                leading:
+                    const Icon(Icons.text_fields_rounded, color: Colors.teal),
                 title: Text(l10n.richText),
-                onTap: () { Navigator.pop(ctx); onConvertToRich!(); },
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onConvertToRich!();
+                },
               ),
             const SizedBox(height: 8),
           ],
@@ -254,7 +261,7 @@ class CodeEditorToolbar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     final languages = [
       'Auto',
       'Python',
@@ -367,9 +374,8 @@ class CodeEditorToolbar extends StatelessWidget {
                     title: Text(
                       lang,
                       style: TextStyle(
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     trailing: isSelected
@@ -407,11 +413,9 @@ class CodeEditorToolbar extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'e.g. vue, proto, graphql',
             prefixText: '.',
-            prefixStyle: const TextStyle(
-                fontFamily: 'monospace', fontSize: 16),
+            prefixStyle: const TextStyle(fontFamily: 'monospace', fontSize: 16),
             enabledBorder: UnderlineInputBorder(
-                borderSide:
-                    BorderSide(color: colorScheme.outline)),
+                borderSide: BorderSide(color: colorScheme.outline)),
             focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: colorScheme.primary)),
           ),

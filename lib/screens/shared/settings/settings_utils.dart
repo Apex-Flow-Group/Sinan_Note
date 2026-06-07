@@ -1,9 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 class SettingsUtils {
   static String getLanguageText(String code, AppLocalizations l10n) {
@@ -30,27 +30,64 @@ class SettingsUtils {
 
   static String getSwipeActionText(String action, AppLocalizations l10n) {
     switch (action) {
-      case 'delete':    return l10n.delete;
-      case 'archive':   return l10n.actionArchive;
-      case 'share':     return l10n.share;
-      case 'reminder':  return l10n.reminder;
-      case 'category':  return l10n.categories;
-      case 'duplicate': return l10n.noteCopy;
-      case 'custom':    return l10n.custom;
-      default:          return l10n.delete;
+      case 'delete':
+        return l10n.delete;
+      case 'archive':
+        return l10n.actionArchive;
+      case 'share':
+        return l10n.share;
+      case 'reminder':
+        return l10n.reminder;
+      case 'category':
+        return l10n.categories;
+      case 'duplicate':
+        return l10n.noteCopy;
+      case 'custom':
+        return l10n.custom;
+      default:
+        return l10n.delete;
     }
   }
 
   static IconData getSwipeActionIcon(String action) {
     switch (action) {
-      case 'delete':    return Icons.delete_outline_rounded;
-      case 'archive':   return Icons.archive_outlined;
-      case 'share':     return Icons.share_outlined;
-      case 'reminder':  return Icons.alarm_rounded;
-      case 'category':  return Icons.label_outlined;
-      case 'duplicate': return Icons.copy_all_rounded;
-      case 'custom':    return Icons.bolt_rounded;
-      default:          return Icons.delete_outline_rounded;
+      case 'delete':
+        return Icons.delete_outline_rounded;
+      case 'archive':
+        return Icons.archive_outlined;
+      case 'share':
+        return Icons.share_outlined;
+      case 'reminder':
+        return Icons.alarm_rounded;
+      case 'category':
+        return Icons.label_outlined;
+      case 'duplicate':
+        return Icons.copy_all_rounded;
+      case 'custom':
+        return Icons.bolt_rounded;
+      default:
+        return Icons.delete_outline_rounded;
+    }
+  }
+
+  static Color getSwipeActionColor(String action) {
+    switch (action) {
+      case 'delete':
+        return const Color(0xFFE53935); // أحمر
+      case 'archive':
+        return const Color(0xFF1E88E5); // أزرق
+      case 'share':
+        return const Color(0xFF43A047); // أخضر
+      case 'reminder':
+        return const Color(0xFFF57C00); // برتقالي
+      case 'category':
+        return const Color(0xFF8E24AA); // بنفسجي
+      case 'duplicate':
+        return const Color(0xFF00897B); // تيل
+      case 'custom':
+        return const Color(0xFFFFB300); // ذهبي
+      default:
+        return const Color(0xFFE53935);
     }
   }
 

@@ -1,15 +1,19 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/feature_info.dart';
-import 'package:apex_note/widgets/common/copy_code_button.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/feature_info.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/widgets/common/copy_code_button.dart';
 
 final _vaultPasswordFormatter = FilteringTextInputFormatter.allow(
   RegExp(r'[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]'),
 );
 
+/// Single source of truth for vault password validation.
+/// Delegates to [VaultService.validatePasswordStrength].
 String? validateVaultPassword(String password) {
   if (password.length < 8) return 'Minimum 8 characters';
   if (!RegExp(r'[0-9]').hasMatch(password)) {
@@ -18,6 +22,9 @@ String? validateVaultPassword(String password) {
   if (!RegExp(r'[!@#$%^&*()\-_=+\[\]{};:\x27",./<>?\\|`~]')
       .hasMatch(password)) {
     return 'Must contain at least one symbol';
+  }
+  if (!VaultService.validatePasswordStrength(password)) {
+    return 'Password must contain at least one letter';
   }
   return null;
 }
@@ -436,3 +443,4 @@ class VaultBiometricPage extends StatelessWidget {
     );
   }
 }
+

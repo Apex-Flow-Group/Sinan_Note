@@ -1,18 +1,19 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
-import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
+import 'package:sinan_note/widgets/editor/reminder_picker_sheet.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
 class SwipeCustomSheet {
   static Future<void> show(
@@ -103,13 +104,13 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
   (IconData, String, Color) _actionMeta(
       String action, AppLocalizations l10n, ColorScheme scheme) {
     return switch (action) {
-      'delete'    => (Icons.delete_outline_rounded, l10n.delete,     Colors.red),
-      'archive'   => (Icons.archive_outlined,        l10n.archive,    Colors.green),
-      'share'     => (Icons.share_outlined,           l10n.share,      Colors.blue),
-      'reminder'  => (Icons.alarm_rounded,            l10n.reminder,   Colors.orange),
-      'category'  => (Icons.label_outlined,           l10n.categories, scheme.primary),
-      'duplicate' => (Icons.copy_all_rounded,         l10n.noteCopy,   Colors.purple),
-      _           => (Icons.help_outline,             action,          scheme.onSurface),
+      'delete' => (Icons.delete_outline_rounded, l10n.delete, Colors.red),
+      'archive' => (Icons.archive_outlined, l10n.archive, Colors.green),
+      'share' => (Icons.share_outlined, l10n.share, Colors.blue),
+      'reminder' => (Icons.alarm_rounded, l10n.reminder, Colors.orange),
+      'category' => (Icons.label_outlined, l10n.categories, scheme.primary),
+      'duplicate' => (Icons.copy_all_rounded, l10n.noteCopy, Colors.purple),
+      _ => (Icons.help_outline, action, scheme.onSurface),
     };
   }
 
@@ -162,11 +163,12 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
         if (!context.mounted) return;
         CustomShareSheet.show(
           context,
-          '${widget.note.title}\n\n${NoteCardUtils.fixNoteContent(widget.note.content, maxChars: widget.note.content.length)}',
+          '${widget.note.title}\n\n${NoteCardUtils.fixNoteContent(widget.note.content, maxChars: null)}',
           subject: widget.note.title,
           note: widget.note,
           onNoteCopied: () async {
-            await notesProvider.duplicateNote(widget.note.id!);
+            await notesProvider.duplicateNote(widget.note.id!,
+                copyLabel: l10n.noteCopy);
             widget.onNoteChanged();
             if (!context.mounted) return;
             UnifiedNotificationService().show(
@@ -179,7 +181,8 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
 
       case 'duplicate':
         Navigator.pop(context);
-        await notesProvider.duplicateNote(widget.note.id!);
+        await notesProvider.duplicateNote(widget.note.id!,
+            copyLabel: l10n.noteCopy);
         widget.onNoteChanged();
         if (!context.mounted) return;
         UnifiedNotificationService().show(
@@ -208,8 +211,8 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
             final rec = result['recurrence'] == 'none'
                 ? null
                 : result['recurrence'] as String;
-            await notesProvider.updateNote(
-                widget.note.copyWith(reminderDateTime: dt, recurrenceRule: rec));
+            await notesProvider.updateNote(widget.note
+                .copyWith(reminderDateTime: dt, recurrenceRule: rec));
             await NotificationService().scheduleNotification(
               id: widget.note.id!,
               title: widget.note.title,
@@ -241,3 +244,4 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
     }
   }
 }
+

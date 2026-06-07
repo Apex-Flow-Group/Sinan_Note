@@ -1,8 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+
 
 /// بيانات زر واحد في الشريط
 class BarEntry {
@@ -289,3 +291,4 @@ class _BarButtonState extends State<_BarButton> {
     );
   }
 }
+

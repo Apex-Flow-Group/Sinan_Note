@@ -1,7 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/models/note.dart';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sinan_note/models/note.dart';
 
 void main() {
   group('Note Model', () {
@@ -31,18 +32,39 @@ void main() {
 
     group('isEncrypted', () {
       test('returns true for encrypted content', () {
+        // IV صالح بـ Base64 (16 بايت = 24 حرف Base64) + ciphertext
         final note = Note(
-          content: 'iv1234567890123456:encrypteddata',
-          title: '', createdAt: now, updatedAt: now,
+          content: 'AAAAAAAAAAAAAAAAAAAAAA==:encrypteddata',
+          title: '',
+          createdAt: now,
+          updatedAt: now,
         );
         expect(note.isEncrypted, true);
       });
       test('returns false for plain content', () {
-        final note = Note(title: '', content: 'plain text', createdAt: now, updatedAt: now);
+        final note = Note(
+            title: '', content: 'plain text', createdAt: now, updatedAt: now);
         expect(note.isEncrypted, false);
       });
       test('returns false for empty content', () {
-        final note = Note(title: '', content: '', createdAt: now, updatedAt: now);
+        final note =
+            Note(title: '', content: '', createdAt: now, updatedAt: now);
+        expect(note.isEncrypted, false);
+      });
+      test('returns false for URL with colon', () {
+        final note = Note(
+            title: '',
+            content: 'https://example.com/path',
+            createdAt: now,
+            updatedAt: now);
+        expect(note.isEncrypted, false);
+      });
+      test('returns false for JSON with colon', () {
+        final note = Note(
+            title: '',
+            content: '{"key":"value"}',
+            createdAt: now,
+            updatedAt: now);
         expect(note.isEncrypted, false);
       });
     });
@@ -50,8 +72,13 @@ void main() {
     group('copyWith()', () {
       test('copies and overrides fields', () {
         final original = Note(
-          id: 1, title: 'Original', content: 'Content',
-          createdAt: now, updatedAt: now, colorIndex: 3, isPinned: true,
+          id: 1,
+          title: 'Original',
+          content: 'Content',
+          createdAt: now,
+          updatedAt: now,
+          colorIndex: 3,
+          isPinned: true,
         );
         final copy = original.copyWith(title: 'Modified');
         expect(copy.title, 'Modified');
@@ -61,13 +88,17 @@ void main() {
       });
       test('can clear reminderDateTime with null', () {
         final note = Note(
-          title: '', content: '', createdAt: now, updatedAt: now,
+          title: '',
+          content: '',
+          createdAt: now,
+          updatedAt: now,
           reminderDateTime: now.add(const Duration(days: 1)),
         );
         expect(note.copyWith(reminderDateTime: null).reminderDateTime, isNull);
       });
       test('auto-updates normalizedTitle', () {
-        final note = Note(title: 'أَهْلاً', content: '', createdAt: now, updatedAt: now);
+        final note =
+            Note(title: 'أَهْلاً', content: '', createdAt: now, updatedAt: now);
         final copy = note.copyWith(title: 'مَرْحَباً');
         expect(copy.normalizedTitle, Note.normalize('مَرْحَباً'));
       });
@@ -76,10 +107,16 @@ void main() {
     group('toMap() / fromMap()', () {
       test('round-trip preserves all fields', () {
         final original = Note(
-          id: 42, title: 'Test', content: 'Content',
-          createdAt: now, updatedAt: now,
-          colorIndex: 5, isArchived: true, isPinned: true,
-          noteType: 'code', categoryIds: [1, 2, 3],
+          id: 42,
+          title: 'Test',
+          content: 'Content',
+          createdAt: now,
+          updatedAt: now,
+          colorIndex: 5,
+          isArchived: true,
+          isPinned: true,
+          noteType: 'code',
+          categoryIds: [1, 2, 3],
         );
         final restored = Note.fromMap(original.toMap());
         expect(restored.id, 42);
@@ -119,9 +156,13 @@ void main() {
       test('1000 notes round-trip without data loss', () {
         for (int i = 0; i < 1000; i++) {
           final note = Note(
-            id: i, title: 'Note $i', content: 'Content $i',
-            createdAt: now, updatedAt: now,
-            colorIndex: i % 12, noteType: ['simple', 'code', 'checklist'][i % 3],
+            id: i,
+            title: 'Note $i',
+            content: 'Content $i',
+            createdAt: now,
+            updatedAt: now,
+            colorIndex: i % 12,
+            noteType: ['simple', 'code', 'checklist'][i % 3],
           );
           final restored = Note.fromMap(note.toMap());
           expect(restored.title, note.title);
@@ -134,9 +175,19 @@ void main() {
 }
 
 Map<String, dynamic> _baseMap(DateTime now) => {
-  'id': 1, 'title': 'T', 'content': 'C',
-  'createdAt': now.toIso8601String(), 'updatedAt': now.toIso8601String(),
-  'noteType': 'simple', 'colorIndex': 0,
-  'isArchived': 0, 'isTrashed': 0, 'isLocked': 0,
-  'isCompleted': 0, 'isProfessional': 0, 'isPinned': 0, 'isChecklist': 0,
-};
+      'id': 1,
+      'title': 'T',
+      'content': 'C',
+      'createdAt': now.toIso8601String(),
+      'updatedAt': now.toIso8601String(),
+      'noteType': 'simple',
+      'colorIndex': 0,
+      'isArchived': 0,
+      'isTrashed': 0,
+      'isLocked': 0,
+      'isCompleted': 0,
+      'isProfessional': 0,
+      'isPinned': 0,
+      'isChecklist': 0,
+    };
+

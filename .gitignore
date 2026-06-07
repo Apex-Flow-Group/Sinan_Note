@@ -30,6 +30,18 @@ migrate_working_dir/
 # Archive folder
 archive/
 
+# Store assets (screenshots for Play Store — kept externally)
+store_assets/
+
+# Installer binaries
+installer/
+
+# Refactoring tool and docs (kept externally)
+.refactoring/
+refactoring_tool/
+docs/
+scripts/
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
@@ -107,3 +119,12 @@ android/build/
 # Local flutter_quill patch — نرفع الكود لكن نستثني ملفات البناء
 packages/flutter_quill/.dart_tool/
 packages/flutter_quill/build/
+
+# Large report files from refactoring tool
+full_report.txt
+full_report_v2.txt
+.refactoring/scan_notes_provider.txt
+*.scan.txt
+
+# Local analysis reports (not for repo)
+REPORT_*.md

@@ -1,16 +1,18 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/common/glowing_search_field.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
-import 'package:apex_note/widgets/home/selection_action_bar.dart';
-import 'package:apex_note/widgets/home/smooth_search_header_delegate.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/common/glowing_search_field.dart';
+import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
+import 'package:sinan_note/widgets/home/selection_action_bar.dart';
+import 'package:sinan_note/widgets/home/smooth_search_header_delegate.dart';
 
 class SmartHeader extends StatefulWidget {
   final ValueNotifier<Set<int>> selectedNoteIdsNotifier;
@@ -42,40 +44,33 @@ class SmartHeader extends StatefulWidget {
   State<SmartHeader> createState() => _SmartHeaderState();
 }
 
-class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin {
+class _SmartHeaderState extends State<SmartHeader>
+    with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    widget.selectedNoteIdsNotifier.addListener(_onSelectionChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.selectedNoteIdsNotifier.removeListener(_onSelectionChanged);
-    super.dispose();
-  }
-
-  void _onSelectionChanged() {
-    // لا شيء - الشريط دائماً مثبت
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hideOnScroll = Provider.of<SettingsProvider>(context, listen: false)
+        .hideSearchOnScroll;
 
     return ValueListenableBuilder<Set<int>>(
       valueListenable: widget.selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
         return SliverPersistentHeader(
           pinned: true,
-          floating: true,
+          floating: hideOnScroll, // floating فقط عندما الإخفاء مفعّل
           delegate: SmoothSearchHeaderDelegate(
             expandedHeight: 68.0,
             statusBarHeight: MediaQuery.of(context).padding.top,
             selectionMode: selectedIds.isNotEmpty,
             isSearchActive: widget.isSearchActive,
             tickerProvider: this,
+            hideOnScroll: hideOnScroll,
             selectionBar: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),
@@ -99,23 +94,9 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                         final note =
                             provider.notes.firstWhere((n) => n.id == id);
                         notesToRestore.add(note);
-                        final updatedNote = Note(
-                          id: note.id,
-                          title: note.title,
-                          content: note.content,
-                          createdAt: note.createdAt,
-                          updatedAt: DateTime.now(),
-                          colorIndex: note.colorIndex,
-                          isArchived: note.isArchived,
-                          isTrashed: note.isTrashed,
-                          reminderDateTime: note.reminderDateTime,
-                          isLocked: note.isLocked,
-                          noteType: note.noteType,
-                          recurrenceRule: note.recurrenceRule,
-                          isCompleted: note.isCompleted,
-                          isProfessional: note.isProfessional,
+                        final updatedNote = note.copyWith(
                           isPinned: !note.isPinned,
-                          isChecklist: note.isChecklist,
+                          updatedAt: DateTime.now(),
                         );
                         await provider.updateNote(updatedNote);
                       }
@@ -188,7 +169,7 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                             widget.selectedNoteIdsNotifier.value = {};
                             final plainContent = NoteCardUtils.fixNoteContent(
                                 note.content,
-                                maxChars: note.content.length);
+                                maxChars: null);
                             CustomShareSheet.show(
                               context,
                               '${note.title}\n\n$plainContent',
@@ -204,6 +185,31 @@ class _SmartHeaderState extends State<SmartHeader> with TickerProviderStateMixin
                             );
                           }
                         : null,
+                    onCategory: () async {
+                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                      final ids = List<int>.from(selectedIds);
+                      final isSingle = ids.length == 1;
+                      final firstNote = provider.notes.firstWhere((n) => n.id == ids.first);
+                      final result = await CategoryPickerSheet.show(
+                        context,
+                        isSingle ? firstNote.categoryIds : [],
+                        isHiddenFromHome: isSingle ? firstNote.isHiddenFromHome : false,
+                      );
+                      if (result == null || !context.mounted) return;
+                      final newCatIds = (result['categoryIds'] as List).cast<int>();
+                      final newHidden = result['isHiddenFromHome'] as bool;
+                      for (final id in ids) {
+                        final note = provider.notes.firstWhere((n) => n.id == id);
+                        final merged = isSingle
+                            ? newCatIds
+                            : {...note.categoryIds, ...newCatIds}.toList();
+                        await provider.updateNote(note.copyWith(
+                          categoryIds: merged,
+                          isHiddenFromHome: isSingle ? newHidden : (note.isHiddenFromHome || newHidden),
+                        ));
+                      }
+                      widget.selectedNoteIdsNotifier.value = {};
+                    },
                   ),
                 ),
               ),

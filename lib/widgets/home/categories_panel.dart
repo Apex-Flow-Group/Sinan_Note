@@ -1,12 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/category.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/category.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/pro_category_tile.dart';
 
 enum CatPanelMode { normal, delete, edit }
 
@@ -157,12 +158,12 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
               onTap: () {
                 provider.selectCategory(null);
                 Navigator.pop(context);
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.of(context, rootNavigator: true).popUntil(
+                    (route) => route.settings.name == '/main' || route.isFirst);
                 widget.onCategorySelected?.call();
               },
             ),
-            // كتالوج المحترف الثابت
-            _ProCategoryTile(
+            ProCategoryTile(
               isSelected: selected == kProCategoryId,
               scheme: scheme,
               isDark: isDark,
@@ -170,7 +171,8 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
               onTap: () {
                 provider.selectCategory(kProCategoryId);
                 Navigator.pop(context);
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.of(context, rootNavigator: true).popUntil(
+                    (route) => route.settings.name == '/main' || route.isFirst);
                 widget.onCategorySelected?.call();
               },
             ),
@@ -204,7 +206,9 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                   } else {
                     provider.selectCategory(cat.id);
                     Navigator.pop(context);
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    Navigator.of(context, rootNavigator: true).popUntil(
+                        (route) =>
+                            route.settings.name == '/main' || route.isFirst);
                     widget.onCategorySelected?.call();
                   }
                 },
@@ -329,123 +333,6 @@ class _CatTile extends StatelessWidget {
                 )
               : null,
         ),
-      ),
-    );
-  }
-}
-
-class _ProCategoryTile extends StatefulWidget {
-  final bool isSelected;
-  final ColorScheme scheme;
-  final bool isDark;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ProCategoryTile({
-    required this.isSelected,
-    required this.scheme,
-    required this.isDark,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  State<_ProCategoryTile> createState() => _ProCategoryTileState();
-}
-
-class _ProCategoryTileState extends State<_ProCategoryTile> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<CategoriesProvider>();
-    final proColor =
-        AppColorPalette.palette[6].getColor(Theme.of(context).brightness);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: widget.isSelected
-                  ? proColor.withValues(alpha: widget.isDark ? 0.15 : 0.08)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              onTap: widget.onTap,
-              leading: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: proColor.withValues(alpha: widget.isDark ? 0.2 : 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.workspace_premium_rounded,
-                    color: proColor, size: 18),
-              ),
-              title: Text(
-                widget.label,
-                style: TextStyle(
-                  fontWeight:
-                      widget.isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: widget.isSelected ? proColor : widget.scheme.onSurface,
-                ),
-              ),
-              trailing: GestureDetector(
-                onTap: () => setState(() => _expanded = !_expanded),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Icon(
-                    _expanded
-                        ? Icons.expand_less_rounded
-                        : Icons.settings_rounded,
-                    size: 22,
-                    color: proColor.withValues(alpha: 0.7),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // خيارات الترس تتوسع للأسفل
-          AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            child: _expanded
-                ? Container(
-                    margin: const EdgeInsets.only(top: 4, bottom: 4),
-                    decoration: BoxDecoration(
-                      color: proColor.withValues(
-                          alpha: widget.isDark ? 0.08 : 0.04),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: proColor.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SwitchListTile(
-                          dense: true,
-                          value: provider.hideProFromHome,
-                          onChanged: (v) => provider.setHideProFromHome(v),
-                          title: Text(
-                            AppLocalizations.of(context)!.hideProFromHome,
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          activeThumbColor: proColor,
-                        ),
-                      ],
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
       ),
     );
   }

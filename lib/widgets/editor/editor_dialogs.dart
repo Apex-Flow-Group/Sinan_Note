@@ -1,9 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/widgets/common/color_picker_sheet.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 
 class WidgetEditorDialogs {
   static Future<String?> showPasswordDialog(
@@ -120,3 +121,4 @@ class WidgetEditorDialogs {
     });
   }
 }
+

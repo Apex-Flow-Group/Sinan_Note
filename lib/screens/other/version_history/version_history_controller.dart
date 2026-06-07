@@ -1,10 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/version_history_service.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/services/version_history_service.dart';
 
 const double kColMin = 200.0;
 const double kColMax = 480.0;
@@ -63,7 +64,8 @@ class VersionHistoryController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> restoreVersion(NoteVersion version, Note note, NotesProvider notesProvider) async {
+  Future<void> restoreVersion(
+      NoteVersion version, Note note, NotesProvider notesProvider) async {
     await _service.restoreVersion(note.id!, version);
     // أخبر NotesProvider بالتغيير حتى تتحدث الشاشة الرئيسية
     await notesProvider.refreshAllNotes();
@@ -75,10 +77,11 @@ class VersionHistoryController extends ChangeNotifier {
   List<Note> get filteredNotes {
     var notes = notesWithHistory;
     if (searchQuery.trim().isNotEmpty) {
-      final q = searchQuery.toLowerCase();
-      notes = notes.where((n) =>
-          n.title.toLowerCase().contains(q) ||
-          n.content.toLowerCase().contains(q)).toList();
+      final q = Note.normalize(searchQuery);
+      notes = notes
+          .where((n) =>
+              n.normalizedTitle.contains(q) || n.normalizedContent.contains(q))
+          .toList();
     }
     if (sortBy == 'title') {
       notes.sort((a, b) => a.title.compareTo(b.title));
@@ -90,23 +93,36 @@ class VersionHistoryController extends ChangeNotifier {
 
   static IconData getActionIcon(String action) {
     switch (action) {
-      case 'manual_save': return Icons.save;
-      case 'auto_save': return Icons.update;
-      case 'created': return Icons.add_circle;
-      case 'archived': return Icons.archive;
-      case 'restored': return Icons.restore;
-      default: return Icons.edit;
+      case 'manual_save':
+        return Icons.save;
+      case 'auto_save':
+        return Icons.update;
+      case 'created':
+        return Icons.add_circle;
+      case 'archived':
+        return Icons.archive;
+      case 'restored':
+        return Icons.restore;
+      default:
+        return Icons.edit;
     }
   }
 
   static Color getActionColor(String action) {
     switch (action) {
-      case 'manual_save': return Colors.green;
-      case 'auto_save': return Colors.blue;
-      case 'created': return Colors.purple;
-      case 'archived': return Colors.orange;
-      case 'restored': return Colors.teal;
-      default: return Colors.grey;
+      case 'manual_save':
+        return Colors.green;
+      case 'auto_save':
+        return Colors.blue;
+      case 'created':
+        return Colors.purple;
+      case 'archived':
+        return Colors.orange;
+      case 'restored':
+        return Colors.teal;
+      default:
+        return Colors.grey;
     }
   }
 }
+

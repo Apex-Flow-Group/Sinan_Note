@@ -1,11 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class CategoryPickerSheet extends StatefulWidget {
   final List<int> selectedIds;
@@ -108,6 +109,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
                         onChanged: (_) => setState(() {
                           if (checked) {
                             _selected.remove(cat.id);
+                            if (_selected.isEmpty) _hideFromHome = false;
                           } else {
                             _selected.add(cat.id);
                           }
@@ -214,3 +216,4 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
     );
   }
 }
+

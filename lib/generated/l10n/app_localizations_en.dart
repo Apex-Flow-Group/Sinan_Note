@@ -1349,6 +1349,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checklistItemHint => 'Task...';
 
   @override
+  String get addItem => 'Add item';
+
+  @override
+  String get itemDeleted => 'Item deleted';
+
+  @override
   String get sort => 'Sort';
 
   @override
@@ -1385,7 +1391,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get officialVersion => 'Official Version - Google Play';
 
   @override
-  String get sinanAiNet => 'SinanAi.net — Emerging Apps';
+  String get sinanAiNet => 'SinanAi.net — Innovative Apps';
 
   @override
   String get importantLinks => 'Important Links';
@@ -2095,4 +2101,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unlockWithBiometricDesc => 'Use fingerprint or face recognition';
+
+  @override
+  String get redo => 'Redo';
+
+  @override
+  String get bold => 'Bold';
+
+  @override
+  String get italic => 'Italic';
+
+  @override
+  String get underline => 'Underline';
+
+  @override
+  String get strikethrough => 'Strikethrough';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get selectAll => 'Select All';
+
+  @override
+  String get noteDuplicated => 'Note duplicated';
+
+  @override
+  String get duplicate => 'Duplicate';
+
+  @override
+  String get toggleView => 'Toggle View';
+
+  @override
+  String get readingMode => 'Reading Mode';
+
+  @override
+  String get saveReadingPosition => 'Save Position';
+
+  @override
+  String get readingPositionSaved => 'Position saved';
+
+  @override
+  String get readingProgress => 'Progress';
+
+  @override
+  String get comfortableFont => 'Comfortable font';
 }

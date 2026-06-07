@@ -1,15 +1,15 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/pin_lock_screen.dart';
-import 'package:apex_note/screens/shared/settings/settings_dialogs.dart';
-import 'package:apex_note/screens/shared/settings/settings_utils.dart';
-import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
+import 'package:sinan_note/screens/shared/settings/settings_dialogs.dart';
+import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
+import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
 
 class SecuritySection extends StatelessWidget {
   const SecuritySection({super.key});
@@ -18,14 +18,13 @@ class SecuritySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
+    final primary = Theme.of(context).colorScheme.primary;
     return SettingsSectionCard(
       title: l10n.security,
       icon: Icons.shield_rounded,
       children: [
         SwitchListTile(
-          secondary: Icon(Icons.lock_rounded, color: primaryColor),
+          secondary: Icon(Icons.lock_rounded, color: primary),
           title: Text(l10n.appLock),
           subtitle:
               Text(settings.isAppLockEnabled ? l10n.enabled : l10n.disabled),
@@ -35,10 +34,12 @@ class SecuritySection extends StatelessWidget {
               if (!context.mounted) return;
               final result = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
-                  builder: (pinContext) => PinLockScreen(
+                  builder: (_) => PinLockScreen(
                     isSetup: true,
                     onSuccess: () {
-                      Navigator.of(pinContext).pop(true);
+                      if (context.mounted) {
+                        Navigator.of(context).pop(true);
+                      }
                     },
                   ),
                 ),
@@ -53,11 +54,13 @@ class SecuritySection extends StatelessWidget {
                 if (!context.mounted) return;
                 final result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
-                    builder: (pinContext) => PinLockScreen(
+                    builder: (_) => PinLockScreen(
                       isSetup: false,
                       isDisabling: true,
                       onSuccess: () {
-                        Navigator.of(pinContext).pop(true);
+                        if (context.mounted) {
+                          Navigator.of(context).pop(true);
+                        }
                       },
                     ),
                   ),
@@ -89,8 +92,7 @@ class SecuritySection extends StatelessWidget {
               return Column(
                 children: [
                   SwitchListTile(
-                    secondary: Icon(Icons.fingerprint_rounded,
-                        color: Theme.of(context).colorScheme.primary),
+                    secondary: Icon(Icons.fingerprint_rounded, color: primary),
                     title: Text(l10n.unlockWithBiometric),
                     subtitle: Text(l10n.unlockWithBiometricDesc),
                     value: settings.biometricLockEnabled,
@@ -115,7 +117,7 @@ class SecuritySection extends StatelessWidget {
           Column(
             children: [
               ListTile(
-                leading: Icon(Icons.timer_outlined, color: primaryColor),
+                leading: Icon(Icons.timer_outlined, color: primary),
                 title: Text(l10n.lockDelay),
                 subtitle: Text(
                   settings.lockDelayEnabled
@@ -133,7 +135,7 @@ class SecuritySection extends StatelessWidget {
             ],
           ),
         SwitchListTile(
-          secondary: Icon(Icons.visibility_off_rounded, color: primaryColor),
+          secondary: Icon(Icons.visibility_off_rounded, color: primary),
           title: Text(l10n.hideContentInBackground),
           subtitle: Text(l10n.applyBlurEffect),
           value: settings.hideContentInBackground,

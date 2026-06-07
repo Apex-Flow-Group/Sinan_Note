@@ -1,7 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+
 
 class SlidableAutoCloser extends StatefulWidget {
   final ValueNotifier<int> closerNotifier;
@@ -40,3 +42,4 @@ class _SlidableAutoCloserState extends State<SlidableAutoCloser> {
   @override
   Widget build(BuildContext context) => widget.child;
 }
+

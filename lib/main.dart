@@ -1,33 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/desktop/archive_screen_responsive.dart';
-import 'package:apex_note/screens/desktop/locked_notes_screen_responsive.dart';
-import 'package:apex_note/screens/desktop/trash_screen_responsive.dart';
-import 'package:apex_note/screens/onboarding/cinematic_intro_screen.dart';
-import 'package:apex_note/screens/onboarding/splash_screen.dart';
-import 'package:apex_note/screens/other/version_history_screen.dart';
-import 'package:apex_note/screens/other/widget_selection_screen.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/screens/shared/settings_screen_responsive.dart';
-import 'package:apex_note/screens/sync/google_drive_screen_responsive.dart';
-import 'package:apex_note/services/app_update_service.dart';
-import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/content_guard.dart';
-import 'package:apex_note/services/security/security_gate.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/widget_service.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
@@ -35,6 +11,32 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/master_width_provider.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/desktop/archive_screen_responsive.dart';
+import 'package:sinan_note/screens/desktop/locked_notes_screen_responsive.dart';
+import 'package:sinan_note/screens/desktop/trash_screen_responsive.dart';
+import 'package:sinan_note/screens/onboarding/cinematic_intro_screen.dart';
+import 'package:sinan_note/screens/onboarding/splash_screen.dart';
+import 'package:sinan_note/screens/other/version_history_screen.dart';
+import 'package:sinan_note/screens/other/widget_selection_screen.dart';
+import 'package:sinan_note/screens/shared/settings_screen_responsive.dart';
+import 'package:sinan_note/screens/sync/google_drive_screen_responsive.dart';
+import 'package:sinan_note/services/app_update_service.dart';
+import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/security/security_gate.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/widgets/editor/paste_handler.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Global navigator key for error feedback
@@ -71,6 +73,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => NotesProvider()),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
         ChangeNotifierProvider(create: (_) => CategoriesProvider()),
+        ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
       ],
       child: const ApexNoteApp(),
     ),
@@ -118,9 +121,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       if (data != null && data is Map) {
         _processIntent(data);
       }
-    } catch (e) {
-      // Ignore: Widget intent errors are non-critical
-    }
+    } catch (_) {}
   }
 
   Future<void> _handleMethodCall(MethodCall call) async {
@@ -138,6 +139,9 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
     if (sharedText != null && sharedText.isNotEmpty) {
       _openEditorWithSharedText(sharedText);
+    } else if (action == 'com.apexflow.app.sinan.ACTION_OPEN_SINAN_FILE') {
+      final filePath = data['file_path'] as String?;
+      if (filePath != null) _importSinanFile(filePath);
     } else if (action ==
         'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
       navigatorKey.currentState?.push(
@@ -185,13 +189,16 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     if (!mounted) return;
 
     final isUrl = Uri.tryParse(text)?.hasScheme ?? false;
-    final content = isUrl
-        ? text
-        : (text.length > kMaxSharedTextLength
-            ? text.substring(0, kMaxSharedTextLength)
-            : text);
+    final mode = isUrl ? NoteMode.simple : _detectNoteMode(text);
 
-    final mode = isUrl ? NoteMode.simple : _detectNoteMode(content);
+    // بناء Delta في Isolate قبل فتح المحرر
+    String content;
+    if (!isUrl) {
+      final delta = await buildDeltaInIsolate(text);
+      content = delta.toJson().toString();
+    } else {
+      content = text;
+    }
 
     // Create and save note to database FIRST
     final newNote = Note(
@@ -217,14 +224,53 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     if (savedNote == null) return;
 
     // Open editor on top of MainLayoutScreen
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (context) => NoteEditorImmersive(
-          mode: mode,
-          note: savedNote,
-        ),
-      ),
-    );
+    AppNavigator.toEditorViaKey(navigatorKey, note: savedNote, mode: mode);
+  }
+
+  void _importSinanFile(String filePath) async {
+    try {
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+
+      while (!settings.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 50));
+        if (!mounted) return;
+      }
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+
+      final file = File(filePath);
+      if (!await file.exists()) return;
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+
+      final note = Note(
+        title: json['title'] as String? ?? '',
+        content: json['content'] as String? ?? '',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        colorIndex: json['colorIndex'] as int? ?? 0,
+        noteType: json['noteType'] as String? ?? 'simple',
+        isProfessional: json['noteType'] == 'code',
+        isChecklist: json['noteType'] == 'checklist',
+      );
+
+      final savedId = await notesProvider.addOrUpdateNote(note, silent: true);
+      final dbService = SqliteDatabaseService();
+      final savedNote = await dbService.getNoteById(savedId);
+      if (!mounted || savedNote == null) return;
+
+      AppNavigator.toEditorViaKey(
+        navigatorKey,
+        note: savedNote,
+        mode: NoteCardUtils.getNoteMode(savedNote),
+      );
+      try {
+        await file.delete();
+      } catch (_) {}
+    } catch (_) {}
   }
 
   NoteMode _detectNoteMode(String text) {
@@ -233,11 +279,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       RegExp(r'^\s*[-*]\s*\[[ xX]\]', multiLine: true),
       RegExp(r'^\s*\d+\.\s*\[[ xX]\]', multiLine: true),
     ];
-
     for (final pattern in checklistPatterns) {
-      if (pattern.hasMatch(text)) {
-        return NoteMode.checklist;
-      }
+      if (pattern.hasMatch(text)) return NoteMode.checklist;
     }
 
     // Code patterns
@@ -247,27 +290,20 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       RegExp(r'(public|private|void|int|String)\s'),
       RegExp(r'[{};]\s*$', multiLine: true),
     ];
-
     for (final pattern in codePatterns) {
-      if (pattern.hasMatch(text)) {
-        return NoteMode.code;
-      }
+      if (pattern.hasMatch(text)) return NoteMode.code;
     }
 
-    // Rich text patterns (HTML/Markdown)
+    // Rich text patterns
     final richPatterns = [
       RegExp(r'<[^>]+>'),
       RegExp(r'\*\*[^*]+\*\*'),
       RegExp(r'__[^_]+__'),
       RegExp(r'^#{1,6}\s', multiLine: true),
     ];
-
     for (final pattern in richPatterns) {
-      if (pattern.hasMatch(text)) {
-        return NoteMode.rich;
-      }
+      if (pattern.hasMatch(text)) return NoteMode.rich;
     }
-
     return NoteMode.simple;
   }
 
@@ -288,23 +324,35 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
   void _openNoteById(int noteId) async {
     try {
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+
+      // انتظار اكتمال التهيئة (قاعدة البيانات + SplashScreen)
+      while (!settings.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 50));
+        if (!mounted) return;
+      }
+
+      // انتظار إضافي لضمان أن MainLayoutScreen حلّت محل SplashScreen
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+
       final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null) {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => NoteEditorImmersive(
-              note: note,
-              mode: NoteCardUtils.getNoteMode(note),
-              readOnly: true,
-            ),
-          ),
+        AppNavigator.toEditorViaKey(
+          navigatorKey,
+          note: note,
+          mode: NoteCardUtils.getNoteMode(note),
+          readOnly: true,
         );
       } else {
-        navigatorKey.currentState?.pushNamed('/widget_selection');
+        AppNavigator.toWidgetSelectionViaKey(navigatorKey);
       }
     } catch (e) {
-      navigatorKey.currentState?.pushNamed('/widget_selection');
+      AppNavigator.toWidgetSelectionViaKey(navigatorKey);
     }
   }
 
@@ -410,7 +458,7 @@ class _AppHomeState extends State<_AppHome> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        if (settings.isFirstLaunch) return CinematicIntroScreen();
+        if (settings.isFirstLaunch) return const CinematicIntroScreen();
         return const SplashScreen();
       },
     );

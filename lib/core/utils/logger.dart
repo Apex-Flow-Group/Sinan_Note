@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/foundation.dart';
+
 
 /// نظام تسجيل موحد للتطبيق
 class AppLogger {
@@ -44,3 +46,4 @@ class AppLogger {
     }
   }
 }
+

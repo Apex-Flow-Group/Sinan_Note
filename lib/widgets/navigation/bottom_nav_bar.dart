@@ -1,8 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -21,7 +22,8 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final appBarColor = AppTheme.secondaryBackground(Theme.of(context).colorScheme);
+    final appBarColor =
+        AppTheme.secondaryBackground(Theme.of(context).colorScheme);
 
     return AnimatedSlide(
       duration: const Duration(milliseconds: 300),
@@ -79,3 +81,4 @@ class BottomNavBar extends StatelessWidget {
     );
   }
 }
+

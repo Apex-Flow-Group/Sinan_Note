@@ -1,24 +1,20 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';
-
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
-import 'package:flutter/services.dart';
-import 'package:local_auth/local_auth.dart';
-
+import 'dart:io';import 'package:flutter/services.dart';import 'package:local_auth/local_auth.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart'; import 'package:sinan_note/core/utils/logger.dart'; import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 class BiometricService {
   static final LocalAuthentication _auth = LocalAuthentication();
 
   /// التحقق من دعم الجهاز للمصادقة البيومترية
+  /// يُرجع true فقط إذا كان الجهاز يدعم البصمة ولديه credentials مسجّلة فعلاً
   static Future<bool> hasBiometrics() async {
     if (Platform.isLinux || Platform.isWindows) return false;
     try {
-      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate =
-          canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
-      return canAuthenticate;
+      // الجهاز يدعم البصمة hardware
+      final bool canCheck = await _auth.canCheckBiometrics;
+      if (!canCheck) return false;
+      // توجد بصمة مسجّلة فعلاً على الجهاز
+      final List<BiometricType> available = await _auth.getAvailableBiometrics();
+      return available.isNotEmpty;
     } on PlatformException catch (e) {
       AppLogger.debug("Biometric check error: $e");
       return false;
@@ -62,3 +58,4 @@ class BiometricService {
         : 'Please authenticate to open the note';
   }
 }
+

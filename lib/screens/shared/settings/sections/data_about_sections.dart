@@ -1,16 +1,18 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/onboarding/whats_new_dialog.dart';
-import 'package:apex_note/screens/other/about_screen.dart';
-import 'package:apex_note/screens/other/support_form_screen.dart';
-import 'package:apex_note/screens/shared/backup_wizard_screen.dart';
-import 'package:apex_note/screens/shared/settings/settings_utils.dart';
-import 'package:apex_note/screens/shared/settings/widgets/settings_section_card.dart';
-import 'package:apex_note/services/storage/db_inspector_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/onboarding/tour_screen.dart';
+import 'package:sinan_note/screens/onboarding/whats_new_dialog.dart';
+import 'package:sinan_note/screens/other/about_screen.dart';
+import 'package:sinan_note/screens/other/support_form_screen.dart';
+import 'package:sinan_note/screens/shared/backup_wizard_screen.dart';
+import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
+import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
+import 'package:sinan_note/services/storage/db_inspector_service.dart';
+import 'package:sinan_note/widgets/common/app_dialog.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 
 class DataSection extends StatelessWidget {
   final String currentLang;
@@ -24,8 +26,7 @@ class DataSection extends StatelessWidget {
       icon: Icons.storage_rounded,
       children: [
         ListTile(
-          leading: Icon(Icons.backup_outlined,
-              color: Theme.of(context).colorScheme.primary),
+          leading: const Icon(Icons.backup_outlined, color: Color(0xFF2E7D32)),
           title: Text(currentLang == 'ar'
               ? 'النسخ الاحتياطي والاستعادة'
               : 'Backup & Restore'),
@@ -33,8 +34,7 @@ class DataSection extends StatelessWidget {
               ? 'تصدير واستيراد ملاحظاتك'
               : 'Export and import your notes'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const BackupWizardScreen())),
+          onTap: () => AppDialog.show(context, const BackupWizardScreen()),
         ),
       ],
     );
@@ -50,19 +50,19 @@ class AboutSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final primary = Theme.of(context).colorScheme.primary;
     return SettingsSectionCard(
       title: l10n.about,
       icon: Icons.info_outline_rounded,
       children: [
         ListTile(
-          leading: const Icon(Icons.mail_outline),
+          leading: Icon(Icons.mail_outline, color: primary),
           title: Text(l10n.feedback),
           subtitle: Text(l10n.contactUs),
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const SupportFormScreen())),
+          onTap: () => AppDialog.show(context, const SupportFormScreen()),
         ),
         ListTile(
-          leading: const Icon(Icons.share),
+          leading: Icon(Icons.share, color: primary),
           title: Text(l10n.shareApp),
           onTap: () {
             final msg = currentLang == 'ar'
@@ -72,11 +72,10 @@ class AboutSection extends StatelessWidget {
           },
         ),
         ListTile(
-          leading: const Icon(Icons.info_outline),
+          leading: Icon(Icons.info_outline, color: primary),
           title: Text(l10n.aboutApp),
           subtitle: Text(version),
-          onTap: () => Navigator.push(
-              context, MaterialPageRoute(builder: (_) => const AboutScreen())),
+          onTap: () => AppDialog.show(context, const AboutScreen()),
         ),
         if (kDebugMode)
           ListTile(
@@ -100,6 +99,13 @@ class AboutSection extends StatelessWidget {
             title: const Text('What\'s New Dialog'),
             subtitle: const Text('Preview the dialog'),
             onTap: () => WhatsNewDialog.show(context),
+          ),
+        if (kDebugMode)
+          ListTile(
+            leading: const Icon(Icons.tour_rounded, color: Colors.teal),
+            title: const Text('Tour Screen'),
+            subtitle: const Text('Preview onboarding tour'),
+            onTap: () => AppDialog.show(context, const TourScreen()),
           ),
       ],
     );

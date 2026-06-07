@@ -1,14 +1,15 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/vault_intro_pages.dart';
-import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/copy_code_button.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
+import 'package:sinan_note/services/security/vault_reset_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/copy_code_button.dart';
+import 'package:sinan_note/widgets/vault_desktop_wrapper.dart';
 
 /// شاشة إعادة تعيين تشفير الخزنة (Wizard)
 /// الخطوات:
@@ -129,7 +130,8 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
       return;
     }
     if (password != confirm) {
-      setState(() => _passwordError = 'Passwords do not match');
+      setState(() =>
+          _passwordError = AppLocalizations.of(context)!.passwordMismatch);
       return;
     }
 
@@ -185,10 +187,12 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
                       ),
                 automaticallyImplyLeading: false,
               ),
-        body: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: _buildCurrentStep(isDark, l10n),
+        body: VaultDesktopWrapper(
+          child: SafeArea(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _buildCurrentStep(isDark, l10n),
+            ),
           ),
         ),
       ),

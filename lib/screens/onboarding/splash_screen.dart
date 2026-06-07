@@ -1,29 +1,28 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:io';
-
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/logger.dart';
-import 'package:apex_note/main.dart' show navigatorKey;
-import 'package:apex_note/screens/auth/pin_lock_screen.dart';
-import 'package:apex_note/screens/onboarding/whats_new_dialog.dart';
-import 'package:apex_note/screens/shared/main_layout_screen.dart';
-import 'package:apex_note/services/app_update_service.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/services/diagnostics/apex_diagnostics_engine.dart';
-import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/security/unified_lock_service.dart';
-import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/widget_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/main.dart' show navigatorKey;
+import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
+import 'package:sinan_note/screens/onboarding/whats_new_dialog.dart';
+import 'package:sinan_note/screens/shared/main_layout_screen.dart';
+import 'package:sinan_note/services/app_update_service.dart';
+import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/services/security/vault_reset_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/widget_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -81,9 +80,9 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       // Initialize Google Sign-In + smart sync in background
-      await GoogleDriveService.initializeSignIn();
-      if (GoogleDriveService.isSignedIn) {
-        unawaited(GoogleDriveService.smartSyncOnStartup().then((_) async {
+      await CloudSyncGateway.initializeSignIn();
+      if (CloudSyncGateway.isSignedIn) {
+        unawaited(CloudSyncGateway.smartSync().then((_) async {
           if (!mounted) return;
           await Provider.of<NotesProvider>(context, listen: false).loadNotes();
         }));
@@ -156,6 +155,7 @@ class _SplashScreenState extends State<SplashScreen> {
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
               const MainLayoutScreen(),
+          settings: const RouteSettings(name: '/main'),
           transitionDuration: const Duration(milliseconds: 300),
           reverseTransitionDuration: Duration.zero,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -197,7 +197,6 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  // ignore: unused_element
   Future<void> _checkAndShowWhatsNew() async {
     final prefs = await SharedPreferences.getInstance();
     final packageInfo = await PackageInfo.fromPlatform();
@@ -306,3 +305,4 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+

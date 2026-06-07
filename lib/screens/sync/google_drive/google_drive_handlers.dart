@@ -1,15 +1,16 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 
 class GoogleDriveHandlers {
   static Future<void> handleSignOut(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await GoogleDriveService.signOut();
+      await CloudSyncGateway.signOut();
       if (!context.mounted) return;
       UnifiedNotificationService().show(
         context: context,
@@ -29,7 +30,7 @@ class GoogleDriveHandlers {
   static Future<void> handleSync(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    if (!GoogleDriveService.isSignedIn) {
+    if (!CloudSyncGateway.isSignedIn) {
       UnifiedNotificationService().show(
         context: context,
         message: l10n.pleaseSignIn,
@@ -39,7 +40,7 @@ class GoogleDriveHandlers {
     }
 
     try {
-      await GoogleDriveService.smartSyncOnStartup();
+      await CloudSyncGateway.smartSync();
       if (!context.mounted) return;
       UnifiedNotificationService().show(
         context: context,
@@ -59,7 +60,7 @@ class GoogleDriveHandlers {
   static Future<void> handleUpload(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    if (!GoogleDriveService.isSignedIn) {
+    if (!CloudSyncGateway.isSignedIn) {
       UnifiedNotificationService().show(
         context: context,
         message: l10n.pleaseSignIn,
@@ -69,7 +70,7 @@ class GoogleDriveHandlers {
     }
 
     try {
-      final success = await GoogleDriveService.uploadDatabase(null);
+      final success = await CloudSyncGateway.upload();
       if (!context.mounted) return;
       UnifiedNotificationService().show(
         context: context,
@@ -90,9 +91,38 @@ class GoogleDriveHandlers {
     }
   }
 
+  static Future<void> handleMerge(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    if (!CloudSyncGateway.isSignedIn) {
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.pleaseSignIn,
+        type: NotificationType.warning,
+      );
+      return;
+    }
+    try {
+      await CloudSyncGateway.silentMerge();
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: isArabic ? 'تم الدمج بنجاح' : 'Merge completed successfully',
+        type: NotificationType.success,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: '${l10n.syncFailed} $e',
+        type: NotificationType.error,
+      );
+    }
+  }
+
   static Future<void> handleDownload(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    if (!GoogleDriveService.isSignedIn) {
+    if (!CloudSyncGateway.isSignedIn) {
       UnifiedNotificationService().show(
         context: context,
         message: l10n.pleaseSignIn,
@@ -102,7 +132,7 @@ class GoogleDriveHandlers {
     }
 
     try {
-      final success = await GoogleDriveService.downloadDatabase(null);
+      final success = await CloudSyncGateway.download();
       if (!context.mounted) return;
       UnifiedNotificationService().show(
         context: context,
@@ -126,15 +156,19 @@ class GoogleDriveHandlers {
   static String formatDateTime(BuildContext context, DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     if (difference.inMinutes < 1) {
       return AppLocalizations.of(context)!.justNow;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      final m = difference.inMinutes;
+      return isAr ? 'منذ $m دقيقة' : '${m}m ago';
     } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
+      final h = difference.inHours;
+      return isAr ? 'منذ $h ساعة' : '${h}h ago';
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      final d = difference.inDays;
+      return isAr ? 'منذ $d يوم' : '${d}d ago';
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
@@ -163,7 +197,6 @@ class GoogleDriveHandlers {
             onPressed: () {
               Navigator.pop(ctx);
               // رابط Google Play
-              // ignore: deprecated_member_use
             },
           ),
         ],
@@ -171,3 +204,4 @@ class GoogleDriveHandlers {
     );
   }
 }
+

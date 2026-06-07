@@ -1,28 +1,28 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/shortcuts/app_shortcuts.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart';
-import 'package:apex_note/screens/other/about_screen.dart';
-import 'package:apex_note/widgets/desktop/desktop_menu_bar.dart';
-import 'package:apex_note/widgets/desktop/desktop_selection_actions.dart';
-import 'package:apex_note/widgets/details_panel.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart';
-import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
-import 'package:apex_note/widgets/home/dialogs/filter_sheet.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/widgets/home/note_locator_button.dart';
-import 'package:apex_note/widgets/home/notes_grid_view.dart';
-import 'package:apex_note/widgets/master_details_layout.dart';
-import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/shortcuts/app_shortcuts.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/providers/master_width_provider.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart';
+import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
+import 'package:sinan_note/widgets/desktop/desktop_selection_actions.dart';
+import 'package:sinan_note/widgets/details_panel.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart';
+import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
+import 'package:sinan_note/widgets/home/note_locator_button.dart';
+import 'package:sinan_note/widgets/home/notes_grid_view.dart';
+import 'package:sinan_note/widgets/master_details_layout.dart';
+import 'package:sinan_note/widgets/responsive_layout_wrapper.dart';
 
 /// نسخة Responsive من HomeScreen تدعم نمط Master-Details
 ///
@@ -55,8 +55,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final ValueNotifier<Set<int>> _selectedNoteIdsNotifier = ValueNotifier({});
-  final ValueNotifier<bool> _isEditModeNotifier =
-      ValueNotifier(false); // 🔥 وضع التعديل
   ViewType _viewType = ViewType.listCompact;
   late final ValueNotifier<String> _viewTypeNotifier;
   bool _showAddMenu = false;
@@ -93,7 +91,13 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   }
 
   void _buildCachedPanels() {
-    _cachedDetailsPanel = const DetailsPanel();
+    _cachedDetailsPanel = ValueListenableBuilder<Set<int>>(
+      valueListenable: _selectedNoteIdsNotifier,
+      builder: (context, selectedIds, _) => DetailsPanel(
+        selectedIds: selectedIds,
+        onClearSelection: () => _selectedNoteIdsNotifier.value = {},
+      ),
+    );
   }
 
   ViewType _parseViewType(String type) {
@@ -130,7 +134,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     _selectedNoteIdsNotifier.dispose();
-    _isEditModeNotifier.dispose();
     _viewTypeNotifier.dispose();
     _notesScrollController.dispose();
     _activeFilterNotifier.dispose();
@@ -161,45 +164,31 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   Widget _buildMasterDetailsLayout(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Shortcuts(
-      shortcuts: const <ShortcutActivator, Intent>{
-        AppShortcuts.newNote: NewNoteIntent(),
-        AppShortcuts.search: SearchIntent(),
-        AppShortcuts.codeNote: CodeNoteIntent(),
-        AppShortcuts.checklist: ChecklistIntent(),
-        AppShortcuts.reminder: ReminderIntent(),
-        AppShortcuts.refresh: RefreshIntent(),
-      },
-      child: Actions(
-        actions: <Type, Action<Intent>>{
-          NewNoteIntent: CallbackAction<NewNoteIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.simple),
-          ),
-          SearchIntent: CallbackAction<SearchIntent>(
-            onInvoke: (_) {
-              FocusScope.of(context).requestFocus(FocusNode());
-              return null;
-            },
-          ),
-          CodeNoteIntent: CallbackAction<CodeNoteIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.code),
-          ),
-          ChecklistIntent: CallbackAction<ChecklistIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.checklist),
-          ),
-          ReminderIntent: CallbackAction<ReminderIntent>(
-            onInvoke: (_) => _navigateToNewNote(NoteMode.reminder),
-          ),
-          RefreshIntent: CallbackAction<RefreshIntent>(
-            onInvoke: (_) {
-              Provider.of<NotesProvider>(context, listen: false)
-                  .loadNotes(force: true);
-              return null;
-            },
-          ),
+    return ShortcutScope(
+      bindings: {
+        AppShortcuts.newNote: () => _navigateToNewNote(NoteMode.simple),
+        AppShortcuts.richNote: () => _navigateToNewNote(NoteMode.rich),
+        AppShortcuts.codeNote: () => _navigateToNewNote(NoteMode.code),
+        AppShortcuts.checklist: () => _navigateToNewNote(NoteMode.checklist),
+        AppShortcuts.reminder: () => _navigateToNewNote(NoteMode.reminder),
+        AppShortcuts.search: () =>
+            FocusScope.of(context).requestFocus(_searchFocusNode),
+        AppShortcuts.refresh: () =>
+            Provider.of<NotesProvider>(context, listen: false)
+                .loadNotes(force: true),
+        AppShortcuts.settings: () => AppNavigator.toSettings(context),
+        AppShortcuts.toggleView: () {
+          setState(() {
+            int currentIndex = _desktopViewTypes.indexOf(_viewType);
+            int nextIndex = (currentIndex + 1) % _desktopViewTypes.length;
+            _viewType = _desktopViewTypes[nextIndex];
+            _viewTypeNotifier.value = _viewType.name;
+          });
+          Provider.of<SettingsProvider>(context, listen: false)
+              .setViewType('home', _viewType.name);
         },
-        child: _buildMasterDetailsScaffold(context, l10n),
-      ),
+      },
+      child: _buildMasterDetailsScaffold(context, l10n),
     );
   }
 
@@ -208,9 +197,10 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
-        final bool hasSelection = selectedIds.isNotEmpty;
 
-        return Scaffold(
+        return Stack(
+          children: [
+            Scaffold(
           resizeToAvoidBottomInset: false,
           drawer: HomeDrawerWidget(
             onBackupTap: () {
@@ -225,29 +215,36 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
             },
             onNotesChanged: () {},
           ),
-          appBar: AppBar(
-            scrolledUnderElevation: 0,
-            elevation: 0,
-            backgroundColor:
-                Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-            leading: hasSelection
-                ? IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      _selectedNoteIdsNotifier.value = {};
-                    },
-                  )
-                : Builder(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight),
+            child: AppBar(
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              titleSpacing: NavigationToolbar.kMiddleSpacing,
+              leading: ClipRect(
+                child: AnimatedSlide(
+                  offset: selectedIds.isNotEmpty
+                      ? const Offset(0, -1)
+                      : Offset.zero,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: Builder(
                     builder: (context) => IconButton(
                       icon: const Icon(Icons.menu),
-                      onPressed: () {
-                        Scaffold.of(context).openDrawer();
-                      },
+                      onPressed: () => Scaffold.of(context).openDrawer(),
                     ),
                   ),
-            title: hasSelection
-                ? Text('${selectedIds.length} ${l10n.selected}')
-                : Consumer<CategoriesProvider>(
+                ),
+              ),
+              title: ClipRect(
+                child: AnimatedSlide(
+                  offset: selectedIds.isNotEmpty
+                      ? const Offset(0, -1)
+                      : Offset.zero,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: Consumer<CategoriesProvider>(
                     builder: (context, cats, _) {
                       final selectedId = cats.selectedCategoryId;
                       if (selectedId == null) {
@@ -288,9 +285,24 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                       );
                     },
                   ),
-            actions: hasSelection
-                ? _buildSelectionActions(context, selectedIds)
-                : _buildSearchActions(context),
+                ),
+              ),
+              actions: [
+                ClipRect(
+                  child: AnimatedSlide(
+                    offset: selectedIds.isNotEmpty
+                        ? const Offset(0, -1)
+                        : Offset.zero,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: _buildSearchActions(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           body: Column(
             children: [
@@ -303,31 +315,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                       Provider.of<NotesProvider>(context, listen: false);
                   await notesProvider.loadNotes(force: true);
                 },
-                onSettings: () => Navigator.pushNamed(context, '/settings'),
-                onExport: () {
-                  final tempStrings = {
-                    'exportBackup': l10n.exportBackup,
-                    'importBackup': l10n.importBackup,
-                    'googleDrive': l10n.googleDrive,
-                    'share': l10n.share,
-                    'soon': l10n.soon,
-                  };
-                  BackupOptionsDialog.show(context, tempStrings);
-                },
-                onImport: () {
-                  final tempStrings = {
-                    'exportBackup': l10n.exportBackup,
-                    'importBackup': l10n.importBackup,
-                    'googleDrive': l10n.googleDrive,
-                    'share': l10n.share,
-                    'soon': l10n.soon,
-                  };
-                  BackupOptionsDialog.show(context, tempStrings);
-                },
-                onAbout: () => showDialog(
-                  context: context,
-                  builder: (_) => const Dialog(child: AboutScreen()),
-                ),
+                onSettings: () => AppNavigator.toSettings(context),
               ),
               Consumer<NotesProvider>(
                 builder: (_, notes, __) => notes.isLoading
@@ -367,7 +355,27 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
               ),
             ],
           ),
-        );
+            ), // Scaffold
+            Positioned(
+              top: 0,
+              left: 0,
+              child: Consumer<MasterWidthProvider>(
+                builder: (context, masterWidth, _) => AnimatedSlide(
+                  offset: selectedIds.isNotEmpty
+                      ? Offset.zero
+                      : const Offset(0, -1),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: _SelectionBar(
+                    width: masterWidth.width,
+                    selectedIds: selectedIds,
+                    onClearSelection: () => _selectedNoteIdsNotifier.value = {},
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ); // Stack
       },
     );
   }
@@ -408,15 +416,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     ];
   }
 
-  List<Widget> _buildSelectionActions(
-      BuildContext context, Set<int> selectedIds) {
-    return [
-      DesktopSelectionActions(
-        selectedIds: selectedIds,
-        onClearSelection: () => _selectedNoteIdsNotifier.value = {},
-      ),
-    ];
-  }
 
   /// إنشاء ملاحظة جديدة واختيارها تلقائياً
   Future<void> _navigateToNewNote(NoteMode mode) async {
@@ -427,29 +426,21 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     final selectedNoteProvider =
         Provider.of<SelectedNoteProvider>(context, listen: false);
     final categories = Provider.of<CategoriesProvider>(context, listen: false);
-    final selectedCatId = categories.selectedCategoryId;
 
-    String colorMode = 'simple';
-    if (mode == NoteMode.reminder) {
-      colorMode = 'reminder';
-    } else if (mode == NoteMode.code) {
-      colorMode = 'professional';
-    } else if (mode == NoteMode.checklist) {
-      colorMode = 'checklist';
-    } else if (mode == NoteMode.rich) {
-      colorMode = 'rich';
-    }
+    final colorMode = switch (mode) {
+      NoteMode.reminder => 'reminder',
+      NoteMode.code => 'professional',
+      NoteMode.checklist => 'checklist',
+      NoteMode.rich => 'rich',
+      _ => 'simple',
+    };
 
-    final newNote = Note(
-      title: '',
-      content: '',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+    final newNote = notesProvider.createDefaultNote(
+      mode: mode,
       colorIndex: settings.getDefaultColorIndex(colorMode),
-      noteType: mode.name,
-      isChecklist: mode == NoteMode.checklist,
-      isProfessional: mode == NoteMode.code,
-      categoryIds: selectedCatId != null ? [selectedCatId] : [],
+      categoryIds: categories.selectedCategoryId != null
+          ? [categories.selectedCategoryId!]
+          : [],
     );
 
     final noteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
@@ -503,26 +494,102 @@ class _SearchFieldState extends State<_SearchField> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final showClear =
         widget.controller.text.isNotEmpty || widget.focusNode.hasFocus;
 
-    return TextField(
-      controller: widget.controller,
-      focusNode: widget.focusNode,
-      decoration: InputDecoration(
-        hintText: widget.hint,
-        border: InputBorder.none,
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: Opacity(
-          opacity: showClear ? 1.0 : 0.0,
-          child: IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: showClear
-                ? () {
-                    widget.controller.clear();
-                    widget.focusNode.unfocus();
-                  }
-                : null,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Container(
+          height: 36,
+          decoration: BoxDecoration(
+            color: isDark
+                ? colorScheme.onSurface.withValues(alpha: 0.06)
+                : colorScheme.onSurface.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: TextField(
+            controller: widget.controller,
+            focusNode: widget.focusNode,
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              border: InputBorder.none,
+              prefixIcon: const Icon(Icons.search, size: 18),
+              suffixIcon: Opacity(
+                opacity: showClear ? 1.0 : 0.0,
+                child: IconButton(
+                  icon: const Icon(Icons.clear, size: 16),
+                  onPressed: showClear
+                      ? () {
+                          widget.controller.clear();
+                          widget.focusNode.unfocus();
+                        }
+                      : null,
+                ),
+              ),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectionBar extends StatelessWidget {
+  final Set<int> selectedIds;
+  final VoidCallback onClearSelection;
+  final double width;
+
+  const _SelectionBar({
+    required this.selectedIds,
+    required this.onClearSelection,
+    required this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        width: width,
+        height: kToolbarHeight,
+        child: ClipRect(
+          child: AnimatedSlide(
+            offset: selectedIds.isNotEmpty
+                ? Offset.zero
+                : const Offset(0, -1),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: onClearSelection,
+                  ),
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      '${selectedIds.length} ${l10n.selected}',
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DesktopSelectionActions(
+                    selectedIds: selectedIds,
+                    onClearSelection: onClearSelection,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

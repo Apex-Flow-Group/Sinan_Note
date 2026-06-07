@@ -1,10 +1,11 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupportFormScreen extends StatefulWidget {
@@ -534,3 +535,4 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
     );
   }
 }
+

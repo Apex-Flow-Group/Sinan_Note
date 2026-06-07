@@ -1,18 +1,21 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
-import 'package:apex_note/widgets/details_panel.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/widgets/master_details_layout.dart';
-import 'package:apex_note/widgets/master_panel.dart';
-import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/mobile/locked_notes_screen.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
+import 'package:sinan_note/widgets/master_details_layout.dart';
+import 'package:sinan_note/widgets/responsive_layout_wrapper.dart';
+import 'package:sinan_note/widgets/vault_details_panel.dart';
 
-/// نسخة Responsive من LockedNotesScreen تدعم نمط Master-Details
+/// نسخة Responsive من LockedNotesScreen تدعم نمط Master-Details على Desktop.
+///
+/// - Mobile  → [LockedNotesScreen] كما هو (بدون تغيير)
+/// - Desktop → [LockedNotesScreen] كـ Master Panel + [VaultDetailsPanel] كـ Details Panel
+///
+/// [VaultDetailsPanel] هو نسخة مخصصة من DetailsPanel تتجاهل شرط isLocked
+/// لأن كل ملاحظات الخزنة مقفلة بطبيعتها.
 class LockedNotesScreenResponsive extends StatefulWidget {
   const LockedNotesScreenResponsive({super.key});
 
@@ -23,125 +26,44 @@ class LockedNotesScreenResponsive extends StatefulWidget {
 
 class _LockedNotesScreenResponsiveState
     extends State<LockedNotesScreenResponsive> {
-  final TextEditingController _searchController = TextEditingController();
+  SelectedNoteProvider? _selectedNoteProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _selectedNoteProvider =
+        Provider.of<SelectedNoteProvider>(context, listen: false);
+  }
 
   @override
   void initState() {
     super.initState();
-    // مسح الاختيار عند فتح الشاشة
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final selectedNoteProvider = Provider.of<SelectedNoteProvider>(
-        context,
-        listen: false,
-      );
-      selectedNoteProvider.clearSelection();
+      if (mounted) _selectedNoteProvider?.clearSelection();
     });
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _selectedNoteProvider?.clearSelection();
+    });
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveLayoutWrapper(
-      // Mobile Layout - الشاشة التقليدية
+      // Mobile: الشاشة التقليدية بدون تغيير
       mobileLayout: const LockedNotesScreen(),
 
-      // Master-Details Layout - للشاشات الكبيرة
-      masterDetailsLayout: _buildMasterDetailsLayout(context),
-    );
-  }
-
-  Widget _buildMasterDetailsLayout(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Scaffold(
-      drawer: HomeDrawerWidget(
-        onBackupTap: () {},
-        onNotesChanged: () {
-          if (mounted) {
-            setState(() {}); // تحديث القائمة عند تغيير الملاحظات
-          }
-        },
-      ),
-      appBar: AppBar(
-        title: _searchController.text.isEmpty
-            ? Text(l10n.locked)
-            : TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l10n.searchInVault,
-                  border: InputBorder.none,
-                ),
-                onChanged: (value) {
-                  setState(() {});
-                },
-              ),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
+      // Desktop: Master-Details
+      masterDetailsLayout: Scaffold(
+        drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: () {}),
+        body: const MasterDetailsLayout(
+          masterPanel: LockedNotesScreen(),
+          detailsPanel: VaultDetailsPanel(),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-                _searchController.text.isEmpty ? Icons.search : Icons.close),
-            onPressed: () {
-              setState(() {
-                if (_searchController.text.isEmpty) {
-                  _searchController.text = ' ';
-                  _searchController.selection = TextSelection.fromPosition(
-                    const TextPosition(offset: 0),
-                  );
-                } else {
-                  _searchController.clear();
-                }
-              });
-            },
-          ),
-        ],
-      ),
-      body: MasterDetailsLayout(
-        // Master Panel - قائمة الملاحظات المقفلة
-        masterPanel: Consumer<NotesProvider>(
-          builder: (context, notesProvider, child) {
-            // الحصول على الملاحظات المقفلة فقط
-            var notes = notesProvider.notes
-                .where((note) => note.isLocked && !note.isTrashed)
-                .toList();
-
-            // تطبيق البحث
-            final searchQuery = _searchController.text.trim();
-            if (searchQuery.isNotEmpty) {
-              final query = searchQuery.toLowerCase();
-              notes = notes.where((note) {
-                return note.title.toLowerCase().contains(query) ||
-                    note.content.toLowerCase().contains(query);
-              }).toList();
-            }
-
-            return MasterPanel(
-              notes: notes,
-              onNoteSelected: (note) {
-                final selectedNoteProvider = Provider.of<SelectedNoteProvider>(
-                  context,
-                  listen: false,
-                );
-                selectedNoteProvider.selectNote(note);
-              },
-            );
-          },
-        ),
-
-        // Details Panel - محتوى الملاحظة المختارة
-        detailsPanel: const DetailsPanel(),
       ),
     );
   }

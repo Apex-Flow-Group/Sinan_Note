@@ -9,6 +9,7 @@ class QuillNumberPoint extends StatelessWidget {
     required this.style,
     required this.width,
     required this.attrs,
+    this.textDirection,
     this.textAlign,
     this.withDot = true,
     this.padding = 0.0,
@@ -26,32 +27,29 @@ class QuillNumberPoint extends StatelessWidget {
   final double padding;
   final Color? backgroundColor;
   final TextAlign? textAlign;
+  final TextDirection? textDirection;
 
   @override
   Widget build(BuildContext context) {
-    if (!attrs.containsKey(Attribute.indent.key) && indentLevelCounts.isEmpty) {
-      return Container(
-        alignment: AlignmentDirectional.topEnd,
-        width: width,
-        padding: EdgeInsetsDirectional.only(end: padding),
-        color: backgroundColor,
-        child: Text(
-          withDot ? '$index.' : index,
-          style: style,
-          textAlign: textAlign,
-        ),
-      );
-    }
+    final dir = textDirection ?? Directionality.of(context);
+    final isLtr = dir == TextDirection.ltr;
+
+    // في LTR: "1."  في RTL: ".1" (التقليد العربي)
+    final label = withDot ? (isLtr ? '$index.' : '.$index') : index;
+
+    // النص دائماً LTR لمنع BiDi engine من عكس الأرقام
+    final child = Directionality(
+      textDirection: TextDirection.ltr,
+      child: Text(label, style: style, textAlign: textAlign),
+    );
+
     return Container(
-      alignment: AlignmentDirectional.topEnd,
+      alignment:
+          isLtr ? AlignmentDirectional.topStart : AlignmentDirectional.topEnd,
       width: width,
       padding: EdgeInsetsDirectional.only(end: padding),
       color: backgroundColor,
-      child: Text(
-        withDot ? '$index.' : index,
-        style: style,
-        textAlign: textAlign,
-      ),
+      child: child,
     );
   }
 }

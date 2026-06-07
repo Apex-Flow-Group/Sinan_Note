@@ -1,6 +1,8 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+
 
 import 'package:flutter/services.dart';
+
 
 /// حد أقصى آمن للصق: 50,000 حرف (~50KB نص عادي)
 const int _kMaxPasteLength = 50000;
@@ -71,3 +73,4 @@ class ClipboardResult {
   bool get isTruncated => status == ClipboardStatus.truncated;
   bool get isEmpty => status == ClipboardStatus.empty;
 }
+

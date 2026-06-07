@@ -1,11 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:flutter/material.dart';
-
+import 'dart:convert';import 'package:flutter/material.dart';import 'package:sinan_note/core/utils/checklist_formatter.dart'; import 'package:sinan_note/core/utils/text_direction_utils.dart'; import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 class ReadOnlyChecklistView extends StatefulWidget {
   final EditorCoordinator coordinator;
   final Color textColor;
@@ -59,15 +54,12 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
   Widget build(BuildContext context) {
     final items =
         ChecklistFormatter.parseJson(widget.coordinator.contentController.text);
-    if (items.isEmpty) {
-      return SingleChildScrollView(
-        controller: widget.scrollController,
-        child: const SizedBox.shrink(),
-      );
-    }
 
+    final displayItems = items.isEmpty
+        ? [ChecklistItem(id: '__ghost__', text: '', isDone: false)]
+        : items;
     final done = items.where((e) => e.isDone).length;
-    final progress = done / items.length;
+    final progress = items.isEmpty ? 0.0 : done / items.length;
 
     return ScrollbarTheme(
       data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
@@ -122,7 +114,7 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                   ),
                 );
               },
-              onReorder: widget.isTrashed
+              onReorder: (items.isEmpty || widget.isTrashed)
                   ? (_, __) {}
                   : (oldIndex, newIndex) {
                       setState(() {
@@ -132,23 +124,18 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                       });
                       _save(items);
                     },
-              children: items.asMap().entries.map((entry) {
+              children: displayItems.asMap().entries.map((entry) {
                 final index = entry.key;
                 final item = entry.value;
-                return ListTile(
+                final isGhost = item.id == '__ghost__';
+
+                final tile = ListTile(
                   key: ValueKey(item.id),
                   contentPadding: EdgeInsets.zero,
-                  leading: widget.isTrashed
-                      ? null
-                      : ReorderableDragStartListener(
-                          index: index,
-                          child: Icon(Icons.drag_indicator,
-                              color: widget.textColor.withValues(alpha: 0.3)),
-                        ),
                   title: Row(
                     children: [
                       GestureDetector(
-                        onTap: widget.isTrashed
+                        onTap: (widget.isTrashed || isGhost)
                             ? null
                             : () {
                                 setState(
@@ -180,6 +167,8 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                       Expanded(
                         child: Text(
                           item.text.isEmpty ? '...' : item.text,
+                          textDirection:
+                              TextDirectionUtils.getDirection(item.text),
                           style: TextStyle(
                             fontSize: 16,
                             height: 1.5,
@@ -195,6 +184,16 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                     ],
                   ),
                 );
+
+                // الضغط الطويل على أي مكان في الصف يُفعّل السحب
+                if (widget.isTrashed || isGhost) {
+                  return KeyedSubtree(key: ValueKey(item.id), child: tile);
+                }
+                return ReorderableDelayedDragStartListener(
+                  key: ValueKey(item.id),
+                  index: index,
+                  child: tile,
+                );
               }).toList(),
             ),
           ],
@@ -203,3 +202,4 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
     );
   }
 }
+

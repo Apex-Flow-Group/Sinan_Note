@@ -1,10 +1,10 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 //
 // MarkdownViewer — عارض Markdown كامل قابل للتوسعة
 // كل فقرة تحدد اتجاهها من أول حرف مؤثر فيها (نفس منطق المحرر)
 // كتل الكود: syntax highlighting + زر نسخ
 
-import 'package:apex_note/core/utils/text_direction_utils.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
@@ -12,6 +12,7 @@ import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ── Code Block Builder ────────────────────────────────────────────────────────
@@ -324,3 +325,4 @@ class MarkdownViewer extends StatelessWidget {
     );
   }
 }
+

@@ -1,32 +1,26 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io' show Platform;
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/locked_notes_intro_screen.dart';
-import 'package:apex_note/screens/auth/vault_entry_screen.dart';
-import 'package:apex_note/screens/mobile/locked_notes_screen.dart';
-import 'package:apex_note/screens/other/about_screen.dart';
-import 'package:apex_note/screens/other/support_form_screen.dart';
-import 'package:apex_note/services/cloud/google_drive_auth.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/categories_panel.dart';
-import 'package:apex_note/widgets/home/drawer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
+import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/categories_panel.dart';
+import 'package:sinan_note/widgets/home/drawer_widgets.dart';
 
 enum _CatMode { normal, delete, edit }
 
-/// ظٹط¨ظ‚ظ‰ ط­ظٹط§ظ‹ ط·ظˆظ„ ط¹ظ…ط± ط§ظ„طھط·ط¨ظٹظ‚ â€” ظ„ط§ ظٹط¶ظٹط¹ ط¹ظ†ط¯ ط¥ط؛ظ„ط§ظ‚ ط§ظ„ظ€ Drawer
+/// يبقى حياً طول عمر التطبيق — لا يضيع عند إغلاق الـ Drawer
 final _activeExtraNotifier = ValueNotifier<String?>(null);
-
-/// ط­ط§ظ„ط© ط§ظ„ط®ط²ظ†ط© â€” ظ…ط±ط¦ظٹط© ظ„ظƒظ„ ط§ظ„ظ€ widgets
-final vaultOpenNotifier = ValueNotifier<bool>(false);
 
 /// ضبط حالة تفعيل الخزنة في الـ Drawer من الخارج
 void setDrawerVaultActive(bool active) {
@@ -52,6 +46,57 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
   _CatMode _catMode = _CatMode.normal;
   bool _isAdding = false;
 
+  /// يُعيد تعيين حالة الخزنة في الـ Drawer عند الانتقال لشاشة أخرى.
+  void _exitVaultIfActive(String destination) {
+    if (_activeExtraNotifier.value == 'vault') {
+      _activeExtraNotifier.value = null;
+    }
+  }
+
+  /// يُغلق الـ Drawer ويتنقل للوجهة المطلوبة بأمان.
+  /// يحفظ reference للـ navigator قبل pop لتجنب مشكلة context unmounted.
+  Future<void> _navigateFromDrawer(
+    BuildContext context, {
+    required String destination,
+    required String routeName,
+  }) async {
+    _exitVaultIfActive(destination);
+
+    // نحفظ reference للـ root navigator
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+
+    // نتحقق هل نحن داخل الخزنة
+    bool isInVault = false;
+    rootNavigator.popUntil((route) {
+      if (route.settings.name == '/vault/locked' ||
+          route.settings.name == '/vault/unlock' ||
+          route.settings.name == '/vault/entry') {
+        isInVault = true;
+      }
+      return true;
+    });
+
+    // إغلاق الـ Drawer
+    final scaffoldState = Scaffold.maybeOf(context);
+    if (scaffoldState != null && scaffoldState.isDrawerOpen) {
+      scaffoldState.closeDrawer();
+    }
+
+    if (isInVault) {
+      // LockedNotesScreen فيها postFrameCallback يعمل exitVault عند pop.
+      // نعمل pop للخزنة ثم ننتظر حتى ينتهي الـ postFrameCallback.
+      rootNavigator.popUntil(
+        (route) => route.settings.name == '/main' || route.isFirst,
+      );
+      // ننتظر حتى ينتهي postFrameCallback في LockedNotesScreen
+      await WidgetsBinding.instance.endOfFrame;
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    // التنقل للوجهة
+    await rootNavigator.pushNamed(routeName);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -76,16 +121,25 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     title: l10n.home,
                     scheme: scheme,
                     isDark: isDark,
-                    isActive: currentRoute == '/' &&
-                        activeExtra == null &&
-                        context
-                                .watch<CategoriesProvider>()
-                                .selectedCategoryId ==
-                            null,
-                    onTap: () {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.isFirst);
+                    isActive:
+                        (currentRoute == '/main' || currentRoute == '/') &&
+                            activeExtra == null &&
+                            context
+                                    .watch<CategoriesProvider>()
+                                    .selectedCategoryId ==
+                                null,
+                    onTap: () async {
+                      _exitVaultIfActive('Home');
+                      final rootNavigator =
+                          Navigator.of(context, rootNavigator: true);
+                      final scaffoldState = Scaffold.maybeOf(context);
+                      if (scaffoldState != null && scaffoldState.isDrawerOpen) {
+                        scaffoldState.closeDrawer();
+                      }
+                      rootNavigator.popUntil(
+                        (route) =>
+                            route.settings.name == '/main' || route.isFirst,
+                      );
                     },
                   ),
                   // â”€â”€â”€ ط²ط± ط§ظ„طھطµظ†ظٹظپط§طھ â”€â”€â”€
@@ -120,13 +174,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/archive',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/archive');
-                      if (!context.mounted) return;
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'Archive',
+                        routeName: '/archive',
+                      );
+                      if (!mounted) return;
                       widget.onNotesChanged();
                     },
                   ),
@@ -138,13 +191,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/trash',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/trash');
-                      if (!context.mounted) return;
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'Trash',
+                        routeName: '/trash',
+                      );
+                      if (!mounted) return;
                       widget.onNotesChanged();
                     },
                   ),
@@ -170,7 +222,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       !Platform.isLinux &&
                       !Platform.isMacOS)
                     ValueListenableBuilder<bool>(
-                      valueListenable: GoogleDriveService.autoSyncEnabled,
+                      valueListenable: CloudSyncGateway.autoSyncEnabled,
                       builder: (context, autoSync, _) => _buildDrawerItem(
                         context,
                         icon: Icons.cloud_sync_rounded,
@@ -183,12 +235,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         isDark: isDark,
                         isActive: currentRoute == '/drive',
                         onTap: () async {
-                          Navigator.of(context, rootNavigator: true).pop();
-                          if (!context.mounted) return;
-                          Navigator.of(context, rootNavigator: true)
-                              .popUntil((route) => route.isFirst);
-                          await Navigator.of(context, rootNavigator: true)
-                              .pushNamed('/drive');
+                          await _navigateFromDrawer(
+                            context,
+                            destination: 'Google Drive',
+                            routeName: '/drive',
+                          );
                         },
                       ),
                     ),
@@ -202,12 +253,11 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/history',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/history');
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'History',
+                        routeName: '/history',
+                      );
                     },
                   ),
                   _buildDrawerItem(
@@ -218,13 +268,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isDark: isDark,
                     isActive: currentRoute == '/settings',
                     onTap: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.isFirst);
-                      await Navigator.of(context, rootNavigator: true)
-                          .pushNamed('/settings');
-                      if (!context.mounted) return;
+                      await _navigateFromDrawer(
+                        context,
+                        destination: 'Settings',
+                        routeName: '/settings',
+                      );
+                      if (!mounted) return;
                       widget.onNotesChanged();
                     },
                   ),
@@ -238,43 +287,9 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 top: 12,
                 bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '© 2025 Apex Flow Group',
-                    style:
-                        TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const SupportFormScreen()));
-                        },
-                        child: Icon(Icons.support_agent_rounded,
-                            size: 18, color: scheme.onSurfaceVariant),
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const AboutScreen()));
-                        },
-                        child: Icon(Icons.info_outline_rounded,
-                            size: 18, color: scheme.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Text(
+                '© 2025 Apex Flow Group',
+                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
               ),
             ),
           ],
@@ -288,8 +303,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     final catProvider = context.watch<CategoriesProvider>();
     final selectedId = catProvider.selectedCategoryId;
     final hasSelection = selectedId != null;
-    final isOnHome = (ModalRoute.of(context)?.settings.name ?? '/') == '/' &&
-        _activeExtraNotifier.value == null;
+    final isOnHome =
+        ((ModalRoute.of(context)?.settings.name ?? '/') == '/main' ||
+                (ModalRoute.of(context)?.settings.name ?? '/') == '/') &&
+            _activeExtraNotifier.value == null;
     final selectedName = hasSelection
         ? (selectedId == kProCategoryId
             ? AppLocalizations.of(context)!.professional
@@ -470,52 +487,62 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     );
   }
 
+  /// إذا كانت الخزنة مفتوحة، نُغلقها قبل الانتقال لأي شاشة أخرى.
+  /// يُستدعى من أزرار "حول" و"تواصل" في أسفل الـ Drawer.
   Future<void> _openLockedNotes(BuildContext context) async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    // ظپظˆط± ط§ظ„ط¶ط؛ط· â†’ ط£ظˆظ‚ظپ طھط¸ظ„ظٹظ„ ط§ظ„ط±ط¦ظٹط³ظٹط©
     _activeExtraNotifier.value = 'vault';
 
     if (!settings.hasSeenLockedIntro) {
+      final navigator = Navigator.of(context, rootNavigator: true);
       Navigator.pop(context);
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LockedNotesIntroScreen()),
-      );
+      if (!context.mounted) return;
+      VaultNavigator.pushIntro(navigator);
       _activeExtraNotifier.value = null;
-      if (!context.mounted) return;
       widget.onNotesChanged();
-    } else {
-      final biometricEnabled = await VaultService.isBiometricEnabled();
-      final hasBiometrics = await BiometricService.hasBiometrics();
+      return;
+    }
+
+    final hasBiometrics = await BiometricService.hasBiometrics();
+    final biometricEnabled = await VaultService.isBiometricEnabled();
+    if (!context.mounted) return;
+
+    if (biometricEnabled && hasBiometrics) {
+      // البصمة أولاً قبل إغلاق الـ Drawer — حتى يبقى context mounted
+      final authenticated = await BiometricService.authenticate();
       if (!context.mounted) return;
 
-      if (biometricEnabled && hasBiometrics) {
-        final nav = Navigator.of(context);
-        nav.pop(); // close drawer before biometric
-        final authenticated = await BiometricService.authenticate();
+      // نحفظ reference للـ navigator قبل إغلاق الـ Drawer
+      final navigator = Navigator.of(context, rootNavigator: true);
 
-        if (authenticated) {
-          await nav.push(
-            MaterialPageRoute(builder: (_) => const LockedNotesScreen()),
-          );
-          _activeExtraNotifier.value = null;
-          widget.onNotesChanged();
-        } else {
-          _activeExtraNotifier.value = null;
-        }
+      // إغلاق الـ Drawer
+      Navigator.of(context).pop();
+
+      if (authenticated) {
+        VaultNavigator.pushLockedNotes(navigator);
       } else {
-        Navigator.pop(context);
-
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const VaultEntryScreen()),
+        await navigator.push(
+          MaterialPageRoute(
+            builder: (_) => const VaultEntryScreen(),
+            settings: const RouteSettings(name: '/vault/entry'),
+          ),
         );
-        _activeExtraNotifier.value = null;
-        if (!context.mounted) return;
-        widget.onNotesChanged();
       }
+    } else {
+      final navigator = Navigator.of(context, rootNavigator: true);
+      Navigator.pop(context);
+      await navigator.push(
+        MaterialPageRoute(
+          builder: (_) => const VaultEntryScreen(),
+          settings: const RouteSettings(name: '/vault/entry'),
+        ),
+      );
     }
+
+    _activeExtraNotifier.value = null;
+    if (!context.mounted) return;
+    widget.onNotesChanged();
   }
 
   Widget _buildDrawerItem(

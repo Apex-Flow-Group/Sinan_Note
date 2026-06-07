@@ -1,12 +1,14 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🗂️ NOTES PROVIDER — اختبارات تكاملية شاملة
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/models/note.dart';
+@Tags(['serial'])
+
+
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import '../test_setup.dart';
-
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -14,11 +16,20 @@ void main() {
   late DateTime now;
 
   setUp(() {
+    SqliteDatabaseService.resetInstance();
+    SqliteDatabaseService.overrideDbPath(':memory:');
     provider = NotesProvider();
     now = DateTime.now();
   });
 
-  tearDown(() => provider.dispose());
+  tearDown(() async {
+    await SqliteDatabaseService().closeDB();
+    SqliteDatabaseService.resetInstance();
+    // provider قد يكون تم dispose() في الاختبار نفسه
+    try {
+      provider.dispose();
+    } catch (_) {}
+  });
 
   Note note(
       {int? id,
@@ -345,3 +356,4 @@ void main() {
     });
   });
 }
+

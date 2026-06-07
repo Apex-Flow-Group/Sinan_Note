@@ -175,6 +175,7 @@ class EditableTextBlock extends StatelessWidget {
     var index = 0;
     for (final line in Iterable.castFrom<dynamic, Line>(block.children)) {
       index++;
+      final nodeTextDirection = getDirectionOfNode(line, textDirection);
       final editableTextLine = EditableTextLine(
           line,
           _buildLeading(
@@ -183,6 +184,7 @@ class EditableTextBlock extends StatelessWidget {
             index: index,
             indentLevelCounts: indentLevelCounts,
             count: count,
+            nodeTextDirection: nodeTextDirection,
           ),
           TextLine(
             line: line,
@@ -210,7 +212,6 @@ class EditableTextBlock extends StatelessWidget {
           cursorCont,
           styles!.inlineCode!,
           null);
-      final nodeTextDirection = getDirectionOfNode(line, textDirection);
       children.add(
         Directionality(
           textDirection: nodeTextDirection,
@@ -227,6 +228,7 @@ class EditableTextBlock extends StatelessWidget {
     required int index,
     required Map<int, int> indentLevelCounts,
     required int count,
+    TextDirection? nodeTextDirection,
   }) {
     final defaultStyles = QuillStyles.getStyles(context, false)!;
     final fontSize = defaultStyles.paragraph?.style.fontSize ?? 16;
@@ -332,11 +334,13 @@ class EditableTextBlock extends StatelessWidget {
     }
 
     if (isOrdered) {
-      return numberPointLeading(leadingConfig);
+      return _wrapLeading(
+          numberPointLeading(leadingConfig, textDirection: nodeTextDirection),
+          nodeTextDirection);
     }
 
     if (isUnordered) {
-      return bulletPointLeading(leadingConfig);
+      return _wrapLeading(bulletPointLeading(leadingConfig), nodeTextDirection);
     }
 
     if (isCheck) {
@@ -346,6 +350,11 @@ class EditableTextBlock extends StatelessWidget {
       return codeBlockLineNumberLeading(leadingConfig);
     }
     return null;
+  }
+
+  Widget _wrapLeading(Widget leading, TextDirection? dir) {
+    if (dir == null) return leading;
+    return Directionality(textDirection: dir, child: leading);
   }
 
   VerticalSpacing _getSpacingForLine(

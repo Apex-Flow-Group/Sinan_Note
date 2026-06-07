@@ -1,7 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
-
 /// Checklist item model
 class ChecklistItem {
   final dynamic id;
@@ -63,7 +62,7 @@ class ChecklistFormatter {
   /// Format checklist for display (read-only text)
   static String toDisplayText(String content) {
     final items = parseJson(content);
-    if (items.isEmpty) return content;
+    if (items.isEmpty) return '';
 
     return items.map((item) {
       final checkbox = item.isDone ? '☑' : '☐';
@@ -154,3 +153,4 @@ class ChecklistFormatter {
     }
   }
 }
+

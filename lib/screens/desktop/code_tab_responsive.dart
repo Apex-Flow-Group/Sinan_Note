@@ -1,12 +1,13 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/shared/tabs/code_tab.dart';
-import 'package:apex_note/widgets/details_panel.dart';
-import 'package:apex_note/widgets/master_details_layout.dart';
-import 'package:apex_note/widgets/responsive_layout_wrapper.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/shared/tabs/code_tab.dart';
+import 'package:sinan_note/widgets/details_panel.dart';
+import 'package:sinan_note/widgets/master_details_layout.dart';
+import 'package:sinan_note/widgets/responsive_layout_wrapper.dart';
 
 class CodeTabResponsive extends StatefulWidget {
   const CodeTabResponsive({super.key});
@@ -39,3 +40,4 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive> {
     );
   }
 }
+

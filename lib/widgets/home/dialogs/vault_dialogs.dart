@@ -1,17 +1,18 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/auth/vault_reset_screen.dart';
-import 'package:apex_note/services/security/biometric_service.dart';
-import 'package:apex_note/services/security/vault_reset_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
+
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/services/security/vault_reset_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class VaultDialogs {
   static void showSettings(BuildContext context) {
@@ -99,12 +100,7 @@ class VaultDialogs {
               subtitle: Text(l10n.resetVaultSubtitle),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const VaultResetScreen(),
-                  ),
-                );
+                VaultNavigator.toReset(context);
               },
             ),
             const Divider(height: 1),
@@ -317,8 +313,13 @@ class VaultDialogs {
     }
   }
 
-  /// فك تشفير كل الملاحظات ثم تدمير الخزنة
-  static Future<void> _executeDecryptAndDestroy(BuildContext context) async {
+  /// تنفيذ تدمير الخزنة — الجزء المشترك بين الخيارين
+  /// [processNotes]: دالة تُعالج الملاحظات (فك تشفير أو حذف)
+  static Future<void> _executeDestroyVault(
+    BuildContext context,
+    Future<void> Function(SqliteDatabaseService db, List<dynamic> notes)
+        processNotes,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
 
     try {
@@ -326,44 +327,13 @@ class VaultDialogs {
       final lockedNotes = await dbService.getLockedNotes();
 
       if (lockedNotes.isNotEmpty) {
-        enc.Key? masterKey;
-        try {
-          masterKey = await VaultService.getMasterKey();
-        } catch (_) {
-          if (!context.mounted) return;
-          UnifiedNotificationService().show(
-            context: context,
-            message: l10n.decryptionFailed,
-            type: NotificationType.error,
-          );
-          return;
-        }
-
-        // فك تشفير كل ملاحظة وإلغاء القفل
-        for (final note in lockedNotes) {
-          final decryptedTitle =
-              VaultService.decryptWithKey(note.title, masterKey);
-          final decryptedContent =
-              VaultService.decryptWithKey(note.content, masterKey);
-
-          final unlocked = note.copyWith(
-            title: decryptedTitle,
-            content: decryptedContent,
-            isLocked: false,
-            updatedAt: DateTime.now(),
-          );
-          await dbService.updateNote(unlocked);
-        }
-
-        VaultService.wipeMasterKey(masterKey);
+        await processNotes(dbService, lockedNotes);
       }
 
-      // تدمير الخزنة
       await VaultService.clearVault();
 
       if (!context.mounted) return;
 
-      // تحديث الصفحة الرئيسية
       Provider.of<NotesProvider>(context, listen: false)
           .refreshAllNotes(force: true);
 
@@ -373,8 +343,7 @@ class VaultDialogs {
         type: NotificationType.success,
       );
 
-      // الخروج من شاشة الخزنة
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.of(context, rootNavigator: true).popUntil((route) => route.settings.name == '/main' || route.isFirst);
     } catch (e) {
       if (!context.mounted) return;
       UnifiedNotificationService().show(
@@ -385,46 +354,48 @@ class VaultDialogs {
     }
   }
 
-  /// تدمير الخزنة مع كل محتوياتها
-  static Future<void> _executeDestroyWithContent(BuildContext context) async {
+  /// فك تشفير كل الملاحظات ثم تدمير الخزنة
+  static Future<void> _executeDecryptAndDestroy(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
 
-    try {
-      final dbService = SqliteDatabaseService();
-      final lockedNotes = await dbService.getLockedNotes();
-
-      // حذف كل الملاحظات المقفلة
-      for (final note in lockedNotes) {
-        if (note.id != null) {
-          await dbService.deleteNote(note.id!);
-        }
+    await _executeDestroyVault(context, (db, notes) async {
+      enc.Key? masterKey;
+      try {
+        masterKey = await VaultService.getMasterKey();
+      } catch (_) {
+        if (!context.mounted) return;
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.decryptionFailed,
+          type: NotificationType.error,
+        );
+        return;
       }
 
-      // تدمير الخزنة
-      await VaultService.clearVault();
+      for (final note in notes) {
+        final decryptedTitle =
+            VaultService.decryptWithKey(note.title, masterKey);
+        final decryptedContent =
+            VaultService.decryptWithKey(note.content, masterKey);
+        await db.updateNote(note.copyWith(
+          title: decryptedTitle,
+          content: decryptedContent,
+          isLocked: false,
+          updatedAt: DateTime.now(),
+        ));
+      }
 
-      if (!context.mounted) return;
+      VaultService.wipeMasterKey(masterKey);
+    });
+  }
 
-      // تحديث الصفحة الرئيسية
-      Provider.of<NotesProvider>(context, listen: false)
-          .refreshAllNotes(force: true);
-
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.vaultDestroyed,
-        type: NotificationType.success,
-      );
-
-      // الخروج من شاشة الخزنة
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } catch (e) {
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: '${l10n.failed}: $e',
-        type: NotificationType.error,
-      );
-    }
+  /// تدمير الخزنة مع كل محتوياتها
+  static Future<void> _executeDestroyWithContent(BuildContext context) async {
+    await _executeDestroyVault(context, (db, notes) async {
+      for (final note in notes) {
+        if (note.id != null) await db.deleteNote(note.id!);
+      }
+    });
   }
 
   static void showChangePassword(BuildContext context) {
@@ -593,3 +564,4 @@ class VaultDialogs {
     );
   }
 }
+

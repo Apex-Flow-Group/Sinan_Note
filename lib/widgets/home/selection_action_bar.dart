@@ -1,5 +1,6 @@
-import 'package:apex_note/generated/l10n/app_localizations.dart';
+﻿
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 class SelectionActionBar extends StatelessWidget {
   final ValueNotifier<Set<int>> selectedIdsNotifier;  // 🔥 FIX: Use notifier directly
@@ -8,6 +9,7 @@ class SelectionActionBar extends StatelessWidget {
   final VoidCallback onArchive;
   final VoidCallback onDelete;
   final VoidCallback? onShare;
+  final VoidCallback? onCategory;
   final bool isDark;
   final bool allPinned;
 
@@ -19,6 +21,7 @@ class SelectionActionBar extends StatelessWidget {
     required this.onArchive,
     required this.onDelete,
     required this.onShare,
+    this.onCategory,
     required this.isDark,
     this.allPinned = false,
   });
@@ -173,6 +176,12 @@ class SelectionActionBar extends StatelessWidget {
                 tooltip: 'Delete',
               ),
               IconButton(
+                icon: const Icon(Icons.label_outline),
+                onPressed: onCategory,
+                tooltip: 'Category',
+                color: onCategory == null ? Colors.grey : null,
+              ),
+              IconButton(
                 icon: const Icon(Icons.share_outlined),
                 onPressed: onShare,
                 tooltip: 'Share',
@@ -186,3 +195,4 @@ class SelectionActionBar extends StatelessWidget {
     );
   }
 }
+

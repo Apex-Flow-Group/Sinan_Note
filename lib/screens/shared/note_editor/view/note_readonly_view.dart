@@ -1,31 +1,34 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+import 'dart:ui' show lerpDouble;
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/constants/app_text_styles.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/quill_migration.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:apex_note/screens/shared/note_editor/view/readonly_checklist_view.dart';
-import 'package:apex_note/screens/shared/note_editor/widgets/read_only_bars.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/services/version_control_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/editor/markdown_viewer.dart';
-import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/screens/shared/note_editor/view/book_mode_view.dart';
+import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart';
+import 'package:sinan_note/screens/shared/note_editor/view/trash_floating_sheet.dart';
+import 'package:sinan_note/screens/shared/note_editor/widgets/read_only_bars.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/services/version_control_service.dart';
+import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/editor/reminder_picker_sheet.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
 class NoteReadOnlyView extends StatefulWidget {
   final Note note;
@@ -61,6 +64,8 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   late Note _currentNote;
   late NoteMode _currentMode;
   int _quillKey = 0;
+
+  static const _bookModeMinLength = 600;
 
   static bool _looksLikeMarkdown(String text) => RegExp(
         r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
@@ -115,7 +120,6 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         dbNote.noteType == 'code' ||
         dbNote.noteType == 'pro') {
       if (targetType == 'rich') {
-        // إذا كان المحتوى Markdown — حوّله منسقاً
         if (_looksLikeMarkdown(newContent)) {
           final mdDelta = MarkdownToDelta(
             markdownDocument: md.Document(encodeHtml: false),
@@ -132,23 +136,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           qc.dispose();
         }
       } else if (targetType == 'simple') {
-        // إذا كان Markdown — أزل الرموز
         if (_looksLikeMarkdown(newContent)) {
-          newContent = newContent
-              .replaceAll(RegExp(r'^#{1,6} ', multiLine: true), '')
-              .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
-              .replaceAll(RegExp(r'__(.+?)__'), r'$1')
-              .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
-              .replaceAll(RegExp(r'_(.+?)_'), r'$1')
-              .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
-              .replaceAll(RegExp(r'`(.+?)`'), r'$1')
-              .replaceAll(RegExp(r'^ *[-*+] ', multiLine: true), '')
-              .replaceAll(RegExp(r'^ *\d+\. ', multiLine: true), '')
-              .replaceAll(RegExp(r'^> ', multiLine: true), '')
-              .replaceAll(RegExp(r'```[\s\S]*?```'), '')
-              .trim();
+          newContent = _stripMarkdown(newContent);
         }
-        // نص عادي → simple: يبقى كما هو
       }
     } else if (dbNote.noteType == 'markdown') {
       if (targetType == 'rich') {
@@ -162,31 +152,10 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         newContent = QuillMigration.toDeltaJson(qc);
         qc.dispose();
       } else if (targetType == 'simple' || targetType == 'code') {
-        newContent = newContent
-            .replaceAll(RegExp(r'^#{1,6} ', multiLine: true), '')
-            .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
-            .replaceAll(RegExp(r'__(.+?)__'), r'$1')
-            .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
-            .replaceAll(RegExp(r'_(.+?)_'), r'$1')
-            .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
-            .replaceAll(RegExp(r'`(.+?)`'), r'$1')
-            .replaceAll(RegExp(r'^ *[-*+] ', multiLine: true), '')
-            .replaceAll(RegExp(r'^ *\d+\. ', multiLine: true), '')
-            .replaceAll(RegExp(r'^> ', multiLine: true), '')
-            .replaceAll(RegExp(r'```[\s\S]*?```'), '')
-            .trim();
+        newContent = _stripMarkdown(newContent);
       }
     } else if (newContent.trimLeft().startsWith('[')) {
-      if (targetType == 'code') {
-        try {
-          final ops = jsonDecode(newContent) as List;
-          newContent = ops
-              .where((op) => op is Map && op['insert'] is String)
-              .map((op) => op['insert'] as String)
-              .join()
-              .replaceAll(RegExp(r'\n+$'), '');
-        } catch (_) {}
-      } else if (targetType == 'simple') {
+      if (targetType == 'code' || targetType == 'simple') {
         try {
           final ops = jsonDecode(newContent) as List;
           newContent = ops
@@ -196,15 +165,12 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               .replaceAll(RegExp(r'\n+$'), '');
         } catch (_) {}
       }
-      // Delta JSON → rich: يبقى كما هو
     } else {
-      // نص عادي → rich
       if (targetType == 'rich') {
         final qc = QuillMigration.controllerFromContent(newContent);
         newContent = QuillMigration.toDeltaJson(qc);
         qc.dispose();
       }
-      // نص عادي → code/simple: يبقى كما هو
     }
 
     await VersionControlService().smartLogVersion(
@@ -228,26 +194,21 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final updated = await SqliteDatabaseService().getNoteById(noteId);
     if (updated == null || !mounted) return;
 
-    // تحديث coordinator بالمحتوى الجديد
     widget.coordinator.contentController.text = updated.content;
-
     final newMode = NoteCardUtils.getNoteMode(updated);
 
     if (newMode == NoteMode.code) {
-      // تحويل إلى كود — أنشئ codeController جديد
       widget.coordinator.codeController?.dispose();
       widget.coordinator.codeController = CodeController(text: updated.content);
       widget.coordinator.quillController?.dispose();
       widget.coordinator.quillController = null;
     } else {
-      // تحويل من كود أو إلى rich/simple — أنشئ quillController جديد
       final newQc = QuillMigration.controllerFromContent(updated.content);
       widget.coordinator.quillController?.dispose();
       widget.coordinator.quillController = newQc;
       widget.coordinator.quillControllerVersion++;
     }
 
-    // إعادة تهيئة stateManager بالمحتوى الجديد حتى يعمل hasChanges() بشكل صحيح
     widget.coordinator.stateManager.loadFromNote(
       noteContent: updated.content,
       noteTitle: updated.title.isNotEmpty ? updated.title : null,
@@ -274,12 +235,77 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
   }
 
+  static String _stripMarkdown(String text) => text
+      .replaceAll(RegExp(r'^#{1,6} ', multiLine: true), '')
+      .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
+      .replaceAll(RegExp(r'__(.+?)__'), r'$1')
+      .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
+      .replaceAll(RegExp(r'_(.+?)_'), r'$1')
+      .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
+      .replaceAll(RegExp(r'`(.+?)`'), r'$1')
+      .replaceAll(RegExp(r'^ *[-*+] ', multiLine: true), '')
+      .replaceAll(RegExp(r'^ *\d+\. ', multiLine: true), '')
+      .replaceAll(RegExp(r'^> ', multiLine: true), '')
+      .replaceAll(RegExp(r'```[\s\S]*?```'), '')
+      .trim();
+
   void _closeOrPop() {
     if (widget.onClose != null) {
       widget.onClose!();
     } else if (mounted && Navigator.canPop(context)) {
       Navigator.pop(context, true);
     }
+  }
+
+  void _openBookMode() {
+    final note = _currentNote;
+    final noteColor = widget.coordinator.getBackgroundColor(context);
+    final textColor =
+        noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+
+    // نمرر Delta JSON للحفاظ على التنسيق في وضع القراءة
+    final String? deltaJson;
+    if (widget.coordinator.quillController != null) {
+      deltaJson =
+          QuillMigration.toDeltaJson(widget.coordinator.quillController!);
+    } else {
+      final raw = widget.coordinator.contentController.text;
+      deltaJson = QuillMigration.isDelta(raw) ? raw : null;
+    }
+
+    final String plainContent;
+    if (widget.coordinator.quillController != null) {
+      plainContent = widget.coordinator.quillController!.document.toPlainText();
+    } else if (_currentMode == NoteMode.code) {
+      plainContent = widget.coordinator.codeController?.text ??
+          widget.coordinator.contentController.text;
+    } else {
+      plainContent = NoteContentUtils.toDisplayText(
+          widget.coordinator.contentController.text);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookModeView(
+          noteId: note.id!,
+          textColor: textColor,
+          noteColor: noteColor,
+          plainContent: plainContent,
+          deltaJson: deltaJson,
+          isMarkdown: note.noteType == 'markdown',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _removeReminder() async {
+    if (_currentNote.id == null) return;
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final updated = _currentNote.copyWith(reminderDateTime: null);
+    await provider.updateNote(updated);
+    if (!mounted) return;
+    setState(() => _currentNote = updated);
   }
 
   Future<void> _onReminder() async {
@@ -305,10 +331,28 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
 
   Future<void> _onShare() async {
     final note = _currentNote;
+    final l10n = AppLocalizations.of(context)!;
     final content = note.isChecklist
         ? ChecklistFormatter.formatForSharing(note.title, note.content)
-        : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length)}';
-    CustomShareSheet.show(context, content, subject: note.title, note: note);
+        : '${note.title}\n\n${NoteCardUtils.fixNoteContent(note.content, maxChars: null)}';
+    CustomShareSheet.show(
+      context,
+      content,
+      subject: note.title,
+      note: note,
+      onNoteCopied: () async {
+        if (note.id == null || !mounted) return;
+        final provider = Provider.of<NotesProvider>(context, listen: false);
+        await provider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
+        if (!mounted) return;
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.noteDuplicated,
+          type: NotificationType.success,
+          duration: const Duration(seconds: 2),
+        );
+      },
+    );
   }
 
   Future<void> _onArchive() async {
@@ -390,6 +434,21 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     if (mounted) _closeOrPop();
   }
 
+  Future<void> _onColorChange() async {
+    final selectedIndex = await ColorPickerSheet.show(
+      context,
+      currentIndex: widget.coordinator.stateManager.colorIndex,
+    );
+    if (selectedIndex == null || !mounted) return;
+    widget.coordinator.stateManager.colorIndex = selectedIndex;
+    widget.coordinator.stateManager.markDirty();
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final updated = _currentNote.copyWith(colorIndex: selectedIndex);
+    await provider.updateNote(updated);
+    if (!mounted) return;
+    setState(() => _currentNote = updated);
+  }
+
   Future<void> _onRefresh() async {
     if (_currentNote.id == null) return;
     final provider = Provider.of<NotesProvider>(context, listen: false);
@@ -399,179 +458,11 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         .cast<Note?>()
         .firstWhere((n) => n?.id == _currentNote.id, orElse: () => null);
     if (updated != null) {
-      setState(() =>
-          widget.coordinator.stateManager.colorIndex = updated.colorIndex);
+      setState(() {
+        _currentNote = updated;
+        widget.coordinator.stateManager.colorIndex = updated.colorIndex;
+      });
     }
-  }
-
-  Widget _buildContent(Color textColor, Color noteColor) {
-    if (_currentMode == NoteMode.checklist) {
-      return ReadOnlyChecklistView(
-        coordinator: widget.coordinator,
-        textColor: textColor,
-        noteColor: noteColor,
-        scrollController: _scrollController,
-        onSave: widget.onSave,
-        isTrashed: _currentNote.isTrashed,
-      );
-    }
-
-    // Markdown preview — يجب أن يكون قبل Code
-    if (_showMarkdown) {
-      final content = widget.coordinator.codeController?.text ??
-          widget.coordinator.contentController.text;
-      return Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 80),
-        child: MarkdownViewer(
-          content: content,
-          textColor: textColor,
-        ),
-      );
-    }
-
-    // Code
-    if (_currentMode == NoteMode.code) {
-      final content = widget.coordinator.codeController?.text ??
-          widget.coordinator.contentController.text;
-      return ScrollbarTheme(
-        data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Directionality(
-            textDirection: TextDirection.ltr,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20, bottom: 80),
-              child: SelectableText(
-                content,
-                style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 14,
-                    height: 1.6,
-                    color: textColor),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Quill
-    final qc = widget.coordinator.quillController;
-    if (qc == null) return const SizedBox.shrink();
-
-    // Rich / Simple / Reminder
-    final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
-    qc.readOnly = true;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: DefaultTextStyle.merge(
-        style: TextStyle(fontFamily: fontFamily),
-        child: ScrollbarTheme(
-          data: const ScrollbarThemeData(thickness: WidgetStatePropertyAll(0)),
-          child: QuillEditor(
-            key: ValueKey(_quillKey),
-            controller: qc,
-            focusNode: widget.coordinator.textFieldFocusNode,
-            scrollController: ScrollController(),
-            config: QuillEditorConfig(
-              unknownEmbedBuilder: _unknownEmbedBuilder,
-              autoFocus: false,
-              expands: true,
-              scrollable: true,
-              padding: const EdgeInsets.only(top: 20, bottom: 40),
-              showCursor: false,
-              enableInteractiveSelection: false,
-              checkBoxReadOnly: true,
-              // ignore: experimental_member_use
-              customLeadingBlockBuilder: (node, config) =>
-                  _buildCheckboxLeading(config, textColor),
-              customStyles: DefaultStyles(
-                leading: DefaultTextBlockStyle(
-                  TextStyle(
-                    fontSize: AppFontSize.noteBody,
-                    fontFamily: fontFamily,
-                    height: AppLineHeight.body(
-                      Provider.of<SettingsProvider>(context, listen: false)
-                          .textScaleFactor,
-                      fontFamily,
-                    ),
-                    color: textColor,
-                  ),
-                  HorizontalSpacing.zero,
-                  VerticalSpacing.zero,
-                  VerticalSpacing.zero,
-                  null,
-                ),
-                lists: DefaultListBlockStyle(
-                  TextStyle(
-                    fontSize: AppFontSize.noteBody,
-                    fontFamily: fontFamily,
-                    height: AppLineHeight.body(
-                      Provider.of<SettingsProvider>(context, listen: false)
-                          .textScaleFactor,
-                      fontFamily,
-                    ),
-                    color: textColor,
-                  ),
-                  HorizontalSpacing.zero,
-                  VerticalSpacing.zero,
-                  VerticalSpacing.zero,
-                  null,
-                  null,
-                ),
-                paragraph: DefaultTextBlockStyle(
-                  TextStyle(
-                    fontSize: AppFontSize.noteBody,
-                    fontFamily: fontFamily,
-                    height: AppLineHeight.body(
-                      Provider.of<SettingsProvider>(context, listen: false)
-                          .textScaleFactor,
-                      fontFamily,
-                    ),
-                    color: textColor,
-                  ),
-                  HorizontalSpacing.zero,
-                  VerticalSpacing.zero,
-                  VerticalSpacing.zero,
-                  null,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Checkbox بألوان النوتة — نفس شكل المحرر
-  Widget? _buildCheckboxLeading(LeadingConfig config, Color textColor) {
-    final isCheck = config.attribute == Attribute.checked ||
-        config.attribute == Attribute.unchecked;
-    if (!isCheck) return null;
-
-    final isChecked = config.value;
-    final size = config.lineSize ?? 16.0;
-
-    return Container(
-      alignment: AlignmentDirectional.centerEnd,
-      padding: EdgeInsetsDirectional.only(end: size / 2),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: isChecked ? Colors.green : Colors.transparent,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isChecked ? Colors.green : textColor.withValues(alpha: 0.5),
-            width: 1.5,
-          ),
-        ),
-        child: isChecked
-            ? Icon(Icons.check, size: size * 0.75, color: Colors.white)
-            : null,
-      ),
-    );
   }
 
   @override
@@ -605,7 +496,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
           ? EdgeInsets.fromLTRB(12, isLandscape ? 8 : 16, 12, 8)
           : isMarkdown
               ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
-              : const EdgeInsets.symmetric(horizontal: 12),
+              : const EdgeInsets.fromLTRB(12, 2, 12, 2),
       decoration: BoxDecoration(
         color: noteColor,
         borderRadius: BorderRadius.circular(16),
@@ -616,7 +507,21 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               offset: const Offset(0, 8))
         ],
       ),
-      child: _buildContent(textColor, noteColor),
+      child: ReadOnlyContent(
+        mode: _currentMode,
+        coordinator: widget.coordinator,
+        textColor: textColor,
+        noteColor: noteColor,
+        scrollController: _scrollController,
+        showMarkdown: _showMarkdown,
+        isTrashed: _currentNote.isTrashed,
+        quillKey: _quillKey,
+        onSave: widget.onSave,
+        reminderDateTime:
+            _currentNote.isTrashed ? null : _currentNote.reminderDateTime,
+        onRemoveReminder: _currentNote.isTrashed ? null : _removeReminder,
+        onEditReminder: _currentNote.isTrashed ? null : _onReminder,
+      ),
     );
 
     final heroTag = widget.heroTag ?? 'note_card_${note.id}';
@@ -626,19 +531,49 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         ? Hero(
             tag: heroTag,
             transitionOnUserGestures: false,
-            createRectTween: (begin, end) => RectTween(begin: begin, end: end),
-            flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) =>
-                FadeTransition(
-              opacity: direction == HeroFlightDirection.push
-                  ? animation
-                  : ReverseAnimation(animation),
-              child: Material(color: Colors.transparent, child: noteCard),
+            createRectTween: (begin, end) =>
+                MaterialRectArcTween(begin: begin, end: end),
+            placeholderBuilder: (context, heroSize, child) => SizedBox(
+              width: heroSize.width,
+              height: heroSize.height,
             ),
+            flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) {
+              final curved = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+                reverseCurve: Curves.easeInCubic,
+              );
+              return AnimatedBuilder(
+                animation: curved,
+                builder: (context, _) {
+                  final radius = BorderRadius.circular(
+                    direction == HeroFlightDirection.push
+                        ? lerpDouble(16, 0, curved.value)!
+                        : lerpDouble(0, 16, curved.value)!,
+                  );
+                  return Material(
+                    color: Colors.transparent,
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: noteCard,
+                    ),
+                  );
+                },
+              );
+            },
             child: noteCard,
           )
         : noteCard;
 
     final canMarkdown = _currentNote.noteType == 'markdown';
+
+    // زر وضع القراءة — يظهر فقط إذا المحتوى > 600 حرف وليس checklist أو code
+    final contentForLength = widget.coordinator.codeController?.text ??
+        widget.coordinator.contentController.text;
+    final canBookMode = _currentMode != NoteMode.checklist &&
+        _currentMode != NoteMode.code &&
+        contentForLength.length >= _bookModeMinLength &&
+        _currentNote.id != null;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -655,6 +590,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         onMarkdownToggle: canMarkdown
             ? () => setState(() => _showMarkdown = !_showMarkdown)
             : null,
+        onReadingMode: canBookMode ? _openBookMode : null,
       ),
       body: Builder(builder: (ctx) {
         final canDoubleTap = !note.isTrashed &&
@@ -681,7 +617,6 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
 
         if (!note.isTrashed) return content;
 
-        // للسلة: Stack مع sheet عائم في الأسفل
         return Stack(
           children: [
             Padding(
@@ -693,7 +628,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: _TrashFloatingSheet(
+              child: TrashFloatingSheet(
                 fadeAnimation: barsFade,
                 onRestore: _onRestore,
                 onPermanentDelete: _onPermanentDelete,
@@ -713,214 +648,12 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
               onArchive: _onArchive,
               onDelete: _onDelete,
               onEdit: widget.onEnterEdit,
+              onColorChange: _onColorChange,
               onConvert: (targetType) => _onConvert(targetType),
               currentNoteType:
                   _currentNote.isProfessional ? 'code' : _currentNote.noteType,
               isChecklist: _currentNote.isChecklist,
             ),
-    );
-  }
-}
-
-class _UnknownEmbedBuilder extends EmbedBuilder {
-  const _UnknownEmbedBuilder();
-  @override
-  String get key => '__unknown__';
-  @override
-  Widget build(BuildContext context, EmbedContext embedContext) =>
-      const SizedBox.shrink();
-}
-
-const _unknownEmbedBuilder = _UnknownEmbedBuilder();
-
-/// Sheet عائم في الأسفل — يبدأ بـ handle فقط ويتمدد عند السحب
-class _TrashFloatingSheet extends StatefulWidget {
-  final Animation<double> fadeAnimation;
-  final VoidCallback onRestore;
-  final VoidCallback onPermanentDelete;
-
-  const _TrashFloatingSheet({
-    required this.fadeAnimation,
-    required this.onRestore,
-    required this.onPermanentDelete,
-  });
-
-  @override
-  State<_TrashFloatingSheet> createState() => _TrashFloatingSheetState();
-}
-
-class _TrashFloatingSheetState extends State<_TrashFloatingSheet>
-    with SingleTickerProviderStateMixin {
-  static const double _peekH = 56.0;
-  static const double _fullH =
-      56.0 + 56.0 + 1.0 + 56.0 + 16.0; // handle + 2 tiles + divider + pad
-
-  late final AnimationController _anim;
-  late final Animation<double> _heightAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _anim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _heightAnim = Tween<double>(begin: _peekH, end: _fullH).animate(
-      CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _anim.dispose();
-    super.dispose();
-  }
-
-  void _onDragUpdate(DragUpdateDetails d) {
-    // سحب للأعلى = delta سالب → نزيد الـ animation
-    final delta = -d.primaryDelta! / (_fullH - _peekH);
-    _anim.value = (_anim.value + delta).clamp(0.0, 1.0);
-  }
-
-  void _onDragEnd(DragEndDetails d) {
-    // snap: إذا > 50% أو velocity سريع → افتح، وإلا أغلق
-    if (d.primaryVelocity != null && d.primaryVelocity! < -300) {
-      _anim.forward();
-    } else if (d.primaryVelocity != null && d.primaryVelocity! > 300) {
-      _anim.reverse();
-    } else if (_anim.value > 0.5) {
-      _anim.forward();
-    } else {
-      _anim.reverse();
-    }
-  }
-
-  void _toggle() {
-    if (_anim.value > 0.5) {
-      _anim.reverse();
-    } else {
-      _anim.forward();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-
-    return FadeTransition(
-      opacity: widget.fadeAnimation,
-      child: AnimatedBuilder(
-        animation: _heightAnim,
-        builder: (context, _) {
-          final height = _heightAnim.value + bottomPad;
-          final openRatio = _anim.value;
-
-          return GestureDetector(
-            onVerticalDragUpdate: _onDragUpdate,
-            onVerticalDragEnd: _onDragEnd,
-            onTap: _toggle,
-            child: Container(
-              height: height,
-              decoration: BoxDecoration(
-                color: isDark ? scheme.surfaceContainerLow : scheme.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ── Handle ──────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: scheme.onSurface.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'اسحب للأعلى'
-                              : 'Swipe up',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurface.withValues(alpha: 0.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // ── أزرار بـ fade ────────────────────────────
-                  Expanded(
-                    child: Opacity(
-                      opacity: openRatio,
-                      child: IgnorePointer(
-                        ignoring: openRatio < 0.5,
-                        child: ListView(
-                          padding: EdgeInsets.zero,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            ListTile(
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.restore_rounded,
-                                    color: Colors.green, size: 22),
-                              ),
-                              title: Text(l10n.restore,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600)),
-                              onTap: widget.onRestore,
-                            ),
-                            const Divider(height: 1, indent: 16, endIndent: 16),
-                            ListTile(
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withValues(alpha: 0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.delete_forever_rounded,
-                                    color: Colors.red, size: 22),
-                              ),
-                              title: Text(
-                                l10n.permanentDelete,
-                                style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              onTap: widget.onPermanentDelete,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

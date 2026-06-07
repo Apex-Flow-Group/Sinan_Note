@@ -1,31 +1,30 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui' as ui;
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/editor_page_route.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/desktop/note_context_menu.dart';
-import 'package:apex_note/widgets/effects/premium_card_effect.dart';
-import 'package:apex_note/widgets/home/note_card/hidden_categories_chip.dart';
-import 'package:apex_note/widgets/home/note_card/slidable_auto_closer.dart';
-import 'package:apex_note/widgets/home/note_card_actions.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/providers/selected_note_provider.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/desktop/note_context_menu.dart';
+import 'package:sinan_note/widgets/effects/premium_card_effect.dart';
+import 'package:sinan_note/widgets/home/note_card/hidden_categories_chip.dart';
+import 'package:sinan_note/widgets/home/note_card/slidable_auto_closer.dart';
+import 'package:sinan_note/widgets/home/note_card_actions.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
 class NoteCardWidget extends StatefulWidget {
   final Note note;
@@ -141,10 +140,21 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     final noteColor = _baseColor;
     final Color titleColor = _titleColor;
     final Color contentColor = _contentColor;
+    final bool isTrash = widget.source == 'trash';
+    final bool isArchive = widget.source == 'archive';
     final bool enableSwipe = !widget.selectionMode &&
-        settings.swipeEnabled &&
-        !widget.note.isLocked &&
-        widget.source != 'archive';
+        (isTrash || isArchive || (settings.swipeEnabled && !widget.note.isLocked));
+
+    final String rightAction = isTrash
+        ? 'restore'
+        : isArchive
+            ? 'unarchive'
+            : settings.swipeRightAction;
+    final String leftAction = isTrash
+        ? 'permanent_delete'
+        : isArchive
+            ? 'trash_from_archive'
+            : settings.swipeLeftAction;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -160,7 +170,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 dragDismissible: false,
                 children: [
                   NoteCardActions.buildCustomSlidableAction(
-                    action: settings.swipeRightAction,
+                    action: rightAction,
                     context: context,
                     borderRadius: const BorderRadius.horizontal(
                         left: Radius.circular(16)),
@@ -177,7 +187,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 dragDismissible: false,
                 children: [
                   NoteCardActions.buildCustomSlidableAction(
-                    action: settings.swipeLeftAction,
+                    action: leftAction,
                     context: context,
                     borderRadius: const BorderRadius.horizontal(
                         right: Radius.circular(16)),
@@ -215,70 +225,26 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                   } else {
                     if (widget.note.isLocked && widget.source == 'locked') {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final decryptedNote = Note(
-                        id: widget.note.id,
-                        title: widget.note.title,
-                        content: widget.note.content,
-                        createdAt: widget.note.createdAt,
-                        updatedAt: widget.note.updatedAt,
-                        colorIndex: widget.note.colorIndex,
-                        isArchived: widget.note.isArchived,
-                        isTrashed: widget.note.isTrashed,
-                        reminderDateTime: widget.note.reminderDateTime,
-                        isLocked: false,
-                        noteType: widget.note.noteType,
-                        recurrenceRule: widget.note.recurrenceRule,
-                        isCompleted: widget.note.isCompleted,
-                        isProfessional: widget.note.isProfessional,
-                        isPinned: widget.note.isPinned,
-                        isChecklist: widget.note.isChecklist,
-                        categoryIds: widget.note.categoryIds,
-                        isHiddenFromHome: widget.note.isHiddenFromHome,
-                      );
-                      final result = await Navigator.push(
+                      final decryptedNote =
+                          widget.note.copyWith(isLocked: false);
+                      final result = await AppNavigator.toEditor(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => NoteEditorImmersive(
-                            note: decryptedNote,
-                            mode: mode,
-                            skipAuthentication: true,
-                            originallyLocked: true,
-                          ),
-                        ),
-                      );
-                      if ((result == true || result == null) && mounted) {
-                        widget.onNoteChanged();
-                      }
-                    } else if (widget.source == 'archive') {
-                      final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final result = await Navigator.push(
-                        context,
-                        EditorPageRoute(
-                          builder: (context) => NoteEditorImmersive(
-                            note: widget.note,
-                            mode: mode,
-                            readOnly: true,
-                            heroTag:
-                                'note_card_${widget.source}_${widget.note.id}',
-                          ),
-                        ),
+                        note: decryptedNote,
+                        mode: mode,
+                        skipAuthentication: true,
+                        originallyLocked: true,
                       );
                       if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
                       }
                     } else {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
-                      final result = await Navigator.push(
+                      final result = await AppNavigator.toEditor(
                         context,
-                        EditorPageRoute(
-                          builder: (context) => NoteEditorImmersive(
-                            note: widget.note,
-                            mode: mode,
-                            readOnly: true,
-                            heroTag:
-                                'note_card_${widget.source}_${widget.note.id}',
-                          ),
-                        ),
+                        note: widget.note,
+                        mode: mode,
+                        readOnly: true,
+                        heroTag: 'note_card_${widget.source}_${widget.note.id}',
                       );
                       if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
@@ -339,7 +305,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 8),
-                                              widget.note.isLocked
+                                              // في شاشة الخزنة (source == 'locked') الملاحظة مفككة مسبقاً
+                                              // → نعرض المحتوى الفعلي بدلاً من "محتوى محمي"
+                                              (widget.note.isLocked &&
+                                                      widget.source != 'locked')
                                                   ? Text(
                                                       l10n.protectedContent,
                                                       maxLines: 1,
@@ -536,22 +505,24 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                   ],
                                 ),
                               ),
-                            if (widget.viewType != ViewType.listCompact &&
-                                (widget.note.isHiddenFromHome ||
+                            if (widget.viewType != ViewType.listCompact)
+                              Builder(builder: (context) {
+                                final hideProFromHome = context
+                                    .read<CategoriesProvider>()
+                                    .hideProFromHome;
+                                final showChip = widget.note.isHiddenFromHome ||
                                     (widget.isFiltering &&
                                         widget.note.isProfessional &&
-                                        context
-                                            .read<CategoriesProvider>()
-                                            .hideProFromHome)))
-                              HiddenCategoriesChip(
-                                note: widget.note,
-                                titleColor: titleColor,
-                                isProHidden: widget.note.isProfessional &&
-                                    context
-                                        .read<CategoriesProvider>()
-                                        .hideProFromHome &&
-                                    !widget.note.isHiddenFromHome,
-                              ),
+                                        hideProFromHome);
+                                if (!showChip) return const SizedBox.shrink();
+                                return HiddenCategoriesChip(
+                                  note: widget.note,
+                                  titleColor: titleColor,
+                                  isProHidden: widget.note.isProfessional &&
+                                      hideProFromHome &&
+                                      !widget.note.isHiddenFromHome,
+                                );
+                              }),
                           ],
                         ),
                       ),

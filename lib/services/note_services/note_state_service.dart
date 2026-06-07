@@ -1,10 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
-
+import 'dart:async';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 class NoteStateService {
   List<Note> _allNotes = [];
   List<Note> _lockedNotes = [];
@@ -13,11 +9,13 @@ class NoteStateService {
 
   /// Callback to refresh notes from database after sync
   Future<void> Function()? onSyncCompleted;
+  Future<void> Function()? onCategoriesRefreshNeeded;
 
   // Cache
   List<Note>? _cachedActiveNotes;
   List<Note>? _cachedArchivedNotes;
   List<Note>? _cachedTrashedNotes;
+  List<Note>? _cachedReminderNotes;
   bool _cacheInvalidated = true;
 
   bool get isInitialDataLoaded => _isInitialDataLoaded;
@@ -53,13 +51,18 @@ class NoteStateService {
   }
 
   List<Note> get reminderNotes {
-    return _allNotes
+    if (_cachedReminderNotes != null && !_cacheInvalidated) {
+      // reminderNotes يعتمد على DateTime.now() — نتحقق أن لا شيء انتهى
+      return _cachedReminderNotes!;
+    }
+    _cachedReminderNotes = _allNotes
         .where((n) =>
             n.reminderDateTime != null &&
             !n.isLocked &&
             !n.isTrashed &&
             n.reminderDateTime!.isAfter(DateTime.now()))
         .toList();
+    return _cachedReminderNotes!;
   }
 
   List<Note> get lockedNotes => _lockedNotes;
@@ -79,7 +82,7 @@ class NoteStateService {
       _allNotes.add(note);
     }
     sortNotes(immediate: true);
-    _allNotes = List.from(_allNotes);
+    // List.from بعد sort مباشرة لا قيمة منها — حُذفت (M2)
     _invalidateCache();
     _silentSync();
   }
@@ -98,7 +101,6 @@ class NoteStateService {
     } else {
       _allNotes.insert(0, note);
       sortNotes(immediate: true);
-      _allNotes = List.from(_allNotes);
     }
     _invalidateCache();
     _silentSync();
@@ -108,7 +110,7 @@ class NoteStateService {
     _allNotes.removeWhere((n) => n.id == id);
     _lockedNotes.removeWhere((n) => n.id == id);
     _invalidateCache();
-    GoogleDriveService.markDirty();
+    // markDirty() تُستدعى داخل _silentSync() — لا حاجة لاستدعاء صريح (M3)
     _silentSync();
   }
 
@@ -125,13 +127,14 @@ class NoteStateService {
       return activeNotes;
     }
 
-    // ✅ Use cached notes for search (faster)
-    final lowerQuery = query.toLowerCase();
+    // استخدام النص المطبّع للبحث الذكي (يتجاهل التشكيل ويوحّد الألف)
+    final normalizedQuery = Note.normalize(query);
+
     final results = activeNotes
         .where((n) =>
-            n.title.toLowerCase().contains(lowerQuery) ||
-            n.content.toLowerCase().contains(lowerQuery))
-        .take(100) // ✅ Limit to 100 results
+            n.normalizedTitle.contains(normalizedQuery) ||
+            n.normalizedContent.contains(normalizedQuery))
+        .take(100)
         .toList();
 
     return results;
@@ -175,6 +178,7 @@ class NoteStateService {
     _cachedActiveNotes = null;
     _cachedArchivedNotes = null;
     _cachedTrashedNotes = null;
+    _cachedReminderNotes = null;
   }
 
   /// 🔄 Silent background sync with debouncing
@@ -183,20 +187,23 @@ class NoteStateService {
 
   void _silentSync() {
     // تعليم أن هناك تغييرات تحتاج رفع
-    GoogleDriveService.markDirty();
+    CloudSyncGateway.markDirty();
 
     _syncDebounce?.cancel();
     _syncDebounce = Timer(const Duration(seconds: 5), () async {
       if (_isSyncing) return;
-      if (!GoogleDriveService.isSignedIn) return;
-      if (!GoogleDriveService.autoSyncEnabled.value) return;
+      if (!CloudSyncGateway.isSignedIn) return;
+      if (!CloudSyncGateway.autoSyncEnabled.value) return;
 
       try {
         _isSyncing = true;
-        await GoogleDriveService.smartSyncOnStartup();
+        await CloudSyncGateway.smartSync();
         // ✅ Refresh notes from database after sync completes
         if (onSyncCompleted != null) {
           await onSyncCompleted!();
+        }
+        if (onCategoriesRefreshNeeded != null) {
+          await onCategoriesRefreshNeeded!();
         }
       } catch (_) {
       } finally {
@@ -205,3 +212,4 @@ class NoteStateService {
     });
   }
 }
+

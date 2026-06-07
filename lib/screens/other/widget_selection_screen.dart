@@ -1,15 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/core/utils/note_content_utils.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/services/widget_service.dart';
-import 'package:flutter/material.dart';
-
+import 'dart:convert';import 'package:flutter/material.dart';import 'package:sinan_note/core/utils/note_content_utils.dart'; import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/unified_notification_service.dart'; import 'package:sinan_note/services/widget_service.dart';
 class WidgetSelectionScreen extends StatefulWidget {
   final String widgetType; // 'note' or 'checklist'
   final int currentNoteId; // النوت الحالية المثبتة
@@ -69,11 +60,10 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
 
     // فلتر البحث
     if (searchQuery.isNotEmpty) {
+      final q = Note.normalize(searchQuery);
       result = result.where((note) {
-        final title = note.title.toLowerCase();
-        final content = note.content.toLowerCase();
-        final query = searchQuery.toLowerCase();
-        return title.contains(query) || content.contains(query);
+        return note.normalizedTitle.contains(q) ||
+            note.normalizedContent.contains(q);
       }).toList();
     }
 
@@ -394,3 +384,4 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
     );
   }
 }
+

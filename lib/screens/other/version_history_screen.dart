@@ -1,23 +1,24 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/screens/other/version_history/panels/diff_panel.dart';
-import 'package:apex_note/screens/other/version_history/panels/notes_panel.dart';
-import 'package:apex_note/screens/other/version_history/panels/versions_panel.dart';
-import 'package:apex_note/screens/other/version_history/version_history_controller.dart';
-import 'package:apex_note/screens/other/version_history/widgets/resizable_divider.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/searchable_header.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/screens/other/version_history/panels/diff_panel.dart';
+import 'package:sinan_note/screens/other/version_history/panels/notes_panel.dart';
+import 'package:sinan_note/screens/other/version_history/panels/versions_panel.dart';
+import 'package:sinan_note/screens/other/version_history/version_history_controller.dart';
+import 'package:sinan_note/screens/other/version_history/widgets/resizable_divider.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/searchable_header.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
 const String _kPrefNotesWidth = 'vh_notes_col_width';
 const String _kPrefVersionsWidth = 'vh_versions_col_width';
@@ -49,7 +50,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     _ctrl.loadNotes();
     _loadColWidths();
     _searchController.addListener(() {
-      _ctrl.searchQuery = _searchController.text.toLowerCase();
+      _ctrl.searchQuery = _searchController.text;
+      setState(() {});
     });
   }
 
@@ -240,7 +242,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           _ctrl.clearNote();
           _animateToPage(0);
         } else {
-          Navigator.of(context).popUntil((r) => r.isFirst);
+          Navigator.of(context, rootNavigator: true).popUntil((r) => r.settings.name == '/main' || r.isFirst);
         }
       },
       child: Scaffold(
@@ -254,7 +256,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                       isSearching: _isSearching,
                       searchController: _searchController,
                       onSearchChange: (q) =>
-                          setState(() => _ctrl.searchQuery = q.toLowerCase()),
+                          setState(() => _ctrl.searchQuery = q),
                       onToggleSearch: () => setState(() {
                         _isSearching = !_isSearching;
                         if (!_isSearching) _searchController.clear();
@@ -492,3 +494,4 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     );
   }
 }
+

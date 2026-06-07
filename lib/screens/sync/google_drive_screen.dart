@@ -1,18 +1,19 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/screens/sync/google_drive/google_drive_handlers.dart';
-import 'package:apex_note/screens/sync/google_drive/google_drive_widgets.dart';
-import 'package:apex_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/sync/google_drive/google_drive_handlers.dart';
+import 'package:sinan_note/screens/sync/google_drive/google_drive_widgets.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
 class GoogleDriveScreen extends StatefulWidget {
   final bool isDesktopLayout;
@@ -26,7 +27,7 @@ class GoogleDriveScreen extends StatefulWidget {
 class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   bool _isLoading = false;
   bool _autoSync = false;
-  bool _pullToRefresh = true;
+  bool _pullToRefresh = false;
 
   @override
   void initState() {
@@ -36,24 +37,27 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   }
 
   Future<void> _restoreSignInState() async {
-    await GoogleDriveService.initializeSignIn();
+    await CloudSyncGateway.initializeSignIn();
     if (mounted) setState(() {});
   }
 
   Future<void> _loadAutoSyncSetting() async {
-    await GoogleDriveService.loadAutoSyncState();
+    await CloudSyncGateway.loadAutoSyncState();
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _autoSync = GoogleDriveService.autoSyncEnabled.value;
-      _pullToRefresh = prefs.getBool('google_drive_pull_to_refresh') ?? true;
+      _autoSync = CloudSyncGateway.autoSyncEnabled.value;
+      _pullToRefresh = prefs.getBool('google_drive_pull_to_refresh') ?? false;
     });
   }
 
   Future<void> _saveAutoSyncSetting(bool value) async {
-    await GoogleDriveService.setAutoSync(value);
+    await CloudSyncGateway.setAutoSync(value);
     if (!mounted) return;
     setState(() => _autoSync = value);
+    if (value && CloudSyncGateway.isSignedIn) {
+      await _handleSync();
+    }
   }
 
   Future<void> _savePullToRefreshSetting(bool value) async {
@@ -78,13 +82,42 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   Future<void> _handleUpload() async {
     setState(() => _isLoading = true);
     await GoogleDriveHandlers.handleUpload(context);
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) {
+      await _refreshUI();
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _handleDownload() async {
     setState(() => _isLoading = true);
     await GoogleDriveHandlers.handleDownload(context);
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) {
+      await _refreshUI();
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleMerge() async {
+    setState(() => _isLoading = true);
+    await GoogleDriveHandlers.handleMerge(context);
+    if (mounted) {
+      await _refreshUI();
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _refreshUI() async {
+    if (!mounted) return;
+    await Provider.of<NotesProvider>(context, listen: false)
+        .refreshAllNotes(force: true);
+    if (!mounted) return;
+    await Provider.of<CategoriesProvider>(context, listen: false)
+        .refreshCategories();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -94,20 +127,15 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     final isDark = settingsProvider.themeMode == ThemeMode.dark ||
         (settingsProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
-    final isSignedIn = GoogleDriveService.isSignedIn;
-    final userEmail = GoogleDriveService.currentUserEmail;
-    final lastSyncTime = GoogleDriveService.lastSyncTime;
+    final isSignedIn = CloudSyncGateway.isSignedIn;
+    final userEmail = CloudSyncGateway.currentUserEmail;
+    final lastSyncTime = CloudSyncGateway.lastSyncTime;
     final lastSyncTimeStr = lastSyncTime != null
         ? GoogleDriveHandlers.formatDateTime(context, lastSyncTime)
         : l10n.never;
 
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        }
-      },
+      canPop: true,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.googleDriveSync),
@@ -142,7 +170,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
 
   Future<void> _handleRefresh() async {
     await _restoreSignInState();
-    if (mounted && GoogleDriveService.isSignedIn) {
+    if (mounted && CloudSyncGateway.isSignedIn) {
       setState(() => _isLoading = true);
       await GoogleDriveHandlers.handleSync(context);
       if (mounted) setState(() => _isLoading = false);
@@ -171,7 +199,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
               context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
           const SizedBox(height: 24),
           GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
-              isSignedIn, _handleUpload, _handleDownload),
+              isSignedIn, _handleUpload, _handleDownload, _handleMerge),
           const SizedBox(height: 24),
           GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
               _autoSync, isSignedIn, _saveAutoSyncSetting,
@@ -300,29 +328,26 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () async {
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
               final notesProvider =
                   Provider.of<NotesProvider>(context, listen: false);
-              final result = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const GoogleDriveSyncPage(),
-                ),
-              );
+              final categoriesProvider =
+                  Provider.of<CategoriesProvider>(context, listen: false);
+              final syncSuccessMsg = l10n.syncSuccess;
+              final result = await AppNavigator.toGoogleDriveSync(context);
               if (result == true && mounted) {
                 await notesProvider.refreshAllNotes(force: true);
                 if (!mounted) return;
-                // ignore: use_build_context_synchronously
-                await Provider.of<CategoriesProvider>(context, listen: false)
-                    .refreshCategories();
-                setState(() {});
+                await categoriesProvider.refreshCategories();
                 if (!mounted) return;
-                scaffoldMessenger.showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.syncSuccess),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                setState(() {});
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  UnifiedNotificationService().show(
+                    context: context,
+                    message: syncSuccessMsg,
+                    type: NotificationType.success,
+                  );
+                });
               }
             },
             icon: const Icon(Icons.login),
@@ -371,7 +396,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                   lastSyncTimeStr, isSignedIn, _handleSync),
               const SizedBox(height: 24),
               GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
-                  isSignedIn, _handleUpload, _handleDownload),
+                  isSignedIn, _handleUpload, _handleDownload, _handleMerge),
             ],
           ),
         1 => ListView(

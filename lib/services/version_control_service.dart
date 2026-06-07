@@ -1,24 +1,25 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/storage/sqlite_database_service.dart';
-import 'package:crypto/crypto.dart';
-
+import 'dart:convert';import 'package:crypto/crypto.dart'; import 'package:sinan_note/models/note_version.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 /// Ultra-Smart Version Control Service
 /// Philosophy: ONE meaningful version per editing session
 class VersionControlService {
   // Smart settings — balanced for real usage
   static const int _minSignificantChange = 20; // 20 chars minimum
   static const double _minChangePercentage = 0.05; // 5% change minimum
-  static const int _maxVersionsPerNote = 5; // Keep only 5 versions max
+  static const int _maxVersionsPerNote = 20; // Keep 20 versions per note
 
   // Session tracking (in-memory)
   static final Map<int, String> _sessionSnapshots = {};
   static final Map<int, DateTime> _sessionStartTimes = {};
 
   final SqliteDatabaseService _db = SqliteDatabaseService();
+
+  /// للاختبارات فقط — يمسح جميع الجلسات النشطة
+  static void clearAllSessions() {
+    _sessionSnapshots.clear();
+    _sessionStartTimes.clear();
+  }
 
   /// Start editing session - Take snapshot
   void startEditingSession(int noteId, String title, String content) {
@@ -238,3 +239,4 @@ class _ChangeSignificance {
     required this.reason,
   });
 }
+

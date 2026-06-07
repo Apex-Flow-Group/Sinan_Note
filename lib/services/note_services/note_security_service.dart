@@ -1,13 +1,6 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/note_services/note_db_interface.dart';
-import 'package:apex_note/services/note_services/note_state_service.dart';
-import 'package:apex_note/services/security/vault_service.dart';
-import 'package:encrypt/encrypt.dart';
-
+import 'dart:convert';import 'package:encrypt/encrypt.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/note_services/note_db_interface.dart'; import 'package:sinan_note/services/note_services/note_state_service.dart'; import 'package:sinan_note/services/security/vault_service.dart';
 class NoteSecurityService {
   bool _isVaultUnlocked = false;
   DateTime? _vaultUnlockedAt;
@@ -63,7 +56,7 @@ class NoteSecurityService {
           VaultService.decryptWithKey(note.content, masterKey);
 
       if (note.isChecklist || note.noteType == 'checklist') {
-        decryptedContent = _cleanChecklistAfterDecryption(decryptedContent);
+        decryptedContent = _normalizeChecklistJson(decryptedContent);
       }
 
       return note.copyWith(title: decryptedTitle, content: decryptedContent);
@@ -88,7 +81,7 @@ class NoteSecurityService {
       if (note.content.isNotEmpty) {
         // ✅ For checklist: validate JSON before encryption
         if (note.isChecklist || note.noteType == 'checklist') {
-          finalContent = _prepareChecklistForEncryption(note.content);
+          finalContent = _normalizeChecklistJson(note.content);
         }
         finalContent = await VaultService.encryptWithMasterKey(finalContent);
       }
@@ -101,7 +94,7 @@ class NoteSecurityService {
         finalContent = await VaultService.decryptWithMasterKey(note.content);
         // ✅ For checklist: validate JSON after decryption
         if (note.isChecklist || note.noteType == 'checklist') {
-          finalContent = _cleanChecklistAfterDecryption(finalContent);
+          finalContent = _normalizeChecklistJson(finalContent);
         }
       }
     }
@@ -120,29 +113,15 @@ class NoteSecurityService {
     stateService.clearLockedNotes();
   }
 
-  /// Prepare checklist JSON for encryption (validate and clean)
-  String _prepareChecklistForEncryption(String content) {
+  /// Normalize checklist JSON: decode then re-encode to ensure clean format.
+  /// Trims whitespace before decoding (handles post-decryption artifacts).
+  String _normalizeChecklistJson(String content) {
     try {
-      final decoded = jsonDecode(content);
-      // Re-encode to ensure clean JSON
+      final decoded = jsonDecode(content.trim());
       return jsonEncode(decoded);
-    } catch (e) {
-      // If invalid JSON, return as-is
-      return content;
-    }
-  }
-
-  /// Clean checklist JSON after decryption (validate and fix)
-  String _cleanChecklistAfterDecryption(String content) {
-    try {
-      // Remove any potential whitespace or encoding issues
-      final trimmed = content.trim();
-      final decoded = jsonDecode(trimmed);
-      // Re-encode to ensure clean JSON
-      return jsonEncode(decoded);
-    } catch (e) {
-      // If invalid JSON, return as-is
+    } catch (_) {
       return content;
     }
   }
 }
+

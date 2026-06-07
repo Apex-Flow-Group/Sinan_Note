@@ -1,36 +1,35 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
-
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/core/theme/app_theme.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_mode.dart';
-import 'package:apex_note/screens/mobile/home_screen_widgets.dart';
-import 'package:apex_note/screens/mobile/home_scrollbar.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/cloud/google_drive_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/home/add_menu_widget.dart'
-    show isMenuOpenNotifier;
-import 'package:apex_note/widgets/home/dialogs/backup_options_dialog.dart';
-import 'package:apex_note/widgets/home/dialogs/filter_sheet.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/widgets/home/note_locator_button.dart';
-import 'package:apex_note/widgets/home/notes_grid_view.dart';
-import 'package:apex_note/widgets/home/smart_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
+import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/home/add_menu_widget.dart'
+    show isMenuOpenNotifier;
+import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
+import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
+import 'package:sinan_note/widgets/home/note_locator_button.dart';
+import 'package:sinan_note/widgets/home/notes_grid_view.dart';
+import 'package:sinan_note/widgets/home/smart_header.dart';
 
-export 'package:apex_note/screens/mobile/home_screen_widgets.dart';
+export 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
 
-enum ViewType { grid, listExpanded, listCompact }
+enum ViewType { listCompact, listExpanded, grid }
 
 class HomeScreen extends StatefulWidget {
   final String? sharedText;
@@ -63,21 +62,23 @@ class _HomeScreenState extends State<HomeScreen> {
   late final ValueNotifier<String> _viewTypeNotifier;
   late final ValueNotifier<Set<int>> _selectedNoteIdsNotifier;
   bool _isSearchActive = false;
-  ViewType _viewType = ViewType.listCompact;
-  Timer? _debounce;
+  ViewType _viewType = ViewType.listExpanded;
   final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
+  String _pullToRefreshMode =
+      'disabled'; // cached — يُحدَّث في didChangeDependencies
 
   @override
   void initState() {
     super.initState();
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     _viewType = _parseViewType(settings.viewType);
+    _pullToRefreshMode = settings.pullToRefreshMode;
     _viewTypeNotifier = ValueNotifier(_viewType.name);
     _selectedNoteIdsNotifier = ValueNotifier({});
     _loadViewType();
     widget.onRegisterModeHandler?.call(_navigateToEditor);
 
-    _searchController.addListener(_onSearchChanged);
+    // _searchController listener محذوف — البحث يُعالَج في NotesFilterController مباشرة
     _searchFocusNode.addListener(() {
       if (mounted) {
         final newState =
@@ -93,24 +94,27 @@ class _HomeScreenState extends State<HomeScreen> {
       if (widget.sharedText != null) {
         final l10n = AppLocalizations.of(context)!;
         final settings = Provider.of<SettingsProvider>(context, listen: false);
-        Navigator.push(
+        final notesProvider =
+            Provider.of<NotesProvider>(context, listen: false);
+        AppNavigator.toEditor(
           context,
-          MaterialPageRoute(
-            builder: (_) => NoteEditorImmersive(
-              mode: NoteMode.code,
-              note: Note(
-                title: l10n.importedFile,
-                content: widget.sharedText!,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-                colorIndex: settings.getDefaultColorIndex('professional'),
-                noteType: NoteMode.code.name,
-              ),
-            ),
+          mode: NoteMode.code,
+          note: notesProvider.createSharedNote(
+            title: l10n.importedFile,
+            content: widget.sharedText!,
+            colorIndex: settings.getDefaultColorIndex('professional'),
           ),
         );
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // تحديث الـ cache عند تغيير الـ settings (مثل تغيير pull-to-refresh mode)
+    _pullToRefreshMode =
+        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
   }
 
   ViewType _parseViewType(String type) {
@@ -119,8 +123,10 @@ class _HomeScreenState extends State<HomeScreen> {
         return ViewType.grid;
       case 'listExpanded':
         return ViewType.listExpanded;
-      default:
+      case 'listCompact':
         return ViewType.listCompact;
+      default:
+        return ViewType.listExpanded;
     }
   }
 
@@ -134,11 +140,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _viewTypeNotifier.value = loaded.name;
       setState(() {});
     }
-  }
-
-  void _onSearchChanged() {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {});
   }
 
   void _exitSearchMode() {
@@ -156,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
     isMenuOpenNotifier.value = false;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final categories = Provider.of<CategoriesProvider>(context, listen: false);
-    final selectedCatId = categories.selectedCategoryId;
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final colorMode = switch (mode) {
       NoteMode.reminder => 'reminder',
       NoteMode.code => 'professional',
@@ -164,25 +165,14 @@ class _HomeScreenState extends State<HomeScreen> {
       NoteMode.rich => 'rich',
       _ => 'simple',
     };
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => NoteEditorImmersive(
-          mode: mode,
-          note: Note(
-            title: '',
-            content: '',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            colorIndex: settings.getDefaultColorIndex(colorMode),
-            noteType: mode.name,
-            isChecklist: mode == NoteMode.checklist,
-            isProfessional: mode == NoteMode.code,
-            categoryIds: selectedCatId != null ? [selectedCatId] : [],
-          ),
-        ),
-      ),
+    final note = notesProvider.createDefaultNote(
+      mode: mode,
+      colorIndex: settings.getDefaultColorIndex(colorMode),
+      categoryIds: categories.selectedCategoryId != null
+          ? [categories.selectedCategoryId!]
+          : [],
     );
+    await AppNavigator.toEditor(context, note: note, mode: mode);
     if (mounted) {
       await Provider.of<NotesProvider>(context, listen: false)
           .refreshAllNotes();
@@ -214,12 +204,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mode == 'full') {
         final pullToSyncEnabled = (await SharedPreferences.getInstance())
                 .getBool('google_drive_pull_to_refresh') ??
-            true;
-        if (GoogleDriveService.isSignedIn &&
-            GoogleDriveService.autoSyncEnabled.value &&
+            false;
+        if (CloudSyncGateway.isSignedIn &&
+            CloudSyncGateway.autoSyncEnabled.value &&
             pullToSyncEnabled) {
-          await GoogleDriveService.smartSyncOnStartup();
-          while (GoogleDriveService.isSyncing.value) {
+          await CloudSyncGateway.smartSync();
+          while (CloudSyncGateway.isSyncing.value) {
             await Future.delayed(const Duration(milliseconds: 200));
           }
         }
@@ -232,6 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) setState(() => _isSearchActive = false);
       } else {
         await notesProvider.refreshAllNotes(force: true);
+        await categoriesProvider.refreshCategories();
       }
     } finally {
       // Wait minimum 1.5s so the user sees the refreshing indicator
@@ -247,8 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
     // Don't show pull indicator when pull-to-refresh is disabled
-    final mode =
-        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
+    final mode = _pullToRefreshMode;
     if (mode == 'disabled') return;
 
     final offset = _scrollController.offset;
@@ -460,3 +450,4 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 }
+

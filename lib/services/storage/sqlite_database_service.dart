@@ -1,17 +1,17 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:io';
 
-import 'package:apex_note/core/utils/note_content_utils.dart';
-import 'package:apex_note/models/category.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/models/note_version.dart';
-import 'package:apex_note/services/diagnostics/apex_error_manager.dart';
-import 'package:apex_note/services/note_services/note_db_interface.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/models/category.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
+import 'package:sinan_note/services/note_services/note_db_interface.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqliteDatabaseService implements NoteDbInterface {
@@ -20,7 +20,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   static Completer<Database>? _initCompleter;
 
   static const _dbName = 'sinan_notes.db';
-  static const _dbVersion = 4;
+  static const _dbVersion = 5;
 
   factory SqliteDatabaseService() {
     _instance ??= SqliteDatabaseService._();
@@ -71,6 +71,10 @@ class SqliteDatabaseService implements NoteDbInterface {
           if (oldVersion < 4) {
             await _migrateToV4(db);
           }
+          // v5: fix notes with isHiddenFromHome=1 but no categories
+          if (oldVersion < 5) {
+            await _migrateToV5(db);
+          }
         },
       );
       _initCompleter!.complete(_db!);
@@ -93,7 +97,10 @@ class SqliteDatabaseService implements NoteDbInterface {
     return _db!;
   }
 
-  static Future<String> _dbPath() async {
+  // ── DB Path ───────────────────────────────────────────────────────────────
+
+  /// مسار ملف قاعدة البيانات — مشترك مع BackupService و VaultResetService
+  static Future<String> getDbPath() async {
     if (_dbPathOverride != null) return _dbPathOverride!;
     if (Platform.isAndroid) {
       return p.join(await getDatabasesPath(), _dbName);
@@ -101,6 +108,8 @@ class SqliteDatabaseService implements NoteDbInterface {
     final dir = await getApplicationDocumentsDirectory();
     return p.join(dir.path, _dbName);
   }
+
+  static Future<String> _dbPath() => getDbPath();
 
   static Future<void> _createTables(Database db) async {
     await db.execute('''
@@ -160,6 +169,14 @@ class SqliteDatabaseService implements NoteDbInterface {
         'CREATE INDEX IF NOT EXISTS idx_notes_reminder  ON notes (reminderDateTime)');
     await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_versions_noteId ON note_versions (noteId)');
+  }
+
+  static Future<void> _migrateToV5(Database db) async {
+    try {
+      await db.execute(
+        "UPDATE notes SET isHiddenFromHome = 0 WHERE isHiddenFromHome = 1 AND (categoryIds IS NULL OR categoryIds = '')",
+      );
+    } catch (_) {}
   }
 
   /// v4 migration: add noteType column to note_versions if it doesn't exist.
@@ -447,7 +464,7 @@ class SqliteDatabaseService implements NoteDbInterface {
 
   // ── Version Control ───────────────────────────────────────────────────────
 
-  static const int _maxVersionsPerNote = 5;
+  static const int _maxVersionsPerNote = 20;
 
   @override
   Future<void> logNoteVersion(NoteVersion version) async {
@@ -622,3 +639,4 @@ class SqliteDatabaseService implements NoteDbInterface {
   @override
   Future<void> runLegacyHistoryCleanup() async {}
 }
+

@@ -1,14 +1,15 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/note_content_utils.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:apex_note/widgets/effects/premium_card_effect.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
+
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/widgets/effects/premium_card_effect.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
 class NotesPanel extends StatelessWidget {
   final List<Note> notes;
@@ -156,3 +157,4 @@ class _NoteItem extends StatelessWidget {
     );
   }
 }
+

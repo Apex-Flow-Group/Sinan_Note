@@ -1,10 +1,12 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/categories/categories_provider.dart';
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/models/note.dart';
+
 import 'package:flutter/material.dart'
     show ChangeNotifier, ScrollController, TextEditingController, ValueNotifier;
+
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/models/note.dart';
 
 class NotesFilterController extends ChangeNotifier {
   static const int _pageSize = 100;
@@ -135,7 +137,7 @@ class NotesFilterController extends ChangeNotifier {
   void _onFilterChanged() => _syncFilteredNotes(_sourceNotes, force: true);
 
   void _syncFilteredNotes(List<Note> notes, {bool force = false}) {
-    final searchQuery = searchController.text.toLowerCase();
+    final searchQuery = searchController.text;
     final isFiltering = searchQuery.isNotEmpty ||
         _lastSelectedCategoryId != null ||
         activeFilterNotifier.value != null;
@@ -173,7 +175,7 @@ class NotesFilterController extends ChangeNotifier {
   }
 
   List<Note> _filterNotes(List<Note> notes) {
-    final searchQuery = searchController.text.toLowerCase();
+    final searchQuery = searchController.text;
     final activeFilter = activeFilterNotifier.value;
     final selectedCategoryId = _lastSelectedCategoryId;
     final hideProFromHome = _lastHideProFromHome;
@@ -242,6 +244,8 @@ class NotesFilterController extends ChangeNotifier {
         return note.reminderDateTime != null;
       case 'checklist':
         return note.noteType == 'checklist' || note.isChecklist;
+      case 'rich':
+        return note.noteType == 'rich';
       default:
         return false;
     }
@@ -285,3 +289,4 @@ class NotesFilterController extends ChangeNotifier {
     super.dispose();
   }
 }
+

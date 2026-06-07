@@ -1,21 +1,19 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/core/utils/adaptive_color.dart';
-import 'package:apex_note/core/utils/checklist_formatter.dart';
-import 'package:apex_note/core/utils/search_mixin.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/providers/selected_note_provider.dart';
-import 'package:apex_note/screens/mobile/trash_empty_sheet.dart';
-import 'package:apex_note/screens/shared/note_editor.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/searchable_header.dart';
-import 'package:apex_note/widgets/common/selected_note_indicator.dart';
-import 'package:apex_note/widgets/home/home_drawer_widget.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/core/utils/search_mixin.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/screens/mobile/trash_empty_sheet.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/searchable_header.dart';
+import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
+import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
+import 'package:sinan_note/widgets/home/note_card_widget.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -28,16 +26,10 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
   bool _selectionMode = false;
   final Set<int> _selectedNotes = {};
   String _sortBy = 'date';
+  final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
 
   bool get _isSearchActive => isSearchActive;
   void _exitSearch() => exitSearch();
-
-  Color _getTextColor(int colorIndex) {
-    final brightness = Theme.of(context).brightness;
-    final color = AppColorPalette.palette[colorIndex].getColor(brightness);
-    final luminance = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b);
-    return luminance > 0.5 ? Colors.black87 : Colors.white;
-  }
 
   @override
   void initState() {
@@ -50,6 +42,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
 
   @override
   void dispose() {
+    _closeAllSlidables.dispose();
     UnifiedNotificationService().commitAll();
     super.dispose();
   }
@@ -57,8 +50,9 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
   List<Note> _filterNotes(List<Note> notes) {
     var filtered = notes.where((note) {
       if (searchQuery.isEmpty) return true;
-      return note.title.toLowerCase().contains(searchQuery) ||
-          note.content.toLowerCase().contains(searchQuery);
+      final q = Note.normalize(searchQuery);
+      return note.normalizedTitle.contains(q) ||
+          note.normalizedContent.contains(q);
     }).toList();
 
     if (_sortBy == 'title') {
@@ -133,190 +127,184 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
               onNotesChanged: () {},
             ),
             body: Column(
-                children: [
-                  Builder(builder: (ctx) {
-                    if (_selectionMode) {
-                      return SearchableHeader(
-                        title: '${_selectedNotes.length} ${l10n.selected}',
-                        isSearching: false,
-                        hideSearchFrame: true,
-                        searchController: searchController,
-                        onToggleSearch: () {},
-                        leading: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(() {
-                            _selectionMode = false;
-                            _selectedNotes.clear();
-                          }),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                _selectedNotes.length == trashedNotes.length
-                                    ? Icons.deselect
-                                    : Icons.select_all,
-                              ),
-                              onPressed: () => setState(() {
-                                if (_selectedNotes.length ==
-                                    trashedNotes.length) {
-                                  _selectedNotes.clear();
-                                } else {
-                                  _selectedNotes.clear();
-                                  _selectedNotes
-                                      .addAll(trashedNotes.map((n) => n.id!));
-                                }
-                              }),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.restore,
-                                  color: _selectedNotes.isNotEmpty
-                                      ? Colors.green
-                                      : Colors.grey),
-                              onPressed: _selectedNotes.isNotEmpty
-                                  ? () => _restoreSelectedNotes(
-                                      notesProvider, trashedNotes, l10n)
-                                  : null,
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete_forever,
-                                  color: _selectedNotes.isNotEmpty
-                                      ? Colors.red
-                                      : Colors.grey),
-                              onPressed: _selectedNotes.isNotEmpty
-                                  ? () async {
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: Text(l10n.permanentDelete),
-                                          content: Text(
-                                              '${l10n.confirmPermanentDeleteMultiple} ${_selectedNotes.length} ${l10n.notesQuestion}'),
-                                          actions: [
-                                            TextButton(
-                                                onPressed: () =>
-                                                    Navigator.pop(ctx, false),
-                                                child: Text(l10n.cancel)),
-                                            TextButton(
-                                                onPressed: () =>
-                                                    Navigator.pop(ctx, true),
-                                                child: Text(l10n.delete,
-                                                    style: const TextStyle(
-                                                        color: Colors.red))),
-                                          ],
-                                        ),
-                                      );
-                                      if (confirm == true) {
-                                        final ids =
-                                            List<int>.from(_selectedNotes);
-                                        setState(() {
-                                          _selectionMode = false;
-                                          _selectedNotes.clear();
-                                        });
-                                        for (var id in ids) {
-                                          await notesProvider.deleteNote(id);
-                                        }
-                                      }
-                                    }
-                                  : null,
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+              children: [
+                Builder(builder: (ctx) {
+                  if (_selectionMode) {
                     return SearchableHeader(
-                      title: l10n.trash,
-                      icon: Icons.delete_sweep_outlined,
-                      isSearching: _isSearchActive,
-                      noteCount: trashedNotes.length,
+                      title: '${_selectedNotes.length} ${l10n.selected}',
+                      isSearching: false,
+                      hideSearchFrame: true,
                       searchController: searchController,
-                      onSearchChange: (q) => setState(() {}),
-                      onToggleSearch: () {
-                        if (_isSearchActive) {
-                          _exitSearch();
-                        } else {
-                          setState(() => searchController.text = '');
-                          toggleSearch();
-                        }
-                      },
-                      leading: !_isSearchActive
-                          ? Builder(
-                              builder: (ctx) => IconButton(
-                                icon: const Icon(Icons.menu),
-                                onPressed: () => Scaffold.of(ctx).openDrawer(),
-                              ),
-                            )
-                          : null,
+                      onToggleSearch: () {},
+                      leading: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => setState(() {
+                          _selectionMode = false;
+                          _selectedNotes.clear();
+                        }),
+                      ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          PopupMenuButton<String>(
-                            icon: const Icon(Icons.sort),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            onSelected: (value) =>
-                                setState(() => _sortBy = value),
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'date',
-                                child: Row(children: [
-                                  Icon(Icons.access_time,
-                                      size: 20,
-                                      color: _sortBy == 'date'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null),
-                                  const SizedBox(width: 12),
-                                  Text(l10n.sortByDate),
-                                  if (_sortBy == 'date') ...[
-                                    const Spacer(),
-                                    Icon(Icons.check,
-                                        size: 20,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ],
-                                ]),
-                              ),
-                              PopupMenuItem(
-                                value: 'title',
-                                child: Row(children: [
-                                  Icon(Icons.sort_by_alpha,
-                                      size: 20,
-                                      color: _sortBy == 'title'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null),
-                                  const SizedBox(width: 12),
-                                  Text(l10n.sortByTitle),
-                                  if (_sortBy == 'title') ...[
-                                    const Spacer(),
-                                    Icon(Icons.check,
-                                        size: 20,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ],
-                                ]),
-                              ),
-                            ],
-                          ),
-                          if (trashedNotes.isNotEmpty)
-                            IconButton(
-                              icon: const Icon(Icons.delete_forever),
-                              onPressed: () => TrashEmptySheet.show(
-                                  context,
-                                  trashedNotes: trashedNotes,
-                                  notesProvider: notesProvider),
+                          IconButton(
+                            icon: Icon(
+                              _selectedNotes.length == trashedNotes.length
+                                  ? Icons.deselect
+                                  : Icons.select_all,
                             ),
+                            onPressed: () => setState(() {
+                              if (_selectedNotes.length ==
+                                  trashedNotes.length) {
+                                _selectedNotes.clear();
+                              } else {
+                                _selectedNotes.clear();
+                                _selectedNotes
+                                    .addAll(trashedNotes.map((n) => n.id!));
+                              }
+                            }),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.restore,
+                                color: _selectedNotes.isNotEmpty
+                                    ? Colors.green
+                                    : Colors.grey),
+                            onPressed: _selectedNotes.isNotEmpty
+                                ? () => _restoreSelectedNotes(
+                                    notesProvider, trashedNotes, l10n)
+                                : null,
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete_forever,
+                                color: _selectedNotes.isNotEmpty
+                                    ? Colors.red
+                                    : Colors.grey),
+                            onPressed: _selectedNotes.isNotEmpty
+                                ? () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: Text(l10n.permanentDelete),
+                                        content: Text(
+                                            '${l10n.confirmPermanentDeleteMultiple} ${_selectedNotes.length} ${l10n.notesQuestion}'),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, false),
+                                              child: Text(l10n.cancel)),
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, true),
+                                              child: Text(l10n.delete,
+                                                  style: const TextStyle(
+                                                      color: Colors.red))),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      final ids =
+                                          List<int>.from(_selectedNotes);
+                                      setState(() {
+                                        _selectionMode = false;
+                                        _selectedNotes.clear();
+                                      });
+                                      for (var id in ids) {
+                                        await notesProvider.deleteNote(id);
+                                      }
+                                    }
+                                  }
+                                : null,
+                          ),
                         ],
                       ),
                     );
-                  }),
-                  Expanded(
-                    child: SafeArea(
+                  }
+                  return SearchableHeader(
+                    title: l10n.trash,
+                    icon: Icons.delete_sweep_outlined,
+                    isSearching: _isSearchActive,
+                    noteCount: trashedNotes.length,
+                    searchController: searchController,
+                    onSearchChange: (q) => setState(() {}),
+                    onToggleSearch: () {
+                      if (_isSearchActive) {
+                        _exitSearch();
+                      } else {
+                        toggleSearch();
+                      }
+                    },
+                    leading: !_isSearchActive
+                        ? Builder(
+                            builder: (ctx) => IconButton(
+                              icon: const Icon(Icons.menu),
+                              onPressed: () => Scaffold.of(ctx).openDrawer(),
+                            ),
+                          )
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.sort),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          onSelected: (value) =>
+                              setState(() => _sortBy = value),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'date',
+                              child: Row(children: [
+                                Icon(Icons.access_time,
+                                    size: 20,
+                                    color: _sortBy == 'date'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null),
+                                const SizedBox(width: 12),
+                                Text(l10n.sortByDate),
+                                if (_sortBy == 'date') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check,
+                                      size: 20,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ],
+                              ]),
+                            ),
+                            PopupMenuItem(
+                              value: 'title',
+                              child: Row(children: [
+                                Icon(Icons.sort_by_alpha,
+                                    size: 20,
+                                    color: _sortBy == 'title'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null),
+                                const SizedBox(width: 12),
+                                Text(l10n.sortByTitle),
+                                if (_sortBy == 'title') ...[
+                                  const Spacer(),
+                                  Icon(Icons.check,
+                                      size: 20,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ],
+                              ]),
+                            ),
+                          ],
+                        ),
+                        if (trashedNotes.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.delete_forever),
+                            onPressed: () => TrashEmptySheet.show(context,
+                                trashedNotes: trashedNotes,
+                                notesProvider: notesProvider),
+                          ),
+                      ],
+                    ),
+                  );
+                }),
+                Expanded(
+                  child: SafeArea(
                     top: false,
                     child: trashedNotes.isEmpty
                         ? Center(
@@ -345,134 +333,50 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                                   _selectedNotes.contains(note.id);
                               return SelectedNoteIndicator(
                                 note: note,
-                                child: Card(
-                                  margin: const EdgeInsets.symmetric(
-                                      vertical: 2, horizontal: 8),
-                                  color: AppColorPalette
-                                      .palette[note.colorIndex]
-                                      .getColor(Theme.of(context).brightness),
-                                  child: InkWell(
-                                    onTap: () async {
-                                      if (_selectionMode) {
-                                        setState(() {
-                                          if (isSelected) {
-                                            _selectedNotes.remove(note.id);
-                                          } else {
-                                            _selectedNotes.add(note.id!);
-                                          }
-                                        });
-                                      } else {
-                                        final isDesktop =
-                                            MediaQuery.of(context).size.width >=
-                                                600;
-                                        if (isDesktop) {
-                                          Provider.of<SelectedNoteProvider>(
-                                                  context,
-                                                  listen: false)
-                                              .selectNote(note);
+                                child: NoteCardWidget(
+                                  note: note,
+                                  viewType: ViewType.listExpanded,
+                                  closeAllSlidables: _closeAllSlidables,
+                                  onNoteChanged: () {
+                                    Provider.of<NotesProvider>(context,
+                                            listen: false)
+                                        .fetchTrashedNotes();
+                                  },
+                                  onLongPress: () {
+                                    if (!_selectionMode) {
+                                      setState(() {
+                                        _selectionMode = true;
+                                        _selectedNotes.add(note.id!);
+                                      });
+                                    }
+                                  },
+                                  onTap: () {
+                                    if (_selectionMode) {
+                                      setState(() {
+                                        if (isSelected) {
+                                          _selectedNotes.remove(note.id);
                                         } else {
-                                          await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  NoteEditorImmersive(
-                                                note: note,
-                                                mode: NoteCardUtils.getNoteMode(
-                                                    note),
-                                                readOnly: true,
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    },
-                                    onLongPress: () {
-                                      if (!_selectionMode) {
-                                        setState(() {
-                                          _selectionMode = true;
                                           _selectedNotes.add(note.id!);
-                                        });
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                      child: Row(
-                                        children: [
-                                          if (_selectionMode)
-                                            Checkbox(
-                                              value: isSelected,
-                                              onChanged: (val) {
-                                                setState(() {
-                                                  if (val == true) {
-                                                    _selectedNotes
-                                                        .add(note.id!);
-                                                  } else {
-                                                    _selectedNotes
-                                                        .remove(note.id);
-                                                  }
-                                                });
-                                              },
-                                            ),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  note.title,
-                                                  style: TextStyle(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: _getTextColor(
-                                                        note.colorIndex),
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 4),
-                                                ChecklistFormatter
-                                                        .isValidChecklist(
-                                                            note.content)
-                                                    ? NoteCardUtils.buildChecklistPreview(
-                                                        note.content,
-                                                        _getTextColor(
-                                                            note.colorIndex))
-                                                    : Text(
-                                                        NoteCardUtils
-                                                            .fixNoteContent(
-                                                                note.content),
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                          color: _getTextColor(
-                                                                  note
-                                                                      .colorIndex)
-                                                              .withValues(
-                                                                  alpha: 0.7),
-                                                        ),
-                                                        maxLines: 3,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                        }
+                                      });
+                                    }
+                                  },
+                                  source: 'trash',
+                                  isFiltering: false,
+                                  selectionMode: _selectionMode,
+                                  isSelected: isSelected,
                                 ),
                               );
                             },
                           ),
                   ), // SafeArea
-                  ), // Expanded
-                ],
-              ), // Column
-            ),
+                ), // Expanded
+              ],
+            ), // Column
+          ),
         );
       },
     );
   }
 }
+

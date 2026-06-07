@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 //
 // مصدر واحد لكل أحجام الخطوط في التطبيق.
 // لا يُسمح باستخدام fontSize ثابت في أي مكان آخر.
@@ -65,3 +65,7 @@ class AppLineHeight {
     return base;
   }
 }
+
+
+
+

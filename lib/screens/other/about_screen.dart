@@ -1,9 +1,9 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -145,10 +145,14 @@ class _AboutScreenState extends State<AboutScreen> {
                 [
                   _buildLinkTile(l10n.appPageGooglePlay, Icons.shop_rounded,
                       'https://play.google.com/store/apps/dev?id=5409981776310932919'),
-                  _buildLinkTile(l10n.sinanAiNet, Icons.language_rounded,
-                      'https://sinanai.net'),
+                  _buildLinkTile(
+                      l10n.sinanAiNet,
+                      Icons.language_rounded,
+                      isArabic
+                          ? 'https://sinanai.net'
+                          : 'https://sinanai.net/en'),
                   _buildLinkTile(l10n.githubRepository, Icons.code_rounded,
-                      'https://github.com/apexflow/sinan-note'),
+                      'https://github.com/Apex-Flow-Group/Sinan_Note'),
                   _buildLinkTile(
                       l10n.privacyPolicy,
                       Icons.privacy_tip_outlined,

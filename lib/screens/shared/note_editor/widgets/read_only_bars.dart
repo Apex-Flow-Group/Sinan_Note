@@ -1,17 +1,6 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/services/widget_service.dart';
-import 'package:apex_note/widgets/common/app_bottom_sheet.dart';
-import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
+import 'dart:convert';import 'package:flutter/material.dart';import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/notes/notes_provider.dart'; import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/unified_notification_service.dart'; import 'package:sinan_note/services/widget_service.dart'; import 'package:sinan_note/widgets/common/app_bottom_sheet.dart'; import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 Map<String, int> _parseChecklistStats(String content) {
   try {
     final decoded = jsonDecode(content);
@@ -36,6 +25,7 @@ class ReadOnlyBars {
     required Future<void> Function() onRefresh,
     VoidCallback? onMarkdownToggle,
     VoidCallback? onReminder,
+    VoidCallback? onReadingMode,
     bool showMarkdown = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -61,6 +51,12 @@ class ReadOnlyBars {
               overflow: TextOverflow.ellipsis,
             ),
             actions: [
+              if (onReadingMode != null)
+                IconButton(
+                  icon: const Icon(Icons.menu_book_rounded),
+                  tooltip: AppLocalizations.of(context)!.readingMode,
+                  onPressed: onReadingMode,
+                ),
               if (onMarkdownToggle != null)
                 IconButton(
                   icon: Icon(
@@ -101,6 +97,7 @@ class ReadOnlyBars {
     required VoidCallback onArchive,
     required VoidCallback onDelete,
     required VoidCallback onEdit,
+    VoidCallback? onColorChange,
     void Function(String)? onConvert,
     String currentNoteType = 'simple',
     bool isChecklist = false,
@@ -147,6 +144,16 @@ class ReadOnlyBars {
                     ),
                   ),
                   const Spacer(),
+                  if (onColorChange != null)
+                    IconButton(
+                      icon: const Icon(Icons.palette_outlined),
+                      tooltip: l10n.noteColors,
+                      onPressed: onColorChange,
+                      padding: const EdgeInsets.all(6),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  if (onColorChange != null) const SizedBox(width: 4),
                   if (onConvert != null)
                     IconButton(
                       icon: const Icon(Icons.swap_horiz_rounded),
@@ -420,3 +427,4 @@ class _ConvertOption {
   final String type;
   const _ConvertOption(this.icon, this.label, this.type);
 }
+

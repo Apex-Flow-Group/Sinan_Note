@@ -1,20 +1,22 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:apex_note/controllers/notes/notes_provider.dart';
-import 'package:apex_note/controllers/settings/settings_provider.dart';
-import 'package:apex_note/generated/l10n/app_localizations.dart';
-import 'package:apex_note/models/note.dart';
-import 'package:apex_note/services/notification_service.dart';
-import 'package:apex_note/services/unified_notification_service.dart';
-import 'package:apex_note/widgets/common/custom_share_sheet.dart';
-import 'package:apex_note/widgets/editor/category_picker_sheet.dart';
-import 'package:apex_note/widgets/editor/reminder_picker_sheet.dart';
-import 'package:apex_note/widgets/home/note_card_utils.dart';
-import 'package:apex_note/widgets/home/swipe_custom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
+import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/common/permanent_delete_sheet.dart';
+import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
+import 'package:sinan_note/widgets/editor/reminder_picker_sheet.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
+import 'package:sinan_note/widgets/home/swipe_custom_sheet.dart';
 
 class NoteCardActions {
   static Widget buildLockedNoteMenu(BuildContext context, Note note,
@@ -189,14 +191,16 @@ class NoteCardActions {
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          final plainContent = NoteCardUtils.fixNoteContent(note.content, maxChars: note.content.length);
+          final plainContent =
+              NoteCardUtils.fixNoteContent(note.content, maxChars: null);
           CustomShareSheet.show(
             context,
             '${note.title}\n\n$plainContent',
             subject: note.title,
             note: note,
             onNoteCopied: () async {
-              await notesProvider.duplicateNote(note.id!);
+              await notesProvider.duplicateNote(note.id!,
+                  copyLabel: l10n.noteCopy);
               onNoteChanged();
               if (!context.mounted) return;
               UnifiedNotificationService().show(
@@ -225,12 +229,15 @@ class NoteCardActions {
           if (!context.mounted || result == null) return;
           if (result['remove'] == true) {
             await NotificationService().cancelNotification(note.id!);
-            final updated = note.copyWith(reminderDateTime: null, recurrenceRule: null);
+            final updated =
+                note.copyWith(reminderDateTime: null, recurrenceRule: null);
             await notesProvider.updateNote(updated);
           } else {
             final updated = note.copyWith(
               reminderDateTime: result['dateTime'] as DateTime,
-              recurrenceRule: result['recurrence'] == 'none' ? null : result['recurrence'] as String,
+              recurrenceRule: result['recurrence'] == 'none'
+                  ? null
+                  : result['recurrence'] as String,
             );
             await notesProvider.updateNote(updated);
             await NotificationService().scheduleNotification(
@@ -238,7 +245,9 @@ class NoteCardActions {
               title: note.title,
               body: NoteCardUtils.fixNoteContent(note.content, maxChars: 100),
               scheduledTime: result['dateTime'] as DateTime,
-              recurrenceRule: result['recurrence'] == 'none' ? null : result['recurrence'] as String,
+              recurrenceRule: result['recurrence'] == 'none'
+                  ? null
+                  : result['recurrence'] as String,
             );
           }
           onNoteChanged();
@@ -272,7 +281,7 @@ class NoteCardActions {
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          await notesProvider.duplicateNote(note.id!);
+          await notesProvider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
           onNoteChanged();
           if (!context.mounted) return;
           UnifiedNotificationService().show(
@@ -288,12 +297,100 @@ class NoteCardActions {
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
-          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          final settings =
+              Provider.of<SettingsProvider>(context, listen: false);
           SwipeCustomSheet.show(
             context,
             note: note,
             actions: settings.swipeCustomActions,
             onNoteChanged: onNoteChanged,
+          );
+        };
+        break;
+      case 'restore':
+        icon = Icons.restore;
+        color = Colors.green.shade600;
+        onTap = () async {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          await notesProvider.restoreNote(note.id!);
+          onNoteChanged();
+          if (!context.mounted) return;
+          UnifiedNotificationService().showWithUndo(
+            context: context,
+            message: l10n.restoredToHome,
+            actionKey: 'swipe_restore_${note.id}',
+            type: NotificationType.success,
+            onExecute: () {},
+            onUndo: () async {
+              await notesProvider.trashNote(note.id!);
+              onNoteChanged();
+            },
+            undoLabel: l10n.undo,
+          );
+        };
+        break;
+      case 'permanent_delete':
+        icon = Icons.delete_forever;
+        color = Colors.red.shade700;
+        onTap = () async {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          final confirm = await AppBottomSheet.show<bool>(
+            context,
+            child: PermanentDeleteSheet(note: note),
+          );
+          if (confirm == true) {
+            await notesProvider.deleteNote(note.id!);
+            onNoteChanged();
+          }
+        };
+        break;
+      case 'unarchive':
+        icon = Icons.unarchive_outlined;
+        color = Colors.green.shade600;
+        onTap = () async {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          await notesProvider.unarchiveNote(note.id!);
+          onNoteChanged();
+          if (!context.mounted) return;
+          UnifiedNotificationService().showWithUndo(
+            context: context,
+            message: l10n.restoredToHome,
+            actionKey: 'swipe_unarchive_${note.id}',
+            type: NotificationType.success,
+            onExecute: () {},
+            onUndo: () async {
+              await notesProvider.archiveNote(note.id!);
+              onNoteChanged();
+            },
+            undoLabel: l10n.undo,
+          );
+        };
+        break;
+      case 'trash_from_archive':
+        icon = Icons.delete_outline;
+        color = Colors.red.shade600;
+        onTap = () async {
+          HapticFeedback.mediumImpact();
+          Slidable.of(context)?.close();
+          final noteId = note.id!;
+          await notesProvider.trashNote(noteId);
+          onNoteChanged();
+          if (!context.mounted) return;
+          UnifiedNotificationService().showWithUndo(
+            context: context,
+            message: '${l10n.movedTo} "${note.title}" ${l10n.toTrash}',
+            actionKey: 'swipe_trash_archive_$noteId',
+            type: NotificationType.info,
+            onExecute: () {},
+            onUndo: () async {
+              await notesProvider.restoreNote(noteId);
+              await notesProvider.archiveNote(noteId);
+              onNoteChanged();
+            },
+            undoLabel: l10n.undo,
           );
         };
         break;
