@@ -4,7 +4,21 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
-## [3.2.4] — 2026-06 | Refactoring & Architecture
+## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes
+
+### 🔧 Bug Fixes
+
+**External intent data lost after biometric/PIN authentication**
+- Shared files, shared text, and widget taps from the Android home screen all lost their data after fingerprint/PIN auth completed. Root cause: intent was read immediately on cold start and executed with a fixed 400–500ms delay — which expired before the biometric dialog finished, so the editor was pushed onto `SplashScreen` and wiped by `pushReplacement`.
+- New mechanism: intent data is saved in `pendingIntentNotifier` instead of executed immediately. `MainLayoutScreen.initState()` sets `isMainLayoutActive = true` in `addPostFrameCallback` (guaranteed to run only after auth succeeds, because `SplashScreen` never navigates here until auth passes). `_ApexNoteAppState._onPendingIntent()` checks `isMainLayoutActive` before executing — works regardless of biometric duration.
+- Warm intents (`onNewIntent` while app is backgrounded) also check `isMainLayoutActive`: execute directly if `MainLayoutScreen` is ready, store otherwise.
+- Empty intents (null action, 0 note_id, empty shared_text) are filtered and never stored.
+
+**Shared text from browser shows "insert:" and raw URL**
+- Two separate issues: (1) Chrome/Android appends the full page URL after the selected text in `EXTRA_TEXT`, producing `"selected text\n\nhttps://very/long/url"`. (2) `buildDeltaInIsolate` result was serialized with `.toString()` instead of `jsonEncode()`, producing Dart's `{insert: text}` syntax which is not valid JSON — the editor failed to parse it and displayed the raw string including the word "insert".
+- Fix 1: `_cleanSharedText()` extracts the URL with a regex, strips it from the text body, and collapses excess blank lines. If only a URL remains, it's treated as a Shared Link note.
+- Fix 2: `content = jsonEncode(delta.toJson())` replaces `content = delta.toJson().toString()`.
+- Title is now auto-extracted from the first line of the cleaned text (truncated at 60 chars).
 
 ### 🏗️ Refactoring
 
@@ -31,9 +45,10 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - `note_card_actions.dart`: `_PermanentDeleteSheet` extracted to `permanent_delete_sheet.dart` (`widgets/common/`).
 - `categories_panel.dart`: `_ProCategoryTile` (stateful, independent expansion state) extracted to `pro_category_tile.dart` (`widgets/home/`).
 
----
+### 🧪 Tests
+- 19 new tests in `intent_preservation_test.dart` covering: cold-start intent storage, guard against execution before `MainLayoutScreen` is ready, correct execution after ready, empty intent filtering, warm intent routing, and double-execution prevention.
 
-## [3.2.3] — 2026-06 | Paste Performance + Apex Sharing
+## [3.2.2] — 2026-06 | Paste Performance + Apex Sharing
 
 ### ✨ New Features
 - **Share notes via Apex Transfer** — new button in the share sheet sends the note to nearby devices over the local network without internet
