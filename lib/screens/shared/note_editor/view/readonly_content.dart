@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/core/constants/app_text_styles.dart';
 import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/models/note_mode.dart';
@@ -168,7 +169,145 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
       );
     }
 
-    // ── وضع العرض: plain text بدل QuillEditor ──────────────────────
+    // ── وضع العرض: Quill إذا اكتمل بناؤه الكامل، وإلا plain text ──
+    final qc = widget.coordinator.quillController;
+    final isQuillFull = qc != null && widget.coordinator.isQuillFullyLoaded;
+
+    if (isQuillFull) {
+      qc.readOnly = true;
+      final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
+      const double fontSize = AppFontSize.noteBody;
+      return Directionality(
+        textDirection: TextDirection.rtl,
+        child: QuillEditor(
+          controller: qc,
+          focusNode: FocusNode(),
+          scrollController: widget.scrollController,
+          config: QuillEditorConfig(
+            autoFocus: false,
+            expands: true,
+            scrollable: true,
+            showCursor: false,
+            enableInteractiveSelection: true,
+            checkBoxReadOnly: true,
+            padding: EdgeInsets.fromLTRB(0, 8, 0, 40 + extraBottomPadding),
+            customStyles: DefaultStyles(
+              paragraph: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: fontSize,
+                  fontFamily: fontFamily,
+                  height: AppLineHeight.body(1.0, fontFamily),
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                VerticalSpacing.zero,
+                VerticalSpacing.zero,
+                null,
+              ),
+              lists: DefaultListBlockStyle(
+                TextStyle(
+                  fontSize: fontSize,
+                  fontFamily: fontFamily,
+                  height: AppLineHeight.body(1.0, fontFamily),
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                VerticalSpacing.zero,
+                VerticalSpacing.zero,
+                null,
+                null,
+              ),
+              h1: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: fontSize + 8,
+                  fontFamily: fontFamily,
+                  fontWeight: FontWeight.bold,
+                  height: 1.6,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(8, 4),
+                VerticalSpacing.zero,
+                null,
+              ),
+              h2: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: fontSize + 5,
+                  fontFamily: fontFamily,
+                  fontWeight: FontWeight.bold,
+                  height: 1.6,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(6, 3),
+                VerticalSpacing.zero,
+                null,
+              ),
+              h3: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: fontSize + 3,
+                  fontFamily: fontFamily,
+                  fontWeight: FontWeight.bold,
+                  height: 1.6,
+                  color: widget.textColor,
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(4, 2),
+                VerticalSpacing.zero,
+                null,
+              ),
+              bold: TextStyle(
+                  fontWeight: FontWeight.bold, color: widget.textColor),
+              italic: TextStyle(
+                  fontStyle: FontStyle.italic, color: widget.textColor),
+              underline: TextStyle(
+                  decoration: TextDecoration.underline,
+                  color: widget.textColor),
+              strikeThrough: TextStyle(
+                  decoration: TextDecoration.lineThrough,
+                  color: widget.textColor),
+              code: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: fontSize - 2,
+                  fontFamily: 'monospace',
+                  height: 1.5,
+                  color: widget.textColor.withValues(alpha: 0.85),
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(4, 4),
+                VerticalSpacing.zero,
+                BoxDecoration(
+                  color: widget.textColor.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              quote: DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: fontSize,
+                  fontFamily: fontFamily,
+                  fontStyle: FontStyle.italic,
+                  height: 1.8,
+                  color: widget.textColor.withValues(alpha: 0.8),
+                ),
+                HorizontalSpacing.zero,
+                const VerticalSpacing(4, 4),
+                VerticalSpacing.zero,
+                BoxDecoration(
+                  border: BorderDirectional(
+                    start: BorderSide(
+                      color: widget.textColor.withValues(alpha: 0.3),
+                      width: 3,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ); // QuillEditor     // Directionality
+    }
+
+    // ── fallback: plain text أثناء بناء Quill ──────────────────────
     if (_plainText == null) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }

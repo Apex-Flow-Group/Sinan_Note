@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,29 +45,42 @@ class QuillEditorWidget extends StatefulWidget {
 }
 
 class _QuillEditorWidgetState extends State<QuillEditorWidget> {
-  late final QuillEditorController _ctrl;
+  late QuillEditorController _ctrl;
   String? _cachedFontFamily;
+  // editorKey يُنشأ مرة واحدة ويبقى ثابتاً طوال عمر الـ widget
+  final _editorKey = GlobalKey<EditorState>();
+
+  QuillEditorController _makeCtrl() => QuillEditorController(
+        quillController: widget.quillController,
+        focusNode: widget.focusNode,
+        selectionBarActive: widget.selectionBarActive,
+        getNoteColor: () => widget.noteColor,
+        onScroll: widget.onScroll,
+        externalEditorKey: _editorKey,
+        rebuild: () {
+          if (mounted) setState(() {});
+        },
+      );
 
   @override
   void initState() {
     super.initState();
-    _ctrl = QuillEditorController(
-      quillController: widget.quillController,
-      focusNode: widget.focusNode,
-      selectionBarActive: widget.selectionBarActive,
-      getNoteColor: () => widget.noteColor,
-      onScroll: widget.onScroll,
-      rebuild: () {
-        if (mounted) setState(() {});
-      },
-    );
+    _ctrl = _makeCtrl();
     _ctrl.init(widget.readOnly);
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _ctrl.didFirstBuild());
   }
 
   @override
   void didUpdateWidget(QuillEditorWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.readOnly != widget.readOnly) {
+    if (oldWidget.quillController != widget.quillController) {
+      _ctrl.dispose();
+      _ctrl = _makeCtrl();
+      _ctrl.init(widget.readOnly);
+      // لا نُعيد استدعاء didFirstBuild — editorKey لم يتغير
+      _ctrl.didFirstBuild();
+    } else if (oldWidget.readOnly != widget.readOnly) {
       _ctrl.updateReadOnly(widget.readOnly);
     }
   }
@@ -96,7 +108,17 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     super.dispose();
   }
 
-  /// يعترض الـ tap — يُنفذ toggle فقط إذا كان الضغط في منطقة الـ checkbox
+  bool _onTapDown(
+      TapDownDetails details, TextPosition Function(Offset) getPosition) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fixRtlCursorPosition();
+      if (!widget.readOnly) {
+        _ctrl.tearHandle.showOnTap(editorKey: _editorKey);
+      }
+    });
+    return false;
+  }
+
   bool _onTapUp(
       TapUpDetails details, TextPosition Function(Offset) getPosition) {
     if (widget.readOnly) return false;
@@ -113,13 +135,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         listAttr.value == 'checked' || listAttr.value == 'unchecked';
     if (!isCheck) return false;
 
-    // الـ tap على الـ checkbox يُرجع offset = lineStart (قبل أي حرف في السطر)
-    // أي tap داخل النص يُرجع offset > lineStart
     final lineStart = line.documentOffset;
-    final tapOffset = pos.offset;
-
-    // إذا كان الـ tap داخل النص → اتركه للـ cursor
-    if (tapOffset > lineStart) return false;
+    if (pos.offset > lineStart) return false;
 
     final isChecked = listAttr.value == 'checked';
     HapticFeedback.lightImpact();
@@ -146,31 +163,14 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     return true;
   }
 
-  /// إصلاح bug Flutter RTL: الـ cursor يقف عند n-1 بدل n
-  /// عند الضغط على نهاية السطر في RTL
-  bool _onTapDown(
-      TapDownDetails details, TextPosition Function(Offset) getPosition) {
-    // نؤجل الإصلاح لما بعد الـ tap حتى يتم تعيين الـ selection
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fixRtlCursorPosition();
-    });
-    return false; // لا نمنع الـ tap — نتركه يمر
-  }
-
   void _fixRtlCursorPosition() {
     final sel = widget.quillController.selection;
     if (!sel.isCollapsed) return;
-
     final plainText = widget.quillController.document.toPlainText();
     final offset = sel.baseOffset;
     if (offset <= 0 || offset >= plainText.length) return;
-
-    // نجد نهاية السطر الحالي
     final lineEnd = plainText.indexOf('\n', offset);
     if (lineEnd == -1) return;
-
-    // إذا كان الـ cursor عند lineEnd - 1 (آخر حرف قبل newline)
-    // وكان الحرف الأخير حرف عربي — ننقله لـ lineEnd
     if (offset == lineEnd - 1) {
       final lastChar = plainText[offset];
       final isRtlChar =
@@ -185,7 +185,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     }
   }
 
-  /// Checkbox بألوان النوتة
   Widget? _buildCheckboxLeading(Node node, LeadingConfig config) {
     final isCheck = config.attribute == Attribute.checked ||
         config.attribute == Attribute.unchecked;
@@ -265,10 +264,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: ListenableBuilder(
-                listenable: Listenable.merge([
-                  // نستمع فقط لتغير المحتوى (isEmpty) وليس كل selection
-                  widget.quillController,
-                ]),
+                listenable: widget.quillController,
                 builder: (context, child) {
                   final ops =
                       widget.quillController.document.toDelta().toList();
@@ -277,10 +273,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           (ops.first.isInsert &&
                               ops.first.data == '\n' &&
                               ops.first.attributes == null));
-                  if (_ctrl.isDraggingSelection) {
-                    // أثناء السحب: لا نعيد بناء الـ Stack
-                    return child!;
-                  }
+                  if (_ctrl.isDraggingSelection || _ctrl.tearHandle.isDragging) return child!;
                   return Stack(
                     fit: StackFit.expand,
                     alignment: AlignmentDirectional.topStart,
@@ -302,9 +295,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           ),
                         ),
                       if (_ctrl.isPasting)
-                        const Positioned.fill(
-                          child: AbsorbPointer(),
-                        ),
+                        const Positioned.fill(child: AbsorbPointer()),
                     ],
                   );
                 },
@@ -316,7 +307,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                     scrollController: _ctrl.scrollController,
                     config: QuillEditorConfig(
                       unknownEmbedBuilder: _unknownEmbedBuilder,
-                      editorKey: _ctrl.editorKey,
+                      editorKey: _editorKey,
                       autoFocus: widget.autoFocus,
                       expands: true,
                       scrollable: true,
@@ -324,10 +315,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       placeholder: '',
                       checkBoxReadOnly: widget.readOnly,
                       requestKeyboardFocusOnCheckListChanged: false,
-
-                      // ignore: experimental_member_use, invalid_use_of_visible_for_testing_member, invalid_annotation_target
-                      // flutter_quill: customLeadingBlockBuilder is @experimental but is the only
-                      // supported API for custom checkbox rendering — no stable alternative exists.
                       // ignore: experimental_member_use, invalid_use_of_visible_for_testing_member
                       customLeadingBlockBuilder: _buildCheckboxLeading,
                       onTapUp: _onTapUp,
@@ -344,7 +331,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       quillMagnifierBuilder: apexMagnifierBuilder,
                       textSelectionThemeData: TextSelectionThemeData(
                         cursorColor: widget.textColor,
-                        selectionColor: widget.textColor.withValues(alpha: 0.2),
+                        selectionColor:
+                            widget.textColor.withValues(alpha: 0.2),
                         selectionHandleColor: widget.textColor,
                       ),
                       customStyles: DefaultStyles(
@@ -425,4 +413,3 @@ class _UnknownEmbedBuilder extends EmbedBuilder {
 }
 
 const _unknownEmbedBuilder = _UnknownEmbedBuilder();
-

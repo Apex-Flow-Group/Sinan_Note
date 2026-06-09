@@ -150,6 +150,7 @@ class _BookModeViewState extends State<BookModeView> {
   late final PageController _pageController;
   double _fontSize = 18;
   bool _comfortableFont = false;
+  bool _showFormatted = true; // true = منسق (Quill) | false = نص عادي
   int _currentPage = 0;
   int _savedPage = 0;
 
@@ -161,6 +162,7 @@ class _BookModeViewState extends State<BookModeView> {
   static const _minFont = 14.0;
   static const _maxFont = 28.0;
   static const _prefKeyPrefix = 'reading_page_';
+  static const _prefKeyFormatted = 'book_mode_show_formatted';
 
   @override
   void initState() {
@@ -196,9 +198,13 @@ class _BookModeViewState extends State<BookModeView> {
   Future<void> _loadSavedPage() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getInt('$_prefKeyPrefix${widget.noteId}') ?? 0;
+    final savedFormatted = prefs.getBool(_prefKeyFormatted) ?? true;
     if (!mounted) return;
     final page = saved.clamp(0, _totalPages - 1);
-    setState(() => _savedPage = page);
+    setState(() {
+      _savedPage = page;
+      _showFormatted = savedFormatted;
+    });
     if (page > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pageController.hasClients) _pageController.jumpToPage(page);
@@ -300,6 +306,25 @@ class _BookModeViewState extends State<BookModeView> {
           tooltip: l10n.comfortableFont,
           onPressed: () => setState(() => _comfortableFont = !_comfortableFont),
         ),
+        // زر التبديل بين التنسيق والنص العادي — يظهر فقط إذا يوجد Delta
+        if (widget.deltaJson != null && !widget.isMarkdown)
+          IconButton(
+            icon: Icon(
+              _showFormatted
+                  ? Icons.format_clear_rounded
+                  : Icons.format_color_text_rounded,
+              color: _showFormatted
+                  ? scheme.primary
+                  : widget.textColor.withValues(alpha: 0.7),
+            ),
+            tooltip: _showFormatted ? 'نص عادي' : 'نص منسق',
+            onPressed: () async {
+              final next = !_showFormatted;
+              setState(() => _showFormatted = next);
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool(_prefKeyFormatted, next);
+            },
+          ),
         const SizedBox(width: 4),
       ],
     );
@@ -326,6 +351,18 @@ class _BookModeViewState extends State<BookModeView> {
           textColor: widget.textColor,
         ),
       );
+    }
+
+    // إذا المستخدم اختار النص العادي — اعرض plain بغض النظر عن وجود Delta
+    if (!_showFormatted) {
+      final text = _plainPages != null
+          ? _plainPages![index]
+          : (_deltaPages![index]
+              .toList()
+              .where((op) => op.isInsert && op.data is String)
+              .map((op) => op.data as String)
+              .join());
+      return _buildPlainPage(text);
     }
 
     if (_deltaPages != null) {

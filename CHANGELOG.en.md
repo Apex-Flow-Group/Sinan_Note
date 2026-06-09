@@ -48,6 +48,30 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 ### 🧪 Tests
 - 19 new tests in `intent_preservation_test.dart` covering: cold-start intent storage, guard against execution before `MainLayoutScreen` is ready, correct execution after ready, empty intent filtering, warm intent routing, and double-execution prevention.
 
+**Read-Only View — Formatted Content & Hero Animation overhaul**
+
+**Formatted text in read-only view**
+- `ReadOnlyContent` now renders rich text using `QuillEditor` in read-only mode instead of plain `SelectableText`. The switch happens after `isQuillFullyLoaded` is set to `true` in `EditorCoordinator`.
+- In read-only mode (`readOnly: true`), `EditorCoordinator.initialize()` builds the full `QuillController` immediately (synchronously for short notes, from pre-built Delta JSON for long notes) instead of the 20-line preview used in edit mode.
+- `Directionality(rtl)` wraps `QuillEditor` in read-only view so `fixDeltaDirections` block directions are respected correctly.
+
+**Long note pre-build before Hero animation**
+- `AppNavigator.toEditor()`: notes longer than 4000 characters in read-only mode are pre-built in a Dart isolate via `compute(buildDeltaJsonForIsolate)` before the route is pushed. The resulting Delta JSON is passed directly to `EditorCoordinator` as `prebuiltDeltaJson`, eliminating a second synchronous parse on the main thread that was freezing the UI and blocking the Hero animation.
+- A small `CircularProgressIndicator` (14×14px) appears in the top-right corner of the card while the isolate is running, implemented with `ValueListenableBuilder` to avoid rebuilding the Hero widget tree.
+
+**Hero animation push fix**
+- `EditorPageRoute`: changed `opaque: true` → `opaque: false` so the source screen remains visible behind the route during the Hero flight. The `FadeTransition` interval was relaxed to `0.0–1.0` to avoid clipping the Hero at the start of the push.
+- `note_readonly_view.dart`: Hero now wraps `noteCard` directly (containing `ReadOnlyContent` with plain text), so the card content is visible during the flight. After the flight completes (350ms), Quill replaces plain text with no visual flash because the text was already visible.
+
+**Book Mode — formatting toggle**
+- Added a toggle button in `BookModeView` AppBar to switch between formatted (Quill) and plain text rendering.
+- State is persisted in `SharedPreferences` under `book_mode_show_formatted` — remembered across sessions.
+- Button is only shown when `deltaJson` is available (rich notes) and `isMarkdown` is false.
+- `_openBookMode()` in `note_readonly_view.dart` now always reads from `contentController` (full content) instead of `quillController` (preview only), ensuring Book Mode receives the complete Delta JSON.
+
+**Cursor tear handle after entering edit mode**
+- `QuillEditorWidget.didUpdateWidget`: when `quillController` changes (e.g. after `_initQuillForEdit()`), `_ctrl` is now fully rebuilt instead of reusing the old instance. This re-binds `tearHandle` and all listeners to the new controller, restoring the cursor tear handle (دمعة المؤشر) after transitioning from read-only to edit mode.
+
 ## [3.2.2] — 2026-06 | Paste Performance + Apex Sharing
 
 ### ✨ New Features

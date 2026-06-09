@@ -226,7 +226,12 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                               maxChars: null);
                                       CustomShareSheet.show(
                                           context, '${note.title}\n\n$content',
-                                          subject: note.title, note: note);
+                                          subject: note.title,
+                                          note: note,
+                                          onNoteCopied: () async {
+                                            final provider = Provider.of<NotesProvider>(context, listen: false);
+                                            await provider.duplicateNote(note.id!, copyLabel: AppLocalizations.of(context)!.noteCopy);
+                                          });
                                     }
                                   : null,
                               onCategory: () async {

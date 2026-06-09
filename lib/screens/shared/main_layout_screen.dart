@@ -26,6 +26,7 @@ import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/details_panel.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/navigation/bottom_nav_bar.dart';
 import 'package:sinan_note/widgets/navigation/side_nav_rail.dart';
@@ -53,6 +54,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   // ✅ Cache screens to prevent rebuilds
   late final List<Widget> _cachedScreens;
+  late final Widget _sharedDetailsPanel;
 
   @override
   void initState() {
@@ -83,6 +85,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
     pendingIntentNotifier.addListener(_onPendingIntentChanged);
 
+    _sharedDetailsPanel = const DetailsPanel();
     _cachedScreens = [
       NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
@@ -101,10 +104,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           showAddMenu: _showAddMenu,
           onToggleMenu: _toggleMenu,
           onRegisterModeHandler: (handler) => _onModeSelected = handler,
+          sharedDetailsPanel: _sharedDetailsPanel,
         ),
       ),
-      const ReminderDashboardResponsive(),
-      const CodeTabResponsive(),
+      ReminderDashboardResponsive(sharedDetailsPanel: _sharedDetailsPanel),
+      CodeTabResponsive(sharedDetailsPanel: _sharedDetailsPanel),
     ];
   }
 

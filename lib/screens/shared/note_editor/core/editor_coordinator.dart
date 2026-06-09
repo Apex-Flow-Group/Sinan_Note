@@ -66,12 +66,19 @@ class EditorCoordinator {
   final NoteMode mode;
   final bool skipAuthentication;
   final bool originallyLocked;
+  final bool readOnly;
+  final String? prebuiltDeltaJson;
+
+  /// يصبح true بعد اكتمال initializeQuillAsync — يُستخدم في العارض لتبديل plain→Quill
+  bool isQuillFullyLoaded = false;
 
   EditorCoordinator({
     required this.note,
     required this.mode,
     required this.skipAuthentication,
     required this.originallyLocked,
+    this.readOnly = false,
+    this.prebuiltDeltaJson,
   });
 
   /// Initialize all controllers and state
@@ -109,13 +116,27 @@ class EditorCoordinator {
     final String initialText = note?.content ?? '';
     contentController = ApexSmartController(text: initialText);
 
-    // بناء QuillController بأول 20 سطر فقط — سريع جداً للانيميشن
-    // initializeQuillAsync() سيستبدله بالمحتوى الكامل من isolate
     if (mode == NoteMode.simple ||
         mode == NoteMode.reminder ||
         mode == NoteMode.rich) {
-      final preview = QuillMigration.previewContent(initialText, maxLines: 20);
-      quillController = QuillMigration.controllerFromContent(preview);
+      if (readOnly) {
+        if (prebuiltDeltaJson != null) {
+          // نوت طويل: استخدم الـ JSON المحضّر من isolate مباشرة
+          final delta = Delta.fromJson(jsonDecode(prebuiltDeltaJson!) as List);
+          quillController = QuillController(
+            document: Document.fromDelta(delta),
+            selection: const TextSelection.collapsed(offset: 0),
+          );
+        } else {
+          // نوت قصير: ابنِ مباشرة — سريع بدون isolate
+          quillController = QuillMigration.controllerFromContent(initialText);
+        }
+        isQuillFullyLoaded = true;
+      } else {
+        final preview =
+            QuillMigration.previewContent(initialText, maxLines: 20);
+        quillController = QuillMigration.controllerFromContent(preview);
+      }
     }
 
     if (mode == NoteMode.code) {
@@ -171,6 +192,7 @@ class EditorCoordinator {
       document: doc,
       selection: const TextSelection.collapsed(offset: 0),
     );
+    isQuillFullyLoaded = true;
     _attachQuillGuard();
   }
 

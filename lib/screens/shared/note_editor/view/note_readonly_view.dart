@@ -263,26 +263,11 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final textColor =
         noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
 
-    // نمرر Delta JSON للحفاظ على التنسيق في وضع القراءة
-    final String? deltaJson;
-    if (widget.coordinator.quillController != null) {
-      deltaJson =
-          QuillMigration.toDeltaJson(widget.coordinator.quillController!);
-    } else {
-      final raw = widget.coordinator.contentController.text;
-      deltaJson = QuillMigration.isDelta(raw) ? raw : null;
-    }
-
-    final String plainContent;
-    if (widget.coordinator.quillController != null) {
-      plainContent = widget.coordinator.quillController!.document.toPlainText();
-    } else if (_currentMode == NoteMode.code) {
-      plainContent = widget.coordinator.codeController?.text ??
-          widget.coordinator.contentController.text;
-    } else {
-      plainContent = NoteContentUtils.toDisplayText(
-          widget.coordinator.contentController.text);
-    }
+    // نقرأ دائماً من contentController لأنه يحتوي على المحتوى الكامل —
+    // quillController قد يكون preview فقط (أول 20 سطر) في وضع القراءة
+    final raw = widget.coordinator.contentController.text;
+    final String? deltaJson = QuillMigration.isDelta(raw) ? raw : null;
+    final String plainContent = NoteContentUtils.toDisplayText(raw);
 
     Navigator.push(
       context,
@@ -527,6 +512,10 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final heroTag = widget.heroTag ?? 'note_card_${note.id}';
     final heroEnabled = Provider.of<SettingsProvider>(context, listen: false)
         .heroAnimationEnabled;
+
+    // الـ Hero يحمل noteCard كاملاً مع plain text أثناء الطيران —
+    // بعد انتهاء الطيران يتحول القارئ لـ Quill المنسق بدون flash
+    // لأن النص الـ plain كان موجوداً طول الوقت، فقط التنسيق يُضاف
     final heroCard = heroEnabled
         ? Hero(
             tag: heroTag,

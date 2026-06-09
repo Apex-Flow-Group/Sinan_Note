@@ -246,7 +246,11 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                             CustomShareSheet.show(context,
                                                 '${note.title}\n\n$content',
                                                 subject: note.title,
-                                                note: note);
+                                                note: note,
+                                                onNoteCopied: () async {
+                                                  final provider = Provider.of<NotesProvider>(context, listen: false);
+                                                  await provider.duplicateNote(note.id!, copyLabel: AppLocalizations.of(context)!.noteCopy);
+                                                });
                                           }
                                         : null,
                                     onCategory: () async {

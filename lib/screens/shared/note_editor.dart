@@ -37,6 +37,7 @@ class NoteEditorImmersive extends StatefulWidget {
   final VoidCallback? onClose;
   final bool readOnly;
   final String? heroTag;
+  final String? prebuiltDeltaJson;
 
   const NoteEditorImmersive({
     super.key,
@@ -47,6 +48,7 @@ class NoteEditorImmersive extends StatefulWidget {
     this.onClose,
     this.readOnly = false,
     this.heroTag,
+    this.prebuiltDeltaJson,
   });
 
   @override
@@ -105,6 +107,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       mode: _currentMode,
       skipAuthentication: widget.skipAuthentication,
       originallyLocked: widget.originallyLocked,
+      readOnly: widget.readOnly,
+      prebuiltDeltaJson: widget.prebuiltDeltaJson,
     );
 
     _coordinator.initialize(context);
@@ -120,32 +124,31 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         widget.note!.content,
       );
     }
-    // ظ„ظ„ظ†ظˆطھط§طھ ط§ظ„ط·ظˆظٹظ„ط©: ط£ط¹ط¯ ط¨ظ†ط§ط، QuillController ظپظٹ isolate ط¨ط¹ط¯ ط£ظˆظ„ frame
-    // ظ‡ط°ط§ ظٹظ…ظ†ط¹ ط§ظ„طھط¬ظ…ط¯ ط¹ظ†ط¯ ظپطھط­ ظ†ظˆطھط§طھ > 5000 ط­ط±ظپ
+
+    // للنوتات الطويلة: أعد بناء QuillController في isolate بعد أول frame
+    // هذا يمنع التجمد عند فتح نوتات > 5000 حرف
     if (widget.mode == NoteMode.simple ||
         widget.mode == NoteMode.reminder ||
         widget.mode == NoteMode.rich) {
-      // ط£ظˆظ„ 20 ط³ط·ط± ط¬ط§ظ‡ط²ط© ظپظˆط±ط§ظ‹ â€” ط§ظ„ظ…ط­ط±ط± ظٹظپطھط­ ط¨ط¯ظˆظ† طھط¬ظ…ط¯
+      // أول 20 سطر جاهزة فوراً — المحرر يفتح بدون تجمد
       _isQuillReady = true;
-      // Skip async Quill init in readOnly mode to prevent flicker after Hero animation
       if (!_isReadOnly) {
+        // وضع التحرير: نبني Quill الكامل بعد أول frame
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           await _coordinator.initializeQuillAsync();
           if (mounted) {
-            // ط£ط¹ط¯ ط±ط¨ط· ط§ظ„ظ€ listener ط¨ط¹ط¯ ط§ط³طھط¨ط¯ط§ظ„ ط§ظ„ظ€ controller ط¨ط§ظ„ظƒط§ظ…ظ„
             _quillChangesSubscription?.cancel();
             _quillChangesSubscription =
                 _coordinator.quillController!.document.changes.listen((_) {
               _onQuillContentChanged();
               _updateUndoRedoState();
             });
-            // تحديث الـ toolbar عند تغيير الـ selection (لإظهار حالة Bold/Italic/إلخ)
             _coordinator.quillController!.addListener(_onQuillSelectionChanged);
-            // طھط­ط¯ظٹط« طµط§ظ…طھ â€” ط¨ط¯ظˆظ† loading indicator
             setState(() {});
           }
         });
       }
+      // وضع القراءة: quillController الكامل جاهز من initialize() — لا شيء إضافي
     } else {
       _isQuillReady = true;
     }
@@ -160,10 +163,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // Add listeners
     _attachListeners();
     // استمع لأوامر القائمة (DesktopMenuBar)
-    EditorCommandBus().addListener(_onEditorCommand);
+    EditorCommandBus().addUniqueListener(_onEditorCommand);
     // سجّل هذا المحرر كالمحرر النشط
     final myId = widget.note?.id;
-    if (myId != null) EditorCommandBus().registerEditor(myId);
+    if (myId != null) {
+      EditorCommandBus().registerEditor(myId, hashCode);
+    }
 
     // Show reminder dialog for new reminder notes
     if (widget.mode == NoteMode.reminder && widget.note == null) {
@@ -188,7 +193,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   @override
   void dispose() {
-    EditorCommandBus().removeListener(_onEditorCommand);
+    EditorCommandBus().removeUniqueListener(_onEditorCommand);
     // ألغِ تسجيل هذا المحرر
     EditorCommandBus().unregisterEditor(widget.note?.id);
     // End version control session to save history (fire-and-forget)
@@ -907,7 +912,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // تحقق أن هذا المحرر هو المحرر النشط
     final myId = _coordinator.savedNoteId ?? widget.note?.id;
     final activeId = EditorCommandBus().activeNoteId;
-    if (activeId != null && myId != activeId) return;
+    final activeHash = EditorCommandBus().activeEditorHash;
+    if (myId == null || (activeId != null && myId != activeId)) return;
+    if (activeHash != null && hashCode != activeHash) return;
 
     switch (cmd) {
       // ── تنسيق (عبر ShortcutBindings) ──────────────────────────────
