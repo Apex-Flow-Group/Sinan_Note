@@ -6,6 +6,24 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes
 
+### ✨ New Features
+
+**Book Mode — formatted text toggle**
+- Added a toggle button in `BookModeView` AppBar to switch between formatted (Quill) and plain text rendering.
+- State is persisted in `SharedPreferences` under `book_mode_show_formatted` — remembered across sessions.
+- Button is only shown when `deltaJson` is available (rich notes) and `isMarkdown` is false.
+
+### ⚡ Performance
+
+**Hero animation — smooth open for long notes**
+- Notes longer than 4000 characters in read-only mode are pre-built in a Dart isolate via `compute(buildDeltaJsonForIsolate)` before the route is pushed. The resulting Delta JSON is passed directly to `EditorCoordinator` as `prebuiltDeltaJson`, eliminating a second synchronous parse on the main thread.
+- A small `CircularProgressIndicator` (14×14px) appears in the top-right corner of the card while the isolate is running.
+- `EditorPageRoute`: changed `opaque: true` → `opaque: false` and relaxed `FadeTransition` to `0.0–1.0` so the source screen remains visible during the Hero flight.
+
+**Read-only view — formatted content without jank**
+- `ReadOnlyContent` now renders rich text using `QuillEditor` in read-only mode instead of plain `SelectableText`, switching after `isQuillFullyLoaded` is set in `EditorCoordinator`.
+- Hero wraps `noteCard` directly with plain text visible during the flight; Quill replaces it after 350ms with no visual flash.
+
 ### 🔧 Bug Fixes
 
 **External intent data lost after biometric/PIN authentication**
@@ -19,6 +37,10 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - Fix 1: `_cleanSharedText()` extracts the URL with a regex, strips it from the text body, and collapses excess blank lines. If only a URL remains, it's treated as a Shared Link note.
 - Fix 2: `content = jsonEncode(delta.toJson())` replaces `content = delta.toJson().toString()`.
 - Title is now auto-extracted from the first line of the cleaned text (truncated at 60 chars).
+
+**Tap on empty line places cursor on next line instead**
+- In RTL mode, tapping an empty line (`\n` only) placed the cursor at `offset+1` (beginning of the next line) instead of `offset` (the empty line itself). Root cause: Flutter's `RenderParagraph.getPositionForOffset` returns `offset=1` for a single-`\n` paragraph when tapped from the left side in RTL — interpreting it as "after the character".
+- Fix: `RenderEditableTextLine.getPositionForOffset` now returns `TextPosition(offset: 0)` immediately when `container.length == 1` (empty line), bypassing `RenderParagraph` entirely.
 
 ### 🏗️ Refactoring
 
