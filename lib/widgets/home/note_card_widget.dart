@@ -253,7 +253,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                         note: widget.note,
                         mode: mode,
                         readOnly: true,
-                        heroTag: 'note_card_${widget.source}_${widget.note.id}',
                       );
                       _loadingNotifier.value = false;
                       if ((result == true || result == null) && mounted) {
@@ -271,7 +270,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 baseColor: noteColor,
                 enableMotion: false,
                 isSelected: widget.isSelected,
-                heroTag: 'note_card_${widget.source}_${widget.note.id}',
                 child: Stack(
                   clipBehavior: Clip.hardEdge,
                   children: [

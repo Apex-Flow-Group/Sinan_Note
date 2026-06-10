@@ -17,7 +17,6 @@ class SettingsProvider with ChangeNotifier {
   bool _doubleTapToEdit = true;
   List<String> _swipeCustomActions = ['delete', 'archive', 'share'];
   String _viewType = 'listCompact';
-  bool _heroAnimationEnabled = false;
   bool _isAppLockEnabled = false;
   bool _customPinEnabled = false;
   bool _biometricLockEnabled = false;
@@ -57,7 +56,6 @@ class SettingsProvider with ChangeNotifier {
   bool get doubleTapToEdit => _doubleTapToEdit;
   List<String> get swipeCustomActions => _swipeCustomActions;
   String get viewType => _viewType;
-  bool get heroAnimationEnabled => _heroAnimationEnabled;
   bool get isAppLockEnabled => _isAppLockEnabled;
   bool get customPinEnabled => _customPinEnabled;
   bool get biometricLockEnabled => _biometricLockEnabled;
@@ -161,12 +159,6 @@ class SettingsProvider with ChangeNotifier {
     _doubleTapToEdit = enabled;
     notifyListeners();
     await _savePref('doubleTapToEdit', enabled);
-  }
-
-  Future<void> setHeroAnimationEnabled(bool enabled) async {
-    _heroAnimationEnabled = enabled;
-    notifyListeners();
-    await _savePref('heroAnimationEnabled', enabled);
   }
 
   Future<void> setPullToRefreshMode(String mode) async {
@@ -282,7 +274,6 @@ class SettingsProvider with ChangeNotifier {
       _doubleTapToEdit = prefs.getBool('doubleTapToEdit') ?? true;
       _swipeCustomActions = prefs.getStringList('swipeCustomActions') ??
           ['delete', 'archive', 'share'];
-      _heroAnimationEnabled = prefs.getBool('heroAnimationEnabled') ?? false;
       _pullToRefreshMode = prefs.getString('pullToRefreshMode') ?? 'disabled';
       _hideNavOnScroll = prefs.getBool('hideNavOnScroll') ?? true;
       _hideSearchOnScroll = prefs.getBool('hideSearchOnScroll') ?? false;

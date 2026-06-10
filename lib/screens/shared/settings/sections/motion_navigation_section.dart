@@ -3,9 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
-import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/screens/shared/settings/widgets/hero_animation_info_sheet.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
 
 class MotionNavigationSection extends StatelessWidget {
@@ -22,28 +20,6 @@ class MotionNavigationSection extends StatelessWidget {
       title: isAr ? 'الحركة والتنقل' : 'Motion & Navigation',
       icon: Icons.animation_rounded,
       children: [
-        // ── Hero Animation ──────────────────────────────────────────
-        if (PlatformHelper.isMobilePlatform)
-          SwitchListTile(
-            secondary: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.auto_awesome_outlined, color: primary),
-                const SizedBox(width: 4),
-                GestureDetector(
-                  onTap: () => HeroAnimationInfoSheet.show(context, l10n),
-                  child: const Icon(Icons.info_outline_rounded,
-                      size: 18, color: Colors.orange),
-                ),
-              ],
-            ),
-            title: Text(l10n.heroAnimation),
-            subtitle: Text(
-                settings.heroAnimationEnabled ? l10n.enabled : l10n.disabled),
-            value: settings.heroAnimationEnabled,
-            onChanged: settings.setHeroAnimationEnabled,
-          ),
-
         // ── Pull to Refresh ─────────────────────────────────────────
         ListTile(
           leading: Icon(Icons.swipe_down_rounded, color: primary),

@@ -68,8 +68,8 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Title ──
               Text(
                 isAr
-                    ? 'تجربة أسرع وأكثر سلاسة'
-                    : 'Faster & Smoother Experience',
+                    ? 'أداء أفضل وكتابة أريح'
+                    : 'Better Performance & Smoother Writing',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -114,8 +114,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'انتقالات سلسة عند فتح الملاحظات، وضع الكتاب بتنسيق كامل، وإصلاحات تجعل الكتابة أريح.'
-                            : 'Smooth transitions when opening notes, Book Mode with full formatting, and fixes that make writing more comfortable.',
+                            ? 'وضع الكتاب بتنسيق كامل، إصلاح المشاركة من المتصفح، وتحسينات تجعل الكتابة أريح.'
+                            : 'Book Mode with full formatting, browser sharing fix, and improvements that make writing more comfortable.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -245,12 +245,14 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Features ──
               _FeatureRow(
-                icon: Icons.auto_awesome_rounded,
+                icon: Icons.bolt_rounded,
                 color: Colors.blue,
-                title: isAr ? 'فتح سلس للملاحظات' : 'Smooth Note Opening',
+                title: isAr
+                    ? 'فتح سريع للملاحظات الطويلة'
+                    : 'Fast Long Note Opening',
                 subtitle: isAr
-                    ? 'انتقال انسيابي عند فتح الملاحظات — بدون تجمّد أو وميض'
-                    : 'Fluid transition when opening notes — no freeze or flash',
+                    ? 'الملاحظات الكبيرة تُفتح بدون تجميد — المعالجة تتم في الخلفية'
+                    : 'Large notes open without freezing — processing happens in the background',
               ),
               _FeatureRow(
                 icon: Icons.menu_book_rounded,

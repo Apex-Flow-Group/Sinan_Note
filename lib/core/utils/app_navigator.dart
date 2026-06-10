@@ -2,14 +2,13 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/editor_page_route.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
 
-// عتبة حجم النوت الطويل — ما فوقها نبني Quill أولاً ثم نفتح الانيميشن
+// عتبة حجم النوت الطويل — ما فوقها نبني Quill أولاً لمنع تجمد الـ UI
 const _kLongNoteThreshold = 1000;
 
 /// مركز التنقل العام — مصدر واحد لكل انتقالات التطبيق.
@@ -38,12 +37,10 @@ abstract class AppNavigator {
     bool readOnly = false,
     bool skipAuthentication = false,
     bool originallyLocked = false,
-    String? heroTag,
   }) async {
     if (!context.mounted) return null;
 
-    // نوت طويل + readonly → نبني Quill في isolate أولاً ثم نمرر النتيجة مباشرة
-    // هذا يمنع تجمد الـ UI عند فتح نوتات طويلة ويضمن ظهور الانيميشن
+    // نوت طويل + readonly → نبني Quill في isolate أولاً لمنع تجمد الـ UI
     String? prebuiltDeltaJson;
     if (readOnly &&
         note.content.length > _kLongNoteThreshold &&
@@ -52,23 +49,6 @@ abstract class AppNavigator {
             mode == NoteMode.reminder)) {
       prebuiltDeltaJson = await compute(buildDeltaJsonForIsolate, note.content);
       if (!context.mounted) return null;
-    } else {}
-
-    if (heroTag != null) {
-      return Navigator.push<bool>(
-        context,
-        EditorPageRoute(
-          builder: (_) => NoteEditorImmersive(
-            note: note,
-            mode: mode,
-            readOnly: readOnly,
-            skipAuthentication: skipAuthentication,
-            originallyLocked: originallyLocked,
-            heroTag: heroTag,
-            prebuiltDeltaJson: prebuiltDeltaJson,
-          ),
-        ),
-      );
     }
 
     return Navigator.push<bool>(

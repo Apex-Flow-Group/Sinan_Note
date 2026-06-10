@@ -36,7 +36,6 @@ class NoteEditorImmersive extends StatefulWidget {
   final bool originallyLocked;
   final VoidCallback? onClose;
   final bool readOnly;
-  final String? heroTag;
   final String? prebuiltDeltaJson;
 
   const NoteEditorImmersive({
@@ -47,7 +46,6 @@ class NoteEditorImmersive extends StatefulWidget {
     this.originallyLocked = false,
     this.onClose,
     this.readOnly = false,
-    this.heroTag,
     this.prebuiltDeltaJson,
   });
 
@@ -576,7 +574,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         mode: _currentMode,
         coordinator: _coordinator,
         sidePadding: sidePadding,
-        heroTag: widget.heroTag,
         onClose: widget.onClose,
         onModeChanged: (newMode, newNote) => setState(() {
           _currentMode = newMode;

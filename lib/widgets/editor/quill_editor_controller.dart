@@ -151,9 +151,12 @@ class QuillEditorController {
   // ── scroll ─────────────────────────────────────────────────────────────────
   void onScrollChanged() {
     if (!scrollController.hasClients) return;
-    // لا نخفي الدمعة أبداً عند scroll — فقط عند تغيير المحتوى
     final offset = scrollController.offset.clamp(0.0, 120.0);
     onScroll?.call(offset / 120.0);
+    // أخفِ الدمعة عند أي scroll يدوي — أبسط وأصح من تتبع الموضع
+    if (!tearHandle.isDragging) {
+      tearHandle.forceHide();
+    }
   }
 
   void onFocusChanged() {
@@ -164,8 +167,8 @@ class QuillEditorController {
         tearHandle.forceHide();
       }
     } else {
-      WidgetsBinding.instance.addPostFrameCallback(
-          (_) => tearHandle.onSelectionChanged());
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => tearHandle.onSelectionChanged());
     }
   }
 
@@ -199,22 +202,27 @@ class QuillEditorController {
     if (isLoading || tearHandle.isDragging) return;
     if (change.source != ChangeSource.local) return;
 
+    final ops = change.change.toList();
+
+    // Enter فقط — نتحقق مبكراً لنتجنب إخفاء الدمعة ثم إعادتها
+    final isOnlyNewline =
+        ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
+
     if (!isFormatting && !isDirectionFormatting && !isPasting) {
-      tearHandle.onTextChanged();
+      if (!isOnlyNewline) {
+        // كتابة عادية أو حذف — أخفِ الدمعة، ستعود عبر onTypingDone
+        tearHandle.onTextChanged();
+      }
       WidgetsBinding.instance
           .addPostFrameCallback((_) => tearHandle.onTypingDone());
     }
 
-    final ops = change.change.toList();
     if (ops.any((op) => op.isDelete)) {
       WidgetsBinding.instance
           .addPostFrameCallback((_) => fixDanglingTashkeel());
       return;
     }
 
-    // تطبيق اتجاه السطر الجديد عند Enter فقط
-    final isOnlyNewline =
-        ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
     if (!isOnlyNewline) return;
 
     // إذا كنا في قائمة — ورّث الاتجاه من الـ block الحالي بدون إعادة حساب
@@ -222,10 +230,10 @@ class QuillEditorController {
     final isList = currentAttrs['list'] != null;
     if (isList) {
       isHandlingEnter = true;
-      // فقط نُعيد تطبيق الاتجاه الحالي للقائمة (ورث تلقائياً)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         isHandlingEnter = false;
         scrollToCursor();
+        tearHandle.showOnTap(editorKey: editorKey);
       });
       return;
     }
@@ -241,11 +249,26 @@ class QuillEditorController {
       prevLineStart < 0 ? 0 : prevLineStart + 1,
       newlinePos,
     );
-    final dir = prevLine.trim().isEmpty
-        ? getPrevNonEmptyLineDirection(plainText, newlinePos)
-        : TextDirectionUtils.getDirection(prevLine);
+
+    // سطر فارغ — لا نطبّق direction، الاتجاه يُطبَّق عند أول كتابة
+    if (prevLine.trim().isEmpty) {
+      isHandlingEnter = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        isHandlingEnter = false;
+        scrollToCursor();
+        tearHandle.showOnTap(editorKey: editorKey);
+      });
+      return;
+    }
+
+    final dir = TextDirectionUtils.getDirection(prevLine);
 
     isHandlingEnter = true;
+    // أعد إظهار الدمعة في السطر الجديد — frame واحد يكفي لاستقرار الكرسور
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollToCursor();
+      tearHandle.showOnTap(editorKey: editorKey);
+    });
     if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
       applyEnterDirection(dir);
     }
@@ -271,7 +294,11 @@ class QuillEditorController {
   }
 
   void _processOnChanged() {
-    if (isFormatting || isPasting || isDirectionFormatting || isHandlingEnter || tearHandle.isDragging) {
+    if (isFormatting ||
+        isPasting ||
+        isDirectionFormatting ||
+        isHandlingEnter ||
+        tearHandle.isDragging) {
       return;
     }
 
@@ -509,19 +536,22 @@ class QuillEditorController {
     final plainText = quillController.document.toPlainText();
     final offset =
         quillController.selection.baseOffset.clamp(0, plainText.length);
-    // نقرأ اتجاه السطر الحالي (قبل Enter) — نفس منطق onDocumentChange
     final lineStart = offset > 0 ? plainText.lastIndexOf('\n', offset - 1) : -1;
     final lineEnd = plainText.indexOf('\n', offset);
     final currentLine = plainText.substring(
       lineStart < 0 ? 0 : lineStart + 1,
       lineEnd < 0 ? plainText.length : lineEnd,
     );
-    final dir = currentLine.trim().isEmpty
-        ? getPrevNonEmptyLineDirection(plainText, offset)
-        : TextDirectionUtils.getDirection(currentLine);
+
+    // إذا كان السطر الحالي فارغاً — نضع isHandlingEnter لمنع onChanged من التدخل،
+    // لكن لا نطبّق direction لأن formatSelection تتداخل مع Quill وتمنع إدراج السطر الجديد
+    // onDocumentChange سيعالج الاتجاه بعد ما يُنفَّذ Enter
     isHandlingEnter = true;
-    // Apply direction immediately to prevent cursor disappearing on empty RTL lines
-    if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
+    if (currentLine.trim().isNotEmpty &&
+        !isFormatting &&
+        !isDirectionFormatting &&
+        !isDraggingSelection) {
+      final dir = TextDirectionUtils.getDirection(currentLine);
       applyEnterDirection(dir);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
@@ -8,7 +7,6 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/settings/font_family_sheet.dart';
 import 'package:sinan_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
-import 'package:sinan_note/screens/shared/settings/widgets/hero_animation_info_sheet.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
 
 class GeneralSection extends StatelessWidget {
@@ -95,35 +93,7 @@ class BetaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // يظهر فقط في وضع التطوير (debug) — مخفي في الإنتاج تلقائياً
-    if (!kDebugMode) return const SizedBox.shrink();
-
-    final l10n = AppLocalizations.of(context)!;
-    final settings = context.watch<SettingsProvider>();
-    return SettingsSectionCard(
-      title: 'Beta',
-      icon: Icons.science_outlined,
-      children: [
-        SwitchListTile(
-          title: Text(l10n.heroAnimation),
-          subtitle: Text(
-              settings.heroAnimationEnabled ? l10n.enabled : l10n.disabled),
-          value: settings.heroAnimationEnabled,
-          onChanged: settings.setHeroAnimationEnabled,
-          secondary: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.auto_awesome_outlined),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: () => HeroAnimationInfoSheet.show(context, l10n),
-                child: const Icon(Icons.info_outline_rounded,
-                    size: 18, color: Colors.orange),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    // لا توجد مميزات تجريبية حالياً
+    return const SizedBox.shrink();
   }
 }

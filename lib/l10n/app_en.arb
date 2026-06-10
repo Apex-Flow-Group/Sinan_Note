@@ -306,7 +306,6 @@
   "swipeGestures": "Swipe Gestures",
   "enabled": "Enabled",
   "disabled": "Disabled",
-  "heroAnimation": "Hero Animation",
   "editorSettings": "Editor Settings",
   "doubleTapToEdit": "Double Tap to Edit",
   "doubleTapToEditDesc": "Double tap on note to open editor",

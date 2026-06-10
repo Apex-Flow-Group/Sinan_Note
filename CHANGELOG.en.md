@@ -4,7 +4,7 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
-## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes
+## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes + Hero Removal + Editor Fixes
 
 ### ✨ New Features
 
@@ -15,14 +15,12 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ### ⚡ Performance
 
-**Hero animation — smooth open for long notes**
-- Notes longer than 4000 characters in read-only mode are pre-built in a Dart isolate via `compute(buildDeltaJsonForIsolate)` before the route is pushed. The resulting Delta JSON is passed directly to `EditorCoordinator` as `prebuiltDeltaJson`, eliminating a second synchronous parse on the main thread.
+**Long note pre-build in isolate**
+- Notes longer than 1000 characters in read-only mode are pre-built in a Dart isolate via `compute(buildDeltaJsonForIsolate)` before the route is pushed. The resulting Delta JSON is passed directly to `EditorCoordinator` as `prebuiltDeltaJson`, eliminating a second synchronous parse on the main thread and preventing UI freeze.
 - A small `CircularProgressIndicator` (14×14px) appears in the top-right corner of the card while the isolate is running.
-- `EditorPageRoute`: changed `opaque: true` → `opaque: false` and relaxed `FadeTransition` to `0.0–1.0` so the source screen remains visible during the Hero flight.
 
 **Read-only view — formatted content without jank**
 - `ReadOnlyContent` now renders rich text using `QuillEditor` in read-only mode instead of plain `SelectableText`, switching after `isQuillFullyLoaded` is set in `EditorCoordinator`.
-- Hero wraps `noteCard` directly with plain text visible during the flight; Quill replaces it after 350ms with no visual flash.
 
 ### 🔧 Bug Fixes
 
@@ -42,21 +40,23 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - In RTL mode, tapping an empty line (`\n` only) placed the cursor at `offset+1` (beginning of the next line) instead of `offset` (the empty line itself). Root cause: Flutter's `RenderParagraph.getPositionForOffset` returns `offset=1` for a single-`\n` paragraph when tapped from the left side in RTL — interpreting it as "after the character".
 - Fix: `RenderEditableTextLine.getPositionForOffset` now returns `TextPosition(offset: 0)` immediately when `container.length == 1` (empty line), bypassing `RenderParagraph` entirely.
 
+**Enter on empty line stays on same line instead of inserting new line**
+- Pressing Enter on an empty line did not move the cursor to a new line. Root cause: `handleEnterKey()` called `formatSelection` (direction formatting) before Quill executed the Enter, causing `document.compose()` to interfere and prevent the line insertion.
+- Fix: `handleEnterKey()` skips `applyEnterDirection` when the current line is empty — Quill executes Enter normally, then `onDocumentChange` applies direction after the fact.
+- `onDocumentChange` also skips `applyEnterDirection` when the previous line is empty, preventing cursor jump to end of line on the second press.
+
+**Cursor tear handle (دمعة المؤشر) behavior fixes**
+- Tear handle was not moving with the cursor after pressing Enter — it stayed on the previous line. Fixed by skipping `tearHandle.onTextChanged()` (which hides the tear) when the document change is an Enter-only insert, then immediately calling `showOnTap` in the next frame to reposition it.
+- Tear handle was hidden and not redrawn on the new line after Enter on a line with content. Fixed by calling `showOnTap` after `scrollToCursor` in all Enter paths (empty line, non-empty line, list).
+- Tear handle was not hidden during manual scroll. Fixed by calling `tearHandle.forceHide()` in `onScrollChanged`.
+
 ### 🏗️ Refactoring
 
 **Widget deep link — cold start fix**
 - `_openNoteById()` now waits for `settings.isInitialized` + 500ms before navigating, matching the pattern already used in `_openEditorWithSharedText`. Fixes the race condition where the widget tap arrived before `SplashScreen` finished and the pushed route was overwritten by `pushReplacement`.
 
-**Hero animation flicker fix**
-- Async Quill initialization (`initializeQuillAsync`) is now skipped in read-only mode on cold open. Quill is initialized lazily the moment the user enters edit mode via `_initQuillForEdit()`.
-- `readonly_content.dart`: plain-text extraction moved from `addPostFrameCallback` to synchronous `initState`, eliminating the one-frame flash of `CircularProgressIndicator`.
-- `note_readonly_view.dart`: `listen: true` → `listen: false` for `heroAnimationEnabled` getter.
-
-**Hero animation setting persistence fix**
-- `settings_provider.dart`: `_heroAnimationEnabled` was hard-coded to `false` on every load, ignoring SharedPreferences. Now reads `prefs.getBool('heroAnimationEnabled') ?? false`.
-
 **Motion & Navigation settings section**
-- Extracted `Hero Animation`, `Pull to Refresh`, and `Double Tap to Edit` controls from `GeneralSection` into a dedicated `MotionNavigationSection` widget (`motion_navigation_section.dart`).
+- Extracted `Pull to Refresh` and `Double Tap to Edit` controls from `GeneralSection` into a dedicated `MotionNavigationSection` widget (`motion_navigation_section.dart`).
 - `settings_screen.dart` updated to include the new section between General and Beta.
 
 **File splitting — Single Responsibility**
@@ -70,20 +70,12 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 ### 🧪 Tests
 - 19 new tests in `intent_preservation_test.dart` covering: cold-start intent storage, guard against execution before `MainLayoutScreen` is ready, correct execution after ready, empty intent filtering, warm intent routing, and double-execution prevention.
 
-**Read-Only View — Formatted Content & Hero Animation overhaul**
+**Read-Only View — Formatted Content overhaul**
 
 **Formatted text in read-only view**
 - `ReadOnlyContent` now renders rich text using `QuillEditor` in read-only mode instead of plain `SelectableText`. The switch happens after `isQuillFullyLoaded` is set to `true` in `EditorCoordinator`.
 - In read-only mode (`readOnly: true`), `EditorCoordinator.initialize()` builds the full `QuillController` immediately (synchronously for short notes, from pre-built Delta JSON for long notes) instead of the 20-line preview used in edit mode.
 - `Directionality(rtl)` wraps `QuillEditor` in read-only view so `fixDeltaDirections` block directions are respected correctly.
-
-**Long note pre-build before Hero animation**
-- `AppNavigator.toEditor()`: notes longer than 4000 characters in read-only mode are pre-built in a Dart isolate via `compute(buildDeltaJsonForIsolate)` before the route is pushed. The resulting Delta JSON is passed directly to `EditorCoordinator` as `prebuiltDeltaJson`, eliminating a second synchronous parse on the main thread that was freezing the UI and blocking the Hero animation.
-- A small `CircularProgressIndicator` (14×14px) appears in the top-right corner of the card while the isolate is running, implemented with `ValueListenableBuilder` to avoid rebuilding the Hero widget tree.
-
-**Hero animation push fix**
-- `EditorPageRoute`: changed `opaque: true` → `opaque: false` so the source screen remains visible behind the route during the Hero flight. The `FadeTransition` interval was relaxed to `0.0–1.0` to avoid clipping the Hero at the start of the push.
-- `note_readonly_view.dart`: Hero now wraps `noteCard` directly (containing `ReadOnlyContent` with plain text), so the card content is visible during the flight. After the flight completes (350ms), Quill replaces plain text with no visual flash because the text was already visible.
 
 **Book Mode — formatting toggle**
 - Added a toggle button in `BookModeView` AppBar to switch between formatted (Quill) and plain text rendering.
@@ -93,6 +85,21 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 **Cursor tear handle after entering edit mode**
 - `QuillEditorWidget.didUpdateWidget`: when `quillController` changes (e.g. after `_initQuillForEdit()`), `_ctrl` is now fully rebuilt instead of reusing the old instance. This re-binds `tearHandle` and all listeners to the new controller, restoring the cursor tear handle (دمعة المؤشر) after transitioning from read-only to edit mode.
+
+### 🗑️ Removed
+
+**Hero animation — fully removed**
+- Removed the experimental Hero card-to-fullscreen transition that was causing instability on various devices.
+- Deleted `EditorPageRoute` (the custom transparent `PageRouteBuilder` used only for Hero flight) — navigation now always uses `MaterialPageRoute`.
+- Deleted `HeroAnimationInfoSheet` (the settings bottom sheet explaining the beta feature).
+- Removed `heroTag` parameter from `NoteCardWidget`, `PremiumCardEffect`, `NoteEditorImmersive`, and `NoteReadOnlyView`.
+- Removed `heroAnimationEnabled` field, getter, setter, and `SharedPreferences` load from `SettingsProvider`.
+- Removed Hero toggle from `MotionNavigationSection` (settings) and emptied `BetaSection` (debug-only).
+- Removed `heroAnimation` localization key from ARB files and generated l10n classes (`app_localizations.dart`, `_ar.dart`, `_en.dart`).
+- Removed `dart:ui show lerpDouble` import from `note_readonly_view.dart` and `provider`/`settings_provider` imports from `premium_card_effect.dart` — no longer needed.
+- The long-note pre-build via `compute(buildDeltaJsonForIsolate)` is **retained** — it still prevents UI freeze when opening heavy notes, now applied unconditionally regardless of Hero state.
+
+---
 
 ## [3.2.2] — 2026-06 | Paste Performance + Apex Sharing
 

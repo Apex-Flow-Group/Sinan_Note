@@ -1,7 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
-import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
@@ -35,7 +34,6 @@ class NoteReadOnlyView extends StatefulWidget {
   final NoteMode mode;
   final EditorCoordinator coordinator;
   final double sidePadding;
-  final String? heroTag;
   final VoidCallback? onClose;
   final VoidCallback onEnterEdit;
   final void Function(NoteMode newMode, Note newNote)? onModeChanged;
@@ -49,7 +47,6 @@ class NoteReadOnlyView extends StatefulWidget {
     required this.sidePadding,
     required this.onEnterEdit,
     required this.onSave,
-    this.heroTag,
     this.onClose,
     this.onModeChanged,
   });
@@ -509,50 +506,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       ),
     );
 
-    final heroTag = widget.heroTag ?? 'note_card_${note.id}';
-    final heroEnabled = Provider.of<SettingsProvider>(context, listen: false)
-        .heroAnimationEnabled;
-
-    // الـ Hero يحمل noteCard كاملاً مع plain text أثناء الطيران —
-    // بعد انتهاء الطيران يتحول القارئ لـ Quill المنسق بدون flash
-    // لأن النص الـ plain كان موجوداً طول الوقت، فقط التنسيق يُضاف
-    final heroCard = heroEnabled
-        ? Hero(
-            tag: heroTag,
-            transitionOnUserGestures: false,
-            createRectTween: (begin, end) =>
-                MaterialRectArcTween(begin: begin, end: end),
-            placeholderBuilder: (context, heroSize, child) => SizedBox(
-              width: heroSize.width,
-              height: heroSize.height,
-            ),
-            flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) {
-              final curved = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-                reverseCurve: Curves.easeInCubic,
-              );
-              return AnimatedBuilder(
-                animation: curved,
-                builder: (context, _) {
-                  final radius = BorderRadius.circular(
-                    direction == HeroFlightDirection.push
-                        ? lerpDouble(16, 0, curved.value)!
-                        : lerpDouble(0, 16, curved.value)!,
-                  );
-                  return Material(
-                    color: Colors.transparent,
-                    child: ClipRRect(
-                      borderRadius: radius,
-                      child: noteCard,
-                    ),
-                  );
-                },
-              );
-            },
-            child: noteCard,
-          )
-        : noteCard;
+    final heroCard = noteCard;
 
     final canMarkdown = _currentNote.noteType == 'markdown';
 

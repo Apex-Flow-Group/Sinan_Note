@@ -900,9 +900,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get disabled => 'معطّل';
 
   @override
-  String get heroAnimation => 'انيميشن الفتح';
-
-  @override
   String get editorSettings => 'إعدادات المحرر';
 
   @override
