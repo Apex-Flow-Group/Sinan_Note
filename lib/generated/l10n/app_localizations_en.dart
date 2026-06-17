@@ -942,10 +942,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutApp => 'About';
 
   @override
-  String get diagnostics => 'Diagnostics';
+  String get diagnostics => 'Error Log';
 
   @override
-  String get developersOnly => 'Developers only';
+  String get developersOnly => 'View & clear crash reports';
 
   @override
   String get systemTheme => 'System';
@@ -970,6 +970,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cleared => 'Cleared';
+
+  @override
+  String get noErrorsLogged => 'No errors logged';
 
   @override
   String get errorLog => 'Error Log';

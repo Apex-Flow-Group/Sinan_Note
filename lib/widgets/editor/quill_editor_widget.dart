@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/widgets/editor/apex_magnifier.dart';
 import 'package:sinan_note/widgets/editor/quill_editor_controller.dart';
@@ -67,8 +68,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     super.initState();
     _ctrl = _makeCtrl();
     _ctrl.init(widget.readOnly);
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _ctrl.didFirstBuild());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ctrl.didFirstBuild());
   }
 
   @override
@@ -110,10 +110,19 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
   bool _onTapDown(
       TapDownDetails details, TextPosition Function(Offset) getPosition) {
+    // أخفِ الدمعة فوراً عند الضغط لمنع ظهورها في المكان القديم
+    _ctrl.tearHandle.forceHide();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fixRtlCursorPosition();
       if (!widget.readOnly) {
+        // أوقف BiDi مؤقتاً لمنعها من تغيير offset بين الآن وظهور الدمعة
+        BiDiCursorCorrectionMiddleware.pauseFor(widget.quillController);
         _ctrl.tearHandle.showOnTap(editorKey: _editorKey);
+        // أعد BiDi بعد ظهور الدمعة (frame إضافيان: واحد لـ showOnTap + واحد أمان)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            BiDiCursorCorrectionMiddleware.resumeFor(widget.quillController);
+          });
+        });
       }
     });
     return false;
@@ -161,28 +170,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     });
 
     return true;
-  }
-
-  void _fixRtlCursorPosition() {
-    final sel = widget.quillController.selection;
-    if (!sel.isCollapsed) return;
-    final plainText = widget.quillController.document.toPlainText();
-    final offset = sel.baseOffset;
-    if (offset <= 0 || offset >= plainText.length) return;
-    final lineEnd = plainText.indexOf('\n', offset);
-    if (lineEnd == -1) return;
-    if (offset == lineEnd - 1) {
-      final lastChar = plainText[offset];
-      final isRtlChar =
-          RegExp(r'[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]')
-              .hasMatch(lastChar);
-      if (isRtlChar) {
-        widget.quillController.updateSelection(
-          TextSelection.collapsed(offset: lineEnd),
-          ChangeSource.local,
-        );
-      }
-    }
   }
 
   Widget? _buildCheckboxLeading(Node node, LeadingConfig config) {
@@ -273,7 +260,10 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           (ops.first.isInsert &&
                               ops.first.data == '\n' &&
                               ops.first.attributes == null));
-                  if (_ctrl.isDraggingSelection || _ctrl.tearHandle.isDragging) return child!;
+                  if (_ctrl.isDraggingSelection ||
+                      _ctrl.tearHandle.isDragging) {
+                    return child!;
+                  }
                   return Stack(
                     fit: StackFit.expand,
                     alignment: AlignmentDirectional.topStart,
@@ -331,8 +321,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       quillMagnifierBuilder: apexMagnifierBuilder,
                       textSelectionThemeData: TextSelectionThemeData(
                         cursorColor: widget.textColor,
-                        selectionColor:
-                            widget.textColor.withValues(alpha: 0.2),
+                        selectionColor: widget.textColor.withValues(alpha: 0.2),
                         selectionHandleColor: widget.textColor,
                       ),
                       customStyles: DefaultStyles(

@@ -49,13 +49,28 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 - Tear handle was not moving with the cursor after pressing Enter — it stayed on the previous line. Fixed by skipping `tearHandle.onTextChanged()` (which hides the tear) when the document change is an Enter-only insert, then immediately calling `showOnTap` in the next frame to reposition it.
 - Tear handle was hidden and not redrawn on the new line after Enter on a line with content. Fixed by calling `showOnTap` after `scrollToCursor` in all Enter paths (empty line, non-empty line, list).
 - Tear handle was not hidden during manual scroll. Fixed by calling `tearHandle.forceHide()` in `onScrollChanged`.
+- Tear handle phantom cursor (the blue line drawn alongside the tear during drag) removed — no longer rendered during drag.
+- Tear handle was drifting away from the cursor after a tap on a new character — fixed by binding `_TearWidgetState` to a `quillController` listener that repositions the tear in the next frame on every selection change.
+- Cursor was jumping on BiDi boundaries during tear drag — root cause was `TextSelection.collapsed(offset: pos.offset)` discarding the `TextAffinity` returned by `getPositionForOffset`. Fixed by passing `affinity: pos.affinity` so both the real cursor and the virtual cursor use the same affinity.
+
+**Desktop / Tablet layout clipped by status bar**
+- On tablets and large-screen devices, the `MasterDetailsLayout` extended behind the system status bar. Fixed by wrapping `MasterDetailsLayout` with `SafeArea(bottom: false)`, resolving the issue for all desktop screens (Reminders, Professional, Home, Archive, Trash, Locked Notes) in a single change.
+
+**"Hide Professional from Home" setting not synced with Google Drive**
+- The `hide_pro_from_home` toggle in the Professional catalog drawer tile was stored only in `SharedPreferences` and never included in the Drive backup. Fixed by adding a `settings` object to the backup payload in `SyncEngine.upload()`, restoring it in both `download()` and `silentMerge()`, and having `CategoriesProvider` listen to `CloudSyncGateway.isSyncing` to reload the setting from `SharedPreferences` immediately after any sync completes.
 
 ### 🏗️ Refactoring
 
 **Widget deep link — cold start fix**
 - `_openNoteById()` now waits for `settings.isInitialized` + 500ms before navigating, matching the pattern already used in `_openEditorWithSharedText`. Fixes the race condition where the widget tap arrived before `SplashScreen` finished and the pushed route was overwritten by `pushReplacement`.
 
-**Motion & Navigation settings section**
+**`ApexErrorManager` — severity system + sync & vault coverage**
+- Rebuilt `ApexErrorManager` with an `ApexErrorSeverity` enum (`expected` / `unexpected`). Expected errors (e.g. `VaultLockedException`) are now logged silently without showing a snackbar to the user.
+- Added `monitorVault`, `monitorSync` wrappers alongside the existing `monitorDB`. `VaultEncrypt` and `VaultDecrypt` in `VaultService` now use `expectedError: true` — no more false "unexpected error" snackbar when the vault is locked.
+- `SyncEngine.upload()`, `download()`, and `silentMerge()` are now wrapped with `monitorSync`, replacing manual `try/catch` blocks with consistent logging and user feedback.
+- `monitorCritical` retained for backward compatibility with an `expectedError` parameter.
+
+
 - Extracted `Pull to Refresh` and `Double Tap to Edit` controls from `GeneralSection` into a dedicated `MotionNavigationSection` widget (`motion_navigation_section.dart`).
 - `settings_screen.dart` updated to include the new section between General and Beta.
 

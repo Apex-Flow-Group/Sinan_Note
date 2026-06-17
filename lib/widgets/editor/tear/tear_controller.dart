@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:sinan_note/widgets/editor/tear/tear_magnifier.dart';
 import 'package:sinan_note/widgets/editor/tear/tear_painters.dart';
 
@@ -71,8 +72,7 @@ class TearController {
 
     Rect caretRect;
     try {
-      caretRect = state.renderEditor
-          .getLocalRectForCaret(TextPosition(offset: sel.baseOffset));
+      caretRect = state.renderEditor.getLocalRectForCaret(sel.base);
     } catch (_) {
       return;
     }
@@ -166,6 +166,9 @@ class _TearWidgetState extends State<_TearWidget>
   int _lastOffset = -1;
   int _lastDragMs = 0;
 
+  /// لون الكرسر الأصلي — نحفظه لاستعادته عند انتهاء السحب
+  Color? _originalCursorColor;
+
   late final ValueNotifier<({Offset pos, double lineTop, double lineBottom})>
       _magNotifier;
 
@@ -184,10 +187,41 @@ class _TearWidgetState extends State<_TearWidget>
         vsync: this, duration: const Duration(milliseconds: 200));
     _scale = CurvedAnimation(parent: _anim, curve: Curves.easeOutBack);
     _anim.forward();
+    // استمع لتغييرات الـ selection لتحديث موضع الدمعة تلقائياً
+    widget.quillController.addListener(_onSelectionChanged);
+  }
+
+  void _onSelectionChanged() {
+    if (_dragging) return;
+    if (!widget.quillController.selection.isCollapsed) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _dragging) return;
+      final state = widget.getEditorKey()?.currentState;
+      if (state == null) return;
+      try {
+        final sel = widget.quillController.selection;
+        final r = state.renderEditor.getLocalRectForCaret(sel.base);
+        final newBottom =
+            state.renderEditor.localToGlobal(Offset(r.center.dx, r.bottom));
+        final newTop = state.renderEditor.localToGlobal(Offset(0, r.top)).dy;
+        if (!mounted) return;
+        setState(() {
+          _pos = newBottom;
+          _lineTop = newTop;
+          _lineBottom = newBottom.dy;
+        });
+        _magNotifier.value = (
+          pos: _pos,
+          lineTop: _lineTop,
+          lineBottom: _lineBottom,
+        );
+      } catch (_) {}
+    });
   }
 
   @override
   void dispose() {
+    widget.quillController.removeListener(_onSelectionChanged);
     _anim.dispose();
     _magNotifier.dispose();
     super.dispose();
@@ -199,6 +233,17 @@ class _TearWidgetState extends State<_TearWidget>
     final dy = (e.position.dy - tearCenterY).abs();
     if (dx < _kHit / 2 && dy < _kHit / 2) {
       HapticFeedback.mediumImpact();
+
+      // أخفِ كرسر Quill الحقيقي بجعل لونه شفاف
+      final state = widget.getEditorKey()?.currentState;
+      if (state != null) {
+        _originalCursorColor = state.cursorCont.color.value;
+        state.cursorCont.color.value = Colors.transparent;
+      }
+
+      // أوقف تصحيحات BiDi
+      BiDiCursorCorrectionMiddleware.pauseFor(widget.quillController);
+
       widget.onDragStart();
       setState(() => _dragging = true);
       _magNotifier.value =
@@ -221,20 +266,24 @@ class _TearWidgetState extends State<_TearWidget>
       return;
     }
 
+    // نقطة الحساب: مكان الإصبع مع إزاحة للأعلى (الإصبع على الدمعة تحت الكرسر)
     final pos = re.getPositionForOffset(
         Offset(globalPos.dx, globalPos.dy - widget.lineHeight));
 
     if (pos.offset != _lastOffset) {
       _lastOffset = pos.offset;
       HapticFeedback.selectionClick();
+
+      // حدّث الـ selection مع الـ affinity الصحيح — BiDi middleware متوقف فلن يتدخل
       widget.quillController.updateSelection(
-        TextSelection.collapsed(offset: pos.offset),
+        TextSelection.collapsed(offset: pos.offset, affinity: pos.affinity),
         ChangeSource.local,
       );
     }
 
+    // حدّث موضع الكرسر الوهمي والدمعة من getLocalRectForCaret مع الـ affinity الصحيح
     try {
-      final r = re.getLocalRectForCaret(TextPosition(offset: pos.offset));
+      final r = re.getLocalRectForCaret(pos);
       _lineTop = re.localToGlobal(Offset(0, r.top)).dy;
       _lineBottom = re.localToGlobal(Offset(0, r.bottom)).dy;
       final caretX = re.localToGlobal(Offset(r.center.dx, 0)).dx;
@@ -255,6 +304,19 @@ class _TearWidgetState extends State<_TearWidget>
 
   void _endDrag() {
     if (!mounted) return;
+
+    // أعد لون الكرسر الحقيقي
+    final state = widget.getEditorKey()?.currentState;
+    if (state != null && _originalCursorColor != null) {
+      state.cursorCont.color.value = _originalCursorColor!;
+    }
+    _originalCursorColor = null;
+
+    // أعد تشغيل تصحيحات BiDi بعد frame لضمان رسم الكرسر أولاً
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      BiDiCursorCorrectionMiddleware.resumeFor(widget.quillController);
+    });
+
     setState(() => _dragging = false);
     widget.onDragEnd();
   }

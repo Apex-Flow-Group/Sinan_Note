@@ -35,6 +35,9 @@ class EditorCoordinator {
   QuillController? quillController;
   int quillControllerVersion = 0;
   BiDiCursorCorrectionMiddleware? _bidiMiddleware;
+
+  /// وصول خارجي للـ middleware لإيقافها أثناء السحب
+  BiDiCursorCorrectionMiddleware? get bidiMiddleware => _bidiMiddleware;
   final UndoHistoryController undoController = UndoHistoryController();
   final UndoHistoryController codeUndoController = UndoHistoryController();
   ChecklistUndoRedoController? checklistUndoRedo;

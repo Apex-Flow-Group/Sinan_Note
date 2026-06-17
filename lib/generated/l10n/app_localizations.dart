@@ -1925,13 +1925,13 @@ abstract class AppLocalizations {
   /// No description provided for @diagnostics.
   ///
   /// In en, this message translates to:
-  /// **'Diagnostics'**
+  /// **'Error Log'**
   String get diagnostics;
 
   /// No description provided for @developersOnly.
   ///
   /// In en, this message translates to:
-  /// **'Developers only'**
+  /// **'View & clear crash reports'**
   String get developersOnly;
 
   /// No description provided for @systemTheme.
@@ -1981,6 +1981,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cleared'**
   String get cleared;
+
+  /// No description provided for @noErrorsLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'No errors logged'**
+  String get noErrorsLogged;
 
   /// No description provided for @errorLog.
   ///
