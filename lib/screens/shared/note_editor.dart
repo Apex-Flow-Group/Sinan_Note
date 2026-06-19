@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
@@ -386,7 +386,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void _attachListeners() {
     _coordinator.contentController.addListener(_onContentChanged);
     _coordinator.undoController.addListener(_updateUndoRedoState);
-    if (_currentMode == NoteMode.code) {
+    if (_currentMode == NoteMode.code && !_isReadOnly) {
       _coordinator.codeController!.addListener(_onContentChanged);
       _coordinator.codeUndoController.addListener(_updateUndoRedoState);
     }
@@ -412,14 +412,19 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     });
   }
 
-  void _onQuillContentChanged() {
-    // ظ„ط§ ظ†ط­ظپط¸ ط£ط«ظ†ط§ط، طھط­ظ…ظٹظ„ ط§ظ„ظ†ظˆطھط© â€” طھط؛ظٹظٹط±ط§طھ _fixDeltaDirections ظ„ظٹط³طھ ظ…ظ† ط§ظ„ظ…ط³طھط®ط¯ظ…
+  // ════════════════════ CONTENT CHANGE HANDLER (UNIFIED) ════════════════════
+
+  /// معالج موحّد لتغييرات المحتوى — يُستخدم لكل الأنواع (Quill, Code, Plain)
+  void _handleContentChange({
+    required String currentText,
+    Duration autosaveDelay = const Duration(milliseconds: 600),
+  }) {
     if (_coordinator.stateManager.isLoading) return;
+    if (_isReadOnly) return;
+
     _coordinator.stateManager.markDirty();
-    final newHasContent =
-        QuillMigration.toPlainText(_coordinator.quillController!)
-            .trim()
-            .isNotEmpty;
+
+    final newHasContent = currentText.trim().isNotEmpty;
     if (_coordinator.stateManager.hasContent != newHasContent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -427,38 +432,33 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         }
       });
     }
+
     _coordinator.autosaveTimer?.cancel();
-    _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 800), () {
-      if (mounted && !_coordinator.stateManager.isSaving) {
+    _coordinator.autosaveTimer = Timer(autosaveDelay, () {
+      if (mounted &&
+          currentText.trim().isNotEmpty &&
+          !_coordinator.stateManager.isSaving) {
         _saveNoteToDatabase();
       }
     });
   }
 
-  void _onContentChanged() {
-    _coordinator.stateManager.markDirty();
+  void _onQuillContentChanged() {
+    _handleContentChange(
+      currentText:
+          QuillMigration.toPlainText(_coordinator.quillController!),
+      autosaveDelay: const Duration(milliseconds: 800),
+    );
+  }
 
+  void _onContentChanged() {
     final currentText = _currentMode == NoteMode.code
         ? _coordinator.codeController!.text
         : _coordinator.contentController.text;
-    final newHasContent = currentText.trim().isNotEmpty;
-
-    if (_coordinator.stateManager.hasContent != newHasContent) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() => _coordinator.stateManager.hasContent = newHasContent);
-        }
-      });
-    }
-
-    _coordinator.autosaveTimer?.cancel();
-    _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 500), () {
-      if (mounted &&
-          (_coordinator.codeController?.text.trim().isNotEmpty ?? false) &&
-          !_coordinator.stateManager.isSaving) {
-        _saveNoteToDatabase();
-      }
-    });
+    _handleContentChange(
+      currentText: currentText,
+      autosaveDelay: const Duration(milliseconds: 500),
+    );
   }
 
   /// يُعاد استدعاؤه عند تغيير الـ cursor/selection في Quill
@@ -529,16 +529,17 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     final hasContent = content.trim().isNotEmpty || title.trim().isNotEmpty;
     final hasChanges = _coordinator.stateManager.hasChanges();
-    final wasSaved = _coordinator.savedNoteId != null || widget.note != null;
 
+    bool didSave = false;
     if (hasContent && hasChanges) {
-      await _saveNoteToDatabase(isManualSave: true);
+      didSave = await _saveNoteToDatabase(isManualSave: true);
     }
 
     // End version control session — saves history for significant changes
     await _endVersionSession();
 
-    if (hasContent && wasSaved && mounted) {
+    // إظهار إشعار الحفظ فقط إذا تم الحفظ فعلاً
+    if (didSave && mounted) {
       final l10n = AppLocalizations.of(context);
       UnifiedNotificationService().show(
         context: context,
@@ -621,6 +622,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             }
           }
           setState(() => _isReadOnly = false);
+          // ربط listener الكود عند الانتقال من القراءة إلى التحرير
+          if (_currentMode == NoteMode.code &&
+              _coordinator.codeController != null) {
+            _coordinator.codeController!.addListener(_onContentChanged);
+            _coordinator.codeUndoController.addListener(_updateUndoRedoState);
+          }
         },
         onSave: ({bool isManualSave = false}) =>
             _saveNoteToDatabase(isManualSave: isManualSave),

@@ -155,15 +155,15 @@ class CustomShareSheet {
               ],
             ),
 
-            // Send via Apex - full width tile
-            if (note != null) ...[
-              const SizedBox(height: 16),
-              _ApexSendTile(
-                isArabic: isArabic,
-                onTap: () => _sendViaApex(context, note, isArabic),
-                colorScheme: colorScheme,
-              ),
-            ],
+            // Send via Apex - hidden (app not published yet)
+            // if (note != null) ...[
+            //   const SizedBox(height: 16),
+            //   _ApexSendTile(
+            //     isArabic: isArabic,
+            //     onTap: () => _sendViaApex(context, note, isArabic),
+            //     colorScheme: colorScheme,
+            //   ),
+            // ],
             const SizedBox(height: 4),
           ],
         ),
@@ -176,6 +176,7 @@ class CustomShareSheet {
     return ext.startsWith('.') ? ext.substring(1) : ext;
   }
 
+  // ignore: unused_element
   static void _sendViaApex(
       BuildContext context, Note note, bool isArabic) async {
     Navigator.pop(context);
@@ -221,6 +222,7 @@ class CustomShareSheet {
   }
 }
 
+// ignore: unused_element
 class _ApexSendTile extends StatelessWidget {
   final bool isArabic;
   final VoidCallback onTap;

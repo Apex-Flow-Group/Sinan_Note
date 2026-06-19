@@ -4,7 +4,7 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
-## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes + Hero Removal + Editor Fixes
+## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes + Hero Removal + Editor Fixes + Save Guard Fix
 
 ### ✨ New Features
 
@@ -59,6 +59,17 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 **"Hide Professional from Home" setting not synced with Google Drive**
 - The `hide_pro_from_home` toggle in the Professional catalog drawer tile was stored only in `SharedPreferences` and never included in the Drive backup. Fixed by adding a `settings` object to the backup payload in `SyncEngine.upload()`, restoring it in both `download()` and `silentMerge()`, and having `CategoriesProvider` listen to `CloudSyncGateway.isSyncing` to reload the setting from `SharedPreferences` immediately after any sync completes.
 
+**Fixed code notes being saved and moved to top when opened without editing**
+- Opening a code note in the viewer (read-only) or editor without making any changes would trigger an unwanted save, updating `updatedAt` and moving the note to the top of the list. Root cause: `CodeController` fires change events during initialization (syntax highlighting), and `_onContentChanged` had no `isLoading` or `_isReadOnly` guard — unlike `_onQuillContentChanged` which already had the `isLoading` guard.
+- Fix: Added `isLoading` and `_isReadOnly` guards to `_onContentChanged`. Also prevented attaching `codeController` listener in read-only mode via `_attachListeners()`.
+
+**Fixed false "Note Saved" notification when opening notes in editor without changes**
+- Regular notes (simple, rich, checklist) showed "Saved" notification on back press even when no actual save occurred. Root cause: the notification logic checked `hasContent && wasSaved` instead of the actual return value of `_saveNoteToDatabase()`.
+- Fix: Notification now only appears when `_saveNoteToDatabase()` returns `true` (an actual database write happened).
+
+**Fixed code controller listener not attached after transitioning from viewer to editor**
+- When switching from read-only to edit mode via `onEnterEdit`, the `codeController` listener was not attached because `_isReadOnly` was still `true` at `_attachListeners()` time. Fix: listener is now explicitly attached after `_isReadOnly` is set to `false`.
+
 ### 🏗️ Refactoring
 
 **Widget deep link — cold start fix**
@@ -76,6 +87,10 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 **File splitting — Single Responsibility**
 - `note_editor.dart` (1235 → ~1095 lines): menu action methods extracted into `EditorMenuHandlersMixin` (`editor_menu_handlers.dart`). Mixed into `_NoteEditorImmersiveState` via `with`.
+
+**Unified content change handler**
+- Extracted `_handleContentChange()` — a single method containing all shared logic for content changes (guards, `markDirty`, `hasContent` update, autosave timer). `_onQuillContentChanged` and `_onContentChanged` are now thin wrappers (5 lines each) that only specify the text source and timer duration.
+- Both handlers now share the same guards (`isLoading`, `_isReadOnly`) and the same autosave behavior — eliminating the inconsistency that caused the original bug.
 - `pin_lock_screen.dart` (829 → ~730 lines): `_numpadKey` and `_numRow` extracted into `PinNumpadKey` / `PinNumpadRow` stateless widgets (`pin_numpad_key.dart`).
 - `backup_wizard_screen.dart` (717 → ~483 lines): `_FlowCard`, `_SectionHeader`, `_OptionTile`, `_ActionBtn`, `_SideItem` extracted to `backup_wizard_widgets.dart` with public names.
 - `unified_notification_service.dart`: `_buildContent`, `_buildActionButton`, `_buildProgressWithUndo`, `_getBackgroundColor`, `_getIcon` extracted to `NotificationSnackBar` class (`notification_snack_bar.dart`). Service is now pure orchestration with no Flutter widget construction.
@@ -84,6 +99,7 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ### 🧪 Tests
 - 19 new tests in `intent_preservation_test.dart` covering: cold-start intent storage, guard against execution before `MainLayoutScreen` is ready, correct execution after ready, empty intent filtering, warm intent routing, and double-execution prevention.
+- 23 new tests in `editor_save_guard_test.dart` covering: code note opened without edits → no save, `isLoading` guard prevents false dirty during init, Quill/checklist notes without edits → no notification, full `saveToDatabase` guard simulation, `_handleBack` notification logic, edge cases (color-only change, undo to original, multiple loads).
 
 **Read-Only View — Formatted Content overhaul**
 
