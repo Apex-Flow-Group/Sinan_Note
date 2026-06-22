@@ -217,7 +217,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 final isDesktop = MediaQuery.of(context).size.width >= 600;
                 if (isDesktop && !widget.selectionMode) {
                   NoteContextMenu.show(
-                      context, widget.note, widget.onNoteChanged);
+                      context, widget.note, widget.onNoteChanged,
+                      source: widget.source);
                 }
               },
               onTap: () async {

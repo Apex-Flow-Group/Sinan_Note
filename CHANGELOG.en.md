@@ -24,6 +24,22 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ### 🔧 Bug Fixes
 
+**Missing snackbar notifications in desktop right-click context menu**
+- Actions triggered from the right-click bottom sheet on notes (pin/unpin, archive, delete) completed silently without any visual feedback. Fixed by adding `UnifiedNotificationService().showWithUndo()` with circular progress timer and undo support — matching the same pattern already used in swipe actions and multi-select toolbar.
+- Pin/Unpin shows success snackbar with undo to revert.
+- Archive shows "moved to archive" with undo to unarchive.
+- Delete shows "moved to trash" with undo to restore.
+- Also fixed missing `onNoteChanged()` calls after archive and delete in the context menu — the note list was not refreshing immediately after these actions.
+
+**Desktop right-click in Trash shows wrong actions**
+- Right-clicking a note in the trash screen on desktop showed the same actions as the home screen (pin, archive, delete). Now the context menu detects `source` and shows the correct trash actions: Restore (with undo snackbar) and Permanent Delete (with confirmation sheet).
+
+**Desktop right-click in Archive shows wrong actions**
+- Right-clicking a note in the archive screen on desktop showed "Pin" and "Archive" which don't belong there. Now the context menu detects `source='archive'` and shows: Open, Color, Unarchive (with undo snackbar), Share, and Delete — without the pin option.
+
+**`commitAll()` crashes with setState during dispose**
+- `UnifiedNotificationService().commitAll()` called from `_TrashScreenState.dispose()` triggered `executedEarly.value = true` synchronously, which notified `ValueListenableBuilder` while the widget tree was locked. Fixed by deferring the value assignment to `addPostFrameCallback`.
+
 **External intent data lost after biometric/PIN authentication**
 - Shared files, shared text, and widget taps from the Android home screen all lost their data after fingerprint/PIN auth completed. Root cause: intent was read immediately on cold start and executed with a fixed 400–500ms delay — which expired before the biometric dialog finished, so the editor was pushed onto `SplashScreen` and wiped by `pushReplacement`.
 - New mechanism: intent data is saved in `pendingIntentNotifier` instead of executed immediately. `MainLayoutScreen.initState()` sets `isMainLayoutActive = true` in `addPostFrameCallback` (guaranteed to run only after auth succeeds, because `SplashScreen` never navigates here until auth passes). `_ApexNoteAppState._onPendingIntent()` checks `isMainLayoutActive` before executing — works regardless of biometric duration.
