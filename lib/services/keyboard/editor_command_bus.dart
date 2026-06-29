@@ -35,19 +35,48 @@ class EditorCommandBus extends ChangeNotifier {
 
   // ── المحرر النشط ──────────────────────────────────────────────────────
   int? _activeNoteId;
+  int? _activeEditorHash;
+  final Set<VoidCallback> _registeredListeners = {};
 
-  /// المحرر يُسجّل نفسه عند mount (أو عند تغيير الملاحظة)
-  void registerEditor(int? noteId) {
+  void registerEditor(int? noteId, int editorHash) {
     if (noteId == null) return;
     _activeNoteId = noteId;
+    _activeEditorHash = editorHash;
   }
 
-  /// المحرر يُلغي تسجيله عند dispose
   void unregisterEditor(int? noteId) {
     if (_activeNoteId == noteId) _activeNoteId = null;
   }
 
   int? get activeNoteId => _activeNoteId;
+  int? get activeEditorHash => _activeEditorHash;
+
+  void addUniqueListener(VoidCallback listener) {
+    if (_registeredListeners.contains(listener)) return;
+    _registeredListeners.add(listener);
+    addListener(listener);
+  }
+
+  void removeUniqueListener(VoidCallback listener) {
+    if (_registeredListeners.remove(listener)) {
+      removeListener(listener);
+    }
+  }
+
+  int get listenerCount => _count;  // exposed for debugging
+  int _count = 0;
+
+  @override
+  void addListener(VoidCallback listener) {
+    super.addListener(listener);
+    _count++;
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    _count--;
+  }
 
   // ── الأوامر ───────────────────────────────────────────────────────────
   EditorCommand? _lastCommand;

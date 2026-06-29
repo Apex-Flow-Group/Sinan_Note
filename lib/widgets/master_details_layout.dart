@@ -45,7 +45,9 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
         ? Theme.of(context).colorScheme.surfaceContainerLow
         : Theme.of(context).colorScheme.surface;
 
-    return Padding(
+    return SafeArea(
+      bottom: false,
+      child: Padding(
       padding: const EdgeInsets.all(8.0),
       child: _MasterDetailsRow(
         isDragging: _isDragging,
@@ -78,6 +80,7 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
         },
         onDragEnd: () => setState(() => _isDragging = false),
       ),
+     ),
     );
   }
 }

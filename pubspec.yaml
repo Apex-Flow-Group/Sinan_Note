@@ -1,6 +1,6 @@
 name: sinan_note
 description: "Sinan Note - Your sharp and reliable companion."
-version: 3.2.2+3390
+version: 3.2.3+3396
 publish_to: none
 
 environment:
@@ -54,7 +54,7 @@ dependencies:
   highlight: ^0.7.0
   flutter_svg: ^2.0.0
 
-  # Rich Text Editor — نسخة محلية معدّلة (إصلاح مقابض التحديد في النص المختلط)
+  # Rich Text Editor — نسخة محلية معدّلة (Apex Flow Group fork)
   flutter_quill:
     path: packages/flutter_quill
   

@@ -1,4 +1,4 @@
-// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
@@ -36,7 +36,7 @@ class NoteEditorImmersive extends StatefulWidget {
   final bool originallyLocked;
   final VoidCallback? onClose;
   final bool readOnly;
-  final String? heroTag;
+  final String? prebuiltDeltaJson;
 
   const NoteEditorImmersive({
     super.key,
@@ -46,7 +46,7 @@ class NoteEditorImmersive extends StatefulWidget {
     this.originallyLocked = false,
     this.onClose,
     this.readOnly = false,
-    this.heroTag,
+    this.prebuiltDeltaJson,
   });
 
   @override
@@ -105,6 +105,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       mode: _currentMode,
       skipAuthentication: widget.skipAuthentication,
       originallyLocked: widget.originallyLocked,
+      readOnly: widget.readOnly,
+      prebuiltDeltaJson: widget.prebuiltDeltaJson,
     );
 
     _coordinator.initialize(context);
@@ -120,32 +122,31 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         widget.note!.content,
       );
     }
-    // ظ„ظ„ظ†ظˆطھط§طھ ط§ظ„ط·ظˆظٹظ„ط©: ط£ط¹ط¯ ط¨ظ†ط§ط، QuillController ظپظٹ isolate ط¨ط¹ط¯ ط£ظˆظ„ frame
-    // ظ‡ط°ط§ ظٹظ…ظ†ط¹ ط§ظ„طھط¬ظ…ط¯ ط¹ظ†ط¯ ظپطھط­ ظ†ظˆطھط§طھ > 5000 ط­ط±ظپ
+
+    // للنوتات الطويلة: أعد بناء QuillController في isolate بعد أول frame
+    // هذا يمنع التجمد عند فتح نوتات > 5000 حرف
     if (widget.mode == NoteMode.simple ||
         widget.mode == NoteMode.reminder ||
         widget.mode == NoteMode.rich) {
-      // ط£ظˆظ„ 20 ط³ط·ط± ط¬ط§ظ‡ط²ط© ظپظˆط±ط§ظ‹ â€” ط§ظ„ظ…ط­ط±ط± ظٹظپطھط­ ط¨ط¯ظˆظ† طھط¬ظ…ط¯
+      // أول 20 سطر جاهزة فوراً — المحرر يفتح بدون تجمد
       _isQuillReady = true;
-      // Skip async Quill init in readOnly mode to prevent flicker after Hero animation
       if (!_isReadOnly) {
+        // وضع التحرير: نبني Quill الكامل بعد أول frame
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           await _coordinator.initializeQuillAsync();
           if (mounted) {
-            // ط£ط¹ط¯ ط±ط¨ط· ط§ظ„ظ€ listener ط¨ط¹ط¯ ط§ط³طھط¨ط¯ط§ظ„ ط§ظ„ظ€ controller ط¨ط§ظ„ظƒط§ظ…ظ„
             _quillChangesSubscription?.cancel();
             _quillChangesSubscription =
                 _coordinator.quillController!.document.changes.listen((_) {
               _onQuillContentChanged();
               _updateUndoRedoState();
             });
-            // تحديث الـ toolbar عند تغيير الـ selection (لإظهار حالة Bold/Italic/إلخ)
             _coordinator.quillController!.addListener(_onQuillSelectionChanged);
-            // طھط­ط¯ظٹط« طµط§ظ…طھ â€” ط¨ط¯ظˆظ† loading indicator
             setState(() {});
           }
         });
       }
+      // وضع القراءة: quillController الكامل جاهز من initialize() — لا شيء إضافي
     } else {
       _isQuillReady = true;
     }
@@ -160,10 +161,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // Add listeners
     _attachListeners();
     // استمع لأوامر القائمة (DesktopMenuBar)
-    EditorCommandBus().addListener(_onEditorCommand);
+    EditorCommandBus().addUniqueListener(_onEditorCommand);
     // سجّل هذا المحرر كالمحرر النشط
     final myId = widget.note?.id;
-    if (myId != null) EditorCommandBus().registerEditor(myId);
+    if (myId != null) {
+      EditorCommandBus().registerEditor(myId, hashCode);
+    }
 
     // Show reminder dialog for new reminder notes
     if (widget.mode == NoteMode.reminder && widget.note == null) {
@@ -188,7 +191,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   @override
   void dispose() {
-    EditorCommandBus().removeListener(_onEditorCommand);
+    EditorCommandBus().removeUniqueListener(_onEditorCommand);
     // ألغِ تسجيل هذا المحرر
     EditorCommandBus().unregisterEditor(widget.note?.id);
     // End version control session to save history (fire-and-forget)
@@ -383,7 +386,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void _attachListeners() {
     _coordinator.contentController.addListener(_onContentChanged);
     _coordinator.undoController.addListener(_updateUndoRedoState);
-    if (_currentMode == NoteMode.code) {
+    if (_currentMode == NoteMode.code && !_isReadOnly) {
       _coordinator.codeController!.addListener(_onContentChanged);
       _coordinator.codeUndoController.addListener(_updateUndoRedoState);
     }
@@ -409,14 +412,19 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     });
   }
 
-  void _onQuillContentChanged() {
-    // ظ„ط§ ظ†ط­ظپط¸ ط£ط«ظ†ط§ط، طھط­ظ…ظٹظ„ ط§ظ„ظ†ظˆطھط© â€” طھط؛ظٹظٹط±ط§طھ _fixDeltaDirections ظ„ظٹط³طھ ظ…ظ† ط§ظ„ظ…ط³طھط®ط¯ظ…
+  // ════════════════════ CONTENT CHANGE HANDLER (UNIFIED) ════════════════════
+
+  /// معالج موحّد لتغييرات المحتوى — يُستخدم لكل الأنواع (Quill, Code, Plain)
+  void _handleContentChange({
+    required String currentText,
+    Duration autosaveDelay = const Duration(milliseconds: 600),
+  }) {
     if (_coordinator.stateManager.isLoading) return;
+    if (_isReadOnly) return;
+
     _coordinator.stateManager.markDirty();
-    final newHasContent =
-        QuillMigration.toPlainText(_coordinator.quillController!)
-            .trim()
-            .isNotEmpty;
+
+    final newHasContent = currentText.trim().isNotEmpty;
     if (_coordinator.stateManager.hasContent != newHasContent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -424,38 +432,33 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         }
       });
     }
+
     _coordinator.autosaveTimer?.cancel();
-    _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 800), () {
-      if (mounted && !_coordinator.stateManager.isSaving) {
+    _coordinator.autosaveTimer = Timer(autosaveDelay, () {
+      if (mounted &&
+          currentText.trim().isNotEmpty &&
+          !_coordinator.stateManager.isSaving) {
         _saveNoteToDatabase();
       }
     });
   }
 
-  void _onContentChanged() {
-    _coordinator.stateManager.markDirty();
+  void _onQuillContentChanged() {
+    _handleContentChange(
+      currentText:
+          QuillMigration.toPlainText(_coordinator.quillController!),
+      autosaveDelay: const Duration(milliseconds: 800),
+    );
+  }
 
+  void _onContentChanged() {
     final currentText = _currentMode == NoteMode.code
         ? _coordinator.codeController!.text
         : _coordinator.contentController.text;
-    final newHasContent = currentText.trim().isNotEmpty;
-
-    if (_coordinator.stateManager.hasContent != newHasContent) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() => _coordinator.stateManager.hasContent = newHasContent);
-        }
-      });
-    }
-
-    _coordinator.autosaveTimer?.cancel();
-    _coordinator.autosaveTimer = Timer(const Duration(milliseconds: 500), () {
-      if (mounted &&
-          (_coordinator.codeController?.text.trim().isNotEmpty ?? false) &&
-          !_coordinator.stateManager.isSaving) {
-        _saveNoteToDatabase();
-      }
-    });
+    _handleContentChange(
+      currentText: currentText,
+      autosaveDelay: const Duration(milliseconds: 500),
+    );
   }
 
   /// يُعاد استدعاؤه عند تغيير الـ cursor/selection في Quill
@@ -526,16 +529,17 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     final hasContent = content.trim().isNotEmpty || title.trim().isNotEmpty;
     final hasChanges = _coordinator.stateManager.hasChanges();
-    final wasSaved = _coordinator.savedNoteId != null || widget.note != null;
 
+    bool didSave = false;
     if (hasContent && hasChanges) {
-      await _saveNoteToDatabase(isManualSave: true);
+      didSave = await _saveNoteToDatabase(isManualSave: true);
     }
 
     // End version control session — saves history for significant changes
     await _endVersionSession();
 
-    if (hasContent && wasSaved && mounted) {
+    // إظهار إشعار الحفظ فقط إذا تم الحفظ فعلاً
+    if (didSave && mounted) {
       final l10n = AppLocalizations.of(context);
       UnifiedNotificationService().show(
         context: context,
@@ -571,7 +575,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         mode: _currentMode,
         coordinator: _coordinator,
         sidePadding: sidePadding,
-        heroTag: widget.heroTag,
         onClose: widget.onClose,
         onModeChanged: (newMode, newNote) => setState(() {
           _currentMode = newMode;
@@ -619,6 +622,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             }
           }
           setState(() => _isReadOnly = false);
+          // ربط listener الكود عند الانتقال من القراءة إلى التحرير
+          if (_currentMode == NoteMode.code &&
+              _coordinator.codeController != null) {
+            _coordinator.codeController!.addListener(_onContentChanged);
+            _coordinator.codeUndoController.addListener(_updateUndoRedoState);
+          }
         },
         onSave: ({bool isManualSave = false}) =>
             _saveNoteToDatabase(isManualSave: isManualSave),
@@ -907,7 +916,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // تحقق أن هذا المحرر هو المحرر النشط
     final myId = _coordinator.savedNoteId ?? widget.note?.id;
     final activeId = EditorCommandBus().activeNoteId;
-    if (activeId != null && myId != activeId) return;
+    final activeHash = EditorCommandBus().activeEditorHash;
+    if (myId == null || (activeId != null && myId != activeId)) return;
+    if (activeHash != null && hashCode != activeHash) return;
 
     switch (cmd) {
       // ── تنسيق (عبر ShortcutBindings) ──────────────────────────────

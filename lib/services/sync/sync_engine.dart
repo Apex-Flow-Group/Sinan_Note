@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/models/category.dart';
 import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/sync/sync_transport.dart';
 
@@ -18,15 +19,14 @@ class SyncEngine {
 
   /// رفع النوتات العادية (غير المشفرة) + الكتالوجات + deleted_ids
   static Future<bool> upload() async {
-    try {
+    return await ApexErrorManager.monitorSync(() async {
       final dbService = SqliteDatabaseService();
       final allNotes = await dbService.getAllNotes();
-
-      // الخزنة محلية دائماً — لا نرفع المشفر
       final notes = allNotes.where((n) => !n.isLocked).toList();
       final categories = await dbService.getAllCategories();
       final deletedIds = await SqliteDatabaseService.getDeletedNoteIds();
       await SqliteDatabaseService.cleanOldDeletions();
+      final prefs = await SharedPreferences.getInstance();
 
       final backupData = <String, dynamic>{
         'version': '2.0',
@@ -37,41 +37,35 @@ class SyncEngine {
             .toList(),
         'deleted_ids': deletedIds
             .map((id, dt) => MapEntry('$id', dt.millisecondsSinceEpoch)),
+        'settings': {
+          'hide_pro_from_home': prefs.getBool('hide_pro_from_home') ?? false,
+        },
       };
 
       final success = await SyncTransport.uploadCompressed(backupData);
       if (success) {
-        // مسح deleted_ids بعد الرفع — تم تطبيقها
-        final prefs = await SharedPreferences.getInstance();
         await prefs.remove('deleted_note_ids');
         AppLogger.success('Uploaded ${notes.length} notes', 'SyncEngine');
       }
       return success;
-    } catch (e) {
-      AppLogger.error('Upload failed', 'SyncEngine', e);
-      return false;
-    }
+    }, name: 'Upload');
   }
 
   // ── Download (استبدال كامل) ───────────────────────────────────────────────
 
   /// تنزيل من السحابة واستبدال النوتات العادية بالكامل
   static Future<bool> download() async {
-    try {
+    return await ApexErrorManager.monitorSync(() async {
       final data = await SyncTransport.downloadAndDecompress();
       if (data == null) throw Exception('No backup found in Drive');
 
       final List<dynamic> notesList = data['notes'] ?? [];
       final List<dynamic> categoriesList = data['categories'] ?? [];
-
-      // فقط النوتات غير المشفرة
       final regularNotes =
           notesList.where((m) => (m['isLocked'] ?? 0) == 0).toList();
 
       final dbService = SqliteDatabaseService();
       final lockedLocal = await dbService.getLockedNotes();
-
-      // حذف العادية وإدراج نوتات Drive
       final allLocal = await dbService.getAllNotes();
       for (final n in allLocal) {
         if (n.id != null && !n.isLocked) await dbService.deleteNote(n.id!);
@@ -83,7 +77,6 @@ class SyncEngine {
         await dbService.updateNote(n);
       }
 
-      // استعادة الكتالوجات
       if (categoriesList.isNotEmpty) {
         final existingCats = await dbService.getAllCategories();
         for (final c in existingCats) {
@@ -98,30 +91,31 @@ class SyncEngine {
         }
       }
 
-      // مسح deleted_ids المحلية — بعد Download لا تعد موثوقة
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('deleted_note_ids');
       await prefs.setInt(
           'last_upload_timestamp', DateTime.now().millisecondsSinceEpoch);
 
+      final settings = data['settings'] as Map?;
+      if (settings != null && settings.containsKey('hide_pro_from_home')) {
+        await prefs.setBool(
+            'hide_pro_from_home', settings['hide_pro_from_home'] as bool);
+      }
+
       AppLogger.success(
           'Downloaded ${regularNotes.length} notes', 'SyncEngine');
       return true;
-    } catch (e) {
-      AppLogger.error('Download failed', 'SyncEngine', e);
-      return false;
-    }
+    }, name: 'Download');
   }
 
   // ── Silent Merge (الأحدث يفوز) ───────────────────────────────────────────
 
   /// دمج صامت — يقارن النوتات المحلية مع Drive والأحدث يفوز
   static Future<void> silentMerge() async {
-    try {
+    await ApexErrorManager.monitorSync(() async {
       final data = await SyncTransport.downloadAndDecompress();
       if (data == null) return;
 
-      // Fast Path check: MD5 لم يتغير = لا حاجة لدمج ثقيل
       final currentMd5 = await SyncTransport.getDriveMd5();
       final prefs = await SharedPreferences.getInstance();
       final lastKnownMd5 = prefs.getString('last_known_drive_md5');
@@ -134,13 +128,11 @@ class SyncEngine {
         'SyncEngine',
       );
 
-      // Parse Drive data
       final driveNotes = _parseNotes(data);
       final driveCats = _parseCategories(data);
       final driveDeleted = _parseDeletedIds(data);
       final localDeleted = await SqliteDatabaseService.getDeletedNoteIds();
 
-      // بناء allDeleted
       final allDeleted = <int, DateTime>{};
       if (isFastPath) {
         allDeleted.addAll(localDeleted);
@@ -153,7 +145,6 @@ class SyncEngine {
         allDeleted.addAll(driveDeleted);
       }
 
-      // Merge notes — الأحدث يفوز
       final dbService = SqliteDatabaseService();
       final localNotes = await dbService.getAllNotes();
 
@@ -169,7 +160,6 @@ class SyncEngine {
         }
       }
 
-      // تطبيق الحذف
       if (isFastPath) {
         allDeleted.forEach((id, deletedAt) {
           final note = merged[id];
@@ -178,7 +168,6 @@ class SyncEngine {
           }
         });
       } else {
-        // Merge Path: تحكيم بمقارنة التواريخ
         for (final n in driveNotes) {
           if (n.id == null) continue;
           if (localDeleted.containsKey(n.id)) {
@@ -198,7 +187,6 @@ class SyncEngine {
         });
       }
 
-      // حفظ النتيجة
       final allLocal = await dbService.getAllNotes();
       final mergedIds = merged.keys.toSet();
       for (final n in allLocal) {
@@ -210,7 +198,6 @@ class SyncEngine {
         await dbService.upsertNote(n);
       }
 
-      // دمج الكتالوجات
       await _mergeCategories(dbService, driveCats);
 
       AppLogger.success(
@@ -218,11 +205,14 @@ class SyncEngine {
         'SyncEngine',
       );
 
-      // رفع بعد الدمج
+      final settings = data['settings'] as Map?;
+      if (settings != null && settings.containsKey('hide_pro_from_home')) {
+        await prefs.setBool(
+            'hide_pro_from_home', settings['hide_pro_from_home'] as bool);
+      }
+
       await upload();
-    } catch (e) {
-      AppLogger.error('Silent merge failed', 'SyncEngine', e);
-    }
+    }, name: 'SilentMerge');
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────

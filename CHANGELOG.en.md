@@ -4,36 +4,151 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
-## [3.2.4] — 2026-06 | Refactoring & Architecture
+## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes + Hero Removal + Editor Fixes + Save Guard Fix
+
+### ✨ New Features
+
+**Book Mode — formatted text toggle**
+- Added a toggle button in `BookModeView` AppBar to switch between formatted (Quill) and plain text rendering.
+- State is persisted in `SharedPreferences` under `book_mode_show_formatted` — remembered across sessions.
+- Button is only shown when `deltaJson` is available (rich notes) and `isMarkdown` is false.
+
+### ⚡ Performance
+
+**Long note pre-build in isolate**
+- Notes longer than 1000 characters in read-only mode are pre-built in a Dart isolate via `compute(buildDeltaJsonForIsolate)` before the route is pushed. The resulting Delta JSON is passed directly to `EditorCoordinator` as `prebuiltDeltaJson`, eliminating a second synchronous parse on the main thread and preventing UI freeze.
+- A small `CircularProgressIndicator` (14×14px) appears in the top-right corner of the card while the isolate is running.
+
+**Read-only view — formatted content without jank**
+- `ReadOnlyContent` now renders rich text using `QuillEditor` in read-only mode instead of plain `SelectableText`, switching after `isQuillFullyLoaded` is set in `EditorCoordinator`.
+
+### 🔧 Bug Fixes
+
+**Missing snackbar notifications in desktop right-click context menu**
+- Actions triggered from the right-click bottom sheet on notes (pin/unpin, archive, delete) completed silently without any visual feedback. Fixed by adding `UnifiedNotificationService().showWithUndo()` with circular progress timer and undo support — matching the same pattern already used in swipe actions and multi-select toolbar.
+- Pin/Unpin shows success snackbar with undo to revert.
+- Archive shows "moved to archive" with undo to unarchive.
+- Delete shows "moved to trash" with undo to restore.
+- Also fixed missing `onNoteChanged()` calls after archive and delete in the context menu — the note list was not refreshing immediately after these actions.
+
+**Desktop right-click in Trash shows wrong actions**
+- Right-clicking a note in the trash screen on desktop showed the same actions as the home screen (pin, archive, delete). Now the context menu detects `source` and shows the correct trash actions: Restore (with undo snackbar) and Permanent Delete (with confirmation sheet).
+
+**Desktop right-click in Archive shows wrong actions**
+- Right-clicking a note in the archive screen on desktop showed "Pin" and "Archive" which don't belong there. Now the context menu detects `source='archive'` and shows: Open, Color, Unarchive (with undo snackbar), Share, and Delete — without the pin option.
+
+**`commitAll()` crashes with setState during dispose**
+- `UnifiedNotificationService().commitAll()` called from `_TrashScreenState.dispose()` triggered `executedEarly.value = true` synchronously, which notified `ValueListenableBuilder` while the widget tree was locked. Fixed by deferring the value assignment to `addPostFrameCallback`.
+
+**External intent data lost after biometric/PIN authentication**
+- Shared files, shared text, and widget taps from the Android home screen all lost their data after fingerprint/PIN auth completed. Root cause: intent was read immediately on cold start and executed with a fixed 400–500ms delay — which expired before the biometric dialog finished, so the editor was pushed onto `SplashScreen` and wiped by `pushReplacement`.
+- New mechanism: intent data is saved in `pendingIntentNotifier` instead of executed immediately. `MainLayoutScreen.initState()` sets `isMainLayoutActive = true` in `addPostFrameCallback` (guaranteed to run only after auth succeeds, because `SplashScreen` never navigates here until auth passes). `_ApexNoteAppState._onPendingIntent()` checks `isMainLayoutActive` before executing — works regardless of biometric duration.
+- Warm intents (`onNewIntent` while app is backgrounded) also check `isMainLayoutActive`: execute directly if `MainLayoutScreen` is ready, store otherwise.
+- Empty intents (null action, 0 note_id, empty shared_text) are filtered and never stored.
+
+**Shared text from browser shows "insert:" and raw URL**
+- Two separate issues: (1) Chrome/Android appends the full page URL after the selected text in `EXTRA_TEXT`, producing `"selected text\n\nhttps://very/long/url"`. (2) `buildDeltaInIsolate` result was serialized with `.toString()` instead of `jsonEncode()`, producing Dart's `{insert: text}` syntax which is not valid JSON — the editor failed to parse it and displayed the raw string including the word "insert".
+- Fix 1: `_cleanSharedText()` extracts the URL with a regex, strips it from the text body, and collapses excess blank lines. If only a URL remains, it's treated as a Shared Link note.
+- Fix 2: `content = jsonEncode(delta.toJson())` replaces `content = delta.toJson().toString()`.
+- Title is now auto-extracted from the first line of the cleaned text (truncated at 60 chars).
+
+**Tap on empty line places cursor on next line instead**
+- In RTL mode, tapping an empty line (`\n` only) placed the cursor at `offset+1` (beginning of the next line) instead of `offset` (the empty line itself). Root cause: Flutter's `RenderParagraph.getPositionForOffset` returns `offset=1` for a single-`\n` paragraph when tapped from the left side in RTL — interpreting it as "after the character".
+- Fix: `RenderEditableTextLine.getPositionForOffset` now returns `TextPosition(offset: 0)` immediately when `container.length == 1` (empty line), bypassing `RenderParagraph` entirely.
+
+**Enter on empty line stays on same line instead of inserting new line**
+- Pressing Enter on an empty line did not move the cursor to a new line. Root cause: `handleEnterKey()` called `formatSelection` (direction formatting) before Quill executed the Enter, causing `document.compose()` to interfere and prevent the line insertion.
+- Fix: `handleEnterKey()` skips `applyEnterDirection` when the current line is empty — Quill executes Enter normally, then `onDocumentChange` applies direction after the fact.
+- `onDocumentChange` also skips `applyEnterDirection` when the previous line is empty, preventing cursor jump to end of line on the second press.
+
+**Cursor tear handle (دمعة المؤشر) behavior fixes**
+- Tear handle was not moving with the cursor after pressing Enter — it stayed on the previous line. Fixed by skipping `tearHandle.onTextChanged()` (which hides the tear) when the document change is an Enter-only insert, then immediately calling `showOnTap` in the next frame to reposition it.
+- Tear handle was hidden and not redrawn on the new line after Enter on a line with content. Fixed by calling `showOnTap` after `scrollToCursor` in all Enter paths (empty line, non-empty line, list).
+- Tear handle was not hidden during manual scroll. Fixed by calling `tearHandle.forceHide()` in `onScrollChanged`.
+- Tear handle phantom cursor (the blue line drawn alongside the tear during drag) removed — no longer rendered during drag.
+- Tear handle was drifting away from the cursor after a tap on a new character — fixed by binding `_TearWidgetState` to a `quillController` listener that repositions the tear in the next frame on every selection change.
+- Cursor was jumping on BiDi boundaries during tear drag — root cause was `TextSelection.collapsed(offset: pos.offset)` discarding the `TextAffinity` returned by `getPositionForOffset`. Fixed by passing `affinity: pos.affinity` so both the real cursor and the virtual cursor use the same affinity.
+
+**Desktop / Tablet layout clipped by status bar**
+- On tablets and large-screen devices, the `MasterDetailsLayout` extended behind the system status bar. Fixed by wrapping `MasterDetailsLayout` with `SafeArea(bottom: false)`, resolving the issue for all desktop screens (Reminders, Professional, Home, Archive, Trash, Locked Notes) in a single change.
+
+**"Hide Professional from Home" setting not synced with Google Drive**
+- The `hide_pro_from_home` toggle in the Professional catalog drawer tile was stored only in `SharedPreferences` and never included in the Drive backup. Fixed by adding a `settings` object to the backup payload in `SyncEngine.upload()`, restoring it in both `download()` and `silentMerge()`, and having `CategoriesProvider` listen to `CloudSyncGateway.isSyncing` to reload the setting from `SharedPreferences` immediately after any sync completes.
+
+**Fixed code notes being saved and moved to top when opened without editing**
+- Opening a code note in the viewer (read-only) or editor without making any changes would trigger an unwanted save, updating `updatedAt` and moving the note to the top of the list. Root cause: `CodeController` fires change events during initialization (syntax highlighting), and `_onContentChanged` had no `isLoading` or `_isReadOnly` guard — unlike `_onQuillContentChanged` which already had the `isLoading` guard.
+- Fix: Added `isLoading` and `_isReadOnly` guards to `_onContentChanged`. Also prevented attaching `codeController` listener in read-only mode via `_attachListeners()`.
+
+**Fixed false "Note Saved" notification when opening notes in editor without changes**
+- Regular notes (simple, rich, checklist) showed "Saved" notification on back press even when no actual save occurred. Root cause: the notification logic checked `hasContent && wasSaved` instead of the actual return value of `_saveNoteToDatabase()`.
+- Fix: Notification now only appears when `_saveNoteToDatabase()` returns `true` (an actual database write happened).
+
+**Fixed code controller listener not attached after transitioning from viewer to editor**
+- When switching from read-only to edit mode via `onEnterEdit`, the `codeController` listener was not attached because `_isReadOnly` was still `true` at `_attachListeners()` time. Fix: listener is now explicitly attached after `_isReadOnly` is set to `false`.
 
 ### 🏗️ Refactoring
 
 **Widget deep link — cold start fix**
 - `_openNoteById()` now waits for `settings.isInitialized` + 500ms before navigating, matching the pattern already used in `_openEditorWithSharedText`. Fixes the race condition where the widget tap arrived before `SplashScreen` finished and the pushed route was overwritten by `pushReplacement`.
 
-**Hero animation flicker fix**
-- Async Quill initialization (`initializeQuillAsync`) is now skipped in read-only mode on cold open. Quill is initialized lazily the moment the user enters edit mode via `_initQuillForEdit()`.
-- `readonly_content.dart`: plain-text extraction moved from `addPostFrameCallback` to synchronous `initState`, eliminating the one-frame flash of `CircularProgressIndicator`.
-- `note_readonly_view.dart`: `listen: true` → `listen: false` for `heroAnimationEnabled` getter.
+**`ApexErrorManager` — severity system + sync & vault coverage**
+- Rebuilt `ApexErrorManager` with an `ApexErrorSeverity` enum (`expected` / `unexpected`). Expected errors (e.g. `VaultLockedException`) are now logged silently without showing a snackbar to the user.
+- Added `monitorVault`, `monitorSync` wrappers alongside the existing `monitorDB`. `VaultEncrypt` and `VaultDecrypt` in `VaultService` now use `expectedError: true` — no more false "unexpected error" snackbar when the vault is locked.
+- `SyncEngine.upload()`, `download()`, and `silentMerge()` are now wrapped with `monitorSync`, replacing manual `try/catch` blocks with consistent logging and user feedback.
+- `monitorCritical` retained for backward compatibility with an `expectedError` parameter.
 
-**Hero animation setting persistence fix**
-- `settings_provider.dart`: `_heroAnimationEnabled` was hard-coded to `false` on every load, ignoring SharedPreferences. Now reads `prefs.getBool('heroAnimationEnabled') ?? false`.
 
-**Motion & Navigation settings section**
-- Extracted `Hero Animation`, `Pull to Refresh`, and `Double Tap to Edit` controls from `GeneralSection` into a dedicated `MotionNavigationSection` widget (`motion_navigation_section.dart`).
+- Extracted `Pull to Refresh` and `Double Tap to Edit` controls from `GeneralSection` into a dedicated `MotionNavigationSection` widget (`motion_navigation_section.dart`).
 - `settings_screen.dart` updated to include the new section between General and Beta.
 
 **File splitting — Single Responsibility**
 - `note_editor.dart` (1235 → ~1095 lines): menu action methods extracted into `EditorMenuHandlersMixin` (`editor_menu_handlers.dart`). Mixed into `_NoteEditorImmersiveState` via `with`.
+
+**Unified content change handler**
+- Extracted `_handleContentChange()` — a single method containing all shared logic for content changes (guards, `markDirty`, `hasContent` update, autosave timer). `_onQuillContentChanged` and `_onContentChanged` are now thin wrappers (5 lines each) that only specify the text source and timer duration.
+- Both handlers now share the same guards (`isLoading`, `_isReadOnly`) and the same autosave behavior — eliminating the inconsistency that caused the original bug.
 - `pin_lock_screen.dart` (829 → ~730 lines): `_numpadKey` and `_numRow` extracted into `PinNumpadKey` / `PinNumpadRow` stateless widgets (`pin_numpad_key.dart`).
 - `backup_wizard_screen.dart` (717 → ~483 lines): `_FlowCard`, `_SectionHeader`, `_OptionTile`, `_ActionBtn`, `_SideItem` extracted to `backup_wizard_widgets.dart` with public names.
 - `unified_notification_service.dart`: `_buildContent`, `_buildActionButton`, `_buildProgressWithUndo`, `_getBackgroundColor`, `_getIcon` extracted to `NotificationSnackBar` class (`notification_snack_bar.dart`). Service is now pure orchestration with no Flutter widget construction.
 - `note_card_actions.dart`: `_PermanentDeleteSheet` extracted to `permanent_delete_sheet.dart` (`widgets/common/`).
 - `categories_panel.dart`: `_ProCategoryTile` (stateful, independent expansion state) extracted to `pro_category_tile.dart` (`widgets/home/`).
 
+### 🧪 Tests
+- 19 new tests in `intent_preservation_test.dart` covering: cold-start intent storage, guard against execution before `MainLayoutScreen` is ready, correct execution after ready, empty intent filtering, warm intent routing, and double-execution prevention.
+- 23 new tests in `editor_save_guard_test.dart` covering: code note opened without edits → no save, `isLoading` guard prevents false dirty during init, Quill/checklist notes without edits → no notification, full `saveToDatabase` guard simulation, `_handleBack` notification logic, edge cases (color-only change, undo to original, multiple loads).
+
+**Read-Only View — Formatted Content overhaul**
+
+**Formatted text in read-only view**
+- `ReadOnlyContent` now renders rich text using `QuillEditor` in read-only mode instead of plain `SelectableText`. The switch happens after `isQuillFullyLoaded` is set to `true` in `EditorCoordinator`.
+- In read-only mode (`readOnly: true`), `EditorCoordinator.initialize()` builds the full `QuillController` immediately (synchronously for short notes, from pre-built Delta JSON for long notes) instead of the 20-line preview used in edit mode.
+- `Directionality(rtl)` wraps `QuillEditor` in read-only view so `fixDeltaDirections` block directions are respected correctly.
+
+**Book Mode — formatting toggle**
+- Added a toggle button in `BookModeView` AppBar to switch between formatted (Quill) and plain text rendering.
+- State is persisted in `SharedPreferences` under `book_mode_show_formatted` — remembered across sessions.
+- Button is only shown when `deltaJson` is available (rich notes) and `isMarkdown` is false.
+- `_openBookMode()` in `note_readonly_view.dart` now always reads from `contentController` (full content) instead of `quillController` (preview only), ensuring Book Mode receives the complete Delta JSON.
+
+**Cursor tear handle after entering edit mode**
+- `QuillEditorWidget.didUpdateWidget`: when `quillController` changes (e.g. after `_initQuillForEdit()`), `_ctrl` is now fully rebuilt instead of reusing the old instance. This re-binds `tearHandle` and all listeners to the new controller, restoring the cursor tear handle (دمعة المؤشر) after transitioning from read-only to edit mode.
+
+### 🗑️ Removed
+
+**Hero animation — fully removed**
+- Removed the experimental Hero card-to-fullscreen transition that was causing instability on various devices.
+- Deleted `EditorPageRoute` (the custom transparent `PageRouteBuilder` used only for Hero flight) — navigation now always uses `MaterialPageRoute`.
+- Deleted `HeroAnimationInfoSheet` (the settings bottom sheet explaining the beta feature).
+- Removed `heroTag` parameter from `NoteCardWidget`, `PremiumCardEffect`, `NoteEditorImmersive`, and `NoteReadOnlyView`.
+- Removed `heroAnimationEnabled` field, getter, setter, and `SharedPreferences` load from `SettingsProvider`.
+- Removed Hero toggle from `MotionNavigationSection` (settings) and emptied `BetaSection` (debug-only).
+- Removed `heroAnimation` localization key from ARB files and generated l10n classes (`app_localizations.dart`, `_ar.dart`, `_en.dart`).
+- Removed `dart:ui show lerpDouble` import from `note_readonly_view.dart` and `provider`/`settings_provider` imports from `premium_card_effect.dart` — no longer needed.
+- The long-note pre-build via `compute(buildDeltaJsonForIsolate)` is **retained** — it still prevents UI freeze when opening heavy notes, now applied unconditionally regardless of Hero state.
+
 ---
 
-## [3.2.3] — 2026-06 | Paste Performance + Apex Sharing
+## [3.2.2] — 2026-06 | Paste Performance + Apex Sharing
 
 ### ✨ New Features
 - **Share notes via Apex Transfer** — new button in the share sheet sends the note to nearby devices over the local network without internet

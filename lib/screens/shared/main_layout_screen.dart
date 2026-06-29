@@ -1,7 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +11,12 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart'
-    show tabToHomeNotifier, currentTabIndexNotifier, bottomNavHiddenNotifier;
+    show
+        tabToHomeNotifier,
+        currentTabIndexNotifier,
+        bottomNavHiddenNotifier,
+        pendingIntentNotifier,
+        isMainLayoutActive;
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/desktop/code_tab_responsive.dart';
@@ -23,6 +26,7 @@ import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/details_panel.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/navigation/bottom_nav_bar.dart';
 import 'package:sinan_note/widgets/navigation/side_nav_rail.dart';
@@ -50,6 +54,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   // ✅ Cache screens to prevent rebuilds
   late final List<Widget> _cachedScreens;
+  late final Widget _sharedDetailsPanel;
 
   @override
   void initState() {
@@ -70,6 +75,17 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       PlatformHelper.lockOrientationForMobile(context);
     });
 
+    // ✅ استهلاك الـ pending intent بعد جاهزية MainLayoutScreen
+    // يُنفَّذ هنا بعد اكتمال المصادقة (بصمة أو PIN) لأن SplashScreen لا ينتقل هنا إلا بعد نجاح المصادقة
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // عيّن الـ flag دائماً بمجرد mount MainLayoutScreen
+      isMainLayoutActive = true;
+      _consumePendingIntent();
+    });
+
+    pendingIntentNotifier.addListener(_onPendingIntentChanged);
+
+    _sharedDetailsPanel = const DetailsPanel();
     _cachedScreens = [
       NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
@@ -88,10 +104,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           showAddMenu: _showAddMenu,
           onToggleMenu: _toggleMenu,
           onRegisterModeHandler: (handler) => _onModeSelected = handler,
+          sharedDetailsPanel: _sharedDetailsPanel,
         ),
       ),
-      const ReminderDashboardResponsive(),
-      const CodeTabResponsive(),
+      ReminderDashboardResponsive(sharedDetailsPanel: _sharedDetailsPanel),
+      CodeTabResponsive(sharedDetailsPanel: _sharedDetailsPanel),
     ];
   }
 
@@ -118,8 +135,34 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   void dispose() {
     _securityController.removeListener(_onSecurityChanged);
     tabToHomeNotifier.removeListener(_onBackToHome);
+    pendingIntentNotifier.removeListener(_onPendingIntentChanged);
+    isMainLayoutActive = false;
     PlatformHelper.unlockOrientation();
     super.dispose();
+  }
+
+  bool _isConsumingIntent = false;
+
+  /// الاستماع للـ pending intents التي تصل بعد جاهزية MainLayoutScreen
+  void _onPendingIntentChanged() {
+    if (!mounted || _isConsumingIntent) return;
+    _consumePendingIntent();
+  }
+
+  /// استهلاك الـ pending intent وتفعيل التنفيذ عبر _ApexNoteAppState
+  void _consumePendingIntent() {
+    final data = pendingIntentNotifier.value;
+    if (data == null) return;
+
+    _isConsumingIntent = true;
+
+    // امسح أولاً لمنع التنفيذ المزدوج
+    pendingIntentNotifier.value = null;
+
+    // أعد التعيين — isMainLayoutActive=true الآن، سيُنفَّذ _onPendingIntent في _ApexNoteAppState
+    pendingIntentNotifier.value = Map.from(data);
+
+    _isConsumingIntent = false;
   }
 
   void _onBackToHome() {
@@ -138,10 +181,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final settings = Provider.of<SettingsProvider>(context, listen: false);
-      Navigator.of(context).push(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              PinLockScreen(
+      Navigator.of(context)
+          .push(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  PinLockScreen(
                 isSetup: false,
                 autoBiometric: settings.biometricLockEnabled,
                 onSuccess: () {
@@ -152,11 +196,12 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                   Navigator.of(context).pop();
                 },
               ),
-          settings: const RouteSettings(name: '/lock'),
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
-        ),
-      ).then((_) => _lockScreenVisible = false);
+              settings: const RouteSettings(name: '/lock'),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          )
+          .then((_) => _lockScreenVisible = false);
     });
   }
 
@@ -315,4 +360,3 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     );
   }
 }
-

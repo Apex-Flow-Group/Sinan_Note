@@ -341,9 +341,7 @@ class NotesProvider extends ChangeNotifier {
       title: note.title.isEmpty ? copyLabel : '${note.title} - $copyLabel',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-      isPinned: false, // النسخة لا تُثبَّت تلقائياً
-      reminderDateTime: null, // التذكير لا يُنسخ
-      recurrenceRule: null,
+      isPinned: false,
     );
 
     final newId = await addNote(copy);

@@ -108,7 +108,10 @@ class SettingsUtils {
 
   static void showDiagnostics(
       BuildContext context, AppLocalizations l10n, String lang) async {
-    final log = await ApexDiagnosticsEngine().getErrorLog();
+    final rawLog = await ApexDiagnosticsEngine().getErrorLog();
+    final log = rawLog == 'لا توجد أخطاء مسجلة'
+        ? l10n.noErrorsLogged
+        : rawLog;
     if (!context.mounted) return;
     showDialog(
       context: context,

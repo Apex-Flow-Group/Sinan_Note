@@ -17,11 +17,12 @@ class QuillEditorController {
   final ValueNotifier<bool> selectionBarActive;
   final Color Function() getNoteColor;
   final ValueChanged<double>? onScroll;
-  final VoidCallback rebuild; // setState del widget
+  final VoidCallback rebuild;
+  final GlobalKey<EditorState>? externalEditorKey;
 
+  late final GlobalKey<EditorState> editorKey;
+  late final TearController tearHandle;
   final scrollController = StableScrollController();
-  final editorKey = GlobalKey<EditorState>();
-  late final CursorTearHandle tearHandle;
 
   // ── flags ──────────────────────────────────────────────────────────────────
   bool isFormatting = false;
@@ -64,11 +65,12 @@ class QuillEditorController {
     required this.getNoteColor,
     required this.rebuild,
     this.onScroll,
+    this.externalEditorKey,
   }) {
-    tearHandle = CursorTearHandle(
-      controller: quillController,
-      editorKey: editorKey,
-      getMagnifierBgColor: getNoteColor,
+    editorKey = externalEditorKey ?? GlobalKey<EditorState>();
+    tearHandle = TearController(
+      quillController: quillController,
+      getBgColor: getNoteColor,
     );
   }
 
@@ -80,10 +82,11 @@ class QuillEditorController {
 
     quillController.addListener(onChanged);
     quillController.addListener(onSelectionChangedForBar);
-    quillController.addListener(tearHandle.onSelectionChanged);
     focusNode.addListener(onFocusChanged);
     _docChangeSub = quillController.document.changes.listen(onDocumentChange);
 
+    // لا نُسجّل tearHandle.onSelectionChanged هنا —
+    // editorKey لم يُربط بعد. نُسجّله بعد أول build عبر didFirstBuild()
     tearHandle.onDragStarted = () => isDraggingTear = true;
     tearHandle.onDragEnded = () {
       isDraggingTear = false;
@@ -95,6 +98,12 @@ class QuillEditorController {
       isLoading = false;
       scrollController.addListener(onScrollChanged);
     });
+  }
+
+  /// يُستدعى من QuillEditorWidget بعد أول build — الـ editorKey جاهز
+  void didFirstBuild() {
+    tearHandle.updateEditorKey(editorKey);
+    quillController.addListener(tearHandle.onSelectionChanged);
   }
 
   void dispose() {
@@ -142,40 +151,78 @@ class QuillEditorController {
   // ── scroll ─────────────────────────────────────────────────────────────────
   void onScrollChanged() {
     if (!scrollController.hasClients) return;
-    if (!tearHandle.isDragging) tearHandle.hide();
     final offset = scrollController.offset.clamp(0.0, 120.0);
     onScroll?.call(offset / 120.0);
+    // أخفِ الدمعة عند أي scroll يدوي — أبسط وأصح من تتبع الموضع
+    if (!tearHandle.isDragging) {
+      tearHandle.forceHide();
+    }
   }
 
   void onFocusChanged() {
-    if (!focusNode.hasFocus) tearHandle.forceHide();
+    if (!focusNode.hasFocus) {
+      if (tearHandle.isDragging) {
+        focusNode.requestFocus();
+      } else {
+        tearHandle.forceHide();
+      }
+    } else {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => tearHandle.onSelectionChanged());
+    }
   }
 
   void scrollToCursor() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
-        editorKey.currentState?.requestKeyboard();
-      }
+      final state = editorKey.currentState;
+      if (state == null || !scrollController.hasClients) return;
+      final sel = quillController.selection;
+      if (!sel.isCollapsed) return;
+      try {
+        final caretRect = state.renderEditor
+            .getLocalRectForCaret(TextPosition(offset: sel.baseOffset));
+        final caretGlobalY =
+            state.renderEditor.localToGlobal(caretRect.bottomLeft).dy;
+        final viewportH = scrollController.position.viewportDimension;
+        final currentScroll = scrollController.offset;
+        final targetScroll = currentScroll + caretGlobalY - viewportH * 0.75;
+        if (targetScroll > currentScroll + 4) {
+          scrollController.animateTo(
+            targetScroll.clamp(0.0, scrollController.position.maxScrollExtent),
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+          );
+        }
+      } catch (_) {}
     });
   }
 
   // ── document change ────────────────────────────────────────────────────────
   void onDocumentChange(DocChange change) {
-    if (isLoading || isDraggingTear) return;
+    if (isLoading || tearHandle.isDragging) return;
     if (change.source != ChangeSource.local) return;
 
-    if (!tearHandle.isDragging) tearHandle.onTextChanged();
-
     final ops = change.change.toList();
+
+    // Enter فقط — نتحقق مبكراً لنتجنب إخفاء الدمعة ثم إعادتها
+    final isOnlyNewline =
+        ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
+
+    if (!isFormatting && !isDirectionFormatting && !isPasting) {
+      if (!isOnlyNewline) {
+        // كتابة عادية أو حذف — أخفِ الدمعة، ستعود عبر onTypingDone
+        tearHandle.onTextChanged();
+      }
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => tearHandle.onTypingDone());
+    }
+
     if (ops.any((op) => op.isDelete)) {
       WidgetsBinding.instance
           .addPostFrameCallback((_) => fixDanglingTashkeel());
       return;
     }
 
-    // تطبيق اتجاه السطر الجديد عند Enter فقط
-    final isOnlyNewline =
-        ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
     if (!isOnlyNewline) return;
 
     // إذا كنا في قائمة — ورّث الاتجاه من الـ block الحالي بدون إعادة حساب
@@ -183,10 +230,10 @@ class QuillEditorController {
     final isList = currentAttrs['list'] != null;
     if (isList) {
       isHandlingEnter = true;
-      // فقط نُعيد تطبيق الاتجاه الحالي للقائمة (ورث تلقائياً)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         isHandlingEnter = false;
         scrollToCursor();
+        tearHandle.showOnTap(editorKey: editorKey);
       });
       return;
     }
@@ -202,17 +249,31 @@ class QuillEditorController {
       prevLineStart < 0 ? 0 : prevLineStart + 1,
       newlinePos,
     );
-    final dir = prevLine.trim().isEmpty
-        ? getPrevNonEmptyLineDirection(plainText, newlinePos)
-        : TextDirectionUtils.getDirection(prevLine);
+
+    // سطر فارغ — لا نطبّق direction، الاتجاه يُطبَّق عند أول كتابة
+    if (prevLine.trim().isEmpty) {
+      isHandlingEnter = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        isHandlingEnter = false;
+        scrollToCursor();
+        tearHandle.showOnTap(editorKey: editorKey);
+      });
+      return;
+    }
+
+    final dir = TextDirectionUtils.getDirection(prevLine);
 
     isHandlingEnter = true;
+    // أعد إظهار الدمعة في السطر الجديد — frame واحد يكفي لاستقرار الكرسور
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollToCursor();
+      tearHandle.showOnTap(editorKey: editorKey);
+    });
     if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
       applyEnterDirection(dir);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isHandlingEnter = false;
-      scrollToCursor();
     });
   }
 
@@ -223,7 +284,8 @@ class QuillEditorController {
         isKeyboardOpening ||
         isDirectionFormatting ||
         isHandlingEnter ||
-        isDraggingSelection) {
+        isDraggingSelection ||
+        tearHandle.isDragging) {
       return;
     }
     _onChangedDebounce?.cancel();
@@ -232,7 +294,11 @@ class QuillEditorController {
   }
 
   void _processOnChanged() {
-    if (isFormatting || isPasting || isDirectionFormatting || isHandlingEnter) {
+    if (isFormatting ||
+        isPasting ||
+        isDirectionFormatting ||
+        isHandlingEnter ||
+        tearHandle.isDragging) {
       return;
     }
 
@@ -437,8 +503,7 @@ class QuillEditorController {
         final p = scrollController.position;
         if (p.pixels < p.maxScrollExtent - 100) return;
         scrollController.animateTo(p.maxScrollExtent,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.easeOut);
+            duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
       });
     }
   }
@@ -471,19 +536,22 @@ class QuillEditorController {
     final plainText = quillController.document.toPlainText();
     final offset =
         quillController.selection.baseOffset.clamp(0, plainText.length);
-    // نقرأ اتجاه السطر الحالي (قبل Enter) — نفس منطق onDocumentChange
     final lineStart = offset > 0 ? plainText.lastIndexOf('\n', offset - 1) : -1;
     final lineEnd = plainText.indexOf('\n', offset);
     final currentLine = plainText.substring(
       lineStart < 0 ? 0 : lineStart + 1,
       lineEnd < 0 ? plainText.length : lineEnd,
     );
-    final dir = currentLine.trim().isEmpty
-        ? getPrevNonEmptyLineDirection(plainText, offset)
-        : TextDirectionUtils.getDirection(currentLine);
+
+    // إذا كان السطر الحالي فارغاً — نضع isHandlingEnter لمنع onChanged من التدخل،
+    // لكن لا نطبّق direction لأن formatSelection تتداخل مع Quill وتمنع إدراج السطر الجديد
+    // onDocumentChange سيعالج الاتجاه بعد ما يُنفَّذ Enter
     isHandlingEnter = true;
-    // Apply direction immediately to prevent cursor disappearing on empty RTL lines
-    if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
+    if (currentLine.trim().isNotEmpty &&
+        !isFormatting &&
+        !isDirectionFormatting &&
+        !isDraggingSelection) {
+      final dir = TextDirectionUtils.getDirection(currentLine);
       applyEnterDirection(dir);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {

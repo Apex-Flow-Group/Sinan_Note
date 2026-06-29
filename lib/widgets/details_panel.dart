@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
@@ -37,12 +36,10 @@ class DetailsPanel extends StatefulWidget {
 
 class _DetailsPanelState extends State<DetailsPanel> {
   NotesProvider? _notesProvider;
-  int? _currentNoteId;
 
   @override
   void initState() {
     super.initState();
-    // الاستماع لتغييرات الملاحظات لمسح الاختيار عند الحذف/النقل
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _notesProvider = Provider.of<NotesProvider>(context, listen: false);
@@ -62,7 +59,6 @@ class _DetailsPanelState extends State<DetailsPanel> {
   /// وتحديث الملاحظة المختارة إذا تغيّرت بياناتها (مثل اللون)
   void _checkSelectedNoteStatus() {
     if (!mounted) return;
-
     final selectedNoteProvider = Provider.of<SelectedNoteProvider>(
       context,
       listen: false,
@@ -82,26 +78,12 @@ class _DetailsPanelState extends State<DetailsPanel> {
         // مسح الاختيار إذا تم أرشفة/قفل الملاحظة — لكن السلة تُعرض بوضع القراءة
         if (currentNote.isArchived || currentNote.isLocked) {
           selectedNoteProvider.clearSelection();
-        } else if (_noteHasChanged(selectedNote, currentNote)) {
-          // 🔥 تحديث الملاحظة المختارة إذا تغيّرت بياناتها (لون، عنوان، إلخ)
-          selectedNoteProvider.selectNote(currentNote);
         }
       } else {
         // الملاحظة لم تعد موجودة - مسح الاختيار
         selectedNoteProvider.clearSelection();
       }
     }
-  }
-
-  /// مقارنة الملاحظتين بالقيم لا بالمرجع (Note لا يملك == operator)
-  bool _noteHasChanged(Note old, Note current) {
-    return old.colorIndex != current.colorIndex ||
-        old.title != current.title ||
-        old.content != current.content ||
-        old.updatedAt != current.updatedAt ||
-        old.isPinned != current.isPinned ||
-        old.isArchived != current.isArchived ||
-        old.isTrashed != current.isTrashed;
   }
 
   @override
@@ -114,42 +96,13 @@ class _DetailsPanelState extends State<DetailsPanel> {
           return const EmptyDetailsView();
         }
 
-        // 🔥 إعادة تعيين عند تغيير الملاحظة
-        if (_currentNoteId != selectedNote.id) {
-          _currentNoteId = selectedNote.id;
-        }
-
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOut,
-              ),
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.03),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              ),
-            );
-          },
-          child: _buildEditorView(context, selectedNote, selectedNoteProvider),
-        );
+        return _buildEditorView(context, selectedNote, selectedNoteProvider);
       },
     );
   }
 
   Widget _buildEditorView(BuildContext context, Note selectedNote,
       SelectedNoteProvider selectedNoteProvider) {
-    // تحديد نوع المحرر حسب نوع الملاحظة
     final NoteMode mode = NoteCardUtils.getNoteMode(selectedNote);
 
     try {
@@ -206,4 +159,3 @@ class _DetailsPanelState extends State<DetailsPanel> {
     }
   }
 }
-

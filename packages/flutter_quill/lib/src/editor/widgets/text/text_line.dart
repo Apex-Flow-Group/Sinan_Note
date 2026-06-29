@@ -1129,8 +1129,14 @@ class RenderEditableTextLine extends RenderEditableBox {
 
   @override
   TextPosition getPositionForOffset(Offset offset) {
-    return _body!.getPositionForOffset(
-        offset - (_body!.parentData as BoxParentData).offset);
+    // سطر فارغ (محتواه \n فقط) — لا نسأل RenderParagraph لأنه يُرجع offset=1
+    // في RTL مما ينقل المؤشر للسطر التالي بدل البقاء هنا
+    if (container.length == 1) {
+      return const TextPosition(offset: 0);
+    }
+    final bodyParentData = _body!.parentData as BoxParentData;
+    final bodyOffset = offset - bodyParentData.offset;
+    return _body!.getPositionForOffset(bodyOffset);
   }
 
   @override

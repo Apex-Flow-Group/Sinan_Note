@@ -1,8 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
-
 
 /// شكل الدمعة أسفل المؤشر
 class TearPainter extends CustomPainter {
@@ -78,4 +76,3 @@ class MagBgPainter extends CustomPainter {
   bool shouldRepaint(MagBgPainter old) =>
       old.tearX != tearX || old.color != color;
 }
-

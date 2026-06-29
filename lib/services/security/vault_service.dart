@@ -377,12 +377,9 @@ class VaultService {
         final encrypted = encrypter.encrypt(plainText, iv: iv);
         return '${iv.base64}:${encrypted.base64}';
       } finally {
-        // CRITICAL: Wipe key from memory immediately
-        if (masterKey != null) {
-          _wipeKey(masterKey);
-        }
+        if (masterKey != null) _wipeKey(masterKey);
       }
-    }, 'VaultEncrypt');
+    }, 'VaultEncrypt', expectedError: true);
   }
 
   /// Decrypt data with master key (auto-cleanup)
@@ -402,12 +399,9 @@ class VaultService {
       } catch (e) {
         return encryptedText;
       } finally {
-        // CRITICAL: Wipe key from memory immediately
-        if (masterKey != null) {
-          _wipeKey(masterKey);
-        }
+        if (masterKey != null) _wipeKey(masterKey);
       }
-    }, 'VaultDecrypt');
+    }, 'VaultDecrypt', expectedError: true);
   }
 
   /// فك تشفير بمفتاح جاهز (sync) — للاستخدام عند فك تشفير ملاحظات متعددة

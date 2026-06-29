@@ -1,10 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/widgets/editor/apex_magnifier.dart';
 import 'package:sinan_note/widgets/editor/quill_editor_controller.dart';
@@ -46,29 +46,41 @@ class QuillEditorWidget extends StatefulWidget {
 }
 
 class _QuillEditorWidgetState extends State<QuillEditorWidget> {
-  late final QuillEditorController _ctrl;
+  late QuillEditorController _ctrl;
   String? _cachedFontFamily;
+  // editorKey يُنشأ مرة واحدة ويبقى ثابتاً طوال عمر الـ widget
+  final _editorKey = GlobalKey<EditorState>();
+
+  QuillEditorController _makeCtrl() => QuillEditorController(
+        quillController: widget.quillController,
+        focusNode: widget.focusNode,
+        selectionBarActive: widget.selectionBarActive,
+        getNoteColor: () => widget.noteColor,
+        onScroll: widget.onScroll,
+        externalEditorKey: _editorKey,
+        rebuild: () {
+          if (mounted) setState(() {});
+        },
+      );
 
   @override
   void initState() {
     super.initState();
-    _ctrl = QuillEditorController(
-      quillController: widget.quillController,
-      focusNode: widget.focusNode,
-      selectionBarActive: widget.selectionBarActive,
-      getNoteColor: () => widget.noteColor,
-      onScroll: widget.onScroll,
-      rebuild: () {
-        if (mounted) setState(() {});
-      },
-    );
+    _ctrl = _makeCtrl();
     _ctrl.init(widget.readOnly);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ctrl.didFirstBuild());
   }
 
   @override
   void didUpdateWidget(QuillEditorWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.readOnly != widget.readOnly) {
+    if (oldWidget.quillController != widget.quillController) {
+      _ctrl.dispose();
+      _ctrl = _makeCtrl();
+      _ctrl.init(widget.readOnly);
+      // لا نُعيد استدعاء didFirstBuild — editorKey لم يتغير
+      _ctrl.didFirstBuild();
+    } else if (oldWidget.readOnly != widget.readOnly) {
       _ctrl.updateReadOnly(widget.readOnly);
     }
   }
@@ -96,7 +108,26 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     super.dispose();
   }
 
-  /// يعترض الـ tap — يُنفذ toggle فقط إذا كان الضغط في منطقة الـ checkbox
+  bool _onTapDown(
+      TapDownDetails details, TextPosition Function(Offset) getPosition) {
+    // أخفِ الدمعة فوراً عند الضغط لمنع ظهورها في المكان القديم
+    _ctrl.tearHandle.forceHide();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!widget.readOnly) {
+        // أوقف BiDi مؤقتاً لمنعها من تغيير offset بين الآن وظهور الدمعة
+        BiDiCursorCorrectionMiddleware.pauseFor(widget.quillController);
+        _ctrl.tearHandle.showOnTap(editorKey: _editorKey);
+        // أعد BiDi بعد ظهور الدمعة (frame إضافيان: واحد لـ showOnTap + واحد أمان)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            BiDiCursorCorrectionMiddleware.resumeFor(widget.quillController);
+          });
+        });
+      }
+    });
+    return false;
+  }
+
   bool _onTapUp(
       TapUpDetails details, TextPosition Function(Offset) getPosition) {
     if (widget.readOnly) return false;
@@ -113,13 +144,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         listAttr.value == 'checked' || listAttr.value == 'unchecked';
     if (!isCheck) return false;
 
-    // الـ tap على الـ checkbox يُرجع offset = lineStart (قبل أي حرف في السطر)
-    // أي tap داخل النص يُرجع offset > lineStart
     final lineStart = line.documentOffset;
-    final tapOffset = pos.offset;
-
-    // إذا كان الـ tap داخل النص → اتركه للـ cursor
-    if (tapOffset > lineStart) return false;
+    if (pos.offset > lineStart) return false;
 
     final isChecked = listAttr.value == 'checked';
     HapticFeedback.lightImpact();
@@ -146,46 +172,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
     return true;
   }
 
-  /// إصلاح bug Flutter RTL: الـ cursor يقف عند n-1 بدل n
-  /// عند الضغط على نهاية السطر في RTL
-  bool _onTapDown(
-      TapDownDetails details, TextPosition Function(Offset) getPosition) {
-    // نؤجل الإصلاح لما بعد الـ tap حتى يتم تعيين الـ selection
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fixRtlCursorPosition();
-    });
-    return false; // لا نمنع الـ tap — نتركه يمر
-  }
-
-  void _fixRtlCursorPosition() {
-    final sel = widget.quillController.selection;
-    if (!sel.isCollapsed) return;
-
-    final plainText = widget.quillController.document.toPlainText();
-    final offset = sel.baseOffset;
-    if (offset <= 0 || offset >= plainText.length) return;
-
-    // نجد نهاية السطر الحالي
-    final lineEnd = plainText.indexOf('\n', offset);
-    if (lineEnd == -1) return;
-
-    // إذا كان الـ cursor عند lineEnd - 1 (آخر حرف قبل newline)
-    // وكان الحرف الأخير حرف عربي — ننقله لـ lineEnd
-    if (offset == lineEnd - 1) {
-      final lastChar = plainText[offset];
-      final isRtlChar =
-          RegExp(r'[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]')
-              .hasMatch(lastChar);
-      if (isRtlChar) {
-        widget.quillController.updateSelection(
-          TextSelection.collapsed(offset: lineEnd),
-          ChangeSource.local,
-        );
-      }
-    }
-  }
-
-  /// Checkbox بألوان النوتة
   Widget? _buildCheckboxLeading(Node node, LeadingConfig config) {
     final isCheck = config.attribute == Attribute.checked ||
         config.attribute == Attribute.unchecked;
@@ -265,10 +251,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: ListenableBuilder(
-                listenable: Listenable.merge([
-                  // نستمع فقط لتغير المحتوى (isEmpty) وليس كل selection
-                  widget.quillController,
-                ]),
+                listenable: widget.quillController,
                 builder: (context, child) {
                   final ops =
                       widget.quillController.document.toDelta().toList();
@@ -277,8 +260,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           (ops.first.isInsert &&
                               ops.first.data == '\n' &&
                               ops.first.attributes == null));
-                  if (_ctrl.isDraggingSelection) {
-                    // أثناء السحب: لا نعيد بناء الـ Stack
+                  if (_ctrl.isDraggingSelection ||
+                      _ctrl.tearHandle.isDragging) {
                     return child!;
                   }
                   return Stack(
@@ -302,9 +285,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                           ),
                         ),
                       if (_ctrl.isPasting)
-                        const Positioned.fill(
-                          child: AbsorbPointer(),
-                        ),
+                        const Positioned.fill(child: AbsorbPointer()),
                     ],
                   );
                 },
@@ -316,7 +297,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                     scrollController: _ctrl.scrollController,
                     config: QuillEditorConfig(
                       unknownEmbedBuilder: _unknownEmbedBuilder,
-                      editorKey: _ctrl.editorKey,
+                      editorKey: _editorKey,
                       autoFocus: widget.autoFocus,
                       expands: true,
                       scrollable: true,
@@ -324,10 +305,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                       placeholder: '',
                       checkBoxReadOnly: widget.readOnly,
                       requestKeyboardFocusOnCheckListChanged: false,
-
-                      // ignore: experimental_member_use, invalid_use_of_visible_for_testing_member, invalid_annotation_target
-                      // flutter_quill: customLeadingBlockBuilder is @experimental but is the only
-                      // supported API for custom checkbox rendering — no stable alternative exists.
                       // ignore: experimental_member_use, invalid_use_of_visible_for_testing_member
                       customLeadingBlockBuilder: _buildCheckboxLeading,
                       onTapUp: _onTapUp,
@@ -425,4 +402,3 @@ class _UnknownEmbedBuilder extends EmbedBuilder {
 }
 
 const _unknownEmbedBuilder = _UnknownEmbedBuilder();
-

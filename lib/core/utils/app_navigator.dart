@@ -1,12 +1,15 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/editor_page_route.dart';
+import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
+
+// عتبة حجم النوت الطويل — ما فوقها نبني Quill أولاً لمنع تجمد الـ UI
+const _kLongNoteThreshold = 1000;
 
 /// مركز التنقل العام — مصدر واحد لكل انتقالات التطبيق.
 ///
@@ -34,25 +37,18 @@ abstract class AppNavigator {
     bool readOnly = false,
     bool skipAuthentication = false,
     bool originallyLocked = false,
-    String? heroTag,
-  }) {
-    if (!context.mounted) return Future.value(null);
+  }) async {
+    if (!context.mounted) return null;
 
-    // إذا فيه heroTag نستخدم EditorPageRoute (fade + hero)
-    if (heroTag != null) {
-      return Navigator.push<bool>(
-        context,
-        EditorPageRoute(
-          builder: (_) => NoteEditorImmersive(
-            note: note,
-            mode: mode,
-            readOnly: readOnly,
-            skipAuthentication: skipAuthentication,
-            originallyLocked: originallyLocked,
-            heroTag: heroTag,
-          ),
-        ),
-      );
+    // نوت طويل + readonly → نبني Quill في isolate أولاً لمنع تجمد الـ UI
+    String? prebuiltDeltaJson;
+    if (readOnly &&
+        note.content.length > _kLongNoteThreshold &&
+        (mode == NoteMode.simple ||
+            mode == NoteMode.rich ||
+            mode == NoteMode.reminder)) {
+      prebuiltDeltaJson = await compute(buildDeltaJsonForIsolate, note.content);
+      if (!context.mounted) return null;
     }
 
     return Navigator.push<bool>(
@@ -64,6 +60,7 @@ abstract class AppNavigator {
           readOnly: readOnly,
           skipAuthentication: skipAuthentication,
           originallyLocked: originallyLocked,
+          prebuiltDeltaJson: prebuiltDeltaJson,
         ),
         settings: const RouteSettings(name: '/editor'),
       ),
@@ -167,4 +164,3 @@ abstract class AppNavigator {
     key.currentState?.pushNamed('/widget_selection');
   }
 }
-

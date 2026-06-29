@@ -68,8 +68,8 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Title ──
               Text(
                 isAr
-                    ? 'وضع القراءة وإصلاحات القوائم'
-                    : 'Reading Mode & List Fixes',
+                    ? 'أداء أفضل وكتابة أريح'
+                    : 'Better Performance & Smoother Writing',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -114,8 +114,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'وضع قراءة مريح للملاحظات الطويلة، إصلاح اتجاه القوائم المرقمة، وتحسينات دقيقة في المحرر.'
-                            : 'Comfortable reading mode for long notes, fixed numbered list direction, and precise editor improvements.',
+                            ? 'وضع الكتاب بتنسيق كامل، إصلاح المشاركة من المتصفح، وتحسينات تجعل الكتابة أريح.'
+                            : 'Book Mode with full formatting, browser sharing fix, and improvements that make writing more comfortable.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -245,36 +245,38 @@ class WhatsNewDialog extends StatelessWidget {
 
               // ── Features ──
               _FeatureRow(
+                icon: Icons.bolt_rounded,
+                color: Colors.blue,
+                title: isAr
+                    ? 'فتح سريع للملاحظات الطويلة'
+                    : 'Fast Long Note Opening',
+                subtitle: isAr
+                    ? 'الملاحظات الكبيرة تُفتح بدون تجميد — المعالجة تتم في الخلفية'
+                    : 'Large notes open without freezing — processing happens in the background',
+              ),
+              _FeatureRow(
                 icon: Icons.menu_book_rounded,
                 color: Colors.teal,
-                title: isAr ? 'وضع القراءة' : 'Reading Mode',
+                title: isAr ? 'وضع الكتاب بتنسيق' : 'Book Mode with Formatting',
                 subtitle: isAr
-                    ? 'شاشة قراءة مريحة للملاحظات الطويلة — صفحات، تحكم بالخط، حفظ الموضع'
-                    : 'Comfortable reading screen for long notes — pages, font control, position saving',
+                    ? 'تبديل بين النص المنسّق والعادي في وضع القراءة — يحفظ اختيارك'
+                    : 'Toggle between formatted and plain text in reading mode — remembers your choice',
               ),
               _FeatureRow(
-                icon: Icons.format_list_numbered_rounded,
+                icon: Icons.share_rounded,
                 color: Colors.orange,
-                title: isAr ? 'إصلاح القوائم المرقمة' : 'Fixed Numbered Lists',
+                title: isAr ? 'مشاركة محسّنة' : 'Improved Sharing',
                 subtitle: isAr
-                    ? 'الرقم في موضعه الصحيح — LTR يسار، RTL يمين — واتجاه ثابت للقائمة كاملاً'
-                    : 'Number in correct position — LTR left, RTL right — consistent direction throughout',
+                    ? 'النص المشارك من المتصفح يظهر نظيفاً بدون روابط زائدة'
+                    : 'Shared text from browser appears clean without extra URLs',
               ),
               _FeatureRow(
-                icon: Icons.water_drop_rounded,
+                icon: Icons.edit_rounded,
                 color: Colors.purple,
-                title: isAr ? 'إصلاح دمعة المؤشر' : 'Fixed Cursor Handle',
+                title: isAr ? 'تحسينات المحرر' : 'Editor Improvements',
                 subtitle: isAr
-                    ? 'الدمعة تظهر تحت المؤشر عند الانتقال لسطر جديد'
-                    : 'Handle appears below cursor when moving to a new line',
-              ),
-              _FeatureRow(
-                icon: Icons.bug_report_rounded,
-                color: Colors.red,
-                title: isAr ? 'إصلاحات متعددة' : 'Multiple Bug Fixes',
-                subtitle: isAr
-                    ? 'اتجاه النص مع الأرقام، عرض المحتوى في العارض، وغيرها'
-                    : 'Text direction with numbers, content display in readonly, and more',
+                    ? 'الضغط على الأسطر الفارغة يعمل بشكل صحيح الآن'
+                    : 'Tapping empty lines now works correctly',
               ),
 
               const SizedBox(height: 20),

@@ -30,6 +30,12 @@ class CategoriesProvider extends ChangeNotifier {
 
   CategoriesProvider() {
     _init();
+    // أعد تحميل الإعدادات بعد انتهاء أي مزامنة
+    CloudSyncGateway.isSyncing.addListener(_onSyncChanged);
+  }
+
+  void _onSyncChanged() {
+    if (!CloudSyncGateway.isSyncing.value) reloadSettings();
   }
 
   Future<void> _init() async {
@@ -145,5 +151,18 @@ class CategoriesProvider extends ChangeNotifier {
   }
 
   Future<void> refreshCategories() async => await _load();
+
+  Future<void> reloadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    _hideProFromHome = prefs.getBool('hide_pro_from_home') ?? false;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    CloudSyncGateway.isSyncing.removeListener(_onSyncChanged);
+    _syncDebounce?.cancel();
+    super.dispose();
+  }
 }
 

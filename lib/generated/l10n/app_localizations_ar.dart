@@ -900,9 +900,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get disabled => 'معطّل';
 
   @override
-  String get heroAnimation => 'انيميشن الفتح';
-
-  @override
   String get editorSettings => 'إعدادات المحرر';
 
   @override
@@ -942,10 +939,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutApp => 'حول التطبيق';
 
   @override
-  String get diagnostics => 'تشخيص النظام';
+  String get diagnostics => 'سجل الأخطاء';
 
   @override
-  String get developersOnly => 'للمطورين فقط';
+  String get developersOnly => 'عرض ومسح تقارير الأعطال';
 
   @override
   String get systemTheme => 'نظام الجهاز';
@@ -970,6 +967,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cleared => 'تم المسح';
+
+  @override
+  String get noErrorsLogged => 'لا توجد أخطاء مسجلة';
 
   @override
   String get errorLog => 'سجل الأخطاء';

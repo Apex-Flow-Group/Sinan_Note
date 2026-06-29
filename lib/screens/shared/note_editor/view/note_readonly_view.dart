@@ -1,7 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
-import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
@@ -35,7 +34,6 @@ class NoteReadOnlyView extends StatefulWidget {
   final NoteMode mode;
   final EditorCoordinator coordinator;
   final double sidePadding;
-  final String? heroTag;
   final VoidCallback? onClose;
   final VoidCallback onEnterEdit;
   final void Function(NoteMode newMode, Note newNote)? onModeChanged;
@@ -49,7 +47,6 @@ class NoteReadOnlyView extends StatefulWidget {
     required this.sidePadding,
     required this.onEnterEdit,
     required this.onSave,
-    this.heroTag,
     this.onClose,
     this.onModeChanged,
   });
@@ -263,26 +260,11 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final textColor =
         noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
 
-    // نمرر Delta JSON للحفاظ على التنسيق في وضع القراءة
-    final String? deltaJson;
-    if (widget.coordinator.quillController != null) {
-      deltaJson =
-          QuillMigration.toDeltaJson(widget.coordinator.quillController!);
-    } else {
-      final raw = widget.coordinator.contentController.text;
-      deltaJson = QuillMigration.isDelta(raw) ? raw : null;
-    }
-
-    final String plainContent;
-    if (widget.coordinator.quillController != null) {
-      plainContent = widget.coordinator.quillController!.document.toPlainText();
-    } else if (_currentMode == NoteMode.code) {
-      plainContent = widget.coordinator.codeController?.text ??
-          widget.coordinator.contentController.text;
-    } else {
-      plainContent = NoteContentUtils.toDisplayText(
-          widget.coordinator.contentController.text);
-    }
+    // نقرأ دائماً من contentController لأنه يحتوي على المحتوى الكامل —
+    // quillController قد يكون preview فقط (أول 20 سطر) في وضع القراءة
+    final raw = widget.coordinator.contentController.text;
+    final String? deltaJson = QuillMigration.isDelta(raw) ? raw : null;
+    final String plainContent = NoteContentUtils.toDisplayText(raw);
 
     Navigator.push(
       context,
@@ -524,46 +506,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       ),
     );
 
-    final heroTag = widget.heroTag ?? 'note_card_${note.id}';
-    final heroEnabled = Provider.of<SettingsProvider>(context, listen: false)
-        .heroAnimationEnabled;
-    final heroCard = heroEnabled
-        ? Hero(
-            tag: heroTag,
-            transitionOnUserGestures: false,
-            createRectTween: (begin, end) =>
-                MaterialRectArcTween(begin: begin, end: end),
-            placeholderBuilder: (context, heroSize, child) => SizedBox(
-              width: heroSize.width,
-              height: heroSize.height,
-            ),
-            flightShuttleBuilder: (_, animation, direction, fromCtx, toCtx) {
-              final curved = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-                reverseCurve: Curves.easeInCubic,
-              );
-              return AnimatedBuilder(
-                animation: curved,
-                builder: (context, _) {
-                  final radius = BorderRadius.circular(
-                    direction == HeroFlightDirection.push
-                        ? lerpDouble(16, 0, curved.value)!
-                        : lerpDouble(0, 16, curved.value)!,
-                  );
-                  return Material(
-                    color: Colors.transparent,
-                    child: ClipRRect(
-                      borderRadius: radius,
-                      child: noteCard,
-                    ),
-                  );
-                },
-              );
-            },
-            child: noteCard,
-          )
-        : noteCard;
+    final heroCard = noteCard;
 
     final canMarkdown = _currentNote.noteType == 'markdown';
 

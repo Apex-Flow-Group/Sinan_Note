@@ -1,9 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-
 
 /// BiDi cursor correction middleware.
 /// Fixes cursor position when tapping on digit boundaries in Arabic text.
@@ -13,18 +11,31 @@ class BiDiCursorCorrectionMiddleware {
   bool _isCorrectingSelection = false;
   int _previousOffset = -1;
 
-  static final _digitRun =
-      RegExp(r'^[\d٠-٩]+([.,،][\d٠-٩]+)*');
-  static final _arabicOrSpace =
-      RegExp(r'[\u0600-\u06FF\u0750-\u077F\s]');
+  /// يُوقف تدخل الـ middleware مؤقتاً (أثناء سحب الدمعة مثلاً)
+  bool paused = false;
+
+  /// static map — يسمح لأي كود يملك reference للـ controller بإيقاف الـ middleware
+  static final Map<QuillController, BiDiCursorCorrectionMiddleware> _instances =
+      {};
+
+  /// يُوقف الـ middleware المرتبط بهذا الـ controller
+  static void pauseFor(QuillController c) => _instances[c]?.paused = true;
+
+  /// يُعيد تشغيل الـ middleware المرتبط بهذا الـ controller
+  static void resumeFor(QuillController c) => _instances[c]?.paused = false;
+
+  static final _digitRun = RegExp(r'^[\d٠-٩]+([.,،][\d٠-٩]+)*');
+  static final _arabicOrSpace = RegExp(r'[\u0600-\u06FF\u0750-\u077F\s]');
   static final _digitChar = RegExp(r'[\d٠-٩]');
 
   BiDiCursorCorrectionMiddleware({required this.controller}) {
+    _instances[controller] = this;
     controller.addListener(_onSelectionChanged);
   }
 
   void _onSelectionChanged() {
     if (_isCorrectingSelection) return;
+    if (paused) return;
 
     final selection = controller.selection;
     if (!selection.isCollapsed) return;
@@ -62,7 +73,7 @@ class BiDiCursorCorrectionMiddleware {
   }
 
   void dispose() {
+    _instances.remove(controller);
     controller.removeListener(_onSelectionChanged);
   }
 }
-

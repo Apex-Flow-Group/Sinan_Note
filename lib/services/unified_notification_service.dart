@@ -108,7 +108,10 @@ class _PendingAction {
   /// للحالات التي نُفِّذت فيها العملية مسبقاً
   void commit() {
     timer?.cancel();
-    executedEarly.value = true;
+    // Use addPostFrameCallback to avoid setState during dispose/locked tree
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      executedEarly.value = true;
+    });
   }
 }
 

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+﻿// Copyright � 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui' as ui;
 
@@ -69,7 +69,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late Color _contentColor;
   late ui.TextDirection _titleDirection;
   late ui.TextDirection _contentDirection;
-
+  final _loadingNotifier = ValueNotifier<bool>(false);
   static final _rtlRegex = RegExp(
     r'[\u0600-\u06FF\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
   );
@@ -110,6 +110,12 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     _cacheColors();
   }
 
+  @override
+  void dispose() {
+    _loadingNotifier.dispose();
+    super.dispose();
+  }
+
   void _cacheColors() {
     final brightness = Theme.of(context).brightness;
     _baseColor =
@@ -143,7 +149,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     final bool isTrash = widget.source == 'trash';
     final bool isArchive = widget.source == 'archive';
     final bool enableSwipe = !widget.selectionMode &&
-        (isTrash || isArchive || (settings.swipeEnabled && !widget.note.isLocked));
+        (isTrash ||
+            isArchive ||
+            (settings.swipeEnabled && !widget.note.isLocked));
 
     final String rightAction = isTrash
         ? 'restore'
@@ -209,7 +217,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 final isDesktop = MediaQuery.of(context).size.width >= 600;
                 if (isDesktop && !widget.selectionMode) {
                   NoteContextMenu.show(
-                      context, widget.note, widget.onNoteChanged);
+                      context, widget.note, widget.onNoteChanged,
+                      source: widget.source);
                 }
               },
               onTap: () async {
@@ -239,13 +248,14 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                       }
                     } else {
                       final mode = NoteCardUtils.getNoteMode(widget.note);
+                      _loadingNotifier.value = true;
                       final result = await AppNavigator.toEditor(
                         context,
                         note: widget.note,
                         mode: mode,
                         readOnly: true,
-                        heroTag: 'note_card_${widget.source}_${widget.note.id}',
                       );
+                      _loadingNotifier.value = false;
                       if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
                       }
@@ -261,7 +271,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                 baseColor: noteColor,
                 enableMotion: false,
                 isSelected: widget.isSelected,
-                heroTag: 'note_card_${widget.source}_${widget.note.id}',
                 child: Stack(
                   clipBehavior: Clip.hardEdge,
                   children: [
@@ -305,8 +314,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 8),
-                                              // في شاشة الخزنة (source == 'locked') الملاحظة مفككة مسبقاً
-                                              // → نعرض المحتوى الفعلي بدلاً من "محتوى محمي"
+                                              // �� ���� ������ (source == 'locked') �������� ����� ������
+                                              // ? ���� ������� ������ ����� �� "����� ����"
                                               (widget.note.isLocked &&
                                                       widget.source != 'locked')
                                                   ? Text(
@@ -405,7 +414,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                         const SizedBox(width: 4),
                                         Flexible(
                                           child: Text(
-                                            '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
+                                            '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} � ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: badgeColor,
@@ -547,6 +556,24 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           ),
                         ),
                       ),
+                    // loading indicator ���� �� ������� ����� pre-build Quill
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _loadingNotifier,
+                      builder: (_, loading, __) => loading
+                          ? Positioned(
+                              top: 8,
+                              right: 8,
+                              child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: titleColor.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),

@@ -37,6 +37,7 @@ class HomeScreenResponsive extends StatefulWidget {
   final bool showAddMenu;
   final VoidCallback onToggleMenu;
   final void Function(void Function(NoteMode))? onRegisterModeHandler;
+  final Widget? sharedDetailsPanel;
 
   const HomeScreenResponsive({
     super.key,
@@ -45,6 +46,7 @@ class HomeScreenResponsive extends StatefulWidget {
     this.showAddMenu = false,
     required this.onToggleMenu,
     this.onRegisterModeHandler,
+    this.sharedDetailsPanel,
   });
 
   @override
@@ -91,7 +93,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   }
 
   void _buildCachedPanels() {
-    _cachedDetailsPanel = ValueListenableBuilder<Set<int>>(
+    _cachedDetailsPanel = widget.sharedDetailsPanel ?? ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) => DetailsPanel(
         selectedIds: selectedIds,

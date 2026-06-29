@@ -49,6 +49,13 @@ final ValueNotifier<int> currentTabIndexNotifier = ValueNotifier<int>(0);
 // Notifier لحالة إخفاء الشريط السفلي عند السحب
 final ValueNotifier<bool> bottomNavHiddenNotifier = ValueNotifier<bool>(false);
 
+/// Pending intent data — يُحفظ هنا عند وصول intent خارجي (ملف / ويدجت / share)
+/// ويُستهلك من MainLayoutScreen بعد اكتمال المصادقة وجاهزية الشاشة الرئيسية
+final ValueNotifier<Map?> pendingIntentNotifier = ValueNotifier<Map?>(null);
+
+/// يُعيَّن true عندما تُصبح MainLayoutScreen نشطة وجاهزة لاستقبال intents
+bool isMainLayoutActive = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -105,13 +112,23 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
             final noteId =
                 int.tryParse(uri.queryParameters['note_id'] ?? '0') ?? 0;
             if (noteId > 0) {
-              _openNoteById(noteId);
+              if (isMainLayoutActive) {
+                _openNoteById(noteId);
+              } else {
+                _storePendingIntent({
+                  'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
+                  'note_id': noteId
+                });
+              }
             } else {
               navigatorKey.currentState?.pushNamed('/widget_selection');
             }
           }
         });
       });
+
+      // ✅ الاستماع للـ pendingIntentNotifier — يُنفّذ الـ intent بعد جاهزية MainLayoutScreen
+      pendingIntentNotifier.addListener(_onPendingIntent);
     }
   }
 
@@ -119,41 +136,68 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     try {
       final data = await platform.invokeMethod('getStartIntent');
       if (data != null && data is Map) {
-        _processIntent(data);
+        // ✅ حفظ الـ intent في الـ notifier بدل تنفيذه مباشرة
+        // سيُستهلك من MainLayoutScreen بعد اكتمال المصادقة
+        _storePendingIntent(data);
       }
     } catch (_) {}
   }
 
   Future<void> _handleMethodCall(MethodCall call) async {
     if (call.method == 'onIntent' && call.arguments is Map) {
-      _processIntent(call.arguments);
+      // ✅ intents الواردة أثناء تشغيل التطبيق
+      final data = call.arguments as Map;
+      if (isMainLayoutActive) {
+        // التطبيق جاهز — نفّذ مباشرة
+        _executeIntent(data);
+      } else {
+        _storePendingIntent(data);
+      }
     }
   }
 
-  void _processIntent(Map data) async {
+  /// حفظ الـ intent للتنفيذ لاحقاً بعد جاهزية MainLayoutScreen
+  void _storePendingIntent(Map data) {
+    final action = data['action'] as String?;
+    final noteId = (data['note_id'] ?? 0) as int;
+    final sharedText = data['shared_text'] as String?;
+    final filePath = data['file_path'] as String?;
+
+    // تجاهل الـ intents الفارغة تماماً
+    final hasContent =
+        // نص مشترك من تطبيق آخر
+        (sharedText != null && sharedText.isNotEmpty) ||
+            // ملف .sinan
+            (filePath != null && filePath.isNotEmpty) ||
+            // فتح ملاحظة بـ ID
+            (action == 'com.apexflow.app.sinan.ACTION_VIEW_NOTE' &&
+                noteId > 0) ||
+            // اختيار ملاحظة للويدجت
+            (action ==
+                'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') ||
+            (action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE');
+
+    if (hasContent) {
+      pendingIntentNotifier.value = Map.from(data);
+    }
+  }
+
+  /// تنفيذ الـ intent (يُستدعى من MainLayoutScreen بعد الجاهزية)
+  void _executeIntent(Map data) {
     final action = data['action'];
     final noteId = data['note_id'] ?? 0;
     final currentNoteId = data['current_note_id'] ?? 0;
     final widgetType = data['widget_type'] ?? 'note';
     final sharedText = data['shared_text'];
 
-    if (sharedText != null && sharedText.isNotEmpty) {
+    if (sharedText != null && (sharedText as String).isNotEmpty) {
       _openEditorWithSharedText(sharedText);
     } else if (action == 'com.apexflow.app.sinan.ACTION_OPEN_SINAN_FILE') {
       final filePath = data['file_path'] as String?;
       if (filePath != null) _importSinanFile(filePath);
     } else if (action ==
-        'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') {
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (context) => WidgetSelectionScreen(
-            widgetType: widgetType,
-            currentNoteId: currentNoteId,
-          ),
-        ),
-      );
-    } else if (noteId == 0 &&
-        action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE') {
+            'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET' ||
+        (noteId == 0 && action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE')) {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
           builder: (context) => WidgetSelectionScreen(
@@ -175,34 +219,40 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
-    // Wait for SplashScreen to finish and MainLayoutScreen to be active
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (!mounted) return;
+    // ── تنظيف النص القادم من المتصفح ──────────────────────────────────────
+    // Android يُرسل أحياناً: "النص المحدد\n\nhttps://..." أو "insert:النص\nhttps://..."
+    // نستخرج: النص النظيف + الرابط منفصلَين
+    final cleaned = _cleanSharedText(text);
+    final cleanText = cleaned['text'] as String;
+    final sourceUrl = cleaned['url'];
 
-    // Keep waiting until settings are initialized (SplashScreen is done)
-    while (!settings.isInitialized) {
-      await Future.delayed(const Duration(milliseconds: 50));
-      if (!mounted) return;
-    }
-    // Extra delay to ensure MainLayoutScreen has replaced SplashScreen
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
+    // إذا لم يبقَ نص بعد التنظيف (فقط رابط) → نعامله كـ Shared Link
+    final isPureUrl = cleanText.isEmpty && sourceUrl != null;
 
-    final isUrl = Uri.tryParse(text)?.hasScheme ?? false;
-    final mode = isUrl ? NoteMode.simple : _detectNoteMode(text);
+    final isUrl = isPureUrl ||
+        (sourceUrl == null && Uri.tryParse(text.trim())?.hasScheme == true);
+    final finalText =
+        isPureUrl ? sourceUrl : (cleanText.isNotEmpty ? cleanText : text);
+    final mode = isUrl ? NoteMode.simple : _detectNoteMode(finalText);
 
     // بناء Delta في Isolate قبل فتح المحرر
     String content;
     if (!isUrl) {
-      final delta = await buildDeltaInIsolate(text);
-      content = delta.toJson().toString();
+      final delta = await buildDeltaInIsolate(finalText);
+      content = jsonEncode(delta.toJson());
     } else {
-      content = text;
+      content = finalText;
     }
+
+    if (!mounted) return;
 
     // Create and save note to database FIRST
     final newNote = Note(
-      title: isUrl ? 'Shared Link' : '',
+      title: isPureUrl
+          ? 'Shared Link'
+          : (cleanText.isNotEmpty
+              ? _extractTitle(cleanText)
+              : (isUrl ? 'Shared Link' : '')),
       content: content,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -227,18 +277,52 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     AppNavigator.toEditorViaKey(navigatorKey, note: savedNote, mode: mode);
   }
 
+  /// تنظيف النص القادم من المتصفح / التطبيقات الخارجية
+  /// يُرجع {'text': النص النظيف, 'url': الرابط أو null}
+  Map<String, String?> _cleanSharedText(String raw) {
+    // regex لاستخراج الروابط من النص
+    final urlRegex = RegExp(
+      r'https?://[^\s]+',
+      caseSensitive: false,
+    );
+
+    String text = raw.trim();
+    String? url;
+
+    // استخرج أول رابط في النص
+    final urlMatch = urlRegex.firstMatch(text);
+    if (urlMatch != null) {
+      url = urlMatch.group(0);
+
+      // أزل الرابط من النص
+      text = text.replaceAll(url!, '').trim();
+
+      // أزل أسطر فارغة زائدة
+      text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+
+      // أزل prefix غريب مثل "insert:" أو "انسريت:" أو بيانات HTML مبتورة
+      text =
+          text.replaceAll(RegExp(r'^insert\s*:\s*', caseSensitive: false), '');
+    }
+
+    return {'text': text, 'url': url};
+  }
+
+  /// استخراج عنوان من أول سطر من النص (للـ title)
+  String _extractTitle(String text) {
+    final firstLine = text.split('\n').first.trim();
+    if (firstLine.isEmpty) return '';
+    return firstLine.length > 60
+        ? '${firstLine.substring(0, 60)}...'
+        : firstLine;
+  }
+
   void _importSinanFile(String filePath) async {
     try {
       final context = navigatorKey.currentContext;
       if (context == null) return;
-      final settings = Provider.of<SettingsProvider>(context, listen: false);
       final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
-      while (!settings.isInitialized) {
-        await Future.delayed(const Duration(milliseconds: 50));
-        if (!mounted) return;
-      }
-      await Future.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
 
       final file = File(filePath);
@@ -324,21 +408,6 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
   void _openNoteById(int noteId) async {
     try {
-      final context = navigatorKey.currentContext;
-      if (context == null) return;
-
-      final settings = Provider.of<SettingsProvider>(context, listen: false);
-
-      // انتظار اكتمال التهيئة (قاعدة البيانات + SplashScreen)
-      while (!settings.isInitialized) {
-        await Future.delayed(const Duration(milliseconds: 50));
-        if (!mounted) return;
-      }
-
-      // انتظار إضافي لضمان أن MainLayoutScreen حلّت محل SplashScreen
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-
       final dbService = SqliteDatabaseService();
       final note = await dbService.getNoteById(noteId);
       if (note != null) {
@@ -359,7 +428,24 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    pendingIntentNotifier.removeListener(_onPendingIntent);
     super.dispose();
+  }
+
+  /// يُستدعى عند تغيير الـ pendingIntentNotifier — ينفذ الـ intent فقط إذا كانت MainLayoutScreen جاهزة
+  void _onPendingIntent() {
+    final data = pendingIntentNotifier.value;
+    if (data == null) return;
+
+    // تحقق أن MainLayoutScreen نشطة (أي اكتملت المصادقة وانتهى SplashScreen)
+    if (!isMainLayoutActive) return;
+    if (navigatorKey.currentContext == null) return;
+
+    // امسح أولاً لمنع التنفيذ المزدوج
+    pendingIntentNotifier.value = null;
+
+    // نفّذ
+    _executeIntent(data);
   }
 
   @override
