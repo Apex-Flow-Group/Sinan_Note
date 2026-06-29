@@ -275,8 +275,9 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                             ? firstNote.isHiddenFromHome
                                             : false,
                                       );
-                                      if (result == null || !context.mounted)
+                                      if (result == null || !context.mounted) {
                                         return;
+                                      }
                                       final newCatIds =
                                           (result['categoryIds'] as List)
                                               .cast<int>();

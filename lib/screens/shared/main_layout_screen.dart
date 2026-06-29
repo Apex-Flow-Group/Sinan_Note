@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
@@ -24,7 +23,6 @@ import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/reminder_dashboard_responsive.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/details_panel.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
@@ -60,16 +58,14 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   void initState() {
     super.initState();
     _securityController.addListener(_onSecurityChanged);
-    _autoSyncOnStartup();
     tabToHomeNotifier.addListener(_onBackToHome);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-      final categoriesProvider =
-          Provider.of<CategoriesProvider>(context, listen: false);
-      notesProvider.stateService.onCategoriesRefreshNeeded =
-          () => categoriesProvider.refreshCategories();
-    });
+    // تسجيل callback المزامنة فوراً — لضمان عدم فقدان sync events مبكرة
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final categoriesProvider =
+        Provider.of<CategoriesProvider>(context, listen: false);
+    notesProvider.stateService.onCategoriesRefreshNeeded =
+        () => categoriesProvider.refreshCategories();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       PlatformHelper.lockOrientationForMobile(context);
@@ -112,24 +108,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     ];
   }
 
-  Future<void> _autoSyncOnStartup() async {
-    await CloudSyncGateway.initializeSignIn();
-
-    final prefs = await SharedPreferences.getInstance();
-    final autoSync = prefs.getBool('google_drive_auto_sync') ?? false;
-
-    if (autoSync && CloudSyncGateway.isSignedIn) {
-      await CloudSyncGateway.smartSync();
-      if (!mounted) return;
-
-      await Provider.of<NotesProvider>(context, listen: false)
-          .refreshAllNotes(force: true);
-      if (!mounted) return;
-
-      await Provider.of<CategoriesProvider>(context, listen: false)
-          .refreshCategories();
-    }
-  }
+  // _autoSyncOnStartup حُذفت — SplashScreen يتولى المزامنة عند الفتح
+  // لتجنب مزامنة مزدوجة متزامنة مع splash_screen
 
   @override
   void dispose() {

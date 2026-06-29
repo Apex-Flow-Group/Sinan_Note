@@ -4,6 +4,30 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.4] — 2026-06 | Architecture Safety & Sync Fixes
+
+### 🔧 Bug Fixes
+
+**Notes not appearing after Google sync on startup**
+- After `smartSync()` completed in the background, the UI was not refreshing because `SplashScreen` had already navigated away (`mounted = false`). Fixed by capturing Provider references before launching sync, so `refreshAllNotes(force: true)` executes regardless of screen lifecycle.
+
+**Reminder tab — overlay and scroll broken on pull**
+- Pulling down on an empty reminder tab caused the battery optimization banner to disappear below the tabs, and switching to a tab with notes made the first note stick at the bottom. Fixed by using `ListView` (with `AlwaysScrollableScrollPhysics`) for empty state instead of `Center`, and adding `hasScrollBody: true` to `SliverFillRemaining`.
+
+**Duplicate sync on app startup**
+- Both `SplashScreen` and `MainLayoutScreen` were calling `smartSync()` independently, causing concurrent sync operations. Removed `_autoSyncOnStartup()` from `MainLayoutScreen` — `SplashScreen` handles it.
+
+**Crash after dispose — silent sync callback**
+- `NoteStateService._silentSync()` could invoke `onSyncCompleted` callback after the Provider was disposed (e.g., if the user killed the app within 5 seconds of editing). Added `_isDisposed` guard that stops all Timer callbacks after `dispose()`.
+
+### 🏗️ Architecture (Family Rules Compliance)
+
+- `MainLayoutScreen`: `onCategoriesRefreshNeeded` callback registered immediately in `initState` instead of delayed `addPostFrameCallback` — prevents missing early sync events.
+- `note_readonly_view.dart`: Replaced direct `SqliteDatabaseService().getNoteById()` with `provider.stateService.getNoteById()` — UI no longer bypasses Provider layer.
+- `splash_screen.dart`: Categories also refreshed after sync (was only refreshing notes before).
+
+---
+
 ## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes + Hero Removal + Editor Fixes + Save Guard Fix
 
 ### ✨ New Features

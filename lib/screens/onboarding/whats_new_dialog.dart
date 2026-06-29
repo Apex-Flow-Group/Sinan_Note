@@ -66,10 +66,11 @@ class WhatsNewDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // ── Title ──
+              // ⚠️ ثابت: يتغير مع كل إصدار — عنوان رئيسي يعكس محتوى التحديث
               Text(
                 isAr
-                    ? 'أداء أفضل وكتابة أريح'
-                    : 'Better Performance & Smoother Writing',
+                    ? 'مزامنة أسرع وأكثر استقراراً'
+                    : 'Faster & More Stable Sync',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -95,6 +96,7 @@ class WhatsNewDialog extends StatelessWidget {
               const SizedBox(height: 20),
 
               // ── Message ──
+              // ⚠️ ثابت: يتغير مع كل إصدار — ملخص قصير للتحديث
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -114,8 +116,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'وضع الكتاب بتنسيق كامل، إصلاح المشاركة من المتصفح، وتحسينات تجعل الكتابة أريح.'
-                            : 'Book Mode with full formatting, browser sharing fix, and improvements that make writing more comfortable.',
+                            ? 'الملاحظات تظهر فوراً بعد المزامنة، إصلاح شاشة التذكير، وتحسينات استقرار عامة.'
+                            : 'Notes appear instantly after sync, reminder screen fix, and general stability improvements.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -148,6 +150,8 @@ class WhatsNewDialog extends StatelessWidget {
               const SizedBox(height: 14),
 
               // ── GitHub Open Source ──
+              // 🔒 ثابت في كل إصدار — لا يتغير
+              // الرابط: https://github.com/Apex-Flow-Group/Sinan_Note
               InkWell(
                 onTap: () => launchUrl(
                   Uri.parse('https://github.com/Apex-Flow-Group/Sinan_Note'),
@@ -244,44 +248,38 @@ class WhatsNewDialog extends StatelessWidget {
               const SizedBox(height: 14),
 
               // ── Features ──
+              // ⚠️ ثابت: يتغير مع كل إصدار — قائمة الميزات/الإصلاحات المرئية للمستخدم
               _FeatureRow(
-                icon: Icons.bolt_rounded,
+                icon: Icons.sync_rounded,
                 color: Colors.blue,
-                title: isAr
-                    ? 'فتح سريع للملاحظات الطويلة'
-                    : 'Fast Long Note Opening',
+                title:
+                    isAr ? 'مزامنة فورية عند الفتح' : 'Instant Sync on Launch',
                 subtitle: isAr
-                    ? 'الملاحظات الكبيرة تُفتح بدون تجميد — المعالجة تتم في الخلفية'
-                    : 'Large notes open without freezing — processing happens in the background',
+                    ? 'الملاحظات الجديدة من أجهزتك الأخرى تظهر مباشرة بدون سحب يدوي'
+                    : 'New notes from your other devices appear immediately without manual pull',
               ),
               _FeatureRow(
-                icon: Icons.menu_book_rounded,
-                color: Colors.teal,
-                title: isAr ? 'وضع الكتاب بتنسيق' : 'Book Mode with Formatting',
-                subtitle: isAr
-                    ? 'تبديل بين النص المنسّق والعادي في وضع القراءة — يحفظ اختيارك'
-                    : 'Toggle between formatted and plain text in reading mode — remembers your choice',
-              ),
-              _FeatureRow(
-                icon: Icons.share_rounded,
+                icon: Icons.alarm_rounded,
                 color: Colors.orange,
-                title: isAr ? 'مشاركة محسّنة' : 'Improved Sharing',
+                title: isAr ? 'إصلاح شاشة التذكير' : 'Reminder Screen Fix',
                 subtitle: isAr
-                    ? 'النص المشارك من المتصفح يظهر نظيفاً بدون روابط زائدة'
-                    : 'Shared text from browser appears clean without extra URLs',
+                    ? 'إصلاح مشكلة اختفاء البانر وتجمّد التمرير في التبويبات الفارغة'
+                    : 'Fixed banner disappearing and scroll freezing in empty tabs',
               ),
               _FeatureRow(
-                icon: Icons.edit_rounded,
-                color: Colors.purple,
-                title: isAr ? 'تحسينات المحرر' : 'Editor Improvements',
+                icon: Icons.speed_rounded,
+                color: Colors.teal,
+                title: isAr ? 'استقرار أفضل' : 'Better Stability',
                 subtitle: isAr
-                    ? 'الضغط على الأسطر الفارغة يعمل بشكل صحيح الآن'
-                    : 'Tapping empty lines now works correctly',
+                    ? 'منع المزامنة المزدوجة وإصلاح احتمال توقف التطبيق عند الإغلاق السريع'
+                    : 'Prevented duplicate sync and fixed potential crash on quick app close',
               ),
 
               const SizedBox(height: 20),
 
               // ── Privacy Policy update notice ──
+              // 🔒 ثابت في كل إصدار — لا يتغير
+              // الرابط: https://apexflow.now/ar/projects/sinan-note/privacy
               InkWell(
                 onTap: () => launchUrl(
                   Uri.parse(
@@ -342,6 +340,7 @@ class WhatsNewDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // ── Thanks ──
+              // 🔒 ثابت في كل إصدار — نص الشكر لا يتغير
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -374,6 +373,7 @@ class WhatsNewDialog extends StatelessWidget {
               const SizedBox(height: 20),
 
               // ── Close Button ──
+              // 🔒 ثابت في كل إصدار — زر الإغلاق لا يتغير
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
