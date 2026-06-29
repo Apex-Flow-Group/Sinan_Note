@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -84,7 +85,8 @@ class _SplashScreenState extends State<SplashScreen> {
       if (CloudSyncGateway.isSignedIn) {
         unawaited(CloudSyncGateway.smartSync().then((_) async {
           if (!mounted) return;
-          await Provider.of<NotesProvider>(context, listen: false).loadNotes();
+          await Provider.of<NotesProvider>(context, listen: false)
+              .refreshAllNotes(force: true);
         }));
       }
 
@@ -305,4 +307,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-

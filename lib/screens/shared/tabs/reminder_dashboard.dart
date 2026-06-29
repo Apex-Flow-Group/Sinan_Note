@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -245,35 +244,59 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                                     maxChars: null);
                                             CustomShareSheet.show(context,
                                                 '${note.title}\n\n$content',
-                                                subject: note.title,
-                                                note: note,
+                                                subject: note.title, note: note,
                                                 onNoteCopied: () async {
-                                                  final provider = Provider.of<NotesProvider>(context, listen: false);
-                                                  await provider.duplicateNote(note.id!, copyLabel: AppLocalizations.of(context)!.noteCopy);
-                                                });
+                                              final provider =
+                                                  Provider.of<NotesProvider>(
+                                                      context,
+                                                      listen: false);
+                                              await provider.duplicateNote(
+                                                  note.id!,
+                                                  copyLabel:
+                                                      AppLocalizations.of(
+                                                              context)!
+                                                          .noteCopy);
+                                            });
                                           }
                                         : null,
                                     onCategory: () async {
-                                      final provider = Provider.of<NotesProvider>(context, listen: false);
+                                      final provider =
+                                          Provider.of<NotesProvider>(context,
+                                              listen: false);
                                       final ids = List<int>.from(selectedIds);
                                       final isSingle = ids.length == 1;
-                                      final firstNote = provider.notes.firstWhere((n) => n.id == ids.first);
-                                      final result = await CategoryPickerSheet.show(
+                                      final firstNote = provider.notes
+                                          .firstWhere((n) => n.id == ids.first);
+                                      final result =
+                                          await CategoryPickerSheet.show(
                                         context,
                                         isSingle ? firstNote.categoryIds : [],
-                                        isHiddenFromHome: isSingle ? firstNote.isHiddenFromHome : false,
+                                        isHiddenFromHome: isSingle
+                                            ? firstNote.isHiddenFromHome
+                                            : false,
                                       );
-                                      if (result == null || !context.mounted) return;
-                                      final newCatIds = (result['categoryIds'] as List).cast<int>();
-                                      final newHidden = result['isHiddenFromHome'] as bool;
+                                      if (result == null || !context.mounted)
+                                        return;
+                                      final newCatIds =
+                                          (result['categoryIds'] as List)
+                                              .cast<int>();
+                                      final newHidden =
+                                          result['isHiddenFromHome'] as bool;
                                       for (final id in ids) {
-                                        final note = provider.notes.firstWhere((n) => n.id == id);
+                                        final note = provider.notes
+                                            .firstWhere((n) => n.id == id);
                                         final merged = isSingle
                                             ? newCatIds
-                                            : {...note.categoryIds, ...newCatIds}.toList();
+                                            : {
+                                                ...note.categoryIds,
+                                                ...newCatIds
+                                              }.toList();
                                         await provider.updateNote(note.copyWith(
                                           categoryIds: merged,
-                                          isHiddenFromHome: isSingle ? newHidden : (note.isHiddenFromHome || newHidden),
+                                          isHiddenFromHome: isSingle
+                                              ? newHidden
+                                              : (note.isHiddenFromHome ||
+                                                  newHidden),
                                         ));
                                       }
                                       _selectedNoteIdsNotifier.value = {};
@@ -388,6 +411,7 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                             },
                           ),
                           SliverFillRemaining(
+                            hasScrollBody: true,
                             child: Column(
                               children: [
                                 if (_showPermissionBanner &&
@@ -601,34 +625,43 @@ class _ReminderTabView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (notes.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              type == 'upcoming'
-                  ? Icons.alarm_add
-                  : type == 'scheduled'
-                      ? Icons.event_repeat
-                      : Icons.alarm_off,
-              size: 80,
-              color: Colors.grey[400],
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.4,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    type == 'upcoming'
+                        ? Icons.alarm_add
+                        : type == 'scheduled'
+                            ? Icons.event_repeat
+                            : Icons.alarm_off,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    type == 'upcoming'
+                        ? strings.noUpcomingReminders
+                        : type == 'scheduled'
+                            ? strings.noScheduledReminders
+                            : strings.noExpiredReminders,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              type == 'upcoming'
-                  ? strings.noUpcomingReminders
-                  : type == 'scheduled'
-                      ? strings.noScheduledReminders
-                      : strings.noExpiredReminders,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
           8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
       itemCount: notes.length,
@@ -680,4 +713,3 @@ class _ReminderTabView extends StatelessWidget {
     );
   }
 }
-
