@@ -106,7 +106,8 @@ abstract class AppShortcuts {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /// حذف (نقل للسلة)
-  static const delete = SingleActivator(LogicalKeyboardKey.delete);
+  static const delete =
+      SingleActivator(LogicalKeyboardKey.delete, control: true);
 
   /// أرشفة
   static const archive =

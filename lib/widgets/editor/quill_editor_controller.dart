@@ -340,9 +340,10 @@ class QuillEditorController {
     final currentAttr = blockAttrs['direction'];
     final currentIsLtr = currentAttr?.value == 'rtl';
 
-    // طبّق فقط إذا يوجد حرف صريح (عربي أو إنجليزي) في السطر
+    // طبّق فقط إذا يوجد حرف صريح (عربي أو إنجليزي) أو رقم في السطر
+    // الأرقام الإنجليزية (0-9) = LTR، الهندية (٠-٩) = RTL
     final hasExplicitDir =
-        RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(currentLine);
+        RegExp(r'[a-zA-Z0-9\u0600-\u06FF\u0750-\u077F]').hasMatch(currentLine);
     if (hasExplicitDir && currentIsLtr == isRtl) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isFormatting || isDirectionFormatting || isDraggingSelection) {

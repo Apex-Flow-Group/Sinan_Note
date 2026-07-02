@@ -270,7 +270,6 @@ class ReadOnlyBars {
                 onDelete();
               },
             ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
           ],
         ),
       ),

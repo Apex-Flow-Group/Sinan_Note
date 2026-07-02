@@ -97,7 +97,8 @@ abstract class AppShortcuts {
   // ═══════════════════════════════════════════════════════════════════════
 
   /// حذف (نقل للسلة)
-  static const delete = SingleActivator(LogicalKeyboardKey.delete);
+  static const delete =
+      SingleActivator(LogicalKeyboardKey.delete, control: true);
 
   /// أرشفة
   static const archive =
@@ -209,6 +210,10 @@ class ShortcutScope extends StatefulWidget {
 class _ShortcutScopeState extends State<ShortcutScope> {
   bool _handlerRegistered = false;
 
+  /// Guard لمنع تنفيذ نفس الاختصار أكثر من مرة في نفس الـ frame
+  static int _lastHandledTimestamp = 0;
+  static LogicalKeyboardKey? _lastHandledKey;
+
   @override
   void initState() {
     super.initState();
@@ -261,6 +266,15 @@ class _ShortcutScopeState extends State<ShortcutScope> {
     for (final entry in widget.bindings.entries) {
       final activator = entry.key;
       if (_matches(activator, event, ctrl, shift, alt, meta)) {
+        // منع التكرار: إذا نفس المفتاح تم معالجته في نفس الـ timestamp
+        final now = event.timeStamp.inMilliseconds;
+        if (_lastHandledKey == event.logicalKey &&
+            (now - _lastHandledTimestamp).abs() < 50) {
+          return true; // consumed but don't fire again
+        }
+        _lastHandledKey = event.logicalKey;
+        _lastHandledTimestamp = now;
+
         entry.value();
         return true;
       }

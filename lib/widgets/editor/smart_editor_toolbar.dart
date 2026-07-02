@@ -33,6 +33,7 @@ class SmartEditorToolbar extends StatefulWidget {
   final VoidCallback onBlockquote;
   final VoidCallback onH1;
   final VoidCallback onH2;
+  final VoidCallback onH3;
   final VoidCallback onChecklist;
   final bool showChecklist;
 
@@ -43,6 +44,7 @@ class SmartEditorToolbar extends StatefulWidget {
   final bool isStrikethroughActive;
   final bool isH1Active;
   final bool isH2Active;
+  final bool isH3Active;
   final bool isListActive;
   final bool isOrderedListActive;
   final bool isBlockquoteActive;
@@ -79,6 +81,7 @@ class SmartEditorToolbar extends StatefulWidget {
     required this.onBlockquote,
     required this.onH1,
     required this.onH2,
+    required this.onH3,
     required this.onChecklist,
     this.showChecklist = true,
     required this.onColorTap,
@@ -92,6 +95,7 @@ class SmartEditorToolbar extends StatefulWidget {
     this.isStrikethroughActive = false,
     this.isH1Active = false,
     this.isH2Active = false,
+    this.isH3Active = false,
     this.isListActive = false,
     this.isOrderedListActive = false,
     this.isBlockquoteActive = false,
@@ -276,6 +280,8 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
                     isActive: widget.isH1Active),
                 _buildIconBtn(Icons.format_size_rounded, widget.onH2,
                     isActive: widget.isH2Active),
+                _buildIconBtn(Icons.text_fields_rounded, widget.onH3,
+                    isActive: widget.isH3Active),
                 _buildIconBtn(Icons.format_list_bulleted_rounded, widget.onList,
                     isActive: widget.isListActive),
                 _buildIconBtn(

@@ -105,6 +105,11 @@ class EditorToolbarBuilder {
                           .attributes['header']
                           ?.value ==
                       2,
+                  isH3Active: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['header']
+                          ?.value ==
+                      3,
                   isListActive: coordinator.quillController
                           ?.getSelectionStyle()
                           .attributes['list']
@@ -459,6 +464,21 @@ class EditorToolbarBuilder {
                     } else {
                       formattingController.insertText(
                           coordinator.contentController, '## ');
+                    }
+                  },
+                  onH3: () {
+                    HapticFeedback.lightImpact();
+                    final qc = coordinator.quillController;
+                    if (qc != null) {
+                      final isH3 =
+                          qc.getSelectionStyle().attributes['header']?.value ==
+                              3;
+                      qc.formatSelection(isH3
+                          ? Attribute.clone(Attribute.h3, null)
+                          : Attribute.h3);
+                    } else {
+                      formattingController.insertText(
+                          coordinator.contentController, '### ');
                     }
                   },
                   onList: () {

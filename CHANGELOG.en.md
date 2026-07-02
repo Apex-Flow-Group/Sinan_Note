@@ -4,7 +4,41 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
-## [3.2.4] — 2026-06 | Architecture Safety & Sync Fixes
+## [3.2.4+3399] — 2026-07 | BiDi Numerals & Editor Fixes
+
+### 🔧 Bug Fixes
+
+**Delete shortcut triggered 3 times when pressing Delete key inside editor**
+- The `Delete` key (no modifier) was registered as a shortcut to trash the note, conflicting with normal text deletion. Changed to `Ctrl+Delete`. Also added a static deduplication guard in `ShortcutScope` to prevent multiple `HardwareKeyboard` handlers from firing the same action within the same frame.
+
+**Text direction incorrectly set to LTR for digit-only lines on Enter**
+- When a line contained only Western digits (e.g. `500`) and user pressed Enter, `Bidi.detectRtlDirectionality` returned `false` (= LTR) because digits are neutral. The new line was incorrectly set to LTR. Now the direction detection treats Western digits (0-9) as LTR and Arabic-Indic digits (٠-٩) as RTL — based on the first strong character or digit encountered.
+
+**Arabic-Indic numerals incorrectly treated as strong RTL characters in `hasExplicitDir`**
+- The regex `[a-zA-Z\u0600-\u06FF]` included Arabic-Indic digits (U+0660–U+0669) in the Arabic range, causing direction formatting to trigger for digit-only lines. Updated to include digits explicitly: `[a-zA-Z0-9\u0600-\u06FF\u0750-\u077F]`.
+
+**Reminder picker bottom sheet overflow by 69px**
+- The `Column` inside `ReminderPickerSheet` had a `SingleChildScrollView` without flex constraint. Wrapped it with `Flexible` so it scrolls within available space.
+
+**Text color picker missing SafeArea**
+- The inline color picker bottom sheet used fixed `bottom: 32` padding. Replaced with proper `SafeArea(top: false)` wrapper.
+
+**More menu bottom sheet double SafeArea padding**
+- `AppBottomSheet` had both `useSafeArea: true` on `showModalBottomSheet` AND a `SafeArea` widget inside `build()`, plus manual `padding.bottom` in `_showMoreSheet`. Removed the redundant inner `SafeArea` and manual padding — `useSafeArea: true` handles it.
+
+### ✨ New Features
+
+**H3 heading button in rich editor toolbar**
+- Added a third heading size (H3) button in the bottom formatting bar, between H2 and the list buttons. Uses `Icons.text_fields_rounded` icon. Toggles `Attribute.h3` on the current line.
+
+### 🏗️ Architecture
+
+- `TextDirectionUtils.getDirection()`: Rewritten to scan for the first strong character or digit — Western digits → LTR, Arabic-Indic digits → RTL, alphabetic characters → delegate to `Bidi.detectRtlDirectionality`. Empty text defaults to RTL.
+- `ShortcutScope._handleKey()`: Added static timestamp-based deduplication (50ms window) to prevent multiple handlers from executing the same shortcut.
+
+---
+
+## [3.2.4+3399] — 2026-06 | Architecture Safety & Sync Fixes
 
 ### 🔧 Bug Fixes
 
