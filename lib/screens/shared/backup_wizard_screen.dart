@@ -2,6 +2,7 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/backup/backup_wizard_widgets.dart';
 import 'package:sinan_note/screens/shared/settings/database_restore_handler.dart';
@@ -26,7 +27,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final isWide = MediaQuery.of(context).size.width >= 800;
+    final isWide = PlatformHelper.isWideDisplay(context);
     if (isWide && !_wideInitialized) {
       _flow = 'backup';
       _wideInitialized = true;
@@ -38,7 +39,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
-    final isWide = MediaQuery.of(context).size.width >= 800;
+    final isWide = PlatformHelper.isWideDisplay(context);
 
     return PopScope(
       canPop: _flow == null || isWide,

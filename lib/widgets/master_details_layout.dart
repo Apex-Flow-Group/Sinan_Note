@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/providers/master_width_provider.dart';
@@ -19,12 +18,14 @@ class MasterDetailsLayout extends StatefulWidget {
   final Widget masterPanel;
   final Widget detailsPanel;
   final double initialMasterWidthRatio;
+  final bool includeSafeArea;
 
   const MasterDetailsLayout({
     super.key,
     required this.masterPanel,
     required this.detailsPanel,
     this.initialMasterWidthRatio = 0.35,
+    this.includeSafeArea = true,
   });
 
   @override
@@ -45,9 +46,7 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
         ? Theme.of(context).colorScheme.surfaceContainerLow
         : Theme.of(context).colorScheme.surface;
 
-    return SafeArea(
-      bottom: false,
-      child: Padding(
+    final content = Padding(
       padding: const EdgeInsets.all(8.0),
       child: _MasterDetailsRow(
         isDragging: _isDragging,
@@ -62,7 +61,6 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
             _initialized = true;
             final provider =
                 Provider.of<MasterWidthProvider>(context, listen: false);
-            // إذا لم يُحفظ عرض مسبقاً، احسبه من الـ ratio
             if (provider.width == 0) {
               provider.setWidth(width * widget.initialMasterWidthRatio);
             }
@@ -80,8 +78,12 @@ class _MasterDetailsLayoutState extends State<MasterDetailsLayout> {
         },
         onDragEnd: () => setState(() => _isDragging = false),
       ),
-     ),
     );
+
+    if (widget.includeSafeArea) {
+      return SafeArea(child: content);
+    }
+    return SafeArea(top: false, child: content);
   }
 }
 
@@ -216,4 +218,3 @@ class _MasterDetailsRow extends StatelessWidget {
     );
   }
 }
-

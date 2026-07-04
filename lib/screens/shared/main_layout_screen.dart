@@ -27,7 +27,6 @@ import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/details_panel.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/navigation/bottom_nav_bar.dart';
-import 'package:sinan_note/widgets/navigation/side_nav_rail.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   final String? sharedText;
@@ -59,6 +58,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     super.initState();
     _securityController.addListener(_onSecurityChanged);
     tabToHomeNotifier.addListener(_onBackToHome);
+    currentTabIndexNotifier.addListener(_onTabIndexChanged);
 
     // تسجيل callback المزامنة فوراً — لضمان عدم فقدان sync events مبكرة
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
@@ -103,8 +103,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           sharedDetailsPanel: _sharedDetailsPanel,
         ),
       ),
-      ReminderDashboardResponsive(sharedDetailsPanel: _sharedDetailsPanel),
-      CodeTabResponsive(sharedDetailsPanel: _sharedDetailsPanel),
+      const ReminderDashboardResponsive(),
+      const CodeTabResponsive(),
     ];
   }
 
@@ -115,6 +115,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   void dispose() {
     _securityController.removeListener(_onSecurityChanged);
     tabToHomeNotifier.removeListener(_onBackToHome);
+    currentTabIndexNotifier.removeListener(_onTabIndexChanged);
     pendingIntentNotifier.removeListener(_onPendingIntentChanged);
     isMainLayoutActive = false;
     PlatformHelper.unlockOrientation();
@@ -148,6 +149,19 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   void _onBackToHome() {
     if (_currentIndex != 0 && mounted) {
       setState(() => _currentIndex = 0);
+    }
+  }
+
+  void _onTabIndexChanged() {
+    final newIndex = currentTabIndexNotifier.value;
+    if (newIndex != _currentIndex && mounted) {
+      setState(() {
+        _currentIndex = newIndex;
+        if (newIndex != 0) {
+          _isScrollHidden = false;
+          bottomNavHiddenNotifier.value = false;
+        }
+      });
     }
   }
 
@@ -303,36 +317,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                   ],
                 ),
               ),
-              if (showBottomBar && isLargeScreen)
-                SideNavRail(
-                  currentIndex: _currentIndex,
-                  onDestinationSelected: (index) {
-                    if (isMenuOpenNotifier.value) {
-                      isMenuOpenNotifier.value = false;
-                    }
-                    setState(() {
-                      _currentIndex = index;
-                      if (index != 0) {
-                        _isScrollHidden = false;
-                        bottomNavHiddenNotifier.value = false;
-                      }
-                    });
-                    currentTabIndexNotifier.value = index;
-                  },
-                  onHomeTap: () {
-                    // العودة للرئيسية: التأكد أن التبويب 0 نشط
-                    if (_currentIndex != 0) {
-                      setState(() => _currentIndex = 0);
-                      currentTabIndexNotifier.value = 0;
-                    } else {
-                      // نشط بالفعل — أرسل إشارة للعودة للرئيسية
-                      tabToHomeNotifier.value++;
-                    }
-                  },
-                  isScrollHidden: false,
-                  isDrawerOpen: _isDrawerOpen,
-                  isRTL: isRTL,
-                ),
             ],
           ),
         ),

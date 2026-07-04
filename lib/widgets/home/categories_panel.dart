@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/category.dart';
 import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/pro_category_tile.dart';
@@ -143,6 +144,8 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
       builder: (context, provider, _) {
         final cats = provider.categories;
         final selected = provider.selectedCategoryId;
+        // الكتالوجات تُظلل فقط إذا كنت على tab الرئيسية
+        final isOnHomeTab = currentTabIndexNotifier.value == 0;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -151,7 +154,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
               label: l10n.allNotes,
               icon: Icons.all_inbox_rounded,
               accentColor: scheme.primary,
-              isSelected: selected == null,
+              isSelected: isOnHomeTab && selected == null,
               scheme: scheme,
               isDark: isDark,
               mode: CatPanelMode.normal,
@@ -160,11 +163,12 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                 Navigator.pop(context);
                 Navigator.of(context, rootNavigator: true).popUntil(
                     (route) => route.settings.name == '/main' || route.isFirst);
+                currentTabIndexNotifier.value = 0;
                 widget.onCategorySelected?.call();
               },
             ),
             ProCategoryTile(
-              isSelected: selected == kProCategoryId,
+              isSelected: isOnHomeTab && selected == kProCategoryId,
               scheme: scheme,
               isDark: isDark,
               label: l10n.professional,
@@ -173,6 +177,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                 Navigator.pop(context);
                 Navigator.of(context, rootNavigator: true).popUntil(
                     (route) => route.settings.name == '/main' || route.isFirst);
+                currentTabIndexNotifier.value = 0;
                 widget.onCategorySelected?.call();
               },
             ),
@@ -194,7 +199,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                 label: cat.name,
                 icon: Icons.bookmark_rounded,
                 accentColor: color,
-                isSelected: selected == cat.id,
+                isSelected: isOnHomeTab && selected == cat.id,
                 scheme: scheme,
                 isDark: isDark,
                 mode: widget.mode,
@@ -209,6 +214,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                     Navigator.of(context, rootNavigator: true).popUntil(
                         (route) =>
                             route.settings.name == '/main' || route.isFirst);
+                    currentTabIndexNotifier.value = 0;
                     widget.onCategorySelected?.call();
                   }
                 },

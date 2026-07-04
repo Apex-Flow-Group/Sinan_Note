@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +7,7 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_version.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
@@ -242,69 +242,83 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           _ctrl.clearNote();
           _animateToPage(0);
         } else {
-          Navigator.of(context, rootNavigator: true).popUntil((r) => r.settings.name == '/main' || r.isFirst);
+          Navigator.of(context, rootNavigator: true)
+              .popUntil((r) => r.settings.name == '/main' || r.isFirst);
         }
       },
       child: Scaffold(
-        drawer: HomeDrawerWidget(onBackupTap: () {}, onNotesChanged: () {}),
-        body: Column(
-          children: [
-            Builder(
-                builder: (ctx) => SearchableHeader(
-                      title: l10n.noteHistory,
-                      icon: Icons.history_rounded,
-                      isSearching: _isSearching,
-                      searchController: _searchController,
-                      onSearchChange: (q) =>
-                          setState(() => _ctrl.searchQuery = q),
-                      onToggleSearch: () => setState(() {
-                        _isSearching = !_isSearching;
-                        if (!_isSearching) _searchController.clear();
-                      }),
-                      leading: Builder(
-                        builder: (ctx) => IconButton(
-                          icon: const Icon(Icons.menu),
-                          onPressed: () => Scaffold.of(ctx).openDrawer(),
+        drawer: HomeDrawerWidget(
+          onBackupTap: () {},
+          onNotesChanged: () {},
+          onTabSelected: (index) {
+            Navigator.of(context, rootNavigator: true)
+                .popUntil((r) => r.settings.name == '/main' || r.isFirst);
+            currentTabIndexNotifier.value = index;
+          },
+        ),
+        body: SafeArea(
+          top: false, // SearchableHeader يتعامل مع الأعلى
+          child: Column(
+            children: [
+              Builder(
+                  builder: (ctx) => SearchableHeader(
+                        title: l10n.noteHistory,
+                        icon: Icons.history_rounded,
+                        isSearching: _isSearching,
+                        maxWidth: 720,
+                        searchController: _searchController,
+                        onSearchChange: (q) =>
+                            setState(() => _ctrl.searchQuery = q),
+                        onToggleSearch: () => setState(() {
+                          _isSearching = !_isSearching;
+                          if (!_isSearching) _searchController.clear();
+                        }),
+                        leading: Builder(
+                          builder: (ctx) => IconButton(
+                            icon: const Icon(Icons.menu),
+                            onPressed: () => Scaffold.of(ctx).openDrawer(),
+                          ),
                         ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                                _viewType == ViewType.listExpanded
-                                    ? Icons.view_headline
-                                    : Icons.view_agenda_outlined,
-                                size: 22),
-                            onPressed: () => setState(() {
-                              _viewType = _viewType == ViewType.listExpanded
-                                  ? ViewType.listCompact
-                                  : ViewType.listExpanded;
-                            }),
-                          ),
-                          PopupMenuButton<String>(
-                            icon: const Icon(Icons.sort),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            onSelected: (v) => setState(() => _ctrl.sortBy = v),
-                            itemBuilder: (_) => [
-                              _sortMenuItem(context, 'date', Icons.access_time,
-                                  l10n.sortByDate),
-                              _sortMenuItem(context, 'title',
-                                  Icons.sort_by_alpha, l10n.sortByTitle),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )),
-            Expanded(
-              child: _ctrl.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : isWide
-                      ? _buildWideLayout(context)
-                      : _buildNarrowLayout(context),
-            ),
-          ],
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                  _viewType == ViewType.listExpanded
+                                      ? Icons.view_headline
+                                      : Icons.view_agenda_outlined,
+                                  size: 22),
+                              onPressed: () => setState(() {
+                                _viewType = _viewType == ViewType.listExpanded
+                                    ? ViewType.listCompact
+                                    : ViewType.listExpanded;
+                              }),
+                            ),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.sort),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              onSelected: (v) =>
+                                  setState(() => _ctrl.sortBy = v),
+                              itemBuilder: (_) => [
+                                _sortMenuItem(context, 'date',
+                                    Icons.access_time, l10n.sortByDate),
+                                _sortMenuItem(context, 'title',
+                                    Icons.sort_by_alpha, l10n.sortByTitle),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )),
+              Expanded(
+                child: _ctrl.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : isWide
+                        ? _buildWideLayout(context)
+                        : _buildNarrowLayout(context),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -494,4 +508,3 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     );
   }
 }
-

@@ -1,8 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
-
+import 'package:sinan_note/core/utils/platform_helper.dart';
 
 /// يفتح الشاشة كـ Dialog عائم على الشاشات الكبيرة (>= 800px)
 /// وكـ push عادي على الشاشات الصغيرة
@@ -13,7 +12,7 @@ class AppDialog {
     double maxWidth = 720,
     double maxHeight = 860,
   }) {
-    final isWide = MediaQuery.of(context).size.width >= 800;
+    final isWide = PlatformHelper.isWideDisplay(context);
 
     if (isWide) {
       return showGeneralDialog<T>(
@@ -55,4 +54,3 @@ class AppDialog {
     );
   }
 }
-

@@ -4,7 +4,70 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
-## [3.2.4+3399] — 2026-07 | BiDi Numerals & Editor Fixes
+## [3.2.4+3402] — 2026-07 | Desktop Screens Unification & Drawer Navigation Fixes
+
+### 🏗️ Architecture — Desktop Screens Rewrite
+
+**All responsive desktop screens fully rewritten**
+- `ArchiveScreenResponsive`, `TrashScreenResponsive`, `ReminderDashboardResponsive`, `CodeTabResponsive`, `LockedNotesScreenResponsive`, `HomeScreenResponsive`, `SettingsScreenResponsive`, and `GoogleDriveScreenResponsive` all rewritten following a unified pattern: `Scaffold → Drawer + Column[SearchableHeader → MasterDetailsLayout(masterPanel, DetailsPanel)]`.
+- Reminders desktop: `SearchableHeader` + `TabBar` (Upcoming/Scheduled/Expired) above `MasterDetailsLayout` with `TabBarView` as masterPanel.
+- Professional desktop: `SearchableHeader` above `MasterDetailsLayout` with filtered code notes list.
+- All screens include selection mode, sort (date/title), search, and proper `PopScope` handling.
+- Mobile layout unchanged — original mobile screens still used as-is.
+
+**Removed `sharedDetailsPanel` parameter**
+- `CodeTabResponsive` and `ReminderDashboardResponsive` no longer accept `sharedDetailsPanel` — they manage their own `DetailsPanel()` internally (matching Archive/Trash pattern).
+- Updated `MainLayoutScreen._cachedScreens` accordingly.
+
+**Deleted `SideNavRail`**
+- Removed the dead code (`&& false` condition) and deleted `lib/widgets/navigation/side_nav_rail.dart` entirely.
+
+### 🔧 Bug Fixes
+
+**Drawer "Home" tap did not switch tab on desktop**
+- Pressing "Home" in the drawer only called `popUntil('/main')` but never set `currentTabIndexNotifier.value = 0`. Added `widget.onTabSelected?.call(0)`.
+
+**Reminders/Professional tabs missing from drawer in Settings, Google Drive, Version History, and Locked Notes**
+- These screens constructed `HomeDrawerWidget` without `onTabSelected`, so the tabs were hidden. Added `onTabSelected` with the standard `popUntil + currentTabIndexNotifier` pattern to all of them.
+
+**Drawer highlighting — Reminders/Professional never highlighted**
+- `isActive` was hardcoded to `false`. Changed to `currentTabIndexNotifier.value == index && route == '/main'`.
+
+**Drawer highlighting — Home highlighted together with Reminders/Professional**
+- Home's `isActive` didn't check the tab index. Added `(widget.onTabSelected == null || currentTabIndexNotifier.value == 0)` condition.
+
+**Drawer highlighting — Category highlighted together with Reminders/Professional**
+- `_buildCategoriesItem.isOnHome` didn't check tab index. Added `currentTabIndexNotifier.value == 0`.
+- `CategoriesPanelWrapper` tile `isSelected` now checks `isOnHomeTab` — categories only highlight when tab 0 is active.
+
+**Google Drive screen not showing desktop layout on foldable**
+- Was using `constraints.maxWidth >= 900` hardcoded breakpoint. Replaced with `PlatformHelper.shouldUseDesktopLayout(context)`.
+
+**Vault intro screen — redundant SafeArea causing top gap**
+- `AppBar` already handles top SafeArea, but body also had `SafeArea(child: ...)`. Changed to `SafeArea(top: false)`.
+
+**Vault intro screen — padding too large on big screens**
+- Reduced top padding and SizedBox spacing when screen height < 700px.
+
+### ✨ Improvements
+
+**Vault intro — exit button replaces back arrow**
+- Replaced `IconButton(arrow_back)` with a styled `TextButton.icon(close_rounded + l10n.close)` in AppBar actions — cleaner and more discoverable.
+
+**Settings & Google Drive — SafeArea for desktop layout**
+- Added `SafeArea(top: false)` to both `SettingsScreenResponsive` and `GoogleDriveScreen` desktop body to prevent content clipping on foldables.
+
+**Swipe Gestures section — disabled on desktop instead of hidden**
+- Mobile-only controls (search bar animation, bottom nav animation) now appear on desktop but with 50% opacity and `IgnorePointer` — visually disabled rather than removed.
+- Added hint text: "These settings apply to the mobile version only" / "هذه الإعدادات تنطبق على نسخة الجوال فقط".
+
+### 🌐 Localization
+
+- Added `swipeGesturesMobileHint` key (EN/AR).
+
+---
+
+## [3.2.4+3401] — 2026-07 | BiDi Numerals & Editor Fixes & Responsive Unification
 
 ### 🔧 Bug Fixes
 
@@ -35,6 +98,8 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 - `TextDirectionUtils.getDirection()`: Rewritten to scan for the first strong character or digit — Western digits → LTR, Arabic-Indic digits → RTL, alphabetic characters → delegate to `Bidi.detectRtlDirectionality`. Empty text defaults to RTL.
 - `ShortcutScope._handleKey()`: Added static timestamp-based deduplication (50ms window) to prevent multiple handlers from executing the same shortcut.
+- `PlatformHelper`: Rewritten with 5-layer detection: Platform → WindowedMode (View.display API) → DisplayFeatures (hinge/fold) → AspectRatio → Size. Supports foldable phones (Honor V5/V6, Samsung Fold), split screen, floating windows.
+- Unified all scattered `width >= 600` checks across 8 files to use `PlatformHelper.isWideDisplay()` / `getDisplayMode()` — foldables no longer trigger desktop layout.
 
 ---
 

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 
 /// Base widget موحد لكل bottom sheets في التطبيق.
 ///
@@ -46,7 +47,7 @@ class AppBottomSheet extends StatelessWidget {
     bool isScrollControlled = false,
     bool useSafeArea = true,
   }) {
-    final isDesktop = MediaQuery.of(context).size.width >= 600;
+    final isDesktop = PlatformHelper.isWideDisplay(context);
     return showModalBottomSheet<T>(
       context: context,
       isDismissible: isDismissible,

@@ -8,6 +8,7 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/shortcuts/app_shortcuts.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/providers/master_width_provider.dart';
 import 'package:sinan_note/providers/selected_note_provider.dart';
@@ -93,13 +94,14 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
   }
 
   void _buildCachedPanels() {
-    _cachedDetailsPanel = widget.sharedDetailsPanel ?? ValueListenableBuilder<Set<int>>(
-      valueListenable: _selectedNoteIdsNotifier,
-      builder: (context, selectedIds, _) => DetailsPanel(
-        selectedIds: selectedIds,
-        onClearSelection: () => _selectedNoteIdsNotifier.value = {},
-      ),
-    );
+    _cachedDetailsPanel = widget.sharedDetailsPanel ??
+        ValueListenableBuilder<Set<int>>(
+          valueListenable: _selectedNoteIdsNotifier,
+          builder: (context, selectedIds, _) => DetailsPanel(
+            selectedIds: selectedIds,
+            onClearSelection: () => _selectedNoteIdsNotifier.value = {},
+          ),
+        );
   }
 
   ViewType _parseViewType(String type) {
@@ -199,164 +201,168 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
       builder: (context, selectedIds, _) {
-
         return Stack(
           children: [
             Scaffold(
-          resizeToAvoidBottomInset: false,
-          drawer: HomeDrawerWidget(
-            onBackupTap: () {
-              final tempStrings = {
-                'exportBackup': l10n.exportBackup,
-                'importBackup': l10n.importBackup,
-                'googleDrive': l10n.googleDrive,
-                'share': l10n.share,
-                'soon': l10n.soon,
-              };
-              BackupOptionsDialog.show(context, tempStrings);
-            },
-            onNotesChanged: () {},
-          ),
-          appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(kToolbarHeight),
-            child: AppBar(
-              scrolledUnderElevation: 0,
-              elevation: 0,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              titleSpacing: NavigationToolbar.kMiddleSpacing,
-              leading: ClipRect(
-                child: AnimatedSlide(
-                  offset: selectedIds.isNotEmpty
-                      ? const Offset(0, -1)
-                      : Offset.zero,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: Builder(
-                    builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
+              resizeToAvoidBottomInset: false,
+              drawer: HomeDrawerWidget(
+                onBackupTap: () {
+                  final tempStrings = {
+                    'exportBackup': l10n.exportBackup,
+                    'importBackup': l10n.importBackup,
+                    'googleDrive': l10n.googleDrive,
+                    'share': l10n.share,
+                    'soon': l10n.soon,
+                  };
+                  BackupOptionsDialog.show(context, tempStrings);
+                },
+                onNotesChanged: () {},
+                onTabSelected: (index) {
+                  currentTabIndexNotifier.value = index;
+                },
+              ),
+              appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(kToolbarHeight),
+                child: AppBar(
+                  scrolledUnderElevation: 0,
+                  elevation: 0,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  titleSpacing: NavigationToolbar.kMiddleSpacing,
+                  leading: ClipRect(
+                    child: AnimatedSlide(
+                      offset: selectedIds.isNotEmpty
+                          ? const Offset(0, -1)
+                          : Offset.zero,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              title: ClipRect(
-                child: AnimatedSlide(
-                  offset: selectedIds.isNotEmpty
-                      ? const Offset(0, -1)
-                      : Offset.zero,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: Consumer<CategoriesProvider>(
-                    builder: (context, cats, _) {
-                      final selectedId = cats.selectedCategoryId;
-                      if (selectedId == null) {
-                        return _SearchField(
-                          controller: _searchController,
-                          focusNode: _searchFocusNode,
-                          hint: l10n.searchNotes,
-                        );
-                      }
-                      final catName = selectedId == kProCategoryId
-                          ? l10n.professional
-                          : (cats.categories
-                                  .where((c) => c.id == selectedId)
-                                  .firstOrNull
-                                  ?.name ??
-                              '');
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: _SearchField(
+                  title: ClipRect(
+                    child: AnimatedSlide(
+                      offset: selectedIds.isNotEmpty
+                          ? const Offset(0, -1)
+                          : Offset.zero,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: Consumer<CategoriesProvider>(
+                        builder: (context, cats, _) {
+                          final selectedId = cats.selectedCategoryId;
+                          if (selectedId == null) {
+                            return _SearchField(
                               controller: _searchController,
                               focusNode: _searchFocusNode,
                               hint: l10n.searchNotes,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Chip(
-                            avatar: const Icon(Icons.label_rounded, size: 16),
-                            label: Text(catName,
-                                style: const TextStyle(fontSize: 13)),
-                            deleteIcon: const Icon(Icons.close, size: 16),
-                            onDeleted: () => cats.selectCategory(null),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-              actions: [
-                ClipRect(
-                  child: AnimatedSlide(
-                    offset: selectedIds.isNotEmpty
-                        ? const Offset(0, -1)
-                        : Offset.zero,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: _buildSearchActions(context),
+                            );
+                          }
+                          final catName = selectedId == kProCategoryId
+                              ? l10n.professional
+                              : (cats.categories
+                                      .where((c) => c.id == selectedId)
+                                      .firstOrNull
+                                      ?.name ??
+                                  '');
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: _SearchField(
+                                  controller: _searchController,
+                                  focusNode: _searchFocusNode,
+                                  hint: l10n.searchNotes,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Chip(
+                                avatar:
+                                    const Icon(Icons.label_rounded, size: 16),
+                                label: Text(catName,
+                                    style: const TextStyle(fontSize: 13)),
+                                deleteIcon: const Icon(Icons.close, size: 16),
+                                onDeleted: () => cats.selectCategory(null),
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
+                  actions: [
+                    ClipRect(
+                      child: AnimatedSlide(
+                        offset: selectedIds.isNotEmpty
+                            ? const Offset(0, -1)
+                            : Offset.zero,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _buildSearchActions(context),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          body: Column(
-            children: [
-              DesktopMenuBar(
-                onNewNote: _navigateToNewNote,
-                onSearch: () =>
-                    FocusScope.of(context).requestFocus(_searchFocusNode),
-                onRefresh: () async {
-                  final notesProvider =
-                      Provider.of<NotesProvider>(context, listen: false);
-                  await notesProvider.loadNotes(force: true);
-                },
-                onSettings: () => AppNavigator.toSettings(context),
               ),
-              Consumer<NotesProvider>(
-                builder: (_, notes, __) => notes.isLoading
-                    ? const LinearProgressIndicator(minHeight: 2)
-                    : const SizedBox.shrink(),
-              ),
-              Expanded(
-                child: MasterDetailsLayout(
-                  masterPanel: Stack(
-                    children: [
-                      CustomScrollView(
-                        controller: _notesScrollController,
-                        slivers: [
-                          NotesGridView(
-                            viewTypeNotifier: _viewTypeNotifier,
-                            selectedNoteIdsNotifier: _selectedNoteIdsNotifier,
-                            searchController: _searchController,
+              body: Column(
+                children: [
+                  DesktopMenuBar(
+                    onNewNote: _navigateToNewNote,
+                    onSearch: () =>
+                        FocusScope.of(context).requestFocus(_searchFocusNode),
+                    onRefresh: () async {
+                      final notesProvider =
+                          Provider.of<NotesProvider>(context, listen: false);
+                      await notesProvider.loadNotes(force: true);
+                    },
+                    onSettings: () => AppNavigator.toSettings(context),
+                  ),
+                  Consumer<NotesProvider>(
+                    builder: (_, notes, __) => notes.isLoading
+                        ? const LinearProgressIndicator(minHeight: 2)
+                        : const SizedBox.shrink(),
+                  ),
+                  Expanded(
+                    child: MasterDetailsLayout(
+                      masterPanel: Stack(
+                        children: [
+                          CustomScrollView(
+                            controller: _notesScrollController,
+                            slivers: [
+                              NotesGridView(
+                                viewTypeNotifier: _viewTypeNotifier,
+                                selectedNoteIdsNotifier:
+                                    _selectedNoteIdsNotifier,
+                                searchController: _searchController,
+                                scrollController: _notesScrollController,
+                                activeFilterNotifier: _activeFilterNotifier,
+                              ),
+                            ],
+                          ),
+                          AddMenuWidget(
+                            showMenu: _showAddMenu,
+                            onToggle: () {
+                              setState(() => _showAddMenu = !_showAddMenu);
+                            },
+                            onModeSelected: _navigateToNewNote,
+                          ),
+                          NoteLocatorButton(
                             scrollController: _notesScrollController,
-                            activeFilterNotifier: _activeFilterNotifier,
                           ),
                         ],
                       ),
-                      AddMenuWidget(
-                        showMenu: _showAddMenu,
-                        onToggle: () {
-                          setState(() => _showAddMenu = !_showAddMenu);
-                        },
-                        onModeSelected: _navigateToNewNote,
-                      ),
-                      NoteLocatorButton(
-                        scrollController: _notesScrollController,
-                      ),
-                    ],
+                      detailsPanel: _cachedDetailsPanel ?? const DetailsPanel(),
+                    ),
                   ),
-                  detailsPanel: _cachedDetailsPanel ?? const DetailsPanel(),
-                ),
+                ],
               ),
-            ],
-          ),
             ), // Scaffold
             Positioned(
               top: 0,
@@ -417,7 +423,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
       ),
     ];
   }
-
 
   /// إنشاء ملاحظة جديدة واختيارها تلقائياً
   Future<void> _navigateToNewNote(NoteMode mode) async {
@@ -563,9 +568,7 @@ class _SelectionBar extends StatelessWidget {
         height: kToolbarHeight,
         child: ClipRect(
           child: AnimatedSlide(
-            offset: selectedIds.isNotEmpty
-                ? Offset.zero
-                : const Offset(0, -1),
+            offset: selectedIds.isNotEmpty ? Offset.zero : const Offset(0, -1),
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             child: SingleChildScrollView(

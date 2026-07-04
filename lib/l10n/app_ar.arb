@@ -304,6 +304,7 @@
   "editor": "المحرر",
   "noteColors": "ألوان الملاحظات",
   "swipeGestures": "إيماءات السحب",
+  "swipeGesturesMobileHint": "هذه الإعدادات تنطبق على نسخة الجوال فقط",
   "enabled": "مفعّل",
   "disabled": "معطّل",
   "editorSettings": "إعدادات المحرر",

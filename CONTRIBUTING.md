@@ -86,6 +86,23 @@ test: إضافة اختبارات
 chore: مهام صيانة
 ```
 
+### Responsive Layout
+
+- **لا تستخدم** `MediaQuery.of(context).size.width >= 600` مباشرة لتحديد نوع الشاشة
+- استخدم `PlatformHelper` دائماً:
+  ```dart
+  // ✅ صحيح
+  final isWide = PlatformHelper.isWideDisplay(context);
+  final mode = PlatformHelper.getDisplayMode(context);
+
+  // ❌ خطأ — لا يفرّق بين المطويات والتابلت والنوافذ المصغرة
+  final isWide = MediaQuery.of(context).size.width >= 600;
+  ```
+- `DisplayMode.phone` — هاتف عادي أو نافذة مصغرة
+- `DisplayMode.foldableOpen` — هاتف مطوي (شاشة داخلية)
+- `DisplayMode.tablet` — تابلت أفقي
+- `DisplayMode.desktop` — Windows/Mac/Linux
+
 ---
 
 ## عملية Pull Request

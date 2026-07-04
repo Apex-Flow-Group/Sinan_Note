@@ -8,6 +8,7 @@ import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
 import 'package:sinan_note/services/cloud/google_drive_auth.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
@@ -30,11 +31,13 @@ void setDrawerVaultActive(bool active) {
 class HomeDrawerWidget extends StatefulWidget {
   final VoidCallback onBackupTap;
   final VoidCallback onNotesChanged;
+  final void Function(int index)? onTabSelected;
 
   const HomeDrawerWidget({
     super.key,
     required this.onBackupTap,
     required this.onNotesChanged,
+    this.onTabSelected,
   });
 
   @override
@@ -124,6 +127,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     isActive:
                         (currentRoute == '/main' || currentRoute == '/') &&
                             activeExtra == null &&
+                            (widget.onTabSelected == null ||
+                                currentTabIndexNotifier.value == 0) &&
                             context
                                     .watch<CategoriesProvider>()
                                     .selectedCategoryId ==
@@ -140,10 +145,48 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                         (route) =>
                             route.settings.name == '/main' || route.isFirst,
                       );
+                      widget.onTabSelected?.call(0);
                     },
                   ),
                   // â”€â”€â”€ ط²ط± ط§ظ„طھطµظ†ظٹظپط§طھ â”€â”€â”€
                   _buildCategoriesItem(context, l10n, scheme, isDark),
+                  // ── التذكيرات والمحترف (في وضع Desktop) ───
+                  if (widget.onTabSelected != null) ...[
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.alarm_rounded,
+                      title: l10n.reminders,
+                      scheme: scheme,
+                      isDark: isDark,
+                      isActive: currentTabIndexNotifier.value == 1 &&
+                          (currentRoute == '/main' || currentRoute == '/'),
+                      onTap: () {
+                        final scaffoldState = Scaffold.maybeOf(context);
+                        if (scaffoldState != null &&
+                            scaffoldState.isDrawerOpen) {
+                          scaffoldState.closeDrawer();
+                        }
+                        widget.onTabSelected!(1);
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.code_rounded,
+                      title: l10n.professional,
+                      scheme: scheme,
+                      isDark: isDark,
+                      isActive: currentTabIndexNotifier.value == 2 &&
+                          (currentRoute == '/main' || currentRoute == '/'),
+                      onTap: () {
+                        final scaffoldState = Scaffold.maybeOf(context);
+                        if (scaffoldState != null &&
+                            scaffoldState.isDrawerOpen) {
+                          scaffoldState.closeDrawer();
+                        }
+                        widget.onTabSelected!(2);
+                      },
+                    ),
+                  ],
                   ClipRect(
                     child: AnimatedSize(
                       duration: const Duration(milliseconds: 250),
@@ -306,7 +349,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     final isOnHome =
         ((ModalRoute.of(context)?.settings.name ?? '/') == '/main' ||
                 (ModalRoute.of(context)?.settings.name ?? '/') == '/') &&
-            _activeExtraNotifier.value == null;
+            _activeExtraNotifier.value == null &&
+            currentTabIndexNotifier.value == 0;
     final selectedName = hasSelection
         ? (selectedId == kProCategoryId
             ? AppLocalizations.of(context)!.professional

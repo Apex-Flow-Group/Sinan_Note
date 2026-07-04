@@ -5,7 +5,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/shared/settings/sections/data_about_sections.dart';
 import 'package:sinan_note/screens/shared/settings/sections/general_section.dart';
 import 'package:sinan_note/screens/shared/settings/sections/security_section.dart';
@@ -20,7 +22,7 @@ class SettingsScreenResponsive extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth >= 800) {
+        if (PlatformHelper.shouldUseDesktopLayout(context)) {
           return const _SettingsDesktop();
         }
         return const SettingsScreen();
@@ -73,6 +75,11 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
         drawer: HomeDrawerWidget(
           onBackupTap: () {},
           onNotesChanged: () {},
+          onTabSelected: (index) {
+            Navigator.of(context, rootNavigator: true)
+                .popUntil((r) => r.settings.name == '/main' || r.isFirst);
+            currentTabIndexNotifier.value = index;
+          },
         ),
         appBar: AppBar(
           leading: Builder(
@@ -83,58 +90,61 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
           ),
           title: Text(l10n.settings),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Master — قائمة الأقسام
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  width: 220,
-                  color: AppTheme.sidebarBackground(colorScheme),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    itemCount: sections.length,
-                    itemBuilder: (_, i) {
-                      final selected = i == _selectedIndex;
-                      return ListTile(
-                        leading: Icon(
-                          sections[i].icon,
-                          color: selected ? colorScheme.primary : null,
-                        ),
-                        title: Text(
-                          sections[i].label,
-                          style: TextStyle(
+        body: SafeArea(
+          top: false, // AppBar يتعامل مع الأعلى
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Master — قائمة الأقسام
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: 220,
+                    color: AppTheme.sidebarBackground(colorScheme),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      itemCount: sections.length,
+                      itemBuilder: (_, i) {
+                        final selected = i == _selectedIndex;
+                        return ListTile(
+                          leading: Icon(
+                            sections[i].icon,
                             color: selected ? colorScheme.primary : null,
-                            fontWeight: selected ? FontWeight.w600 : null,
                           ),
-                        ),
-                        selected: selected,
-                        selectedTileColor:
-                            colorScheme.primaryContainer.withValues(alpha: 0.4),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16),
-                        onTap: () => setState(() => _selectedIndex = i),
-                      );
-                    },
+                          title: Text(
+                            sections[i].label,
+                            style: TextStyle(
+                              color: selected ? colorScheme.primary : null,
+                              fontWeight: selected ? FontWeight.w600 : null,
+                            ),
+                          ),
+                          selected: selected,
+                          selectedTileColor: colorScheme.primaryContainer
+                              .withValues(alpha: 0.4),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 16),
+                          onTap: () => setState(() => _selectedIndex = i),
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Details — محتوى القسم
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: KeyedSubtree(
-                    key: ValueKey(_selectedIndex),
-                    child: _buildSection(_selectedIndex, currentLang),
+                const SizedBox(width: 12),
+                // Details — محتوى القسم
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: KeyedSubtree(
+                      key: ValueKey(_selectedIndex),
+                      child: _buildSection(_selectedIndex, currentLang),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -172,6 +172,15 @@ class _BookModeViewState extends State<BookModeView> {
     _loadSavedPage();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // خط أكبر قليلاً على الشاشات العريضة (مرة واحدة فقط)
+    if (_fontSize == 18 && MediaQuery.of(context).size.width > 600) {
+      _fontSize = 20;
+    }
+  }
+
   void _buildPages() {
     if (widget.isMarkdown || widget.deltaJson == null) {
       _plainPages = _splitPlainIntoPages(widget.plainContent ?? '');
@@ -331,21 +340,36 @@ class _BookModeViewState extends State<BookModeView> {
   }
 
   Widget _buildPageView() {
-    return PageView.builder(
-      controller: _pageController,
-      physics: const _StiffPageScrollPhysics(),
-      onPageChanged: (i) => setState(() => _currentPage = i),
-      itemCount: _totalPages,
-      itemBuilder: (context, index) => _buildPage(index),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 600;
+        final maxContentWidth = isWide ? 640.0 : double.infinity;
+        final horizontalPadding = isWide ? 32.0 : 20.0;
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxContentWidth),
+            child: PageView.builder(
+              controller: _pageController,
+              physics: const _StiffPageScrollPhysics(),
+              onPageChanged: (i) => setState(() => _currentPage = i),
+              itemCount: _totalPages,
+              itemBuilder: (context, index) =>
+                  _buildPage(index, horizontalPadding),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildPage(int index) {
+  Widget _buildPage(int index, double horizontalPadding) {
     if (widget.isMarkdown) {
       final pageText = _plainPages![index];
       return SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        padding:
+            EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 20),
         child: MarkdownViewer(
           content: pageText,
           textColor: widget.textColor,
@@ -362,17 +386,17 @@ class _BookModeViewState extends State<BookModeView> {
               .where((op) => op.isInsert && op.data is String)
               .map((op) => op.data as String)
               .join());
-      return _buildPlainPage(text);
+      return _buildPlainPage(text, horizontalPadding);
     }
 
     if (_deltaPages != null) {
-      return _buildQuillPage(_deltaPages![index]);
+      return _buildQuillPage(_deltaPages![index], horizontalPadding);
     }
 
-    return _buildPlainPage(_plainPages![index]);
+    return _buildPlainPage(_plainPages![index], horizontalPadding);
   }
 
-  Widget _buildQuillPage(Delta pageDelta) {
+  Widget _buildQuillPage(Delta pageDelta, double horizontalPadding) {
     final fontFamily = _comfortableFont ? 'Georgia' : null;
 
     Document doc;
@@ -385,7 +409,7 @@ class _BookModeViewState extends State<BookModeView> {
           .where((op) => op.isInsert && op.data is String)
           .map((op) => op.data as String)
           .join();
-      return _buildPlainPage(text);
+      return _buildPlainPage(text, horizontalPadding);
     }
 
     final controller = QuillController(
@@ -406,7 +430,8 @@ class _BookModeViewState extends State<BookModeView> {
             autoFocus: false,
             expands: true,
             scrollable: true,
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            padding: EdgeInsets.fromLTRB(
+                horizontalPadding, 16, horizontalPadding, 20),
             showCursor: false,
             enableInteractiveSelection: true,
             checkBoxReadOnly: true,
@@ -529,7 +554,7 @@ class _BookModeViewState extends State<BookModeView> {
     );
   }
 
-  Widget _buildPlainPage(String text) {
+  Widget _buildPlainPage(String text, double horizontalPadding) {
     final paragraphs = text.split('\n');
     final fontFamily = _comfortableFont ? 'Georgia' : null;
 
@@ -541,7 +566,8 @@ class _BookModeViewState extends State<BookModeView> {
       textDirection: pageDir,
       child: ListView.builder(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        padding:
+            EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 20),
         itemCount: paragraphs.length,
         itemBuilder: (_, i) {
           final para = paragraphs[i];

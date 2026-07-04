@@ -9,6 +9,7 @@ import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
@@ -209,7 +210,14 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         drawer: HomeDrawerWidget(
-            onBackupTap: () {}, onNotesChanged: _loadLockedNotes),
+          onBackupTap: () {},
+          onNotesChanged: _loadLockedNotes,
+          onTabSelected: (index) {
+            Navigator.of(context, rootNavigator: true)
+                .popUntil((r) => r.settings.name == '/main' || r.isFirst);
+            currentTabIndexNotifier.value = index;
+          },
+        ),
         body: Stack(
           children: [
             Column(

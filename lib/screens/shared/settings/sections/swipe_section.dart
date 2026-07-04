@@ -25,61 +25,98 @@ class SwipeSection extends StatelessWidget {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final primary = Theme.of(context).colorScheme.primary;
 
+    final isDesktop = PlatformHelper.shouldUseDesktopLayout(context);
+
     return SettingsSectionCard(
       title: l10n.swipeGestures,
       icon: Icons.swipe_rounded,
       children: [
-        if (!PlatformHelper.isDesktopPlatform) ...[
+        if (isDesktop)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.search_rounded, color: primary),
-                    const SizedBox(width: 16),
-                    Text(isAr ? 'شريط البحث بالرئيسية' : 'Home search bar',
-                        style: Theme.of(context).textTheme.bodyLarge),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _ToggleButtons(
-                  value: settings.hideSearchOnScroll,
-                  labelFalse: isAr ? 'ثابت' : 'Fixed',
-                  labelTrue: isAr ? 'متحرك' : 'Animated',
-                  onChanged: settings.setHideSearchOnScroll,
+                Icon(Icons.phone_android_rounded,
+                    size: 16, color: Colors.grey[500]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.swipeGesturesMobileHint,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 4),
-          // ─── شريط التنقل السفلي ─────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        Opacity(
+          opacity: isDesktop ? 0.5 : 1.0,
+          child: IgnorePointer(
+            ignoring: isDesktop,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.more_horiz_rounded, color: primary),
-                    const SizedBox(width: 16),
-                    Text(isAr ? 'شريط التنقل السفلي' : 'Bottom navigation bar',
-                        style: Theme.of(context).textTheme.bodyLarge),
-                  ],
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.search_rounded, color: primary),
+                          const SizedBox(width: 16),
+                          Text(
+                              isAr ? 'شريط البحث بالرئيسية' : 'Home search bar',
+                              style: Theme.of(context).textTheme.bodyLarge),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _ToggleButtons(
+                        value: settings.hideSearchOnScroll,
+                        labelFalse: isAr ? 'ثابت' : 'Fixed',
+                        labelTrue: isAr ? 'متحرك' : 'Animated',
+                        onChanged: settings.setHideSearchOnScroll,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                _ToggleButtons(
-                  value: settings.hideNavOnScroll,
-                  labelFalse: isAr ? 'ثابت' : 'Fixed',
-                  labelTrue: isAr ? 'متحرك' : 'Animated',
-                  onChanged: settings.setHideNavOnScroll,
+                const SizedBox(height: 4),
+                // ─── شريط التنقل السفلي ─────────────────────────────────────
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.more_horiz_rounded, color: primary),
+                          const SizedBox(width: 16),
+                          Text(
+                              isAr
+                                  ? 'شريط التنقل السفلي'
+                                  : 'Bottom navigation bar',
+                              style: Theme.of(context).textTheme.bodyLarge),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _ToggleButtons(
+                        value: settings.hideNavOnScroll,
+                        labelFalse: isAr ? 'ثابت' : 'Fixed',
+                        labelTrue: isAr ? 'متحرك' : 'Animated',
+                        onChanged: settings.setHideNavOnScroll,
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 4),
               ],
             ),
           ),
-          const SizedBox(height: 4),
-        ],
+        ),
         SwitchListTile(
           secondary: Icon(Icons.swipe, color: primary),
           title: Text(l10n.swipeGesturesDesc),

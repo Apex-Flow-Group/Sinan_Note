@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WhatsNewDialog extends StatelessWidget {
@@ -23,7 +24,7 @@ class WhatsNewDialog extends StatelessWidget {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isDesktop = MediaQuery.of(context).size.width >= 600;
+    final isDesktop = PlatformHelper.isWideDisplay(context);
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
