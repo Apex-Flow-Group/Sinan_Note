@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -30,8 +31,16 @@ class TearController {
 
   void updateEditorKey(GlobalKey<EditorState> key) => _editorKey = key;
 
+  DateTime? _lastShowRequest;
+
   void showOnTap({required GlobalKey<EditorState> editorKey}) {
     updateEditorKey(editorKey);
+    final now = DateTime.now();
+    // إذا جاء طلبان بفارق أقل من 300ms → double tap → لا نُظهر الدمعة
+    final isDoubleTap = _lastShowRequest != null &&
+        now.difference(_lastShowRequest!) < kDoubleTapTimeout;
+    _lastShowRequest = now;
+    if (isDoubleTap) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_dragging) return;
       if (!quillController.selection.isCollapsed) return;

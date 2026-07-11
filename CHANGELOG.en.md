@@ -4,6 +4,33 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.5+3403] — 2026-07 | Pull-to-Refresh Fixes & Tear Handle & Cross-Platform Links
+
+### 🔧 Bug Fixes
+
+**Pull-to-refresh mode not updating after settings change**
+- `_pullToRefreshMode` was cached in `HomeScreen` state and only updated in `didChangeDependencies` with `listen: false` — changes made in Settings were never reflected until a full restart.
+- Fixed by removing the cached field entirely. `_onScrollChanged` now reads `pullToRefreshMode` directly from `SettingsProvider` on every scroll event.
+
+**Refresh bar appearing before internet check**
+- `_isRefreshingNotifier.value = true` was set inside `_onScrollChanged` (during pull gesture), before any internet check — the bar appeared even with no connection.
+- Fixed by moving `_isRefreshingNotifier.value = true` into `_onRefresh`, after the internet check passes. The bar now never starts if there is no internet.
+
+**No feedback when pulling to refresh without internet**
+- When `mode == 'full'` and no internet is available, the refresh silently did nothing.
+- Fixed: `_onRefresh` now checks `SyncTransport.hasInternet()` first. If no internet → immediate pull state reset + `UnifiedNotificationService` error snackbar with a Retry button.
+- Added 30-second timeout on `CloudSyncGateway.smartSync()`. On `TimeoutException` → same error snackbar with Retry.
+
+**About screen links not working on Linux/Windows**
+- Links used a custom `MethodChannel('com.apexflow.app.sinan/launcher')` which only works on Android.
+- Replaced with `url_launcher` (`launchUrl` + `LaunchMode.externalApplication`) — works on Android, Linux, and Windows without any platform-specific code.
+
+**Double tap selects word but tear handle steals the second tap**
+- `showOnTap` was called on every `_onTapDown` via `addPostFrameCallback`. On double tap, the second tap arrived while the tear was still visible, and `_TearWidget._onPointerDown` intercepted it instead of passing it to Quill for word selection.
+- Fixed in `TearController.showOnTap`: tracks `_lastShowRequest` timestamp. If two calls arrive within `kDoubleTapTimeout` (300ms), the second is treated as a double tap and `_show()` is skipped — Quill receives the tap normally and selects the word.
+
+---
+
 ## [3.2.4+3402] — 2026-07 | Desktop Screens Unification & Drawer Navigation Fixes
 
 ### 🏗️ Architecture — Desktop Screens Rewrite
