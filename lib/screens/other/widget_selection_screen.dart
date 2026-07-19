@@ -1,6 +1,15 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:flutter/material.dart';import 'package:sinan_note/core/utils/note_content_utils.dart'; import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/unified_notification_service.dart'; import 'package:sinan_note/services/widget_service.dart';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+
 class WidgetSelectionScreen extends StatefulWidget {
   final String widgetType; // 'note' or 'checklist'
   final int currentNoteId; // النوت الحالية المثبتة
@@ -384,4 +393,3 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
     );
   }
 }
-

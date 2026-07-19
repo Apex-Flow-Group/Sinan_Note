@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -8,7 +7,7 @@ import 'package:sinan_note/screens/shared/settings/database_restore_handler.dart
 import 'package:sinan_note/screens/shared/settings/json_import_handler.dart';
 import 'package:sinan_note/services/storage/backup_service.dart';
 import 'package:sinan_note/services/storage/storage_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class SettingsBackupHandlers {
   static void showBackupDialog(
@@ -89,7 +88,9 @@ class SettingsBackupHandlers {
           children: [
             // ── تصدير عادي ──
             Text(
-              isArabic ? 'تصدير عادي (بدون مشفرة)' : 'Normal export (no encrypted)',
+              isArabic
+                  ? 'تصدير عادي (بدون مشفرة)'
+                  : 'Normal export (no encrypted)',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
             const SizedBox(height: 8),
@@ -104,7 +105,9 @@ class SettingsBackupHandlers {
                   final msg = await StorageService().exportNotesToPath(result);
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
-                      context: context, message: msg, type: NotificationType.success,
+                      context: context,
+                      message: msg,
+                      type: NotificationType.success,
                       duration: const Duration(seconds: 4));
                 } catch (e) {
                   if (!context.mounted) return;
@@ -135,7 +138,9 @@ class SettingsBackupHandlers {
             const Divider(height: 24),
             // ── تصدير كامل ──
             Text(
-              isArabic ? 'تصدير كامل (مع المشفرة)' : 'Full export (with encrypted)',
+              isArabic
+                  ? 'تصدير كامل (مع المشفرة)'
+                  : 'Full export (with encrypted)',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
             Container(
@@ -164,7 +169,9 @@ class SettingsBackupHandlers {
                       .exportNotesToPath(result, includeVault: true);
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
-                      context: context, message: msg, type: NotificationType.success,
+                      context: context,
+                      message: msg,
+                      type: NotificationType.success,
                       duration: const Duration(seconds: 4));
                 } catch (e) {
                   if (!context.mounted) return;
@@ -223,9 +230,8 @@ class SettingsBackupHandlers {
         .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
     if (result == null || result.files.single.path == null) return;
 
-    final lang = context.mounted
-        ? Localizations.localeOf(context).languageCode
-        : 'en';
+    final lang =
+        context.mounted ? Localizations.localeOf(context).languageCode : 'en';
     if (!context.mounted) return;
     await JsonImportHandler.handle(
         context, lang, l10n, result.files.single.path!);
@@ -280,10 +286,9 @@ class SettingsBackupHandlers {
     return ElevatedButton.icon(
       icon: Icon(icon),
       label: Text(label),
-      style:
-          ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+      style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50)),
       onPressed: onPressed,
     );
   }
 }
-

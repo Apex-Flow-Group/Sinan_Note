@@ -1,12 +1,11 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class DesktopSelectionActions extends StatelessWidget {
   final Set<int> selectedIds;
@@ -112,4 +111,3 @@ class DesktopSelectionActions extends StatelessWidget {
     }
   }
 }
-

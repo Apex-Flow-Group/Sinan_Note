@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
+import 'package:sinan_note/core/utils/paste_handler.dart';
 import 'package:sinan_note/core/utils/text_direction_utils.dart';
-import 'package:sinan_note/widgets/editor/paste_handler.dart';
 import 'package:sinan_note/widgets/editor/quill_editor_state_mixin.dart';
 import 'package:sinan_note/widgets/editor/tear/tear.dart';
 

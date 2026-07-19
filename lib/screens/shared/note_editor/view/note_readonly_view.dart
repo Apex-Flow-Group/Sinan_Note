@@ -21,10 +21,10 @@ import 'package:sinan_note/screens/shared/note_editor/view/book_mode_view.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/trash_floating_sheet.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/read_only_bars.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
-import 'package:sinan_note/services/version_control_service.dart';
+import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/reminder_picker_sheet.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 

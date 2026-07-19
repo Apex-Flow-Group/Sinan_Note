@@ -15,11 +15,11 @@ import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_c
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
-import 'package:sinan_note/services/code_export_service.dart';
-import 'package:sinan_note/services/code_preview_service.dart';
-import 'package:sinan_note/services/svg_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/services/code/code_export_service.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/common/svg_preview_sheet.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+import 'package:sinan_note/widgets/editor/code_preview_sheet.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 import 'package:sinan_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 

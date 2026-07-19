@@ -13,7 +13,7 @@ import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:sinan_note/screens/sync/google_drive/google_drive_widgets.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
 class GoogleDriveScreen extends StatefulWidget {

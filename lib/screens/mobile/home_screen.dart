@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +19,7 @@ import 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
 import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/sync/sync_transport.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;
 import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
@@ -65,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearchActive = false;
   ViewType _viewType = ViewType.listExpanded;
   final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
-
 
   @override
   void initState() {
@@ -193,7 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // حفظ كل قراءات context قبل أي await
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final categoriesProvider = Provider.of<CategoriesProvider>(context, listen: false);
+    final categoriesProvider =
+        Provider.of<CategoriesProvider>(context, listen: false);
 
     // فحص الإنترنت أولاً — قبل إظهار الشريط
     if (mode == 'full') {
@@ -203,7 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           UnifiedNotificationService().showWithAction(
             context: context,
-            message: isAr ? 'لا يوجد اتصال بالإنترنت' : 'No internet connection',
+            message:
+                isAr ? 'لا يوجد اتصال بالإنترنت' : 'No internet connection',
             actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
             onAction: _onRefresh,
             type: NotificationType.error,
@@ -264,7 +266,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
     // Don't show pull indicator when pull-to-refresh is disabled
-    final mode = Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
+    final mode =
+        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
     if (mode == 'disabled') return;
 
     final offset = _scrollController.offset;
@@ -473,4 +476,3 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 }
-

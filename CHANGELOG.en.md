@@ -4,6 +4,65 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.4+3405] — 2026-07 | AGP 9 Upgrade & Codebase Restructuring
+
+> ⚓ **STABLE BASELINE** — Safe rollback point.
+> Architecture is clean, all features complete, tests passing.
+> Any major refactor or new feature starts from here.
+> Next version (3.3.0+) → if it fails, revert to tag: `v3.2.4-stable`
+
+### 🚀 Build & Performance
+
+**Android Gradle Plugin upgraded to 9.0.1**
+- Upgraded AGP from 8.9.1 → 9.0.1, enabling latest R8 optimizations.
+- Added `android.builtInKotlin=false` and `android.newDsl=false` flags for Flutter plugin compatibility.
+- Increased `MaxMetaspaceSize` from 512m → 1g to prevent R8 OOM during release builds.
+- Forced `espresso-core` and `espresso-idling-resource` to 3.6.1 to resolve namespace conflict with AGP 9.
+
+**Optimized Resource Shrinking enabled**
+- Added `android.r8.optimizedResourceShrinking=true` — R8 now removes unused resources more aggressively, resulting in smaller APK size.
+
+### 🔧 Bug Fixes
+
+**R8 crash with AGP 9 — WorkManager/Room classes stripped**
+- `shrinkResources true` with AGP 9.0.1 caused R8 to strip `androidx.work.impl.WorkDatabase` (Room-generated class used by WorkManager via `InitializationProvider`). App crashed on startup with `Failed to create an instance of WorkDatabase`.
+- Fixed by adding `-keep class androidx.work.** { *; }` and `-keep class androidx.room.** { *; }` to ProGuard rules.
+
+### 🏗️ Architecture — Codebase Restructuring
+
+**Dead code removal**
+- Deleted unused duplicate `lib/services/keyboard/app_shortcuts.dart` (not imported anywhere).
+- Removed empty `lib/providers/` and `lib/controllers/editor/` directories.
+
+**Controllers consolidated**
+- Moved `selected_note_provider.dart` and `master_width_provider.dart` from `providers/` → `controllers/`.
+- Moved `version_history_controller.dart` from `screens/other/version_history/` → `controllers/version_history/`.
+- Moved `EditorStateManager` from `controllers/editor/` → `screens/shared/note_editor/state/` (where it's actually consumed).
+
+**Services reorganized by responsibility**
+- Created `services/code/` — moved `language_detector.dart`, `smart_analyzer.dart`, `code_executor.dart`, `code_export_service.dart` into it.
+- Moved `clipboard_guard.dart` and `content_guard.dart` → `services/security/`.
+- Moved `version_control_service.dart` and `version_history_service.dart` → `services/note_services/`.
+- Moved `svg_service.dart` → `widgets/common/svg_preview_sheet.dart` (it was a full widget masquerading as a service).
+- Moved `unified_notification_service.dart` → `widgets/common/` (uses BuildContext — not a pure service).
+- Moved `paste_handler.dart` → `core/utils/` (pure Isolate utility, not a widget).
+
+**Widgets organized**
+- Created `widgets/layout/` — moved 8 layout files from `widgets/` root: `master_details_layout`, `master_panel`, `details_panel`, `empty_details_view`, `note_list_tile`, `responsive_layout_wrapper`, `vault_desktop_wrapper`, `vault_details_panel`.
+
+**Business logic extracted from main.dart**
+- Created `services/intent_handler_service.dart` — extracted `cleanSharedText`, `extractTitle`, `detectNoteMode`, `getModeString`, `parseSinanFile`, `hasValidContent` from main.dart.
+- `main.dart` reduced from 516 → 462 lines.
+
+### ✨ New
+
+**Cloud Code Executor (Judge0 CE API) — built, not connected**
+- Added `services/code/cloud_code_executor.dart` — complete implementation with submission, polling, result parsing, and 21 supported languages.
+- Includes `CodeExecutionResult` model with formatted output and error categorization.
+- Ready to activate: requires `http` package + API key.
+
+---
+
 ## [3.2.5+3403] — 2026-07 | Pull-to-Refresh Fixes & Tear Handle & Cross-Platform Links
 
 ### 🔧 Bug Fixes

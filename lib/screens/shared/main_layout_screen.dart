@@ -23,9 +23,9 @@ import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/reminder_dashboard_responsive.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
-import 'package:sinan_note/widgets/details_panel.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
+import 'package:sinan_note/widgets/layout/details_panel.dart';
 import 'package:sinan_note/widgets/navigation/bottom_nav_bar.dart';
 
 class MainLayoutScreen extends StatefulWidget {

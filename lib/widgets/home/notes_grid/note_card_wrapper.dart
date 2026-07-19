@@ -1,10 +1,9 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/providers/selected_note_provider.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/widgets/home/note_card_widget.dart';
 
@@ -87,7 +86,8 @@ class _NoteCardWrapperState extends State<NoteCardWrapper> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: _isCurrentlyOpen ? const EdgeInsets.only(left: 4) : EdgeInsets.zero,
+      padding:
+          _isCurrentlyOpen ? const EdgeInsets.only(left: 4) : EdgeInsets.zero,
       child: Row(
         children: [
           AnimatedContainer(
@@ -133,4 +133,3 @@ class _NoteCardWrapperState extends State<NoteCardWrapper> {
     );
   }
 }
-

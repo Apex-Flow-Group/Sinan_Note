@@ -14,7 +14,7 @@ import 'package:sinan_note/services/cloud/google_drive_auth.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/categories_panel.dart';
 import 'package:sinan_note/widgets/home/drawer_widgets.dart';
 

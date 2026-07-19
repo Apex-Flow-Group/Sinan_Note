@@ -3,27 +3,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/master_width_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/shortcuts/app_shortcuts.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note_mode.dart';
-import 'package:sinan_note/providers/master_width_provider.dart';
-import 'package:sinan_note/providers/selected_note_provider.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart';
 import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:sinan_note/widgets/desktop/desktop_selection_actions.dart';
-import 'package:sinan_note/widgets/details_panel.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 import 'package:sinan_note/widgets/home/note_locator_button.dart';
 import 'package:sinan_note/widgets/home/notes_grid_view.dart';
-import 'package:sinan_note/widgets/master_details_layout.dart';
-import 'package:sinan_note/widgets/responsive_layout_wrapper.dart';
+import 'package:sinan_note/widgets/layout/details_panel.dart';
+import 'package:sinan_note/widgets/layout/master_details_layout.dart';
+import 'package:sinan_note/widgets/layout/responsive_layout_wrapper.dart';
 
 /// نسخة Responsive من HomeScreen تدعم نمط Master-Details
 ///

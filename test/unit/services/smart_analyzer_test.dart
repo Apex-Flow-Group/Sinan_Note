@@ -1,7 +1,13 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🧠 SMART SERVICES — SmartAnalyzer + LanguageDetector + ChecklistFormatter
 
-import 'dart:convert';import 'package:flutter_test/flutter_test.dart';import 'package:sinan_note/core/utils/checklist_formatter.dart'; import 'package:sinan_note/services/language_detector.dart'; import 'package:sinan_note/services/smart_analyzer.dart';
+import 'dart:convert';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/services/code/language_detector.dart';
+import 'package:sinan_note/services/code/smart_analyzer.dart';
+
 void main() {
   // ══════════════════════════════════════════════════════════════
   // 1. SmartAnalyzer — الحسابات الرياضية
@@ -372,4 +378,3 @@ ORDER BY name;
     });
   });
 }
-

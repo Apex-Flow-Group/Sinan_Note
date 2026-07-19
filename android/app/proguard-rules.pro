@@ -1,6 +1,16 @@
 # Sinan Note ProGuard Rules
 # Add project specific ProGuard rules here.
 
+# ══════════════════════════════════════════════════════════════════════
+# App Native Classes — MUST KEEP (MainActivity, Widgets)
+# ══════════════════════════════════════════════════════════════════════
+-keep class com.apexflow.app.sinan.** { *; }
+
+# Flutter Embedding — required for AGP 9
+-keep class io.flutter.embedding.** { *; }
+-keep class io.flutter.embedding.android.** { *; }
+-keep class io.flutter.embedding.engine.** { *; }
+
 # Flutter
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.**  { *; }
@@ -36,6 +46,17 @@
 
 # Home Widget
 -keep class es.antonborri.home_widget.** { *; }
+
+# AndroidX WorkManager + Room (required for R8 with AGP 9)
+-keep class androidx.work.** { *; }
+-keep class androidx.room.** { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao class * { *; }
+-dontwarn androidx.room.**
+
+# AndroidX Startup
+-keep class androidx.startup.** { *; }
 
 # Play Core (للمكونات المؤجلة)
 -keep class com.google.android.play.core.** { *; }

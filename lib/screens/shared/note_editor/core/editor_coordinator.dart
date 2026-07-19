@@ -9,7 +9,6 @@ import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/core/constants/app_text_styles.dart';
 import 'package:sinan_note/core/utils/apex_smart_controller.dart';
@@ -21,10 +20,11 @@ import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_storage_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
 import 'package:sinan_note/screens/shared/note_editor/utils/note_editor_utils.dart';
-import 'package:sinan_note/services/clipboard_guard.dart';
-import 'package:sinan_note/services/content_guard.dart';
-import 'package:sinan_note/services/language_detector.dart';
+import 'package:sinan_note/services/code/language_detector.dart';
+import 'package:sinan_note/services/security/clipboard_guard.dart';
+import 'package:sinan_note/services/security/content_guard.dart';
 import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 
 /// Central coordinator for all editor operations

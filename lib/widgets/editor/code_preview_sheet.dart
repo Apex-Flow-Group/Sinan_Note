@@ -1,6 +1,11 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:flutter/material.dart'; import 'package:flutter/services.dart';import 'package:sinan_note/services/unified_notification_service.dart';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+
 /// عرض معاينة منسقة للكود — لا يُشغّل الكود ولا يغيره
 class CodePreviewService {
   static bool supportsPreview(String? language) => language != null;
@@ -437,4 +442,3 @@ class _CodeWithLineNumbers extends StatelessWidget {
     }
   }
 }
-

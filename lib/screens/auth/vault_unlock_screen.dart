@@ -8,8 +8,8 @@ import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
-import 'package:sinan_note/widgets/vault_desktop_wrapper.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
 
 final _passwordFormatter = FilteringTextInputFormatter.allow(
   RegExp(r'[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:,.<>/?\\|`~"]'),

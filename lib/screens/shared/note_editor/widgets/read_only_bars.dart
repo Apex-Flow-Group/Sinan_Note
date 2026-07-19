@@ -7,9 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 
 Map<String, int> _parseChecklistStats(String content) {

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/providers/master_width_provider.dart';
+import 'package:sinan_note/controllers/master_width_provider.dart';
 
 /// Widget يعرض Master Panel و Details Panel جنباً إلى جنب مع إمكانية تغيير الحجم
 ///

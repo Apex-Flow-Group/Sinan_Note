@@ -1,11 +1,9 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
-
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
-import 'package:sinan_note/services/version_control_service.dart';
 
 /// Version History Service - UI layer for smart version control
 /// Uses VersionControlService settings for consistency
@@ -18,7 +16,7 @@ class VersionHistoryService {
 
   Future<List<Note>> getNotesWithHistory() async {
     final allNotes = await _dbService.getAllNotes();
-    
+
     final notesWithHistory = <Note>[];
     for (var note in allNotes) {
       if (note.isLocked) continue;
@@ -27,7 +25,7 @@ class VersionHistoryService {
         notesWithHistory.add(note);
       }
     }
-    
+
     return notesWithHistory;
   }
 
@@ -71,4 +69,3 @@ class VersionHistoryService {
     return await _dbService.getAllNotes();
   }
 }
-

@@ -16,8 +16,8 @@ import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/security/vault_reset_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/home/dialogs/vault_dialogs.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart'

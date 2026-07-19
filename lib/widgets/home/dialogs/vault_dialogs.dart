@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,8 +10,8 @@ import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/services/security/vault_reset_service.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class VaultDialogs {
   static void showSettings(BuildContext context) {
@@ -343,7 +342,8 @@ class VaultDialogs {
         type: NotificationType.success,
       );
 
-      Navigator.of(context, rootNavigator: true).popUntil((route) => route.settings.name == '/main' || route.isFirst);
+      Navigator.of(context, rootNavigator: true)
+          .popUntil((route) => route.settings.name == '/main' || route.isFirst);
     } catch (e) {
       if (!context.mounted) return;
       UnifiedNotificationService().show(
@@ -564,4 +564,3 @@ class VaultDialogs {
     );
   }
 }
-

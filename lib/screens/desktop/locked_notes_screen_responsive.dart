@@ -2,11 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
-import 'package:sinan_note/providers/selected_note_provider.dart';
 import 'package:sinan_note/screens/mobile/locked_notes_screen.dart';
-import 'package:sinan_note/widgets/master_details_layout.dart';
-import 'package:sinan_note/widgets/vault_details_panel.dart';
+import 'package:sinan_note/widgets/layout/master_details_layout.dart';
+import 'package:sinan_note/widgets/layout/vault_details_panel.dart';
 
 /// نسخة Responsive من LockedNotesScreen تدعم نمط Master-Details على Desktop.
 ///

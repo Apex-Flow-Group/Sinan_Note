@@ -21,8 +21,8 @@ import 'package:sinan_note/screens/shared/note_editor/handlers/editor_menu_handl
 import 'package:sinan_note/screens/shared/note_editor/state/editor_save_operations.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:sinan_note/services/keyboard/editor_command_bus.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
-import 'package:sinan_note/services/version_control_service.dart';
+import 'package:sinan_note/services/note_services/version_control_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 
 // Import Core Components
@@ -445,8 +445,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   void _onQuillContentChanged() {
     _handleContentChange(
-      currentText:
-          QuillMigration.toPlainText(_coordinator.quillController!),
+      currentText: QuillMigration.toPlainText(_coordinator.quillController!),
       autosaveDelay: const Duration(milliseconds: 800),
     );
   }
