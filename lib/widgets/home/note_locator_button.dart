@@ -1,12 +1,11 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/providers/selected_note_provider.dart';
 
 /// Registry عالمي يحفظ ارتفاع كل بطاقة بعد بنائها
 class NoteCardKeyRegistry {
@@ -212,4 +211,3 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
     );
   }
 }
-

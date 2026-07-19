@@ -1,18 +1,19 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/services/note_services/version_control_service.dart';
+import 'package:sinan_note/services/note_services/version_history_service.dart';
 import 'package:sinan_note/services/search/smart_search_service.dart';
 import 'package:sinan_note/services/security/rate_limiter_service.dart';
 import 'package:sinan_note/services/storage/compression_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
-import 'package:sinan_note/services/version_control_service.dart';
-import 'package:sinan_note/services/version_history_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 import '../../test_setup.dart';
+
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -273,7 +274,8 @@ void main() {
 
     // ── حالات الحافة الحقيقية ─────────────────────────────────────────────
 
-    test('endEditingSession بدون startEditingSession — لا يحفظ ولا يتعطل', () async {
+    test('endEditingSession بدون startEditingSession — لا يحفظ ولا يتعطل',
+        () async {
       final id = await insertNote('Title', 'Content');
       // لم نستدعِ startEditingSession
       await service.endEditingSession(
@@ -415,7 +417,8 @@ void main() {
       }
     });
 
-    test('smartLogVersion مع isLocked=true — لا يُحفظ حتى مع forceLog', () async {
+    test('smartLogVersion مع isLocked=true — لا يُحفظ حتى مع forceLog',
+        () async {
       final id = await insertNote('Title', 'Content');
       await service.smartLogVersion(
         noteId: id,
@@ -694,4 +697,3 @@ void main() {
     });
   });
 }
-

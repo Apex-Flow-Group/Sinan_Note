@@ -1,9 +1,9 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -29,13 +29,11 @@ class _AboutScreenState extends State<AboutScreen> {
     } catch (_) {}
   }
 
-  static const _channel = MethodChannel('com.apexflow.app.sinan/launcher');
-
   Future<void> _launchUrl(String url) async {
     if (_isLaunching) return;
     setState(() => _isLaunching = true);
     try {
-      await _channel.invokeMethod('launch', url);
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (_) {
     } finally {
       if (mounted) setState(() => _isLaunching = false);

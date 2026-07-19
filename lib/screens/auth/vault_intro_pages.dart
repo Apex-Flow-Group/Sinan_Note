@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -188,12 +187,13 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isCompact = MediaQuery.of(context).size.height < 700;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(32, 32, 32, 32),
+      padding: EdgeInsets.fromLTRB(32, isCompact ? 12 : 32, 32, 32),
       child: Column(
         children: [
-          const SizedBox(height: 20),
+          SizedBox(height: isCompact ? 8 : 20),
           Container(
             width: 100,
             height: 100,
@@ -443,4 +443,3 @@ class VaultBiometricPage extends StatelessWidget {
     );
   }
 }
-

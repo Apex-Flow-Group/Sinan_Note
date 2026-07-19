@@ -6,7 +6,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
-import 'package:sinan_note/widgets/vault_desktop_wrapper.dart';
+import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
 
 /// نقطة الدخول الرئيسية للخزنة.
 /// تتحقق من الحالة وتُفوّض التنقل لـ [VaultNavigator].

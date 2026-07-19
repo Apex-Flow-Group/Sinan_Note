@@ -1,8 +1,8 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:sinan_note/models/note.dart';
@@ -38,6 +38,21 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   bool _hasMore = false;
   bool _isNavHidden = false;
   bool _isFiltering = false;
+
+  int _getCrossAxisCount(BuildContext context) {
+    final mode = PlatformHelper.getDisplayMode(context);
+    final width = MediaQuery.of(context).size.width;
+    switch (mode) {
+      case DisplayMode.desktop:
+        return width >= 1200 ? 4 : 3;
+      case DisplayMode.tablet:
+        return width >= 1200 ? 4 : 3;
+      case DisplayMode.foldableOpen:
+        return 3;
+      case DisplayMode.phone:
+        return 2;
+    }
+  }
 
   @override
   void initState() {
@@ -119,11 +134,7 @@ class _NotesSliverViewState extends State<NotesSliverView> {
         padding:
             EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding),
         sliver: SliverMasonryGrid.count(
-          crossAxisCount: MediaQuery.of(context).size.width >= 1200
-              ? 4
-              : MediaQuery.of(context).size.width >= 600
-                  ? 3
-                  : 2,
+          crossAxisCount: _getCrossAxisCount(context),
           mainAxisSpacing: 6,
           crossAxisSpacing: 6,
           childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
@@ -183,4 +194,3 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     );
   }
 }
-

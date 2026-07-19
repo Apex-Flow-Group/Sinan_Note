@@ -1,16 +1,15 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
-import 'package:sinan_note/providers/selected_note_provider.dart';
-import 'package:sinan_note/widgets/note_list_tile.dart';
+import 'package:sinan_note/widgets/layout/note_list_tile.dart';
 
 /// Widget يعرض قائمة الملاحظات في Master Panel
-/// 
+///
 /// المسؤوليات:
 /// - عرض قائمة الملاحظات في ListView قابل للتمرير
 /// - تمييز الملاحظة المختارة بصرياً
@@ -21,22 +20,22 @@ import 'package:sinan_note/widgets/note_list_tile.dart';
 class MasterPanel extends StatelessWidget {
   /// قائمة الملاحظات المراد عرضها
   final List<Note> notes;
-  
+
   /// دالة تُستدعى عند اختيار ملاحظة
   final Function(Note) onNoteSelected;
-  
+
   /// دالة تُستدعى عند فتح context menu لملاحظة (اختياري)
   final Function(Note, BuildContext)? onNoteContextMenu;
-  
+
   /// عنوان AppBar (اختياري)
   final String? appBarTitle;
-  
+
   /// أيقونة AppBar (اختياري)
   final IconData? appBarIcon;
-  
+
   /// دالة تُستدعى عند الضغط على زر الإضافة (اختياري)
   final VoidCallback? onAddPressed;
-  
+
   /// دالة تُستدعى عند اختيار نوع ملاحظة جديدة (اختياري)
   final Function(NoteMode)? onAddNote;
 
@@ -54,11 +53,9 @@ class MasterPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
-    final content = notes.isEmpty
-        ? _buildEmptyState(l10n)
-        : _buildNotesList();
-    
+
+    final content = notes.isEmpty ? _buildEmptyState(l10n) : _buildNotesList();
+
     // إذا كان هناك عنوان AppBar، نعرض Column مع AppBar
     if (appBarTitle != null) {
       return Column(
@@ -68,7 +65,7 @@ class MasterPanel extends StatelessWidget {
         ],
       );
     }
-    
+
     // إذا كان هناك زر إضافة، نعرض Stack مع FAB
     if (onAddPressed != null || onAddNote != null) {
       return Stack(
@@ -87,17 +84,17 @@ class MasterPanel extends StatelessWidget {
         ],
       );
     }
-    
+
     // بدون AppBar أو FAB، نعرض المحتوى مباشرة
     return content;
   }
-  
+
   /// بناء AppBar للـ Master Panel
   Widget _buildAppBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).appBarTheme.backgroundColor ?? 
-               Theme.of(context).primaryColor,
+        color: Theme.of(context).appBarTheme.backgroundColor ??
+            Theme.of(context).primaryColor,
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).dividerColor,
@@ -115,7 +112,7 @@ class MasterPanel extends StatelessWidget {
                 Icon(
                   appBarIcon,
                   color: Theme.of(context).appBarTheme.iconTheme?.color ??
-                         Theme.of(context).colorScheme.onPrimary,
+                      Theme.of(context).colorScheme.onPrimary,
                 ),
                 const SizedBox(width: 12),
               ],
@@ -123,9 +120,9 @@ class MasterPanel extends StatelessWidget {
                 child: Text(
                   appBarTitle!,
                   style: Theme.of(context).appBarTheme.titleTextStyle ??
-                         Theme.of(context).textTheme.titleLarge?.copyWith(
-                           color: Theme.of(context).colorScheme.onPrimary,
-                         ),
+                      Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
                 ),
               ),
             ],
@@ -134,7 +131,7 @@ class MasterPanel extends StatelessWidget {
       ),
     );
   }
-  
+
   /// بناء حالة القائمة الفارغة
   Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
@@ -158,7 +155,7 @@ class MasterPanel extends StatelessWidget {
       ),
     );
   }
-  
+
   /// بناء قائمة الملاحظات
   Widget _buildNotesList() {
     return Consumer<SelectedNoteProvider>(
@@ -182,12 +179,12 @@ class MasterPanel extends StatelessWidget {
       },
     );
   }
-  
+
   /// بناء قائمة إضافة ملاحظة جديدة
   Widget _buildAddNoteMenu(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return FloatingActionButton(
       onPressed: () {
         showModalBottomSheet(
@@ -198,7 +195,8 @@ class MasterPanel extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: Icon(Icons.note_outlined, color: colorScheme.outline),
+                  leading:
+                      Icon(Icons.note_outlined, color: colorScheme.outline),
                   title: Text(l10n.simpleNoteMenu),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -206,7 +204,8 @@ class MasterPanel extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.format_paint_rounded, color: colorScheme.primary),
+                  leading: Icon(Icons.format_paint_rounded,
+                      color: colorScheme.primary),
                   title: Text(l10n.richNoteMenu),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -214,7 +213,8 @@ class MasterPanel extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.code_rounded, color: colorScheme.secondary),
+                  leading:
+                      Icon(Icons.code_rounded, color: colorScheme.secondary),
                   title: Text(l10n.codeEditorMenu),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -222,7 +222,8 @@ class MasterPanel extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.checklist_rounded, color: colorScheme.tertiary),
+                  leading: Icon(Icons.checklist_rounded,
+                      color: colorScheme.tertiary),
                   title: Text(l10n.checklistMenu),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -238,4 +239,3 @@ class MasterPanel extends StatelessWidget {
     );
   }
 }
-

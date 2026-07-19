@@ -1,14 +1,20 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:path_provider/path_provider.dart'; import 'package:sinan_note/services/language_detector.dart';
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
+import 'package:sinan_note/services/code/language_detector.dart';
+
 /// تنفيذ الكود محلياً معطّل لأسباب أمنية.
 /// جميع دوال التنفيذ ترجع رسالة توجيه للمستخدم.
 /// التنفيذ السحابي قادم عبر Judge0 API.
 class CodeExecutor {
   static Future<String> executeDart(String code) async => _securityMessage;
   static Future<String> executePython(String code) async => _securityMessage;
-  static Future<String> executeJavaScript(String code) async => _securityMessage;
-  static Future<String> executeCode(String code, String language) async => _securityMessage;
+  static Future<String> executeJavaScript(String code) async =>
+      _securityMessage;
+  static Future<String> executeCode(String code, String language) async =>
+      _securityMessage;
 
   /// Save code as executable file
   static Future<String> saveAsExecutable(
@@ -37,4 +43,3 @@ class CodeExecutor {
       '• Use online compilers (repl.it, jdoodle.com)\n'
       '• Copy code to your development environment';
 }
-

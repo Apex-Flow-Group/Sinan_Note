@@ -16,6 +16,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/widgets/common/notification_snack_bar.dart';
 
 /// نوع الإشعار
@@ -286,10 +287,11 @@ class UnifiedNotificationService {
   /// عرض الإشعار الفعلي
   void _showNotification(BuildContext context, NotificationConfig config,
       {VoidCallback? onDismissed}) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1024;
-    final isTablet = screenWidth >= 600 && screenWidth < 1024;
-    final isMobile = screenWidth < 600;
+    final displayMode = PlatformHelper.getDisplayMode(context);
+    final isDesktop = displayMode == DisplayMode.desktop;
+    final isTablet = displayMode == DisplayMode.tablet;
+    final isMobile = displayMode == DisplayMode.phone ||
+        displayMode == DisplayMode.foldableOpen;
 
     final position =
         config.position ?? _getDefaultPosition(isMobile, isTablet, isDesktop);

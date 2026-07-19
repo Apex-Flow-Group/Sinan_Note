@@ -4,6 +4,215 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.4+3405] — 2026-07 | AGP 9 Upgrade & Codebase Restructuring
+
+> ⚓ **STABLE BASELINE** — Safe rollback point.
+> Architecture is clean, all features complete, tests passing.
+> Any major refactor or new feature starts from here.
+> Next version (3.3.0+) → if it fails, revert to tag: `v3.2.4-stable`
+
+### 🚀 Build & Performance
+
+**Android Gradle Plugin upgraded to 9.0.1**
+- Upgraded AGP from 8.9.1 → 9.0.1, enabling latest R8 optimizations.
+- Added `android.builtInKotlin=false` and `android.newDsl=false` flags for Flutter plugin compatibility.
+- Increased `MaxMetaspaceSize` from 512m → 1g to prevent R8 OOM during release builds.
+- Forced `espresso-core` and `espresso-idling-resource` to 3.6.1 to resolve namespace conflict with AGP 9.
+
+**Optimized Resource Shrinking enabled**
+- Added `android.r8.optimizedResourceShrinking=true` — R8 now removes unused resources more aggressively, resulting in smaller APK size.
+
+### 🔧 Bug Fixes
+
+**R8 crash with AGP 9 — WorkManager/Room classes stripped**
+- `shrinkResources true` with AGP 9.0.1 caused R8 to strip `androidx.work.impl.WorkDatabase` (Room-generated class used by WorkManager via `InitializationProvider`). App crashed on startup with `Failed to create an instance of WorkDatabase`.
+- Fixed by adding `-keep class androidx.work.** { *; }` and `-keep class androidx.room.** { *; }` to ProGuard rules.
+
+### 🏗️ Architecture — Codebase Restructuring
+
+**Dead code removal**
+- Deleted unused duplicate `lib/services/keyboard/app_shortcuts.dart` (not imported anywhere).
+- Removed empty `lib/providers/` and `lib/controllers/editor/` directories.
+
+**Controllers consolidated**
+- Moved `selected_note_provider.dart` and `master_width_provider.dart` from `providers/` → `controllers/`.
+- Moved `version_history_controller.dart` from `screens/other/version_history/` → `controllers/version_history/`.
+- Moved `EditorStateManager` from `controllers/editor/` → `screens/shared/note_editor/state/` (where it's actually consumed).
+
+**Services reorganized by responsibility**
+- Created `services/code/` — moved `language_detector.dart`, `smart_analyzer.dart`, `code_executor.dart`, `code_export_service.dart` into it.
+- Moved `clipboard_guard.dart` and `content_guard.dart` → `services/security/`.
+- Moved `version_control_service.dart` and `version_history_service.dart` → `services/note_services/`.
+- Moved `svg_service.dart` → `widgets/common/svg_preview_sheet.dart` (it was a full widget masquerading as a service).
+- Moved `unified_notification_service.dart` → `widgets/common/` (uses BuildContext — not a pure service).
+- Moved `paste_handler.dart` → `core/utils/` (pure Isolate utility, not a widget).
+
+**Widgets organized**
+- Created `widgets/layout/` — moved 8 layout files from `widgets/` root: `master_details_layout`, `master_panel`, `details_panel`, `empty_details_view`, `note_list_tile`, `responsive_layout_wrapper`, `vault_desktop_wrapper`, `vault_details_panel`.
+
+**Business logic extracted from main.dart**
+- Created `services/intent_handler_service.dart` — extracted `cleanSharedText`, `extractTitle`, `detectNoteMode`, `getModeString`, `parseSinanFile`, `hasValidContent` from main.dart.
+- `main.dart` reduced from 516 → 462 lines.
+
+### ✨ New
+
+**Cloud Code Executor (Judge0 CE API) — built, not connected**
+- Added `services/code/cloud_code_executor.dart` — complete implementation with submission, polling, result parsing, and 21 supported languages.
+- Includes `CodeExecutionResult` model with formatted output and error categorization.
+- Ready to activate: requires `http` package + API key.
+
+---
+
+## [3.2.5+3403] — 2026-07 | Pull-to-Refresh Fixes & Tear Handle & Cross-Platform Links
+
+### 🔧 Bug Fixes
+
+**Pull-to-refresh mode not updating after settings change**
+- `_pullToRefreshMode` was cached in `HomeScreen` state and only updated in `didChangeDependencies` with `listen: false` — changes made in Settings were never reflected until a full restart.
+- Fixed by removing the cached field entirely. `_onScrollChanged` now reads `pullToRefreshMode` directly from `SettingsProvider` on every scroll event.
+
+**Refresh bar appearing before internet check**
+- `_isRefreshingNotifier.value = true` was set inside `_onScrollChanged` (during pull gesture), before any internet check — the bar appeared even with no connection.
+- Fixed by moving `_isRefreshingNotifier.value = true` into `_onRefresh`, after the internet check passes. The bar now never starts if there is no internet.
+
+**No feedback when pulling to refresh without internet**
+- When `mode == 'full'` and no internet is available, the refresh silently did nothing.
+- Fixed: `_onRefresh` now checks `SyncTransport.hasInternet()` first. If no internet → immediate pull state reset + `UnifiedNotificationService` error snackbar with a Retry button.
+- Added 30-second timeout on `CloudSyncGateway.smartSync()`. On `TimeoutException` → same error snackbar with Retry.
+
+**About screen links not working on Linux/Windows**
+- Links used a custom `MethodChannel('com.apexflow.app.sinan/launcher')` which only works on Android.
+- Replaced with `url_launcher` (`launchUrl` + `LaunchMode.externalApplication`) — works on Android, Linux, and Windows without any platform-specific code.
+
+**Double tap selects word but tear handle steals the second tap**
+- `showOnTap` was called on every `_onTapDown` via `addPostFrameCallback`. On double tap, the second tap arrived while the tear was still visible, and `_TearWidget._onPointerDown` intercepted it instead of passing it to Quill for word selection.
+- Fixed in `TearController.showOnTap`: tracks `_lastShowRequest` timestamp. If two calls arrive within `kDoubleTapTimeout` (300ms), the second is treated as a double tap and `_show()` is skipped — Quill receives the tap normally and selects the word.
+
+---
+
+## [3.2.4+3402] — 2026-07 | Desktop Screens Unification & Drawer Navigation Fixes
+
+### 🏗️ Architecture — Desktop Screens Rewrite
+
+**All responsive desktop screens fully rewritten**
+- `ArchiveScreenResponsive`, `TrashScreenResponsive`, `ReminderDashboardResponsive`, `CodeTabResponsive`, `LockedNotesScreenResponsive`, `HomeScreenResponsive`, `SettingsScreenResponsive`, and `GoogleDriveScreenResponsive` all rewritten following a unified pattern: `Scaffold → Drawer + Column[SearchableHeader → MasterDetailsLayout(masterPanel, DetailsPanel)]`.
+- Reminders desktop: `SearchableHeader` + `TabBar` (Upcoming/Scheduled/Expired) above `MasterDetailsLayout` with `TabBarView` as masterPanel.
+- Professional desktop: `SearchableHeader` above `MasterDetailsLayout` with filtered code notes list.
+- All screens include selection mode, sort (date/title), search, and proper `PopScope` handling.
+- Mobile layout unchanged — original mobile screens still used as-is.
+
+**Removed `sharedDetailsPanel` parameter**
+- `CodeTabResponsive` and `ReminderDashboardResponsive` no longer accept `sharedDetailsPanel` — they manage their own `DetailsPanel()` internally (matching Archive/Trash pattern).
+- Updated `MainLayoutScreen._cachedScreens` accordingly.
+
+**Deleted `SideNavRail`**
+- Removed the dead code (`&& false` condition) and deleted `lib/widgets/navigation/side_nav_rail.dart` entirely.
+
+### 🔧 Bug Fixes
+
+**Drawer "Home" tap did not switch tab on desktop**
+- Pressing "Home" in the drawer only called `popUntil('/main')` but never set `currentTabIndexNotifier.value = 0`. Added `widget.onTabSelected?.call(0)`.
+
+**Reminders/Professional tabs missing from drawer in Settings, Google Drive, Version History, and Locked Notes**
+- These screens constructed `HomeDrawerWidget` without `onTabSelected`, so the tabs were hidden. Added `onTabSelected` with the standard `popUntil + currentTabIndexNotifier` pattern to all of them.
+
+**Drawer highlighting — Reminders/Professional never highlighted**
+- `isActive` was hardcoded to `false`. Changed to `currentTabIndexNotifier.value == index && route == '/main'`.
+
+**Drawer highlighting — Home highlighted together with Reminders/Professional**
+- Home's `isActive` didn't check the tab index. Added `(widget.onTabSelected == null || currentTabIndexNotifier.value == 0)` condition.
+
+**Drawer highlighting — Category highlighted together with Reminders/Professional**
+- `_buildCategoriesItem.isOnHome` didn't check tab index. Added `currentTabIndexNotifier.value == 0`.
+- `CategoriesPanelWrapper` tile `isSelected` now checks `isOnHomeTab` — categories only highlight when tab 0 is active.
+
+**Google Drive screen not showing desktop layout on foldable**
+- Was using `constraints.maxWidth >= 900` hardcoded breakpoint. Replaced with `PlatformHelper.shouldUseDesktopLayout(context)`.
+
+**Vault intro screen — redundant SafeArea causing top gap**
+- `AppBar` already handles top SafeArea, but body also had `SafeArea(child: ...)`. Changed to `SafeArea(top: false)`.
+
+**Vault intro screen — padding too large on big screens**
+- Reduced top padding and SizedBox spacing when screen height < 700px.
+
+### ✨ Improvements
+
+**Vault intro — exit button replaces back arrow**
+- Replaced `IconButton(arrow_back)` with a styled `TextButton.icon(close_rounded + l10n.close)` in AppBar actions — cleaner and more discoverable.
+
+**Settings & Google Drive — SafeArea for desktop layout**
+- Added `SafeArea(top: false)` to both `SettingsScreenResponsive` and `GoogleDriveScreen` desktop body to prevent content clipping on foldables.
+
+**Swipe Gestures section — disabled on desktop instead of hidden**
+- Mobile-only controls (search bar animation, bottom nav animation) now appear on desktop but with 50% opacity and `IgnorePointer` — visually disabled rather than removed.
+- Added hint text: "These settings apply to the mobile version only" / "هذه الإعدادات تنطبق على نسخة الجوال فقط".
+
+### 🌐 Localization
+
+- Added `swipeGesturesMobileHint` key (EN/AR).
+
+---
+
+## [3.2.4+3401] — 2026-07 | BiDi Numerals & Editor Fixes & Responsive Unification
+
+### 🔧 Bug Fixes
+
+**Delete shortcut triggered 3 times when pressing Delete key inside editor**
+- The `Delete` key (no modifier) was registered as a shortcut to trash the note, conflicting with normal text deletion. Changed to `Ctrl+Delete`. Also added a static deduplication guard in `ShortcutScope` to prevent multiple `HardwareKeyboard` handlers from firing the same action within the same frame.
+
+**Text direction incorrectly set to LTR for digit-only lines on Enter**
+- When a line contained only Western digits (e.g. `500`) and user pressed Enter, `Bidi.detectRtlDirectionality` returned `false` (= LTR) because digits are neutral. The new line was incorrectly set to LTR. Now the direction detection treats Western digits (0-9) as LTR and Arabic-Indic digits (٠-٩) as RTL — based on the first strong character or digit encountered.
+
+**Arabic-Indic numerals incorrectly treated as strong RTL characters in `hasExplicitDir`**
+- The regex `[a-zA-Z\u0600-\u06FF]` included Arabic-Indic digits (U+0660–U+0669) in the Arabic range, causing direction formatting to trigger for digit-only lines. Updated to include digits explicitly: `[a-zA-Z0-9\u0600-\u06FF\u0750-\u077F]`.
+
+**Reminder picker bottom sheet overflow by 69px**
+- The `Column` inside `ReminderPickerSheet` had a `SingleChildScrollView` without flex constraint. Wrapped it with `Flexible` so it scrolls within available space.
+
+**Text color picker missing SafeArea**
+- The inline color picker bottom sheet used fixed `bottom: 32` padding. Replaced with proper `SafeArea(top: false)` wrapper.
+
+**More menu bottom sheet double SafeArea padding**
+- `AppBottomSheet` had both `useSafeArea: true` on `showModalBottomSheet` AND a `SafeArea` widget inside `build()`, plus manual `padding.bottom` in `_showMoreSheet`. Removed the redundant inner `SafeArea` and manual padding — `useSafeArea: true` handles it.
+
+### ✨ New Features
+
+**H3 heading button in rich editor toolbar**
+- Added a third heading size (H3) button in the bottom formatting bar, between H2 and the list buttons. Uses `Icons.text_fields_rounded` icon. Toggles `Attribute.h3` on the current line.
+
+### 🏗️ Architecture
+
+- `TextDirectionUtils.getDirection()`: Rewritten to scan for the first strong character or digit — Western digits → LTR, Arabic-Indic digits → RTL, alphabetic characters → delegate to `Bidi.detectRtlDirectionality`. Empty text defaults to RTL.
+- `ShortcutScope._handleKey()`: Added static timestamp-based deduplication (50ms window) to prevent multiple handlers from executing the same shortcut.
+- `PlatformHelper`: Rewritten with 5-layer detection: Platform → WindowedMode (View.display API) → DisplayFeatures (hinge/fold) → AspectRatio → Size. Supports foldable phones (Honor V5/V6, Samsung Fold), split screen, floating windows.
+- Unified all scattered `width >= 600` checks across 8 files to use `PlatformHelper.isWideDisplay()` / `getDisplayMode()` — foldables no longer trigger desktop layout.
+
+---
+
+## [3.2.4+3399] — 2026-06 | Architecture Safety & Sync Fixes
+
+### 🔧 Bug Fixes
+
+**Notes not appearing after Google sync on startup**
+- After `smartSync()` completed in the background, the UI was not refreshing because `SplashScreen` had already navigated away (`mounted = false`). Fixed by capturing Provider references before launching sync, so `refreshAllNotes(force: true)` executes regardless of screen lifecycle.
+
+**Reminder tab — overlay and scroll broken on pull**
+- Pulling down on an empty reminder tab caused the battery optimization banner to disappear below the tabs, and switching to a tab with notes made the first note stick at the bottom. Fixed by using `ListView` (with `AlwaysScrollableScrollPhysics`) for empty state instead of `Center`, and adding `hasScrollBody: true` to `SliverFillRemaining`.
+
+**Duplicate sync on app startup**
+- Both `SplashScreen` and `MainLayoutScreen` were calling `smartSync()` independently, causing concurrent sync operations. Removed `_autoSyncOnStartup()` from `MainLayoutScreen` — `SplashScreen` handles it.
+
+**Crash after dispose — silent sync callback**
+- `NoteStateService._silentSync()` could invoke `onSyncCompleted` callback after the Provider was disposed (e.g., if the user killed the app within 5 seconds of editing). Added `_isDisposed` guard that stops all Timer callbacks after `dispose()`.
+
+### 🏗️ Architecture (Family Rules Compliance)
+
+- `MainLayoutScreen`: `onCategoriesRefreshNeeded` callback registered immediately in `initState` instead of delayed `addPostFrameCallback` — prevents missing early sync events.
+- `note_readonly_view.dart`: Replaced direct `SqliteDatabaseService().getNoteById()` with `provider.stateService.getNoteById()` — UI no longer bypasses Provider layer.
+- `splash_screen.dart`: Categories also refreshed after sync (was only refreshing notes before).
+
+---
+
 ## [3.2.3] — 2026-06 | Refactoring & Architecture + Intent Fixes + Hero Removal + Editor Fixes + Save Guard Fix
 
 ### ✨ New Features

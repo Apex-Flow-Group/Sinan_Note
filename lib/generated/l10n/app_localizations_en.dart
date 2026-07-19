@@ -897,6 +897,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noteColors => 'Note Colors';
 
   @override
+  String get swipeGesturesMobileHint =>
+      'These settings apply to the mobile version only';
+
+  @override
   String get enabled => 'Enabled';
 
   @override

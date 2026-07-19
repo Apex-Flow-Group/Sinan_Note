@@ -15,11 +15,11 @@ import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_c
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
-import 'package:sinan_note/services/code_export_service.dart';
-import 'package:sinan_note/services/code_preview_service.dart';
-import 'package:sinan_note/services/svg_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/services/code/code_export_service.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
+import 'package:sinan_note/widgets/common/svg_preview_sheet.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+import 'package:sinan_note/widgets/editor/code_preview_sheet.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 import 'package:sinan_note/widgets/editor/toolbars/editor_toolbar_factory.dart';
 
@@ -105,6 +105,11 @@ class EditorToolbarBuilder {
                           .attributes['header']
                           ?.value ==
                       2,
+                  isH3Active: coordinator.quillController
+                          ?.getSelectionStyle()
+                          .attributes['header']
+                          ?.value ==
+                      3,
                   isListActive: coordinator.quillController
                           ?.getSelectionStyle()
                           .attributes['list']
@@ -459,6 +464,21 @@ class EditorToolbarBuilder {
                     } else {
                       formattingController.insertText(
                           coordinator.contentController, '## ');
+                    }
+                  },
+                  onH3: () {
+                    HapticFeedback.lightImpact();
+                    final qc = coordinator.quillController;
+                    if (qc != null) {
+                      final isH3 =
+                          qc.getSelectionStyle().attributes['header']?.value ==
+                              3;
+                      qc.formatSelection(isH3
+                          ? Attribute.clone(Attribute.h3, null)
+                          : Attribute.h3);
+                    } else {
+                      formattingController.insertText(
+                          coordinator.contentController, '### ');
                     }
                   },
                   onList: () {

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +18,8 @@ import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
 import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/services/sync/sync_transport.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;
 import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
@@ -64,15 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearchActive = false;
   ViewType _viewType = ViewType.listExpanded;
   final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
-  String _pullToRefreshMode =
-      'disabled'; // cached — يُحدَّث في didChangeDependencies
 
   @override
   void initState() {
     super.initState();
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     _viewType = _parseViewType(settings.viewType);
-    _pullToRefreshMode = settings.pullToRefreshMode;
     _viewTypeNotifier = ValueNotifier(_viewType.name);
     _selectedNoteIdsNotifier = ValueNotifier({});
     _loadViewType();
@@ -107,14 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // تحديث الـ cache عند تغيير الـ settings (مثل تغيير pull-to-refresh mode)
-    _pullToRefreshMode =
-        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
   }
 
   ViewType _parseViewType(String type) {
@@ -186,19 +177,48 @@ class _HomeScreenState extends State<HomeScreen> {
       false; // Flag: pull reached threshold, waiting for release
   final ValueNotifier<bool> _isRefreshingNotifier = ValueNotifier(false);
 
+  void _resetPullState() {
+    _isRefreshingNotifier.value = false;
+    _pullTriggered = false;
+    _pullDistanceNotifier.value = 0;
+    _isPullingNotifier.value = false;
+  }
+
   Future<void> _onRefresh() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final mode = settings.pullToRefreshMode;
 
-    // Disabled → do nothing
     if (mode == 'disabled') return;
 
-    _isRefreshingNotifier.value = true;
-    final minDuration = Future.delayed(const Duration(milliseconds: 1500));
-
+    // حفظ كل قراءات context قبل أي await
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final categoriesProvider =
         Provider.of<CategoriesProvider>(context, listen: false);
+
+    // فحص الإنترنت أولاً — قبل إظهار الشريط
+    if (mode == 'full') {
+      final hasInternet = await SyncTransport.hasInternet();
+      if (!hasInternet) {
+        _resetPullState();
+        if (mounted) {
+          UnifiedNotificationService().showWithAction(
+            context: context,
+            message:
+                isAr ? 'لا يوجد اتصال بالإنترنت' : 'No internet connection',
+            actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
+            onAction: _onRefresh,
+            type: NotificationType.error,
+            duration: const Duration(seconds: 5),
+          );
+        }
+        return;
+      }
+    }
+
+    // الإنترنت متاح — ابدأ الشريط الآن
+    _isRefreshingNotifier.value = true;
+    final minDuration = Future.delayed(const Duration(milliseconds: 1500));
 
     try {
       if (mode == 'full') {
@@ -208,7 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
         if (CloudSyncGateway.isSignedIn &&
             CloudSyncGateway.autoSyncEnabled.value &&
             pullToSyncEnabled) {
-          await CloudSyncGateway.smartSync();
+          await CloudSyncGateway.smartSync()
+              .timeout(const Duration(seconds: 30));
           while (CloudSyncGateway.isSyncing.value) {
             await Future.delayed(const Duration(milliseconds: 200));
           }
@@ -224,21 +245,29 @@ class _HomeScreenState extends State<HomeScreen> {
         await notesProvider.refreshAllNotes(force: true);
         await categoriesProvider.refreshCategories();
       }
+    } on TimeoutException {
+      if (mounted) {
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
+        UnifiedNotificationService().showWithAction(
+          context: context,
+          message: isAr ? 'انتهت مهلة الاتصال' : 'Connection timed out',
+          actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
+          onAction: _onRefresh,
+          type: NotificationType.error,
+          duration: const Duration(seconds: 5),
+        );
+      }
     } finally {
-      // Wait minimum 1.5s so the user sees the refreshing indicator
       await minDuration;
-      // ✅ Clean reset — ensure all pull state is zeroed for next pull
-      _isRefreshingNotifier.value = false;
-      _pullTriggered = false;
-      _pullDistanceNotifier.value = 0;
-      _isPullingNotifier.value = false;
+      _resetPullState();
     }
   }
 
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
     // Don't show pull indicator when pull-to-refresh is disabled
-    final mode = _pullToRefreshMode;
+    final mode =
+        Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
     if (mode == 'disabled') return;
 
     final offset = _scrollController.offset;
@@ -252,9 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!_isPullingNotifier.value) {
           _isPullingNotifier.value = true;
           _pullTriggered = true;
-          // Switch immediately to refreshing bar (no bounce-back visible)
-          _pullDistanceNotifier.value = 0;
-          _isRefreshingNotifier.value = true;
         }
       } else {
         if (_isPullingNotifier.value) _isPullingNotifier.value = false;
@@ -450,4 +476,3 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 }
-

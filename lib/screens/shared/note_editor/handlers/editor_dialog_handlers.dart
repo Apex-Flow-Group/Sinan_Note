@@ -1,21 +1,20 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
+import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/rename_dialog.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/note_history_sheet.dart';
 import 'package:sinan_note/widgets/editor/reminder_picker_sheet.dart';
 
@@ -155,57 +154,61 @@ class EditorDialogHandlers {
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding:
-            const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 32),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.chooseTextColor,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: textColors.map((color) {
-                return GestureDetector(
-                  onTap: () {
-                    if (color == null) {
-                      quillController
-                          .formatSelection(const ColorAttribute(null));
-                    } else {
-                      final hex =
-                          '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
-                      quillController.formatSelection(ColorAttribute(hex));
-                    }
-                    Navigator.pop(ctx);
-                  },
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: color ?? Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color:
-                            color == null ? Colors.grey : Colors.grey.shade300,
-                        width: 2,
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Container(
+          padding:
+              const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.chooseTextColor,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: textColors.map((color) {
+                  return GestureDetector(
+                    onTap: () {
+                      if (color == null) {
+                        quillController
+                            .formatSelection(const ColorAttribute(null));
+                      } else {
+                        final hex =
+                            '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+                        quillController.formatSelection(ColorAttribute(hex));
+                      }
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: color ?? Colors.transparent,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: color == null
+                              ? Colors.grey
+                              : Colors.grey.shade300,
+                          width: 2,
+                        ),
                       ),
+                      child: color == null
+                          ? const Icon(Icons.format_clear,
+                              size: 20, color: Colors.grey)
+                          : null,
                     ),
-                    child: color == null
-                        ? const Icon(Icons.format_clear,
-                            size: 20, color: Colors.grey)
-                        : null,
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -306,4 +309,3 @@ class EditorDialogHandlers {
     }
   }
 }
-

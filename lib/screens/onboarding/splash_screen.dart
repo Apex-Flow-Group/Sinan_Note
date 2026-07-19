@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/logger.dart';
@@ -82,11 +83,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // Initialize Google Sign-In + smart sync in background
       await CloudSyncGateway.initializeSignIn();
-      if (CloudSyncGateway.isSignedIn) {
+      if (CloudSyncGateway.isSignedIn && mounted) {
+        // نأخذ reference للـ providers قبل المزامنة — لأنه بعد الانتقال
+        // من SplashScreen لن يكون mounted وسنفقد الـ context
+        final notesProvider =
+            Provider.of<NotesProvider>(context, listen: false);
+        final categoriesProvider =
+            Provider.of<CategoriesProvider>(context, listen: false);
         unawaited(CloudSyncGateway.smartSync().then((_) async {
-          if (!mounted) return;
-          await Provider.of<NotesProvider>(context, listen: false)
-              .refreshAllNotes(force: true);
+          await notesProvider.refreshAllNotes(force: true);
+          await categoriesProvider.refreshCategories();
         }));
       }
 

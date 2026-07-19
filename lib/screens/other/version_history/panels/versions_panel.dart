@@ -1,11 +1,10 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
+import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_version.dart';
-import 'package:sinan_note/screens/other/version_history/version_history_controller.dart';
 
 class VersionsPanel extends StatelessWidget {
   final Note selectedNote;
@@ -33,7 +32,9 @@ class VersionsPanel extends StatelessWidget {
 
     if (loading) return const Center(child: CircularProgressIndicator());
     if (versions.isEmpty) {
-      return Center(child: Text(l10n.noHistory, style: Theme.of(context).textTheme.bodyLarge));
+      return Center(
+          child: Text(l10n.noHistory,
+              style: Theme.of(context).textTheme.bodyLarge));
     }
 
     return Column(
@@ -50,10 +51,15 @@ class VersionsPanel extends StatelessWidget {
                 ),
               Expanded(
                 child: Text(
-                  selectedNote.title.isEmpty ? l10n.untitled : selectedNote.title,
+                  selectedNote.title.isEmpty
+                      ? l10n.untitled
+                      : selectedNote.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ],
@@ -81,7 +87,8 @@ class _VersionItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _VersionItem({required this.version, required this.isSelected, required this.onTap});
+  const _VersionItem(
+      {required this.version, required this.isSelected, required this.onTap});
 
   String _formatTimeAgo(BuildContext context, DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -133,16 +140,19 @@ class _VersionItem extends StatelessWidget {
                       version.title.isEmpty ? l10n.untitled : version.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 3),
                     Text(_formatTimeAgo(context, version.timestamp),
-                        style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        style:
+                            TextStyle(fontSize: 13, color: Colors.grey[600])),
                   ],
                 ),
               ),
               if (isSelected)
-                Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.primary, size: 20),
+                Icon(Icons.chevron_right,
+                    color: Theme.of(context).colorScheme.primary, size: 20),
             ],
           ),
         ),
@@ -150,4 +160,3 @@ class _VersionItem extends StatelessWidget {
     );
   }
 }
-

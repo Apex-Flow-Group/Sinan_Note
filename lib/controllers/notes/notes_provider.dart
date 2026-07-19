@@ -1,6 +1,18 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/widgets.dart';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/models/note_mode.dart'; import 'package:sinan_note/services/note_services/note_batch_operations_service.dart'; import 'package:sinan_note/services/note_services/note_security_service.dart'; import 'package:sinan_note/services/note_services/note_side_effect_service.dart'; import 'package:sinan_note/services/note_services/note_state_service.dart'; import 'package:sinan_note/services/security/vault_service.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/version_control_service.dart';
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/services/note_services/note_batch_operations_service.dart';
+import 'package:sinan_note/services/note_services/note_security_service.dart';
+import 'package:sinan_note/services/note_services/note_side_effect_service.dart';
+import 'package:sinan_note/services/note_services/note_state_service.dart';
+import 'package:sinan_note/services/note_services/version_control_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+
 class NotesProvider extends ChangeNotifier {
   late final NoteStateService _stateService;
   late final SqliteDatabaseService _dbService;
@@ -405,4 +417,3 @@ class NotesProvider extends ChangeNotifier {
     super.dispose();
   }
 }
-

@@ -1832,6 +1832,12 @@ abstract class AppLocalizations {
   /// **'Note Colors'**
   String get noteColors;
 
+  /// No description provided for @swipeGesturesMobileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These settings apply to the mobile version only'**
+  String get swipeGesturesMobileHint;
+
   /// No description provided for @enabled.
   ///
   /// In en, this message translates to:

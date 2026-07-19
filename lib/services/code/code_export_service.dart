@@ -1,6 +1,10 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:path_provider/path_provider.dart'; import 'package:sinan_note/services/language_detector.dart';
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
+import 'package:sinan_note/services/code/language_detector.dart';
+
 /// يحفظ ملف الكود مباشرة في مجلد التحميلات بالامتداد الصحيح
 class CodeExportService {
   /// يحفظ الكود في Downloads ويُرجع مسار الملف المحفوظ
@@ -35,9 +39,7 @@ class CodeExportService {
 
   static String _buildFileName(String title, String ext) {
     // نظّف الاسم من الأحرف غير المسموح بها
-    final clean = title
-        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-        .trim();
+    final clean = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
     final base = clean.isEmpty ? 'code' : clean;
     // إذا كان الاسم ينتهي بالامتداد بالفعل لا نضيفه مرة ثانية
     if (base.toLowerCase().endsWith(ext.toLowerCase())) return base;
@@ -65,4 +67,3 @@ class CodeExportService {
     return getApplicationDocumentsDirectory();
   }
 }
-

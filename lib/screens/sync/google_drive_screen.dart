@@ -9,10 +9,11 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:sinan_note/screens/sync/google_drive/google_drive_widgets.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
 class GoogleDriveScreen extends StatefulWidget {
@@ -144,6 +145,11 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
         drawer: HomeDrawerWidget(
           onBackupTap: () {},
           onNotesChanged: () {},
+          onTabSelected: (index) {
+            Navigator.of(context, rootNavigator: true)
+                .popUntil((r) => r.settings.name == '/main' || r.isFirst);
+            currentTabIndexNotifier.value = index;
+          },
         ),
         body: _isLoading
             ? Center(
@@ -438,60 +444,64 @@ class _GoogleDriveDesktopMasterDetailsState
   Widget build(BuildContext context) {
     final colorScheme = widget.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          // Master — قائمة الأقسام (نفس شكل الإعدادات)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              width: 220,
-              color: AppTheme.sidebarBackground(colorScheme),
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                itemCount: widget.sections.length,
-                itemBuilder: (_, i) {
-                  final selected = i == _selectedIndex;
-                  return ListTile(
-                    leading: Icon(
-                      widget.sections[i].icon,
-                      color: selected ? colorScheme.primary : null,
-                    ),
-                    title: Text(
-                      widget.sections[i].label,
-                      style: TextStyle(
+    return SafeArea(
+      top: false, // AppBar يتعامل مع الأعلى
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Master — قائمة الأقسام (نفس شكل الإعدادات)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: 220,
+                color: AppTheme.sidebarBackground(colorScheme),
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  itemCount: widget.sections.length,
+                  itemBuilder: (_, i) {
+                    final selected = i == _selectedIndex;
+                    return ListTile(
+                      leading: Icon(
+                        widget.sections[i].icon,
                         color: selected ? colorScheme.primary : null,
-                        fontWeight: selected ? FontWeight.w600 : null,
                       ),
-                    ),
-                    selected: selected,
-                    selectedTileColor:
-                        colorScheme.primaryContainer.withValues(alpha: 0.4),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    onTap: () => setState(() => _selectedIndex = i),
-                  );
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Details — محتوى القسم
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: KeyedSubtree(
-                key: ValueKey(_selectedIndex),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: widget.buildContent(_selectedIndex),
+                      title: Text(
+                        widget.sections[i].label,
+                        style: TextStyle(
+                          color: selected ? colorScheme.primary : null,
+                          fontWeight: selected ? FontWeight.w600 : null,
+                        ),
+                      ),
+                      selected: selected,
+                      selectedTileColor:
+                          colorScheme.primaryContainer.withValues(alpha: 0.4),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16),
+                      onTap: () => setState(() => _selectedIndex = i),
+                    );
+                  },
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            // Details — محتوى القسم
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: KeyedSubtree(
+                  key: ValueKey(_selectedIndex),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: widget.buildContent(_selectedIndex),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

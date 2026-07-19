@@ -1,9 +1,8 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
 import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
 
 void main() {
   group('EditorStateManager', () {
@@ -482,6 +481,7 @@ void main() {
           // حفظ بدون updateSnapshot
           manager.isSaving = false;
         }
+
         savedWithoutSnapshot();
 
         // isDirty لا يزال true — الـ snapshot لم يتحدث
@@ -639,7 +639,8 @@ void main() {
     });
 
     group('تسلسل autosave الحقيقي', () {
-      test('كتابة → dirty → autosave بدون snapshot → كتابة → dirty لا يزال', () {
+      test('كتابة → dirty → autosave بدون snapshot → كتابة → dirty لا يزال',
+          () {
         // يحاكي: المستخدم يكتب → autosave يحفظ → يكتب مجدداً
         manager.loadFromNote(noteContent: 'نص أولي', noteTitle: '');
 
@@ -686,7 +687,8 @@ void main() {
         manager.colorIndex = 7;
         // isDirty لا يزال false لكن colorIndex تغير
         expect(manager.isDirty, false);
-        expect(manager.hasChanges(), true); // يكتشف عبر colorIndex != originalColorIndex
+        expect(manager.hasChanges(),
+            true); // يكتشف عبر colorIndex != originalColorIndex
       });
 
       test('إزالة reminder تُكتشف كتغيير حتى بدون isDirty', () {
@@ -699,7 +701,8 @@ void main() {
 
         manager.reminderDateTime = null;
         expect(manager.isDirty, false); // لم نستدعِ markDirty
-        expect(manager.hasChanges(), true); // يكتشف عبر reminderDateTime != original
+        expect(manager.hasChanges(),
+            true); // يكتشف عبر reminderDateTime != original
       });
     });
 
@@ -735,4 +738,3 @@ void main() {
     });
   });
 }
-

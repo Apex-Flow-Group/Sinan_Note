@@ -3,6 +3,9 @@
 # Sinan Note - Release Build Script
 # Maximum protection + compression
 
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk
+export PATH=$JAVA_HOME/bin:$PATH
+
 echo "🚀 Building Sinan Note - Release AAB"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
@@ -18,7 +21,8 @@ flutter pub get
 echo "🔒 Building with maximum protection..."
 flutter build appbundle --release \
   --obfuscate \
-  --split-debug-info=./build/app/outputs/symbols
+  --split-debug-info=./build/app/outputs/symbols \
+  --android-skip-build-dependency-validation
 
 # Check if build succeeded
 if [ $? -eq 0 ]; then

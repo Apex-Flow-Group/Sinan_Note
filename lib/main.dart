@@ -12,15 +12,16 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/controllers/master_width_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/paste_handler.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
-import 'package:sinan_note/providers/master_width_provider.dart';
-import 'package:sinan_note/providers/selected_note_provider.dart';
 import 'package:sinan_note/screens/desktop/archive_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/locked_notes_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/trash_screen_responsive.dart';
@@ -32,10 +33,10 @@ import 'package:sinan_note/screens/shared/settings_screen_responsive.dart';
 import 'package:sinan_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:sinan_note/services/app_update_service.dart';
 import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/intent_handler_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
-import 'package:sinan_note/widgets/editor/paste_handler.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -96,6 +97,7 @@ class ApexNoteApp extends StatefulWidget {
 
 class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   static const platform = MethodChannel('com.apexflow.app.sinan/widget');
+  static const _intentService = IntentHandlerService();
 
   @override
   void initState() {
@@ -158,26 +160,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
   /// حفظ الـ intent للتنفيذ لاحقاً بعد جاهزية MainLayoutScreen
   void _storePendingIntent(Map data) {
-    final action = data['action'] as String?;
-    final noteId = (data['note_id'] ?? 0) as int;
-    final sharedText = data['shared_text'] as String?;
-    final filePath = data['file_path'] as String?;
-
-    // تجاهل الـ intents الفارغة تماماً
-    final hasContent =
-        // نص مشترك من تطبيق آخر
-        (sharedText != null && sharedText.isNotEmpty) ||
-            // ملف .sinan
-            (filePath != null && filePath.isNotEmpty) ||
-            // فتح ملاحظة بـ ID
-            (action == 'com.apexflow.app.sinan.ACTION_VIEW_NOTE' &&
-                noteId > 0) ||
-            // اختيار ملاحظة للويدجت
-            (action ==
-                'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET') ||
-            (action == 'com.apexflow.app.sinan.ACTION_NEW_NOTE');
-
-    if (hasContent) {
+    if (_intentService.hasValidContent(data)) {
       pendingIntentNotifier.value = Map.from(data);
     }
   }
@@ -219,10 +202,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
-    // ── تنظيف النص القادم من المتصفح ──────────────────────────────────────
-    // Android يُرسل أحياناً: "النص المحدد\n\nhttps://..." أو "insert:النص\nhttps://..."
-    // نستخرج: النص النظيف + الرابط منفصلَين
-    final cleaned = _cleanSharedText(text);
+    // تنظيف النص القادم من المتصفح
+    final cleaned = _intentService.cleanSharedText(text);
     final cleanText = cleaned['text'] as String;
     final sourceUrl = cleaned['url'];
 
@@ -233,7 +214,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
         (sourceUrl == null && Uri.tryParse(text.trim())?.hasScheme == true);
     final finalText =
         isPureUrl ? sourceUrl : (cleanText.isNotEmpty ? cleanText : text);
-    final mode = isUrl ? NoteMode.simple : _detectNoteMode(finalText);
+    final mode =
+        isUrl ? NoteMode.simple : _intentService.detectNoteMode(finalText);
 
     // بناء Delta في Isolate قبل فتح المحرر
     String content;
@@ -251,12 +233,13 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       title: isPureUrl
           ? 'Shared Link'
           : (cleanText.isNotEmpty
-              ? _extractTitle(cleanText)
+              ? _intentService.extractTitle(cleanText)
               : (isUrl ? 'Shared Link' : '')),
       content: content,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-      colorIndex: settings.getDefaultColorIndex(_getModeString(mode)),
+      colorIndex:
+          settings.getDefaultColorIndex(_intentService.getModeString(mode)),
       noteType: mode.name,
       isProfessional: mode == NoteMode.code,
       isChecklist: mode == NoteMode.checklist,
@@ -277,46 +260,6 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     AppNavigator.toEditorViaKey(navigatorKey, note: savedNote, mode: mode);
   }
 
-  /// تنظيف النص القادم من المتصفح / التطبيقات الخارجية
-  /// يُرجع {'text': النص النظيف, 'url': الرابط أو null}
-  Map<String, String?> _cleanSharedText(String raw) {
-    // regex لاستخراج الروابط من النص
-    final urlRegex = RegExp(
-      r'https?://[^\s]+',
-      caseSensitive: false,
-    );
-
-    String text = raw.trim();
-    String? url;
-
-    // استخرج أول رابط في النص
-    final urlMatch = urlRegex.firstMatch(text);
-    if (urlMatch != null) {
-      url = urlMatch.group(0);
-
-      // أزل الرابط من النص
-      text = text.replaceAll(url!, '').trim();
-
-      // أزل أسطر فارغة زائدة
-      text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
-
-      // أزل prefix غريب مثل "insert:" أو "انسريت:" أو بيانات HTML مبتورة
-      text =
-          text.replaceAll(RegExp(r'^insert\s*:\s*', caseSensitive: false), '');
-    }
-
-    return {'text': text, 'url': url};
-  }
-
-  /// استخراج عنوان من أول سطر من النص (للـ title)
-  String _extractTitle(String text) {
-    final firstLine = text.split('\n').first.trim();
-    if (firstLine.isEmpty) return '';
-    return firstLine.length > 60
-        ? '${firstLine.substring(0, 60)}...'
-        : firstLine;
-  }
-
   void _importSinanFile(String filePath) async {
     try {
       final context = navigatorKey.currentContext;
@@ -325,21 +268,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
       if (!mounted) return;
 
-      final file = File(filePath);
-      if (!await file.exists()) return;
-      final json =
-          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-
-      final note = Note(
-        title: json['title'] as String? ?? '',
-        content: json['content'] as String? ?? '',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        colorIndex: json['colorIndex'] as int? ?? 0,
-        noteType: json['noteType'] as String? ?? 'simple',
-        isProfessional: json['noteType'] == 'code',
-        isChecklist: json['noteType'] == 'checklist',
-      );
+      final note = await _intentService.parseSinanFile(filePath);
+      if (!mounted || note == null) return;
 
       final savedId = await notesProvider.addOrUpdateNote(note, silent: true);
       final dbService = SqliteDatabaseService();
@@ -351,59 +281,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
         note: savedNote,
         mode: NoteCardUtils.getNoteMode(savedNote),
       );
-      try {
-        await file.delete();
-      } catch (_) {}
     } catch (_) {}
-  }
-
-  NoteMode _detectNoteMode(String text) {
-    // Checklist patterns
-    final checklistPatterns = [
-      RegExp(r'^\s*[-*]\s*\[[ xX]\]', multiLine: true),
-      RegExp(r'^\s*\d+\.\s*\[[ xX]\]', multiLine: true),
-    ];
-    for (final pattern in checklistPatterns) {
-      if (pattern.hasMatch(text)) return NoteMode.checklist;
-    }
-
-    // Code patterns
-    final codePatterns = [
-      RegExp(r'(function|const|let|var|class|import|export)\s'),
-      RegExp(r'(def|class|import|from|if __name__)\s'),
-      RegExp(r'(public|private|void|int|String)\s'),
-      RegExp(r'[{};]\s*$', multiLine: true),
-    ];
-    for (final pattern in codePatterns) {
-      if (pattern.hasMatch(text)) return NoteMode.code;
-    }
-
-    // Rich text patterns
-    final richPatterns = [
-      RegExp(r'<[^>]+>'),
-      RegExp(r'\*\*[^*]+\*\*'),
-      RegExp(r'__[^_]+__'),
-      RegExp(r'^#{1,6}\s', multiLine: true),
-    ];
-    for (final pattern in richPatterns) {
-      if (pattern.hasMatch(text)) return NoteMode.rich;
-    }
-    return NoteMode.simple;
-  }
-
-  String _getModeString(NoteMode mode) {
-    switch (mode) {
-      case NoteMode.code:
-        return 'professional';
-      case NoteMode.rich:
-        return 'rich';
-      case NoteMode.reminder:
-        return 'reminder';
-      case NoteMode.checklist:
-        return 'checklist';
-      default:
-        return 'simple';
-    }
   }
 
   void _openNoteById(int noteId) async {

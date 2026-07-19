@@ -9,14 +9,15 @@ import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/security/vault_reset_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/home/dialogs/vault_dialogs.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart'
@@ -209,7 +210,14 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         drawer: HomeDrawerWidget(
-            onBackupTap: () {}, onNotesChanged: _loadLockedNotes),
+          onBackupTap: () {},
+          onNotesChanged: _loadLockedNotes,
+          onTabSelected: (index) {
+            Navigator.of(context, rootNavigator: true)
+                .popUntil((r) => r.settings.name == '/main' || r.isFirst);
+            currentTabIndexNotifier.value = index;
+          },
+        ),
         body: Stack(
           children: [
             Column(

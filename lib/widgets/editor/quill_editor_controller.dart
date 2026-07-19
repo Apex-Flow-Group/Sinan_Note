@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
+import 'package:sinan_note/core/utils/paste_handler.dart';
 import 'package:sinan_note/core/utils/text_direction_utils.dart';
-import 'package:sinan_note/widgets/editor/paste_handler.dart';
 import 'package:sinan_note/widgets/editor/quill_editor_state_mixin.dart';
 import 'package:sinan_note/widgets/editor/tear/tear.dart';
 
@@ -340,9 +340,10 @@ class QuillEditorController {
     final currentAttr = blockAttrs['direction'];
     final currentIsLtr = currentAttr?.value == 'rtl';
 
-    // طبّق فقط إذا يوجد حرف صريح (عربي أو إنجليزي) في السطر
+    // طبّق فقط إذا يوجد حرف صريح (عربي أو إنجليزي) أو رقم في السطر
+    // الأرقام الإنجليزية (0-9) = LTR، الهندية (٠-٩) = RTL
     final hasExplicitDir =
-        RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(currentLine);
+        RegExp(r'[a-zA-Z0-9\u0600-\u06FF\u0750-\u077F]').hasMatch(currentLine);
     if (hasExplicitDir && currentIsLtr == isRtl) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isFormatting || isDirectionFormatting || isDraggingSelection) {

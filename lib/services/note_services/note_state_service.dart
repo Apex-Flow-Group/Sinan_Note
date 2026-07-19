@@ -1,10 +1,15 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'dart:async';
+
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+
 class NoteStateService {
   List<Note> _allNotes = [];
   List<Note> _lockedNotes = [];
   bool _isInitialDataLoaded = false;
+  bool _isDisposed = false;
   Timer? _sortDebounce;
 
   /// Callback to refresh notes from database after sync
@@ -168,6 +173,7 @@ class NoteStateService {
   }
 
   void dispose() {
+    _isDisposed = true;
     _sortDebounce?.cancel();
     _syncDebounce?.cancel();
   }
@@ -186,11 +192,13 @@ class NoteStateService {
   Timer? _syncDebounce;
 
   void _silentSync() {
+    if (_isDisposed) return;
     // تعليم أن هناك تغييرات تحتاج رفع
     CloudSyncGateway.markDirty();
 
     _syncDebounce?.cancel();
     _syncDebounce = Timer(const Duration(seconds: 5), () async {
+      if (_isDisposed) return;
       if (_isSyncing) return;
       if (!CloudSyncGateway.isSignedIn) return;
       if (!CloudSyncGateway.autoSyncEnabled.value) return;
@@ -198,10 +206,12 @@ class NoteStateService {
       try {
         _isSyncing = true;
         await CloudSyncGateway.smartSync();
+        if (_isDisposed) return;
         // ✅ Refresh notes from database after sync completes
         if (onSyncCompleted != null) {
           await onSyncCompleted!();
         }
+        if (_isDisposed) return;
         if (onCategoriesRefreshNeeded != null) {
           await onCategoriesRefreshNeeded!();
         }
@@ -212,4 +222,3 @@ class NoteStateService {
     });
   }
 }
-

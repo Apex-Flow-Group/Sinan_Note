@@ -1,12 +1,11 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
+import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
 import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_version.dart';
-import 'package:sinan_note/screens/other/version_history/version_history_controller.dart';
 import 'package:sinan_note/widgets/editor/diff_view.dart';
 
 class DiffPanel extends StatelessWidget {
@@ -43,7 +42,8 @@ class DiffPanel extends StatelessWidget {
     final idx = allVersions.indexWhere((v) => v.id == version.id);
     final older = idx < allVersions.length - 1 ? allVersions[idx + 1] : null;
     final newText = NoteContentUtils.toDisplayText(version.content);
-    final oldText = older != null ? NoteContentUtils.toDisplayText(older.content) : '';
+    final oldText =
+        older != null ? NoteContentUtils.toDisplayText(older.content) : '';
     final spans = older != null ? computeDiff(oldText, newText) : null;
     final actionColor = VersionHistoryController.getActionColor(version.action);
     final actionIcon = VersionHistoryController.getActionIcon(version.action);
@@ -73,10 +73,12 @@ class DiffPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(version.title.isEmpty ? l10n.untitled : version.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 2),
                     Text(_formatTimeAgo(context, version.timestamp),
-                        style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        style:
+                            TextStyle(fontSize: 13, color: Colors.grey[600])),
                   ],
                 ),
               ),
@@ -130,4 +132,3 @@ class DiffPanel extends StatelessWidget {
         ),
       );
 }
-

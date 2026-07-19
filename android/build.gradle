@@ -3,6 +3,13 @@ allprojects {
         google()
         mavenCentral()
     }
+    // Force newer espresso version to fix namespace conflict with AGP 9
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.test.espresso:espresso-core:3.6.1'
+            force 'androidx.test.espresso:espresso-idling-resource:3.6.1'
+        }
+    }
 }
 
 subprojects {
@@ -16,10 +23,10 @@ subprojects {
                 }
             }
         }
-        
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-            kotlinOptions {
-                jvmTarget = "17"
+
+        project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            compilerOptions {
+                jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
             }
         }
     }

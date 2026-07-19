@@ -4,7 +4,7 @@
 
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/widgets/editor/paste_handler.dart';
+import 'package:sinan_note/core/utils/paste_handler.dart';
 
 // ── مولّد نصوص ─────────────────────────────────────────────────────────────
 
@@ -43,7 +43,8 @@ void main() {
         sw.stop();
 
         expect(delta.length, greaterThan(0));
-        print('buildDeltaInIsolate | Arabic | $size chars → ${sw.elapsedMilliseconds}ms');
+        print(
+            'buildDeltaInIsolate | Arabic | $size chars → ${sw.elapsedMilliseconds}ms');
       });
 
       test('English $size chars', () async {
@@ -53,7 +54,8 @@ void main() {
         sw.stop();
 
         expect(delta.length, greaterThan(0));
-        print('buildDeltaInIsolate | English | $size chars → ${sw.elapsedMilliseconds}ms');
+        print(
+            'buildDeltaInIsolate | English | $size chars → ${sw.elapsedMilliseconds}ms');
       });
 
       test('Mixed AR+EN $size chars', () async {
@@ -63,7 +65,8 @@ void main() {
         sw.stop();
 
         expect(delta.length, greaterThan(0));
-        print('buildDeltaInIsolate | Mixed | $size chars → ${sw.elapsedMilliseconds}ms');
+        print(
+            'buildDeltaInIsolate | Mixed | $size chars → ${sw.elapsedMilliseconds}ms');
       });
     }
   });

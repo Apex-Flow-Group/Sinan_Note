@@ -304,6 +304,7 @@
   "editor": "Editor",
   "noteColors": "Note Colors",
   "swipeGestures": "Swipe Gestures",
+  "swipeGesturesMobileHint": "These settings apply to the mobile version only",
   "enabled": "Enabled",
   "disabled": "Disabled",
   "editorSettings": "Editor Settings",

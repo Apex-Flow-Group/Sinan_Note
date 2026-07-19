@@ -1,11 +1,12 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 📋 NOTE STATE SERVICE — اختبارات شاملة تشمل تسريب المزامنة
 
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/services/note_services/note_state_service.dart';
+
 import '../../test_setup.dart';
+
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -564,5 +565,88 @@ void main() {
       expect(service.lockedNotes.length, 0);
     });
   });
-}
 
+  // ══════════════════════════════════════════════════════════════
+  // 7. حماية Dispose — لا crash بعد dispose
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — Dispose Safety', () {
+    test('_silentSync لا يُنفَّذ بعد dispose', () async {
+      bool callbackCalled = false;
+      service.onSyncCompleted = () async {
+        callbackCalled = true;
+      };
+
+      service.updateAllNotes([
+        Note(id: 1, title: 'Test', content: '', createdAt: now, updatedAt: now),
+      ]);
+
+      // يُطلق _silentSync (timer 5 ثوانٍ)
+      service.updateNote(
+        Note(
+            id: 1,
+            title: 'Modified',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+      );
+
+      // dispose قبل انتهاء الـ timer
+      service.dispose();
+
+      // انتظر قليلاً — الـ callback يجب ألا يُستدعى
+      await Future.delayed(const Duration(milliseconds: 200));
+      expect(callbackCalled, isFalse);
+    });
+
+    test('عمليات على الـ state بعد dispose لا ترمي استثناء', () {
+      service.updateAllNotes([
+        Note(id: 1, title: 'A', content: '', createdAt: now, updatedAt: now),
+      ]);
+      service.dispose();
+
+      // هذه العمليات يجب ألا ترمي أي استثناء
+      expect(
+          () => service.updateNote(
+                Note(
+                    id: 1,
+                    title: 'B',
+                    content: '',
+                    createdAt: now,
+                    updatedAt: now),
+              ),
+          returnsNormally);
+      expect(
+          () => service.addNote(
+                Note(
+                    id: 2,
+                    title: 'C',
+                    content: '',
+                    createdAt: now,
+                    updatedAt: now),
+              ),
+          returnsNormally);
+      expect(() => service.removeNote(1), returnsNormally);
+    });
+
+    test('getNoteById يعمل بعد updateAllNotes', () {
+      service.updateAllNotes([
+        Note(
+            id: 5,
+            title: 'Find me',
+            content: 'here',
+            createdAt: now,
+            updatedAt: now),
+        Note(
+            id: 10,
+            title: 'Other',
+            content: '',
+            createdAt: now,
+            updatedAt: now),
+      ]);
+      final found = service.getNoteById(5);
+      expect(found, isNotNull);
+      expect(found!.title, 'Find me');
+      expect(service.getNoteById(999), isNull);
+    });
+  });
+}

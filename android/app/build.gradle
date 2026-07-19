@@ -22,10 +22,6 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     defaultConfig {
         applicationId = "com.apexflow.app.sinan"
         minSdkVersion = flutter.minSdkVersion
@@ -62,7 +58,7 @@ android {
         }
     }
 
-    // Workaround for Flutter Gradle Plugin + AGP 8.x race condition
+    // Workaround for Flutter Gradle Plugin race condition
     // libs.jar must exist before JetifyTransform runs
     applicationVariants.configureEach { variant ->
         variant.preBuildProvider.configure {

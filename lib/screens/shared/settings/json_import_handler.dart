@@ -13,7 +13,7 @@ import 'package:sinan_note/screens/shared/settings/backup_validators.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/storage/backup_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class JsonImportHandler {
   static Future<void> handle(
@@ -192,4 +192,3 @@ class JsonImportHandler {
     );
   }
 }
-

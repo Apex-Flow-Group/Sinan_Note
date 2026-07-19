@@ -894,6 +894,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noteColors => 'ألوان الملاحظات';
 
   @override
+  String get swipeGesturesMobileHint =>
+      'هذه الإعدادات تنطبق على نسخة الجوال فقط';
+
+  @override
   String get enabled => 'مفعّل';
 
   @override

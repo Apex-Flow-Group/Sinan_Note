@@ -1,11 +1,10 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/notification_service.dart';
-import 'package:sinan_note/services/unified_notification_service.dart';
+import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class ReminderPickerSheet extends StatefulWidget {
   final DateTime? initialDateTime;
@@ -210,147 +209,158 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
             const Divider(height: 16),
 
             // ── Body ──
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Date card ──
-                  _SectionCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionLabel(l10n.date, Icons.calendar_today_rounded),
-                        const SizedBox(height: 12),
-                        // Quick chips
-                        Row(
-                          children: [
-                            _QuickChip(
-                              label: l10n.today,
-                              date: DateTime.now(),
-                              selected:
-                                  _isSameDay(_selectedDate, DateTime.now()),
-                              onTap: () => setState(
-                                  () => _selectedDate = DateTime.now()),
-                            ),
-                            const SizedBox(width: 8),
-                            _QuickChip(
-                              label: l10n.tomorrow,
-                              date: DateTime.now().add(const Duration(days: 1)),
-                              selected: _isSameDay(_selectedDate,
-                                  DateTime.now().add(const Duration(days: 1))),
-                              onTap: () => setState(() => _selectedDate =
-                                  DateTime.now().add(const Duration(days: 1))),
-                            ),
-                            const SizedBox(width: 8),
-                            _QuickChip(
-                              label: l10n.nextWeek,
-                              date: DateTime.now().add(const Duration(days: 7)),
-                              selected: _isSameDay(_selectedDate,
-                                  DateTime.now().add(const Duration(days: 7))),
-                              onTap: () => setState(() => _selectedDate =
-                                  DateTime.now().add(const Duration(days: 7))),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Date picker button
-                        _PickerButton(
-                          icon: Icons.edit_calendar_rounded,
-                          label: DateFormat('EEE, MMM d, yyyy')
-                              .format(_selectedDate),
-                          onTap: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDate,
-                              firstDate: DateTime.now(),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 365)),
-                            );
-                            if (date != null) {
-                              setState(() => _selectedDate = date);
-                            }
-                          },
-                        ),
-                      ],
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Date card ──
+                    _SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _SectionLabel(
+                              l10n.date, Icons.calendar_today_rounded),
+                          const SizedBox(height: 12),
+                          // Quick chips
+                          Row(
+                            children: [
+                              _QuickChip(
+                                label: l10n.today,
+                                date: DateTime.now(),
+                                selected:
+                                    _isSameDay(_selectedDate, DateTime.now()),
+                                onTap: () => setState(
+                                    () => _selectedDate = DateTime.now()),
+                              ),
+                              const SizedBox(width: 8),
+                              _QuickChip(
+                                label: l10n.tomorrow,
+                                date:
+                                    DateTime.now().add(const Duration(days: 1)),
+                                selected: _isSameDay(
+                                    _selectedDate,
+                                    DateTime.now()
+                                        .add(const Duration(days: 1))),
+                                onTap: () => setState(() => _selectedDate =
+                                    DateTime.now()
+                                        .add(const Duration(days: 1))),
+                              ),
+                              const SizedBox(width: 8),
+                              _QuickChip(
+                                label: l10n.nextWeek,
+                                date:
+                                    DateTime.now().add(const Duration(days: 7)),
+                                selected: _isSameDay(
+                                    _selectedDate,
+                                    DateTime.now()
+                                        .add(const Duration(days: 7))),
+                                onTap: () => setState(() => _selectedDate =
+                                    DateTime.now()
+                                        .add(const Duration(days: 7))),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Date picker button
+                          _PickerButton(
+                            icon: Icons.edit_calendar_rounded,
+                            label: DateFormat('EEE, MMM d, yyyy')
+                                .format(_selectedDate),
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: _selectedDate,
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now()
+                                    .add(const Duration(days: 365)),
+                              );
+                              if (date != null) {
+                                setState(() => _selectedDate = date);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // ── Time card ──
-                  _SectionCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionLabel(l10n.time, Icons.access_time_rounded),
-                        const SizedBox(height: 12),
-                        _PickerButton(
-                          icon: Icons.schedule_rounded,
-                          label: _selectedTime.format(context),
-                          onTap: () async {
-                            final time = await showTimePicker(
-                              context: context,
-                              initialTime: _selectedTime,
-                            );
-                            if (time != null) {
-                              setState(() => _selectedTime = time);
-                            }
-                          },
-                        ),
-                      ],
+                    // ── Time card ──
+                    _SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _SectionLabel(l10n.time, Icons.access_time_rounded),
+                          const SizedBox(height: 12),
+                          _PickerButton(
+                            icon: Icons.schedule_rounded,
+                            label: _selectedTime.format(context),
+                            onTap: () async {
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: _selectedTime,
+                              );
+                              if (time != null) {
+                                setState(() => _selectedTime = time);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // ── Recurrence card ──
-                  _SectionCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionLabel(l10n.repeat, Icons.repeat_rounded),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _RecurrenceChip(
-                                label: l10n.doesNotRepeat,
-                                value: 'none',
-                                selected: _recurrence == 'none',
-                                onTap: () =>
-                                    setState(() => _recurrence = 'none')),
-                            _RecurrenceChip(
-                                label: l10n.daily,
-                                value: 'DAILY',
-                                selected: _recurrence == 'DAILY',
-                                onTap: () =>
-                                    setState(() => _recurrence = 'DAILY')),
-                            _RecurrenceChip(
-                                label: l10n.weekly,
-                                value: 'WEEKLY',
-                                selected: _recurrence == 'WEEKLY',
-                                onTap: () =>
-                                    setState(() => _recurrence = 'WEEKLY')),
-                            _RecurrenceChip(
-                                label: l10n.monthly,
-                                value: 'MONTHLY',
-                                selected: _recurrence == 'MONTHLY',
-                                onTap: () =>
-                                    setState(() => _recurrence = 'MONTHLY')),
-                            _RecurrenceChip(
-                                label: l10n.yearly,
-                                value: 'YEARLY',
-                                selected: _recurrence == 'YEARLY',
-                                onTap: () =>
-                                    setState(() => _recurrence = 'YEARLY')),
-                          ],
-                        ),
-                      ],
+                    // ── Recurrence card ──
+                    _SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _SectionLabel(l10n.repeat, Icons.repeat_rounded),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _RecurrenceChip(
+                                  label: l10n.doesNotRepeat,
+                                  value: 'none',
+                                  selected: _recurrence == 'none',
+                                  onTap: () =>
+                                      setState(() => _recurrence = 'none')),
+                              _RecurrenceChip(
+                                  label: l10n.daily,
+                                  value: 'DAILY',
+                                  selected: _recurrence == 'DAILY',
+                                  onTap: () =>
+                                      setState(() => _recurrence = 'DAILY')),
+                              _RecurrenceChip(
+                                  label: l10n.weekly,
+                                  value: 'WEEKLY',
+                                  selected: _recurrence == 'WEEKLY',
+                                  onTap: () =>
+                                      setState(() => _recurrence = 'WEEKLY')),
+                              _RecurrenceChip(
+                                  label: l10n.monthly,
+                                  value: 'MONTHLY',
+                                  selected: _recurrence == 'MONTHLY',
+                                  onTap: () =>
+                                      setState(() => _recurrence = 'MONTHLY')),
+                              _RecurrenceChip(
+                                  label: l10n.yearly,
+                                  value: 'YEARLY',
+                                  selected: _recurrence == 'YEARLY',
+                                  onTap: () =>
+                                      setState(() => _recurrence = 'YEARLY')),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -528,4 +538,3 @@ class _RecurrenceChip extends StatelessWidget {
     );
   }
 }
-

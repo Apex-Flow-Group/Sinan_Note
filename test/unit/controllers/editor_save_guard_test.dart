@@ -2,7 +2,7 @@
 // ⚡ اختبارات حراسة الحفظ — تمنع الحفظ/الإشعار الكاذب عند فتح نوت بدون تعديل
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/controllers/editor/editor_state_manager.dart';
+import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
 
 void main() {
   group('حراسة الحفظ — فتح نوت بدون تعديل', () {

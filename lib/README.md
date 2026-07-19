@@ -10,13 +10,15 @@
 lib/
 ├── controllers/
 │   ├── categories/
-│   │   └── categories_provider.dart    # إدارة الكتالوجات + الكتالوج الافتراضي (kProCategoryId)
-│   ├── editor/
-│   │   └── editor_state_manager.dart   # حالة المحرر (dirty, undo, reminder...)
+│   │   └── categories_provider.dart        # إدارة الكتالوجات + الكتالوج الافتراضي (kProCategoryId)
 │   ├── notes/
-│   │   └── notes_provider.dart         # CRUD الملاحظات + الحالة العامة
-│   └── settings/
-│       └── settings_provider.dart      # إعدادات المستخدم
+│   │   └── notes_provider.dart             # CRUD الملاحظات + الحالة العامة
+│   ├── settings/
+│   │   └── settings_provider.dart          # إعدادات المستخدم
+│   ├── version_history/
+│   │   └── version_history_controller.dart # إدارة حالة شاشة تاريخ الإصدارات
+│   ├── master_width_provider.dart          # عرض لوحة Master (Desktop)
+│   └── selected_note_provider.dart         # النوت المفتوحة حالياً (Master-Details)
 │
 ├── core/
 │   ├── constants/                      # ثوابت التطبيق
@@ -41,9 +43,6 @@ lib/
 │   ├── note_mode.dart                  # enum: simple/code/checklist/reminder/rich
 │   ├── feature_info.dart               # معلومات الميزات الجديدة
 │   └── exceptions.dart                 # استثناءات مخصصة
-│
-├── providers/
-│   └── selected_note_provider.dart     # النوت المفتوحة حالياً (Master-Details)
 │
 ├── screens/          → راجع lib/screens/README.md
 ├── services/         → راجع lib/services/README.md
