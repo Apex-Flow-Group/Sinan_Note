@@ -25,6 +25,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
+          version: 3.41.6
           cache: true
 
       - name: Get dependencies
