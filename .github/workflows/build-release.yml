@@ -43,17 +43,15 @@ jobs:
           storeFile=../sinan_key.jks
           EOF
 
-      - name: Build Release AAB
-        run: |
-          flutter build appbundle --release \
-            --obfuscate \
-            --split-debug-info=build/app/outputs/symbols
-
       - name: Build Release APK
         run: |
           flutter build apk --release \
             --obfuscate \
             --split-debug-info=build/app/outputs/symbols
+
+      - name: Build Release AAB
+        run: |
+          flutter build appbundle --release
 
       - name: Upload AAB as artifact
         uses: actions/upload-artifact@v4
@@ -71,7 +69,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/flutter-apk/app-release.apk
           generate_release_notes: true
         env:
