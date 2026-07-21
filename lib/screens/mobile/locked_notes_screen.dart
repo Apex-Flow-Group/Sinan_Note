@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
@@ -18,6 +19,7 @@ import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/security/vault_reset_service.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/home/dialogs/vault_dialogs.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart'
@@ -137,6 +139,22 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     );
 
     if (mounted) await _loadLockedNotes();
+  }
+
+  /// إنشاء ملاحظة مقفلة جديدة واختيارها في Details Panel (للديسكتوب)
+  Future<void> _createNewNoteForDesktop(NoteMode mode) async {
+    final provider = Provider.of<NotesProvider>(context, listen: false);
+    final selectedNoteProvider =
+        Provider.of<SelectedNoteProvider>(context, listen: false);
+    final note = provider.createDefaultLockedNote(mode: mode);
+    final noteId = await provider.addOrUpdateNote(note, silent: true);
+    if (!mounted) return;
+    await _loadLockedNotes();
+    final savedNote = provider.notes.firstWhere(
+      (n) => n.id == noteId,
+      orElse: () => note,
+    );
+    selectedNoteProvider.selectNote(savedNote);
   }
 
   Future<void> _showImportSheet() async {
@@ -289,6 +307,14 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                     searchController: searchController,
                     onSearchChange: (q) => setState(() {}),
                     onToggleSearch: () => toggleSearch(),
+                    menuBar: PlatformHelper.shouldUseDesktopLayout(context)
+                        ? DesktopMenuBar(
+                            onNewNote: (mode) => _createNewNoteForDesktop(mode),
+                            onSearch: () => toggleSearch(),
+                            onRefresh: () => setState(() {}),
+                            onSettings: () => AppNavigator.toSettings(context),
+                          )
+                        : null,
                     leading: Builder(
                       builder: (ctx) => IconButton(
                         icon: const Icon(Icons.menu),

@@ -21,6 +21,9 @@ class SearchableHeader extends StatefulWidget {
   final int? noteCount;
   final double? maxWidth;
 
+  /// شريط القوائم — إذا أُمرر يُعرض مدمجاً مع شريط البحث (للديسكتوب فقط)
+  final Widget? menuBar;
+
   const SearchableHeader({
     super.key,
     required this.title,
@@ -36,6 +39,7 @@ class SearchableHeader extends StatefulWidget {
     this.hideSearchFrame = false,
     this.noteCount,
     this.maxWidth,
+    this.menuBar,
   });
 
   @override
@@ -90,6 +94,19 @@ class _SearchableHeaderState extends State<SearchableHeader>
     final frameBg = AppTheme.scaffoldBackground(colorScheme);
     final hintColor = colorScheme.onSurface.withValues(alpha: 0.45);
     final textColor = colorScheme.onSurface;
+
+    // إذا يوجد menuBar نستخدم الشكل الموحد
+    if (widget.menuBar != null) {
+      return _buildUnifiedMenuHeader(
+        context,
+        topPadding: topPadding,
+        appBarColor: appBarColor,
+        hintColor: hintColor,
+        textColor: textColor,
+        colorScheme: colorScheme,
+        isDark: isDark,
+      );
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -267,6 +284,257 @@ class _SearchableHeaderState extends State<SearchableHeader>
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// بناء الشريط الموحد (MenuBar + Search) — نفس تصميم HomeScreenResponsive
+  Widget _buildUnifiedMenuHeader(
+    BuildContext context, {
+    required double topPadding,
+    required Color appBarColor,
+    required Color hintColor,
+    required Color textColor,
+    required ColorScheme colorScheme,
+    required bool isDark,
+  }) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: appBarColor,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      ),
+      child: Container(
+        color: appBarColor,
+        padding: EdgeInsets.only(
+          top: topPadding + 6,
+          bottom: 6 + widget.extraBottomPadding,
+          left: 12,
+          right: 12,
+        ),
+        child: Row(
+          children: [
+            if (widget.leading != null) ...[
+              widget.leading!,
+              const SizedBox(width: 8),
+            ],
+            // الشريط الموحد
+            Expanded(
+              child: Container(
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? colorScheme.onSurface.withValues(alpha: 0.06)
+                      : colorScheme.onSurface.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final showMenuBar =
+                        !widget.isSearching && constraints.maxWidth >= 400;
+                    return Row(
+                      children: [
+                        // شريط القوائم — يختفي عند البحث أو ضيق المساحة
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: showMenuBar
+                              ? Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                      start: 4),
+                                  child: Theme(
+                                    data: Theme.of(context).copyWith(
+                                      menuBarTheme: MenuBarThemeData(
+                                        style: MenuStyle(
+                                          backgroundColor:
+                                              const WidgetStatePropertyAll(
+                                                  Colors.transparent),
+                                          elevation:
+                                              const WidgetStatePropertyAll(0),
+                                          shape: WidgetStatePropertyAll(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20)),
+                                          ),
+                                          padding: const WidgetStatePropertyAll(
+                                              EdgeInsets.symmetric(
+                                                  horizontal: 4)),
+                                        ),
+                                      ),
+                                    ),
+                                    child: widget.menuBar!,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        // فاصل أو ... عند الضيق
+                        if (!widget.isSearching && constraints.maxWidth >= 400)
+                          Container(
+                            width: 1,
+                            height: 20,
+                            color: colorScheme.outlineVariant
+                                .withValues(alpha: 0.4),
+                          )
+                        else if (!widget.isSearching &&
+                            constraints.maxWidth < 400)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: GestureDetector(
+                              onTap: widget.onToggleSearch,
+                              child: Icon(Icons.more_horiz_rounded,
+                                  size: 20,
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.5)),
+                            ),
+                          ),
+                        // حقل البحث
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (!widget.isSearching) widget.onToggleSearch();
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: AnimatedBuilder(
+                              animation: _progress,
+                              builder: (context, _) {
+                                final t = _progress.value;
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.search,
+                                          size: 18,
+                                          color: colorScheme.onSurface
+                                              .withValues(alpha: 0.6)),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Stack(
+                                          alignment:
+                                              AlignmentDirectional.centerStart,
+                                          children: [
+                                            // العنوان
+                                            Opacity(
+                                              opacity:
+                                                  (1.0 - t * 2).clamp(0.0, 1.0),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    widget.title,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: hintColor,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  if (widget.noteCount !=
+                                                      null) ...[
+                                                    const SizedBox(width: 6),
+                                                    Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 5,
+                                                          vertical: 1),
+                                                      decoration: BoxDecoration(
+                                                        color: hintColor
+                                                            .withValues(
+                                                                alpha: 0.15),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                      ),
+                                                      child: Text(
+                                                        '${widget.noteCount}',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: hintColor,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                            // حقل البحث
+                                            Opacity(
+                                              opacity: ((t - 0.3) / 0.7)
+                                                  .clamp(0.0, 1.0),
+                                              child: IgnorePointer(
+                                                ignoring: !widget.isSearching,
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: TextField(
+                                                        controller: widget
+                                                            .searchController,
+                                                        focusNode: _focusNode,
+                                                        onChanged: widget
+                                                            .onSearchChange,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          hintText: _hintText(
+                                                              context),
+                                                          border:
+                                                              InputBorder.none,
+                                                          hintStyle: TextStyle(
+                                                              color: hintColor,
+                                                              fontSize: 13),
+                                                          isDense: true,
+                                                          contentPadding:
+                                                              EdgeInsets.zero,
+                                                        ),
+                                                        style: TextStyle(
+                                                            fontSize: 13,
+                                                            color: textColor),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+            // أزرار trailing — مع زر بحث/خروج
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: widget.isSearching
+                  ? IconButton(
+                      key: const ValueKey('exit_search'),
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () {
+                        widget.searchController.clear();
+                        widget.onSearchChange?.call('');
+                        widget.onToggleSearch();
+                      },
+                    )
+                  : IconButton(
+                      key: const ValueKey('search'),
+                      icon: const Icon(Icons.search_rounded),
+                      onPressed: widget.onToggleSearch,
+                    ),
+            ),
+            if (widget.trailing != null) widget.trailing!,
+          ],
         ),
       ),
     );

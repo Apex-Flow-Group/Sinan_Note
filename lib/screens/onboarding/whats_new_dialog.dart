@@ -70,8 +70,8 @@ class WhatsNewDialog extends StatelessWidget {
               // ⚠️ ثابت: يتغير مع كل إصدار — عنوان رئيسي يعكس محتوى التحديث
               Text(
                 isAr
-                    ? 'مزامنة أسرع وأكثر استقراراً'
-                    : 'Faster & More Stable Sync',
+                    ? 'شريط أدوات موحّد ومشاركة أذكى'
+                    : 'Unified Toolbar & Smarter Sharing',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
@@ -117,8 +117,8 @@ class WhatsNewDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAr
-                            ? 'الملاحظات تظهر فوراً بعد المزامنة، إصلاح شاشة التذكير، وتحسينات استقرار عامة.'
-                            : 'Notes appear instantly after sync, reminder screen fix, and general stability improvements.',
+                            ? 'شريط القوائم والبحث أصبحا جزءاً واحداً، المشاركة عبر Apex أصبحت كالمزامنة، وكل وضع عرض يُحفظ منفصلاً.'
+                            : 'Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.',
                         style: TextStyle(
                           fontSize: 13.5,
                           height: 1.75,
@@ -251,29 +251,36 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Features ──
               // ⚠️ ثابت: يتغير مع كل إصدار — قائمة الميزات/الإصلاحات المرئية للمستخدم
               _FeatureRow(
-                icon: Icons.sync_rounded,
-                color: Colors.blue,
-                title:
-                    isAr ? 'مزامنة فورية عند الفتح' : 'Instant Sync on Launch',
+                icon: Icons.menu_open_rounded,
+                color: Colors.indigo,
+                title: isAr ? 'شريط أدوات موحّد' : 'Unified Toolbar',
                 subtitle: isAr
-                    ? 'الملاحظات الجديدة من أجهزتك الأخرى تظهر مباشرة بدون سحب يدوي'
-                    : 'New notes from your other devices appear immediately without manual pull',
+                    ? 'شريط القوائم (File, Edit, View, Help) مدمج مع البحث في شريط واحد أنيق على سطح المكتب'
+                    : 'Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop',
               ),
               _FeatureRow(
-                icon: Icons.alarm_rounded,
-                color: Colors.orange,
-                title: isAr ? 'إصلاح شاشة التذكير' : 'Reminder Screen Fix',
-                subtitle: isAr
-                    ? 'إصلاح مشكلة اختفاء البانر وتجمّد التمرير في التبويبات الفارغة'
-                    : 'Fixed banner disappearing and scroll freezing in empty tabs',
-              ),
-              _FeatureRow(
-                icon: Icons.speed_rounded,
+                icon: Icons.share_rounded,
                 color: Colors.teal,
-                title: isAr ? 'استقرار أفضل' : 'Better Stability',
+                title: isAr ? 'مشاركة ذكية عبر Apex' : 'Smart Sharing via Apex',
                 subtitle: isAr
-                    ? 'منع المزامنة المزدوجة وإصلاح احتمال توقف التطبيق عند الإغلاق السريع'
-                    : 'Prevented duplicate sync and fixed potential crash on quick app close',
+                    ? 'الملاحظات المشاركة تصل كاملة بنوعها — تشيك لست، كود، ريتش — وتُعرض بدون حفظ تلقائي'
+                    : 'Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving',
+              ),
+              _FeatureRow(
+                icon: Icons.view_agenda_rounded,
+                color: Colors.deepPurple,
+                title: isAr ? 'حفظ عرض منفصل' : 'Separate View Modes',
+                subtitle: isAr
+                    ? 'وضع العرض (موسّع/مطوي/شبكة) يُحفظ منفصلاً للجوال وسطح المكتب'
+                    : 'View mode (expanded/compact/grid) saved separately for mobile and desktop',
+              ),
+              _FeatureRow(
+                icon: Icons.save_outlined,
+                color: Colors.orange,
+                title: isAr ? 'سؤال الحفظ عند الخروج' : 'Save Prompt on Exit',
+                subtitle: isAr
+                    ? 'الملاحظات المستلمة من الخارج لا تُحفظ تلقائياً — يُسألك عند الخروج'
+                    : 'Received notes are not auto-saved — you\'re asked before closing',
               ),
 
               const SizedBox(height: 20),

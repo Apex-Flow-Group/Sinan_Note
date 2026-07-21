@@ -1,67 +1,77 @@
-# Sinan Note ProGuard Rules
-# Add project specific ProGuard rules here.
+# Sinan Note ProGuard Rules (Optimized for R8)
+# ══════════════════════════════════════════════════════════════════════
+# هدف: رفع نسب Shrinking/Obfuscation/Optimization من ~35% إلى 60%+
+# القاعدة: لا تحمي إلا ما يُستدعى بالـ Reflection أو من الأندرويد مباشرة
+# ══════════════════════════════════════════════════════════════════════
 
 # ══════════════════════════════════════════════════════════════════════
-# App Native Classes — MUST KEEP (MainActivity, Widgets)
+# App — MainActivity + Widgets (مطلوبة لأن AndroidManifest يشير لها)
 # ══════════════════════════════════════════════════════════════════════
--keep class com.apexflow.app.sinan.** { *; }
+-keep class com.apexflow.app.sinan.MainActivity { *; }
+-keep class com.apexflow.app.sinan.widget.** { *; }
 
-# Flutter Embedding — required for AGP 9
--keep class io.flutter.embedding.** { *; }
--keep class io.flutter.embedding.android.** { *; }
--keep class io.flutter.embedding.engine.** { *; }
+# ══════════════════════════════════════════════════════════════════════
+# Flutter Engine — الحد الأدنى المطلوب
+# ══════════════════════════════════════════════════════════════════════
+-keep class io.flutter.embedding.android.FlutterActivity { *; }
+-keep class io.flutter.embedding.android.FlutterFragmentActivity { *; }
+-keep class io.flutter.embedding.engine.FlutterEngine { *; }
+-keep class io.flutter.embedding.engine.FlutterJNI { *; }
+-keep class io.flutter.plugin.common.** { *; }
+-keep class io.flutter.plugins.GeneratedPluginRegistrant { *; }
+-dontwarn io.flutter.**
 
-# Flutter
--keep class io.flutter.app.** { *; }
--keep class io.flutter.plugin.**  { *; }
--keep class io.flutter.util.**  { *; }
--keep class io.flutter.view.**  { *; }
--keep class io.flutter.**  { *; }
--keep class io.flutter.plugins.**  { *; }
+# ══════════════════════════════════════════════════════════════════════
+# Plugins — فقط الكلاسات اللي تُسجّل عبر Reflection
+# ══════════════════════════════════════════════════════════════════════
 
-# Isar Database
+# Isar Database (JNI)
 -keep class io.isar.** { *; }
 -dontwarn io.isar.**
 
-# SQLite (للترحيل)
--keep class com.tekartik.sqflite.** { *; }
--keep class org.sqlite.** { *; }
--keep class org.sqlite.database.** { *; }
+# SQLite (للترحيل — يمكن إزالته بعد انتهاء الترحيل)
+-keep class com.tekartik.sqflite.SqflitePlugin { *; }
 -dontwarn com.tekartik.sqflite.**
 -dontwarn org.sqlite.**
 
-# Google Sign In
--keep class com.google.android.gms.** { *; }
+# Google Sign In — فقط Auth
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.api.** { *; }
 -dontwarn com.google.android.gms.**
 
-# Encryption
--keep class javax.crypto.** { *; }
--keep class javax.crypto.spec.** { *; }
-
-# Local Auth (Biometric)
--keep class androidx.biometric.** { *; }
+# Local Auth (Biometric) — الـ Fragment فقط
+-keep class androidx.biometric.BiometricPrompt { *; }
+-keep class androidx.biometric.BiometricManager { *; }
 
 # Notifications
 -keep class com.dexterous.flutterlocalnotifications.** { *; }
 
 # Home Widget
--keep class es.antonborri.home_widget.** { *; }
+-keep class es.antonborri.home_widget.HomeWidgetPlugin { *; }
+-keep class es.antonborri.home_widget.HomeWidgetProvider { *; }
 
-# AndroidX WorkManager + Room (required for R8 with AGP 9)
--keep class androidx.work.** { *; }
--keep class androidx.room.** { *; }
--keep class * extends androidx.room.RoomDatabase { *; }
--keep @androidx.room.Entity class * { *; }
--keep @androidx.room.Dao class * { *; }
+# ══════════════════════════════════════════════════════════════════════
+# AndroidX — فقط ما يُستدعى بالـ Reflection
+# ══════════════════════════════════════════════════════════════════════
+-keep class androidx.work.impl.WorkManagerInitializer { *; }
+-keep class androidx.startup.InitializationProvider { *; }
+-keep class * extends androidx.work.ListenableWorker { *; }
+-dontwarn androidx.work.**
 -dontwarn androidx.room.**
 
-# AndroidX Startup
--keep class androidx.startup.** { *; }
+# Room — إذا لا تستخدم Room مباشرة يمكن حذف هذه
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao interface * { *; }
 
-# Play Core (للمكونات المؤجلة)
--keep class com.google.android.play.core.** { *; }
+# ══════════════════════════════════════════════════════════════════════
+# Play Core
+# ══════════════════════════════════════════════════════════════════════
+-keep class com.google.android.play.core.splitcompat.SplitCompatApplication { *; }
 -dontwarn com.google.android.play.core.**
 
-# Preserve line numbers for debugging
+# ══════════════════════════════════════════════════════════════════════
+# Debugging — يمكن إزالته في المستقبل لزيادة Obfuscation
+# ══════════════════════════════════════════════════════════════════════
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile

@@ -122,13 +122,12 @@ class MainActivity: FlutterFragmentActivity() {
                     val uri = androidx.core.content.FileProvider.getUriForFile(
                         this, "${packageName}.fileprovider", file
                     )
-                    // Pass both URI and raw path so Apex can read it
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(uri, "application/x-sinan")
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/x-sinan"
                         setPackage("com.apexflow.tools.transfer")
+                        putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        putExtra("sinan_file_path", path)
                     }
                     try {
                         startActivity(intent)

@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/shared/tabs/reminder_dashboard.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 import 'package:sinan_note/widgets/home/note_card_widget.dart';
 import 'package:sinan_note/widgets/layout/details_panel.dart';
@@ -61,6 +65,30 @@ class _ReminderDashboardResponsiveState
     _closeAllSlidables.dispose();
     UnifiedNotificationService().commitAll();
     super.dispose();
+  }
+
+  Future<void> _createNewNote(BuildContext context, NoteMode mode) async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final selectedNoteProvider =
+        Provider.of<SelectedNoteProvider>(context, listen: false);
+    final colorMode = switch (mode) {
+      NoteMode.reminder => 'reminder',
+      NoteMode.code => 'professional',
+      NoteMode.checklist => 'checklist',
+      NoteMode.rich => 'rich',
+      _ => 'simple',
+    };
+    final newNote = notesProvider.createDefaultNote(
+      mode: mode,
+      colorIndex: settings.getDefaultColorIndex(colorMode),
+    );
+    final noteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
+    final savedNote = notesProvider.notes.firstWhere(
+      (note) => note.id == noteId,
+      orElse: () => newNote,
+    );
+    selectedNoteProvider.selectNote(savedNote);
   }
 
   List<Note> _filterNotes(List<Note> notes) {
@@ -268,6 +296,12 @@ class _ReminderDashboardResponsiveState
                             ),
                           )
                         : null,
+                    menuBar: DesktopMenuBar(
+                      onNewNote: (mode) => _createNewNote(context, mode),
+                      onSearch: () => toggleSearch(),
+                      onRefresh: () => setState(() {}),
+                      onSettings: () => AppNavigator.toSettings(context),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -326,26 +360,52 @@ class _ReminderDashboardResponsiveState
                 }),
 
                 // ── TabBar ──
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 720),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicatorColor: Theme.of(context).primaryColor,
-                      labelColor: isDark
-                          ? Colors.white
-                          : Theme.of(context).primaryColor,
-                      unselectedLabelColor:
-                          isDark ? Colors.grey[400] : Colors.grey[600],
-                      labelStyle: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 14),
-                      unselectedLabelStyle: const TextStyle(
-                          fontWeight: FontWeight.normal, fontSize: 14),
-                      tabs: [
-                        Tab(text: l10n.upcoming),
-                        Tab(text: l10n.scheduled),
-                        Tab(text: l10n.expired),
-                      ],
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: Container(
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.06)
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicator: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          dividerHeight: 0,
+                          labelColor: Theme.of(context).colorScheme.primary,
+                          unselectedLabelColor:
+                              isDark ? Colors.grey[400] : Colors.grey[600],
+                          labelStyle: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13),
+                          unselectedLabelStyle: const TextStyle(
+                              fontWeight: FontWeight.normal, fontSize: 13),
+                          labelPadding: EdgeInsets.zero,
+                          tabs: [
+                            Tab(text: l10n.upcoming, height: 34),
+                            Tab(text: l10n.scheduled, height: 34),
+                            Tab(text: l10n.expired, height: 34),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

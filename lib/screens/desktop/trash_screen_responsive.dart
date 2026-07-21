@@ -4,17 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/trash_empty_sheet.dart';
 import 'package:sinan_note/screens/mobile/trash_screen.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 import 'package:sinan_note/widgets/home/note_card_widget.dart';
 import 'package:sinan_note/widgets/layout/details_panel.dart';
@@ -56,6 +60,30 @@ class _TrashScreenResponsiveState extends State<TrashScreenResponsive>
     _closeAllSlidables.dispose();
     UnifiedNotificationService().commitAll();
     super.dispose();
+  }
+
+  Future<void> _createNewNote(BuildContext context, NoteMode mode) async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final selectedNoteProvider =
+        Provider.of<SelectedNoteProvider>(context, listen: false);
+    final colorMode = switch (mode) {
+      NoteMode.reminder => 'reminder',
+      NoteMode.code => 'professional',
+      NoteMode.checklist => 'checklist',
+      NoteMode.rich => 'rich',
+      _ => 'simple',
+    };
+    final newNote = notesProvider.createDefaultNote(
+      mode: mode,
+      colorIndex: settings.getDefaultColorIndex(colorMode),
+    );
+    final noteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
+    final savedNote = notesProvider.notes.firstWhere(
+      (note) => note.id == noteId,
+      orElse: () => newNote,
+    );
+    selectedNoteProvider.selectNote(savedNote);
   }
 
   List<Note> _filterNotes(List<Note> notes) {
@@ -263,6 +291,14 @@ class _TrashScreenResponsiveState extends State<TrashScreenResponsive>
                             ),
                           )
                         : null,
+                    menuBar: DesktopMenuBar(
+                      onNewNote: (mode) => _createNewNote(context, mode),
+                      onSearch: () => toggleSearch(),
+                      onRefresh: () =>
+                          Provider.of<NotesProvider>(context, listen: false)
+                              .fetchTrashedNotes(),
+                      onSettings: () => AppNavigator.toSettings(context),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

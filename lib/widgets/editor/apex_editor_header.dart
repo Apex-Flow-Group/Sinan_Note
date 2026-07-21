@@ -1,8 +1,6 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
-
 
 class ApexEditorHeader extends StatelessWidget {
   final Color backgroundColor;
@@ -38,93 +36,100 @@ class ApexEditorHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // في وضع Details Panel (onBackTap != null) لا نحتاج SafeArea
+    // لأن الـ parent يتعامل معها
+    final needsSafeArea = onBackTap == null;
+
     return Container(
       color: backgroundColor,
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back_rounded, color: textColor, size: 24),
-              onPressed: onBackTap ?? () => Navigator.pop(context),
-              splashRadius: 24,
-            ),
-            Expanded(
-              child: GestureDetector(
-                onTap: onTitleTap,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          color: textColor.withValues(alpha: 0.7),
-                          fontSize: 16,
-                          fontWeight: FontWeight.normal,
-                        ),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (onTitleTap != null) ...[
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.edit,
-                        size: 14,
-                        color: textColor.withValues(alpha: 0.4),
-                      ),
-                    ]
-                  ],
-                ),
-              ),
-            ),
-            if (onReminderTap != null)
-              IconButton(
-                icon: Icon(
-                  hasReminder
-                      ? Icons.alarm_on_rounded
-                      : Icons.alarm_add_rounded,
-                  color: hasReminder
-                      ? Colors.orange
-                      : textColor.withValues(alpha: 0.7),
-                  size: 22,
-                ),
-                onPressed: onReminderTap,
-                splashRadius: 24,
-                tooltip: 'تذكير',
-              ),
-            if (onCategoryTap != null)
-              IconButton(
-                icon: Icon(Icons.label_rounded,
-                    color: textColor.withValues(alpha: 0.7), size: 22),
-                onPressed: onCategoryTap,
-                splashRadius: 24,
-              ),
-            if (hasHistory)
-              IconButton(
-                icon: Icon(Icons.history_rounded, color: textColor, size: 22),
-                onPressed: onHistoryTap,
-                splashRadius: 24,
-              ),
-            if (onEditTap != null)
-              IconButton(
-                icon: Icon(Icons.edit_rounded, color: textColor, size: 24),
-                onPressed: onEditTap,
-                splashRadius: 24,
-                tooltip: 'تعديل',
-              )
-            else if (onSaveTap != null)
-              IconButton(
-                icon: Icon(Icons.check_rounded, color: textColor, size: 24),
-                onPressed: onSaveTap,
-                splashRadius: 24,
-              ),
-          ],
+      child: needsSafeArea
+          ? SafeArea(
+              bottom: false,
+              child: _buildRow(context),
+            )
+          : _buildRow(context),
+    );
+  }
+
+  Widget _buildRow(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: textColor, size: 24),
+          onPressed: onBackTap ?? () => Navigator.pop(context),
+          splashRadius: 24,
         ),
-      ),
+        Expanded(
+          child: GestureDetector(
+            onTap: onTitleTap,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: textColor.withValues(alpha: 0.7),
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (onTitleTap != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.edit,
+                    size: 14,
+                    color: textColor.withValues(alpha: 0.4),
+                  ),
+                ]
+              ],
+            ),
+          ),
+        ),
+        if (onReminderTap != null)
+          IconButton(
+            icon: Icon(
+              hasReminder ? Icons.alarm_on_rounded : Icons.alarm_add_rounded,
+              color: hasReminder
+                  ? Colors.orange
+                  : textColor.withValues(alpha: 0.7),
+              size: 22,
+            ),
+            onPressed: onReminderTap,
+            splashRadius: 24,
+            tooltip: 'تذكير',
+          ),
+        if (onCategoryTap != null)
+          IconButton(
+            icon: Icon(Icons.label_rounded,
+                color: textColor.withValues(alpha: 0.7), size: 22),
+            onPressed: onCategoryTap,
+            splashRadius: 24,
+          ),
+        if (hasHistory)
+          IconButton(
+            icon: Icon(Icons.history_rounded, color: textColor, size: 22),
+            onPressed: onHistoryTap,
+            splashRadius: 24,
+          ),
+        if (onEditTap != null)
+          IconButton(
+            icon: Icon(Icons.edit_rounded, color: textColor, size: 24),
+            onPressed: onEditTap,
+            splashRadius: 24,
+            tooltip: 'تعديل',
+          )
+        else if (onSaveTap != null)
+          IconButton(
+            icon: Icon(Icons.check_rounded, color: textColor, size: 24),
+            onPressed: onSaveTap,
+            splashRadius: 24,
+          ),
+      ],
     );
   }
 }
-

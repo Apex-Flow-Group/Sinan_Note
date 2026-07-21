@@ -199,8 +199,22 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     final context = navigatorKey.currentContext;
     if (context == null) return;
 
+    // ═══ كشف ملف .sinan مُمرر كـ shared_text بدل file_path ═══
+    // يحدث عند الاستقبال عبر Apex File Share
+    if (text.trimLeft().startsWith('{')) {
+      try {
+        final decoded = jsonDecode(text) as Map<String, dynamic>;
+        if (decoded.containsKey('content') && decoded.containsKey('title')) {
+          // هذا ملف .sinan — عالجه كاستيراد ملف
+          await _importSinanFromText(decoded);
+          return;
+        }
+      } catch (_) {
+        // ليس JSON صالح — تابع كنص عادي
+      }
+    }
+
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
     // تنظيف النص القادم من المتصفح
     final cleaned = _intentService.cleanSharedText(text);
@@ -228,7 +242,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
     if (!mounted) return;
 
-    // Create and save note to database FIRST
+    // إنشاء الملاحظة بدون حفظ — المستخدم يقرر عند الخروج
     final newNote = Note(
       title: isPureUrl
           ? 'Shared Link'
@@ -245,41 +259,73 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       isChecklist: mode == NoteMode.checklist,
     );
 
-    // Save to database and get the ID
-    final savedNoteId =
-        await notesProvider.addOrUpdateNote(newNote, silent: true);
-
-    // Get the saved note from database
-    final dbService = SqliteDatabaseService();
-    final savedNote = await dbService.getNoteById(savedNoteId);
     if (!mounted) return;
 
-    if (savedNote == null) return;
-
-    // Open editor on top of MainLayoutScreen
-    AppNavigator.toEditorViaKey(navigatorKey, note: savedNote, mode: mode);
+    // فتح المحرر كمعاينة — بدون حفظ تلقائي
+    AppNavigator.toEditorViaKey(
+      navigatorKey,
+      note: newNote,
+      mode: mode,
+      isSharedPreview: true,
+    );
   }
 
   void _importSinanFile(String filePath) async {
     try {
       final context = navigatorKey.currentContext;
       if (context == null) return;
-      final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
       if (!mounted) return;
 
       final note = await _intentService.parseSinanFile(filePath);
       if (!mounted || note == null) return;
 
-      final savedId = await notesProvider.addOrUpdateNote(note, silent: true);
-      final dbService = SqliteDatabaseService();
-      final savedNote = await dbService.getNoteById(savedId);
-      if (!mounted || savedNote == null) return;
-
+      // فتح المحرر بدون حفظ — المستخدم يقرر عند الخروج
       AppNavigator.toEditorViaKey(
         navigatorKey,
-        note: savedNote,
-        mode: NoteCardUtils.getNoteMode(savedNote),
+        note: note,
+        mode: NoteCardUtils.getNoteMode(note),
+        isSharedPreview: true,
+      );
+    } catch (_) {}
+  }
+
+  /// استيراد ملف .sinan من نص JSON (عندما يصل كـ shared_text بدل file_path)
+  Future<void> _importSinanFromText(Map<String, dynamic> json) async {
+    try {
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+
+      Note note;
+
+      // الصيغة الكاملة (من toMap) — تحتوي 'updatedAt'
+      if (json.containsKey('updatedAt')) {
+        json.remove('id');
+        note = Note.fromMap(json);
+        note.createdAt = DateTime.now();
+        note.updatedAt = DateTime.now();
+      } else {
+        // الصيغة القديمة
+        note = Note(
+          title: json['title'] as String? ?? '',
+          content: json['content'] as String? ?? '',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          colorIndex: json['colorIndex'] as int? ?? 0,
+          noteType: json['noteType'] as String? ?? 'simple',
+          isProfessional: json['noteType'] == 'code',
+          isChecklist: json['noteType'] == 'checklist',
+        );
+      }
+
+      if (!mounted) return;
+
+      // فتح المحرر بدون حفظ — المستخدم يقرر عند الخروج
+      AppNavigator.toEditorViaKey(
+        navigatorKey,
+        note: note,
+        mode: NoteCardUtils.getNoteMode(note),
+        isSharedPreview: true,
       );
     } catch (_) {}
   }

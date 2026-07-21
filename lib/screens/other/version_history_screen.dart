@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/models/note_version.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/other/version_history/panels/diff_panel.dart';
@@ -18,6 +22,7 @@ import 'package:sinan_note/screens/other/version_history/panels/versions_panel.d
 import 'package:sinan_note/screens/other/version_history/widgets/resizable_divider.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
+import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
 const String _kPrefNotesWidth = 'vh_notes_col_width';
@@ -61,6 +66,30 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     _searchController.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _createNewNote(NoteMode mode) async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final selectedNoteProvider =
+        Provider.of<SelectedNoteProvider>(context, listen: false);
+    final colorMode = switch (mode) {
+      NoteMode.reminder => 'reminder',
+      NoteMode.code => 'professional',
+      NoteMode.checklist => 'checklist',
+      NoteMode.rich => 'rich',
+      _ => 'simple',
+    };
+    final newNote = notesProvider.createDefaultNote(
+      mode: mode,
+      colorIndex: settings.getDefaultColorIndex(colorMode),
+    );
+    final noteId = await notesProvider.addOrUpdateNote(newNote, silent: true);
+    final savedNote = notesProvider.notes.firstWhere(
+      (note) => note.id == noteId,
+      orElse: () => newNote,
+    );
+    selectedNoteProvider.selectNote(savedNote);
   }
 
   Future<void> _loadColWidths() async {
@@ -273,6 +302,16 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                           _isSearching = !_isSearching;
                           if (!_isSearching) _searchController.clear();
                         }),
+                        menuBar: PlatformHelper.shouldUseDesktopLayout(context)
+                            ? DesktopMenuBar(
+                                onNewNote: (mode) => _createNewNote(mode),
+                                onSearch: () =>
+                                    setState(() => _isSearching = true),
+                                onRefresh: () => setState(() {}),
+                                onSettings: () =>
+                                    AppNavigator.toSettings(context),
+                              )
+                            : null,
                         leading: Builder(
                           builder: (ctx) => IconButton(
                             icon: const Icon(Icons.menu),

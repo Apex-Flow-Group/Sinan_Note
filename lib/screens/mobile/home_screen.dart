@@ -123,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadViewType() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final savedType = await settings.getViewType('home');
+    final savedType = await settings.getViewType('home_mobile');
     if (!mounted) return;
     final loaded = _parseViewType(savedType);
     if (_viewType != loaded) {
@@ -397,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               });
                               await Provider.of<SettingsProvider>(context,
                                       listen: false)
-                                  .setViewType('home', _viewType.name);
+                                  .setViewType('home_mobile', _viewType.name);
                             },
                             onMenuTap: () {
                               if (_isSearchActive) {
