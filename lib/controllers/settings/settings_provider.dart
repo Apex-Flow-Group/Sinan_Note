@@ -180,7 +180,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> setViewType(String key, String type) async {
-    if (key == 'home') {
+    if (key == 'home' || key == 'home_mobile' || key == 'home_desktop') {
       _viewType = type;
     }
     notifyListeners();

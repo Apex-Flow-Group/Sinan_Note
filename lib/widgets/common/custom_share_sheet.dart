@@ -193,13 +193,8 @@ class CustomShareSheet {
           .trim();
       final filePath = '${tmp.path}/$safeTitle.sinan';
 
-      await File(filePath).writeAsString(jsonEncode({
-        'title': note.title,
-        'content': note.content,
-        'noteType': note.noteType,
-        'colorIndex': note.colorIndex,
-        'createdAt': note.createdAt.toIso8601String(),
-      }));
+      // إرسال الملاحظة كنسخة طبق الأصل — نفس صيغة السحابة
+      await File(filePath).writeAsString(jsonEncode(note.toMap()));
 
       await ApexShareService.openFileInApex(filePath);
     } on PlatformException catch (e) {

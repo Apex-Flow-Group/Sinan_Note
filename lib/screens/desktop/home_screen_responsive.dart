@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -80,6 +80,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     _viewType = _parseViewType(settings.viewType);
     _viewTypeNotifier = ValueNotifier(_viewType.name);
     _loadViewType();
+    _searchController.addListener(_onSearchStateChanged);
+    _searchFocusNode.addListener(_onSearchStateChanged);
     // مسح الاختيار عند فتح الشاشة (الانتقال من تبويب آخر)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final selectedNoteProvider = Provider.of<SelectedNoteProvider>(
@@ -117,7 +119,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   Future<void> _loadViewType() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final savedType = await settings.getViewType('home');
+    final savedType = await settings.getViewType('home_desktop');
     if (mounted) {
       ViewType loadedType;
       if (savedType == 'listExpanded') {
@@ -135,6 +137,8 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchStateChanged);
+    _searchFocusNode.removeListener(_onSearchStateChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
     _selectedNoteIdsNotifier.dispose();
@@ -142,6 +146,10 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
     _notesScrollController.dispose();
     _activeFilterNotifier.dispose();
     super.dispose();
+  }
+
+  void _onSearchStateChanged() {
+    if (mounted) setState(() {});
   }
 
   void _showFilterDialog(BuildContext context) {
@@ -189,7 +197,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
             _viewTypeNotifier.value = _viewType.name;
           });
           Provider.of<SettingsProvider>(context, listen: false)
-              .setViewType('home', _viewType.name);
+              .setViewType('home_desktop', _viewType.name);
         },
       },
       child: _buildMasterDetailsScaffold(context, l10n),
@@ -253,42 +261,34 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                       child: Consumer<CategoriesProvider>(
                         builder: (context, cats, _) {
                           final selectedId = cats.selectedCategoryId;
-                          if (selectedId == null) {
-                            return _SearchField(
-                              controller: _searchController,
-                              focusNode: _searchFocusNode,
-                              hint: l10n.searchNotes,
-                            );
-                          }
-                          final catName = selectedId == kProCategoryId
-                              ? l10n.professional
-                              : (cats.categories
-                                      .where((c) => c.id == selectedId)
-                                      .firstOrNull
-                                      ?.name ??
-                                  '');
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: _SearchField(
-                                  controller: _searchController,
-                                  focusNode: _searchFocusNode,
-                                  hint: l10n.searchNotes,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Chip(
-                                avatar:
-                                    const Icon(Icons.label_rounded, size: 16),
-                                label: Text(catName,
-                                    style: const TextStyle(fontSize: 13)),
-                                deleteIcon: const Icon(Icons.close, size: 16),
-                                onDeleted: () => cats.selectCategory(null),
-                                visualDensity: VisualDensity.compact,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ],
+                          return _UnifiedToolbar(
+                            searchController: _searchController,
+                            searchFocusNode: _searchFocusNode,
+                            searchHint: l10n.searchNotes,
+                            selectedCategoryId: selectedId,
+                            categoryName: selectedId == null
+                                ? null
+                                : selectedId == kProCategoryId
+                                    ? l10n.professional
+                                    : (cats.categories
+                                            .where((c) => c.id == selectedId)
+                                            .firstOrNull
+                                            ?.name ??
+                                        ''),
+                            onCategoryDismiss: () => cats.selectCategory(null),
+                            menuBar: DesktopMenuBar(
+                              onNewNote: _navigateToNewNote,
+                              onSearch: () => FocusScope.of(context)
+                                  .requestFocus(_searchFocusNode),
+                              onRefresh: () async {
+                                final notesProvider =
+                                    Provider.of<NotesProvider>(context,
+                                        listen: false);
+                                await notesProvider.loadNotes(force: true);
+                              },
+                              onSettings: () =>
+                                  AppNavigator.toSettings(context),
+                            ),
                           );
                         },
                       ),
@@ -313,17 +313,6 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
               ),
               body: Column(
                 children: [
-                  DesktopMenuBar(
-                    onNewNote: _navigateToNewNote,
-                    onSearch: () =>
-                        FocusScope.of(context).requestFocus(_searchFocusNode),
-                    onRefresh: () async {
-                      final notesProvider =
-                          Provider.of<NotesProvider>(context, listen: false);
-                      await notesProvider.loadNotes(force: true);
-                    },
-                    onSettings: () => AppNavigator.toSettings(context),
-                  ),
                   Consumer<NotesProvider>(
                     builder: (_, notes, __) => notes.isLoading
                         ? const LinearProgressIndicator(minHeight: 2)
@@ -390,7 +379,33 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   List<Widget> _buildSearchActions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isSearching =
+        _searchController.text.isNotEmpty || _searchFocusNode.hasFocus;
+
     return [
+      // زر بحث / خروج — يتحول حسب الحالة
+      AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: isSearching
+            ? IconButton(
+                key: const ValueKey('exit_search'),
+                icon: const Icon(Icons.close_rounded),
+                tooltip: l10n.close,
+                onPressed: () {
+                  _searchController.clear();
+                  _searchFocusNode.unfocus();
+                  setState(() {});
+                },
+              )
+            : IconButton(
+                key: const ValueKey('search'),
+                icon: const Icon(Icons.search_rounded),
+                tooltip: l10n.searchNotes,
+                onPressed: () {
+                  FocusScope.of(context).requestFocus(_searchFocusNode);
+                },
+              ),
+      ),
       ValueListenableBuilder<String>(
         valueListenable: _viewTypeNotifier,
         builder: (context, viewType, child) {
@@ -408,7 +423,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
               });
               final settings =
                   Provider.of<SettingsProvider>(context, listen: false);
-              await settings.setViewType('home', _viewType.name);
+              await settings.setViewType('home_desktop', _viewType.name);
             },
           );
         },
@@ -541,6 +556,224 @@ class _SearchFieldState extends State<_SearchField> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// شريط موحّد يجمع القوائم (File|Edit|View|Help) مع حقل البحث في حاوية واحدة
+class _UnifiedToolbar extends StatefulWidget {
+  final TextEditingController searchController;
+  final FocusNode searchFocusNode;
+  final String searchHint;
+  final int? selectedCategoryId;
+  final String? categoryName;
+  final VoidCallback? onCategoryDismiss;
+  final Widget menuBar;
+
+  const _UnifiedToolbar({
+    required this.searchController,
+    required this.searchFocusNode,
+    required this.searchHint,
+    required this.menuBar,
+    this.selectedCategoryId,
+    this.categoryName,
+    this.onCategoryDismiss,
+  });
+
+  @override
+  State<_UnifiedToolbar> createState() => _UnifiedToolbarState();
+}
+
+class _UnifiedToolbarState extends State<_UnifiedToolbar>
+    with SingleTickerProviderStateMixin {
+  bool _isSearchActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.searchController.addListener(_onSearchChanged);
+    widget.searchFocusNode.addListener(_onFocusChanged);
+    _isSearchActive = widget.searchFocusNode.hasFocus ||
+        widget.searchController.text.isNotEmpty;
+  }
+
+  @override
+  void dispose() {
+    widget.searchController.removeListener(_onSearchChanged);
+    widget.searchFocusNode.removeListener(_onFocusChanged);
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final active = widget.searchFocusNode.hasFocus ||
+        widget.searchController.text.isNotEmpty;
+    if (_isSearchActive != active) setState(() => _isSearchActive = active);
+  }
+
+  void _onFocusChanged() {
+    final active = widget.searchFocusNode.hasFocus ||
+        widget.searchController.text.isNotEmpty;
+    if (_isSearchActive != active) setState(() => _isSearchActive = active);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      height: 38,
+      decoration: BoxDecoration(
+        color: isDark
+            ? colorScheme.onSurface.withValues(alpha: 0.06)
+            : colorScheme.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          // >= 320: قوائم كاملة + حقل بحث
+          // 200-320: قائمة منسدلة + حقل بحث
+          // < 200: قائمة منسدلة + أيقونة بحث فقط (آخر ما يُطوى)
+          final showInlineMenu = !_isSearchActive && width >= 320;
+          final showSearchField = _isSearchActive || width >= 200;
+
+          return Row(
+            children: [
+              if (!_isSearchActive) ...[
+                if (showInlineMenu)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 4),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(
+                        menuBarTheme: MenuBarThemeData(
+                          style: MenuStyle(
+                            backgroundColor: const WidgetStatePropertyAll(
+                                Colors.transparent),
+                            elevation: const WidgetStatePropertyAll(0),
+                            shape: WidgetStatePropertyAll(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
+                            ),
+                            padding: const WidgetStatePropertyAll(
+                                EdgeInsets.symmetric(horizontal: 4)),
+                          ),
+                        ),
+                      ),
+                      child: widget.menuBar,
+                    ),
+                  )
+                else
+                  _OverflowMenuAnchor(menuBar: widget.menuBar),
+                Container(
+                  width: 1,
+                  height: 20,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                ),
+              ],
+              if (showSearchField)
+                Expanded(
+                  child: TextField(
+                    controller: widget.searchController,
+                    focusNode: widget.searchFocusNode,
+                    style:
+                        TextStyle(fontSize: 13, color: colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      hintText: widget.searchHint,
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                      border: InputBorder.none,
+                      prefixIcon: Icon(Icons.search,
+                          size: 18,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                )
+              else
+                IconButton(
+                  icon: Icon(Icons.search_rounded,
+                      size: 20,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                  onPressed: () => widget.searchFocusNode.requestFocus(),
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
+                ),
+              if (widget.selectedCategoryId != null &&
+                  widget.categoryName != null &&
+                  showSearchField &&
+                  !_isSearchActive) ...[
+                const SizedBox(width: 4),
+                Chip(
+                  avatar: const Icon(Icons.label_rounded, size: 14),
+                  label: Text(widget.categoryName!,
+                      style: const TextStyle(fontSize: 12)),
+                  deleteIcon: const Icon(Icons.close, size: 14),
+                  onDeleted: widget.onCategoryDismiss,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                const SizedBox(width: 8),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// زر ⋯ منسدل — يعرض قوائم File/Edit/View/Help عند ضيق المساحة
+class _OverflowMenuAnchor extends StatefulWidget {
+  final Widget menuBar;
+  const _OverflowMenuAnchor({required this.menuBar});
+
+  @override
+  State<_OverflowMenuAnchor> createState() => _OverflowMenuAnchorState();
+}
+
+class _OverflowMenuAnchorState extends State<_OverflowMenuAnchor> {
+  final MenuController _controller = MenuController();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return MenuAnchor(
+      controller: _controller,
+      menuChildren: [
+        // نعرض الـ menuBar نفسه داخل القائمة المنسدلة
+        Theme(
+          data: Theme.of(context).copyWith(
+            menuBarTheme: const MenuBarThemeData(
+              style: MenuStyle(
+                backgroundColor: WidgetStatePropertyAll(Colors.transparent),
+                elevation: WidgetStatePropertyAll(0),
+                padding: WidgetStatePropertyAll(EdgeInsets.zero),
+              ),
+            ),
+          ),
+          child: widget.menuBar,
+        ),
+      ],
+      child: IconButton(
+        icon: Icon(Icons.more_horiz_rounded,
+            size: 20, color: colorScheme.onSurface.withValues(alpha: 0.7)),
+        onPressed: () {
+          if (_controller.isOpen) {
+            _controller.close();
+          } else {
+            _controller.open();
+          }
+        },
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
+        tooltip: '',
       ),
     );
   }

@@ -143,6 +143,12 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_default_size(window, 1280, 720);
   }
 
+  // الحد الأدنى لحجم النافذة: 800x500
+  GdkGeometry geometry;
+  geometry.min_width = 800;
+  geometry.min_height = 500;
+  gtk_window_set_geometry_hints(window, nullptr, &geometry, GDK_HINT_MIN_SIZE);
+
   // Connect delete-event to save state on close
   g_signal_connect(window, "delete-event", G_CALLBACK(on_delete_event), nullptr);
 

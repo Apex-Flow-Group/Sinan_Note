@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
@@ -38,6 +38,10 @@ class NoteEditorImmersive extends StatefulWidget {
   final bool readOnly;
   final String? prebuiltDeltaJson;
 
+  /// ملاحظة مستلمة من الخارج (مشاركة/مزامنة) — لا تُحفظ تلقائياً
+  /// عند الخروج يُسأل المستخدم إن كان يريد الحفظ
+  final bool isSharedPreview;
+
   const NoteEditorImmersive({
     super.key,
     this.note,
@@ -47,6 +51,7 @@ class NoteEditorImmersive extends StatefulWidget {
     this.onClose,
     this.readOnly = false,
     this.prebuiltDeltaJson,
+    this.isSharedPreview = false,
   });
 
   @override
@@ -506,7 +511,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   Future<void> _handleBack() async {
-    // ظˆط¶ط¹ ط§ظ„ظ‚ط±ط§ط،ط© â€” ط§ط®ط±ط¬ ظ…ط¨ط§ط´ط±ط© ط¨ط¯ظˆظ† ط­ظپط¸ ط£ظˆ ط±ط³ط§ظ„ط©
+    // وضع القراءة — اخرج مباشرة بدون حفظ أو رسالة
     if (_isReadOnly) {
       if (!mounted) return;
       if (widget.onClose != null) {
@@ -529,15 +534,39 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final hasContent = content.trim().isNotEmpty || title.trim().isNotEmpty;
     final hasChanges = _coordinator.stateManager.hasChanges();
 
+    // ملاحظة مستلمة من الخارج — اسأل المستخدم قبل الحفظ
+    if (widget.isSharedPreview && hasContent) {
+      final shouldSave = await _showSaveSharedNoteDialog();
+      if (!mounted) return;
+      if (shouldSave == true) {
+        await _saveNoteToDatabase(isManualSave: true);
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          UnifiedNotificationService().show(
+            context: context,
+            message: l10n!.noteSaved,
+            type: NotificationType.success,
+            duration: const Duration(seconds: 1),
+          );
+        }
+      }
+      if (!mounted) return;
+      if (widget.onClose != null) {
+        widget.onClose!();
+      } else {
+        Navigator.of(context).pop(shouldSave == true);
+      }
+      return;
+    }
+
     bool didSave = false;
     if (hasContent && hasChanges) {
       didSave = await _saveNoteToDatabase(isManualSave: true);
     }
 
-    // End version control session — saves history for significant changes
+    // End version control session
     await _endVersionSession();
 
-    // إظهار إشعار الحفظ فقط إذا تم الحفظ فعلاً
     if (didSave && mounted) {
       final l10n = AppLocalizations.of(context);
       UnifiedNotificationService().show(
@@ -555,6 +584,32 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       Navigator.of(context)
           .pop(_coordinator.savedNoteId != null || widget.note != null);
     }
+  }
+
+  Future<bool?> _showSaveSharedNoteDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.save),
+        content: Text(
+          isArabic
+              ? 'هل تريد حفظ هذه الملاحظة؟'
+              : 'Would you like to save this note?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(isArabic ? 'تجاهل' : 'Discard'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
   }
 
   // ==================== BUILD METHOD ====================

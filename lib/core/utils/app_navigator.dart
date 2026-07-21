@@ -146,6 +146,7 @@ abstract class AppNavigator {
     required Note note,
     required NoteMode mode,
     bool readOnly = false,
+    bool isSharedPreview = false,
   }) {
     key.currentState?.push(
       MaterialPageRoute(
@@ -153,6 +154,7 @@ abstract class AppNavigator {
           note: note,
           mode: mode,
           readOnly: readOnly,
+          isSharedPreview: isSharedPreview,
         ),
         settings: const RouteSettings(name: '/editor'),
       ),

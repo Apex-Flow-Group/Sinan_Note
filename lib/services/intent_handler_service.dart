@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
 
@@ -15,6 +16,9 @@ class IntentHandlerService {
 
   /// تنظيف النص القادم من المتصفح / التطبيقات الخارجية
   /// يُرجع {'text': النص النظيف, 'url': الرابط أو null}
+  ///
+  /// يتعامل مع حالة خاصة: إذا كان النص هو Delta JSON كامل
+  /// (مثل [{"insert":"النص\n"}]) يستخلص النص الصافي منه.
   Map<String, String?> cleanSharedText(String raw) {
     final urlRegex = RegExp(
       r'https?://[^\s]+',
@@ -24,6 +28,18 @@ class IntentHandlerService {
     String text = raw.trim();
     String? url;
 
+    // إزالة أحرف التحكم غير المرئية (Zero-width space, BOM, etc.)
+    text = text.replaceAll(RegExp(r'[\u200B-\u200D\uFEFF\u00AD]'), '');
+
+    // ═══ الحالة الخاصة: النص هو Delta JSON (Quill) ═══
+    // يحدث عند المشاركة من تطبيقات تنسخ المحتوى الداخلي بدلاً من النص المرئي
+    text = _extractPlainFromDeltaIfNeeded(text);
+
+    // ═══ الحالة الخاصة: النص هو Checklist JSON ═══
+    if (ChecklistFormatter.isValidChecklist(text)) {
+      text = ChecklistFormatter.toPlainText(text);
+    }
+
     // استخرج أول رابط في النص
     final urlMatch = urlRegex.firstMatch(text);
     if (urlMatch != null) {
@@ -32,15 +48,50 @@ class IntentHandlerService {
       // أزل الرابط من النص
       text = text.replaceAll(url!, '').trim();
 
-      // أزل أسطر فارغة زائدة
-      text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
-
       // أزل prefix غريب مثل "insert:" أو "انسريت:" أو بيانات HTML مبتورة
       text =
           text.replaceAll(RegExp(r'^insert\s*:\s*', caseSensitive: false), '');
     }
 
+    // تنظيف فراغات نهاية الأسطر
+    text = text.replaceAll(RegExp(r'[ \t]+$', multiLine: true), '');
+
+    // أزل أسطر فارغة زائدة (3+ → 2)
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+
     return {'text': text, 'url': url};
+  }
+
+  /// إذا كان النص Delta JSON كامل، يستخلص النص الصافي منه.
+  /// مثال: [{"insert":"مرحبا\n"},{"insert":"سطر ثاني\n"}] → "مرحبا\nسطر ثاني"
+  String _extractPlainFromDeltaIfNeeded(String text) {
+    if (!text.trimLeft().startsWith('[')) return text;
+
+    try {
+      final decoded = jsonDecode(text);
+      if (decoded is! List) return text;
+
+      // تحقق أنه Delta JSON حقيقي (يحتوي على 'insert')
+      if (decoded.isEmpty) return text;
+      final first = decoded.first;
+      if (first is! Map || !first.containsKey('insert')) return text;
+
+      // استخلص النص من كل عنصر insert
+      final buffer = StringBuffer();
+      for (final op in decoded) {
+        if (op is Map && op.containsKey('insert')) {
+          final insert = op['insert'];
+          if (insert is String) {
+            buffer.write(insert);
+          }
+        }
+      }
+
+      final extracted = buffer.toString().trimRight();
+      return extracted.isNotEmpty ? extracted : text;
+    } catch (_) {
+      return text;
+    }
   }
 
   /// استخراج عنوان من أول سطر من النص
@@ -104,6 +155,7 @@ class IntentHandlerService {
   }
 
   /// قراءة وتحليل ملف .sinan — يُرجع Note أو null
+  /// يدعم الصيغة الكاملة (toMap) والصيغة القديمة (title/content فقط)
   Future<Note?> parseSinanFile(String filePath) async {
     try {
       final file = File(filePath);
@@ -112,16 +164,42 @@ class IntentHandlerService {
       final json =
           jsonDecode(await file.readAsString()) as Map<String, dynamic>;
 
-      final note = Note(
-        title: json['title'] as String? ?? '',
-        content: json['content'] as String? ?? '',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        colorIndex: json['colorIndex'] as int? ?? 0,
-        noteType: json['noteType'] as String? ?? 'simple',
-        isProfessional: json['noteType'] == 'code',
-        isChecklist: json['noteType'] == 'checklist',
-      );
+      Note note;
+
+      // الصيغة الكاملة (من toMap) — تحتوي 'updatedAt'
+      if (json.containsKey('updatedAt')) {
+        // أزل id لأن النوت سيُنشأ جديد في الداتابيز
+        json.remove('id');
+        note = Note.fromMap(json);
+        // حدّث التواريخ لأنها نسخة جديدة
+        note.createdAt = DateTime.now();
+        note.updatedAt = DateTime.now();
+      } else {
+        // الصيغة القديمة (title + content + noteType + colorIndex)
+        String content = json['content'] as String? ?? '';
+        String title = json['title'] as String? ?? '';
+
+        // تنظيف العنوان (قد يكون Delta JSON خام من نسخ قديمة)
+        title = _extractPlainFromDeltaIfNeeded(title);
+        title = _cleanFileContent(title);
+
+        // المحتوى: إذا كان Delta JSON أو Checklist JSON — اتركه
+        if (!content.trimLeft().startsWith('[') &&
+            !content.trimLeft().startsWith('{')) {
+          content = _cleanFileContent(content);
+        }
+
+        note = Note(
+          title: title,
+          content: content,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          colorIndex: json['colorIndex'] as int? ?? 0,
+          noteType: json['noteType'] as String? ?? 'simple',
+          isProfessional: json['noteType'] == 'code',
+          isChecklist: json['noteType'] == 'checklist',
+        );
+      }
 
       // حاول حذف الملف المؤقت بعد القراءة
       try {
@@ -132,6 +210,33 @@ class IntentHandlerService {
     } catch (_) {
       return null;
     }
+  }
+
+  /// تنظيف النص القادم من ملف مشترك
+  /// - إزالة الأسطر الفارغة الزائدة (3+ → 2)
+  /// - إزالة prefix "insert:" أو بيانات HTML مبتورة
+  /// - إزالة فراغات بداية ونهاية كل سطر الزائدة
+  /// - إزالة أحرف التحكم غير المرئية (zero-width spaces, etc.)
+  String _cleanFileContent(String raw) {
+    String text = raw;
+
+    // إزالة أحرف التحكم غير المرئية (Zero-width space, BOM, etc.)
+    text = text.replaceAll(RegExp(r'[\u200B-\u200D\uFEFF\u00AD]'), '');
+
+    // إزالة prefix "insert:" الذي يظهر أحياناً من Chrome/WebView
+    text = text.replaceAll(
+        RegExp(r'^insert\s*:\s*', caseSensitive: false, multiLine: true), '');
+
+    // إزالة أسطر فارغة زائدة (3 أو أكثر → 2)
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+
+    // إزالة فراغات نهاية الأسطر (trailing whitespace)
+    text = text.replaceAll(RegExp(r'[ \t]+$', multiLine: true), '');
+
+    // إزالة فراغات البداية والنهاية الكلية
+    text = text.trim();
+
+    return text;
   }
 
   /// تحديد ما إذا كان الـ intent يحتوي محتوى حقيقي

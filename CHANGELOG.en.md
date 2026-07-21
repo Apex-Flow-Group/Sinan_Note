@@ -4,6 +4,54 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.4+3408] — 2026-07 | Unified Toolbar & Smart Sharing & Separate View Modes
+
+### ✨ New Features
+
+**Unified Toolbar — Menu bar + Search in one bar (Desktop)**
+- The menu bar (File | Edit | View | Help) and search field are now merged into a single rounded container in the AppBar across all desktop screens (Home, Archive, Trash, Professional, Reminders, Vault, Note History).
+- When search is active: menu bar animates out, search expands to fill the space.
+- When search is inactive: menu bar + divider + search hint shown together.
+- Mobile layout is unaffected — no menu bar appears on phones.
+
+**Search/Exit button in actions area (Desktop)**
+- A dedicated search/exit icon button in the AppBar actions replaces the old inline clear button inside the search field.
+- Shows 🔍 when idle (tap to focus search), shows ✕ when searching (tap to clear & exit).
+
+**Separate view mode persistence for Mobile vs Desktop**
+- View mode (compact/expanded/grid) is now saved independently for each layout:
+  - Mobile: `viewType_home_mobile` (supports all 3 modes)
+  - Desktop: `viewType_home_desktop` (compact/expanded only)
+- Changing view mode in one layout no longer affects the other.
+
+**Smart sharing via Apex — preview without auto-save**
+- Notes shared via Apex Transfer (or any external app) now open in the editor as a preview — not saved to the database automatically.
+- The note is displayed in its correct type (checklist, code, rich, simple) with full content.
+- On exit, user is asked: "Would you like to save this note?" with Save/Discard options.
+- Manual save (Ctrl+S or save button) during editing also works normally.
+- Applies to all incoming content: `.sinan` files, shared text, and files from external apps.
+
+### 🔧 Bug Fixes
+
+**Apex Share — file arrives with random name instead of note title**
+- The Intent used `ACTION_VIEW` + FileProvider URI, which loses the display name on transfer. Changed to `ACTION_SEND` + `EXTRA_STREAM` — Apex now reads the correct file name via `ContentResolver.DISPLAY_NAME`.
+
+**Editor header taking double height in Details Panel**
+- `SafeArea` inside `ApexEditorHeader` added unnecessary top padding when the editor was embedded in the Details Panel (desktop master-details). Now `SafeArea` is only applied when the editor runs as a standalone page.
+
+**Reminder TabBar too large on Desktop**
+- Replaced the full-width 720px TabBar with a compact 400px rounded pill-style tab selector that matches the unified toolbar aesthetic.
+
+### 🏗️ Architecture
+
+- `SearchableHeader` gained a `menuBar` parameter — when provided, renders the unified toolbar style automatically.
+- `_UnifiedToolbar` widget in `home_screen_responsive.dart` handles the animated show/hide of the menu bar with `AnimatedSize`.
+- `DesktopMenuBar` is now shared across all desktop screens (same File/Edit/View/Help menu everywhere).
+- `AppNavigator.toEditorViaKey` gained `isSharedPreview` parameter.
+- `NoteEditorImmersive` gained `isSharedPreview` flag that triggers the save prompt on back.
+
+---
+
 ## [3.2.4+3405] — 2026-07 | AGP 9 Upgrade & Codebase Restructuring
 
 > ⚓ **STABLE BASELINE** — Safe rollback point.
