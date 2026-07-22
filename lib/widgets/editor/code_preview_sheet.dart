@@ -20,7 +20,10 @@ class CodePreviewService {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (_) => _PreviewSheet(language: language, code: code),
+        builder: (_) => SafeArea(
+          top: false,
+          child: _PreviewSheet(language: language, code: code),
+        ),
       );
     } catch (_) {}
   }

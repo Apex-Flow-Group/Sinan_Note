@@ -83,7 +83,10 @@ class GeneralSection extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => FontFamilySheet(settings: settings, l10n: l10n),
+      builder: (_) => SafeArea(
+        top: false,
+        child: FontFamilySheet(settings: settings, l10n: l10n),
+      ),
     );
   }
 }

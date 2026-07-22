@@ -126,7 +126,10 @@ class NoteHistorySheet extends StatelessWidget {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => NoteHistorySheet(noteId: noteId),
+        builder: (context) => SafeArea(
+          top: false,
+          child: NoteHistorySheet(noteId: noteId),
+        ),
       );
     }
   }

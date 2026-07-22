@@ -1,6 +1,12 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:flutter/material.dart'; import 'package:flutter_svg/flutter_svg.dart';import 'package:path_provider/path_provider.dart'; import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
 /// SVG Service - Preview and export SVG files
 class SvgService {
   /// يعرض الـ SVG داخل التطبيق في bottom sheet
@@ -10,7 +16,10 @@ class SvgService {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _SvgPreviewSheet(svgCode: svgCode),
+      builder: (_) => SafeArea(
+        top: false,
+        child: _SvgPreviewSheet(svgCode: svgCode),
+      ),
     );
   }
 
@@ -63,12 +72,10 @@ class _SvgPreviewSheet extends StatelessWidget {
             ),
             // title bar
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
                 children: [
-                  Icon(Icons.image_outlined,
-                      size: 18, color: scheme.primary),
+                  Icon(Icons.image_outlined, size: 18, color: scheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     'SVG Preview',
@@ -126,4 +133,3 @@ class _SvgPreviewSheet extends StatelessWidget {
     }
   }
 }
-

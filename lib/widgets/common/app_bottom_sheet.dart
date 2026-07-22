@@ -6,9 +6,11 @@ import 'package:sinan_note/core/utils/platform_helper.dart';
 /// Base widget موحد لكل bottom sheets في التطبيق.
 ///
 /// يوفر:
+/// - SafeArea تلقائي (bottom) — يحمي المحتوى من الشريط السفلي على التابلت/الموبايل
 /// - handle bar موحد
 /// - header موحد (أيقونة + عنوان)
 /// - shape وإعدادات showModalBottomSheet موحدة
+/// - constraints تلقائية على الشاشات العريضة (maxWidth: 480)
 ///
 /// الاستخدام:
 /// ```dart
@@ -19,6 +21,14 @@ import 'package:sinan_note/core/utils/platform_helper.dart';
 ///     titleIcon: Icons.filter_list_rounded,
 ///     child: Column(...),
 ///   ),
+/// );
+/// ```
+///
+/// أو لعرض محتوى مخصص مع SafeArea تلقائي:
+/// ```dart
+/// AppBottomSheet.show(
+///   context,
+///   child: MyCustomContent(),
 /// );
 /// ```
 class AppBottomSheet extends StatelessWidget {
@@ -39,13 +49,20 @@ class AppBottomSheet extends StatelessWidget {
     this.actions,
   });
 
-  /// يفتح bottom sheet بإعدادات موحدة
+  /// يفتح bottom sheet بإعدادات موحدة مع SafeArea تلقائي
+  ///
+  /// يُطبّق تلقائياً:
+  /// - `SafeArea(top: false)` على المحتوى لحماية الجزء السفلي
+  /// - `maxWidth: 480` على الشاشات العريضة (تابلت/ديسكتوب)
+  /// - شكل موحد (rounded corners)
   static Future<T?> show<T>(
     BuildContext context, {
     required Widget child,
     bool isDismissible = true,
     bool isScrollControlled = false,
     bool useSafeArea = true,
+    Color? backgroundColor,
+    BoxConstraints? constraints,
   }) {
     final isDesktop = PlatformHelper.isWideDisplay(context);
     return showModalBottomSheet<T>(
@@ -53,11 +70,13 @@ class AppBottomSheet extends StatelessWidget {
       isDismissible: isDismissible,
       isScrollControlled: isScrollControlled,
       useSafeArea: useSafeArea,
-      constraints: isDesktop ? const BoxConstraints(maxWidth: 480) : null,
+      backgroundColor: backgroundColor,
+      constraints: constraints ??
+          (isDesktop ? const BoxConstraints(maxWidth: 480) : null),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => child,
+      builder: (_) => SafeArea(top: false, child: child),
     );
   }
 

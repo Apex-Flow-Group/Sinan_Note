@@ -183,17 +183,20 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (modalContext) => VaultImportSheet(
-        unlocked: unlocked,
-        selected: selected,
-        onConfirm: () async {
-          for (final id in selected) {
-            await provider.toggleLockStatus(id, true);
-          }
-          if (!modalContext.mounted) return;
-          Navigator.pop(modalContext);
-          await _loadLockedNotes();
-        },
+      builder: (modalContext) => SafeArea(
+        top: false,
+        child: VaultImportSheet(
+          unlocked: unlocked,
+          selected: selected,
+          onConfirm: () async {
+            for (final id in selected) {
+              await provider.toggleLockStatus(id, true);
+            }
+            if (!modalContext.mounted) return;
+            Navigator.pop(modalContext);
+            await _loadLockedNotes();
+          },
+        ),
       ),
     );
     if (mounted) _isAuthenticating = false;

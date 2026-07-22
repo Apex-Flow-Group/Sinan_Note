@@ -6,6 +6,7 @@ import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/layout/note_list_tile.dart';
 
 /// Widget يعرض قائمة الملاحظات في Master Panel
@@ -187,9 +188,9 @@ class MasterPanel extends StatelessWidget {
 
     return FloatingActionButton(
       onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          builder: (ctx) => Container(
+        AppBottomSheet.show(
+          context,
+          child: Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -199,7 +200,7 @@ class MasterPanel extends StatelessWidget {
                       Icon(Icons.note_outlined, color: colorScheme.outline),
                   title: Text(l10n.simpleNoteMenu),
                   onTap: () {
-                    Navigator.pop(ctx);
+                    Navigator.pop(context);
                     onAddNote!(NoteMode.simple);
                   },
                 ),
@@ -208,7 +209,7 @@ class MasterPanel extends StatelessWidget {
                       color: colorScheme.primary),
                   title: Text(l10n.richNoteMenu),
                   onTap: () {
-                    Navigator.pop(ctx);
+                    Navigator.pop(context);
                     onAddNote!(NoteMode.rich);
                   },
                 ),
@@ -217,7 +218,7 @@ class MasterPanel extends StatelessWidget {
                       Icon(Icons.code_rounded, color: colorScheme.secondary),
                   title: Text(l10n.codeEditorMenu),
                   onTap: () {
-                    Navigator.pop(ctx);
+                    Navigator.pop(context);
                     onAddNote!(NoteMode.code);
                   },
                 ),
@@ -226,7 +227,7 @@ class MasterPanel extends StatelessWidget {
                       color: colorScheme.tertiary),
                   title: Text(l10n.checklistMenu),
                   onTap: () {
-                    Navigator.pop(ctx);
+                    Navigator.pop(context);
                     onAddNote!(NoteMode.checklist);
                   },
                 ),

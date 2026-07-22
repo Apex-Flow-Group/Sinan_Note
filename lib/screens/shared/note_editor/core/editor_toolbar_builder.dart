@@ -183,42 +183,46 @@ class EditorToolbarBuilder {
                                 context: context,
                                 isScrollControlled: true,
                                 backgroundColor: Colors.transparent,
-                                builder: (_) => DraggableScrollableSheet(
-                                  initialChildSize: 0.85,
-                                  maxChildSize: 0.95,
-                                  minChildSize: 0.4,
-                                  builder: (_, sc) => Container(
-                                    decoration: BoxDecoration(
-                                      color: coordinator
-                                          .getBackgroundColor(context),
-                                      borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(20)),
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        const SizedBox(height: 12),
-                                        Container(
-                                          width: 40,
-                                          height: 4,
-                                          decoration: BoxDecoration(
-                                            color: finalTextColor.withValues(
-                                                alpha: 0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(2),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Expanded(
-                                          child: SingleChildScrollView(
-                                            controller: sc,
-                                            padding: const EdgeInsets.all(16),
-                                            child: MarkdownViewer(
-                                              content: code,
-                                              textColor: finalTextColor,
+                                builder: (_) => SafeArea(
+                                  top: false,
+                                  child: DraggableScrollableSheet(
+                                    initialChildSize: 0.85,
+                                    maxChildSize: 0.95,
+                                    minChildSize: 0.4,
+                                    builder: (_, sc) => Container(
+                                      decoration: BoxDecoration(
+                                        color: coordinator
+                                            .getBackgroundColor(context),
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                                top: Radius.circular(20)),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            width: 40,
+                                            height: 4,
+                                            decoration: BoxDecoration(
+                                              color: finalTextColor.withValues(
+                                                  alpha: 0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 8),
+                                          Expanded(
+                                            child: SingleChildScrollView(
+                                              controller: sc,
+                                              padding: const EdgeInsets.all(16),
+                                              child: MarkdownViewer(
+                                                content: code,
+                                                textColor: finalTextColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),

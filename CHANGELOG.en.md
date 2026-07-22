@@ -4,6 +4,35 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.4+3409] — 2026-07 | Unified SafeArea for Bottom Sheets (Tablet Fix)
+
+### 🔧 Bug Fixes
+
+**Bottom sheets not respecting safe area on tablets (navigation bar overlap)**
+- On tablets running in desktop layout mode, the system navigation bar overlaps the bottom of bottom sheets — buttons and content were partially hidden behind the gesture/navigation bar.
+- Root cause: ~12 bottom sheets across the app called `showModalBottomSheet` directly without wrapping content in `SafeArea`, and several others used manual `MediaQuery.of(context).padding.bottom` which is fragile and inconsistent.
+
+### 🏗️ Architecture — Centralized SafeArea in `AppBottomSheet`
+
+**`AppBottomSheet.show()` now wraps content in `SafeArea(top: false)` automatically**
+- Every bottom sheet opened via `AppBottomSheet.show()` now gets bottom safe area protection without any additional code at the call site.
+- Added optional `backgroundColor` and `constraints` parameters to support more use cases without falling back to raw `showModalBottomSheet`.
+
+**Migrated all unprotected bottom sheets to use SafeArea**
+- `master_panel.dart` — migrated to `AppBottomSheet.show()`
+- `custom_share_sheet.dart` — added `SafeArea(top: false)`, removed manual `padding.bottom`
+- `note_history_sheet.dart` — added `SafeArea(top: false)` wrapper
+- `code_preview_sheet.dart` — added `SafeArea(top: false)` wrapper
+- `svg_preview_sheet.dart` — added `SafeArea(top: false)` wrapper
+- `db_inspector_service.dart` — added `SafeArea(top: false)` wrapper
+- `google_drive_widgets.dart` (upload + download) — added `SafeArea(top: false)`, removed manual `padding.bottom`
+- `locked_notes_screen.dart` — added `SafeArea(top: false)` wrapper
+- `version_history_screen.dart` — added `SafeArea(top: false)`, removed manual `padding.bottom`
+- `general_section.dart` (font family sheet) — added `SafeArea(top: false)` wrapper
+- `editor_toolbar_builder.dart` (markdown preview) — added `SafeArea(top: false)` wrapper
+
+---
+
 ## [3.2.4+3408] — 2026-07 | Unified Toolbar & Smart Sharing & Separate View Modes
 
 ### ✨ New Features

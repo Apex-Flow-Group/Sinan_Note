@@ -28,151 +28,153 @@ class CustomShareSheet {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        padding: EdgeInsets.fromLTRB(
-            20, 16, 20, 20 + MediaQuery.of(context).padding.bottom),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colorScheme.outline.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) => SafeArea(
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colorScheme.outline.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Title
-            Text(
-              appShare
-                  ? (isArabic ? 'مشاركة التطبيق' : 'Share App')
-                  : (isArabic ? 'مشاركة الملاحظة' : 'Share Note'),
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-            ),
-            const SizedBox(height: 8),
+              // Title
+              Text(
+                appShare
+                    ? (isArabic ? 'مشاركة التطبيق' : 'Share App')
+                    : (isArabic ? 'مشاركة الملاحظة' : 'Share Note'),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+              ),
+              const SizedBox(height: 8),
 
-            // Subtitle
-            Text(
-              isArabic ? 'اختر طريقة المشاركة' : 'Choose sharing method',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 24),
+              // Subtitle
+              Text(
+                isArabic ? 'اختر طريقة المشاركة' : 'Choose sharing method',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 24),
 
-            // 4 options in one row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (!appShare)
-                  _ShareOption(
-                    icon: Icons.file_download_outlined,
-                    label: isArabic ? 'حفظ' : 'Save',
-                    onTap: () async {
-                      try {
-                        final extension =
-                            note != null ? _getFileExtension(note) : 'txt';
-                        final fileName = subject?.isEmpty ?? true
-                            ? 'note.$extension'
-                            : '${subject!.replaceAll(RegExp(r'[<>:"/\|?*]'), '_')}.$extension';
-                        final bytes = Uint8List.fromList(utf8.encode(text));
-                        final result = await FilePicker.platform.saveFile(
-                          dialogTitle: isArabic ? 'حفظ الملف' : 'Save File',
-                          fileName: fileName,
-                          type: FileType.any,
-                          bytes: bytes,
-                        );
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
-                        if (result != null) {
+              // 4 options in one row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  if (!appShare)
+                    _ShareOption(
+                      icon: Icons.file_download_outlined,
+                      label: isArabic ? 'حفظ' : 'Save',
+                      onTap: () async {
+                        try {
+                          final extension =
+                              note != null ? _getFileExtension(note) : 'txt';
+                          final fileName = subject?.isEmpty ?? true
+                              ? 'note.$extension'
+                              : '${subject!.replaceAll(RegExp(r'[<>:"/\|?*]'), '_')}.$extension';
+                          final bytes = Uint8List.fromList(utf8.encode(text));
+                          final result = await FilePicker.platform.saveFile(
+                            dialogTitle: isArabic ? 'حفظ الملف' : 'Save File',
+                            fileName: fileName,
+                            type: FileType.any,
+                            bytes: bytes,
+                          );
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                          if (result != null) {
+                            UnifiedNotificationService().show(
+                              context: context,
+                              message: isArabic
+                                  ? 'تم حفظ الملف بنجاح'
+                                  : 'File saved successfully',
+                              type: NotificationType.success,
+                              duration: const Duration(seconds: 2),
+                            );
+                          }
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
                           UnifiedNotificationService().show(
                             context: context,
                             message: isArabic
-                                ? 'تم حفظ الملف بنجاح'
-                                : 'File saved successfully',
-                            type: NotificationType.success,
-                            duration: const Duration(seconds: 2),
+                                ? 'فشل حفظ الملف'
+                                : 'Failed to save file',
+                            type: NotificationType.error,
                           );
                         }
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
+                      },
+                    ),
+                  _ShareOption(
+                    icon: Icons.share_outlined,
+                    label: isArabic ? 'مشاركة' : 'Share',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Share.share(text, subject: subject);
+                    },
+                  ),
+                  _ShareOption(
+                    icon: Icons.copy_outlined,
+                    label: isArabic ? 'نسخ' : 'Copy',
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await Clipboard.setData(ClipboardData(text: text));
+                      HapticFeedback.lightImpact();
+                      if (context.mounted) {
                         UnifiedNotificationService().show(
                           context: context,
                           message: isArabic
-                              ? 'فشل حفظ الملف'
-                              : 'Failed to save file',
-                          type: NotificationType.error,
+                              ? 'تم النسخ إلى الحافظة'
+                              : strings.textCopiedToClipboard,
+                          type: NotificationType.success,
+                          duration: const Duration(seconds: 2),
                         );
                       }
                     },
                   ),
-                _ShareOption(
-                  icon: Icons.share_outlined,
-                  label: isArabic ? 'مشاركة' : 'Share',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Share.share(text, subject: subject);
-                  },
-                ),
-                _ShareOption(
-                  icon: Icons.copy_outlined,
-                  label: isArabic ? 'نسخ' : 'Copy',
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await Clipboard.setData(ClipboardData(text: text));
-                    HapticFeedback.lightImpact();
-                    if (context.mounted) {
-                      UnifiedNotificationService().show(
-                        context: context,
-                        message: isArabic
-                            ? 'تم النسخ إلى الحافظة'
-                            : strings.textCopiedToClipboard,
-                        type: NotificationType.success,
-                        duration: const Duration(seconds: 2),
-                      );
-                    }
-                  },
-                ),
-                if (note != null)
-                  _ShareOption(
-                    icon: Icons.copy_all,
-                    label: isArabic ? 'نسخة' : 'Duplicate',
-                    onTap: () {
-                      Navigator.pop(context);
-                      if (onNoteCopied != null) onNoteCopied();
-                    },
-                  ),
-              ],
-            ),
-
-            // Send via Apex Transfer — shows only if installed
-            if (note != null && Platform.isAndroid) ...[
-              const SizedBox(height: 16),
-              FutureBuilder<bool>(
-                future: ApexShareService.isInstalled(),
-                builder: (context, snapshot) {
-                  if (snapshot.data != true) return const SizedBox.shrink();
-                  return _ApexSendTile(
-                    isArabic: isArabic,
-                    onTap: () => _sendViaApex(context, note, isArabic),
-                    colorScheme: colorScheme,
-                  );
-                },
+                  if (note != null)
+                    _ShareOption(
+                      icon: Icons.copy_all,
+                      label: isArabic ? 'نسخة' : 'Duplicate',
+                      onTap: () {
+                        Navigator.pop(context);
+                        if (onNoteCopied != null) onNoteCopied();
+                      },
+                    ),
+                ],
               ),
+
+              // Send via Apex Transfer — shows only if installed
+              if (note != null && Platform.isAndroid) ...[
+                const SizedBox(height: 16),
+                FutureBuilder<bool>(
+                  future: ApexShareService.isInstalled(),
+                  builder: (context, snapshot) {
+                    if (snapshot.data != true) return const SizedBox.shrink();
+                    return _ApexSendTile(
+                      isArabic: isArabic,
+                      onTap: () => _sendViaApex(context, note, isArabic),
+                      colorScheme: colorScheme,
+                    );
+                  },
+                ),
+              ],
+              const SizedBox(height: 4),
             ],
-            const SizedBox(height: 4),
-          ],
+          ),
         ),
       ),
     );

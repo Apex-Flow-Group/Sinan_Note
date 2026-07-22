@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
@@ -168,77 +167,86 @@ class GoogleDriveWidgets {
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         builder: (ctx) {
-          final bottomPad = MediaQuery.of(ctx).padding.bottom;
-          return Padding(
-            padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottomPad),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          return SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.cloud_upload,
+                            color: Colors.blue, size: 28),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.uploadDatabase,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 2),
+                            Text(l10n.uploadDatabaseDesc,
+                                style: Theme.of(context).textTheme.bodySmall),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.blue.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.cloud_upload, color: Colors.blue, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.uploadDatabase,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 2),
-                        Text(l10n.uploadDatabaseDesc,
-                            style: Theme.of(context).textTheme.bodySmall),
-                      ],
+                    child: Text(
+                      isAr
+                          ? 'سيتم رفع ملاحظاتك العادية إلى Drive.\nالخزنة المشفرة لا تُرفع أبداً.'
+                          : 'Your regular notes will be uploaded to Drive.\nEncrypted vault notes are never uploaded.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(height: 1.6),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  isAr
-                      ? 'سيتم رفع ملاحظاتك العادية إلى Drive.\nالخزنة المشفرة لا تُرفع أبداً.'
-                      : 'Your regular notes will be uploaded to Drive.\nEncrypted vault notes are never uploaded.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.6),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(l10n.cancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        onUpload?.call();
-                      },
-                      icon: const Icon(Icons.cloud_upload, size: 18),
-                      label: Text(isAr ? 'رفع' : 'Upload'),
-                    ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            onUpload?.call();
+                          },
+                          icon: const Icon(Icons.cloud_upload, size: 18),
+                          label: Text(isAr ? 'رفع' : 'Upload'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        );
+            ),
+          );
         },
       );
     }
@@ -251,92 +259,100 @@ class GoogleDriveWidgets {
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         builder: (ctx) {
-          final bottomPad = MediaQuery.of(ctx).padding.bottom;
-          return Padding(
-            padding: EdgeInsets.fromLTRB(24, 20, 24, 16 + bottomPad),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // عنوان
-              Row(
+          return SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.cloud_download, color: Colors.green, size: 28),
+                  // عنوان
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.cloud_download,
+                            color: Colors.green, size: 28),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isAr ? 'جلب من Drive' : 'Download from Drive',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isAr
+                                  ? 'اختر طريقة الجلب'
+                                  : 'Choose how to download',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isAr ? 'جلب من Drive' : 'Download from Drive',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isAr ? 'اختر طريقة الجلب' : 'Choose how to download',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                  const SizedBox(height: 20),
+
+                  // خيار الدمج
+                  _buildDownloadOption(
+                    context: context,
+                    icon: Icons.merge,
+                    iconColor: Colors.blue,
+                    title: isAr ? 'دمج ذكي' : 'Smart Merge',
+                    description: isAr
+                        ? 'يحتفظ بأحدث نسخة من كل ملاحظة.\nالأفضل للمزامنة بين أجهزة متعددة.'
+                        : 'Keeps the latest version of each note.\nBest for syncing across multiple devices.',
+                    recommended: true,
+                    isAr: isAr,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      onMerge?.call();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // خيار الاستبدال
+                  _buildDownloadOption(
+                    context: context,
+                    icon: Icons.download_for_offline,
+                    iconColor: Colors.orange,
+                    title: isAr ? 'استبدال كامل' : 'Full Replace',
+                    description: isAr
+                        ? 'يحذف كل الملاحظات المحلية ويستبدلها بنسخة Drive.\nاستخدم عند إعادة التثبيت فقط.'
+                        : 'Deletes all local notes and replaces with Drive.\nUse only when reinstalling the app.',
+                    recommended: false,
+                    isAr: isAr,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      onDownload?.call();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // زر إلغاء
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(l10n.cancel),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              // خيار الدمج
-              _buildDownloadOption(
-                context: context,
-                icon: Icons.merge,
-                iconColor: Colors.blue,
-                title: isAr ? 'دمج ذكي' : 'Smart Merge',
-                description: isAr
-                    ? 'يحتفظ بأحدث نسخة من كل ملاحظة.\nالأفضل للمزامنة بين أجهزة متعددة.'
-                    : 'Keeps the latest version of each note.\nBest for syncing across multiple devices.',
-                recommended: true,
-                isAr: isAr,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  onMerge?.call();
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // خيار الاستبدال
-              _buildDownloadOption(
-                context: context,
-                icon: Icons.download_for_offline,
-                iconColor: Colors.orange,
-                title: isAr ? 'استبدال كامل' : 'Full Replace',
-                description: isAr
-                    ? 'يحذف كل الملاحظات المحلية ويستبدلها بنسخة Drive.\nاستخدم عند إعادة التثبيت فقط.'
-                    : 'Deletes all local notes and replaces with Drive.\nUse only when reinstalling the app.',
-                recommended: false,
-                isAr: isAr,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  onDownload?.call();
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // زر إلغاء
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(l10n.cancel),
-                ),
-              ),
-            ],
-          ),
-        );
+            ),
+          );
         },
       );
     }
@@ -547,14 +563,16 @@ class GoogleDriveWidgets {
                       if (recommended) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.blue,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             isAr ? 'موصى به' : 'Recommended',
-                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 10),
                           ),
                         ),
                       ],
@@ -580,4 +598,3 @@ class GoogleDriveWidgets {
     );
   }
 }
-
