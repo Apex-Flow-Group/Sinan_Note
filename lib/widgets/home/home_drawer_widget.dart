@@ -124,15 +124,15 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     title: l10n.home,
                     scheme: scheme,
                     isDark: isDark,
-                    isActive:
+                    isActive: !_categoriesExpanded &&
                         (currentRoute == '/main' || currentRoute == '/') &&
-                            activeExtra == null &&
-                            (widget.onTabSelected == null ||
-                                currentTabIndexNotifier.value == 0) &&
-                            context
-                                    .watch<CategoriesProvider>()
-                                    .selectedCategoryId ==
-                                null,
+                        activeExtra == null &&
+                        (widget.onTabSelected == null ||
+                            currentTabIndexNotifier.value == 0) &&
+                        context
+                                .watch<CategoriesProvider>()
+                                .selectedCategoryId ==
+                            null,
                     onTap: () async {
                       _exitVaultIfActive('Home');
                       final rootNavigator =
@@ -148,9 +148,31 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       widget.onTabSelected?.call(0);
                     },
                   ),
-                  // â”€â”€â”€ ط²ط± ط§ظ„طھطµظ†ظٹظپط§طھ â”€â”€â”€
+                  // زر التصنيفات — قائمة الكتالوجات مباشرة أسفله
                   _buildCategoriesItem(context, l10n, scheme, isDark),
-                  // ── التذكيرات والمحترف (في وضع Desktop) ───
+                  ClipRect(
+                    child: AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: _categoriesExpanded
+                          ? Padding(
+                              padding:
+                                  const EdgeInsetsDirectional.only(start: 16),
+                              child: CategoriesPanelWrapper(
+                                mode: _catMode == _CatMode.delete
+                                    ? CatPanelMode.delete
+                                    : _catMode == _CatMode.edit
+                                        ? CatPanelMode.edit
+                                        : CatPanelMode.normal,
+                                isAdding: _isAdding,
+                                onAddDone: () =>
+                                    setState(() => _isAdding = false),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                  // التذكيرات والمحترف (في وضع Desktop) — بعد الكتالوجات
                   if (widget.onTabSelected != null) ...[
                     _buildDrawerItem(
                       context,
@@ -187,28 +209,6 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       },
                     ),
                   ],
-                  ClipRect(
-                    child: AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      child: _categoriesExpanded
-                          ? Padding(
-                              padding:
-                                  const EdgeInsetsDirectional.only(start: 16),
-                              child: CategoriesPanelWrapper(
-                                mode: _catMode == _CatMode.delete
-                                    ? CatPanelMode.delete
-                                    : _catMode == _CatMode.edit
-                                        ? CatPanelMode.edit
-                                        : CatPanelMode.normal,
-                                isAdding: _isAdding,
-                                onAddDone: () =>
-                                    setState(() => _isAdding = false),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.inventory_2_rounded,
@@ -361,11 +361,13 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
         : null;
 
     // ظ†ظپط³ ط§ظ„ط­ط§ظˆظٹط© ظ„ظƒظ„ظٹظ‡ظ…ط§ ظ„طھط«ط¨ظٹطھ ط§ظ„ط­ط¬ظ…
+    final isHighlighted = _categoriesExpanded || (hasSelection && isOnHome);
+
     final iconBox = Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(
-            alpha: hasSelection && isOnHome
+            alpha: isHighlighted
                 ? (isDark ? 0.28 : 0.18)
                 : (isDark ? 0.18 : 0.1)),
         borderRadius: BorderRadius.circular(8),
@@ -380,7 +382,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
         duration: const Duration(milliseconds: 200),
         height: 56,
         decoration: BoxDecoration(
-          color: hasSelection && isOnHome
+          color: isHighlighted
               ? scheme.primary.withValues(alpha: isDark ? 0.15 : 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -589,6 +591,17 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     widget.onNotesChanged();
   }
 
+  void _collapseCategories() {
+    if (!_categoriesExpanded && _catMode == _CatMode.normal && !_isAdding) {
+      return;
+    }
+    setState(() {
+      _categoriesExpanded = false;
+      _catMode = _CatMode.normal;
+      _isAdding = false;
+    });
+  }
+
   Widget _buildDrawerItem(
     BuildContext context, {
     required IconData icon,
@@ -603,13 +616,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
   }) {
     final effectiveColor = iconColor ?? scheme.primary;
     final effectiveIcon = isVaultOpen ? Icons.shield_outlined : icon;
+    final highlighted = isActive && !_categoriesExpanded;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isActive
+          color: highlighted
               ? scheme.primary.withValues(alpha: isDark ? 0.15 : 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -620,7 +634,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: effectiveColor.withValues(
-                  alpha: isActive
+                  alpha: highlighted
                       ? (isDark ? 0.28 : 0.18)
                       : (isDark ? 0.18 : 0.1)),
               borderRadius: BorderRadius.circular(8),
@@ -630,8 +644,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
           title: Text(
             title,
             style: TextStyle(
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              color: isActive ? scheme.primary : scheme.onSurface,
+              fontWeight: highlighted ? FontWeight.w700 : FontWeight.w500,
+              color: highlighted ? scheme.primary : scheme.onSurface,
             ),
           ),
           subtitle: subtitle != null
@@ -639,7 +653,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                   style:
                       TextStyle(fontSize: 12, color: scheme.onSurfaceVariant))
               : null,
-          onTap: onTap,
+          onTap: () {
+            _collapseCategories();
+            onTap();
+          },
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
