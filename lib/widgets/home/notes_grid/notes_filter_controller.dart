@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart'
     show
         ChangeNotifier,
@@ -23,6 +25,10 @@ class NotesFilterController extends ChangeNotifier {
   static const int _fuzzyContentWords = 50;
   static const int _space = 0x20;
 
+  /// الكتابة السريعة لا تعيد بناء الشبكة عند كل حرف — الفلترة نفسها رخيصة،
+  /// لكن إعادة بناء البطاقات ليست كذلك.
+  static const Duration _searchDebounce = Duration(milliseconds: 110);
+
   final TextEditingController searchController;
   final ValueNotifier<String?> activeFilterNotifier;
   final ValueNotifier<List<Note>>? externalFilteredNotifier;
@@ -42,6 +48,7 @@ class NotesFilterController extends ChangeNotifier {
   bool _lastHideProFromHome = false;
   String _lastSearchQuery = '';
   int _lastRefreshStamp = -1;
+  Timer? _searchDebounceTimer;
 
   NotesFilterController({
     required this.searchController,
@@ -139,14 +146,28 @@ class NotesFilterController extends ChangeNotifier {
   }
 
   /// يطبّق البحث والفلاتر على قائمة جاهزة بلا حاجة لمزوّدات.
+  ///
+  /// يعبّئ المصدر أيضاً حتى يعمل أي تغيير لاحق في البحث كما في الإنتاج.
   @visibleForTesting
-  void filterFor(List<Note> notes) => _syncFilteredNotes(notes, force: true);
+  void filterFor(List<Note> notes) {
+    _sourceNotes = List.of(notes);
+    _syncFilteredNotes(_sourceNotes, force: true);
+  }
 
   void _onSearchChanged() {
     final query = searchController.text;
     if (query == _lastSearchQuery) return;
     _lastSearchQuery = query;
-    _syncFilteredNotes(_sourceNotes);
+
+    _searchDebounceTimer?.cancel();
+    // إفراغ الحقل يستجيب فوراً — المستخدم ينتظر رجوع القائمة كاملة
+    if (query.isEmpty) {
+      _syncFilteredNotes(_sourceNotes);
+      return;
+    }
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      _syncFilteredNotes(_sourceNotes);
+    });
   }
 
   void _onFilterChanged() => _syncFilteredNotes(_sourceNotes, force: true);
@@ -324,6 +345,7 @@ class NotesFilterController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     searchController.removeListener(_onSearchChanged);
     activeFilterNotifier.removeListener(_onFilterChanged);
     hasMoreNotifier.dispose();

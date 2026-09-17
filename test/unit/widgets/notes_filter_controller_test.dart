@@ -86,6 +86,38 @@ void main() {
     });
   });
 
+  group('search debounce', () {
+    testWidgets('typing refilters once, and clearing responds immediately',
+        (tester) async {
+      controller.filterFor([
+        note(id: 1, title: 'Release Roadmap'),
+        note(id: 2, title: 'Vault'),
+      ]);
+
+      var rebuilds = 0;
+      void count() => rebuilds++;
+      controller.filteredNotesNotifier.addListener(count);
+      addTearDown(
+        () => controller.filteredNotesNotifier.removeListener(count),
+      );
+
+      for (final partial in ['r', 're', 'rel', 'rele', 'relea']) {
+        search.text = partial;
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      expect(rebuilds, 0,
+          reason: 'fast typing must not refilter per keystroke');
+
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(rebuilds, 1);
+      expect(controller.filteredNotesNotifier.value.single.id, 1);
+
+      search.text = '';
+      expect(rebuilds, 2, reason: 'clearing the field is not debounced');
+      expect(controller.filteredNotesNotifier.value.length, 2);
+    });
+  });
+
   group('pinned filter', () {
     test('keeps only pinned notes', () {
       final notes = [

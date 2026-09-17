@@ -120,6 +120,12 @@ android/build/
 packages/flutter_quill/.dart_tool/
 packages/flutter_quill/build/
 
+# قفل حزمة الـ stub — الحزم المكتبية لا تُلزم pubspec.lock
+.quill_windows_stub/pubspec.lock
+
+# يُولّده flutter_tools من pubspec قبل كل بناء — تعديله يدوياً لا يصمد
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
 # Large report files from refactoring tool
 full_report.txt
 full_report_v2.txt
