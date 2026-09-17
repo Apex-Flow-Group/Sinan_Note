@@ -37,7 +37,6 @@ class VaultFeaturesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
@@ -189,7 +188,6 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
     final l10n = AppLocalizations.of(context)!;
     final isCompact = MediaQuery.of(context).size.height < 700;
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(32, isCompact ? 12 : 32, 32, 32),
       child: Column(
         children: [
@@ -306,7 +304,6 @@ class VaultRecoveryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
@@ -402,7 +399,6 @@ class VaultBiometricPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Padding(

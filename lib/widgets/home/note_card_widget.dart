@@ -14,6 +14,7 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
@@ -128,7 +129,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   }
 
   void _cacheNoteData() {
-    _displayTitle = NoteCardUtils.getDisplayTitle(widget.note);
+    _displayTitle = NoteContentUtils.limitRunes(
+      NoteCardUtils.getDisplayTitle(widget.note),
+      NoteContentUtils.cardTitleChars,
+    );
     _displayContent = widget.note.previewPlain;
     _isChecklist = widget.note.isChecklist;
     if (!_isChecklist && !widget.note.isLocked) {

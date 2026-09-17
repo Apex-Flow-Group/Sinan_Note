@@ -3,6 +3,7 @@ package com.apexflow.app.sinan
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -18,6 +19,29 @@ class MainActivity: FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startIntent = intent
+        applyHighestRefreshRate()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyHighestRefreshRate()
+    }
+
+    /// Samsung/Xiaomi often keep Flutter at 60Hz unless the window asks for the panel mode.
+    private fun applyHighestRefreshRate() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            display
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay
+        } ?: return
+        val best = display.supportedModes.maxByOrNull { it.refreshRate } ?: return
+        val params = window.attributes
+        params.preferredDisplayModeId = best.modeId
+        @Suppress("DEPRECATION")
+        params.preferredRefreshRate = best.refreshRate
+        window.attributes = params
     }
 
     override fun onNewIntent(intent: Intent) {

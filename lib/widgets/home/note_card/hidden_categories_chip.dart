@@ -51,9 +51,10 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
     if (route != null && _routeAnimation == null) {
       _routeAnimation = route.animation;
       _routeAnimation!.addStatusListener(_onRouteStatus);
-      // إذا الـ route مكتمل بالفعل — اظهر مباشرة
+      // الشريحة تُبنى من جديد كلما رجعت البطاقة للعرض أثناء السكرول.
+      // تشغيل الأنيميشن هنا يكبّر ارتفاع البطاقة بعد أول إطار فتُزاح الشبكة.
       if (_routeAnimation!.status == AnimationStatus.completed) {
-        _ctrl.forward();
+        _ctrl.value = 1.0;
       }
     }
   }

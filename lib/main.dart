@@ -16,6 +16,7 @@ import 'package:sinan_note/controllers/master_width_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/physics/coast_scroll_physics.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
@@ -476,7 +477,8 @@ class _AppHomeState extends State<_AppHome> {
 }
 
 // على Linux/Desktop: يمنع Scrollbar التلقائي من إيقاف الـ scroll عند السحب
-class _AppScrollBehavior extends MaterialScrollBehavior {
+class _AppScrollBehavior extends MaterialScrollBehavior
+    with CoastScrollBehaviorMixin {
   const _AppScrollBehavior();
 
   @override

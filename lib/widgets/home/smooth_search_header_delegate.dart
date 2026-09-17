@@ -85,7 +85,13 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) {
-    return true;
+    return expandedHeight != oldDelegate.expandedHeight ||
+        statusBarHeight != oldDelegate.statusBarHeight ||
+        selectionMode != oldDelegate.selectionMode ||
+        isSearchActive != oldDelegate.isSearchActive ||
+        hideOnScroll != oldDelegate.hideOnScroll ||
+        !identical(child, oldDelegate.child) ||
+        !identical(selectionBar, oldDelegate.selectionBar);
   }
 }
 

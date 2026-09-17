@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/physics/coast_scroll_physics.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -627,7 +628,9 @@ class _ReminderTabView extends StatelessWidget {
   Widget build(BuildContext context) {
     if (notes.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const CoastScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.4,
@@ -662,7 +665,9 @@ class _ReminderTabView extends StatelessWidget {
     }
 
     return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const CoastScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
       padding: EdgeInsets.fromLTRB(
           8, 8, 8, MediaQuery.of(context).padding.bottom + 100),
       itemCount: notes.length,

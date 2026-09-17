@@ -63,7 +63,8 @@ class Note {
       return '';
     }
     if (_previewPlain != null &&
-        (_previewPlain!.isNotEmpty || content.isEmpty)) {
+        (_previewPlain!.isNotEmpty || content.isEmpty) &&
+        !NoteContentUtils.looksLikeDeltaJson(_previewPlain!)) {
       return _previewPlain!;
     }
     _previewPlain = NoteContentUtils.toDisplayText(

@@ -224,6 +224,8 @@
   "reminderNotes": "ملاحظات مع تذكير",
   "checklists": "قوائم المهام",
   "pinnedOnly": "المثبتة فقط",
+  "sectionPinned": "مثبت",
+  "sectionOthers": "أخرى",
   "noCategory": "بدون تصنيف",
   "decryptingVault": "جاري فك التشفير...",
   "noLockedNotes": "لا توجد ملاحظات مقفلة",

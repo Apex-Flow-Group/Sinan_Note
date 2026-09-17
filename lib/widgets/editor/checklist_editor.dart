@@ -567,7 +567,6 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     return CustomScrollView(
       controller: _scrollController,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      physics: const ClampingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
           child: RepaintBoundary(

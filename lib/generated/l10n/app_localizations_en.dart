@@ -686,6 +686,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinnedOnly => 'Pinned Only';
 
   @override
+  String get sectionPinned => 'Pinned';
+
+  @override
+  String get sectionOthers => 'Others';
+
+  @override
   String get noCategory => 'No category';
 
   @override

@@ -3,13 +3,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/physics/coast_scroll_physics.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -26,6 +26,7 @@ import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 import 'package:sinan_note/widgets/home/note_locator_button.dart';
+import 'package:sinan_note/widgets/home/notes_grid/grid_perf_probe.dart';
 import 'package:sinan_note/widgets/home/notes_grid_view.dart';
 import 'package:sinan_note/widgets/home/smart_header.dart';
 
@@ -315,6 +316,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // مسافة السحب فوق القمة تُحجز فقط عندما يكون هناك تحديث بالسحب يشغلها
+    final pullExtent =
+        context.select<SettingsProvider, String>((s) => s.pullToRefreshMode) ==
+                'disabled'
+            ? 0.0
+            : CoastScrollPhysics.refreshPullExtent;
 
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _selectedNoteIdsNotifier,
@@ -361,25 +368,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         .copyWith(scrollbars: false),
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (notification) {
-                        if (notification is UserScrollNotification &&
-                            notification.direction == ScrollDirection.idle) {
+                        if (notification is ScrollEndNotification) {
                           _handleScrollEnd();
-                        }
-                        if (notification is ScrollEndNotification &&
-                            _pullTriggered) {
-                          _pullTriggered = false;
-                          _isPullingNotifier.value = false;
-                          _pullDistanceNotifier.value = 0;
-                          _onRefresh();
+                          if (_pullTriggered) {
+                            _pullTriggered = false;
+                            _isPullingNotifier.value = false;
+                            _pullDistanceNotifier.value = 0;
+                            _onRefresh();
+                          }
                         }
                         return false;
                       },
                       child: CustomScrollView(
                         controller: _scrollController,
-                        cacheExtent: 1500,
-                        physics: const BouncingScrollPhysics(
-                          decelerationRate: ScrollDecelerationRate.fast,
-                          parent: AlwaysScrollableScrollPhysics(),
+                        cacheExtent: GridPerfProbe.cacheExtent,
+                        physics: CoastScrollPhysics(
+                          pullExtent: pullExtent,
+                          parent: const AlwaysScrollableScrollPhysics(),
                         ),
                         slivers: [
                           SmartHeader(
@@ -437,13 +442,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListenableBuilder(
                     listenable: _viewTypeNotifier,
-                    builder: (context, _) => HomeScrollbar(
-                      scrollController: _scrollController,
-                      notesNotifier: _filteredNotesNotifier,
-                      interactive: _viewTypeNotifier.value == 'listCompact',
-                      totalCountNotifier: _totalCountNotifier,
-                      viewTypeNotifier: _viewTypeNotifier,
-                    ),
+                    builder: (context, _) {
+                      if (GridPerfProbe.isActive) {
+                        return const SizedBox.shrink();
+                      }
+                      return HomeScrollbar(
+                        scrollController: _scrollController,
+                        notesNotifier: _filteredNotesNotifier,
+                        interactive: _viewTypeNotifier.value == 'listCompact',
+                        totalCountNotifier: _totalCountNotifier,
+                        viewTypeNotifier: _viewTypeNotifier,
+                      );
+                    },
                   ),
                   NoteLocatorButton(scrollController: _scrollController),
                 ],
@@ -462,6 +472,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_isSearchActive) return;
     if (_isScrollSnapping) return;
     if (!_scrollController.hasClients) return;
+    if (!Provider.of<SettingsProvider>(context, listen: false)
+        .hideSearchOnScroll) {
+      return;
+    }
     final offset = _scrollController.offset;
     if (offset > 0 && offset < _headerHeight) {
       _isScrollSnapping = true;
