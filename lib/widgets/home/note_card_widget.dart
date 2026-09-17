@@ -70,6 +70,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late Color _contentColor;
   late ui.TextDirection _titleDirection;
   late ui.TextDirection _contentDirection;
+  List<ChecklistItem> _checklistItems = const [];
   final _loadingNotifier = ValueNotifier<bool>(false);
   static final _rtlRegex = RegExp(
     r'[\u0600-\u06FF\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
@@ -128,8 +129,17 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
 
   void _cacheNoteData() {
     _displayTitle = NoteCardUtils.getDisplayTitle(widget.note);
-    _displayContent = NoteCardUtils.fixNoteContent(widget.note.content);
-    _isChecklist = ChecklistFormatter.isValidChecklist(widget.note.content);
+    _displayContent = widget.note.previewPlain;
+    _isChecklist = widget.note.isChecklist;
+    if (!_isChecklist && !widget.note.isLocked) {
+      _isChecklist = ChecklistFormatter.isValidChecklist(widget.note.content);
+    }
+    _checklistItems = _isChecklist && !widget.note.isLocked
+        ? ChecklistFormatter.parseJson(widget.note.content)
+            .where((item) => item.text.trim().isNotEmpty)
+            .take(3)
+            .toList()
+        : const [];
     _shouldShowExt = NoteCardUtils.shouldShowExtension(widget.note.noteType);
     _fileExtension = _shouldShowExt
         ? NoteCardUtils.getFileExtension(
@@ -335,9 +345,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                     )
                                                   : _isChecklist
                                                       ? NoteCardUtils
-                                                          .buildChecklistPreview(
-                                                              widget
-                                                                  .note.content,
+                                                          .buildChecklistPreviewFromItems(
+                                                              _checklistItems,
                                                               titleColor)
                                                       : Text(
                                                           _displayContent,

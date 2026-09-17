@@ -136,7 +136,8 @@ class NoteCardUtils {
 
     // Only auto-detect for unknown/generic types (new notes)
     if (noteType == 'code' || noteType == 'pro' || noteType == 'professional') {
-      final detectedLang = LanguageDetector.detectLanguage(content);
+      final sample = content.length > 800 ? content.substring(0, 800) : content;
+      final detectedLang = LanguageDetector.detectLanguage(sample);
       if (detectedLang != null) {
         return LanguageDetector.getFileExtension(detectedLang);
       }
@@ -150,6 +151,11 @@ class NoteCardUtils {
         .where((item) => item.text.trim().isNotEmpty)
         .take(3)
         .toList();
+    return buildChecklistPreviewFromItems(items, titleColor);
+  }
+
+  static Widget buildChecklistPreviewFromItems(
+      List<ChecklistItem> items, Color titleColor) {
     if (items.isEmpty) {
       return Row(
         textDirection: TextDirection.ltr,

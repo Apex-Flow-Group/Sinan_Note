@@ -133,19 +133,26 @@ class _NotesSliverViewState extends State<NotesSliverView> {
       return SliverPadding(
         padding:
             EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding),
-        sliver: SliverMasonryGrid.count(
-          crossAxisCount: _getCrossAxisCount(context),
+        sliver: SliverMasonryGrid(
           mainAxisSpacing: 6,
           crossAxisSpacing: 6,
-          childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index == _filteredNotes.length) {
-              return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()));
-            }
-            return _buildCard(_filteredNotes[index], 'home_grid');
-          },
+          gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: _getCrossAxisCount(context),
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              if (index == _filteredNotes.length) {
+                return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()));
+              }
+              return _buildCard(_filteredNotes[index], 'home_grid');
+            },
+            childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
+            findChildIndexCallback: _findChildIndex,
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: false,
+          ),
         ),
       );
     }
@@ -164,16 +171,18 @@ class _NotesSliverViewState extends State<NotesSliverView> {
             return _buildCard(_filteredNotes[index], 'home_list');
           },
           childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
-          findChildIndexCallback: (key) {
-            if (key is! ValueKey<int>) return null;
-            final index = _filteredNotes.indexWhere((n) => n.id == key.value);
-            return index == -1 ? null : index;
-          },
+          findChildIndexCallback: _findChildIndex,
           addAutomaticKeepAlives: false,
           addRepaintBoundaries: true,
         ),
       ),
     );
+  }
+
+  int? _findChildIndex(Key key) {
+    if (key is! ValueKey<int>) return null;
+    final index = _filteredNotes.indexWhere((n) => n.id == key.value);
+    return index == -1 ? null : index;
   }
 
   Widget _buildCard(Note note, String source) {
@@ -186,11 +195,11 @@ class _NotesSliverViewState extends State<NotesSliverView> {
       isFiltering: _isFiltering,
     );
 
-    if (source == 'home_grid') return wrapper;
-
     return RepaintBoundary(
       key: ValueKey<int>(note.id!),
-      child: HeightRecorder(noteId: note.id!, child: wrapper),
+      child: source == 'home_grid'
+          ? wrapper
+          : HeightRecorder(noteId: note.id!, child: wrapper),
     );
   }
 }

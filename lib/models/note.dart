@@ -2,6 +2,7 @@
 
 
 
+import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/models/exceptions.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 
@@ -26,6 +27,7 @@ class Note {
   late bool isChecklist;
   List<int> categoryIds;
   late bool isHiddenFromHome;
+  String? _previewPlain;
 
   Note({
     this.id,
@@ -46,10 +48,29 @@ class Note {
     this.isChecklist = false,
     this.categoryIds = const [],
     this.isHiddenFromHome = false,
+    String? previewPlain,
   }) {
     // Auto-normalize on creation
     normalizedTitle = normalize(title);
     normalizedContent = normalize(content);
+    _previewPlain = previewPlain;
+  }
+
+  /// معاينة جاهزة للبطاقات — تُحسب مرة وتُحفظ، بلا Quill أثناء السكرول
+  String get previewPlain {
+    if (isLocked || isEncrypted) {
+      _previewPlain ??= '';
+      return '';
+    }
+    if (_previewPlain != null &&
+        (_previewPlain!.isNotEmpty || content.isEmpty)) {
+      return _previewPlain!;
+    }
+    _previewPlain = NoteContentUtils.toDisplayText(
+      content,
+      maxChars: NoteContentUtils.previewMaxChars,
+    );
+    return _previewPlain!;
   }
 
   /// Normalize Arabic text for smart search
@@ -119,6 +140,9 @@ class Note {
     // Auto-update normalized fields
     newNote.normalizedTitle = normalize(newNote.title);
     newNote.normalizedContent = normalize(newNote.content);
+    if (content == null && isLocked == null) {
+      newNote._previewPlain = _previewPlain;
+    }
     return newNote;
   }
 
@@ -145,6 +169,7 @@ class Note {
       'isChecklist': isChecklist ? 1 : 0,
       'categoryIds': categoryIds.join(','),
       'isHiddenFromHome': isHiddenFromHome ? 1 : 0,
+      'previewPlain': previewPlain,
     };
   }
 
@@ -180,6 +205,7 @@ class Note {
             ? (map['categoryIds'] as String).split(',').map(int.parse).toList()
             : [],
         isHiddenFromHome: (map['isHiddenFromHome'] ?? 0) == 1,
+        previewPlain: map['previewPlain'] as String?,
       );
     } catch (e) {
       if (e is ValidationException) rethrow;

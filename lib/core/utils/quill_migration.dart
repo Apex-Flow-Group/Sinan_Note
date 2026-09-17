@@ -243,12 +243,9 @@ class QuillMigration {
 
   /// Checks if content is already Delta JSON
   static bool isDelta(String content) {
-    if (!content.trimLeft().startsWith('[')) return false;
-    try {
-      final decoded = jsonDecode(content);
-      return decoded is List;
-    } catch (_) {
-      return false;
-    }
+    final t = content.trimLeft();
+    if (!t.startsWith('[')) return false;
+    final head = t.length > 240 ? t.substring(0, 240) : t;
+    return head.contains('"insert"');
   }
 }

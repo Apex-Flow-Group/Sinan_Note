@@ -69,6 +69,20 @@ void main() {
       });
     });
 
+    group('previewPlain', () {
+      test('extracts Delta insert text and caches it', () {
+        const delta = '[{"insert":"Cached preview\\n"}]';
+        final note = Note(
+          title: 'T',
+          content: delta,
+          createdAt: now,
+          updatedAt: now,
+        );
+        expect(note.previewPlain, 'Cached preview');
+        expect(note.copyWith(title: 'Other').previewPlain, 'Cached preview');
+      });
+    });
+
     group('copyWith()', () {
       test('copies and overrides fields', () {
         final original = Note(
@@ -126,6 +140,7 @@ void main() {
         expect(restored.isPinned, true);
         expect(restored.noteType, 'code');
         expect(restored.categoryIds, [1, 2, 3]);
+        expect(restored.previewPlain, original.previewPlain);
       });
 
       test('fromMap: noteType "pro" → "code"', () {

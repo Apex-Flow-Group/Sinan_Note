@@ -20,7 +20,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   static Completer<Database>? _initCompleter;
 
   static const _dbName = 'sinan_notes.db';
-  static const _dbVersion = 5;
+  static const _dbVersion = 6;
 
   factory SqliteDatabaseService() {
     _instance ??= SqliteDatabaseService._();
@@ -74,6 +74,10 @@ class SqliteDatabaseService implements NoteDbInterface {
           // v5: fix notes with isHiddenFromHome=1 but no categories
           if (oldVersion < 5) {
             await _migrateToV5(db);
+          }
+          // v6: معاينة جاهزة للبطاقات — بدون Quill أثناء السكرول
+          if (oldVersion < 6) {
+            await _migrateToV6(db);
           }
         },
       );
@@ -133,7 +137,8 @@ class SqliteDatabaseService implements NoteDbInterface {
         isPinned          INTEGER NOT NULL DEFAULT 0,
         isChecklist       INTEGER NOT NULL DEFAULT 0,
         categoryIds       TEXT    NOT NULL DEFAULT '',
-        isHiddenFromHome  INTEGER NOT NULL DEFAULT 0
+        isHiddenFromHome  INTEGER NOT NULL DEFAULT 0,
+        previewPlain      TEXT    NOT NULL DEFAULT ''
       )
     ''');
     await db.execute('''
@@ -176,6 +181,35 @@ class SqliteDatabaseService implements NoteDbInterface {
       await db.execute(
         "UPDATE notes SET isHiddenFromHome = 0 WHERE isHiddenFromHome = 1 AND (categoryIds IS NULL OR categoryIds = '')",
       );
+    } catch (_) {}
+  }
+
+  static Future<void> _migrateToV6(Database db) async {
+    try {
+      await db.execute(
+        "ALTER TABLE notes ADD COLUMN previewPlain TEXT NOT NULL DEFAULT ''",
+      );
+    } catch (_) {}
+    try {
+      final rows = await db.query('notes', columns: ['id', 'content', 'isLocked']);
+      if (rows.isEmpty) return;
+      final batch = db.batch();
+      for (final row in rows) {
+        final locked = (row['isLocked'] ?? 0) == 1;
+        final preview = locked
+            ? ''
+            : NoteContentUtils.toDisplayText(
+                row['content'] as String? ?? '',
+                maxChars: NoteContentUtils.previewMaxChars,
+              );
+        batch.update(
+          'notes',
+          {'previewPlain': preview},
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+      await batch.commit(noResult: true);
     } catch (_) {}
   }
 
@@ -224,6 +258,7 @@ class SqliteDatabaseService implements NoteDbInterface {
       'isChecklist': note.isChecklist ? 1 : 0,
       'categoryIds': note.categoryIds.join(','),
       'isHiddenFromHome': note.isHiddenFromHome ? 1 : 0,
+      'previewPlain': note.isLocked ? '' : note.previewPlain,
     };
   }
 
