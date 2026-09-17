@@ -1,9 +1,7 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 
 void main() {
   testWidgets('Recovery page scroll test', (WidgetTester tester) async {
@@ -40,4 +38,3 @@ void main() {
     expect(scrollView, findsOneWidget);
   });
 }
-

@@ -1,14 +1,14 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🗂️ NOTES PROVIDER — اختبارات تكاملية شاملة
 
 @Tags(['serial'])
-
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import '../test_setup.dart';
+
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -356,4 +356,3 @@ void main() {
     });
   });
 }
-

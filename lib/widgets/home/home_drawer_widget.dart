@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io' show Platform;
 
@@ -367,9 +367,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(
-            alpha: isHighlighted
-                ? (isDark ? 0.28 : 0.18)
-                : (isDark ? 0.18 : 0.1)),
+            alpha:
+                isHighlighted ? (isDark ? 0.28 : 0.18) : (isDark ? 0.18 : 0.1)),
         borderRadius: BorderRadius.circular(8),
       ),
       child:

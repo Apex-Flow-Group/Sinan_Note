@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -306,4 +305,3 @@ class DateIndicatorDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant DateIndicatorDelegate old) => old.child != child;
 }
-

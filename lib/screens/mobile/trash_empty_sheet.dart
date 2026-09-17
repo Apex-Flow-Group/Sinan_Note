@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
@@ -119,4 +118,3 @@ class TrashEmptySheet extends StatelessWidget {
     );
   }
 }
-

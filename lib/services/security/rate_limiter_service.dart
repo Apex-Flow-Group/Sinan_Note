@@ -1,6 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,18 +17,18 @@ class RateLimiterService {
   static Future<int?> getRemainingLockTime() async {
     final prefs = await SharedPreferences.getInstance();
     final lockUntil = prefs.getInt(_keyLockUntil);
-    
+
     if (lockUntil == null) return null;
-    
+
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final remaining = lockUntil - now;
-    
+
     if (remaining <= 0) {
       // انتهى وقت القفل - إعادة تعيين
       await _reset();
       return null;
     }
-    
+
     return remaining;
   }
 
@@ -38,26 +36,26 @@ class RateLimiterService {
   /// يرجع الوقت المتبقي للقفل (بالثواني) أو null إذا لم يتم القفل
   static Future<int?> recordFailedAttempt() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // التحقق من القفل الحالي
     final lockTime = await getRemainingLockTime();
     if (lockTime != null) return lockTime;
-    
+
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final attempts = (prefs.getInt(_keyAttempts) ?? 0) + 1;
-    
+
     await prefs.setInt(_keyAttempts, attempts);
     await prefs.setInt(_keyLastAttempt, now);
-    
+
     if (attempts >= _maxAttempts) {
       // تحديد مدة القفل بناءً على عدد مرات القفل السابقة
       final lockDuration = _calculateLockDuration(attempts);
       final lockUntil = now + lockDuration;
-      
+
       await prefs.setInt(_keyLockUntil, lockUntil);
       return lockDuration;
     }
-    
+
     return null;
   }
 
@@ -106,4 +104,3 @@ class RateLimiterService {
     }
   }
 }
-

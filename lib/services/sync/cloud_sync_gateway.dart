@@ -1,6 +1,14 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/foundation.dart';import 'package:shared_preferences/shared_preferences.dart'; import 'package:sinan_note/core/utils/logger.dart'; import 'package:sinan_note/services/cloud/google_drive_auth.dart'; import 'package:sinan_note/services/cloud/google_drive_merge.dart'; import 'package:sinan_note/services/sync/sync_engine.dart'; import 'package:sinan_note/services/sync/sync_transport.dart';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/services/cloud/google_drive_auth.dart';
+import 'package:sinan_note/services/cloud/google_drive_merge.dart';
+import 'package:sinan_note/services/sync/sync_engine.dart';
+import 'package:sinan_note/services/sync/sync_transport.dart';
+
 /// بوابة المزامنة الموحدة — نقطة الدخول الوحيدة لكل عمليات المزامنة.
 ///
 /// كل الشاشات والـ providers تتحدث مع هذا الملف فقط.
@@ -185,4 +193,3 @@ class CloudSyncGateway {
     return await SyncTransport.getDriveNotesCount();
   }
 }
-

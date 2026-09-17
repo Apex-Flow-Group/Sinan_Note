@@ -1,6 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:sinan_note/services/note_services/note_side_effect_service.dart';
 import 'package:sinan_note/services/note_services/note_state_service.dart';
@@ -81,4 +79,3 @@ class NoteBatchOperationsService {
     await _sideEffectService.updateWidgetSideEffect();
   }
 }
-

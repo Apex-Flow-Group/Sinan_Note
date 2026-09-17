@@ -1,6 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:flutter/material.dart'; import 'package:flutter/services.dart';import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:sinan_note/services/security/unified_lock_service.dart';
+
 /// Immutable security configuration
 class SecurityConfig {
   final bool lockEnabled;
@@ -44,12 +48,12 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
 
   void initialize(SecurityConfig config) {
     _config = config;
-    
+
     if (!_isInitialized) {
       WidgetsBinding.instance.addObserver(this);
       _isInitialized = true;
     }
-    
+
     // Initial lock state on app start
     if (_config.lockEnabled) {
       _isLocked = true;
@@ -97,7 +101,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     if (_isAuthenticating || _ignoreLifecycle) {
       return;
     }
-    
+
     // Save pause time for lock calculation
     if (_config.lockEnabled && _pausedTime == null) {
       _pausedTime = DateTime.now();
@@ -122,7 +126,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
         notifyListeners();
       }
     }
-    
+
     // Clean up pause time
     _pausedTime = null;
   }
@@ -210,8 +214,3 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 }
-
-
-
-
-

@@ -1,10 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-
 
 /// حدود أمان المحتوى
 const int _kMaxTextLength = 100000;
@@ -56,4 +54,3 @@ class ContentGuard {
     _guardingCode = false;
   }
 }
-

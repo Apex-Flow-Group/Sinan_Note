@@ -1,6 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui';import 'package:flutter/material.dart';import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note_mode.dart';
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note_mode.dart';
+
 // Global notifier for menu state
 final ValueNotifier<bool> isMenuOpenNotifier = ValueNotifier<bool>(false);
 
@@ -181,9 +185,8 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
       },
     ];
 
-    final double fabBottom = MediaQuery.of(context).padding.bottom +
-        kBottomNavigationBarHeight +
-        16;
+    final double fabBottom =
+        MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
     const double fabSize = 56.0;
     const double itemSpacing = 8.0;
     final double baseBottom = fabBottom + fabSize + itemSpacing;
@@ -328,4 +331,3 @@ class _AnimatedMenuItem extends StatelessWidget {
     );
   }
 }
-

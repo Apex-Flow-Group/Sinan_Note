@@ -1,6 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:math';import 'package:flutter/material.dart';import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart'; import 'package:sinan_note/screens/onboarding/tour_screen.dart';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/screens/onboarding/tour_screen.dart';
+
 class CinematicIntroScreen extends StatefulWidget {
   const CinematicIntroScreen({super.key});
 
@@ -93,7 +98,8 @@ class _CinematicIntroScreenState extends State<CinematicIntroScreen>
   void _startTour() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const TourScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const TourScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -211,7 +217,7 @@ class _BackgroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // ✅ حماية من size صفر
     if (size.width <= 0 || size.height <= 0) return;
-    
+
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
 
     final gradient = LinearGradient(
@@ -394,7 +400,7 @@ class _ButtonPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // ✅ حماية من size صفر
     if (size.width <= 0 || size.height <= 0) return;
-    
+
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.width, size.height),
       const Radius.circular(28),
@@ -437,4 +443,3 @@ class _ButtonPainter extends CustomPainter {
   @override
   bool shouldRepaint(_ButtonPainter oldDelegate) => true;
 }
-

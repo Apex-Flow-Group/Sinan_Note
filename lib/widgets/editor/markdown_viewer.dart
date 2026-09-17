@@ -1,9 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 //
 // MarkdownViewer — عارض Markdown كامل قابل للتوسعة
 // كل فقرة تحدد اتجاهها من أول حرف مؤثر فيها (نفس منطق المحرر)
 // كتل الكود: syntax highlighting + زر نسخ
-
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -301,8 +300,7 @@ class MarkdownViewer extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: textColor.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: textColor.withValues(alpha: 0.2)),
+                    border: Border.all(color: textColor.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -325,4 +323,3 @@ class MarkdownViewer extends StatelessWidget {
     );
   }
 }
-

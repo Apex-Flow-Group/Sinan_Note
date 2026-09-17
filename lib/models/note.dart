@@ -1,6 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/models/exceptions.dart';
@@ -224,4 +222,3 @@ class Note {
 }
 
 const _undefined = Object();
-

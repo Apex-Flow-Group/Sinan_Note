@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
@@ -42,7 +41,10 @@ class NotesPanel extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               searchQuery.isEmpty ? l10n.noHistoryYet : l10n.noResults,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[500]),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(color: Colors.grey[500]),
             ),
           ],
         ),
@@ -81,12 +83,14 @@ class _NoteItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final noteColor = AppColorPalette.palette[note.colorIndex].getColor(brightness);
+    final noteColor =
+        AppColorPalette.palette[note.colorIndex].getColor(brightness);
     final isLight = noteColor.computeLuminance() > 0.5;
     final titleColor = isLight ? Colors.black87 : Colors.white;
     final contentColor = isLight ? Colors.grey[700]! : Colors.grey[300]!;
     final displayTitle = NoteCardUtils.getDisplayTitle(note);
-    final displayContent = NoteContentUtils.toDisplayText(note.content, maxChars: 200);
+    final displayContent =
+        NoteContentUtils.toDisplayText(note.content, maxChars: 200);
     final isChecklist = ChecklistFormatter.isValidChecklist(note.content);
 
     return Padding(
@@ -111,7 +115,10 @@ class _NoteItem extends StatelessWidget {
                         displayTitle,
                         maxLines: viewType == ViewType.listCompact ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: titleColor),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: titleColor),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -119,7 +126,8 @@ class _NoteItem extends StatelessWidget {
                       future: getVersionCount(note.id!),
                       builder: (_, snap) => snap.hasData
                           ? Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? Theme.of(context).colorScheme.primary
@@ -129,10 +137,14 @@ class _NoteItem extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.history, size: 12, color: Colors.white),
+                                  const Icon(Icons.history,
+                                      size: 12, color: Colors.white),
                                   const SizedBox(width: 3),
                                   Text('${snap.data}',
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)),
                                 ],
                               ),
                             )
@@ -143,7 +155,8 @@ class _NoteItem extends StatelessWidget {
                 if (viewType == ViewType.listExpanded) ...[
                   const SizedBox(height: 8),
                   isChecklist
-                      ? NoteCardUtils.buildChecklistPreview(note.content, titleColor)
+                      ? NoteCardUtils.buildChecklistPreview(
+                          note.content, titleColor)
                       : Text(displayContent,
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
@@ -157,4 +170,3 @@ class _NoteItem extends StatelessWidget {
     );
   }
 }
-

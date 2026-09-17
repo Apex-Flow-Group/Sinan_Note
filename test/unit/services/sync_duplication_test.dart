@@ -1,12 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🔁 اختبار مشكلة التكرار في المزامنة — يثبت أن الإصلاح يعمل
-
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../test_setup.dart';
+
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -525,4 +525,3 @@ void main() {
     });
   });
 }
-

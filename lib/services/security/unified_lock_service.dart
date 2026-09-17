@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -96,7 +96,8 @@ class UnifiedLockService {
   /// المصادقة الموحّدة — تحدد النوع تلقائياً وتشارك الجلسة
   /// [context]: 'app_lock' | 'vault_entry'
   /// [biometricEnabled]: إذا كان المستخدم فعّل البصمة مع PIN
-  Future<bool> authenticate({String context = 'app_lock', bool biometricEnabled = false}) async {
+  Future<bool> authenticate(
+      {String context = 'app_lock', bool biometricEnabled = false}) async {
     if (_isAuthenticatedThisSession) return true;
 
     final lockType = await getLockType();
@@ -147,4 +148,3 @@ class UnifiedLockService {
     return pbkdf2.process(Uint8List.fromList(utf8.encode(pin)));
   }
 }
-

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:io';
@@ -191,7 +191,8 @@ class SqliteDatabaseService implements NoteDbInterface {
       );
     } catch (_) {}
     try {
-      final rows = await db.query('notes', columns: ['id', 'content', 'isLocked']);
+      final rows =
+          await db.query('notes', columns: ['id', 'content', 'isLocked']);
       if (rows.isEmpty) return;
       final batch = db.batch();
       for (final row in rows) {
@@ -674,4 +675,3 @@ class SqliteDatabaseService implements NoteDbInterface {
   @override
   Future<void> runLegacyHistoryCleanup() async {}
 }
-

@@ -1,8 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/widgets/home/note_locator_button.dart' show NoteCardKeyRegistry;
+import 'package:sinan_note/widgets/home/note_locator_button.dart'
+    show NoteCardKeyRegistry;
 
 class HeightRecorder extends StatefulWidget {
   final int noteId;
@@ -21,7 +21,8 @@ class _HeightRecorderState extends State<HeightRecorder> {
       if (!mounted) return;
       final ro = context.findRenderObject() as RenderBox?;
       if (ro != null && ro.hasSize) {
-        NoteCardKeyRegistry.instance.recordHeight(widget.noteId, ro.size.height);
+        NoteCardKeyRegistry.instance
+            .recordHeight(widget.noteId, ro.size.height);
       }
     });
   }
@@ -29,4 +30,3 @@ class _HeightRecorderState extends State<HeightRecorder> {
   @override
   Widget build(BuildContext context) => widget.child;
 }
-

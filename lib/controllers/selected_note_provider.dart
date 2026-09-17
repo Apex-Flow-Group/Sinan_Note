@@ -1,11 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/foundation.dart';
 import 'package:sinan_note/models/note.dart';
 
 /// Provider لإدارة حالة الملاحظة المختارة في نمط Master-Details
-/// 
+///
 /// يستخدم هذا Provider لتتبع الملاحظة المختارة حالياً على الشاشات الكبيرة
 /// حيث يتم عرض قائمة الملاحظات (Master Panel) ومحتوى الملاحظة (Details Panel) جنباً إلى جنب
 class SelectedNoteProvider extends ChangeNotifier {
@@ -15,7 +14,7 @@ class SelectedNoteProvider extends ChangeNotifier {
   Note? get selectedNote => _selectedNote;
 
   /// اختيار ملاحظة جديدة
-  /// 
+  ///
   /// يقوم بتحديث الملاحظة المختارة وإشعار جميع المستمعين
   /// لإعادة بناء الواجهة وعرض محتوى الملاحظة الجديدة
   void selectNote(Note? note) {
@@ -24,7 +23,7 @@ class SelectedNoteProvider extends ChangeNotifier {
   }
 
   /// مسح الملاحظة المختارة
-  /// 
+  ///
   /// يستخدم عند:
   /// - الانتقال بين الأقسام (Home/Vault/Archive/Trash)
   /// - حذف أو نقل الملاحظة المختارة
@@ -35,10 +34,9 @@ class SelectedNoteProvider extends ChangeNotifier {
   }
 
   /// التحقق من أن ملاحظة معينة هي المختارة حالياً
-  /// 
+  ///
   /// يستخدم لتمييز الملاحظة المختارة بصرياً في Master Panel
   bool isNoteSelected(int? noteId) {
     return _selectedNote?.id == noteId;
   }
 }
-

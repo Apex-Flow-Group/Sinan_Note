@@ -1,6 +1,9 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'dart:async';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+
 class SmartSearchService {
   static final SmartSearchService _instance = SmartSearchService._();
   factory SmartSearchService() => _instance;
@@ -105,4 +108,3 @@ class SearchResult {
 
   SearchResult({required this.notes, this.suggestion});
 }
-

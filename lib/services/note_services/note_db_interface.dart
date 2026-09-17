@@ -1,6 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:sinan_note/models/category.dart';
 import 'package:sinan_note/models/note.dart';
@@ -8,10 +6,10 @@ import 'package:sinan_note/models/note_version.dart';
 
 abstract class NoteDbInterface {
   // Core
-  Future<int>        insertNote(Note note);
-  Future<Note?>      getNoteById(int id);
-  Future<int>        updateNote(Note note);
-  Future<bool>       deleteNote(int id);
+  Future<int> insertNote(Note note);
+  Future<Note?> getNoteById(int id);
+  Future<int> updateNote(Note note);
+  Future<bool> deleteNote(int id);
   Future<List<Note>> getAllNotes();
   Future<List<Note>> getNotes({int? limit, int? offset});
 
@@ -34,21 +32,20 @@ abstract class NoteDbInterface {
   Future<List<Note>> getExpiredReminders();
 
   // Versions
-  Future<void>             logNoteVersion(NoteVersion version);
+  Future<void> logNoteVersion(NoteVersion version);
   Future<List<NoteVersion>> getNoteHistory(int noteId);
-  Future<NoteVersion?>     getLastNoteVersion(int noteId);
-  Future<void>             keepMaxVersions(int noteId, int maxLimit);
-  Future<int>              deleteNoteVersions(int noteId);
+  Future<NoteVersion?> getLastNoteVersion(int noteId);
+  Future<void> keepMaxVersions(int noteId, int maxLimit);
+  Future<int> deleteNoteVersions(int noteId);
 
   // Categories
   Future<List<NoteCategory>> getAllCategories();
-  Future<int>                insertCategory(NoteCategory cat);
-  Future<void>               updateCategory(NoteCategory cat);
-  Future<void>               deleteCategory(int id);
+  Future<int> insertCategory(NoteCategory cat);
+  Future<void> updateCategory(NoteCategory cat);
+  Future<void> deleteCategory(int id);
 
   // Lifecycle
   Future<void> closeDB();
   Future<void> reopenDatabase();
   Future<void> runLegacyHistoryCleanup();
 }
-

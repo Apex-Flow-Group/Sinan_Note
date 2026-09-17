@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 class BackupMessages {
   static String buildSuccessMessage({
@@ -48,12 +48,10 @@ class BackupMessages {
 
   static String getCancelMessage(String lang, String operation) {
     if (lang == 'ar') {
-      return operation == 'import' ? 'تم إلغاء الاستيراد' : 'تم إلغاء الاستعادة';
+      return operation == 'import'
+          ? 'تم إلغاء الاستيراد'
+          : 'تم إلغاء الاستعادة';
     }
     return operation == 'import' ? 'Import cancelled' : 'Restore cancelled';
   }
 }
-
-
-
-

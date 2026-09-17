@@ -1,6 +1,9 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:math';import 'package:flutter/material.dart';import 'package:sinan_note/core/theme/app_theme.dart';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:sinan_note/core/theme/app_theme.dart';
+
 class GlowingSearchField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
@@ -184,4 +187,3 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
     );
   }
 }
-

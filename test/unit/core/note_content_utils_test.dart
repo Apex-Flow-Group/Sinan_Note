@@ -31,8 +31,7 @@ void main() {
     });
 
     test('malformed Delta still extracts insert text, never returns JSON', () {
-      const broken =
-          '[{"insert": "نجاحا لافتا في شباك التذاكر", "broken": }]';
+      const broken = '[{"insert": "نجاحا لافتا في شباك التذاكر", "broken": }]';
       final text = NoteContentUtils.toDisplayText(broken, maxChars: 180);
       expect(text.startsWith('['), isFalse);
       expect(text.contains('نجاحا'), isTrue);

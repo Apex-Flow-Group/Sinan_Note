@@ -1,6 +1,5 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🔒 NOTE SECURITY SERVICE — اختبارات شاملة
-
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/models/category.dart';
@@ -11,42 +10,77 @@ import 'package:sinan_note/services/note_services/note_security_service.dart';
 import 'package:sinan_note/services/note_services/note_state_service.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import '../../test_setup.dart';
+
 // Mock يُطبِّق NoteDbInterface بدون Isar الحقيقي
 class _MockDb implements NoteDbInterface {
   final Map<int, Note> _store = {};
 
-  @override Future<List<Note>> getLockedNotes() async => _store.values.where((n) => n.isLocked).toList();
-  @override Future<Note?> getNoteById(int id) async => _store[id];
-  @override Future<int> updateNote(Note note) async { _store[note.id!] = note; return note.id!; }
+  @override
+  Future<List<Note>> getLockedNotes() async =>
+      _store.values.where((n) => n.isLocked).toList();
+  @override
+  Future<Note?> getNoteById(int id) async => _store[id];
+  @override
+  Future<int> updateNote(Note note) async {
+    _store[note.id!] = note;
+    return note.id!;
+  }
 
   // ── unused stubs ──
-  @override Future<int>    insertNote(Note n) async => 0;
-  @override Future<bool>   deleteNote(int id) async => false;
-  @override Future<List<Note>> getAllNotes({int? limit, int? offset}) async => [];
-  @override Future<List<Note>> getNotes({int? limit, int? offset}) async => [];
-  @override Future<List<Note>> getArchivedNotes() async => [];
-  @override Future<List<Note>> getTrashedNotes() async => [];
-  @override Future<List<Note>> searchNotes(String q, {int limit = 100}) async => [];
-  @override Future<int>    archiveNote(int id) async => 0;
-  @override Future<int>    unarchiveNote(int id) async => 0;
-  @override Future<int>    trashNote(int id) async => 0;
-  @override Future<int>    restoreNote(int id) async => 0;
-  @override Future<List<Note>> getUpcomingReminders() async => [];
-  @override Future<List<Note>> getNotesForWidget() async => [];
-  @override Future<List<Note>> getScheduledReminders() async => [];
-  @override Future<List<Note>> getExpiredReminders() async => [];
-  @override Future<void>   logNoteVersion(v) async {}
-  @override Future<List<NoteVersion>> getNoteHistory(int id) async => [];
-  @override Future<NoteVersion?>   getLastNoteVersion(int id) async => null;
-  @override Future<void>   keepMaxVersions(int id, int max) async {}
-  @override Future<int>    deleteNoteVersions(int id) async => 0;
-  @override Future<List<NoteCategory>> getAllCategories() async => [];
-  @override Future<int>    insertCategory(NoteCategory cat) async => 0;
-  @override Future<void>   updateCategory(NoteCategory cat) async {}
-  @override Future<void>   deleteCategory(int id) async {}
-  @override Future<void>   closeDB() async {}
-  @override Future<void>   reopenDatabase() async {}
-  @override Future<void>   runLegacyHistoryCleanup() async {}
+  @override
+  Future<int> insertNote(Note n) async => 0;
+  @override
+  Future<bool> deleteNote(int id) async => false;
+  @override
+  Future<List<Note>> getAllNotes({int? limit, int? offset}) async => [];
+  @override
+  Future<List<Note>> getNotes({int? limit, int? offset}) async => [];
+  @override
+  Future<List<Note>> getArchivedNotes() async => [];
+  @override
+  Future<List<Note>> getTrashedNotes() async => [];
+  @override
+  Future<List<Note>> searchNotes(String q, {int limit = 100}) async => [];
+  @override
+  Future<int> archiveNote(int id) async => 0;
+  @override
+  Future<int> unarchiveNote(int id) async => 0;
+  @override
+  Future<int> trashNote(int id) async => 0;
+  @override
+  Future<int> restoreNote(int id) async => 0;
+  @override
+  Future<List<Note>> getUpcomingReminders() async => [];
+  @override
+  Future<List<Note>> getNotesForWidget() async => [];
+  @override
+  Future<List<Note>> getScheduledReminders() async => [];
+  @override
+  Future<List<Note>> getExpiredReminders() async => [];
+  @override
+  Future<void> logNoteVersion(v) async {}
+  @override
+  Future<List<NoteVersion>> getNoteHistory(int id) async => [];
+  @override
+  Future<NoteVersion?> getLastNoteVersion(int id) async => null;
+  @override
+  Future<void> keepMaxVersions(int id, int max) async {}
+  @override
+  Future<int> deleteNoteVersions(int id) async => 0;
+  @override
+  Future<List<NoteCategory>> getAllCategories() async => [];
+  @override
+  Future<int> insertCategory(NoteCategory cat) async => 0;
+  @override
+  Future<void> updateCategory(NoteCategory cat) async {}
+  @override
+  Future<void> deleteCategory(int id) async {}
+  @override
+  Future<void> closeDB() async {}
+  @override
+  Future<void> reopenDatabase() async {}
+  @override
+  Future<void> runLegacyHistoryCleanup() async {}
 
   void seed(Note note) => _store[note.id!] = note;
 }
@@ -122,8 +156,20 @@ void main() {
     });
 
     test('يجلب الملاحظات المقفلة', () async {
-      db.seed(Note(id: 1, title: 'Locked', content: 'Secret', createdAt: now, updatedAt: now, isLocked: true));
-      db.seed(Note(id: 2, title: 'Public', content: 'Public', createdAt: now, updatedAt: now, isLocked: false));
+      db.seed(Note(
+          id: 1,
+          title: 'Locked',
+          content: 'Secret',
+          createdAt: now,
+          updatedAt: now,
+          isLocked: true));
+      db.seed(Note(
+          id: 2,
+          title: 'Public',
+          content: 'Public',
+          createdAt: now,
+          updatedAt: now,
+          isLocked: false));
 
       final notes = await security.fetchAndDecryptLockedNotes(db);
       expect(notes.length, 1);
@@ -146,7 +192,8 @@ void main() {
     });
 
     test('ملاحظة checklist مقفلة تُعالج بشكل صحيح', () async {
-      const checklistJson = '{"title":"Tasks","items":[{"id":"1","text":"Task","isDone":false}]}';
+      const checklistJson =
+          '{"title":"Tasks","items":[{"id":"1","text":"Task","isDone":false}]}';
       db.seed(Note(
         id: 1,
         title: 'Checklist',
@@ -176,7 +223,13 @@ void main() {
 
     tearDown(() async => await VaultService.clearVault());
     test('قفل ملاحظة يُحدِّث isLocked في قاعدة البيانات', () async {
-      db.seed(Note(id: 1, title: 'Test', content: 'Content', createdAt: now, updatedAt: now, isLocked: false));
+      db.seed(Note(
+          id: 1,
+          title: 'Test',
+          content: 'Content',
+          createdAt: now,
+          updatedAt: now,
+          isLocked: false));
 
       await security.toggleLockStatus(1, true, db);
 
@@ -185,7 +238,13 @@ void main() {
     });
 
     test('فك قفل ملاحظة يُحدِّث isLocked في قاعدة البيانات', () async {
-      db.seed(Note(id: 1, title: 'Test', content: 'Content', createdAt: now, updatedAt: now, isLocked: true));
+      db.seed(Note(
+          id: 1,
+          title: 'Test',
+          content: 'Content',
+          createdAt: now,
+          updatedAt: now,
+          isLocked: true));
 
       await security.toggleLockStatus(1, false, db);
 
@@ -194,7 +253,13 @@ void main() {
     });
 
     test('قفل ملاحظة بمحتوى فارغ لا يُشفِّر', () async {
-      db.seed(Note(id: 1, title: '', content: '', createdAt: now, updatedAt: now, isLocked: false));
+      db.seed(Note(
+          id: 1,
+          title: '',
+          content: '',
+          createdAt: now,
+          updatedAt: now,
+          isLocked: false));
 
       await security.toggleLockStatus(1, true, db);
 
@@ -211,7 +276,8 @@ void main() {
     });
 
     test('قفل checklist يُعيد ترتيب JSON قبل التشفير', () async {
-      const validJson = '{"title":"Tasks","items":[{"id":"1","text":"Task","isDone":false}]}';
+      const validJson =
+          '{"title":"Tasks","items":[{"id":"1","text":"Task","isDone":false}]}';
       db.seed(Note(
         id: 1,
         title: 'Checklist',
@@ -237,7 +303,13 @@ void main() {
   group('NoteSecurityService — Clear Session', () {
     test('clearLockedSession يمسح الملاحظات المقفلة من الذاكرة', () {
       state.updateLockedNotes([
-        Note(id: 1, title: 'Secret', content: 'Secret Content', createdAt: now, updatedAt: now, isLocked: true),
+        Note(
+            id: 1,
+            title: 'Secret',
+            content: 'Secret Content',
+            createdAt: now,
+            updatedAt: now,
+            isLocked: true),
       ]);
       expect(state.lockedNotes.length, 1);
 
@@ -247,10 +319,21 @@ void main() {
 
     test('clearLockedSession لا يؤثر على الملاحظات العادية', () {
       state.updateAllNotes([
-        Note(id: 1, title: 'Regular', content: 'Content', createdAt: now, updatedAt: now),
+        Note(
+            id: 1,
+            title: 'Regular',
+            content: 'Content',
+            createdAt: now,
+            updatedAt: now),
       ]);
       state.updateLockedNotes([
-        Note(id: 2, title: 'Locked', content: 'Secret', createdAt: now, updatedAt: now, isLocked: true),
+        Note(
+            id: 2,
+            title: 'Locked',
+            content: 'Secret',
+            createdAt: now,
+            updatedAt: now,
+            isLocked: true),
       ]);
 
       security.clearLockedSession(state);
@@ -260,4 +343,3 @@ void main() {
     });
   });
 }
-

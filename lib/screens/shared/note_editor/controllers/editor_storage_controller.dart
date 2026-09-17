@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,7 +37,6 @@ class EditorStorageController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('last_font_size', fontSize);
       await prefs.setInt('last_note_color', _colorToInt(backgroundColor));
-      
     } catch (_) {}
   }
 
@@ -137,4 +135,3 @@ class EditorStorageController {
     }
   }
 }
-

@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
@@ -62,14 +61,14 @@ class NoteEditorUtils {
     if (customTitle != null && customTitle.isNotEmpty) {
       return customTitle;
     }
-    
+
     if (isChecklist) {
       if (checklistTitle != null && checklistTitle.isNotEmpty) {
         return checklistTitle;
       }
       return 'Checklist';
     }
-    
+
     if (content.isNotEmpty) {
       final end = content.indexOf('\n');
       if (end != -1 && end < 40) {
@@ -77,8 +76,7 @@ class NoteEditorUtils {
       }
       return content.length > 40 ? "${content.substring(0, 40)}..." : content;
     }
-    
+
     return fallback;
   }
 }
-

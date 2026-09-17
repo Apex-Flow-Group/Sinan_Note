@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -39,7 +38,8 @@ class FilterSheet {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.format_paint_rounded, color: Colors.purple),
+              leading:
+                  const Icon(Icons.format_paint_rounded, color: Colors.purple),
               title: Text(l10n.richNoteMenu),
               onTap: () {
                 Navigator.pop(context);
@@ -94,4 +94,3 @@ class FilterSheet {
     );
   }
 }
-

@@ -1,6 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:flutter/services.dart';import 'package:local_auth/local_auth.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart'; import 'package:sinan_note/core/utils/logger.dart'; import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
+
 class BiometricService {
   static final LocalAuthentication _auth = LocalAuthentication();
 
@@ -13,7 +19,8 @@ class BiometricService {
       final bool canCheck = await _auth.canCheckBiometrics;
       if (!canCheck) return false;
       // توجد بصمة مسجّلة فعلاً على الجهاز
-      final List<BiometricType> available = await _auth.getAvailableBiometrics();
+      final List<BiometricType> available =
+          await _auth.getAvailableBiometrics();
       return available.isNotEmpty;
     } on PlatformException catch (e) {
       AppLogger.debug("Biometric check error: $e");
@@ -58,4 +65,3 @@ class BiometricService {
         : 'Please authenticate to open the note';
   }
 }
-

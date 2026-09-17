@@ -1,10 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🔐 VAULT & ENCRYPTION — اختبارات حقيقية وشاملة
-
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import '../test_setup.dart';
+
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -344,4 +344,3 @@ void main() {
     });
   });
 }
-

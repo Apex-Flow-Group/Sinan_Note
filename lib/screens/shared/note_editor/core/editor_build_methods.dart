@@ -1,6 +1,5 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // Re-exports — use the specific builders directly for new code.
-
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -137,4 +136,3 @@ class EditorBuildMethods {
         scrollProgress: scrollProgress,
       );
 }
-

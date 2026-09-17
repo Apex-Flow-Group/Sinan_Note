@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,4 +40,3 @@ class MasterWidthProvider extends ChangeNotifier {
     await prefs.setDouble(_key, _width);
   }
 }
-

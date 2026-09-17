@@ -162,4 +162,3 @@ class StorageService {
     return count;
   }
 }
-

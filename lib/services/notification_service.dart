@@ -1,6 +1,16 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:flutter_local_notifications/flutter_local_notifications.dart'; import 'package:flutter_timezone/flutter_timezone.dart';import 'package:sinan_note/core/utils/app_navigator.dart'; import 'package:sinan_note/core/utils/logger.dart'; import 'package:sinan_note/main.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/widgets/home/note_card_utils.dart'; import 'package:timezone/data/latest_all.dart' as tz; import 'package:timezone/timezone.dart' as tz;
+import 'dart:io';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/main.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -268,4 +278,3 @@ class NotificationService {
     }
   }
 }
-

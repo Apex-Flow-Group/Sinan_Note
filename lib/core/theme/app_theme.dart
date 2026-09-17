@@ -1,9 +1,7 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 
 /// مصدر واحد لكل إعدادات الثيم.
 /// القاعدة: لا يوجد لون hardcoded خارج هذا الملف.
@@ -59,7 +57,8 @@ class AppTheme {
   static Color scaffoldBackground(ColorScheme scheme) {
     return scheme.brightness == Brightness.light
         ? scheme.surface
-        : Color.alphaBlend(Colors.white.withValues(alpha: 0.05), scheme.surface);
+        : Color.alphaBlend(
+            Colors.white.withValues(alpha: 0.05), scheme.surface);
   }
 
   /// لون خلفية الـ Sidebar/Master panel في الـ Desktop layout
@@ -132,4 +131,3 @@ class AppTheme {
     );
   }
 }
-

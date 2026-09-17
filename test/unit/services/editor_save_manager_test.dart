@@ -106,20 +106,20 @@ void main() {
 
     test('checklist غير فارغ — title موجود', () {
       const withTitle = '{"title":"مهام","items":[]}';
-      expect(
-          EditorSaveManager.isContentEmpty(withTitle, NoteMode.checklist), false);
+      expect(EditorSaveManager.isContentEmpty(withTitle, NoteMode.checklist),
+          false);
     });
 
     test('checklist غير فارغ — item موجود', () {
       const withItem =
           '{"title":"","items":[{"id":"1","text":"اشتري خبز","isDone":false}]}';
-      expect(
-          EditorSaveManager.isContentEmpty(withItem, NoteMode.checklist), false);
+      expect(EditorSaveManager.isContentEmpty(withItem, NoteMode.checklist),
+          false);
     });
 
     test('checklist — JSON تالف يُعامَل كفارغ', () {
-      expect(
-          EditorSaveManager.isContentEmpty('not-json', NoteMode.checklist), true);
+      expect(EditorSaveManager.isContentEmpty('not-json', NoteMode.checklist),
+          true);
     });
 
     test('checklist — items كلها نصوص فارغة', () {

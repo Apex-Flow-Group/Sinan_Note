@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,10 +8,12 @@ class GoogleDriveSyncTermsScreen extends StatefulWidget {
   const GoogleDriveSyncTermsScreen({super.key});
 
   @override
-  State<GoogleDriveSyncTermsScreen> createState() => _GoogleDriveSyncTermsScreenState();
+  State<GoogleDriveSyncTermsScreen> createState() =>
+      _GoogleDriveSyncTermsScreenState();
 }
 
-class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen> {
+class _GoogleDriveSyncTermsScreenState
+    extends State<GoogleDriveSyncTermsScreen> {
   bool _agreedToTerms = false;
 
   @override
@@ -52,9 +53,9 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Title
                     Text(
                       l10n.syncTermsTitle,
@@ -64,9 +65,9 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Regular notes info
                     _buildInfoCard(
                       icon: Icons.note,
@@ -74,21 +75,22 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                       color: Colors.blue,
                       isDark: isDark,
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Vault notes info — الخزنة محلية دائماً
                     _buildInfoCard(
                       icon: Icons.lock,
-                      title: Localizations.localeOf(context).languageCode == 'ar'
-                          ? 'الخزنة المشفرة: محلية بالكامل — لا تُرفع أبداً'
-                          : 'Encrypted Vault: fully local — never uploaded',
+                      title:
+                          Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'الخزنة المشفرة: محلية بالكامل — لا تُرفع أبداً'
+                              : 'Encrypted Vault: fully local — never uploaded',
                       color: Colors.orange,
                       isDark: isDark,
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Important notes
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -120,9 +122,9 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Compression info
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -132,7 +134,8 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.compress, color: Colors.blue, size: 30),
+                          const Icon(Icons.compress,
+                              color: Colors.blue, size: 30),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Text(
@@ -143,18 +146,21 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Privacy policy link
                     Center(
                       child: TextButton.icon(
                         onPressed: () async {
-                          final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+                          final isArabic =
+                              Localizations.localeOf(context).languageCode ==
+                                  'ar';
                           final url = isArabic
                               ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
                               : 'https://apexflow.now/en/projects/sinan-note/privacy';
-                          await const MethodChannel('com.apexflow.app.sinan/launcher')
+                          await const MethodChannel(
+                                  'com.apexflow.app.sinan/launcher')
                               .invokeMethod('launch', url);
                         },
                         icon: const Icon(Icons.privacy_tip),
@@ -165,7 +171,7 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                 ),
               ),
             ),
-            
+
             // Bottom agreement section
             Container(
               padding: const EdgeInsets.all(24.0),
@@ -184,14 +190,13 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                 children: [
                   CheckboxListTile(
                     value: _agreedToTerms,
-                    onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
+                    onChanged: (val) =>
+                        setState(() => _agreedToTerms = val ?? false),
                     title: Text(l10n.agreeToTerms),
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  
                   const SizedBox(height: 16),
-                  
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -258,4 +263,3 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
     );
   }
 }
-

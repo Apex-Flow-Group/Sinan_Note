@@ -1,8 +1,6 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-
 
 class RenameDialog extends StatefulWidget {
   final String initialTitle;
@@ -108,4 +106,3 @@ class _RenameDialogState extends State<RenameDialog> {
     );
   }
 }
-

@@ -1,6 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui';import 'package:flutter/material.dart'; import 'package:flutter/services.dart';import 'package:sinan_note/widgets/editor/apex_editor_header.dart';
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:sinan_note/widgets/editor/apex_editor_header.dart';
+
 /// Extracted header widget for note editor
 class EditorHeaderWidget extends StatelessWidget {
   final Color backgroundColor;
@@ -40,25 +44,25 @@ class EditorHeaderWidget extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
             child: ApexEditorHeader(
-                backgroundColor: backgroundColor.withValues(alpha: 0.7),
-                textColor: textColor,
-                title: title,
-                isLocked: isLocked,
-                hasHistory: hasHistory,
-                hasReminder: hasReminder,
-                onReminderTap: () {
-                  HapticFeedback.mediumImpact();
-                  onReminderTap();
-                },
-                onHistoryTap: onHistoryTap,
-                onTitleTap: () {
-                  HapticFeedback.lightImpact();
-                  onTitleTap();
-                },
-                onSaveTap: () async {
-                  HapticFeedback.mediumImpact();
-                  onSaveTap();
-                },
+              backgroundColor: backgroundColor.withValues(alpha: 0.7),
+              textColor: textColor,
+              title: title,
+              isLocked: isLocked,
+              hasHistory: hasHistory,
+              hasReminder: hasReminder,
+              onReminderTap: () {
+                HapticFeedback.mediumImpact();
+                onReminderTap();
+              },
+              onHistoryTap: onHistoryTap,
+              onTitleTap: () {
+                HapticFeedback.lightImpact();
+                onTitleTap();
+              },
+              onSaveTap: () async {
+                HapticFeedback.mediumImpact();
+                onSaveTap();
+              },
             ),
           ),
         ),
@@ -66,4 +70,3 @@ class EditorHeaderWidget extends StatelessWidget {
     );
   }
 }
-

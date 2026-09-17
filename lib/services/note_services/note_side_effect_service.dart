@@ -1,6 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:sinan_note/core/utils/checklist_formatter.dart'; import 'package:sinan_note/core/utils/note_content_utils.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/notification_service.dart'; import 'package:sinan_note/services/widget_service.dart';
+import 'dart:io';
+import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/services/widget_service.dart';
+
 /// Service responsible for handling side effects of note operations.
 ///
 /// This service manages external system interactions that occur as a result
@@ -111,7 +117,6 @@ class NoteSideEffectService {
 
     try {
       await NotificationService().cancelNotification(noteId);
-    
     } catch (_) {}
   }
 
@@ -142,7 +147,6 @@ class NoteSideEffectService {
 
     try {
       await WidgetService.checkAndUpdateIfPinned(note);
-      
     } catch (_) {}
   }
 
@@ -159,8 +163,6 @@ class NoteSideEffectService {
 
     try {
       await WidgetService.checkAndResetIfPinned(noteId);
-      
     } catch (_) {}
   }
 }
-

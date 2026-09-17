@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/checklist_formatter.dart';
@@ -319,4 +318,3 @@ class VersionsBottomSheet extends StatelessWidget {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 }
-
