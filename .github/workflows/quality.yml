@@ -1,0 +1,44 @@
+name: Quality
+
+# بوابة الجودة: لا يمر تنسيق مكسور ولا تحليل فاشل ولا اختبار ساقط
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: 3.41.6
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze lib test
+
+      - name: Verify localizations are up to date
+        run: |
+          flutter gen-l10n
+          git diff --exit-code lib/generated/l10n
+
+      - name: Run tests
+        run: flutter test

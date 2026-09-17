@@ -26,7 +26,6 @@ import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 import 'package:sinan_note/widgets/home/note_locator_button.dart';
-import 'package:sinan_note/widgets/home/notes_grid/grid_perf_probe.dart';
 import 'package:sinan_note/widgets/home/notes_grid_view.dart';
 import 'package:sinan_note/widgets/home/smart_header.dart';
 
@@ -381,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       child: CustomScrollView(
                         controller: _scrollController,
-                        cacheExtent: GridPerfProbe.cacheExtent,
+                        cacheExtent: _gridCacheExtent,
                         physics: CoastScrollPhysics(
                           pullExtent: pullExtent,
                           parent: const AlwaysScrollableScrollPhysics(),
@@ -442,18 +441,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListenableBuilder(
                     listenable: _viewTypeNotifier,
-                    builder: (context, _) {
-                      if (GridPerfProbe.isActive) {
-                        return const SizedBox.shrink();
-                      }
-                      return HomeScrollbar(
-                        scrollController: _scrollController,
-                        notesNotifier: _filteredNotesNotifier,
-                        interactive: _viewTypeNotifier.value == 'listCompact',
-                        totalCountNotifier: _totalCountNotifier,
-                        viewTypeNotifier: _viewTypeNotifier,
-                      );
-                    },
+                    builder: (context, _) => HomeScrollbar(
+                      scrollController: _scrollController,
+                      notesNotifier: _filteredNotesNotifier,
+                      interactive: _viewTypeNotifier.value == 'listCompact',
+                      totalCountNotifier: _totalCountNotifier,
+                      viewTypeNotifier: _viewTypeNotifier,
+                    ),
                   ),
                   NoteLocatorButton(scrollController: _scrollController),
                 ],
@@ -466,6 +460,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   static const _headerHeight = 68.0;
+
+  /// شاشة إضافية مبنية مسبقاً فوق وتحت المرئي — تقلّل إعادة بناء البطاقات
+  /// أثناء التمرير السريع.
+  static const _gridCacheExtent = 1500.0;
+
   bool _isScrollSnapping = false;
 
   void _handleScrollEnd() {

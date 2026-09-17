@@ -1,8 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart'
-    show ChangeNotifier, ScrollController, TextEditingController, ValueNotifier;
+    show
+        ChangeNotifier,
+        ScrollController,
+        TextEditingController,
+        ValueNotifier,
+        visibleForTesting;
 
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
@@ -11,6 +15,13 @@ import 'package:sinan_note/models/note.dart';
 class NotesFilterController extends ChangeNotifier {
   static const int _pageSize = 100;
   static const double _loadThreshold = 0.95;
+
+  /// حدود البحث الضبابي — استعلام أقصر من هذا يُطابق حرفياً فقط
+  static const int _minFuzzyQueryLength = 4;
+  static const int _minFuzzyWordLength = 3;
+  static const int _fuzzyTitleWords = 24;
+  static const int _fuzzyContentWords = 50;
+  static const int _space = 0x20;
 
   final TextEditingController searchController;
   final ValueNotifier<String?> activeFilterNotifier;
@@ -127,6 +138,10 @@ class NotesFilterController extends ChangeNotifier {
     }
   }
 
+  /// يطبّق البحث والفلاتر على قائمة جاهزة بلا حاجة لمزوّدات.
+  @visibleForTesting
+  void filterFor(List<Note> notes) => _syncFilteredNotes(notes, force: true);
+
   void _onSearchChanged() {
     final query = searchController.text;
     if (query == _lastSearchQuery) return;
@@ -182,6 +197,9 @@ class NotesFilterController extends ChangeNotifier {
     final isFiltering = searchQuery.isNotEmpty ||
         selectedCategoryId != null ||
         activeFilter != null;
+    // تطبيع الاستعلام مرة واحدة — كان يُحسب لكل ملاحظة على حِدة
+    final normalized = searchQuery.isEmpty ? '' : Note.normalize(searchQuery);
+    final allowFuzzy = normalized.length >= _minFuzzyQueryLength;
 
     return notes.where((note) {
       if (note.isLocked || note.isArchived || note.isTrashed) return false;
@@ -211,23 +229,22 @@ class NotesFilterController extends ChangeNotifier {
 
       if (searchQuery.isEmpty) return true;
 
-      final normalized = Note.normalize(searchQuery);
       if (note.normalizedTitle.contains(normalized) ||
           note.normalizedContent.contains(normalized)) {
         return true;
       }
 
-      if (normalized.length >= 4) {
-        for (final word in [
-          ...note.normalizedTitle.split(' '),
-          ...note.normalizedContent.split(' ').take(50)
-        ]) {
-          if (word.length >= 3 && _levenshtein(normalized, word) <= 1) {
-            return true;
-          }
-        }
-      }
-      return false;
+      if (!allowFuzzy) return false;
+      return _anyWordNearQuery(
+            note.normalizedTitle,
+            normalized,
+            _fuzzyTitleWords,
+          ) ||
+          _anyWordNearQuery(
+            note.normalizedContent,
+            normalized,
+            _fuzzyContentWords,
+          );
     }).toList();
   }
 
@@ -251,30 +268,58 @@ class NotesFilterController extends ChangeNotifier {
     }
   }
 
-  int _levenshtein(String s1, String s2) {
-    if (s1 == s2) return 0;
-    if (s1.isEmpty) return s2.length;
-    if (s2.isEmpty) return s1.length;
-    final m = s1.length, n = s2.length;
-    final dp = List.generate(
-        m + 1,
-        (i) => List.generate(
-            n + 1,
-            (j) => i == 0
-                ? j
-                : j == 0
-                    ? i
-                    : 0));
-    for (int i = 1; i <= m; i++) {
-      for (int j = 1; j <= n; j++) {
-        dp[i][j] = s1[i - 1] == s2[j - 1]
-            ? dp[i - 1][j - 1]
-            : 1 +
-                [dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]]
-                    .reduce((a, b) => a < b ? a : b);
+  /// هل في [text] كلمة تبعد عن [query] تحريراً واحداً على الأكثر؟
+  ///
+  /// يمسح الكلمات في مكانها بلا اقتطاع نصوص ولا مصفوفات — البحث يُعاد عند كل
+  /// حرف يكتبه المستخدم، على كل الملاحظات.
+  static bool _anyWordNearQuery(String text, String query, int maxWords) {
+    var scanned = 0;
+    var start = 0;
+    final length = text.length;
+
+    for (var i = 0; i <= length; i++) {
+      if (i != length && text.codeUnitAt(i) != _space) continue;
+      if (i - start >= _minFuzzyWordLength &&
+          _withinOneEdit(query, text, start, i)) {
+        return true;
+      }
+      scanned++;
+      if (scanned >= maxWords) return false;
+      start = i + 1;
+    }
+    return false;
+  }
+
+  /// مسافة تحرير ≤ 1 بين [query] والمقطع `[start, end)` من [text].
+  ///
+  /// اختلاف الطول بأكثر من حرف يُرفض فوراً، والمقارنة تتوقف عند ثاني اختلاف —
+  /// فلا حاجة لمصفوفة Levenshtein كاملة لسؤال جوابه نعم أو لا.
+  static bool _withinOneEdit(String query, String text, int start, int end) {
+    final wordLength = end - start;
+    if ((query.length - wordLength).abs() > 1) return false;
+
+    var q = 0;
+    var t = start;
+    var edited = false;
+
+    while (q < query.length && t < end) {
+      if (query.codeUnitAt(q) == text.codeUnitAt(t)) {
+        q++;
+        t++;
+        continue;
+      }
+      if (edited) return false;
+      edited = true;
+      if (query.length > wordLength) {
+        q++;
+      } else if (query.length < wordLength) {
+        t++;
+      } else {
+        q++;
+        t++;
       }
     }
-    return dp[m][n];
+    return true;
   }
 
   @override
@@ -289,4 +334,3 @@ class NotesFilterController extends ChangeNotifier {
     super.dispose();
   }
 }
-

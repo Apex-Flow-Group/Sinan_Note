@@ -7,7 +7,6 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:sinan_note/widgets/home/notes_grid/grid_perf_probe.dart';
 import 'package:sinan_note/widgets/home/notes_grid/height_recorder.dart';
 import 'package:sinan_note/widgets/home/notes_grid/note_card_wrapper.dart';
 
@@ -140,20 +139,10 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     final bottomPadding =
         MediaQuery.of(context).padding.bottom + navBarHeight + 16 + 56 + 8;
 
-    return SliverMainAxisGroup(
-      slivers: [
-        if (GridPerfProbe.isActive)
-          const SliverToBoxAdapter(child: ProbeBanner()),
-        ..._buildNoteSlivers(bottomPadding),
-      ],
-    );
+    return SliverMainAxisGroup(slivers: _buildNoteSlivers(bottomPadding));
   }
 
   List<Widget> _buildNoteSlivers(double bottomPadding) {
-    if (!GridPerfProbe.useRealCards) {
-      return [_buildProbeSliver(bottomPadding)];
-    }
-
     // عنوان واحد بلا مقابل لا يفصل شيئاً — نعرض الفواصل فقط عند وجود المجموعتين
     if (_pinnedNotes.isEmpty || _unpinnedNotes.isEmpty) {
       return [_buildNotesSliver(_filteredNotes, bottomPadding)];
@@ -278,83 +267,6 @@ class _NotesSliverViewState extends State<NotesSliverView> {
       ),
     );
   }
-
-  Widget _buildProbeSliver(double bottomPadding) {
-    final padding =
-        EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding);
-
-    Widget tile(int index) {
-      final note = _filteredNotes[index];
-      return RepaintBoundary(
-        key: ValueKey<int>(note.id ?? index),
-        child: ProbeNoteTile(note: note),
-      );
-    }
-
-    if (_viewType == ViewType.grid && GridPerfProbe.useMasonry) {
-      return SliverPadding(
-        padding: padding,
-        sliver: SliverMasonryGrid(
-          mainAxisSpacing: 6,
-          crossAxisSpacing: 6,
-          gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: _getCrossAxisCount(context),
-          ),
-          delegate: SliverChildBuilderDelegate(
-            (context, index) => tile(index),
-            childCount: _filteredNotes.length,
-            addAutomaticKeepAlives: false,
-            addRepaintBoundaries: false,
-          ),
-        ),
-      );
-    }
-
-    if (_viewType == ViewType.grid) {
-      return SliverPadding(
-        padding: padding,
-        sliver: SliverGrid(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: _getCrossAxisCount(context),
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-            mainAxisExtent: GridPerfProbe.tileExtent,
-          ),
-          delegate: SliverChildBuilderDelegate(
-            (context, index) => tile(index),
-            childCount: _filteredNotes.length,
-            addAutomaticKeepAlives: false,
-            addRepaintBoundaries: false,
-          ),
-        ),
-      );
-    }
-
-    return SliverPadding(
-      padding: padding,
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final note = _filteredNotes[index];
-            return Padding(
-              key: ValueKey<int>(note.id ?? index),
-              padding: const EdgeInsets.only(bottom: 6),
-              child: SizedBox(
-                height: GridPerfProbe.tileExtent,
-                child: ProbeNoteTile(note: note),
-              ),
-            );
-          },
-          childCount: _filteredNotes.length,
-          findChildIndexCallback: _findChildIndex,
-          addAutomaticKeepAlives: false,
-          addRepaintBoundaries: false,
-        ),
-      ),
-    );
-  }
-
-  int? _findChildIndex(Key key) => _findIndexIn(_filteredNotes, key);
 
   int? _findIndexIn(List<Note> notes, Key key) {
     if (key is! ValueKey<int>) return null;

@@ -1,4 +1,4 @@
-﻿// Copyright � 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui' as ui;
 
@@ -73,18 +73,27 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late ui.TextDirection _contentDirection;
   List<ChecklistItem> _checklistItems = const [];
   final _loadingNotifier = ValueNotifier<bool>(false);
-  static final _rtlRegex = RegExp(
-    r'[\u0600-\u06FF\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
-  );
 
+  /// أول حرف ذي اتجاه يحدد اتجاه النص. نقارن مدى الأكواد مباشرة بدل بناء
+  /// `RegExp` لكل حرف — البطاقة تُبنى مئات المرات أثناء التمرير.
   static ui.TextDirection _detectDirection(String text) {
-    if (text.isEmpty) return ui.TextDirection.rtl;
-    for (final char in text.runes) {
-      final c = String.fromCharCode(char);
-      if (_rtlRegex.hasMatch(c)) return ui.TextDirection.rtl;
-      if (RegExp(r'[a-zA-Z]').hasMatch(c)) return ui.TextDirection.ltr;
+    for (final code in text.runes) {
+      if (_isRtlCode(code)) return ui.TextDirection.rtl;
+      if (_isLatinCode(code)) return ui.TextDirection.ltr;
     }
     return ui.TextDirection.rtl;
+  }
+
+  static bool _isRtlCode(int code) {
+    return (code >= 0x0590 && code <= 0x05FF) || // عبري
+        (code >= 0x0600 && code <= 0x06FF) || // عربي
+        (code >= 0x07C0 && code <= 0x07FF) || // نكو
+        (code >= 0xFB1D && code <= 0xFDFF) || // أشكال تقديمية أ
+        (code >= 0xFE70 && code <= 0xFEFF); // أشكال تقديمية ب
+  }
+
+  static bool _isLatinCode(int code) {
+    return (code >= 0x41 && code <= 0x5A) || (code >= 0x61 && code <= 0x7A);
   }
 
   @override
@@ -329,8 +338,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 8),
-                                              // �� ���� ������ (source == 'locked') �������� ����� ������
-                                              // ? ���� ������� ������ ����� �� "����� ����"
+                                              // في شاشة المقفلة يكون المحتوى
+                                              // مفكوك التشفير، فتُعرض معاينته.
+                                              // خارجها لا يُقرأ المحتوى أبداً.
                                               (widget.note.isLocked &&
                                                       widget.source != 'locked')
                                                   ? Text(
@@ -428,7 +438,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                         const SizedBox(width: 4),
                                         Flexible(
                                           child: Text(
-                                            '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} � ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
+                                            '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} • ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: badgeColor,
@@ -570,7 +580,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           ),
                         ),
                       ),
-                    // loading indicator ���� �� ������� ����� pre-build Quill
+                    // مؤشر انتظار أثناء تهيئة المحرر قبل فتح الملاحظة
                     ValueListenableBuilder<bool>(
                       valueListenable: _loadingNotifier,
                       builder: (_, loading, __) => loading
