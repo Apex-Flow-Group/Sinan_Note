@@ -94,7 +94,7 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
             ),
           ],
         ),
-        clipBehavior: Clip.hardEdge,
+        clipBehavior: Clip.antiAlias,
         child: widget.child,
       );
       return container;
@@ -123,7 +123,7 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
                 ),
               ],
             ),
-            clipBehavior: Clip.hardEdge,
+            clipBehavior: Clip.antiAlias,
             child: widget.child,
           );
         },

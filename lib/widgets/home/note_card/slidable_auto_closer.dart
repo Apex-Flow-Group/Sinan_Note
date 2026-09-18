@@ -31,10 +31,11 @@ class _SlidableAutoCloserState extends State<SlidableAutoCloser> {
   }
 
   void _onGlobalTouch() {
-    final slidableController = Slidable.of(context);
-    if (slidableController != null) {
-      slidableController.close();
-    }
+    final controller = Slidable.of(context);
+    // كل لمسة تصل لكل بطاقة مرئية. إغلاق المغلق أصلاً يشغّل أنيميشن 200ms
+    // في كل بطاقة عند بداية كل سحبة تمرير.
+    if (controller == null || controller.ratio == 0) return;
+    controller.close();
   }
 
   @override

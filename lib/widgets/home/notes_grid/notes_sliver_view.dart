@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show bottomNavHiddenNotifier;
 import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/widgets/home/notes_grid/height_recorder.dart';
@@ -42,7 +41,6 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   final Map<int, int> _indexInUnpinned = {};
   String _viewTypeName = 'listCompact';
   bool _hasMore = false;
-  bool _isNavHidden = false;
   bool _isFiltering = false;
 
   int _getCrossAxisCount(BuildContext context) {
@@ -66,13 +64,11 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     _setNotes(widget.filteredNotesNotifier.value);
     _viewTypeName = widget.viewTypeNotifier.value;
     _hasMore = widget.hasMoreNotifier.value;
-    _isNavHidden = bottomNavHiddenNotifier.value;
     _isFiltering = widget.isFilteringNotifier.value;
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
     widget.viewTypeNotifier.addListener(_onViewTypeChanged);
     widget.hasMoreNotifier.addListener(_onHasMoreChanged);
     widget.isFilteringNotifier.addListener(_onFilteringChanged);
-    bottomNavHiddenNotifier.addListener(_onNavHiddenChanged);
   }
 
   @override
@@ -81,16 +77,15 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     widget.viewTypeNotifier.removeListener(_onViewTypeChanged);
     widget.hasMoreNotifier.removeListener(_onHasMoreChanged);
     widget.isFilteringNotifier.removeListener(_onFilteringChanged);
-    bottomNavHiddenNotifier.removeListener(_onNavHiddenChanged);
     super.dispose();
   }
 
-  void _onNavHiddenChanged() =>
-      setState(() => _isNavHidden = bottomNavHiddenNotifier.value);
   void _onFilteringChanged() =>
       setState(() => _isFiltering = widget.isFilteringNotifier.value);
+
   void _onHasMoreChanged() =>
       setState(() => _hasMore = widget.hasMoreNotifier.value);
+
   void _onNotesChanged() =>
       setState(() => _setNotes(widget.filteredNotesNotifier.value));
 
@@ -149,9 +144,13 @@ class _NotesSliverViewState extends State<NotesSliverView> {
       );
     }
 
-    final navBarHeight = _isNavHidden ? 0.0 : kBottomNavigationBarHeight;
-    final bottomPadding =
-        MediaQuery.of(context).padding.bottom + navBarHeight + 16 + 56 + 8;
+    // مساحة شريط التنقل محجوزة دائماً: ربطها بحالة الإخفاء كان يعيد بناء
+    // الشبكة كلها وسط الفلينغ من أجل هامش سفلي — إطار واحد بـ 74ms.
+    final bottomPadding = MediaQuery.of(context).padding.bottom +
+        kBottomNavigationBarHeight +
+        16 +
+        56 +
+        8;
 
     return SliverMainAxisGroup(slivers: _buildNoteSlivers(bottomPadding));
   }

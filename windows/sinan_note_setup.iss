@@ -5,9 +5,10 @@
 #define AppPublisher "Apex Flow Group"
 #define AppURL "https://sinanai.net"
 #define AppExeName "sinan_note.exe"
-#define ProjectDir "C:\Users\aljaw\Documents\GitHub\Sinan_Note_G"
+#define ProjectDir "C:\Users\aljaw\Documents\GitHub\Sinan_Note"
 #define SourceDir ProjectDir + "\build\windows\x64\runner\Release"
-#define AppVersion GetVersionNumbersString(SourceDir + "\" + AppExeName)
+#define RawVersion GetVersionNumbersString(SourceDir + "\" + AppExeName)
+#define AppVersion (RawVersion == "") ? "1.0.0.0" : RawVersion
 
 [Setup]
 AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
