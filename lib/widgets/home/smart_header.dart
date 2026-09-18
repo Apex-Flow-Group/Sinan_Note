@@ -91,8 +91,9 @@ class _SmartHeaderState extends State<SmartHeader>
                       final count = ids.length;
                       final notesToRestore = <Note>[];
                       for (final id in ids) {
-                        final note =
-                            provider.notes.firstWhere((n) => n.id == id);
+                        // قد تُحذف ملاحظة مختارة بمزامنة أثناء الحلقة
+                        final note = provider.stateService.getNoteById(id);
+                        if (note == null) continue;
                         notesToRestore.add(note);
                         final updatedNote = note.copyWith(
                           isPinned: !note.isPinned,
@@ -164,8 +165,9 @@ class _SmartHeaderState extends State<SmartHeader>
                             final provider = Provider.of<NotesProvider>(context,
                                 listen: false);
                             final noteId = selectedIds.first;
-                            final note = provider.notes
-                                .firstWhere((n) => n.id == noteId);
+                            final note =
+                                provider.stateService.getNoteById(noteId);
+                            if (note == null) return;
                             widget.selectedNoteIdsNotifier.value = {};
                             final plainContent = NoteCardUtils.fixNoteContent(
                                 note.content,
@@ -191,7 +193,8 @@ class _SmartHeaderState extends State<SmartHeader>
                       final ids = List<int>.from(selectedIds);
                       final isSingle = ids.length == 1;
                       final firstNote =
-                          provider.notes.firstWhere((n) => n.id == ids.first);
+                          provider.stateService.getNoteById(ids.first);
+                      if (firstNote == null) return;
                       final result = await CategoryPickerSheet.show(
                         context,
                         isSingle ? firstNote.categoryIds : [],
@@ -203,8 +206,9 @@ class _SmartHeaderState extends State<SmartHeader>
                           (result['categoryIds'] as List).cast<int>();
                       final newHidden = result['isHiddenFromHome'] as bool;
                       for (final id in ids) {
-                        final note =
-                            provider.notes.firstWhere((n) => n.id == id);
+                        // الحوار أعلاه انتظر المستخدم — القائمة قد تكون تغيّرت
+                        final note = provider.stateService.getNoteById(id);
+                        if (note == null) continue;
                         final merged = isSingle
                             ? newCatIds
                             : {...note.categoryIds, ...newCatIds}.toList();

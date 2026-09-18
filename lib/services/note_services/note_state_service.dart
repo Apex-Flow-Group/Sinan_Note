@@ -21,6 +21,7 @@ class NoteStateService {
   List<Note>? _cachedArchivedNotes;
   List<Note>? _cachedTrashedNotes;
   List<Note>? _cachedReminderNotes;
+  Map<int, Note>? _notesById;
   bool _cacheInvalidated = true;
 
   bool get isInitialDataLoaded => _isInitialDataLoaded;
@@ -80,9 +81,9 @@ class NoteStateService {
   }
 
   void updateNote(Note note) {
-    final index = _allNotes.indexWhere((n) => n.id == note.id);
-    if (index != -1) {
-      _allNotes[index] = note;
+    final existing = getNoteById(note.id ?? -1);
+    if (existing != null) {
+      _allNotes[_allNotes.indexOf(existing)] = note;
     } else {
       _allNotes.add(note);
     }
@@ -92,12 +93,16 @@ class NoteStateService {
     _silentSync();
   }
 
+  /// بحث بالمعرّف عبر فهرس — لا مسح للقائمة ولا استثناء يُلتقط.
+  ///
+  /// الفهرس يُبنى مرة ويُبطَل مع باقي الذاكرة المؤقتة، فأي تعديل على
+  /// [_allNotes] يجب أن يمر بـ [_invalidateCache].
   Note? getNoteById(int id) {
-    try {
-      return _allNotes.firstWhere((n) => n.id == id);
-    } catch (_) {
-      return null;
-    }
+    final index = _notesById ??= {
+      for (final note in _allNotes)
+        if (note.id != null) note.id!: note,
+    };
+    return index[id];
   }
 
   void addNote(Note note) {
@@ -185,6 +190,7 @@ class NoteStateService {
     _cachedArchivedNotes = null;
     _cachedTrashedNotes = null;
     _cachedReminderNotes = null;
+    _notesById = null;
   }
 
   /// 🔄 Silent background sync with debouncing

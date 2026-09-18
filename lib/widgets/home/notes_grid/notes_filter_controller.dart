@@ -119,26 +119,25 @@ class NotesFilterController extends ChangeNotifier {
       return;
     }
 
-    bool anyUpdated = false;
-    for (int i = 0; i < _allFiltered.length; i++) {
-      final updated = newNotes.firstWhere(
-        (n) => n.id == _allFiltered[i].id,
-        orElse: () => _allFiltered[i],
-      );
-      if (updated.updatedAt != _allFiltered[i].updatedAt ||
-          updated.colorIndex != _allFiltered[i].colorIndex) {
+    // فهرس واحد بدل مسح القائمة لكل عنصر — الإشعار يصل مع كل تعديل ومزامنة
+    final incoming = <int?, Note>{for (final note in newNotes) note.id: note};
+
+    var anyUpdated = false;
+    for (var i = 0; i < _allFiltered.length; i++) {
+      final current = _allFiltered[i];
+      final updated = incoming[current.id];
+      if (updated == null) continue;
+      if (updated.updatedAt != current.updatedAt ||
+          updated.colorIndex != current.colorIndex) {
         _allFiltered[i] = updated;
         anyUpdated = true;
       }
     }
-    // Also update _sourceNotes to reflect latest note data
-    for (int i = 0; i < _sourceNotes.length; i++) {
-      final updated = newNotes.firstWhere(
-        (n) => n.id == _sourceNotes[i].id,
-        orElse: () => _sourceNotes[i],
-      );
-      _sourceNotes[i] = updated;
+    for (var i = 0; i < _sourceNotes.length; i++) {
+      final updated = incoming[_sourceNotes[i].id];
+      if (updated != null) _sourceNotes[i] = updated;
     }
+
     if (anyUpdated) {
       filteredNotesNotifier.value =
           List.of(_allFiltered.sublist(0, _visibleCount));
@@ -153,6 +152,10 @@ class NotesFilterController extends ChangeNotifier {
     _sourceNotes = List.of(notes);
     _syncFilteredNotes(_sourceNotes, force: true);
   }
+
+  /// يحاكي وصول إشعار من [NotesProvider] بقائمة محدّثة.
+  @visibleForTesting
+  void applyProviderNotes(List<Note> notes) => _onProviderChanged(notes);
 
   void _onSearchChanged() {
     final query = searchController.text;

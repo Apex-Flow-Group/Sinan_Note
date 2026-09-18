@@ -118,6 +118,42 @@ void main() {
     });
   });
 
+  group('provider updates', () {
+    test('an edited note is swapped in place without refiltering', () {
+      final before = [
+        note(id: 1, title: 'One', content: 'a'),
+        note(id: 2, title: 'Two', content: 'b'),
+      ];
+      controller.filterFor(before);
+
+      final edited = Note(
+        id: 2,
+        title: 'Two',
+        content: 'b',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 6, 1),
+        colorIndex: 3,
+      );
+      controller.applyProviderNotes([before.first, edited]);
+
+      final visible = controller.filteredNotesNotifier.value;
+      expect(visible.map((n) => n.id), [1, 2]);
+      expect(visible.last.colorIndex, 3);
+    });
+
+    test('a note missing from the provider is dropped', () {
+      final before = [
+        note(id: 1, title: 'One'),
+        note(id: 2, title: 'Two'),
+      ];
+      controller.filterFor(before);
+
+      controller.applyProviderNotes([before.first]);
+
+      expect(controller.filteredNotesNotifier.value.map((n) => n.id), [1]);
+    });
+  });
+
   group('pinned filter', () {
     test('keeps only pinned notes', () {
       final notes = [

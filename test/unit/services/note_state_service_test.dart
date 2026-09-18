@@ -21,6 +21,57 @@ void main() {
   tearDown(() => service.dispose());
 
   // ══════════════════════════════════════════════════════════════
+  // 0. البحث بالمعرّف — الفهرس لا يعطي نتيجة قديمة
+  // ══════════════════════════════════════════════════════════════
+  group('NoteStateService — getNoteById', () {
+    Note make(int id, String title) => Note(
+          id: id,
+          title: title,
+          content: '',
+          createdAt: now,
+          updatedAt: now,
+        );
+
+    test('يجد الموجود ويعيد null لغير الموجود', () {
+      service.updateAllNotes([make(1, 'One'), make(2, 'Two')]);
+
+      expect(service.getNoteById(1)?.title, 'One');
+      expect(service.getNoteById(2)?.title, 'Two');
+      expect(service.getNoteById(99), isNull);
+    });
+
+    test('يرى الإضافة والتعديل والحذف بعد بناء الفهرس', () {
+      service.updateAllNotes([make(1, 'One')]);
+      expect(service.getNoteById(1)?.title, 'One');
+
+      service.addNote(make(2, 'Two'));
+      expect(service.getNoteById(2)?.title, 'Two');
+
+      service.updateNote(make(1, 'Renamed'));
+      expect(service.getNoteById(1)?.title, 'Renamed');
+
+      service.removeNote(1);
+      expect(service.getNoteById(1), isNull);
+      expect(service.getNoteById(2)?.title, 'Two');
+    });
+
+    test('يرى نتيجة batchUpdateNotes', () {
+      service.updateAllNotes([make(1, 'One'), make(2, 'Two')]);
+      service.batchUpdateNotes([2], (n) => n.copyWith(title: 'Batched'));
+
+      expect(service.getNoteById(2)?.title, 'Batched');
+      expect(service.getNoteById(1)?.title, 'One');
+    });
+
+    test('updateNote لا يكرّر ملاحظة موجودة', () {
+      service.updateAllNotes([make(1, 'One')]);
+      service.updateNote(make(1, 'Again'));
+
+      expect(service.activeNotes.where((n) => n.id == 1).length, 1);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
   // 1. الفلترة الصحيحة
   // ══════════════════════════════════════════════════════════════
   group('NoteStateService — Filtering', () {

@@ -36,6 +36,10 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   List<Note> _filteredNotes = [];
   List<Note> _pinnedNotes = const [];
   List<Note> _unpinnedNotes = const [];
+
+  /// موضع كل ملاحظة داخل قسمها — يُبنى مع القائمة لا عند كل بحث عن بطاقة
+  final Map<int, int> _indexInFiltered = {};
+  final Map<int, int> _indexInUnpinned = {};
   String _viewTypeName = 'listCompact';
   bool _hasMore = false;
   bool _isNavHidden = false;
@@ -95,6 +99,16 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     _pinnedNotes = notes.where((note) => note.isPinned).toList(growable: false);
     _unpinnedNotes =
         notes.where((note) => !note.isPinned).toList(growable: false);
+    _reindex(_indexInFiltered, _filteredNotes);
+    _reindex(_indexInUnpinned, _unpinnedNotes);
+  }
+
+  static void _reindex(Map<int, int> target, List<Note> notes) {
+    target.clear();
+    for (var i = 0; i < notes.length; i++) {
+      final id = notes[i].id;
+      if (id != null) target[id] = i;
+    }
   }
 
   void _onViewTypeChanged() =>
@@ -145,7 +159,9 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   List<Widget> _buildNoteSlivers(double bottomPadding) {
     // عنوان واحد بلا مقابل لا يفصل شيئاً — نعرض الفواصل فقط عند وجود المجموعتين
     if (_pinnedNotes.isEmpty || _unpinnedNotes.isEmpty) {
-      return [_buildNotesSliver(_filteredNotes, bottomPadding)];
+      return [
+        _buildNotesSliver(_filteredNotes, _indexInFiltered, bottomPadding),
+      ];
     }
 
     final l10n = AppLocalizations.of(context);
@@ -154,12 +170,18 @@ class _NotesSliverViewState extends State<NotesSliverView> {
         l10n?.sectionPinned ?? 'Pinned',
         Icons.push_pin_rounded,
       ),
-      _buildNotesSliver(_pinnedNotes, 0, showLoader: false, lazy: false),
+      _buildNotesSliver(
+        _pinnedNotes,
+        const {},
+        0,
+        showLoader: false,
+        lazy: false,
+      ),
       _buildSectionLabel(
         l10n?.sectionOthers ?? 'Others',
         Icons.sticky_note_2_rounded,
       ),
-      _buildNotesSliver(_unpinnedNotes, bottomPadding),
+      _buildNotesSliver(_unpinnedNotes, _indexInUnpinned, bottomPadding),
     ];
   }
 
@@ -195,6 +217,7 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   /// الثانية تُجمّد التمرير قبل نهاية القائمة.
   Widget _buildNotesSliver(
     List<Note> notes,
+    Map<int, int> index,
     double bottomPadding, {
     bool showLoader = true,
     bool lazy = true,
@@ -260,7 +283,7 @@ class _NotesSliverViewState extends State<NotesSliverView> {
         delegate: SliverChildBuilderDelegate(
           (context, index) => builder(context, index, 'home_list'),
           childCount: childCount,
-          findChildIndexCallback: (key) => _findIndexIn(notes, key),
+          findChildIndexCallback: (key) => _findIndexIn(index, key),
           addAutomaticKeepAlives: false,
           addRepaintBoundaries: true,
         ),
@@ -268,10 +291,9 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     );
   }
 
-  int? _findIndexIn(List<Note> notes, Key key) {
+  static int? _findIndexIn(Map<int, int> index, Key key) {
     if (key is! ValueKey<int>) return null;
-    final index = notes.indexWhere((n) => n.id == key.value);
-    return index == -1 ? null : index;
+    return index[key.value];
   }
 
   Widget _buildCard(Note note, String source) {
