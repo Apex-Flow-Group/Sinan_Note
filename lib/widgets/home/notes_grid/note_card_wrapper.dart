@@ -85,6 +85,37 @@ class _NoteCardWrapperState extends State<NoteCardWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final card = NoteCardWidget(
+      key: ValueKey(widget.note.id),
+      note: widget.note,
+      viewType: widget.viewType,
+      closeAllSlidables: widget.closeAllSlidables,
+      isCurrentlyOpen: _isCurrentlyOpen,
+      onNoteChanged: () {},
+      isSelected: _isSelected,
+      selectionMode: _selectionMode,
+      source: widget.source,
+      isFiltering: widget.isFiltering,
+      onLongPress: () {
+        if (widget.selectedNoteIdsNotifier.value.isNotEmpty) return;
+        widget.selectedNoteIdsNotifier.value = {widget.note.id!};
+      },
+      onTap: () {
+        final current = widget.selectedNoteIdsNotifier.value;
+        if (current.isNotEmpty) {
+          final newSet = Set<int>.from(current);
+          newSet.contains(widget.note.id)
+              ? newSet.remove(widget.note.id)
+              : newSet.add(widget.note.id!);
+          widget.selectedNoteIdsNotifier.value = Set<int>.of(newSet);
+        }
+      },
+    );
+
+    // ── شبكة: البطاقة تأخذ الخلية كاملة من SliverGrid — لا حاجة للـ Row ──
+    if (widget.viewType == ViewType.grid) return card;
+
+    // ── قائمة: شريط تمييز جانبي يظهر حين تكون الملاحظة مفتوحة ─────────────
     return Padding(
       padding:
           _isCurrentlyOpen ? const EdgeInsets.only(left: 4) : EdgeInsets.zero,
@@ -100,34 +131,7 @@ class _NoteCardWrapperState extends State<NoteCardWrapper> {
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          Expanded(
-            child: NoteCardWidget(
-              key: ValueKey(widget.note.id),
-              note: widget.note,
-              viewType: widget.viewType,
-              closeAllSlidables: widget.closeAllSlidables,
-              isCurrentlyOpen: _isCurrentlyOpen,
-              onNoteChanged: () {},
-              isSelected: _isSelected,
-              selectionMode: _selectionMode,
-              source: widget.source,
-              isFiltering: widget.isFiltering,
-              onLongPress: () {
-                if (widget.selectedNoteIdsNotifier.value.isNotEmpty) return;
-                widget.selectedNoteIdsNotifier.value = {widget.note.id!};
-              },
-              onTap: () {
-                final current = widget.selectedNoteIdsNotifier.value;
-                if (current.isNotEmpty) {
-                  final newSet = Set<int>.from(current);
-                  newSet.contains(widget.note.id)
-                      ? newSet.remove(widget.note.id)
-                      : newSet.add(widget.note.id!);
-                  widget.selectedNoteIdsNotifier.value = Set<int>.of(newSet);
-                }
-              },
-            ),
-          ),
+          Expanded(child: card),
         ],
       ),
     );
