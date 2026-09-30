@@ -1,7 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
@@ -42,6 +42,12 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   String _viewTypeName = 'listCompact';
   bool _hasMore = false;
   bool _isFiltering = false;
+
+  // ── perf prints — debug only, zero cost in release ──────────────────────────
+  int _perfBuildCount = 0;
+  int _perfBuildTotalUs = 0;
+  static const int _kPerfLogEvery = 10;
+  // ────────────────────────────────────────────────────────────────────────────
 
   int _getCrossAxisCount(BuildContext context) {
     final mode = PlatformHelper.getDisplayMode(context);
@@ -211,9 +217,8 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     );
   }
 
-  /// [lazy] يجب أن يكون `false` لكل قسم ما عدا واحد:
-  /// `SliverMasonryGrid` لا يحتمل وجود نسختين كسولتين في نفس ScrollView —
-  /// الثانية تُجمّد التمرير قبل نهاية القائمة.
+  /// [lazy] يُتجاهل في وضع الشبكة بعد التحويل إلى SliverGrid ذات الحجم الثابت.
+  /// المعامل محفوظ لتوافق موقع الاستدعاء القائم.
   Widget _buildNotesSliver(
     List<Note> notes,
     Map<int, int> index,
@@ -236,35 +241,17 @@ class _NotesSliverViewState extends State<NotesSliverView> {
       return _buildCard(notes[index], source);
     }
 
-    if (_viewType == ViewType.grid && !lazy) {
-      return SliverPadding(
-        padding: padding,
-        sliver: SliverToBoxAdapter(
-          child: MasonryGridView.count(
-            crossAxisCount: _getCrossAxisCount(context),
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-            shrinkWrap: true,
-            primary: false,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            itemCount: childCount,
-            itemBuilder: (context, index) =>
-                builder(context, index, 'home_grid'),
-          ),
-        ),
-      );
-    }
-
+    // ── شبكة ذات حجم ثابت — لا قياس ارتفاع لكل خلية، layout pass واحدة ────
     if (_viewType == ViewType.grid) {
       return SliverPadding(
         padding: padding,
-        sliver: SliverMasonryGrid(
+        sliver: SliverGrid(
           key: ValueKey<int?>(notes.isEmpty ? null : notes.first.id),
-          mainAxisSpacing: 6,
-          crossAxisSpacing: 6,
-          gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: _getCrossAxisCount(context),
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            childAspectRatio: 0.85,
           ),
           delegate: SliverChildBuilderDelegate(
             (context, index) => builder(context, index, 'home_grid'),
@@ -296,6 +283,9 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   }
 
   Widget _buildCard(Note note, String source) {
+    // ── بداية التوقيت (debug فقط) ───────────────────────────────────────────
+    final Stopwatch? sw = kDebugMode ? (Stopwatch()..start()) : null;
+
     final wrapper = NoteCardWrapper(
       note: note,
       viewType: _viewType,
@@ -305,11 +295,28 @@ class _NotesSliverViewState extends State<NotesSliverView> {
       isFiltering: _isFiltering,
     );
 
-    return RepaintBoundary(
+    final result = RepaintBoundary(
       key: ValueKey<int>(note.id!),
       child: source == 'home_grid'
           ? wrapper
           : HeightRecorder(noteId: note.id!, child: wrapper),
     );
+
+    // ── نهاية التوقيت + طباعة كل _kPerfLogEvery بطاقة ──────────────────────
+    if (kDebugMode) {
+      sw!.stop();
+      _perfBuildCount++;
+      _perfBuildTotalUs += sw.elapsedMicroseconds;
+      if (_perfBuildCount % _kPerfLogEvery == 0) {
+        final avgUs = _perfBuildTotalUs ~/ _perfBuildCount;
+        debugPrint(
+          '[HOME GRID] builds=$_perfBuildCount '
+          'avg=$avgUsµs/card '
+          'total=${(_perfBuildTotalUs / 1000).toStringAsFixed(1)}ms',
+        );
+      }
+    }
+
+    return result;
   }
 }
