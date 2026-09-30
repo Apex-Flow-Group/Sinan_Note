@@ -298,7 +298,7 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     final result = RepaintBoundary(
       key: ValueKey<int>(note.id!),
       child: source == 'home_grid'
-          ? wrapper
+          ? SizedBox.expand(child: wrapper)
           : HeightRecorder(noteId: note.id!, child: wrapper),
     );
 
