@@ -2156,4 +2156,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comfortableFont => 'Comfortable font';
+
+  @override
+  String get signInRequiredTitle => 'Sign in Required';
+
+  @override
+  String get signInRequiredMessage =>
+      'Sign in to Google Drive to enable this setting.';
+
+  @override
+  String get goToSignIn => 'Go to Sign In';
 }

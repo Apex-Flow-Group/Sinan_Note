@@ -731,5 +731,11 @@
   "readingProgress": "Progress",
   "@readingProgress": {},
   "comfortableFont": "Comfortable font",
-  "@comfortableFont": {}
+  "@comfortableFont": {},
+  "signInRequiredTitle": "Sign in Required",
+  "@signInRequiredTitle": {},
+  "signInRequiredMessage": "Sign in to Google Drive to enable this setting.",
+  "@signInRequiredMessage": {},
+  "goToSignIn": "Go to Sign In",
+  "@goToSignIn": {}
 }

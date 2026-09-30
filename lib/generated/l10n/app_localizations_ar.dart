@@ -2146,4 +2146,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get comfortableFont => 'خط مريح';
+
+  @override
+  String get signInRequiredTitle => 'تسجيل الدخول مطلوب';
+
+  @override
+  String get signInRequiredMessage =>
+      'يجب تسجيل الدخول بقوقل لتفعيل هذا الإعداد.';
+
+  @override
+  String get goToSignIn => 'الذهاب لتسجيل الدخول';
 }

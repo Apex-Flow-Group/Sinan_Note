@@ -731,5 +731,11 @@
   "readingProgress": "التقدم",
   "@readingProgress": {},
   "comfortableFont": "خط مريح",
-  "@comfortableFont": {}
+  "@comfortableFont": {},
+  "signInRequiredTitle": "تسجيل الدخول مطلوب",
+  "@signInRequiredTitle": {},
+  "signInRequiredMessage": "يجب تسجيل الدخول بقوقل لتفعيل هذا الإعداد.",
+  "@signInRequiredMessage": {},
+  "goToSignIn": "الذهاب لتسجيل الدخول",
+  "@goToSignIn": {}
 }

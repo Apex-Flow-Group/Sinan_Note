@@ -4243,6 +4243,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Comfortable font'**
   String get comfortableFont;
+
+  /// No description provided for @signInRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in Required'**
+  String get signInRequiredTitle;
+
+  /// No description provided for @signInRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Google Drive to enable this setting.'**
+  String get signInRequiredMessage;
+
+  /// No description provided for @goToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Sign In'**
+  String get goToSignIn;
 }
 
 class _AppLocalizationsDelegate
