@@ -12,16 +12,21 @@ import 'package:flutter/widgets.dart';
 /// المدة ثابتة والمسافة تتبع سرعة الإفلات: سحبة قوية تقطع أكثر من سحبة خفيفة
 /// خلال نفس زمن التباطؤ.
 ///
-/// المحاكاة لا تعرف حدود القائمة ولا تقترب منها؛ التوقف عند آخر عنصر مسؤولية
-/// [CoastScrollPhysics.applyBoundaryConditions] التي تقرأ الحد الحقيقي كل إطار.
+/// المحاكاة لا تعرف آخر عنصر؛ التوقف عنده مسؤولية
+/// [CoastScrollPhysics.applyBoundaryConditions].
+/// انزلاق نحو القمة يقف عند [CoastFlingSimulation.ceiling] ولا يدخل مساحة السحب.
 class CoastFlingSimulation extends Simulation {
   CoastFlingSimulation({
     required double position,
     required double velocity,
     super.tolerance,
+    this.ceiling,
   })  : assert(velocity != 0),
         _start = position,
         _velocity = velocity;
+
+  /// حد القمة. الانزلاق يتمطّط قليلاً بعده ثم يتوقف ليرجع النابض.
+  final double? ceiling;
 
   final double _start;
   final double _velocity;
@@ -37,9 +42,27 @@ class CoastFlingSimulation extends Simulation {
 
   double _t(double time) => (time / _duration).clamp(0.0, 1.0);
 
+  double _raw(double time) {
+    return _start + reach * (1.0 - math.pow(1.0 - _t(time), _curve));
+  }
+
+  bool _hitCeiling(double time) {
+    final ceiling = this.ceiling;
+    return ceiling != null && _velocity < 0 && _raw(time) <= ceiling;
+  }
+
+  /// تمطيط قصير فوق القمة، لا فجوة سحب.
+  double _stretch(double time) {
+    final past = ceiling! - _raw(time);
+    const limit = CoastScrollPhysics.edgeStretch;
+    return limit * (1.0 - math.exp(-past / limit));
+  }
+
   @override
   double x(double time) {
-    return _start + reach * (1.0 - math.pow(1.0 - _t(time), _curve));
+    final raw = _raw(time);
+    if (!_hitCeiling(time)) return raw;
+    return ceiling! - _stretch(time);
   }
 
   @override
@@ -49,7 +72,13 @@ class CoastFlingSimulation extends Simulation {
   }
 
   @override
-  bool isDone(double time) => time >= _duration;
+  bool isDone(double time) {
+    if (time >= _duration) return true;
+    if (!_hitCeiling(time)) return false;
+    if (_stretch(time) >= CoastScrollPhysics.edgeStretch * 0.92) return true;
+    final speed = _velocity * math.pow(1.0 - _t(time), _curve - 1.0);
+    return speed.abs() < 350;
+  }
 }
 
 /// فيزياء تمرير القوائم والشبكات.
@@ -74,6 +103,9 @@ class CoastScrollPhysics extends ScrollPhysics {
 
   /// مسافة سحب تكفي لظهور مؤشر التحديث فوق القائمة.
   static const double refreshPullExtent = 120;
+
+  /// تمطيط الانزلاق عند القمة. أصغر من عتبة التحديث حتى لا يفتح فجوة.
+  static const double edgeStretch = 28;
 
   /// مقاومة السحب عند أول بكسل فوق القمة — أصغر يعني شداً أثقل.
   static const double _pullResistance = 0.52;
@@ -125,12 +157,12 @@ class CoastScrollPhysics extends ScrollPhysics {
     return total + remaining;
   }
 
-  /// يمتص التجاوز عند آخر عنصر، وفوق القمة يسمح بـ [pullExtent] فقط.
+  /// الطرفان سواء: التجاوز يُمتص فيُطلق تمطيط الحافة، ولا تُزاح القائمة فتفتح فجوة.
   @override
   double applyBoundaryConditions(ScrollMetrics position, double value) {
     final pixels = position.pixels;
     final max = position.maxScrollExtent;
-    final min = position.minScrollExtent - pullExtent;
+    final min = position.minScrollExtent;
 
     if (pixels >= max && value > pixels) return value - pixels;
     if (pixels < max && value > max) return value - max;
@@ -149,11 +181,15 @@ class CoastScrollPhysics extends ScrollPhysics {
 
     final settle = _settleTarget(position);
     if (settle != null) {
+      // سرعة متجهة خارج القائمة تصطدم بالحد وتُبقي الفجوة. نُسقطها
+      // فيرجع النابض بسلاسة نحو الحد دون غوص إضافي.
+      final outward = (settle - position.pixels).sign;
+      final settleSpeed = speed.sign == outward || speed == 0 ? speed : 0.0;
       return ScrollSpringSimulation(
         spring,
         position.pixels,
         settle,
-        speed,
+        settleSpeed,
         tolerance: tolerance,
       );
     }

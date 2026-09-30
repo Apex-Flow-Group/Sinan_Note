@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
@@ -28,7 +27,6 @@ class GoogleDriveScreen extends StatefulWidget {
 class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   bool _isLoading = false;
   bool _autoSync = false;
-  bool _pullToRefresh = false;
 
   @override
   void initState() {
@@ -45,10 +43,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   Future<void> _loadAutoSyncSetting() async {
     await CloudSyncGateway.loadAutoSyncState();
     if (!mounted) return;
-    final prefs = await SharedPreferences.getInstance();
     setState(() {
       _autoSync = CloudSyncGateway.autoSyncEnabled.value;
-      _pullToRefresh = prefs.getBool('google_drive_pull_to_refresh') ?? false;
     });
   }
 
@@ -59,13 +55,6 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     if (value && CloudSyncGateway.isSignedIn) {
       await _handleSync();
     }
-  }
-
-  Future<void> _savePullToRefreshSetting(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('google_drive_pull_to_refresh', value);
-    if (!mounted) return;
-    setState(() => _pullToRefresh = value);
   }
 
   Future<void> _handleSignOut() async {
@@ -174,15 +163,6 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     );
   }
 
-  Future<void> _handleRefresh() async {
-    await _restoreSignInState();
-    if (mounted && CloudSyncGateway.isSignedIn) {
-      setState(() => _isLoading = true);
-      await GoogleDriveHandlers.handleSync(context);
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   Widget _buildMobileLayout(
     BuildContext context,
     AppLocalizations l10n,
@@ -191,12 +171,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     String? userEmail,
     String lastSyncTimeStr,
   ) {
-    return RefreshIndicator(
-      onRefresh: _pullToRefresh ? _handleRefresh : () async {},
-      semanticsLabel: l10n.pullToRefresh,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 80),
-        children: [
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 80),
+      children: [
           // Account Section with New Sync Button
           _buildAccountSectionWithNewSync(
               context, l10n, isDark, isSignedIn, userEmail),
@@ -207,12 +184,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
               isSignedIn, _handleUpload, _handleDownload, _handleMerge),
           const SizedBox(height: 24),
-          GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
-              _autoSync, isSignedIn, _saveAutoSyncSetting,
-              pullToRefresh: _pullToRefresh,
-              onPullToRefreshChanged: _savePullToRefreshSetting),
+          GoogleDriveWidgets.buildAutoSyncSection(
+              context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
         ],
-      ),
     );
   }
 
@@ -409,9 +383,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
             padding: const EdgeInsets.all(24),
             children: [
               GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
-                  _autoSync, isSignedIn, _saveAutoSyncSetting,
-                  pullToRefresh: _pullToRefresh,
-                  onPullToRefreshChanged: _savePullToRefreshSetting),
+                  _autoSync, isSignedIn, _saveAutoSyncSetting),
             ],
           ),
         _ => const SizedBox(),

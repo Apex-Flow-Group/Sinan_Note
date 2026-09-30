@@ -70,17 +70,15 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   TickerProvider get vsync => tickerProvider;
 
+  /// لا نستخدم سناب الإطار: عند التوقف في أعلى القائمة كان يطلق انيميشن
+  /// يوسّع الشريط ويفتح فجوة فوق الملاحظات. التثبيت يتم في [_handleScrollEnd]
+  /// وفقط إذا لم نكن أصلاً عند القمة.
   @override
-  FloatingHeaderSnapConfiguration? get snapConfiguration => hideOnScroll
-      ? FloatingHeaderSnapConfiguration(
-          curve: Curves.easeOut,
-          duration: const Duration(milliseconds: 200),
-        )
-      : null;
+  FloatingHeaderSnapConfiguration? get snapConfiguration => null;
 
   @override
-  PersistentHeaderShowOnScreenConfiguration get showOnScreenConfiguration =>
-      const PersistentHeaderShowOnScreenConfiguration();
+  PersistentHeaderShowOnScreenConfiguration? get showOnScreenConfiguration =>
+      null;
 
   @override
   bool shouldRebuild(covariant SmoothSearchHeaderDelegate oldDelegate) {

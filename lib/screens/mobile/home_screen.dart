@@ -5,7 +5,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
@@ -22,6 +21,7 @@ import 'package:sinan_note/services/sync/sync_transport.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;
+import 'package:sinan_note/widgets/home/date_indicator/sync_progress_bar.dart';
 import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
@@ -53,7 +53,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -70,6 +71,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _pullReturn = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    )..addListener(() {
+        _pullDistanceNotifier.value = _returnFrom * (1 - _pullReturn.value);
+      });
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     _viewType = _parseViewType(settings.viewType);
     _viewTypeNotifier = ValueNotifier(_viewType.name);
@@ -87,8 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     });
-    _scrollController.addListener(_onScrollChanged);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.sharedText != null) {
         final l10n = AppLocalizations.of(context)!;
@@ -172,14 +177,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final ValueNotifier<bool> _isPullingNotifier = ValueNotifier(false);
   final ValueNotifier<double> _pullDistanceNotifier = ValueNotifier(0.0);
-  static const double _pullThreshold = 80.0;
+  late final AnimationController _pullReturn;
+  double _returnFrom = 0;
+  static const double _pullThreshold = SyncProgressBar.pullThreshold;
   bool _pullTriggered =
       false; // Flag: pull reached threshold, waiting for release
+  /// الإصبع سحب فوق القمة فعلاً. انزلاق قادم من أسفل القائمة لا يُسلح المزامنة.
+  bool _explicitPull = false;
+
+  /// التحديث انطلق عند الإفلات. رجوع القائمة للأعلى لا يعيد إطلاقه.
+  bool _refreshInFlight = false;
   final ValueNotifier<bool> _isRefreshingNotifier = ValueNotifier(false);
 
   void _resetPullState() {
     _isRefreshingNotifier.value = false;
     _pullTriggered = false;
+    _explicitPull = false;
+    _refreshInFlight = false;
     _pullDistanceNotifier.value = 0;
     _isPullingNotifier.value = false;
   }
@@ -188,7 +202,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final mode = settings.pullToRefreshMode;
 
-    if (mode == 'disabled') return;
+    if (mode == 'disabled') {
+      _refreshInFlight = false;
+      return;
+    }
 
     // حفظ كل قراءات context قبل أي await
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
@@ -196,55 +213,42 @@ class _HomeScreenState extends State<HomeScreen> {
     final categoriesProvider =
         Provider.of<CategoriesProvider>(context, listen: false);
 
-    // فحص الإنترنت أولاً — قبل إظهار الشريط
-    if (mode == 'full') {
-      final hasInternet = await SyncTransport.hasInternet();
-      if (!hasInternet) {
-        _resetPullState();
-        if (mounted) {
-          UnifiedNotificationService().showWithAction(
-            context: context,
-            message:
-                isAr ? 'لا يوجد اتصال بالإنترنت' : 'No internet connection',
-            actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
-            onAction: _onRefresh,
-            type: NotificationType.error,
-            duration: const Duration(seconds: 5),
-          );
-        }
-        return;
-      }
-    }
-
-    // الإنترنت متاح — ابدأ الشريط الآن
     _isRefreshingNotifier.value = true;
+    _pullDistanceNotifier.value = 0;
     final minDuration = Future.delayed(const Duration(milliseconds: 1500));
 
     try {
       if (mode == 'full') {
-        final pullToSyncEnabled = (await SharedPreferences.getInstance())
-                .getBool('google_drive_pull_to_refresh') ??
-            false;
-        if (CloudSyncGateway.isSignedIn &&
-            CloudSyncGateway.autoSyncEnabled.value &&
-            pullToSyncEnabled) {
+        final hasInternet = await SyncTransport.hasInternet();
+        if (!hasInternet) {
+          _resetPullState();
+          if (mounted) {
+            UnifiedNotificationService().showWithAction(
+              context: context,
+              message:
+                  isAr ? 'لا يوجد اتصال بالإنترنت' : 'No internet connection',
+              actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
+              onAction: _onRefresh,
+              type: NotificationType.error,
+              duration: const Duration(seconds: 5),
+            );
+          }
+          return;
+        }
+        if (CloudSyncGateway.isSignedIn) {
           await CloudSyncGateway.smartSync()
               .timeout(const Duration(seconds: 30));
           while (CloudSyncGateway.isSyncing.value) {
             await Future.delayed(const Duration(milliseconds: 200));
           }
         }
-
-        await notesProvider.refreshAllNotes(force: true);
-        await categoriesProvider.refreshCategories();
-
         _searchController.clear();
         _activeFilterNotifier.value = null;
         if (mounted) setState(() => _isSearchActive = false);
-      } else {
-        await notesProvider.refreshAllNotes(force: true);
-        await categoriesProvider.refreshCategories();
       }
+
+      await notesProvider.refreshAllNotes(force: true);
+      await categoriesProvider.refreshCategories();
     } on TimeoutException {
       if (mounted) {
         final isAr = Localizations.localeOf(context).languageCode == 'ar';
@@ -263,39 +267,50 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onScrollChanged() {
-    if (!_scrollController.hasClients) return;
-    // Don't show pull indicator when pull-to-refresh is disabled
+  double _dragOverscroll = 0;
+
+  void _easePullClosed() {
+    _returnFrom = _pullDistanceNotifier.value;
+    if (_returnFrom <= 0) return;
+    _pullReturn.forward(from: 0);
+  }
+
+  void _unwindPull(ScrollUpdateNotification notification) {
+    if (_refreshInFlight || notification.dragDetails == null) return;
+    if (_dragOverscroll <= 0) return;
+    final delta = notification.scrollDelta ?? 0;
+    if (delta <= 0) return;
+    if (_pullReturn.isAnimating) _pullReturn.stop();
+    _dragOverscroll = (_dragOverscroll - delta).clamp(0.0, double.infinity);
+    _pullDistanceNotifier.value = _dragOverscroll;
+    if (_dragOverscroll < _pullThreshold) {
+      _pullTriggered = false;
+      _isPullingNotifier.value = false;
+    }
+  }
+
+  void _onLeadingOverscroll(OverscrollNotification notification) {
+    if (_refreshInFlight || notification.dragDetails == null) return;
+    if (notification.overscroll >= 0) return;
     final mode =
         Provider.of<SettingsProvider>(context, listen: false).pullToRefreshMode;
     if (mode == 'disabled') return;
 
-    final offset = _scrollController.offset;
-    if (offset < 0) {
-      // If pull already triggered, stop updating distance (refreshing bar takes over)
-      if (_pullTriggered) return;
-
-      final distance = offset.abs();
-      _pullDistanceNotifier.value = distance;
-      if (distance >= _pullThreshold) {
-        if (!_isPullingNotifier.value) {
-          _isPullingNotifier.value = true;
-          _pullTriggered = true;
-        }
-      } else {
-        if (_isPullingNotifier.value) _isPullingNotifier.value = false;
-      }
+    if (_pullReturn.isAnimating) _pullReturn.stop();
+    _explicitPull = true;
+    _dragOverscroll += notification.overscroll.abs();
+    _pullDistanceNotifier.value = _dragOverscroll;
+    if (_dragOverscroll >= _pullThreshold) {
+      _isPullingNotifier.value = true;
+      _pullTriggered = true;
     } else {
-      if (!_pullTriggered) {
-        if (_pullDistanceNotifier.value != 0) _pullDistanceNotifier.value = 0;
-      }
-      if (_isPullingNotifier.value) _isPullingNotifier.value = false;
+      _isPullingNotifier.value = false;
     }
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScrollChanged);
+    _pullReturn.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     _scrollController.dispose();
@@ -367,13 +382,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         .copyWith(scrollbars: false),
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (notification) {
+                        if (notification is OverscrollNotification) {
+                          _onLeadingOverscroll(notification);
+                        }
+                        if (notification is ScrollUpdateNotification) {
+                          _unwindPull(notification);
+                        }
                         if (notification is ScrollEndNotification) {
+                          _dragOverscroll = 0;
                           _handleScrollEnd();
-                          if (_pullTriggered) {
-                            _pullTriggered = false;
-                            _isPullingNotifier.value = false;
+                          final explicit = _explicitPull;
+                          final triggered = _pullTriggered;
+                          _explicitPull = false;
+                          _pullTriggered = false;
+                          _isPullingNotifier.value = false;
+                          if (triggered && explicit && !_refreshInFlight) {
+                            _pullReturn.stop();
                             _pullDistanceNotifier.value = 0;
+                            _refreshInFlight = true;
                             _onRefresh();
+                          } else {
+                            _easePullClosed();
                           }
                         }
                         return false;
@@ -468,24 +497,22 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isScrollSnapping = false;
 
   void _handleScrollEnd() {
-    if (_isSearchActive) return;
-    if (_isScrollSnapping) return;
+    if (_isSearchActive || _isScrollSnapping) return;
     if (!_scrollController.hasClients) return;
     if (!Provider.of<SettingsProvider>(context, listen: false)
         .hideSearchOnScroll) {
       return;
     }
     final offset = _scrollController.offset;
-    if (offset > 0 && offset < _headerHeight) {
-      _isScrollSnapping = true;
-      final snapTo = offset < _headerHeight / 2 ? 0.0 : _headerHeight;
-      _scrollController
-          .animateTo(
-            snapTo,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          )
-          .then((_) => _isScrollSnapping = false);
-    }
+    if (offset <= 0 || offset >= _headerHeight) return;
+    _isScrollSnapping = true;
+    final snapTo = offset < _headerHeight / 2 ? 0.0 : _headerHeight;
+    _scrollController
+        .animateTo(
+          snapTo,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        )
+        .then((_) => _isScrollSnapping = false);
   }
 }

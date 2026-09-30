@@ -10,7 +10,10 @@ class SyncProgressBar extends StatelessWidget {
   final ValueNotifier<double>? pullDistanceNotifier;
   final ValueNotifier<bool>? isRefreshingNotifier;
 
-  static const double _threshold = 80.0;
+  /// مسافة الإصبع فوق القمة قبل أن يُطلق التحديث. كانت 80 فتُطلق من لمسة قصيرة.
+  static const double pullThreshold = 240;
+
+  static const double _threshold = pullThreshold;
 
   const SyncProgressBar({
     super.key,
@@ -25,7 +28,33 @@ class SyncProgressBar extends StatelessWidget {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Priority 1: Google Drive syncing
+    // حدث واحد: التحديث الجاري يغطي الشريط كله، والمزامنة تظهر وحدها إذا لم يكن تحديثاً.
+    if (isRefreshingNotifier != null) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: isRefreshingNotifier!,
+        builder: (context, refreshing, _) {
+          if (refreshing) {
+            return _Bar(
+              color: colorScheme.primary,
+              label: isAr ? 'جارٍ التحديث...' : 'Refreshing...',
+            );
+          }
+          return ValueListenableBuilder<bool>(
+            valueListenable: CloudSyncGateway.isSyncing,
+            builder: (context, syncing, _) {
+              if (syncing) {
+                return _Bar(
+                  color: colorScheme.primary,
+                  label: isAr ? 'جارٍ المزامنة...' : 'Syncing...',
+                );
+              }
+              return _buildPull(context, colorScheme, isAr);
+            },
+          );
+        },
+      );
+    }
+
     return ValueListenableBuilder<bool>(
       valueListenable: CloudSyncGateway.isSyncing,
       builder: (context, syncing, _) {
@@ -35,23 +64,6 @@ class SyncProgressBar extends StatelessWidget {
             label: isAr ? 'جارٍ المزامنة...' : 'Syncing...',
           );
         }
-
-        // Priority 2: Refreshing or pulling
-        if (isRefreshingNotifier != null) {
-          return ValueListenableBuilder<bool>(
-            valueListenable: isRefreshingNotifier!,
-            builder: (context, refreshing, _) {
-              if (refreshing) {
-                return _Bar(
-                  color: colorScheme.primary,
-                  label: isAr ? 'جارٍ التحديث...' : 'Refreshing...',
-                );
-              }
-              return _buildPull(context, colorScheme, isAr);
-            },
-          );
-        }
-
         return _buildPull(context, colorScheme, isAr);
       },
     );
