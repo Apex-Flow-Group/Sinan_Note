@@ -238,7 +238,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   }
 
   Widget _buildSurface(BuildContext context) {
-    return PremiumCardEffect(
+    final effect = PremiumCardEffect(
       baseColor: _baseColor,
       enableMotion: false,
       isSelected: widget.isSelected,
@@ -271,6 +271,10 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
         ],
       ),
     );
+
+    // شبكة: Slidable يعطي ارتفاعاً حرّاً لمحتواه — نُجبر البطاقة على ملء الخلية
+    if (widget.viewType == ViewType.grid) return SizedBox.expand(child: effect);
+    return effect;
   }
 
   Widget _buildSelectionMark(BuildContext context) {
