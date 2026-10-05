@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
@@ -21,6 +22,19 @@ enum _CatMode { normal, delete, edit }
 
 /// يبقى حياً طول عمر التطبيق — لا يضيع عند إغلاق الـ Drawer
 final _activeExtraNotifier = ValueNotifier<String?>(null);
+
+enum _Destination {
+  home,
+  reminders,
+  professional,
+  archive,
+  trash,
+  vault,
+  drive,
+  history,
+  settings,
+  none,
+}
 
 /// ضبط حالة تفعيل الخزنة في الـ Drawer من الخارج
 void setDrawerVaultActive(bool active) {
@@ -105,239 +119,272 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
+    // التذكيرات والمحترف تبويبات في الشريط السفلي على الجوال؛ في تخطيط
+    // سطح المكتب لا شريط سفلي فتصبح عناصر في القائمة.
+    final tabsInDrawer = widget.onTabSelected != null &&
+        PlatformHelper.shouldUseDesktopLayout(context);
 
-    return ValueListenableBuilder<String?>(
-      valueListenable: _activeExtraNotifier,
-      builder: (context, activeExtra, _) => Drawer(
-        backgroundColor: scheme.surface,
-        child: Column(
-          children: [
-            SizedBox(height: MediaQuery.of(context).padding.top + 8),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.only(top: 8, bottom: 8),
-                children: [
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.home_rounded,
-                    title: l10n.home,
-                    scheme: scheme,
-                    isDark: isDark,
-                    isActive: !_categoriesExpanded &&
-                        (currentRoute == '/main' || currentRoute == '/') &&
-                        activeExtra == null &&
-                        (widget.onTabSelected == null ||
-                            currentTabIndexNotifier.value == 0) &&
-                        context
-                                .watch<CategoriesProvider>()
-                                .selectedCategoryId ==
-                            null,
-                    onTap: () async {
-                      _exitVaultIfActive('Home');
-                      final rootNavigator =
-                          Navigator.of(context, rootNavigator: true);
-                      final scaffoldState = Scaffold.maybeOf(context);
-                      if (scaffoldState != null && scaffoldState.isDrawerOpen) {
-                        scaffoldState.closeDrawer();
-                      }
-                      rootNavigator.popUntil(
-                        (route) =>
-                            route.settings.name == '/main' || route.isFirst,
-                      );
-                      widget.onTabSelected?.call(0);
-                    },
-                  ),
-                  // زر التصنيفات — قائمة الكتالوجات مباشرة أسفله
-                  _buildCategoriesItem(context, l10n, scheme, isDark),
-                  ClipRect(
-                    child: AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      child: _categoriesExpanded
-                          ? Padding(
-                              padding:
-                                  const EdgeInsetsDirectional.only(start: 16),
-                              child: CategoriesPanelWrapper(
-                                mode: _catMode == _CatMode.delete
-                                    ? CatPanelMode.delete
-                                    : _catMode == _CatMode.edit
-                                        ? CatPanelMode.edit
-                                        : CatPanelMode.normal,
-                                isAdding: _isAdding,
-                                onAddDone: () =>
-                                    setState(() => _isAdding = false),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
-                  // التذكيرات والمحترف (في وضع Desktop) — بعد الكتالوجات
-                  if (widget.onTabSelected != null) ...[
+    return ListenableBuilder(
+      listenable:
+          Listenable.merge([_activeExtraNotifier, currentTabIndexNotifier]),
+      builder: (context, _) {
+        final current = _destinationOf(
+          route: currentRoute,
+          vaultOpen: _activeExtraNotifier.value == 'vault',
+          tab: currentTabIndexNotifier.value,
+          tabsInDrawer: tabsInDrawer,
+        );
+        return Drawer(
+          backgroundColor: scheme.surface,
+          child: Column(
+            children: [
+              SizedBox(height: MediaQuery.of(context).padding.top + 8),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.only(top: 8, bottom: 8),
+                  children: [
                     _buildDrawerItem(
                       context,
-                      icon: Icons.alarm_rounded,
-                      title: l10n.reminders,
+                      icon: Icons.home_rounded,
+                      title: l10n.home,
                       scheme: scheme,
                       isDark: isDark,
-                      isActive: currentTabIndexNotifier.value == 1 &&
-                          (currentRoute == '/main' || currentRoute == '/'),
-                      onTap: () {
+                      isActive: current == _Destination.home &&
+                          context
+                                  .watch<CategoriesProvider>()
+                                  .selectedCategoryId ==
+                              null,
+                      onTap: () async {
+                        _exitVaultIfActive('Home');
+                        final rootNavigator =
+                            Navigator.of(context, rootNavigator: true);
                         final scaffoldState = Scaffold.maybeOf(context);
                         if (scaffoldState != null &&
                             scaffoldState.isDrawerOpen) {
                           scaffoldState.closeDrawer();
                         }
-                        widget.onTabSelected!(1);
+                        rootNavigator.popUntil(
+                          (route) =>
+                              route.settings.name == '/main' || route.isFirst,
+                        );
+                        widget.onTabSelected?.call(0);
+                      },
+                    ),
+                    // زر التصنيفات — قائمة الكتالوجات مباشرة أسفله
+                    _buildCategoriesItem(context, l10n, scheme, isDark),
+                    ClipRect(
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        child: _categoriesExpanded
+                            ? Padding(
+                                padding:
+                                    const EdgeInsetsDirectional.only(start: 16),
+                                child: CategoriesPanelWrapper(
+                                  mode: _catMode == _CatMode.delete
+                                      ? CatPanelMode.delete
+                                      : _catMode == _CatMode.edit
+                                          ? CatPanelMode.edit
+                                          : CatPanelMode.normal,
+                                  isAdding: _isAdding,
+                                  onAddDone: () =>
+                                      setState(() => _isAdding = false),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                    // التذكيرات والمحترف (تخطيط سطح المكتب) — بعد الكتالوجات
+                    if (tabsInDrawer) ...[
+                      _buildDrawerItem(
+                        context,
+                        icon: Icons.alarm_rounded,
+                        title: l10n.reminders,
+                        scheme: scheme,
+                        isDark: isDark,
+                        isActive: current == _Destination.reminders,
+                        onTap: () {
+                          final scaffoldState = Scaffold.maybeOf(context);
+                          if (scaffoldState != null &&
+                              scaffoldState.isDrawerOpen) {
+                            scaffoldState.closeDrawer();
+                          }
+                          widget.onTabSelected!(1);
+                        },
+                      ),
+                      _buildDrawerItem(
+                        context,
+                        icon: Icons.code_rounded,
+                        title: l10n.professional,
+                        scheme: scheme,
+                        isDark: isDark,
+                        isActive: current == _Destination.professional,
+                        onTap: () {
+                          final scaffoldState = Scaffold.maybeOf(context);
+                          if (scaffoldState != null &&
+                              scaffoldState.isDrawerOpen) {
+                            scaffoldState.closeDrawer();
+                          }
+                          widget.onTabSelected!(2);
+                        },
+                      ),
+                    ],
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.inventory_2_rounded,
+                      title: l10n.archive,
+                      scheme: scheme,
+                      isDark: isDark,
+                      isActive: current == _Destination.archive,
+                      onTap: () async {
+                        await _navigateFromDrawer(
+                          context,
+                          destination: 'Archive',
+                          routeName: '/archive',
+                        );
+                        if (!mounted) return;
+                        widget.onNotesChanged();
                       },
                     ),
                     _buildDrawerItem(
                       context,
-                      icon: Icons.code_rounded,
-                      title: l10n.professional,
+                      icon: Icons.delete_sweep_rounded,
+                      title: l10n.trash,
                       scheme: scheme,
                       isDark: isDark,
-                      isActive: currentTabIndexNotifier.value == 2 &&
-                          (currentRoute == '/main' || currentRoute == '/'),
-                      onTap: () {
-                        final scaffoldState = Scaffold.maybeOf(context);
-                        if (scaffoldState != null &&
-                            scaffoldState.isDrawerOpen) {
-                          scaffoldState.closeDrawer();
-                        }
-                        widget.onTabSelected!(2);
+                      isActive: current == _Destination.trash,
+                      onTap: () async {
+                        await _navigateFromDrawer(
+                          context,
+                          destination: 'Trash',
+                          routeName: '/trash',
+                        );
+                        if (!mounted) return;
+                        widget.onNotesChanged();
                       },
                     ),
-                  ],
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.inventory_2_rounded,
-                    title: l10n.archive,
-                    scheme: scheme,
-                    isDark: isDark,
-                    isActive: currentRoute == '/archive',
-                    onTap: () async {
-                      await _navigateFromDrawer(
-                        context,
-                        destination: 'Archive',
-                        routeName: '/archive',
-                      );
-                      if (!mounted) return;
-                      widget.onNotesChanged();
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.delete_sweep_rounded,
-                    title: l10n.trash,
-                    scheme: scheme,
-                    isDark: isDark,
-                    isActive: currentRoute == '/trash',
-                    onTap: () async {
-                      await _navigateFromDrawer(
-                        context,
-                        destination: 'Trash',
-                        routeName: '/trash',
-                      );
-                      if (!mounted) return;
-                      widget.onNotesChanged();
-                    },
-                  ),
-                  ValueListenableBuilder<String?>(
-                    valueListenable: _activeExtraNotifier,
-                    builder: (context, extra, _) => _buildDrawerItem(
+                    _buildDrawerItem(
                       context,
                       icon: Icons.shield_rounded,
                       title: l10n.locked,
                       scheme: scheme,
                       isDark: isDark,
-                      isActive: extra == 'vault',
-                      isVaultOpen: extra == 'vault',
+                      isActive: current == _Destination.vault,
+                      isVaultOpen: current == _Destination.vault,
                       onTap: () => _openLockedNotes(context),
                     ),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Divider(height: 1, color: scheme.outlineVariant),
-                  ),
-                  if (!Platform.isWindows &&
-                      !Platform.isLinux &&
-                      !Platform.isMacOS)
-                    ValueListenableBuilder<bool>(
-                      valueListenable: CloudSyncGateway.autoSyncEnabled,
-                      builder: (context, autoSync, _) => _buildDrawerItem(
-                        context,
-                        icon: Icons.cloud_sync_rounded,
-                        title: l10n.googleDrive,
-                        subtitle: GoogleDriveAuth.isSignedIn
-                            ? (autoSync ? l10n.driveSyncOn : l10n.driveSyncOff)
-                            : l10n.driveSignIn,
-                        iconColor: const Color(0xFF4285F4),
-                        scheme: scheme,
-                        isDark: isDark,
-                        isActive: currentRoute == '/drive',
-                        onTap: () async {
-                          await _navigateFromDrawer(
-                            context,
-                            destination: 'Google Drive',
-                            routeName: '/drive',
-                          );
-                        },
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Divider(height: 1, color: scheme.outlineVariant),
                     ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.manage_history_rounded,
-                    title: l10n.noteHistory,
-                    subtitle: l10n.noteHistory,
-                    iconColor: Colors.orange,
-                    scheme: scheme,
-                    isDark: isDark,
-                    isActive: currentRoute == '/history',
-                    onTap: () async {
-                      await _navigateFromDrawer(
-                        context,
-                        destination: 'History',
-                        routeName: '/history',
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.tune_rounded,
-                    title: l10n.settings,
-                    scheme: scheme,
-                    isDark: isDark,
-                    isActive: currentRoute == '/settings',
-                    onTap: () async {
-                      await _navigateFromDrawer(
-                        context,
-                        destination: 'Settings',
-                        routeName: '/settings',
-                      );
-                      if (!mounted) return;
-                      widget.onNotesChanged();
-                    },
-                  ),
-                ],
+                    if (!Platform.isWindows &&
+                        !Platform.isLinux &&
+                        !Platform.isMacOS)
+                      ValueListenableBuilder<bool>(
+                        valueListenable: CloudSyncGateway.autoSyncEnabled,
+                        builder: (context, autoSync, _) => _buildDrawerItem(
+                          context,
+                          icon: Icons.cloud_sync_rounded,
+                          title: l10n.googleDrive,
+                          subtitle: GoogleDriveAuth.isSignedIn
+                              ? (autoSync
+                                  ? l10n.driveSyncOn
+                                  : l10n.driveSyncOff)
+                              : l10n.driveSignIn,
+                          iconColor: const Color(0xFF4285F4),
+                          scheme: scheme,
+                          isDark: isDark,
+                          isActive: current == _Destination.drive,
+                          onTap: () async {
+                            await _navigateFromDrawer(
+                              context,
+                              destination: 'Google Drive',
+                              routeName: '/drive',
+                            );
+                          },
+                        ),
+                      ),
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.manage_history_rounded,
+                      title: l10n.noteHistory,
+                      subtitle: l10n.noteHistory,
+                      iconColor: Colors.orange,
+                      scheme: scheme,
+                      isDark: isDark,
+                      isActive: current == _Destination.history,
+                      onTap: () async {
+                        await _navigateFromDrawer(
+                          context,
+                          destination: 'History',
+                          routeName: '/history',
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.tune_rounded,
+                      title: l10n.settings,
+                      scheme: scheme,
+                      isDark: isDark,
+                      isActive: current == _Destination.settings,
+                      onTap: () async {
+                        await _navigateFromDrawer(
+                          context,
+                          destination: 'Settings',
+                          routeName: '/settings',
+                        );
+                        if (!mounted) return;
+                        widget.onNotesChanged();
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Container(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 12,
-                bottom: MediaQuery.of(context).padding.bottom + 16,
+              Container(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                ),
+                child: Text(
+                  '© 2025 Apex Flow Group',
+                  style:
+                      TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                ),
               ),
-              child: Text(
-                '© 2025 Apex Flow Group',
-                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-              ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
+  }
+
+  /// الوجهة الحالية — مصدر واحد للتظليل، فلا يُظلَّل عنصران معاً.
+  static _Destination _destinationOf({
+    required String route,
+    required bool vaultOpen,
+    required int tab,
+    required bool tabsInDrawer,
+  }) {
+    if (vaultOpen) return _Destination.vault;
+    return switch (route) {
+      '/archive' => _Destination.archive,
+      '/trash' => _Destination.trash,
+      '/drive' => _Destination.drive,
+      '/history' => _Destination.history,
+      '/settings' => _Destination.settings,
+      '/main' || '/' when !tabsInDrawer => _Destination.home,
+      '/main' || '/' => switch (tab) {
+          0 => _Destination.home,
+          1 => _Destination.reminders,
+          2 => _Destination.professional,
+          _ => _Destination.none,
+        },
+      _ => _Destination.none,
+    };
   }
 
   Widget _buildCategoriesItem(BuildContext context, AppLocalizations l10n,
@@ -366,9 +413,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(
-            alpha: isHighlighted
-                ? (isDark ? 0.28 : 0.18)
-                : (isDark ? 0.18 : 0.1)),
+            alpha:
+                isHighlighted ? (isDark ? 0.28 : 0.18) : (isDark ? 0.18 : 0.1)),
         borderRadius: BorderRadius.circular(8),
       ),
       child:
@@ -572,6 +618,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
         );
       }
     } else {
+      if (!context.mounted) return;
       final navigator = Navigator.of(context, rootNavigator: true);
       Navigator.pop(context);
       await navigator.push(
