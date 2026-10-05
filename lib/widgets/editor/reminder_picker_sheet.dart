@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class ReminderPickerSheet extends StatefulWidget {
@@ -161,17 +162,17 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.12),
+                            color:
+                                context.colors.warning.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.alarm_rounded,
-                              color: Colors.orange, size: 18),
+                          child: Icon(Icons.alarm_rounded,
+                              color: context.colors.warning, size: 18),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           l10n.reminder,
-                          style: TextStyle(
-                            fontSize: 17,
+                          style: context.text.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: scheme.onSurface,
                           ),
@@ -193,8 +194,8 @@ class _ReminderPickerSheetState extends State<ReminderPickerSheet> {
                     icon: const Icon(Icons.check_rounded, size: 18),
                     label: Text(l10n.save),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.colors.warning,
+                      foregroundColor: _onWarning(context),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       shape: RoundedRectangleBorder(
@@ -405,12 +406,11 @@ class _SectionLabel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.orange),
+        Icon(icon, size: 16, color: context.colors.warning),
         const SizedBox(width: 6),
         Text(
           text,
-          style: TextStyle(
-            fontSize: 13,
+          style: context.text.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: scheme.onSurface.withValues(alpha: 0.6),
           ),
@@ -436,19 +436,19 @@ class _PickerButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.08),
+          color: context.colors.warning.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+          border:
+              Border.all(color: context.colors.warning.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: Colors.orange),
+            Icon(icon, size: 18, color: context.colors.warning),
             const SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 15,
+              style: context.text.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
               ),
@@ -473,26 +473,24 @@ class _QuickChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = context.colors.warning;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              selected ? Colors.orange : Colors.orange.withValues(alpha: 0.08),
+          color: selected ? accent : accent.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color:
-                selected ? Colors.orange : Colors.orange.withValues(alpha: 0.3),
+            color: selected ? accent : accent.withValues(alpha: 0.3),
           ),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
+          style: context.text.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : Colors.orange,
+            color: selected ? _onWarning(context) : accent,
           ),
         ),
       ),
@@ -528,8 +526,7 @@ class _RecurrenceChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
+          style: context.text.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
           ),
@@ -537,4 +534,13 @@ class _RecurrenceChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// نص فوق لون التحذير (لون التذكير). warning فاتح في الوضعين (كهرماني/أصفر)،
+/// فالنص فوقه داكن دائماً: onSurface في الفاتح وsurface في الداكن.
+Color _onWarning(BuildContext context) {
+  final scheme = context.scheme;
+  return scheme.brightness == Brightness.dark
+      ? scheme.surface
+      : scheme.onSurface;
 }

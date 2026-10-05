@@ -1,0 +1,23 @@
+{
+  "saveThisNoteQuestion": { "en": "Would you like to save this note?", "ar": "هل تريد حفظ هذه الملاحظة؟" },
+  "reminderTimePassed": { "en": "Time passed", "ar": "مضى الوقت" },
+  "reminderInMinutes": { "en": "In {count}m", "ar": "خلال {count} دقيقة", "placeholders": { "count": { "type": "int" } } },
+  "reminderInHours": { "en": "In {count}h", "ar": "خلال {count} ساعة", "placeholders": { "count": { "type": "int" } } },
+  "reminderInDays": { "en": "In {count}d", "ar": "بعد {count} أيام", "placeholders": { "count": { "type": "int" } } },
+  "exportFailedWithError": { "en": "Export failed: {error}", "ar": "فشل التصدير: {error}", "placeholders": { "error": { "type": "String" } } },
+  "plainTextView": { "en": "Plain text", "ar": "نص عادي" },
+  "formattedTextView": { "en": "Formatted text", "ar": "نص منسق" },
+  "markdownView": { "en": "Markdown", "ar": "ماركداون" },
+  "swipeUp": { "en": "Swipe up", "ar": "اسحب للأعلى" },
+  "customExtensionHint": { "en": "e.g. vue, proto, graphql", "ar": "مثال: vue, proto, graphql" },
+  "codePreviewTitle": { "en": "{language} Preview", "ar": "معاينة {language}", "placeholders": { "language": { "type": "String" } } },
+  "search": { "en": "Search", "ar": "بحث" },
+  "searchInCode": { "en": "Search in code...", "ar": "ابحث في الكود..." },
+  "searchResultsCount": { "en": "{count, plural, =1{1 result} other{{count} results}}", "ar": "{count} نتيجة", "placeholders": { "count": { "type": "int" } } },
+  "paste": { "en": "Paste", "ar": "لصق" },
+  "cut": { "en": "Cut", "ar": "قص" },
+  "selectAllShort": { "en": "All", "ar": "الكل" },
+  "deselect": { "en": "Deselect", "ar": "إلغاء" },
+  "clearSelection": { "en": "Deselect", "ar": "إلغاء التحديد" },
+  "imageAltFallback": { "en": "Image", "ar": "صورة" }
+}

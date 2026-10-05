@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/checklist_item_widget.dart';
@@ -378,8 +380,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading:
-                  const Icon(Icons.arrow_downward_rounded, color: Colors.blue),
+              leading: Icon(Icons.arrow_downward_rounded,
+                  color: context.scheme.primary),
               title: Text(l10n.sortDoneToBottom),
               onTap: () {
                 Navigator.pop(context);
@@ -387,8 +389,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.arrow_upward_rounded, color: Colors.green),
+              leading: Icon(Icons.arrow_upward_rounded,
+                  color: context.colors.success),
               title: Text(l10n.sortDoneToTop),
               onTap: () {
                 Navigator.pop(context);
@@ -397,7 +399,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.restore_rounded, color: Colors.grey),
+              leading: Icon(Icons.restore_rounded, color: context.colors.muted),
               title: Text(l10n.sortOriginal),
               onTap: () {
                 Navigator.pop(context);
@@ -562,7 +564,8 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bool isLightColor = widget.backgroundColor.computeLuminance() > 0.5;
-    final Color textColor = isLightColor ? Colors.black87 : Colors.white;
+    final Color textColor =
+        isLightColor ? EditorPalette.inkOnLight : EditorPalette.inkOnDark;
 
     return CustomScrollView(
       controller: _scrollController,
@@ -623,16 +626,14 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                       children: [
                         Text(
                           '${(_progress * 100).toInt()}%',
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: context.text.labelMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: textColor.withValues(alpha: 0.7),
                           ),
                         ),
                         Text(
                           '${_items.where((e) => e.isDone).length} / ${_items.length}',
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: context.text.labelMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: textColor.withValues(alpha: 0.7),
                           ),
@@ -651,7 +652,9 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                             value: value,
                             backgroundColor: textColor.withValues(alpha: 0.1),
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              value >= 1.0 ? Colors.green : Colors.blue,
+                              value >= 1.0
+                                  ? context.colors.success
+                                  : context.scheme.primary,
                             ),
                             minHeight: 6,
                           );
@@ -696,7 +699,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
               : (child, index, animation) {
                   return Material(
                     color: Colors.transparent,
-                    shadowColor: Colors.black26,
+                    shadowColor: context.colors.shadow,
                     elevation: 10,
                     child: ScaleTransition(scale: animation, child: child),
                   );
@@ -715,7 +718,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
                   l10n.addItem,
                   style: TextStyle(
                     color: textColor.withValues(alpha: 0.5),
-                    fontSize: 14,
+                    fontSize: context.text.bodyMedium?.fontSize,
                   ),
                 ),
                 style: TextButton.styleFrom(
@@ -762,12 +765,13 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       background: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.15),
+          color: context.colors.danger.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete_outline, color: Colors.red, size: 22),
+        child:
+            Icon(Icons.delete_outline, color: context.colors.danger, size: 22),
       ),
       confirmDismiss: (_) async {
         // لا نحذف إذا كان آخر item

@@ -6,6 +6,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
 import 'package:sinan_note/widgets/editor/apex_magnifier.dart';
 import 'package:sinan_note/widgets/editor/quill_editor_controller.dart';
@@ -190,15 +191,18 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: isChecked ? Colors.green : Colors.transparent,
+          color: isChecked ? context.colors.success : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: isChecked ? Colors.green : textColor.withValues(alpha: 0.5),
+            color: isChecked
+                ? context.colors.success
+                : textColor.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
         child: isChecked
-            ? Icon(Icons.check, size: size * 0.75, color: Colors.white)
+            ? Icon(Icons.check,
+                size: size * 0.75, color: context.scheme.surface)
             : null,
       ),
     );

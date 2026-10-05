@@ -23,6 +23,7 @@ import 'package:sinan_note/services/code/language_detector.dart';
 import 'package:sinan_note/services/security/clipboard_guard.dart';
 import 'package:sinan_note/services/security/content_guard.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 
 /// Central coordinator for all editor operations
@@ -54,7 +55,7 @@ class EditorCoordinator {
   String? notePassword;
   late bool initialLockState;
   double fontSize = 16.0;
-  Color textColor = Colors.black87;
+  Color textColor = EditorPalette.inkOnLight;
   Timer? autosaveTimer;
   String? detectedLanguage;
   bool isLanguageManuallySelected = false;

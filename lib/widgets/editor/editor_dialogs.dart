@@ -3,6 +3,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 
@@ -17,7 +19,8 @@ class WidgetEditorDialogs {
     // Create fresh controller to avoid stale state
     final controller = TextEditingController();
     final isLight = backgroundColor.computeLuminance() > 0.5;
-    final textColor = isLight ? Colors.black87 : Colors.white;
+    final textColor =
+        isLight ? EditorPalette.inkOnLight : EditorPalette.inkOnDark;
 
     final result = await showDialog<String>(
       context: context,
@@ -87,7 +90,7 @@ class WidgetEditorDialogs {
               Navigator.pop(ctx);
             },
             child: Text(l10n.automatic,
-                style: const TextStyle(color: Colors.grey)),
+                style: TextStyle(color: ctx.colors.muted)),
           ),
           TextButton(
             onPressed: () {

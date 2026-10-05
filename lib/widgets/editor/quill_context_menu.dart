@@ -1,6 +1,8 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';import 'package:flutter/material.dart'; import 'package:flutter/services.dart'; import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 // ── حالات القائمة ─────────────────────────────────────────────────────────────
 enum _MenuState { noSelection, hasSelection, allSelected }
 
@@ -72,7 +74,7 @@ class _DesktopContextMenuState extends State<_DesktopContextMenu> {
   Widget build(BuildContext context) {
     final anchor = widget.rawEditorState.contextMenuAnchors;
     final ctrl = widget.ctrl;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final menuBg = isDark ? scheme.surfaceContainerHigh : scheme.surface;
@@ -132,13 +134,13 @@ class _DesktopContextMenuState extends State<_DesktopContextMenu> {
       case _MenuState.noSelection:
         entries.addAll([
           (
-            label: isAr ? 'لصق' : 'Paste',
+            label: l10n.paste,
             icon: Icons.content_paste_rounded,
             action: doPaste,
             enabled: _hasClipboard
           ),
           (
-            label: isAr ? 'تحديد الكل' : 'Select all',
+            label: l10n.selectAll,
             icon: Icons.select_all_rounded,
             action: doSelectAll,
             enabled: true
@@ -147,32 +149,32 @@ class _DesktopContextMenuState extends State<_DesktopContextMenu> {
       case _MenuState.hasSelection:
         entries.addAll([
           (
-            label: isAr ? 'قص' : 'Cut',
+            label: l10n.cut,
             icon: Icons.content_cut_rounded,
             action: doCut,
             enabled: true
           ),
           (
-            label: isAr ? 'نسخ' : 'Copy',
+            label: l10n.copy,
             icon: Icons.content_copy_rounded,
             action: doCopy,
             enabled: true
           ),
           if (_hasClipboard)
             (
-              label: isAr ? 'لصق' : 'Paste',
+              label: l10n.paste,
               icon: Icons.content_paste_rounded,
               action: doPaste,
               enabled: true
             ),
           (
-            label: isAr ? 'تحديد الكل' : 'All',
+            label: l10n.selectAll,
             icon: Icons.select_all_rounded,
             action: doSelectAll,
             enabled: true
           ),
           (
-            label: isAr ? 'إلغاء' : 'Deselect',
+            label: l10n.clearSelection,
             icon: Icons.deselect_rounded,
             action: doDeselect,
             enabled: true
@@ -181,26 +183,26 @@ class _DesktopContextMenuState extends State<_DesktopContextMenu> {
       case _MenuState.allSelected:
         entries.addAll([
           (
-            label: isAr ? 'قص' : 'Cut',
+            label: l10n.cut,
             icon: Icons.content_cut_rounded,
             action: doCut,
             enabled: true
           ),
           (
-            label: isAr ? 'نسخ' : 'Copy',
+            label: l10n.copy,
             icon: Icons.content_copy_rounded,
             action: doCopy,
             enabled: true
           ),
           if (_hasClipboard)
             (
-              label: isAr ? 'لصق' : 'Paste',
+              label: l10n.paste,
               icon: Icons.content_paste_rounded,
               action: doPaste,
               enabled: true
             ),
           (
-            label: isAr ? 'إلغاء التحديد' : 'Deselect',
+            label: l10n.clearSelection,
             icon: Icons.deselect_rounded,
             action: doDeselect,
             enabled: true
@@ -239,7 +241,7 @@ class _DesktopContextMenuState extends State<_DesktopContextMenu> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.15),
+                  color: context.colors.shadow,
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -332,8 +334,7 @@ class _DesktopMenuItemState extends State<_DesktopMenuItem> {
                 const SizedBox(width: 10),
                 Text(
                   widget.label,
-                  style: TextStyle(
-                    fontSize: 13,
+                  style: context.text.bodySmall?.copyWith(
                     color: widget.textColor,
                     fontWeight: FontWeight.w500,
                   ),

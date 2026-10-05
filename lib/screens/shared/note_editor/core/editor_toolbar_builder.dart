@@ -16,6 +16,7 @@ import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.da
 import 'package:sinan_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:sinan_note/services/code/code_export_service.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/svg_preview_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -48,8 +49,8 @@ class EditorToolbarBuilder {
     final isDark = base.computeLuminance() < 0.5;
     final scrolled = Color.alphaBlend(
       isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.06),
+          ? EditorPalette.tintOnDark.withValues(alpha: 0.08)
+          : EditorPalette.tintOnLight.withValues(alpha: 0.06),
       base,
     );
 
@@ -262,7 +263,7 @@ class EditorToolbarBuilder {
                       if (context.mounted) {
                         UnifiedNotificationService().show(
                           context: context,
-                          message: 'Export failed: $e',
+                          message: l10n.exportFailedWithError('$e'),
                           type: NotificationType.error,
                         );
                       }

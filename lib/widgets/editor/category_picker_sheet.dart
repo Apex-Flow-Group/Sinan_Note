@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
@@ -126,7 +128,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
                               size: 16, color: color),
                         ),
                         activeColor: color,
-                        checkColor: Colors.white,
+                        checkColor: EditorPalette.inkOnDark,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8)),
                         controlAffinity: ListTileControlAffinity.trailing,
@@ -189,8 +191,8 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
                               _hideFromHome
                                   ? l10n.hiddenFromHomeDesc
                                   : l10n.visibleInHomeDesc,
-                              style: TextStyle(
-                                  fontSize: 12, color: scheme.onSurfaceVariant),
+                              style: context.text.labelMedium
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ),

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
@@ -264,9 +265,8 @@ class _BookModeViewState extends State<BookModeView> {
       ),
       title: Text(
         '${l10n.readingMode}  ${_currentPage + 1}/$_totalPages',
-        style: TextStyle(
+        style: context.text.titleSmall?.copyWith(
           color: widget.textColor,
-          fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -324,7 +324,7 @@ class _BookModeViewState extends State<BookModeView> {
                   ? scheme.primary
                   : widget.textColor.withValues(alpha: 0.7),
             ),
-            tooltip: _showFormatted ? 'نص عادي' : 'نص منسق',
+            tooltip: _showFormatted ? l10n.plainTextView : l10n.formattedTextView,
             onPressed: () async {
               final next = !_showFormatted;
               setState(() => _showFormatted = next);
@@ -633,7 +633,7 @@ class _BookModeViewState extends State<BookModeView> {
                           width: 3,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: Colors.orange,
+                            color: context.colors.gold,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -659,8 +659,7 @@ class _BookModeViewState extends State<BookModeView> {
                   ),
                   Text(
                     '${_currentPage + 1} / $_totalPages',
-                    style: TextStyle(
-                      fontSize: 13,
+                    style: context.text.bodySmall?.copyWith(
                       color: widget.textColor.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w500,
                     ),
@@ -685,14 +684,13 @@ class _BookModeViewState extends State<BookModeView> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.bookmark_rounded,
-                              color: Colors.orange, size: 14),
+                          Icon(Icons.bookmark_rounded,
+                              color: context.colors.gold, size: 14),
                           const SizedBox(width: 2),
                           Text(
                             '${_savedPage + 1}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.orange,
+                            style: context.text.labelMedium?.copyWith(
+                              color: context.colors.gold,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -707,7 +705,8 @@ class _BookModeViewState extends State<BookModeView> {
                     icon: const Icon(Icons.bookmark_add_rounded, size: 16),
                     label: Text(
                       l10n.saveReadingPosition,
-                      style: const TextStyle(fontSize: 12),
+                      style: TextStyle(
+                          fontSize: context.text.labelMedium?.fontSize),
                     ),
                     style: TextButton.styleFrom(
                       foregroundColor: scheme.primary,

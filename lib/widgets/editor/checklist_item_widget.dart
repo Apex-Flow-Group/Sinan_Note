@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// Standalone widget for rendering a single checklist item.
 ///
@@ -114,17 +115,17 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isDone ? Colors.green : Colors.transparent,
+                  color: isDone ? context.colors.success : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isDone
-                        ? Colors.green
+                        ? context.colors.success
                         : widget.textColor.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
                 child: isDone
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    ? Icon(Icons.check, size: 16, color: context.scheme.surface)
                     : null,
               ),
             ),
@@ -146,7 +147,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
                   widget.readOnly ? null : (_) => widget.onSubmitted?.call(),
               onChanged: widget.readOnly ? null : widget.onTextChanged,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: context.text.bodyLarge?.fontSize,
                 decoration:
                     isDone ? TextDecoration.lineThrough : TextDecoration.none,
                 color: isDone

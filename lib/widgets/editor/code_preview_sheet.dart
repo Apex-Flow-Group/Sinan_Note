@@ -4,6 +4,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 /// عرض معاينة منسقة للكود — لا يُشغّل الكود ولا يغيره
@@ -76,10 +79,9 @@ class _PreviewSheetState extends State<_PreviewSheet> {
     try {
       Clipboard.setData(ClipboardData(text: _displayCode));
       if (mounted) {
-        final isAr = Localizations.localeOf(context).languageCode == 'ar';
         UnifiedNotificationService().show(
           context: context,
-          message: isAr ? 'تم النسخ' : 'Copied',
+          message: AppLocalizations.of(context)!.copied,
           type: NotificationType.success,
           duration: const Duration(seconds: 1),
         );
@@ -91,7 +93,7 @@ class _PreviewSheetState extends State<_PreviewSheet> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -99,7 +101,7 @@ class _PreviewSheetState extends State<_PreviewSheet> {
       maxChildSize: 0.95,
       builder: (_, scrollController) => Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          color: isDark ? EditorPalette.codeSheetDark : EditorPalette.paper,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -125,9 +127,8 @@ class _PreviewSheetState extends State<_PreviewSheet> {
                   Icon(Icons.preview_rounded, size: 16, color: scheme.primary),
                   const SizedBox(width: 6),
                   Text(
-                    '${widget.language} Preview',
-                    style: TextStyle(
-                      fontSize: 14,
+                    l10n.codePreviewTitle(widget.language),
+                    style: context.text.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurface,
                     ),
@@ -141,7 +142,7 @@ class _PreviewSheetState extends State<_PreviewSheet> {
                           : Icons.search_rounded,
                       size: 20,
                     ),
-                    tooltip: isAr ? 'بحث' : 'Search',
+                    tooltip: l10n.search,
                     onPressed: () => setState(() {
                       _searchVisible = !_searchVisible;
                       if (!_searchVisible) {
@@ -153,7 +154,7 @@ class _PreviewSheetState extends State<_PreviewSheet> {
                   // زر النسخ
                   IconButton(
                     icon: const Icon(Icons.copy_rounded, size: 20),
-                    tooltip: isAr ? 'نسخ' : 'Copy',
+                    tooltip: l10n.copy,
                     onPressed: _copyAll,
                   ),
                   // زر الإغلاق
@@ -172,9 +173,9 @@ class _PreviewSheetState extends State<_PreviewSheet> {
                 child: TextField(
                   controller: _searchController,
                   autofocus: true,
-                  style: const TextStyle(fontSize: 13),
+                  style: TextStyle(fontSize: context.text.bodySmall?.fontSize),
                   decoration: InputDecoration(
-                    hintText: isAr ? 'ابحث في الكود...' : 'Search in code...',
+                    hintText: l10n.searchInCode,
                     prefixIcon: const Icon(Icons.search_rounded, size: 18),
                     suffixIcon: _query.isNotEmpty
                         ? IconButton(
@@ -265,15 +266,13 @@ class _SearchResultCount extends StatelessWidget {
       final count = RegExp(RegExp.escape(query), caseSensitive: false)
           .allMatches(code)
           .length;
-      final isAr = Localizations.localeOf(context).languageCode == 'ar';
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Align(
           alignment: AlignmentDirectional.centerStart,
           child: Text(
-            isAr ? '$count نتيجة' : '$count result${count == 1 ? '' : 's'}',
-            style: TextStyle(
-              fontSize: 11,
+            AppLocalizations.of(context)!.searchResultsCount(count),
+            style: context.text.labelSmall?.copyWith(
               color: count > 0
                   ? scheme.primary
                   : scheme.onSurface.withValues(alpha: 0.4),
@@ -308,11 +307,13 @@ class _CodeWithLineNumbers extends StatelessWidget {
   Widget build(BuildContext context) {
     try {
       final codePreviewBg =
-          isDark ? const Color(0xFF12121F) : const Color(0xFFF6F8FA);
+          isDark ? EditorPalette.codeBlockDark : EditorPalette.codeBlockLight;
       final borderColor = isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.08);
-      final textColor = isDark ? Colors.white70 : Colors.black87;
+          ? EditorPalette.tintOnDark.withValues(alpha: 0.08)
+          : EditorPalette.tintOnLight.withValues(alpha: 0.08);
+      final textColor =
+          isDark ? EditorPalette.softInkOnDark : EditorPalette.inkOnLight;
+      final codeFontSize = context.text.bodySmall?.fontSize;
       final highlightColor =
           scheme.primary.withValues(alpha: isDark ? 0.35 : 0.25);
 
@@ -326,15 +327,16 @@ class _CodeWithLineNumbers extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.12),
+                color: context.colors.warning.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: context.colors.warning.withValues(alpha: 0.3)),
               ),
               child: Text(
                 'JSON: $parseError',
-                style: const TextStyle(
-                  color: Colors.orange,
-                  fontSize: 12,
+                style: TextStyle(
+                  color: context.colors.warning,
+                  fontSize: context.text.labelMedium?.fontSize,
                   fontFamily: 'monospace',
                 ),
               ),
@@ -355,13 +357,13 @@ class _CodeWithLineNumbers extends StatelessWidget {
                       code,
                       style: TextStyle(
                         fontFamily: 'monospace',
-                        fontSize: 13,
+                        fontSize: codeFontSize,
                         height: 1.6,
                         color: textColor,
                       ),
                     )
                   : _buildHighlightedText(
-                      code, query, textColor, highlightColor),
+                      code, query, textColor, highlightColor, codeFontSize),
             ),
           ),
         ],
@@ -372,9 +374,10 @@ class _CodeWithLineNumbers extends StatelessWidget {
         code,
         style: TextStyle(
           fontFamily: 'monospace',
-          fontSize: 13,
+          fontSize: context.text.bodySmall?.fontSize,
           height: 1.6,
-          color: isDark ? Colors.white70 : Colors.black87,
+          color:
+              isDark ? EditorPalette.softInkOnDark : EditorPalette.inkOnLight,
         ),
       );
     }
@@ -385,6 +388,7 @@ class _CodeWithLineNumbers extends StatelessWidget {
     String query,
     Color textColor,
     Color highlightColor,
+    double? fontSize,
   ) {
     try {
       final pattern = RegExp(RegExp.escape(query), caseSensitive: false);
@@ -394,7 +398,7 @@ class _CodeWithLineNumbers extends StatelessWidget {
           text,
           style: TextStyle(
               fontFamily: 'monospace',
-              fontSize: 13,
+              fontSize: fontSize,
               height: 1.6,
               color: textColor),
         );
@@ -428,8 +432,8 @@ class _CodeWithLineNumbers extends StatelessWidget {
 
       return SelectableText.rich(
         TextSpan(
-          style: const TextStyle(
-              fontFamily: 'monospace', fontSize: 13, height: 1.6),
+          style: TextStyle(
+              fontFamily: 'monospace', fontSize: fontSize, height: 1.6),
           children: spans,
         ),
       );
@@ -438,7 +442,7 @@ class _CodeWithLineNumbers extends StatelessWidget {
         text,
         style: TextStyle(
             fontFamily: 'monospace',
-            fontSize: 13,
+            fontSize: fontSize,
             height: 1.6,
             color: textColor),
       );

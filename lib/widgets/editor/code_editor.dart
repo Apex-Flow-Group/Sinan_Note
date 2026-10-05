@@ -27,6 +27,7 @@ import 'package:highlight/languages/typescript.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:highlight/languages/yaml.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 
 class CodeEditor extends StatefulWidget {
   final CodeController controller;
@@ -40,7 +41,7 @@ class CodeEditor extends StatefulWidget {
     required this.controller,
     required this.undoController,
     this.detectedLanguage,
-    this.backgroundColor = Colors.white,
+    this.backgroundColor = EditorPalette.paper,
     this.focusNode,
   });
 
@@ -169,8 +170,10 @@ class _CodeEditorState extends State<CodeEditor> {
   Widget build(BuildContext context) {
     final isDark = widget.backgroundColor.computeLuminance() < 0.5;
     final theme = _buildTheme(isDark);
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final gutterColor = isDark ? Colors.white38 : Colors.black38;
+    final textColor =
+        isDark ? EditorPalette.inkOnDark : EditorPalette.inkOnLight;
+    final gutterColor =
+        isDark ? EditorPalette.faintOnDark : EditorPalette.faintOnLight;
     const systemFontSize = AppFontSize.noteBody;
 
     return Directionality(
@@ -215,7 +218,7 @@ class _CodeEditorState extends State<CodeEditor> {
         : Map<String, TextStyle>.from(githubTheme);
     baseTheme['root'] = TextStyle(
       backgroundColor: Colors.transparent,
-      color: isDark ? Colors.white : Colors.black87,
+      color: isDark ? EditorPalette.inkOnDark : EditorPalette.inkOnLight,
     );
     return baseTheme;
   }

@@ -5,10 +5,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_checklist_view.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
 /// يعرض محتوى الملاحظة في وضع العرض حسب النوع
@@ -157,9 +160,8 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
                   EdgeInsets.only(top: 20, bottom: 80 + extraBottomPadding),
               child: SelectableText(
                 content,
-                style: TextStyle(
+                style: context.text.bodyMedium?.copyWith(
                     fontFamily: 'monospace',
-                    fontSize: 14,
                     height: 1.6,
                     color: widget.textColor),
               ),
@@ -365,7 +367,7 @@ class _ReminderBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = reminderDateTime.difference(now);
     final isPast = diff.isNegative;
@@ -374,22 +376,20 @@ class _ReminderBadge extends StatelessWidget {
     if (isPast) {
       final ago = now.difference(reminderDateTime);
       if (ago.inMinutes < 60) {
-        timeText =
-            isAr ? 'منذ ${ago.inMinutes} دقيقة' : '${ago.inMinutes}m ago';
+        timeText = l10n.minutesAgo(ago.inMinutes);
       } else if (ago.inHours < 24) {
-        timeText = isAr ? 'منذ ${ago.inHours} ساعة' : '${ago.inHours}h ago';
+        timeText = l10n.hoursAgo(ago.inHours);
       } else {
-        timeText = isAr ? 'منذ ${ago.inDays} يوم' : '${ago.inDays}d ago';
+        timeText = l10n.daysAgo(ago.inDays);
       }
     } else if (diff.inMinutes < 60) {
-      timeText =
-          isAr ? 'خلال ${diff.inMinutes} دقيقة' : 'In ${diff.inMinutes}m';
+      timeText = l10n.reminderInMinutes(diff.inMinutes);
     } else if (diff.inHours < 24) {
-      timeText = isAr ? 'خلال ${diff.inHours} ساعة' : 'In ${diff.inHours}h';
+      timeText = l10n.reminderInHours(diff.inHours);
     } else if (diff.inDays == 1) {
-      timeText = isAr ? 'غداً' : 'Tomorrow';
+      timeText = l10n.tomorrow;
     } else {
-      timeText = isAr ? 'بعد ${diff.inDays} أيام' : 'In ${diff.inDays}d';
+      timeText = l10n.reminderInDays(diff.inDays);
     }
 
     final hour = reminderDateTime.hour.toString().padLeft(2, '0');
@@ -399,11 +399,13 @@ class _ReminderBadge extends StatelessWidget {
 
     final isDark = noteColor.computeLuminance() < 0.5;
     final bgColor = isDark
-        ? Color.alphaBlend(Colors.white.withValues(alpha: 0.15), noteColor)
-        : Color.alphaBlend(Colors.black.withValues(alpha: 0.1), noteColor);
+        ? Color.alphaBlend(
+            EditorPalette.tintOnDark.withValues(alpha: 0.15), noteColor)
+        : Color.alphaBlend(
+            EditorPalette.tintOnLight.withValues(alpha: 0.1), noteColor);
     final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.25)
-        : Colors.black.withValues(alpha: 0.18);
+        ? EditorPalette.tintOnDark.withValues(alpha: 0.25)
+        : EditorPalette.tintOnLight.withValues(alpha: 0.18);
     final dimText = textColor.withValues(alpha: isPast ? 0.55 : 0.85);
     final dimIcon = textColor.withValues(alpha: 0.45);
 
@@ -430,8 +432,7 @@ class _ReminderBadge extends StatelessWidget {
                   Flexible(
                     child: Text(
                       '$timeText  •  $dateStr',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: context.text.labelMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                         color: dimText,
                         height: 1.2,

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// Dialog helpers for NoteEditor
 class NoteEditorDialogs {
@@ -37,7 +38,8 @@ class NoteEditorDialogs {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+            child: Text(l10n.delete,
+                style: TextStyle(color: context.colors.danger)),
           ),
         ],
       ),

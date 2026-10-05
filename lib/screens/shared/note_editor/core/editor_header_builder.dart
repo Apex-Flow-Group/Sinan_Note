@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/editor/apex_editor_header.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 import 'package:sinan_note/widgets/editor/editor_selection_panel.dart';
@@ -36,8 +37,8 @@ class EditorHeaderBuilder {
     final isDark = base.computeLuminance() < 0.5;
     final scrolled = Color.alphaBlend(
       isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.06),
+          ? EditorPalette.tintOnDark.withValues(alpha: 0.08)
+          : EditorPalette.tintOnLight.withValues(alpha: 0.06),
       base,
     );
 

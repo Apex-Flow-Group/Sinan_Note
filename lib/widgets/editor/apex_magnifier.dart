@@ -2,6 +2,8 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 
 
 class ApexMagnifier extends StatelessWidget {
@@ -31,8 +33,8 @@ class ApexMagnifier extends StatelessWidget {
 
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? scheme.surfaceContainerHigh : Colors.white;
-    final shadowColor = Colors.black.withValues(alpha: 0.25);
+    final bgColor = isDark ? scheme.surfaceContainerHigh : scheme.surface;
+    final shadowColor = context.colors.shadow;
 
     return Positioned(
       left: left,
@@ -113,8 +115,8 @@ class _TeardropShadowPainter extends CustomPainter {
       path,
       Paint()
         ..color = color.computeLuminance() > 0.5
-            ? Colors.black.withValues(alpha: 0.08)
-            : Colors.white.withValues(alpha: 0.12)
+            ? EditorPalette.tintOnLight.withValues(alpha: 0.08)
+            : EditorPalette.tintOnDark.withValues(alpha: 0.12)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );

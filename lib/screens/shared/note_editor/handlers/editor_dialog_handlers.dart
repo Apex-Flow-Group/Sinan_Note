@@ -11,6 +11,8 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/rename_dialog.dart';
@@ -108,7 +110,8 @@ class EditorDialogHandlers {
     final brightness = Theme.of(context).brightness;
     final color = AppColorPalette.palette[selectedIndex].getColor(brightness);
     final isDarkBg = color.computeLuminance() < 0.5;
-    final textColor = isDarkBg ? Colors.white : Colors.black87;
+    final textColor =
+        isDarkBg ? EditorPalette.inkOnDark : EditorPalette.inkOnLight;
 
     stateManager.colorIndex = selectedIndex;
     stateManager.markDirty();
@@ -136,19 +139,9 @@ class EditorDialogHandlers {
     required QuillController quillController,
   }) async {
     final l10n = AppLocalizations.of(context)!;
-    final textColors = [
+    final textColors = <Color?>[
       null, // reset
-      Colors.red,
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.pink,
-      Colors.teal,
-      Colors.yellow.shade700,
-      Colors.cyan,
-      Colors.white,
-      Colors.black87,
+      ...EditorPalette.textColors,
     ];
 
     await showModalBottomSheet(
@@ -167,8 +160,8 @@ class EditorDialogHandlers {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l10n.chooseTextColor,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: ctx.text.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 12,
@@ -194,14 +187,14 @@ class EditorDialogHandlers {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: color == null
-                              ? Colors.grey
-                              : Colors.grey.shade300,
+                              ? ctx.colors.muted
+                              : ctx.colors.subtle,
                           width: 2,
                         ),
                       ),
                       child: color == null
-                          ? const Icon(Icons.format_clear,
-                              size: 20, color: Colors.grey)
+                          ? Icon(Icons.format_clear,
+                              size: 20, color: ctx.colors.muted)
                           : null,
                     ),
                   );
@@ -288,11 +281,12 @@ class EditorDialogHandlers {
             TextButton(
               onPressed: () => Navigator.pop(ctx, 'force'),
               child: Text(l10n.saveAnyway,
-                  style: const TextStyle(color: Colors.orange)),
+                  style: TextStyle(color: ctx.colors.warning)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, 'markdown'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: ctx.colors.success),
               child: Text(l10n.saveAsMarkdown),
             ),
           ],

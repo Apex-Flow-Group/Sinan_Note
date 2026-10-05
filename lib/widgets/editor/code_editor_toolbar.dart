@@ -3,6 +3,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class CodeEditorToolbar extends StatelessWidget {
   final Color backgroundColor;
@@ -82,9 +83,8 @@ class CodeEditorToolbar extends StatelessWidget {
                                     detectedLanguage!.startsWith('custom:')
                                 ? '.${detectedLanguage!.substring(7)}'
                                 : (detectedLanguage ?? 'Auto'),
-                            style: TextStyle(
+                            style: context.text.labelMedium?.copyWith(
                               color: textColor.withValues(alpha: 0.7),
-                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -100,32 +100,38 @@ class CodeEditorToolbar extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (onConvertToSimple != null || onConvertToRich != null)
-                    _buildIconBtn(Icons.swap_horiz_rounded,
-                        () => _showConvertMenu(context), Colors.teal),
-                  if (onBackgroundColorTap != null)
                     _buildIconBtn(
-                        Icons.color_lens, onBackgroundColorTap, Colors.purple),
+                        context,
+                        Icons.swap_horiz_rounded,
+                        () => _showConvertMenu(context),
+                        context.scheme.tertiary),
+                  if (onBackgroundColorTap != null)
+                    _buildIconBtn(context, Icons.color_lens,
+                        onBackgroundColorTap, context.scheme.secondary),
                   if (onRunCode != null)
-                    _buildIconBtn(Icons.play_arrow, onRunCode, Colors.green),
+                    _buildIconBtn(context, Icons.play_arrow, onRunCode,
+                        context.colors.success),
                   if (onExportCode != null)
-                    _buildIconBtn(Icons.file_download_outlined, onExportCode,
-                        Colors.blue),
+                    _buildIconBtn(context, Icons.file_download_outlined,
+                        onExportCode, context.scheme.primary),
                 ],
               ),
             ),
             // Symbol row with scroll support
-            isDesktop ? _buildDesktopSymbolRow() : _buildMobileSymbolRow(),
+            isDesktop
+                ? _buildDesktopSymbolRow()
+                : _buildMobileSymbolRow(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMobileSymbolRow() {
+  Widget _buildMobileSymbolRow(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: _buildSymbolButtons(),
+        children: _buildSymbolButtons(context),
       ),
     );
   }
@@ -164,7 +170,7 @@ class CodeEditorToolbar extends StatelessWidget {
                   controller: scrollController,
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: _buildSymbolButtons(),
+                    children: _buildSymbolButtons(context),
                   ),
                 ),
               ),
@@ -189,24 +195,26 @@ class CodeEditorToolbar extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildSymbolButtons() {
+  List<Widget> _buildSymbolButtons(BuildContext context) {
+    Widget sym(String symbol, VoidCallback onTap) =>
+        _buildSymbolBtn(context, symbol, onTap);
     return [
-      _buildIconBtn(Icons.undo, onUndo, textColor),
-      _buildIconBtn(Icons.redo, onRedo, textColor),
+      _buildIconBtn(context, Icons.undo, onUndo, textColor),
+      _buildIconBtn(context, Icons.redo, onRedo, textColor),
       const SizedBox(width: 8),
-      _buildSymbolBtn('{ }', () => onInsertSymbol('{}')),
-      _buildSymbolBtn('[ ]', () => onInsertSymbol('[]')),
-      _buildSymbolBtn('( )', () => onInsertSymbol('()')),
-      _buildSymbolBtn('< >', () => onInsertSymbol('<>')),
-      _buildSymbolBtn('" "', () => onInsertSymbol('""')),
-      _buildSymbolBtn("' '", () => onInsertSymbol("''")),
-      _buildSymbolBtn(';', () => onInsertSymbol(';')),
-      _buildSymbolBtn(':', () => onInsertSymbol(':')),
-      _buildSymbolBtn('=', () => onInsertSymbol('=')),
-      _buildSymbolBtn('->', () => onInsertSymbol('->')),
-      _buildSymbolBtn('=>', () => onInsertSymbol('=>')),
-      _buildSymbolBtn('//', () => onInsertSymbol('//')),
-      _buildSymbolBtn('/*', () => onInsertSymbol('/**/')),
+      sym('{ }', () => onInsertSymbol('{}')),
+      sym('[ ]', () => onInsertSymbol('[]')),
+      sym('( )', () => onInsertSymbol('()')),
+      sym('< >', () => onInsertSymbol('<>')),
+      sym('" "', () => onInsertSymbol('""')),
+      sym("' '", () => onInsertSymbol("''")),
+      sym(';', () => onInsertSymbol(';')),
+      sym(':', () => onInsertSymbol(':')),
+      sym('=', () => onInsertSymbol('=')),
+      sym('->', () => onInsertSymbol('->')),
+      sym('=>', () => onInsertSymbol('=>')),
+      sym('//', () => onInsertSymbol('//')),
+      sym('/*', () => onInsertSymbol('/**/')),
     ];
   }
 
@@ -226,14 +234,14 @@ class CodeEditorToolbar extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[400],
+                color: ctx.scheme.outlineVariant,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 12),
             if (onConvertToSimple != null)
               ListTile(
-                leading: const Icon(Icons.note_rounded, color: Colors.teal),
+                leading: Icon(Icons.note_rounded, color: ctx.scheme.tertiary),
                 title: Text(l10n.simpleNotes),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -243,7 +251,7 @@ class CodeEditorToolbar extends StatelessWidget {
             if (onConvertToRich != null)
               ListTile(
                 leading:
-                    const Icon(Icons.text_fields_rounded, color: Colors.teal),
+                    Icon(Icons.text_fields_rounded, color: ctx.scheme.tertiary),
                 title: Text(l10n.richText),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -317,7 +325,7 @@ class CodeEditorToolbar extends StatelessWidget {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[400],
+                        color: ctx.scheme.outlineVariant,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -411,9 +419,11 @@ class CodeEditorToolbar extends StatelessWidget {
           autofocus: true,
           style: const TextStyle(fontFamily: 'monospace'),
           decoration: InputDecoration(
-            hintText: 'e.g. vue, proto, graphql',
+            hintText: l10n.customExtensionHint,
             prefixText: '.',
-            prefixStyle: const TextStyle(fontFamily: 'monospace', fontSize: 16),
+            prefixStyle: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: ctx.text.bodyLarge?.fontSize),
             enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: colorScheme.outline)),
             focusedBorder: UnderlineInputBorder(
@@ -446,7 +456,8 @@ class CodeEditorToolbar extends StatelessWidget {
     }
   }
 
-  Widget _buildSymbolBtn(String symbol, VoidCallback onTap) {
+  Widget _buildSymbolBtn(
+      BuildContext context, String symbol, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
       child: Material(
@@ -467,9 +478,8 @@ class CodeEditorToolbar extends StatelessWidget {
             ),
             child: Text(
               symbol,
-              style: TextStyle(
+              style: context.text.bodySmall?.copyWith(
                 color: textColor,
-                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 fontFamily: 'monospace',
               ),
@@ -480,8 +490,10 @@ class CodeEditorToolbar extends StatelessWidget {
     );
   }
 
-  Widget _buildIconBtn(IconData icon, VoidCallback? onTap, Color color) {
+  Widget _buildIconBtn(
+      BuildContext context, IconData icon, VoidCallback? onTap, Color color) {
     final isEnabled = onTap != null;
+    final disabled = context.scheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Material(
@@ -497,18 +509,18 @@ class CodeEditorToolbar extends StatelessWidget {
             decoration: BoxDecoration(
               color: isEnabled
                   ? color.withValues(alpha: 0.12)
-                  : Colors.grey.withValues(alpha: 0.08),
+                  : disabled.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isEnabled
                     ? color.withValues(alpha: 0.3)
-                    : Colors.grey.withValues(alpha: 0.2),
+                    : disabled.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
             child: Icon(
               icon,
-              color: isEnabled ? color : Colors.grey,
+              color: isEnabled ? color : disabled,
               size: 20,
             ),
           ),

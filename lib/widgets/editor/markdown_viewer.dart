@@ -12,7 +12,10 @@ import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ── Code Block Builder ────────────────────────────────────────────────────────
@@ -77,8 +80,9 @@ class _CodeBlockState extends State<_CodeBlock> {
 
   @override
   Widget build(BuildContext context) {
-    final bg =
-        widget.isDark ? const Color(0xFF282C34) : const Color(0xFFFAFAFA);
+    final bg = widget.isDark
+        ? EditorPalette.markdownCodeDark
+        : EditorPalette.markdownCodeLight;
     final borderColor = widget.textColor.withValues(alpha: 0.15);
 
     return Container(
@@ -109,7 +113,7 @@ class _CodeBlockState extends State<_CodeBlock> {
                     widget.language,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: context.text.labelSmall?.fontSize,
                       fontFamily: 'monospace',
                       color: widget.textColor.withValues(alpha: 0.5),
                       fontWeight: FontWeight.w600,
@@ -123,10 +127,10 @@ class _CodeBlockState extends State<_CodeBlock> {
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: _copied
-                        ? const Icon(Icons.check_rounded,
-                            key: ValueKey('check'),
+                        ? Icon(Icons.check_rounded,
+                            key: const ValueKey('check'),
                             size: 16,
-                            color: Colors.green)
+                            color: context.colors.success)
                         : Icon(Icons.copy_rounded,
                             key: const ValueKey('copy'),
                             size: 16,
@@ -145,9 +149,9 @@ class _CodeBlockState extends State<_CodeBlock> {
                 widget.code,
                 language: widget.language,
                 theme: widget.theme,
-                textStyle: const TextStyle(
+                textStyle: TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 13,
+                  fontSize: context.text.bodySmall?.fontSize,
                   height: 1.5,
                 ),
               ),
@@ -185,26 +189,45 @@ class MarkdownViewer extends StatelessWidget {
 
   MarkdownStyleSheet _buildStyleSheet(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final t = context.text;
     final codeBg = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+        ? EditorPalette.tintOnDark.withValues(alpha: 0.08)
+        : EditorPalette.tintOnLight.withValues(alpha: 0.06);
     final blockquoteBg = isDark
-        ? Colors.white.withValues(alpha: 0.05)
-        : Colors.black.withValues(alpha: 0.04);
+        ? EditorPalette.tintOnDark.withValues(alpha: 0.05)
+        : EditorPalette.tintOnLight.withValues(alpha: 0.04);
     final dividerColor = textColor.withValues(alpha: 0.2);
-    final linkColor = isDark ? Colors.lightBlueAccent : Colors.blue;
-    final base = TextStyle(color: textColor, fontSize: 16, height: 1.6);
+    final linkColor = isDark
+        ? EditorPalette.markdownLinkDark
+        : EditorPalette.markdownLinkLight;
+    final base =
+        TextStyle(color: textColor, fontSize: t.bodyLarge?.fontSize, height: 1.6);
 
     return MarkdownStyleSheet(
       p: base,
       pPadding: EdgeInsets.zero,
-      h1: base.copyWith(fontSize: 28, fontWeight: FontWeight.bold, height: 1.3),
-      h2: base.copyWith(fontSize: 24, fontWeight: FontWeight.bold, height: 1.3),
-      h3: base.copyWith(fontSize: 20, fontWeight: FontWeight.w600, height: 1.3),
-      h4: base.copyWith(fontSize: 18, fontWeight: FontWeight.w600, height: 1.3),
-      h5: base.copyWith(fontSize: 16, fontWeight: FontWeight.w600, height: 1.3),
+      h1: base.copyWith(
+          fontSize: t.headlineLarge?.fontSize,
+          fontWeight: FontWeight.bold,
+          height: 1.3),
+      h2: base.copyWith(
+          fontSize: t.headlineMedium?.fontSize,
+          fontWeight: FontWeight.bold,
+          height: 1.3),
+      h3: base.copyWith(
+          fontSize: t.headlineSmall?.fontSize,
+          fontWeight: FontWeight.w600,
+          height: 1.3),
+      h4: base.copyWith(
+          fontSize: t.titleLarge?.fontSize,
+          fontWeight: FontWeight.w600,
+          height: 1.3),
+      h5: base.copyWith(
+          fontSize: t.bodyLarge?.fontSize,
+          fontWeight: FontWeight.w600,
+          height: 1.3),
       h6: base.copyWith(
-          fontSize: 14,
+          fontSize: t.bodyMedium?.fontSize,
           fontWeight: FontWeight.w600,
           height: 1.3,
           color: textColor.withValues(alpha: 0.7)),
@@ -222,9 +245,11 @@ class MarkdownViewer extends StatelessWidget {
       a: base.copyWith(color: linkColor, decoration: TextDecoration.underline),
       code: base.copyWith(
         fontFamily: 'monospace',
-        fontSize: 14,
+        fontSize: t.bodyMedium?.fontSize,
         backgroundColor: codeBg,
-        color: isDark ? Colors.greenAccent : Colors.green.shade800,
+        color: isDark
+            ? EditorPalette.markdownInlineCodeDark
+            : EditorPalette.markdownInlineCodeLight,
       ),
       // كتل الكود تُعالج بـ _CodeBlockBuilder — هذا للـ fallback فقط
       codeblockDecoration: const BoxDecoration(),
@@ -244,7 +269,7 @@ class MarkdownViewer extends StatelessWidget {
       ),
       blockquotePadding:
           const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      listBullet: base.copyWith(fontSize: 16),
+      listBullet: base.copyWith(fontSize: t.bodyLarge?.fontSize),
       listBulletPadding: const EdgeInsets.only(right: 8),
       listIndent: 20,
       tableHead: base.copyWith(fontWeight: FontWeight.bold),
@@ -310,10 +335,10 @@ class MarkdownViewer extends StatelessWidget {
                       Icon(Icons.broken_image_outlined,
                           color: textColor.withValues(alpha: 0.4), size: 18),
                       const SizedBox(width: 6),
-                      Text(alt ?? 'Image',
+                      Text(alt ?? AppLocalizations.of(context)!.imageAltFallback,
                           style: TextStyle(
                               color: textColor.withValues(alpha: 0.5),
-                              fontSize: 13)),
+                              fontSize: context.text.bodySmall?.fontSize)),
                     ],
                   ),
                 ),

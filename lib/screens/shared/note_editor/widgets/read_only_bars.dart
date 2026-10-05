@@ -8,6 +8,7 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
@@ -58,7 +59,9 @@ class ReadOnlyBars {
             toolbarHeight: 48,
             title: Text(
               note.title.isEmpty ? l10n.viewNote : note.title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  fontSize: context.text.titleMedium?.fontSize,
+                  fontWeight: FontWeight.w600),
               overflow: TextOverflow.ellipsis,
             ),
             actions: [
@@ -75,7 +78,8 @@ class ReadOnlyBars {
                         ? Icons.text_fields_rounded
                         : Icons.auto_awesome_outlined,
                   ),
-                  tooltip: showMarkdown ? 'Plain text' : 'Markdown',
+                  tooltip:
+                      showMarkdown ? l10n.plainTextView : l10n.markdownView,
                   onPressed: onMarkdownToggle,
                 ),
               if (!note.isTrashed && onReminder != null)
@@ -84,7 +88,9 @@ class ReadOnlyBars {
                     note.reminderDateTime != null
                         ? Icons.alarm_on_rounded
                         : Icons.alarm_add_rounded,
-                    color: note.reminderDateTime != null ? Colors.orange : null,
+                    color: note.reminderDateTime != null
+                        ? context.colors.warning
+                        : null,
                   ),
                   tooltip: l10n.reminder,
                   onPressed: onReminder,
@@ -138,7 +144,7 @@ class ReadOnlyBars {
                       onPressed: onEdit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
+                        foregroundColor: context.scheme.onPrimary,
                         elevation: 2,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         shape: RoundedRectangleBorder(
@@ -148,8 +154,9 @@ class ReadOnlyBars {
                       icon: const Icon(Icons.edit, size: 18),
                       label: Text(
                         l10n.edit,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: context.text.bodySmall?.fontSize),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -238,7 +245,7 @@ class ReadOnlyBars {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.share_rounded, color: Colors.blue),
+              leading: Icon(Icons.share_rounded, color: context.scheme.primary),
               title: Text(l10n.actionShare),
               onTap: () {
                 Navigator.pop(context);
@@ -250,7 +257,7 @@ class ReadOnlyBars {
                 note.isArchived
                     ? Icons.unarchive_rounded
                     : Icons.archive_rounded,
-                color: Colors.green,
+                color: context.colors.success,
               ),
               title:
                   Text(note.isArchived ? l10n.unarchive : l10n.actionArchive),
@@ -262,9 +269,9 @@ class ReadOnlyBars {
             _WidgetPinTile(note: note),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.delete_rounded, color: Colors.red),
+              leading: Icon(Icons.delete_rounded, color: context.colors.danger),
               title: Text(l10n.actionDelete,
-                  style: const TextStyle(color: Colors.red)),
+                  style: TextStyle(color: context.colors.danger)),
               onTap: () {
                 Navigator.pop(context);
                 onDelete();
@@ -327,13 +334,13 @@ class ReadOnlyBars {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[400],
+                color: ctx.scheme.outlineVariant,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 4),
             ...options.map((opt) => ListTile(
-                  leading: Icon(opt.icon, color: Colors.teal),
+                  leading: Icon(opt.icon, color: ctx.scheme.tertiary),
                   title: Text(opt.label),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -396,7 +403,7 @@ class _WidgetPinTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return ListTile(
-      leading: const Icon(Icons.widgets_outlined, color: Colors.purple),
+      leading: Icon(Icons.widgets_outlined, color: context.scheme.secondary),
       title: Text(l10n.pinToWidget),
       onTap: () async {
         Navigator.pop(context);

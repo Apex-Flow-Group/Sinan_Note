@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/editor/toolbars/editor_options_menu.dart';
 
 enum ToolbarMode { main, format, style }
@@ -335,8 +336,9 @@ class _SmartEditorToolbarState extends State<SmartEditorToolbar> {
 
   Widget _buildIconBtn(IconData icon, VoidCallback? onTap,
       {Color? color, bool isEnabled = true, bool isActive = false}) {
-    final effectiveColor =
-        onTap == null ? Colors.grey : (color ?? widget.textColor);
+    final effectiveColor = onTap == null
+        ? context.scheme.onSurfaceVariant
+        : (color ?? widget.textColor);
     final activeColor = widget.textColor;
 
     return IconButton(

@@ -1,6 +1,8 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class ApexEditorHeader extends StatelessWidget {
   final Color backgroundColor;
@@ -69,9 +71,8 @@ class ApexEditorHeader extends StatelessWidget {
                 Flexible(
                   child: Text(
                     title,
-                    style: TextStyle(
+                    style: context.text.bodyLarge?.copyWith(
                       color: textColor.withValues(alpha: 0.7),
-                      fontSize: 16,
                       fontWeight: FontWeight.normal,
                     ),
                     textAlign: TextAlign.center,
@@ -95,13 +96,13 @@ class ApexEditorHeader extends StatelessWidget {
             icon: Icon(
               hasReminder ? Icons.alarm_on_rounded : Icons.alarm_add_rounded,
               color: hasReminder
-                  ? Colors.orange
+                  ? context.colors.warning
                   : textColor.withValues(alpha: 0.7),
               size: 22,
             ),
             onPressed: onReminderTap,
             splashRadius: 24,
-            tooltip: 'تذكير',
+            tooltip: AppLocalizations.of(context)!.reminder,
           ),
         if (onCategoryTap != null)
           IconButton(
@@ -121,7 +122,7 @@ class ApexEditorHeader extends StatelessWidget {
             icon: Icon(Icons.edit_rounded, color: textColor, size: 24),
             onPressed: onEditTap,
             splashRadius: 24,
-            tooltip: 'تعديل',
+            tooltip: AppLocalizations.of(context)!.edit,
           )
         else if (onSaveTap != null)
           IconButton(

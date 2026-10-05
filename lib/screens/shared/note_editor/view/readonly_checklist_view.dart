@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 class ReadOnlyChecklistView extends StatefulWidget {
   final EditorCoordinator coordinator;
   final Color textColor;
@@ -77,13 +78,11 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('${(progress * 100).toInt()}%',
-                    style: TextStyle(
-                        fontSize: 12,
+                    style: context.text.labelMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: widget.textColor.withValues(alpha: 0.7))),
                 Text('$done / ${items.length}',
-                    style: TextStyle(
-                        fontSize: 12,
+                    style: context.text.labelMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: widget.textColor.withValues(alpha: 0.7))),
               ],
@@ -95,7 +94,9 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                 value: progress,
                 backgroundColor: widget.textColor.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(
-                    progress == 1.0 ? Colors.green : Colors.blue),
+                    progress == 1.0
+                        ? context.colors.success
+                        : context.scheme.primary),
                 minHeight: 6,
               ),
             ),
@@ -107,7 +108,7 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
               proxyDecorator: (child, index, animation) {
                 return Material(
                   color: Colors.transparent,
-                  shadowColor: Colors.black26,
+                  shadowColor: context.colors.shadow,
                   elevation: 10,
                   borderRadius: BorderRadius.circular(8),
                   child: ScaleTransition(
@@ -153,19 +154,20 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color:
-                                item.isDone ? Colors.green : Colors.transparent,
+                            color: item.isDone
+                                ? context.colors.success
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: item.isDone
-                                  ? Colors.green
+                                  ? context.colors.success
                                   : widget.textColor.withValues(alpha: 0.5),
                               width: 2,
                             ),
                           ),
                           child: item.isDone
-                              ? const Icon(Icons.check,
-                                  size: 16, color: Colors.white)
+                              ? Icon(Icons.check,
+                                  size: 16, color: context.scheme.surface)
                               : null,
                         ),
                       ),
@@ -174,8 +176,7 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                           item.text.isEmpty ? '...' : item.text,
                           textDirection:
                               directionOf(item.text),
-                          style: TextStyle(
-                            fontSize: 16,
+                          style: context.text.bodyLarge?.copyWith(
                             height: 1.5,
                             color: item.isDone
                                 ? widget.textColor.withValues(alpha: 0.5)

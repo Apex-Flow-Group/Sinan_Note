@@ -2,6 +2,7 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 
 enum DiffType { equal, added, removed }
@@ -51,6 +52,7 @@ class DiffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Text.rich(
       TextSpan(
         children: spans.map((s) {
@@ -58,18 +60,18 @@ class DiffView extends StatelessWidget {
             case DiffType.added:
               return TextSpan(
                 text: s.text,
-                style: const TextStyle(
-                  color: Color(0xFF2E7D32),
-                  backgroundColor: Color(0xFFE8F5E9),
+                style: TextStyle(
+                  color: colors.success,
+                  backgroundColor: colors.successContainer,
                   fontWeight: FontWeight.w500,
                 ),
               );
             case DiffType.removed:
               return TextSpan(
                 text: s.text,
-                style: const TextStyle(
-                  color: Color(0xFFC62828),
-                  backgroundColor: Color(0xFFFFEBEE),
+                style: TextStyle(
+                  color: colors.danger,
+                  backgroundColor: colors.dangerContainer,
                   decoration: TextDecoration.lineThrough,
                 ),
               );
@@ -78,7 +80,7 @@ class DiffView extends StatelessWidget {
           }
         }).toList(),
       ),
-      style: const TextStyle(fontSize: 14, height: 1.6),
+      style: TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
     );
   }
 }

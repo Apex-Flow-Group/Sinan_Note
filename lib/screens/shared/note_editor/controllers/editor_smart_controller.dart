@@ -12,15 +12,17 @@ import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 class EditorSmartController {
   final SmartAnalyzer _analyzer = SmartAnalyzer();
 
-  String getTimeRemaining(DateTime? reminderDateTime) {
+  String getTimeRemaining(DateTime? reminderDateTime, AppLocalizations l10n) {
     if (reminderDateTime == null) return '';
     final now = DateTime.now();
     final difference = reminderDateTime.difference(now);
-    if (difference.isNegative) return 'مضى الوقت';
-    if (difference.inDays > 0) return 'بعد ${difference.inDays} يوم';
-    if (difference.inHours > 0) return 'بعد ${difference.inHours} ساعة';
-    if (difference.inMinutes > 0) return 'بعد ${difference.inMinutes} دقيقة';
-    return 'الآن';
+    if (difference.isNegative) return l10n.reminderTimePassed;
+    if (difference.inDays > 0) return l10n.reminderInDays(difference.inDays);
+    if (difference.inHours > 0) return l10n.reminderInHours(difference.inHours);
+    if (difference.inMinutes > 0) {
+      return l10n.reminderInMinutes(difference.inMinutes);
+    }
+    return l10n.justNow;
   }
 
   /// يحسب ويُرجع النتيجة فقط — بدون كتابة في المحرر
@@ -134,8 +136,10 @@ class EditorSmartController {
               Icon(Icons.calculate_outlined, color: scheme.primary, size: 22),
               const SizedBox(width: 8),
               Text(l10n.approximateSum.replaceAll(':', ''),
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
@@ -144,8 +148,10 @@ class EditorSmartController {
               if (sumExpression.isNotEmpty)
                 Text(
                   sumExpression,
-                  style:
-                      TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: scheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
               if (sumExpression.isNotEmpty) const SizedBox(height: 8),
@@ -161,11 +167,11 @@ class EditorSmartController {
                   children: [
                     Text(
                       sumResult,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.onPrimaryContainer,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: scheme.onPrimaryContainer,
+                              ),
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
@@ -238,8 +244,10 @@ class EditorSmartController {
             Icon(Icons.calculate_outlined, color: scheme.primary, size: 22),
             const SizedBox(width: 8),
             Text(l10n.calculated,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
@@ -247,7 +255,10 @@ class EditorSmartController {
           children: [
             Text(
               expression,
-              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -262,11 +273,10 @@ class EditorSmartController {
                 children: [
                   Text(
                     '= $resultValue',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onPrimaryContainer,
-                    ),
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: scheme.onPrimaryContainer,
+                        ),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
@@ -436,7 +446,10 @@ class EditorSmartController {
         title: Text(l10n.output),
         content: SingleChildScrollView(
           child: Text(output,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+              style: Theme.of(context)
+                  .textTheme
+                  .labelMedium
+                  ?.copyWith(fontFamily: 'monospace')),
         ),
         actions: [
           TextButton(

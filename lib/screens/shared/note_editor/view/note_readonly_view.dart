@@ -20,7 +20,9 @@ import 'package:sinan_note/screens/shared/note_editor/view/book_mode_view.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/trash_floating_sheet.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/read_only_bars.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -247,8 +249,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   void _openBookMode() {
     final note = _currentNote;
     final noteColor = widget.coordinator.getBackgroundColor(context);
-    final textColor =
-        noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+    final textColor = noteColor.computeLuminance() > 0.5
+        ? EditorPalette.inkOnLight
+        : EditorPalette.inkOnDark;
 
     // نقرأ دائماً من contentController لأنه يحتوي على المحتوى الكامل —
     // quillController قد يكون preview فقط (أول 20 سطر) في وضع القراءة
@@ -447,8 +450,9 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final note = _currentNote;
     final scheme = Theme.of(context).colorScheme;
     final noteColor = widget.coordinator.getBackgroundColor(context);
-    final textColor =
-        noteColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+    final textColor = noteColor.computeLuminance() > 0.5
+        ? EditorPalette.inkOnLight
+        : EditorPalette.inkOnDark;
     final appBarColor = AppTheme.secondaryBackground(scheme);
 
     final routeAnimation = ModalRoute.of(context)?.animation;
@@ -479,7 +483,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: context.colors.shadow,
               blurRadius: 20,
               offset: const Offset(0, 8))
         ],

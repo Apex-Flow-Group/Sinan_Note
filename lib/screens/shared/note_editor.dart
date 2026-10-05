@@ -22,6 +22,8 @@ import 'package:sinan_note/screens/shared/note_editor/handlers/editor_menu_handl
 import 'package:sinan_note/screens/shared/note_editor/state/editor_save_operations.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:sinan_note/services/keyboard/editor_command_bus.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 
@@ -573,20 +575,15 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   Future<bool?> _showSaveSharedNoteDialog() async {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Directionality.of(context) == TextDirection.rtl;
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.save),
-        content: Text(
-          isArabic
-              ? 'هل تريد حفظ هذه الملاحظة؟'
-              : 'Would you like to save this note?',
-        ),
+        content: Text(l10n.saveThisNoteQuestion),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(isArabic ? 'تجاهل' : 'Discard'),
+            child: Text(l10n.discardChanges),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -683,8 +680,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             strokeWidth: 2,
             color: _coordinator.getBackgroundColor(context).computeLuminance() >
                     0.5
-                ? Colors.black38
-                : Colors.white38,
+                ? EditorPalette.faintOnLight
+                : EditorPalette.faintOnDark,
           ),
         ),
       );
@@ -874,8 +871,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final l10n = AppLocalizations.of(context)!;
     final isDarkBg =
         _coordinator.getBackgroundColor(context).computeLuminance() < 0.5;
-    final finalTextColor = isDarkBg ? Colors.white : Colors.black87;
-    final finalHintColor = isDarkBg ? Colors.white54 : Colors.black45;
+    final finalTextColor =
+        isDarkBg ? EditorPalette.inkOnDark : EditorPalette.inkOnLight;
+    final finalHintColor =
+        isDarkBg ? EditorPalette.hintOnDark : EditorPalette.hintOnLight;
     final screenWidth = MediaQuery.of(context).size.width;
     final sidePadding = screenWidth > 600 ? 16.0 : screenWidth * 0.05;
 
@@ -883,8 +882,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final isDarkBase = base.computeLuminance() < 0.5;
     final scrolled = Color.alphaBlend(
       isDarkBase
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.06),
+          ? EditorPalette.tintOnDark.withValues(alpha: 0.08)
+          : EditorPalette.tintOnLight.withValues(alpha: 0.06),
       base,
     );
 
@@ -1056,24 +1055,24 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[400],
+                  color: context.scheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 20),
-              const Icon(Icons.delete_outline_rounded,
-                  size: 48, color: Colors.red),
+              Icon(Icons.delete_outline_rounded,
+                  size: 48, color: context.colors.danger),
               const SizedBox(height: 12),
               Text(
                 l10n.deleteNote,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: context.text.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.deleteConfirm,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: context.colors.muted),
               ),
               const SizedBox(height: 24),
               Row(
@@ -1088,8 +1087,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.colors.danger,
+                        foregroundColor: context.scheme.onError,
                       ),
                       onPressed: () => Navigator.pop(ctx, true),
                       child: Text(l10n.delete),

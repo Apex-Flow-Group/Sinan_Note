@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/editor/code_editor_toolbar.dart';
 import 'package:sinan_note/widgets/editor/smart_editor_toolbar.dart';
 import 'package:sinan_note/widgets/editor/toolbars/checklist_bottom_bar.dart';
@@ -222,21 +223,25 @@ class _SimpleToolbar extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildIconBtn(Icons.calculate_outlined, onCalculate),
+                    _buildIconBtn(
+                        context, Icons.calculate_outlined, onCalculate),
                     selectionBarActive != null
                         ? ValueListenableBuilder<bool>(
                             valueListenable: selectionBarActive!,
                             builder: (_, isActive, __) => _buildIconBtn(
+                              context,
                               isActive
                                   ? Icons.close_rounded
                                   : Icons.content_paste_rounded,
                               onPaste,
                             ),
                           )
-                        : _buildIconBtn(Icons.content_paste_rounded, onPaste),
-                    _buildIconBtn(Icons.palette_outlined, onBackgroundColorTap),
-                    _buildIconBtn(Icons.undo_rounded, onUndo),
-                    _buildIconBtn(Icons.redo_rounded, onRedo),
+                        : _buildIconBtn(
+                            context, Icons.content_paste_rounded, onPaste),
+                    _buildIconBtn(
+                        context, Icons.palette_outlined, onBackgroundColorTap),
+                    _buildIconBtn(context, Icons.undo_rounded, onUndo),
+                    _buildIconBtn(context, Icons.redo_rounded, onRedo),
                   ],
                 ),
               ),
@@ -292,8 +297,10 @@ class _SimpleToolbar extends StatelessWidget {
     );
   }
 
-  Widget _buildIconBtn(IconData icon, VoidCallback? onTap) {
-    final effectiveColor = onTap == null ? Colors.grey : textColor;
+  Widget _buildIconBtn(
+      BuildContext context, IconData icon, VoidCallback? onTap) {
+    final effectiveColor =
+        onTap == null ? context.scheme.onSurfaceVariant : textColor;
     return IconButton(
       icon: Icon(icon, color: effectiveColor, size: 22),
       onPressed: onTap,

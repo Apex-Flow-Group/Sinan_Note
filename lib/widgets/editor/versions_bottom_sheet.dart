@@ -7,6 +7,7 @@ import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/editor/diff_view.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
@@ -40,7 +41,7 @@ class VersionsBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: context.scheme.outlineVariant,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -53,23 +54,22 @@ class VersionsBottomSheet extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.noteHistory,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+                  style: context.text.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: context.scheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
                   '$totalVersions',
-                  style: const TextStyle(
-                      fontSize: 14,
+                  style: context.text.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue),
+                      color: context.scheme.primary),
                 ),
               ),
               if (isDesktop)
@@ -97,7 +97,8 @@ class VersionsBottomSheet extends StatelessWidget {
                     final version = versions[index];
                     final timeAgo = _formatTimeAgo(context, version.timestamp);
                     final actionIcon = _getActionIcon(version.action);
-                    final actionColor = _getActionColor(version.action);
+                    final actionColor =
+                        _getActionColor(context, version.action);
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -130,8 +131,8 @@ class VersionsBottomSheet extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(timeAgo,
-                                      style: const TextStyle(
-                                          fontSize: 12, color: Colors.grey)),
+                                      style: context.text.labelMedium?.copyWith(
+                                          color: context.colors.muted)),
                                 ],
                               ),
                             ),
@@ -180,20 +181,20 @@ class VersionsBottomSheet extends StatelessWidget {
     }
   }
 
-  Color _getActionColor(String action) {
+  Color _getActionColor(BuildContext context, String action) {
     switch (action) {
       case 'manual_save':
-        return Colors.green;
+        return context.colors.success;
       case 'auto_save':
-        return Colors.blue;
+        return context.scheme.primary;
       case 'created':
-        return Colors.purple;
+        return context.scheme.secondary;
       case 'archived':
-        return Colors.orange;
+        return context.colors.warning;
       case 'restored':
-        return Colors.teal;
+        return context.scheme.tertiary;
       default:
-        return Colors.grey;
+        return context.colors.muted;
     }
   }
 
@@ -227,8 +228,8 @@ class VersionsBottomSheet extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(l10n.preview,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                          style: ctx.text.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
                     ),
                     IconButton(
                         icon: const Icon(Icons.close, size: 20),
@@ -242,14 +243,13 @@ class VersionsBottomSheet extends StatelessWidget {
                 child: Row(
                   children: [
                     _legendDot(
-                        const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+                        ctx.colors.success, ctx.colors.successContainer),
                     const SizedBox(width: 4),
-                    Text(l10n.added, style: const TextStyle(fontSize: 12)),
+                    Text(l10n.added, style: ctx.text.labelMedium),
                     const SizedBox(width: 12),
-                    _legendDot(
-                        const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+                    _legendDot(ctx.colors.danger, ctx.colors.dangerContainer),
                     const SizedBox(width: 4),
-                    Text(l10n.deleted, style: const TextStyle(fontSize: 12)),
+                    Text(l10n.deleted, style: ctx.text.labelMedium),
                   ],
                 ),
               ),

@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// Sheet عائم في الأسفل لملاحظات المهملات — يبدأ بـ handle فقط ويتمدد عند السحب
 class TrashFloatingSheet extends StatefulWidget {
@@ -99,7 +100,7 @@ class _TrashFloatingSheetState extends State<TrashFloatingSheet>
                     const BorderRadius.vertical(top: Radius.circular(20)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
+                    color: context.colors.shadow,
                     blurRadius: 12,
                     offset: const Offset(0, -2),
                   ),
@@ -123,11 +124,8 @@ class _TrashFloatingSheetState extends State<TrashFloatingSheet>
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'اسحب للأعلى'
-                              : 'Swipe up',
-                          style: TextStyle(
-                            fontSize: 12,
+                          l10n.swipeUp,
+                          style: context.text.labelMedium?.copyWith(
                             color: scheme.onSurface.withValues(alpha: 0.4),
                           ),
                         ),
@@ -147,11 +145,12 @@ class _TrashFloatingSheetState extends State<TrashFloatingSheet>
                               leading: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.12),
+                                  color: context.colors.success
+                                      .withValues(alpha: 0.12),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.restore_rounded,
-                                    color: Colors.green, size: 22),
+                                child: Icon(Icons.restore_rounded,
+                                    color: context.colors.success, size: 22),
                               ),
                               title: Text(l10n.restore,
                                   style: const TextStyle(
@@ -163,16 +162,17 @@ class _TrashFloatingSheetState extends State<TrashFloatingSheet>
                               leading: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withValues(alpha: 0.12),
+                                  color: context.colors.danger
+                                      .withValues(alpha: 0.12),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.delete_forever_rounded,
-                                    color: Colors.red, size: 22),
+                                child: Icon(Icons.delete_forever_rounded,
+                                    color: context.colors.danger, size: 22),
                               ),
                               title: Text(
                                 l10n.permanentDelete,
-                                style: const TextStyle(
-                                    color: Colors.red,
+                                style: TextStyle(
+                                    color: context.colors.danger,
                                     fontWeight: FontWeight.w600),
                               ),
                               onTap: widget.onPermanentDelete,

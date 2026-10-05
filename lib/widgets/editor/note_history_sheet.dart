@@ -8,6 +8,7 @@ import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 // ── Diff types ──────────────────────────────────────────────────────────────
@@ -68,6 +69,7 @@ class _DiffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Text.rich(
       TextSpan(
         children: spans.map((s) {
@@ -75,18 +77,18 @@ class _DiffView extends StatelessWidget {
             case _DiffType.added:
               return TextSpan(
                 text: s.text,
-                style: const TextStyle(
-                  color: Color(0xFF2E7D32),
-                  backgroundColor: Color(0xFFE8F5E9),
+                style: TextStyle(
+                  color: colors.success,
+                  backgroundColor: colors.successContainer,
                   fontWeight: FontWeight.w500,
                 ),
               );
             case _DiffType.removed:
               return TextSpan(
                 text: s.text,
-                style: const TextStyle(
-                  color: Color(0xFFC62828),
-                  backgroundColor: Color(0xFFFFEBEE),
+                style: TextStyle(
+                  color: colors.danger,
+                  backgroundColor: colors.dangerContainer,
                   decoration: TextDecoration.lineThrough,
                 ),
               );
@@ -95,7 +97,7 @@ class _DiffView extends StatelessWidget {
           }
         }).toList(),
       ),
-      style: const TextStyle(fontSize: 14, height: 1.6),
+      style: TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
     );
   }
 }
@@ -172,8 +174,8 @@ class NoteHistorySheet extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(l10n.preview,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                          style: ctx.text.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, size: 20),
@@ -188,14 +190,13 @@ class NoteHistorySheet extends StatelessWidget {
                 child: Row(
                   children: [
                     _legendDot(
-                        const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+                        ctx.colors.success, ctx.colors.successContainer),
                     const SizedBox(width: 4),
-                    Text(l10n.added, style: const TextStyle(fontSize: 12)),
+                    Text(l10n.added, style: ctx.text.labelMedium),
                     const SizedBox(width: 12),
-                    _legendDot(
-                        const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+                    _legendDot(ctx.colors.danger, ctx.colors.dangerContainer),
                     const SizedBox(width: 4),
-                    Text(l10n.deleted, style: const TextStyle(fontSize: 12)),
+                    Text(l10n.deleted, style: ctx.text.labelMedium),
                   ],
                 ),
               ),
@@ -262,7 +263,7 @@ class NoteHistorySheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: context.scheme.outlineVariant,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -270,12 +271,12 @@ class NoteHistorySheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
             child: Row(
               children: [
-                const Icon(Icons.history_edu, color: Colors.blueAccent),
+                Icon(Icons.history_edu, color: context.scheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   l10n.noteHistory,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18),
+                  style: context.text.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 if (isDesktop)
@@ -315,11 +316,14 @@ class NoteHistorySheet extends StatelessWidget {
 
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor:
-                            isCreate ? Colors.green[100] : Colors.blue[100],
+                        backgroundColor: isCreate
+                            ? context.colors.successContainer
+                            : context.scheme.primaryContainer,
                         child: Icon(
                           isCreate ? Icons.add_circle_outline : Icons.edit,
-                          color: isCreate ? Colors.green : Colors.blue,
+                          color: isCreate
+                              ? context.colors.success
+                              : context.scheme.primary,
                           size: 20,
                         ),
                       ),
@@ -332,8 +336,8 @@ class NoteHistorySheet extends StatelessWidget {
                         children: [
                           Text(
                             "${date.year}-${date.month}-${date.day}  ${date.hour}:${date.minute}",
-                            style: const TextStyle(
-                                fontSize: 13, color: Colors.grey),
+                            style: context.text.bodySmall
+                                ?.copyWith(color: context.colors.muted),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -341,7 +345,7 @@ class NoteHistorySheet extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: context.text.bodyMedium?.fontSize,
                               color: Theme.of(context)
                                   .textTheme
                                   .bodyMedium

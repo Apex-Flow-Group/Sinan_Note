@@ -4,6 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 
 /// بيانات زر واحد في الشريط
@@ -82,7 +84,8 @@ class _EditorSelectionPanelState extends State<EditorSelectionPanel> {
     return BarSelectionState.hasSelection;
   }
 
-  List<BarEntry> _buildEntries(BarSelectionState state, bool isAr) {
+  List<BarEntry> _buildEntries(
+      BarSelectionState state, AppLocalizations l10n) {
     final ctrl = widget.ctrl;
 
     void doCut() {
@@ -126,56 +129,56 @@ class _EditorSelectionPanelState extends State<EditorSelectionPanel> {
       case BarSelectionState.noSelection:
         return [
           BarEntry(
-              label: isAr ? 'لصق' : 'Paste',
+              label: l10n.paste,
               icon: Icons.content_paste_rounded,
               action: doPaste,
               enabled: _hasClipboard),
           BarEntry(
-              label: isAr ? 'تحديد الكل' : 'Select all',
+              label: l10n.selectAll,
               icon: Icons.select_all_rounded,
               action: doSelectAll),
         ];
       case BarSelectionState.hasSelection:
         return [
           BarEntry(
-              label: isAr ? 'قص' : 'Cut',
+              label: l10n.cut,
               icon: Icons.content_cut_rounded,
               action: doCut),
           BarEntry(
-              label: isAr ? 'نسخ' : 'Copy',
+              label: l10n.copy,
               icon: Icons.content_copy_rounded,
               action: doCopy),
           if (_hasClipboard)
             BarEntry(
-                label: isAr ? 'لصق' : 'Paste',
+                label: l10n.paste,
                 icon: Icons.content_paste_rounded,
                 action: doPaste),
           BarEntry(
-              label: isAr ? 'الكل' : 'All',
+              label: l10n.selectAllShort,
               icon: Icons.select_all_rounded,
               action: doSelectAll),
           BarEntry(
-              label: isAr ? 'إلغاء' : 'Deselect',
+              label: l10n.deselect,
               icon: Icons.deselect_rounded,
               action: doDeselect),
         ];
       case BarSelectionState.allSelected:
         return [
           BarEntry(
-              label: isAr ? 'قص' : 'Cut',
+              label: l10n.cut,
               icon: Icons.content_cut_rounded,
               action: doCut),
           BarEntry(
-              label: isAr ? 'نسخ' : 'Copy',
+              label: l10n.copy,
               icon: Icons.content_copy_rounded,
               action: doCopy),
           if (_hasClipboard)
             BarEntry(
-                label: isAr ? 'لصق' : 'Paste',
+                label: l10n.paste,
                 icon: Icons.content_paste_rounded,
                 action: doPaste),
           BarEntry(
-              label: isAr ? 'إلغاء' : 'Deselect',
+              label: l10n.deselect,
               icon: Icons.deselect_rounded,
               action: doDeselect),
         ];
@@ -184,13 +187,13 @@ class _EditorSelectionPanelState extends State<EditorSelectionPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     final barText = widget.textColor;
     final disabledText = barText.withValues(alpha: 0.35);
     final dividerColor = barText.withValues(alpha: 0.15);
 
     final state = _getBarState();
-    final entries = _buildEntries(state, isAr);
+    final entries = _buildEntries(state, l10n);
 
     return Container(
       color: widget.backgroundColor,
@@ -278,8 +281,7 @@ class _BarButtonState extends State<_BarButton> {
             const SizedBox(height: 2),
             Text(
               widget.label,
-              style: TextStyle(
-                  fontSize: 10,
+              style: context.text.labelSmall?.copyWith(
                   color: widget.textColor,
                   fontWeight: FontWeight.w500),
               maxLines: 1,

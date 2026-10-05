@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 
@@ -95,24 +96,24 @@ mixin EditorMenuHandlersMixin<T extends StatefulWidget> on State<T> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[400],
+                  color: ctx.scheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 20),
-              const Icon(Icons.delete_outline_rounded,
-                  size: 48, color: Colors.red),
+              Icon(Icons.delete_outline_rounded,
+                  size: 48, color: ctx.colors.danger),
               const SizedBox(height: 12),
               Text(
                 l10n.deleteNote,
                 style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ctx.text.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.deleteConfirm,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: ctx.colors.muted),
               ),
               const SizedBox(height: 24),
               Row(
@@ -127,8 +128,8 @@ mixin EditorMenuHandlersMixin<T extends StatefulWidget> on State<T> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
+                        backgroundColor: ctx.colors.danger,
+                        foregroundColor: ctx.scheme.onError,
                       ),
                       onPressed: () => Navigator.pop(ctx, true),
                       child: Text(l10n.delete),

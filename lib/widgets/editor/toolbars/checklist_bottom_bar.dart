@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/editor/toolbars/editor_options_menu.dart';
 
 class ChecklistBottomBar extends StatelessWidget {
@@ -66,7 +67,9 @@ class ChecklistBottomBar extends StatelessWidget {
                     ),
                     IconButton(
                       icon: Icon(Icons.undo_rounded,
-                          color: onUndo != null ? textColor : Colors.grey),
+                          color: onUndo != null
+                              ? textColor
+                              : context.scheme.onSurfaceVariant),
                       onPressed: onUndo,
                       padding: const EdgeInsets.all(4),
                       constraints:
@@ -74,7 +77,9 @@ class ChecklistBottomBar extends StatelessWidget {
                     ),
                     IconButton(
                       icon: Icon(Icons.redo_rounded,
-                          color: onRedo != null ? textColor : Colors.grey),
+                          color: onRedo != null
+                              ? textColor
+                              : context.scheme.onSurfaceVariant),
                       onPressed: onRedo,
                       padding: const EdgeInsets.all(4),
                       constraints:

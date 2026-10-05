@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 
 /// شكل الدمعة أسفل المؤشر
 class TearPainter extends CustomPainter {
@@ -61,12 +62,13 @@ class MagBgPainter extends CustomPainter {
       ..lineTo(tearX + 7, h)
       ..close();
 
-    canvas.drawShadow(path, Colors.black.withValues(alpha: 0.45), 16, true);
+    canvas.drawShadow(
+        path, EditorPalette.tintOnLight.withValues(alpha: 0.45), 16, true);
     canvas.drawPath(path, Paint()..color = color);
 
     // حد سفلي داكن يعطي إحساس العمق
     final borderPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15)
+      ..color = EditorPalette.tintOnLight.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
     canvas.drawPath(path, borderPaint);
