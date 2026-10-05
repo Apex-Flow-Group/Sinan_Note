@@ -87,6 +87,7 @@ class QuillEditorConfig {
     this.onPerformAction,
     @experimental this.customLeadingBlockBuilder,
     this.textDirectionResolver,
+    this.backspaceResolver,
   });
 
   @experimental
@@ -94,6 +95,9 @@ class QuillEditorConfig {
 
   /// See [QuillRawEditorConfig.textDirectionResolver].
   final TextDirectionResolver? textDirectionResolver;
+
+  /// See [QuillRawEditorConfig.backspaceResolver].
+  final BackspaceResolver? backspaceResolver;
 
   /// The text placeholder in the quill editor
   final String? placeholder;
@@ -481,6 +485,7 @@ class QuillEditorConfig {
   QuillEditorConfig copyWith({
     LeadingBlockNodeBuilder? customLeadingBlockBuilder,
     TextDirectionResolver? textDirectionResolver,
+    BackspaceResolver? backspaceResolver,
     String? placeholder,
     List<CharacterShortcutEvent>? characterShortcutEvents,
     List<SpaceShortcutEvent>? spaceShortcutEvents,
@@ -542,6 +547,7 @@ class QuillEditorConfig {
           customLeadingBlockBuilder ?? this.customLeadingBlockBuilder,
       textDirectionResolver:
           textDirectionResolver ?? this.textDirectionResolver,
+      backspaceResolver: backspaceResolver ?? this.backspaceResolver,
       placeholder: placeholder ?? this.placeholder,
       characterShortcutEvents:
           characterShortcutEvents ?? this.characterShortcutEvents,

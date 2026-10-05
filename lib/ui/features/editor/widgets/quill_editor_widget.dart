@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/input/backspace_resolver.dart';
 import 'package:sinan_note/ui/core/input/bidi_cursor_middleware.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
@@ -215,22 +216,6 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
 
     return Actions(
       actions: {
-        DeleteCharacterIntent: CallbackAction<DeleteCharacterIntent>(
-          onInvoke: (intent) {
-            if (intent.forward) return Actions.maybeInvoke(context, intent);
-            if (_ctrl.deleteWithTashkeelAwareness()) return null;
-            final ctrl = widget.quillController;
-            final sel = ctrl.selection;
-            if (sel.isCollapsed && sel.baseOffset > 0) {
-              ctrl.replaceText(sel.baseOffset - 1, 1, '',
-                  TextSelection.collapsed(offset: sel.baseOffset - 1));
-            } else if (!sel.isCollapsed) {
-              ctrl.replaceText(sel.start, sel.end - sel.start, '',
-                  TextSelection.collapsed(offset: sel.start));
-            }
-            return null;
-          },
-        ),
         PasteTextIntent: CallbackAction<PasteTextIntent>(
           onInvoke: (_) {
             _ctrl.pastePlainText(markdownEnabled: widget.markdownPaste);
@@ -302,6 +287,8 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                     scrollController: _ctrl.scrollController,
                     config: QuillEditorConfig(
                       textDirectionResolver: strongDirectionOf,
+                      // الحركة تُحذف قبل حرفها (المفتاح ولوحة الهاتف)
+                      backspaceResolver: backspaceResolver,
                       unknownEmbedBuilder: _unknownEmbedBuilder,
                       editorKey: _editorKey,
                       autoFocus: widget.autoFocus,

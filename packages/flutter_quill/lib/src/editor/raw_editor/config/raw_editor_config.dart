@@ -73,7 +73,14 @@ class QuillRawEditorConfig {
     @experimental this.customLeadingBuilder,
     this.quillMagnifierBuilder,
     this.textDirectionResolver,
+    this.backspaceResolver,
   });
+
+  /// The range a backspace at a collapsed caret deletes, or null for the
+  /// default (one grapheme). Applied to hardware keys and to deletions the
+  /// software keyboard sends, so scripts with combining marks can delete a
+  /// mark before its base letter.
+  final BackspaceResolver? backspaceResolver;
 
   /// Derives each line's direction from its text. Returns null when the text
   /// has no character that decides it (the line then follows the previous
@@ -423,3 +430,6 @@ class QuillRawEditorConfig {
 
 /// Direction of a line of text, or null when the text does not decide it.
 typedef TextDirectionResolver = TextDirection? Function(String text);
+
+/// Range a backspace at [caret] in [text] deletes, or null for the default.
+typedef BackspaceResolver = TextRange? Function(String text, int caret);

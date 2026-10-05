@@ -32,25 +32,6 @@ class QuillEditorController {
 
   StreamSubscription? _docChangeSub;
 
-  // ── tashkeel ───────────────────────────────────────────────────────────────
-  static const _harakat = {
-    '\u064B',
-    '\u064C',
-    '\u064D',
-    '\u064E',
-    '\u064F',
-    '\u0650',
-    '\u0652',
-    '\u0653',
-    '\u0654',
-    '\u0655',
-    '\u0656',
-    '\u0657',
-    '\u0670',
-  };
-  static const _shadda = '\u0651';
-  static bool isTashkeel(String ch) => _harakat.contains(ch) || ch == _shadda;
-
   QuillEditorController({
     required this.quillController,
     required this.focusNode,
@@ -200,11 +181,7 @@ class QuillEditorController {
           .addPostFrameCallback((_) => tearHandle.onTypingDone());
     }
 
-    if (ops.any((op) => op.isDelete)) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => fixDanglingTashkeel());
-      return;
-    }
+    if (ops.any((op) => op.isDelete)) return;
 
     if (!isOnlyNewline) return;
 
@@ -213,48 +190,6 @@ class QuillEditorController {
       scrollToCursor();
       tearHandle.showOnTap(editorKey: editorKey);
     });
-  }
-
-  // ── tashkeel ───────────────────────────────────────────────────────────────
-  void fixDanglingTashkeel() {
-    final sel = quillController.selection;
-    if (!sel.isCollapsed) return;
-    final text = quillController.document.toPlainText();
-    final pos = sel.baseOffset;
-    if (pos == 0 || pos > text.length) return;
-    if (!isTashkeel(text[pos - 1])) return;
-    if (pos >= 2 && !isTashkeel(text[pos - 2])) return;
-    quillController.replaceText(
-        pos - 1, 1, '', TextSelection.collapsed(offset: pos - 1));
-  }
-
-  bool deleteWithTashkeelAwareness() {
-    final sel = quillController.selection;
-    if (!sel.isCollapsed || sel.baseOffset == 0) return false;
-    final text = quillController.document.toPlainText();
-    final pos = sel.baseOffset;
-    if (pos > text.length) return false;
-
-    int start = pos - 1;
-    while (start > 0 && isTashkeel(text[start])) {
-      start--;
-    }
-
-    final hasTashkeel =
-        (pos - start) > 1 || (pos - start == 1 && isTashkeel(text[start]));
-    if (!hasTashkeel) return false;
-
-    int tashkeelPos = pos - 1;
-    while (tashkeelPos > start && !isTashkeel(text[tashkeelPos])) {
-      tashkeelPos--;
-    }
-
-    if (isTashkeel(text[tashkeelPos])) {
-      quillController.replaceText(
-          tashkeelPos, 1, '', TextSelection.collapsed(offset: tashkeelPos));
-      return true;
-    }
-    return false;
   }
 
   // ── paste ──────────────────────────────────────────────────────────────────
@@ -312,11 +247,6 @@ class QuillEditorController {
         HardwareKeyboard.instance.isControlPressed) {
       pastePlainText(markdownEnabled: markdownEnabled);
       return KeyEventResult.handled;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.backspace) {
-      return deleteWithTashkeelAwareness()
-          ? KeyEventResult.handled
-          : KeyEventResult.ignored;
     }
     return KeyEventResult.ignored;
   }

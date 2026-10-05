@@ -50,6 +50,18 @@ class QuillEditorDeleteTextAction<T extends DirectionalTextEditingIntent>
         );
       }
 
+      if (intent is DeleteCharacterIntent && !intent.forward) {
+        final range = state.widget.config.backspaceResolver
+            ?.call(state.textEditingValue.text, selection.baseOffset);
+        if (range != null) {
+          return Actions.invoke(
+            context!,
+            ReplaceTextIntent(state.textEditingValue, '', range,
+                SelectionChangedCause.keyboard),
+          );
+        }
+      }
+
       final textBoundary = getTextBoundariesForIntent(intent);
       if (!textBoundary.textEditingValue.selection.isValid) {
         return null;

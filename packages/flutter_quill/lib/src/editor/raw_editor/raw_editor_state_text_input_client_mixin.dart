@@ -232,6 +232,16 @@ mixin RawEditorStateTextInputClientMixin on EditorState
     final text = value.text;
     final cursorPosition = value.selection.extentOffset;
     final diff = getDiff(oldText, text, cursorPosition);
+    final backspace = _backspaceRange(effectiveLastKnownValue, diff);
+    if (backspace != null) {
+      widget.controller.replaceText(
+        backspace.start,
+        backspace.end - backspace.start,
+        '',
+        TextSelection.collapsed(offset: backspace.start),
+      );
+      return;
+    }
     if (diff.deleted.isEmpty && diff.inserted.isEmpty) {
       widget.controller.updateSelection(value.selection, ChangeSource.local);
     } else {
@@ -242,6 +252,29 @@ mixin RawEditorStateTextInputClientMixin on EditorState
         value.selection,
       );
     }
+  }
+
+  /// A single backspace from the keyboard (one character deleted right
+  /// before a collapsed caret) goes through [QuillRawEditorConfig
+  /// .backspaceResolver]; null keeps the keyboard's own deletion.
+  TextRange? _backspaceRange(TextEditingValue old, Diff diff) {
+    final resolver = widget.config.backspaceResolver;
+    final caret = old.selection;
+    if (resolver == null ||
+        !caret.isCollapsed ||
+        diff.inserted.isNotEmpty ||
+        diff.deleted.isEmpty ||
+        diff.deleted.characters.length != 1 ||
+        diff.start + diff.deleted.length != caret.baseOffset) {
+      return null;
+    }
+    final range = resolver(old.text, caret.baseOffset);
+    if (range == null ||
+        (range.start == diff.start &&
+            range.end == diff.start + diff.deleted.length)) {
+      return null;
+    }
+    return range;
   }
 
   @override
