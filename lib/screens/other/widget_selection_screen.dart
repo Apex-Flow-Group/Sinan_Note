@@ -3,10 +3,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -38,8 +39,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
   }
 
   Future<void> _loadNotes() async {
-    final dbService = SqliteDatabaseService();
-    final allNotes = await dbService.getAllNotes();
+    final allNotes = context.read<NotesProvider>().notes;
     setState(() {
       if (widget.widgetType == 'checklist') {
         notes = allNotes

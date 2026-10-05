@@ -30,6 +30,22 @@ class BackupViewModel {
 
   Future<String> exportTo(String directory) => _backups.exportTo(directory);
 
+  /// ملف JSON في [directory]. يرمي `ValidationException` إن لم يوجد ما يُصدَّر.
+  Future<({String path, int count})> exportJsonTo(String directory,
+          {required bool includeVault}) =>
+      _backups.exportJson(directory, includeVault: includeVault);
+
+  Future<void> shareJson(
+      {required bool includeVault,
+      required String subject,
+      required String text}) async {
+    final file = await _backups.exportJson(
+        (await getTemporaryDirectory()).path,
+        includeVault: includeVault);
+    await Share.shareXFiles([XFile(file.path, mimeType: 'application/json')],
+        subject: subject, text: text);
+  }
+
   /// يحفظ لقطة عبر نافذة النظام. يُرجع false إن ألغى المستخدم.
   Future<bool> saveWithDialog() async {
     final path = await _backups.exportTo((await getTemporaryDirectory()).path);

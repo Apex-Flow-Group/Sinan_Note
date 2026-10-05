@@ -9,7 +9,6 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../helpers/test_data_layer.dart';
@@ -23,13 +22,9 @@ void main() {
   });
 
   setUp(() {
-    SqliteDatabaseService.resetInstance();
-    SqliteDatabaseService.overrideDbPath(':memory:');
   });
 
   tearDown(() async {
-    await SqliteDatabaseService().closeDB();
-    SqliteDatabaseService.resetInstance();
   });
 
   group('NoteEditorImmersive Integration', () {

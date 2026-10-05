@@ -3,9 +3,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/settings/backup_restore_flow.dart';
-import 'package:sinan_note/services/storage/storage_service.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -49,7 +49,9 @@ class SettingsBackupHandlers {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: e.toString().replaceAll('Exception:', ''),
+                      message: e is ValidationException
+                          ? l10n.noNotesToExport
+                          : '$e',
                       type: NotificationType.error);
                 }
               },
@@ -67,7 +69,9 @@ class SettingsBackupHandlers {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: e.toString().replaceAll('Exception:', ''),
+                      message: e is ValidationException
+                          ? l10n.noNotesToExport
+                          : '$e',
                       type: NotificationType.error);
                 }
               },
@@ -103,20 +107,24 @@ class SettingsBackupHandlers {
               onPressed: () async {
                 Navigator.pop(ctx);
                 final result = await FilePicker.platform.getDirectoryPath();
-                if (result == null) return;
+                if (result == null || !context.mounted) return;
                 try {
-                  final msg = await StorageService().exportNotesToPath(result);
+                  final file = await context
+                      .read<BackupViewModel>()
+                      .exportJsonTo(result, includeVault: false);
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: msg,
+                      message: l10n.notesExportedTo(file.count, file.path),
                       type: NotificationType.success,
                       duration: const Duration(seconds: 4));
                 } catch (e) {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: e.toString().replaceAll('Exception:', ''),
+                      message: e is ValidationException
+                          ? l10n.noNotesToExport
+                          : '$e',
                       type: NotificationType.error);
                 }
               },
@@ -128,12 +136,17 @@ class SettingsBackupHandlers {
               onPressed: () async {
                 Navigator.pop(ctx);
                 try {
-                  await StorageService().shareNotesFile();
+                  await context.read<BackupViewModel>().shareJson(
+                      includeVault: false,
+                      subject: l10n.exportBackup,
+                      text: l10n.jsonBackupShareText);
                 } catch (e) {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: e.toString().replaceAll('Exception:', ''),
+                      message: e is ValidationException
+                          ? l10n.noNotesToExport
+                          : '$e',
                       type: NotificationType.error);
                 }
               },
@@ -166,21 +179,24 @@ class SettingsBackupHandlers {
               onPressed: () async {
                 Navigator.pop(ctx);
                 final result = await FilePicker.platform.getDirectoryPath();
-                if (result == null) return;
+                if (result == null || !context.mounted) return;
                 try {
-                  final msg = await StorageService()
-                      .exportNotesToPath(result, includeVault: true);
+                  final file = await context
+                      .read<BackupViewModel>()
+                      .exportJsonTo(result, includeVault: true);
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: msg,
+                      message: l10n.notesExportedTo(file.count, file.path),
                       type: NotificationType.success,
                       duration: const Duration(seconds: 4));
                 } catch (e) {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: e.toString().replaceAll('Exception:', ''),
+                      message: e is ValidationException
+                          ? l10n.noNotesToExport
+                          : '$e',
                       type: NotificationType.error);
                 }
               },
@@ -192,12 +208,17 @@ class SettingsBackupHandlers {
               onPressed: () async {
                 Navigator.pop(ctx);
                 try {
-                  await StorageService().shareNotesFile(includeVault: true);
+                  await context.read<BackupViewModel>().shareJson(
+                      includeVault: true,
+                      subject: l10n.exportBackup,
+                      text: l10n.jsonFullBackupShareText);
                 } catch (e) {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                       context: context,
-                      message: e.toString().replaceAll('Exception:', ''),
+                      message: e is ValidationException
+                          ? l10n.noNotesToExport
+                          : '$e',
                       type: NotificationType.error);
                 }
               },

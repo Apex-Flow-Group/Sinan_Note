@@ -2221,4 +2221,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String daysAgo(int count) {
     return 'منذ $count يوم';
   }
+
+  @override
+  String notesExportedTo(int count, String path) {
+    return 'تم حفظ $count ملاحظة في:\n$path';
+  }
+
+  @override
+  String get jsonBackupShareText => 'نسخة احتياطية من Sinan Note';
+
+  @override
+  String get jsonFullBackupShareText =>
+      'نسخة احتياطية كاملة من Sinan Note (تتضمن الملاحظات المشفّرة)';
 }

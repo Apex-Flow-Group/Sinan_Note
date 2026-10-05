@@ -94,8 +94,12 @@ class BackupRepository {
         for (final map in list)
           NoteMapper.fromMap(Map<String, Object?>.from(map as Map)),
       ],
-      // ملفات JSON لا تحمل أسماء التصنيفات؛ أرقامها تُطابق المحلية إن وُجدت
-      categories: const {},
+      // ملفات JSON القديمة بلا أسماء تصنيفات؛ أرقامها تُطابق المحلية إن وُجدت
+      categories: {
+        if (data is Map<String, dynamic>)
+          for (final c in (data['categories'] as List? ?? const []).cast<Map>())
+            c['id'] as int: c['name'] as String,
+      },
     );
   }
 
@@ -133,6 +137,32 @@ class BackupRepository {
       await _db.transaction((_) => File(_db.path).copy(path));
     }
     return path;
+  }
+
+  /// ملف JSON يُستعاد بـ [read]. الملاحظات في السلة لا تُصدَّر؛ المقفلة فقط
+  /// مع [includeVault]، كما هي مخزّنة (مشفّرة). يرمي `ValidationException`
+  /// إن لم يكن هناك ما يُصدَّر.
+  Future<({String path, int count})> exportJson(String directory,
+      {required bool includeVault}) async {
+    final rows = await _db.query('notes',
+        where: includeVault ? 'isTrashed = 0' : 'isTrashed = 0 AND isLocked = 0');
+    if (rows.isEmpty) throw const ValidationException('No notes to export');
+    final notes = rows.map(NoteMapper.fromMap).toList();
+    final data = {
+      'version': '2.0',
+      'created_at': DateTime.now().toIso8601String(),
+      'has_locked_notes': notes.any((n) => n.isLocked),
+      'notes': [for (final n in notes) NoteMapper.toMap(n)],
+      'categories': [
+        for (final c in _categories.categories)
+          {'id': c.id, 'name': c.name, 'sortOrder': c.sortOrder},
+      ],
+    };
+    final name = includeVault ? 'sinan_notes_full' : 'sinan_notes';
+    final path = p.join(
+        directory, '${name}_${DateTime.now().millisecondsSinceEpoch}.json');
+    await File(path).writeAsString(jsonEncode(data), flush: true);
+    return (path: path, count: notes.length);
   }
 
   /// يربط تصنيفات الملاحظات بالتصنيفات المحلية بالاسم، وينشئ الناقص منها.

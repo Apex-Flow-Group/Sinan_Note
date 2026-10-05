@@ -8,162 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
 class WidgetService {
   static final WidgetService _instance = WidgetService._internal();
   factory WidgetService() => _instance;
   WidgetService._internal();
-
-  final SqliteDatabaseService _dbService = SqliteDatabaseService();
-
-  Future<void> updateWidgetData() async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
-
-    try {
-      // 1. فحص النوت المثبتة أولاً
-      final prefs = await SharedPreferences.getInstance();
-      final savedNoteId = prefs.getInt('flutter.note_id') ?? 0;
-
-      if (savedNoteId > 0) {
-        final specificNote = await _dbService.getNoteById(savedNoteId);
-        if (specificNote != null &&
-            !specificNote.isLocked &&
-            !specificNote.isTrashed &&
-            !specificNote.isArchived &&
-            !specificNote.isChecklist &&
-            specificNote.noteType != 'checklist') {
-          await updateNoteWidget(specificNote);
-          AppLogger.success(
-              'Note widget updated with pinned note ID: $savedNoteId',
-              'Widget');
-          return; // ✅ استخدام النوت المثبتة
-        }
-      }
-
-      // 2. فقط إذا لم توجد نوت مثبتة، استخدم المزامنة العامة
-      final notes = await _dbService.getAllNotes();
-
-      // STRICT FILTER: Only NON-checklist notes (pinned first, then recent)
-      final validNotes = notes
-          .where((note) =>
-              !note.isLocked &&
-              !note.isTrashed &&
-              !note.isArchived &&
-              !note.isChecklist &&
-              note.noteType != 'checklist')
-          .toList();
-
-      // Sort: Pinned first, then by modified date
-      validNotes.sort((a, b) {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        return b.updatedAt.compareTo(a.updatedAt);
-      });
-
-      if (validNotes.isNotEmpty) {
-        final note = validNotes.first;
-        final title =
-            note.title.isEmpty ? (await _getUntitledText()) : note.title;
-        final content = _formatNoteContent(note.content, 200);
-
-        await HomeWidget.saveWidgetData<String>('title', title);
-        await HomeWidget.saveWidgetData<String>('content', content);
-        await HomeWidget.saveWidgetData<int>('note_id', note.id ?? 0);
-      } else {
-        await HomeWidget.saveWidgetData<String>(
-            'title', await _getSelectNoteText());
-        await HomeWidget.saveWidgetData<String>(
-            'content', await _getTapToSelectText());
-        await HomeWidget.saveWidgetData<int>('note_id', 0);
-      }
-
-      await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
-
-      AppLogger.success('Note widget updated with general sync', 'Widget');
-    } catch (e) {
-      AppLogger.error('Note widget update failed', 'Widget', e);
-    }
-  }
-
-  Future<void> updateChecklistWidgetData() async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
-
-    try {
-      // 1. فحص القائمة المثبتة أولاً
-      final prefs = await SharedPreferences.getInstance();
-      final savedChecklistId = prefs.getInt('flutter.checklist_note_id') ?? 0;
-
-      if (savedChecklistId > 0) {
-        final specificChecklist =
-            await _dbService.getNoteById(savedChecklistId);
-        if (specificChecklist != null &&
-            !specificChecklist.isLocked &&
-            !specificChecklist.isTrashed &&
-            !specificChecklist.isArchived &&
-            (specificChecklist.isChecklist ||
-                specificChecklist.noteType == 'checklist')) {
-          final title = specificChecklist.title.isEmpty
-              ? 'Checklist'
-              : specificChecklist.title;
-          final stats = _parseChecklistStats(specificChecklist.content);
-
-          await updateChecklistWidget(
-            specificChecklist.id ?? 0,
-            title,
-            specificChecklist.content,
-            specificChecklist.colorIndex,
-            totalItems: stats['total'] ?? 0,
-            completedItems: stats['completed'] ?? 0,
-          );
-          AppLogger.success(
-              'Checklist widget updated with pinned list ID: $savedChecklistId',
-              'Widget');
-          return; // ✅ استخدام القائمة المثبتة
-        }
-      }
-
-      // 2. فقط إذا لم توجد قائمة مثبتة، استخدم المزامنة العامة
-      final notes = await _dbService.getAllNotes();
-
-      // STRICT FILTER: ONLY checklists (pinned first, then recent)
-      final validChecklists = notes
-          .where((note) =>
-              !note.isLocked &&
-              !note.isTrashed &&
-              !note.isArchived &&
-              (note.isChecklist || note.noteType == 'checklist'))
-          .toList();
-
-      // Sort: Pinned first, then by modified date
-      validChecklists.sort((a, b) {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        return b.updatedAt.compareTo(a.updatedAt);
-      });
-
-      if (validChecklists.isNotEmpty) {
-        final checklist = validChecklists.first;
-        final title = checklist.title.isEmpty ? 'Checklist' : checklist.title;
-        final stats = _parseChecklistStats(checklist.content);
-
-        await updateChecklistWidget(
-          checklist.id ?? 0,
-          title,
-          checklist.content,
-          checklist.colorIndex,
-          totalItems: stats['total'] ?? 0,
-          completedItems: stats['completed'] ?? 0,
-        );
-      } else {
-        await _resetChecklistWidget();
-      }
-
-      AppLogger.success('Checklist widget updated with general sync', 'Widget');
-    } catch (e) {
-      AppLogger.error('Checklist widget update failed', 'Widget', e);
-    }
-  }
 
   /// Format note content (simple truncation)
   String _formatNoteContent(String content, int maxLength) {
@@ -313,7 +162,6 @@ class WidgetService {
 
     try {
       await HomeWidget.setAppGroupId('group.com.apexflow.app.sinan_note');
-      await HomeWidget.registerInteractivityCallback(_widgetBackgroundCallback);
     } catch (e) {
       // Widget initialization failed
     }
@@ -408,25 +256,9 @@ class WidgetService {
   static Future<String> _getUntitledText() =>
       _getLocalizedText('بدون عنوان', 'Untitled');
 
-  static Future<String> _getSelectNoteText() =>
-      _getLocalizedText('اختر ملاحظة', 'Select Note');
-
   static Future<String> _getTapToSelectText() =>
       _getLocalizedText('اضغط هنا للتحديد +', 'Tap to select +');
 
   static Future<String> _getSelectListText() =>
       _getLocalizedText('اختر قائمة', 'Select List');
-}
-
-/// Background callback for widget actions
-@pragma('vm:entry-point')
-void _widgetBackgroundCallback(Uri? uri) async {
-  if (uri?.host == 'deleteNote') {
-    final noteId = int.tryParse(uri?.queryParameters['id'] ?? '');
-    if (noteId != null) {
-      final dbService = SqliteDatabaseService();
-      await dbService.deleteNote(noteId);
-      await WidgetService().updateWidgetData();
-    }
-  }
 }

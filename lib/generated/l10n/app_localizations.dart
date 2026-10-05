@@ -4357,6 +4357,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}d ago'**
   String daysAgo(int count);
+
+  /// No description provided for @notesExportedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes saved to:\n{path}'**
+  String notesExportedTo(int count, String path);
+
+  /// No description provided for @jsonBackupShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinan Note backup'**
+  String get jsonBackupShareText;
+
+  /// No description provided for @jsonFullBackupShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Sinan Note backup (encrypted notes included)'**
+  String get jsonFullBackupShareText;
 }
 
 class _AppLocalizationsDelegate

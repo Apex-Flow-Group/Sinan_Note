@@ -797,5 +797,18 @@
         "type": "int"
       }
     }
-  }
+  },
+  "notesExportedTo": "{count} notes saved to:\n{path}",
+  "@notesExportedTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "jsonBackupShareText": "Sinan Note backup",
+  "jsonFullBackupShareText": "Full Sinan Note backup (encrypted notes included)"
 }

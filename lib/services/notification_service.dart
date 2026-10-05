@@ -1,6 +1,6 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:flutter_local_notifications/flutter_local_notifications.dart'; import 'package:flutter_timezone/flutter_timezone.dart';import 'package:sinan_note/core/utils/app_navigator.dart'; import 'package:sinan_note/core/utils/logger.dart'; import 'package:sinan_note/main.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/widgets/home/note_card_utils.dart'; import 'package:timezone/data/latest_all.dart' as tz; import 'package:timezone/timezone.dart' as tz;
+import 'dart:io';import 'package:flutter_local_notifications/flutter_local_notifications.dart'; import 'package:flutter_timezone/flutter_timezone.dart';import 'package:sinan_note/core/utils/logger.dart'; import 'package:timezone/data/latest_all.dart' as tz; import 'package:timezone/timezone.dart' as tz;
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -241,31 +241,13 @@ class NotificationService {
     }
   }
 
-  static void _onNotificationTapped(NotificationResponse response) async {
-    final payload = response.payload;
-    if (payload != null) {
-      final noteId = int.tryParse(payload);
-      if (noteId != null) {
-        await _openNoteById(noteId);
-      }
-    }
-  }
+  /// يُعيَّن في نقطة التركيب: ما يحدث عند لمس تذكير ملاحظة (يمر بقفل
+  /// التطبيق، ولا يفتح ملاحظة مقفلة).
+  static void Function(int noteId)? onNoteTapped;
 
-  static Future<void> _openNoteById(int noteId) async {
-    try {
-      final dbService = SqliteDatabaseService();
-      final note = await dbService.getNoteById(noteId);
-      if (note != null && navigatorKey.currentState != null) {
-        AppNavigator.toEditorViaKey(
-          navigatorKey,
-          note: note,
-          mode: NoteCardUtils.getNoteMode(note),
-          readOnly: true,
-        );
-      }
-    } catch (e) {
-      AppLogger.error('Error opening note', 'Notification', e);
-    }
+  static void _onNotificationTapped(NotificationResponse response) {
+    final noteId = int.tryParse(response.payload ?? '');
+    if (noteId != null) onNoteTapped?.call(noteId);
   }
 }
 

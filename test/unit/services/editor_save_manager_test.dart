@@ -5,14 +5,27 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_save_manager.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../../helpers/test_data_layer.dart';
 import '../../test_setup.dart';
 
+// ─── قاعدة الاختبار: NotesRepository الحقيقي بأسماء مختصرة ─────────────────
+class _Db {
+  _Db(this.data);
+  final TestDataLayer data;
+
+  Future<Note?> getNoteById(int id) => data.notes.find(id);
+  Future<int> insertNote(Note note) async =>
+      (await data.notes.save(note.copyWith(id: null))).id!;
+  Future<void> updateNote(Note note) => data.notes.save(note);
+  Future<void> trashNote(int id) => data.notes.trash([id]);
+  Future<void> closeDB() => data.dispose();
+}
+
 // ─── Fake NotesProvider ───────────────────────────────────────────────────────
-// يتجنب Provider/Flutter overhead — يكتب مباشرة في DB
+// يتجنب Provider/Flutter overhead
 class _FakeProvider {
-  final SqliteDatabaseService db;
+  final _Db db;
   _FakeProvider(this.db);
 
   Future<int> addOrUpdateNote(Note note, {bool silent = false}) async {
@@ -28,7 +41,7 @@ class _FakeProvider {
     return note.id!;
   }
 
-  Future<int> trashNote(int id) => db.trashNote(id);
+  Future<void> trashNote(int id) => db.trashNote(id);
 }
 
 // ─── Wrapper يستدعي EditorSaveManager.saveNote مع _FakeProvider ──────────────
@@ -71,20 +84,15 @@ void main() {
     initializeTestEnvironment();
   });
 
-  late SqliteDatabaseService db;
+  late _Db db;
   late _FakeProvider provider;
 
   setUp(() async {
-    SqliteDatabaseService.resetInstance();
-    SqliteDatabaseService.overrideDbPath(':memory:');
-    db = SqliteDatabaseService();
+    db = _Db(await TestDataLayer.create());
     provider = _FakeProvider(db);
   });
 
-  tearDown(() async {
-    await db.closeDB();
-    SqliteDatabaseService.resetInstance();
-  });
+  tearDown(() => db.closeDB());
 
   // ══════════════════════════════════════════════════════════════════════════
   // EditorSaveManager.isContentEmpty
@@ -484,7 +492,7 @@ void main() {
         noteType: 'professional',
       );
       final saved = await db.getNoteById(id!);
-      // SqliteDatabaseService يُحوِّل pro/professional → code
+      // NoteMapper يُحوِّل pro/professional → code
       expect(saved!.noteType, 'code');
     });
 

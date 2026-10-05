@@ -20,7 +20,6 @@ import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
@@ -59,12 +58,6 @@ class _SplashScreenState extends State<SplashScreen> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     try {
-      // Step 1: Initialize SQLite Database (20%)
-      _updateStatus(
-          isArabic ? 'تهيئة قاعدة البيانات...' : 'Initializing database...',
-          0.2);
-      await SqliteDatabaseService.initialize();
-
       // Step 2: Background services (60%)
       _updateStatus(isArabic ? 'تحميل الخدمات...' : 'Loading services...', 0.6);
       await _initBackgroundServices();

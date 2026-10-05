@@ -4,10 +4,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/backup/backup_wizard_widgets.dart';
 import 'package:sinan_note/screens/shared/settings/backup_restore_flow.dart';
-import 'package:sinan_note/services/storage/storage_service.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -387,19 +387,25 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   }) async {
     setState(() => _isLoading = true);
     try {
+      final l10n = AppLocalizations.of(context)!;
+      final backups = context.read<BackupViewModel>();
       if (share) {
-        await StorageService().shareNotesFile(includeVault: includeVault);
+        await backups.shareJson(
+          includeVault: includeVault,
+          subject: l10n.exportBackup,
+          text: includeVault
+              ? l10n.jsonFullBackupShareText
+              : l10n.jsonBackupShareText,
+        );
       } else {
         final dir = await FilePicker.platform.getDirectoryPath();
         if (dir == null) return;
-        final msg = await StorageService().exportNotesToPath(
-          dir,
-          includeVault: includeVault,
-        );
+        final file =
+            await backups.exportJsonTo(dir, includeVault: includeVault);
         if (mounted) {
           UnifiedNotificationService().show(
             context: context,
-            message: msg,
+            message: l10n.notesExportedTo(file.count, file.path),
             type: NotificationType.success,
             duration: const Duration(seconds: 4),
           );
@@ -409,7 +415,9 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
       if (mounted) {
         UnifiedNotificationService().show(
           context: context,
-          message: e.toString().replaceAll('Exception:', ''),
+          message: e is ValidationException
+              ? AppLocalizations.of(context)!.noNotesToExport
+              : '$e',
           type: NotificationType.error,
         );
       }

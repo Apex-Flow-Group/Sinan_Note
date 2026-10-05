@@ -110,6 +110,12 @@ final _rules = <_Rule>[
           !p.startsWith('lib/data/services/database/'),
       RegExp(
           r'''\.(insert|update|delete)\(\s*'notes'|(INSERT INTO|UPDATE|DELETE FROM)\s+notes\b''')),
+  // A7: البيانات والمجال لا تعرف الواجهة (ولا main.dart)
+  _Rule(
+      'A7',
+      (p, l) => _isDataOrDomain(l),
+      RegExp(
+          r'''\bimport\s+'package:sinan_note/(main\.dart'|(screens|widgets|controllers|ui)/)''')),
   // A6: لا حالة عامة على مستوى الملف ولا singletons بحالة
   _Rule(
       'A6',

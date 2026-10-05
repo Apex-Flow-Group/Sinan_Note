@@ -46,6 +46,7 @@ import 'package:sinan_note/screens/shared/settings_screen_responsive.dart';
 import 'package:sinan_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:sinan_note/services/app_update_service.dart';
 import 'package:sinan_note/services/intent_handler_service.dart';
+import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
@@ -155,6 +156,10 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    NotificationService.onNoteTapped = (noteId) => _storePendingIntent({
+          'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
+          'note_id': noteId,
+        });
     if (Platform.isAndroid || Platform.isIOS) {
       _handleWidgetIntent();
       platform.setMethodCallHandler(_handleMethodCall);

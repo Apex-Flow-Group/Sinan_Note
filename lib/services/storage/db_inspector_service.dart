@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/data/services/database/app_database.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DbInspectorService {
@@ -26,46 +26,6 @@ class DbInspectorService {
   static Future<Map<String, dynamic>> _buildReport() async {
     final result = <String, dynamic>{};
 
-    // ── SQLite (notes/categories/versions) ────────────────────────────────
-    try {
-      final dbService = SqliteDatabaseService();
-      final notes = await dbService.getAllNotes();
-      final categories = await dbService.getAllCategories();
-      final deletedIds = await SqliteDatabaseService.getDeletedNoteIds();
-
-      // عدد كل الـ versions
-      int totalVersions = 0;
-      for (final n in notes) {
-        if (n.id != null) {
-          final v = await dbService.getNoteHistory(n.id!);
-          totalVersions += v.length;
-        }
-      }
-
-      result['notes_summary'] = {
-        'notes': notes.length,
-        'locked': notes.where((n) => n.isLocked).length,
-        'archived': notes.where((n) => n.isArchived).length,
-        'trashed': notes.where((n) => n.isTrashed).length,
-        'categories': categories.length,
-        'deleted': deletedIds.length,
-        'versions': totalVersions,
-        'sample': notes
-            .take(5)
-            .map((n) => {
-                  'id': n.id,
-                  'title': n.title.length > 30
-                      ? '${n.title.substring(0, 30)}…'
-                      : n.title,
-                  'type': n.noteType,
-                  'locked': n.isLocked,
-                })
-            .toList(),
-      };
-    } catch (e) {
-      result['notes_summary'] = {'error': e.toString()};
-    }
-
     // ── SQLite ─────────────────────────────────────────────────────────────
     try {
       final dbPath = await _getSqlitePath();
@@ -84,8 +44,22 @@ class DbInspectorService {
           final r = await db.rawQuery('SELECT COUNT(*) as c FROM "$name"');
           counts[name] = (r.first['c'] as int?) ?? 0;
         }
+        Future<int> notesWhere(String flag) async =>
+            Sqflite.firstIntValue(await db
+                .rawQuery('SELECT COUNT(*) FROM notes WHERE $flag = 1')) ??
+            0;
+        result['notes_summary'] = {
+          'notes': counts['notes'] ?? 0,
+          'locked': await notesWhere('isLocked'),
+          'archived': await notesWhere('isArchived'),
+          'trashed': await notesWhere('isTrashed'),
+          'categories': counts['categories'] ?? 0,
+          'versions': counts['note_versions'] ?? 0,
+        };
+        // عناوين الملاحظات المقفلة مشفّرة؛ لا تُعرض
         final sample = await db.rawQuery(
-            'SELECT id, title, noteType, isLocked FROM notes LIMIT 5');
+            "SELECT id, CASE WHEN isLocked = 1 THEN '🔒' ELSE title END "
+            'AS title, noteType, isLocked FROM notes LIMIT 5');
         await db.close();
         result['sqlite'] = {
           'path': dbPath,
@@ -101,7 +75,7 @@ class DbInspectorService {
     return result;
   }
 
-  static Future<String> _getSqlitePath() => SqliteDatabaseService.getDbPath();
+  static Future<String> _getSqlitePath() => AppDatabase.defaultPath();
 }
 
 // ── Report Sheet ───────────────────────────────────────────────────────────

@@ -1,8 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sinan_note/data/services/database/app_database.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/data/services/database/notes_schema.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../test_setup.dart';
@@ -25,6 +26,7 @@ CREATE TABLE notes (
 
 void main() {
   late Directory tmp;
+  Database? db;
 
   setUpAll(initializeTestEnvironment);
 
@@ -33,8 +35,7 @@ void main() {
   });
 
   tearDown(() async {
-    await SqliteDatabaseService().closeDB();
-    SqliteDatabaseService.resetInstance();
+    await db?.close();
     await tmp.delete(recursive: true);
   });
 
@@ -62,29 +63,26 @@ void main() {
     }
     await old.close();
 
-    SqliteDatabaseService.resetInstance();
-    SqliteDatabaseService.overrideDbPath(path);
-    final notes = await SqliteDatabaseService().getAllNotes();
+    db = await AppDatabase.open(path);
+    final notes =
+        (await db!.query('notes')).map(NoteMapper.fromMap).toList();
 
     expect(notes.map((n) => n.title).toSet(), {'note 0', 'note 1', 'note 2'});
     expect(notes.map((n) => n.uuid).toSet().length, 3);
     expect(notes.every((n) => n.uuid.length == 36), isTrue);
 
-    final db = await SqliteDatabaseService().database;
-    expect(await db.getVersion(), NotesSchema.version);
-    final indexes = await db.rawQuery("PRAGMA index_list('notes')");
+    expect(await db!.getVersion(), NotesSchema.version);
+    final indexes = await db!.rawQuery("PRAGMA index_list('notes')");
     expect(
         indexes.any((i) => i['name'] == 'idx_notes_uuid' && i['unique'] == 1),
         isTrue);
   });
 
   test('a fresh database has the uuid column and unique index', () async {
-    SqliteDatabaseService.resetInstance();
-    SqliteDatabaseService.overrideDbPath('${tmp.path}/fresh.db');
-    final db = await SqliteDatabaseService().database;
-    final cols = await db.rawQuery('PRAGMA table_info(notes)');
+    db = await AppDatabase.open('${tmp.path}/fresh.db');
+    final cols = await db!.rawQuery('PRAGMA table_info(notes)');
     expect(cols.any((c) => c['name'] == 'uuid'), isTrue);
-    final indexes = await db.rawQuery("PRAGMA index_list('notes')");
+    final indexes = await db!.rawQuery("PRAGMA index_list('notes')");
     expect(indexes.any((i) => i['name'] == 'idx_notes_uuid'), isTrue);
   });
 }

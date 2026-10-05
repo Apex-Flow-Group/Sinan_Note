@@ -748,5 +748,8 @@
   "syncingProgress": "جارٍ المزامنة...",
   "minutesAgo": "منذ {count} دقيقة",
   "hoursAgo": "منذ {count} ساعة",
-  "daysAgo": "منذ {count} يوم"
+  "daysAgo": "منذ {count} يوم",
+  "notesExportedTo": "تم حفظ {count} ملاحظة في:\n{path}",
+  "jsonBackupShareText": "نسخة احتياطية من Sinan Note",
+  "jsonFullBackupShareText": "نسخة احتياطية كاملة من Sinan Note (تتضمن الملاحظات المشفّرة)"
 }
