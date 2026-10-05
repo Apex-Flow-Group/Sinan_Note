@@ -1111,5 +1111,78 @@
         "type": "int"
       }
     }
+  },
+  "saveThisNoteQuestion": "Would you like to save this note?",
+  "reminderTimePassed": "Time passed",
+  "reminderInMinutes": "In {count}m",
+  "@reminderInMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderInHours": "In {count}h",
+  "@reminderInHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderInDays": "In {count}d",
+  "@reminderInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exportFailedWithError": "Export failed: {error}",
+  "@exportFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "plainTextView": "Plain text",
+  "formattedTextView": "Formatted text",
+  "markdownView": "Markdown",
+  "swipeUp": "Swipe up",
+  "customExtensionHint": "e.g. vue, proto, graphql",
+  "codePreviewTitle": "{language} Preview",
+  "@codePreviewTitle": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "search": "Search",
+  "searchInCode": "Search in code...",
+  "searchResultsCount": "{count, plural, =1{1 result} other{{count} results}}",
+  "@searchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paste": "Paste",
+  "cut": "Cut",
+  "selectAllShort": "All",
+  "deselect": "Deselect",
+  "clearSelection": "Deselect",
+  "imageAltFallback": "Image",
+  "whatsNewSafeSyncTitle": "Safer sync — update all your devices",
+  "whatsNewSafeSyncDesc": "Google Drive sync now uses a new file and never overwrites your notes. Changes from devices that aren't updated yet still arrive here, but changes made here reach them only after you update them.",
+  "numbersCount": "{count} numbers",
+  "@numbersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

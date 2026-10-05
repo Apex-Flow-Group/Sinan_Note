@@ -2846,4 +2846,91 @@ class AppLocalizationsAr extends AppLocalizations {
   String daysAgoLong(int count) {
     return '$count أيام';
   }
+
+  @override
+  String get saveThisNoteQuestion => 'هل تريد حفظ هذه الملاحظة؟';
+
+  @override
+  String get reminderTimePassed => 'مضى الوقت';
+
+  @override
+  String reminderInMinutes(int count) {
+    return 'خلال $count دقيقة';
+  }
+
+  @override
+  String reminderInHours(int count) {
+    return 'خلال $count ساعة';
+  }
+
+  @override
+  String reminderInDays(int count) {
+    return 'بعد $count أيام';
+  }
+
+  @override
+  String exportFailedWithError(String error) {
+    return 'فشل التصدير: $error';
+  }
+
+  @override
+  String get plainTextView => 'نص عادي';
+
+  @override
+  String get formattedTextView => 'نص منسق';
+
+  @override
+  String get markdownView => 'ماركداون';
+
+  @override
+  String get swipeUp => 'اسحب للأعلى';
+
+  @override
+  String get customExtensionHint => 'مثال: vue, proto, graphql';
+
+  @override
+  String codePreviewTitle(String language) {
+    return 'معاينة $language';
+  }
+
+  @override
+  String get search => 'بحث';
+
+  @override
+  String get searchInCode => 'ابحث في الكود...';
+
+  @override
+  String searchResultsCount(int count) {
+    return '$count نتيجة';
+  }
+
+  @override
+  String get paste => 'لصق';
+
+  @override
+  String get cut => 'قص';
+
+  @override
+  String get selectAllShort => 'الكل';
+
+  @override
+  String get deselect => 'إلغاء';
+
+  @override
+  String get clearSelection => 'إلغاء التحديد';
+
+  @override
+  String get imageAltFallback => 'صورة';
+
+  @override
+  String get whatsNewSafeSyncTitle => 'مزامنة أكثر أماناً — حدّث كل أجهزتك';
+
+  @override
+  String get whatsNewSafeSyncDesc =>
+      'المزامنة مع Google Drive صارت بملف جديد ولا تكتب فوق ملاحظاتك أبداً. تعديلات الأجهزة التي لم تُحدَّث بعد تصل إلى هنا، لكن تعديلات هذا الجهاز لا تصلها إلا بعد تحديثها.';
+
+  @override
+  String numbersCount(int count) {
+    return '$count رقم';
+  }
 }

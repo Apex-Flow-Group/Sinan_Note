@@ -50,16 +50,16 @@ Stack: ${stackTrace.toString().split('\n').take(5).join('\n')}
     return report;
   }
 
-  /// قراءة سجل الأخطاء
-  Future<String> getErrorLog() async {
-    if (_logPath == null) return 'Engine not initialized';
+  /// قراءة سجل الأخطاء؛ null إن لم يُسجَّل شيء (الواجهة تكتب الرسالة).
+  Future<String?> getErrorLog() async {
+    if (_logPath == null) return null;
     try {
       final logFile = File(_logPath!);
       if (await logFile.exists()) {
         return await logFile.readAsString();
       }
     } catch (_) {}
-    return 'لا توجد أخطاء مسجلة';
+    return null;
   }
 
   /// مسح السجل

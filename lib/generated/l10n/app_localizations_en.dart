@@ -2853,4 +2853,97 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgoLong(int count) {
     return '$count days ago';
   }
+
+  @override
+  String get saveThisNoteQuestion => 'Would you like to save this note?';
+
+  @override
+  String get reminderTimePassed => 'Time passed';
+
+  @override
+  String reminderInMinutes(int count) {
+    return 'In ${count}m';
+  }
+
+  @override
+  String reminderInHours(int count) {
+    return 'In ${count}h';
+  }
+
+  @override
+  String reminderInDays(int count) {
+    return 'In ${count}d';
+  }
+
+  @override
+  String exportFailedWithError(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get plainTextView => 'Plain text';
+
+  @override
+  String get formattedTextView => 'Formatted text';
+
+  @override
+  String get markdownView => 'Markdown';
+
+  @override
+  String get swipeUp => 'Swipe up';
+
+  @override
+  String get customExtensionHint => 'e.g. vue, proto, graphql';
+
+  @override
+  String codePreviewTitle(String language) {
+    return '$language Preview';
+  }
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get searchInCode => 'Search in code...';
+
+  @override
+  String searchResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get paste => 'Paste';
+
+  @override
+  String get cut => 'Cut';
+
+  @override
+  String get selectAllShort => 'All';
+
+  @override
+  String get deselect => 'Deselect';
+
+  @override
+  String get clearSelection => 'Deselect';
+
+  @override
+  String get imageAltFallback => 'Image';
+
+  @override
+  String get whatsNewSafeSyncTitle => 'Safer sync — update all your devices';
+
+  @override
+  String get whatsNewSafeSyncDesc =>
+      'Google Drive sync now uses a new file and never overwrites your notes. Changes from devices that aren\'t updated yet still arrive here, but changes made here reach them only after you update them.';
+
+  @override
+  String numbersCount(int count) {
+    return '$count numbers';
+  }
 }

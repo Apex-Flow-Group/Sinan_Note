@@ -1,12 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:sinan_note/domain/text/smart_analyzer.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/code/code_executor.dart';
 import 'package:sinan_note/services/code/language_detector.dart';
-import 'package:sinan_note/services/code/smart_analyzer.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class EditorSmartController {
@@ -124,7 +124,8 @@ class EditorSmartController {
 
     if (data['type'] == 'sum') {
       final sumResult = data['result'] as String;
-      final sumExpression = data['expression'] as String? ?? '';
+      final sumExpression = data['expression'] as String? ??
+          l10n.numbersCount(data['count'] as int? ?? 0);
       final sumInsertText = sumResult;
       showDialog(
         context: context,

@@ -235,6 +235,12 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Features ──
               // ⚠️ ثابت: يتغير مع كل إصدار — قائمة الميزات/الإصلاحات المرئية للمستخدم
               _FeatureRow(
+                icon: Icons.cloud_sync_rounded,
+                color: context.colors.warning,
+                title: l10n.whatsNewSafeSyncTitle,
+                subtitle: l10n.whatsNewSafeSyncDesc,
+              ),
+              _FeatureRow(
                 icon: Icons.menu_open_rounded,
                 color: context.colors.info,
                 title: l10n.whatsNewUnifiedToolbarTitle,

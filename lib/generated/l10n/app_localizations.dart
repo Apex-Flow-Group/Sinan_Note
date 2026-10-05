@@ -5467,6 +5467,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} days ago'**
   String daysAgoLong(int count);
+
+  /// No description provided for @saveThisNoteQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to save this note?'**
+  String get saveThisNoteQuestion;
+
+  /// No description provided for @reminderTimePassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Time passed'**
+  String get reminderTimePassed;
+
+  /// No description provided for @reminderInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'In {count}m'**
+  String reminderInMinutes(int count);
+
+  /// No description provided for @reminderInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'In {count}h'**
+  String reminderInHours(int count);
+
+  /// No description provided for @reminderInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'In {count}d'**
+  String reminderInDays(int count);
+
+  /// No description provided for @exportFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String exportFailedWithError(String error);
+
+  /// No description provided for @plainTextView.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain text'**
+  String get plainTextView;
+
+  /// No description provided for @formattedTextView.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatted text'**
+  String get formattedTextView;
+
+  /// No description provided for @markdownView.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get markdownView;
+
+  /// No description provided for @swipeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up'**
+  String get swipeUp;
+
+  /// No description provided for @customExtensionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. vue, proto, graphql'**
+  String get customExtensionHint;
+
+  /// No description provided for @codePreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{language} Preview'**
+  String codePreviewTitle(String language);
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @searchInCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in code...'**
+  String get searchInCode;
+
+  /// No description provided for @searchResultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 result} other{{count} results}}'**
+  String searchResultsCount(int count);
+
+  /// No description provided for @paste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get paste;
+
+  /// No description provided for @cut.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut'**
+  String get cut;
+
+  /// No description provided for @selectAllShort.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get selectAllShort;
+
+  /// No description provided for @deselect.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect'**
+  String get deselect;
+
+  /// No description provided for @clearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect'**
+  String get clearSelection;
+
+  /// No description provided for @imageAltFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get imageAltFallback;
+
+  /// No description provided for @whatsNewSafeSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safer sync — update all your devices'**
+  String get whatsNewSafeSyncTitle;
+
+  /// No description provided for @whatsNewSafeSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive sync now uses a new file and never overwrites your notes. Changes from devices that aren\'t updated yet still arrive here, but changes made here reach them only after you update them.'**
+  String get whatsNewSafeSyncDesc;
+
+  /// No description provided for @numbersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} numbers'**
+  String numbersCount(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -72,7 +72,7 @@ class ApexErrorManager {
 
   static Future<void> _shareErrorLog() async {
     try {
-      final log = await _engine.getErrorLog();
+      final log = await _engine.getErrorLog() ?? '-';
       await Share.share(
         'Error Report for Apex Flow Group\n\n$log\n\nSend to: $developerEmail',
         subject: 'Sinan Note - Error Report',

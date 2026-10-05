@@ -1,12 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🧠 SMART SERVICES — SmartAnalyzer + LanguageDetector + ChecklistFormatter
 
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
+import 'package:sinan_note/domain/text/smart_analyzer.dart';
 import 'package:sinan_note/services/code/language_detector.dart';
-import 'package:sinan_note/services/code/smart_analyzer.dart';
 
 void main() {
   // ══════════════════════════════════════════════════════════════

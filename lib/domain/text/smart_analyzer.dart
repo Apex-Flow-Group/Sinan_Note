@@ -212,7 +212,9 @@ class SmartAnalyzer {
       // بناء تعبير العرض مع الإشارات
       final lines2 =
           paragraphText.split('\n').where((l) => l.trim().isNotEmpty).toList();
-      String displayExpr;
+      // أكثر من 8 أرقام: لا تعبير، والواجهة تعرض العدد بلغتها
+      String? displayExpr;
+      var count = 0;
       if (lines2.length > 1) {
         final parts = <String>[];
         for (final line in lines2) {
@@ -224,20 +226,21 @@ class SmartAnalyzer {
             parts.add(f);
           }
         }
-        displayExpr =
-            parts.length <= 8 ? parts.join(' + ') : '${parts.length} رقم';
+        count = parts.length;
+        displayExpr = count <= 8 ? parts.join(' + ') : null;
       } else {
         final nums = RegExp(r'[+\-]?\s*\d+(?:\.\d+)?(?!\s*%)')
             .allMatches(normalizeNumbers(paragraphText));
         final numList =
             nums.map((m) => m.group(0)!.replaceAll(' ', '')).toList();
-        displayExpr =
-            numList.length <= 8 ? numList.join(' + ') : '${numList.length} رقم';
+        count = numList.length;
+        displayExpr = count <= 8 ? numList.join(' + ') : null;
       }
       return {
         'type': 'sum',
         'result': formatted,
         'expression': displayExpr,
+        'count': count,
       };
     }
 
