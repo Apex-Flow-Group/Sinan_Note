@@ -130,6 +130,10 @@ final _rules = <_Rule>[
   // T1: الألوان من الثيم فقط
   _Rule('T1', (p, l) => l != _Layer.theme,
       RegExp(r'''\bColors\.(?!transparent\b)[a-z]|\bColor\(0x''')),
+  // T3: لا ThemeData.primaryColor (قديم: في الداكن هو لون السطح لا اللون
+  // الأساسي) — colorScheme.primary
+  _Rule('T3', (p, l) => l != _Layer.theme,
+      RegExp(r'''\.primaryColor\b''')),
   // T2: أحجام الخط من TextTheme
   _Rule('T2', (p, l) => _isUi(l), RegExp(r'''\bfontSize:\s*\d''')),
   // L1: لا نصوص للمستخدم ولا تفرّع لغة في الواجهة

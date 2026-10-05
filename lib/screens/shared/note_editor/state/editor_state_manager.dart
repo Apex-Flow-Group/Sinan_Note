@@ -217,6 +217,15 @@ class EditorStateManager {
     isDirty = false;
   }
 
+  /// المحتوى والعنوان كما عرضهما المحرر عند التحميل يصبحان المرجع: صيغة
+  /// المحرر قد تختلف عن المخزّن حرفياً دون أن يغيّر المستخدم شيئاً.
+  void rebaseContent(String loadedContent) {
+    content = loadedContent;
+    hasContent = loadedContent.isNotEmpty;
+    originalContent = loadedContent;
+    originalTitle = customTitle ?? checklistTitle ?? '';
+  }
+
   /// Update content and mark as dirty
   ///
   /// Convenience method to update content and set dirty flag.

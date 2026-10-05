@@ -77,6 +77,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late ui.TextDirection _titleDirection;
   late ui.TextDirection _contentDirection;
   final _loadingNotifier = ValueNotifier<bool>(false);
+
   /// ما يُشتق من محتوى الملاحظة يُحسب مرة لكل (id, updatedAt) ويبقى بعد خروج
   /// البطاقة من الشاشة — البطاقات لا تحتفظ بحالتها أثناء التمرير.
   static final _previewCache = <int, _CardPreview>{};
@@ -384,8 +385,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                           maxLines: 4,
                                                           overflow: TextOverflow
                                                               .ellipsis,
-                                                          style:
-                                                              _contentStyle,
+                                                          style: _contentStyle,
                                                         ),
                                             ],
                                           ),
@@ -426,8 +426,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                   final isExpired = widget
                                       .note.reminderDateTime!
                                       .isBefore(DateTime.now());
-                                  final badgeColor =
-                                      isExpired ? colors.danger : colors.warning;
+                                  final badgeColor = isExpired
+                                      ? colors.danger
+                                      : colors.warning;
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 4),
@@ -513,8 +514,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: extColor.withValues(
-                                            alpha: 0.15),
+                                        color: extColor.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Row(
@@ -577,7 +577,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                 ? Icons.check_circle
                                 : Icons.circle_outlined,
                             color: widget.isSelected
-                                ? Theme.of(context).primaryColor
+                                ? Theme.of(context).colorScheme.primary
                                 : titleColor.withValues(alpha: 0.5),
                             size: 24,
                           ),

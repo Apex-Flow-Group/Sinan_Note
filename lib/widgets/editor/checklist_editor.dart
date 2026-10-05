@@ -19,6 +19,9 @@ class ChecklistEditor extends StatefulWidget {
   final String initialContent;
   final String? initialTitle; // ← العنوان الأصلي للنوتة كـ fallback
   final Function(String jsonContent) onChanged;
+
+  /// الحالة كما حُمّلت (بصيغة هذا المحرر) — مرجع المقارنة، لا تعديل.
+  final ValueChanged<String>? onLoaded;
   final Color backgroundColor;
   final VoidCallback? onUndoRedoChanged;
   final Function(ChecklistUndoRedoController)? onUndoRedoControllerCreated;
@@ -29,6 +32,7 @@ class ChecklistEditor extends StatefulWidget {
     super.key,
     required this.initialContent,
     required this.onChanged,
+    this.onLoaded,
     required this.backgroundColor,
     this.initialTitle,
     this.onUndoRedoChanged,
@@ -132,9 +136,9 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       _initializeController(item);
     }
 
-    // حفظ snapshot أولي في الـ history
+    // حفظ snapshot أولي في الـ history، ويُبلَّغ كحالة محمّلة لا كتعديل
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _notifyParent();
+      if (mounted) _notifyParent(loaded: true);
     });
   }
 
@@ -413,8 +417,10 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
     );
   }
 
-  void _notifyParent() {
+  void _notifyParent({bool loaded = false}) {
     if (!mounted) return;
+    final emit =
+        loaded ? (widget.onLoaded ?? widget.onChanged) : widget.onChanged;
 
     // 🛡️ Force sync all controllers to models
     for (var item in _items) {
@@ -440,7 +446,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
     if (!hasContent && !_isUndoRedoAction) {
       // Empty checklist - don't save garbage, but don't block undo/redo
-      widget.onChanged(jsonEncode({'title': '', 'items': []}));
+      emit(jsonEncode({'title': '', 'items': []}));
       return;
     }
 
@@ -462,7 +468,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       }
     }
 
-    widget.onChanged(jsonData);
+    emit(jsonData);
 
     // 🔧 FIX: أطلق onUndoRedoChanged فقط إذا تغيرت الحالة فعلاً
     WidgetsBinding.instance.addPostFrameCallback((_) {

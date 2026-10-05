@@ -97,7 +97,7 @@ class MasterPanel extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).appBarTheme.backgroundColor ??
-            Theme.of(context).primaryColor,
+            Theme.of(context).colorScheme.primary,
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).dividerColor,

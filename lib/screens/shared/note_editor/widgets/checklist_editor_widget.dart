@@ -14,7 +14,10 @@ class ChecklistEditorWidget extends StatelessWidget {
   final Function(ChecklistUndoRedoController) onUndoRedoControllerCreated;
   final VoidCallback onUndoRedoChanged;
   final Function(String) onChecklistTitleChanged;
-  final VoidCallback onContentChanged;
+  final ValueChanged<String> onContentChanged;
+
+  /// المحتوى كما حمّله المحرر: يصبح مرجع "هل تغيّر شيء؟".
+  final ValueChanged<String> onContentLoaded;
   final Function(VoidCallback addItem)? onAddItemCreated;
   final bool readOnly;
   final String? noteTitle; // ← العنوان الأصلي للنوتة
@@ -28,10 +31,23 @@ class ChecklistEditorWidget extends StatelessWidget {
     required this.onUndoRedoChanged,
     required this.onChecklistTitleChanged,
     required this.onContentChanged,
+    required this.onContentLoaded,
     this.onAddItemCreated,
     this.readOnly = false,
     this.noteTitle,
   });
+
+  void _accept(String jsonContent) {
+    contentController.text = jsonContent;
+    try {
+      final decoded = jsonDecode(jsonContent);
+      if (decoded is Map && decoded['title'] != null) {
+        onChecklistTitleChanged(decoded['title']);
+      }
+    } catch (e) {
+      // Invalid JSON, ignore
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,17 +67,12 @@ class ChecklistEditorWidget extends StatelessWidget {
         onUndoRedoChanged: onUndoRedoChanged,
         onAddItemCreated: onAddItemCreated,
         onChanged: (jsonContent) {
-          contentController.text = jsonContent;
-          onContentChanged();
-
-          try {
-            final decoded = jsonDecode(jsonContent);
-            if (decoded is Map && decoded['title'] != null) {
-              onChecklistTitleChanged(decoded['title']);
-            }
-          } catch (e) {
-            // Invalid JSON, ignore
-          }
+          _accept(jsonContent);
+          onContentChanged(jsonContent);
+        },
+        onLoaded: (jsonContent) {
+          _accept(jsonContent);
+          onContentLoaded(jsonContent);
         },
       ),
     );

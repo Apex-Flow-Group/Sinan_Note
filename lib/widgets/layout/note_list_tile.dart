@@ -56,7 +56,8 @@ class NoteListTile extends StatelessWidget {
 
       // تمييز الملاحظة المختارة
       selected: isSelected,
-      selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+      selectedTileColor:
+          Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
 
       // معالجة النقر
       onTap: onTap,

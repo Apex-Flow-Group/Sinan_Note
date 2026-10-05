@@ -63,9 +63,8 @@ class EditorContentBuilder {
         onAddItemCreated: (addItem) {
           coordinator.checklistAddItem = addItem;
         },
-        onContentChanged: () {
-          coordinator.stateManager.markDirty();
-        },
+        onContentChanged: coordinator.stateManager.updateContent,
+        onContentLoaded: coordinator.stateManager.rebaseContent,
       );
     } else {
       coordinator.quillController ??= QuillMigration.controllerFromContent(

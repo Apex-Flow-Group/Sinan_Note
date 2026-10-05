@@ -143,7 +143,7 @@ class ReadOnlyBars {
                     child: ElevatedButton.icon(
                       onPressed: onEdit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: context.scheme.onPrimary,
                         elevation: 2,
                         padding: const EdgeInsets.symmetric(horizontal: 16),

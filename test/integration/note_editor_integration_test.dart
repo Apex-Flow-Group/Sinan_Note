@@ -154,6 +154,57 @@ void main() {
 
         expect(find.text('Task 1'), findsOneWidget);
       });
+
+      Future<Note> savedChecklist() async {
+        final t = DateTime.utc(2026);
+        return (await data.notes.save(Note(
+          title: 'Tasks',
+          content: '{"title":"Tasks","items":['
+              '{"id":"1","text":"Task 1","isDone":false},'
+              '{"id":"2","text":"Task 2","isDone":true}]}',
+          noteType: 'checklist',
+          isChecklist: true,
+          createdAt: t,
+          updatedAt: t,
+        )));
+      }
+
+      testWidgets('opening and leaving without changes does not save',
+          (tester) async {
+        final note = await tester.runAsync(savedChecklist);
+        await tester
+            .pumpWidget(buildEditor(note: note, mode: NoteMode.checklist));
+        await tester.pumpAndSettle();
+        final writes = data.notes.localWrites.value;
+
+        await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+        await tester.runAsync(
+            () => Future.delayed(const Duration(milliseconds: 300)));
+        await tester.pumpAndSettle();
+
+        expect(data.notes.localWrites.value, writes, reason: 'nothing saved');
+      });
+
+      testWidgets('a real edit is still saved on leaving', (tester) async {
+        final note = await tester.runAsync(savedChecklist);
+        await tester
+            .pumpWidget(buildEditor(note: note, mode: NoteMode.checklist));
+        await tester.pumpAndSettle();
+        final writes = data.notes.localWrites.value;
+
+        await tester.enterText(find.text('Task 1'), 'Task 1 edited');
+        await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+        await tester.runAsync(
+            () => Future.delayed(const Duration(milliseconds: 500)));
+        await tester.pumpAndSettle();
+
+        expect(data.notes.localWrites.value, greaterThan(writes));
+        // رسالة "تم الحفظ" ونسخة السجل تكتمل قبل نهاية الاختبار
+        await tester.pump(const Duration(seconds: 5));
+        await tester.runAsync(
+            () => Future.delayed(const Duration(milliseconds: 300)));
+      });
     });
 
     group('Reminder Mode', () {

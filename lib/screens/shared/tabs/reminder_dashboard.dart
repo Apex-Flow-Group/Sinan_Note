@@ -380,11 +380,14 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                       ),
                                       TabBar(
                                         controller: _tabController,
-                                        indicatorColor:
-                                            Theme.of(context).primaryColor,
+                                        indicatorColor: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                         labelColor: isDark
                                             ? context.scheme.onSurface
-                                            : Theme.of(context).primaryColor,
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .primary,
                                         unselectedLabelColor:
                                             context.colors.muted,
                                         labelStyle: context.text.bodyMedium
