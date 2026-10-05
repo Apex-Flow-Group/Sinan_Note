@@ -1,90 +1,84 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sinan_note/domain/text/word_diff.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
-enum DiffType { equal, added, removed }
+/// الفرق بين نصين، يُحسب في isolate مرة لكل زوج نصوص.
+class DiffView extends StatefulWidget {
+  const DiffView({super.key, required this.oldText, required this.newText});
 
-class DiffSpan {
-  final DiffType type;
-  final String text;
-  const DiffSpan(this.type, this.text);
+  final String oldText;
+  final String newText;
+
+  @override
+  State<DiffView> createState() => _DiffViewState();
 }
 
-List<DiffSpan> computeDiff(String oldText, String newText) {
-  final a = oldText.split(RegExp(r'(?<=\s)|(?=\s)'));
-  final b = newText.split(RegExp(r'(?<=\s)|(?=\s)'));
-  final m = a.length, n = b.length;
-  final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
-  for (var i = m - 1; i >= 0; i--) {
-    for (var j = n - 1; j >= 0; j--) {
-      if (a[i] == b[j]) {
-        dp[i][j] = dp[i + 1][j + 1] + 1;
-      } else {
-        dp[i][j] = dp[i + 1][j] > dp[i][j + 1] ? dp[i + 1][j] : dp[i][j + 1];
-      }
-    }
-  }
-  final spans = <DiffSpan>[];
-  var i = 0, j = 0;
-  while (i < m && j < n) {
-    if (a[i] == b[j]) {
-      spans.add(DiffSpan(DiffType.equal, a[i]));
-      i++;
-      j++;
-    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-      spans.add(DiffSpan(DiffType.removed, a[i]));
-      i++;
-    } else {
-      spans.add(DiffSpan(DiffType.added, b[j]));
-      j++;
-    }
-  }
-  while (i < m) {
-    spans.add(DiffSpan(DiffType.removed, a[i++]));
-  }
-  while (j < n) {
-    spans.add(DiffSpan(DiffType.added, b[j++]));
-  }
-  return spans;
-}
+class _DiffViewState extends State<DiffView> {
+  late Future<List<DiffSpan>> _spans;
 
-class DiffView extends StatelessWidget {
-  final List<DiffSpan> spans;
-  const DiffView({super.key, required this.spans});
+  @override
+  void initState() {
+    super.initState();
+    _spans = _compute();
+  }
+
+  @override
+  void didUpdateWidget(DiffView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.oldText != widget.oldText ||
+        oldWidget.newText != widget.newText) {
+      _spans = _compute();
+    }
+  }
+
+  Future<List<DiffSpan>> _compute() =>
+      compute(WordDiff.ofPair, (widget.oldText, widget.newText));
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Text.rich(
-      TextSpan(
-        children: spans.map((s) {
-          switch (s.type) {
-            case DiffType.added:
-              return TextSpan(
-                text: s.text,
-                style: TextStyle(
-                  color: colors.success,
-                  backgroundColor: colors.successContainer,
-                  fontWeight: FontWeight.w500,
-                ),
-              );
-            case DiffType.removed:
-              return TextSpan(
-                text: s.text,
-                style: TextStyle(
-                  color: colors.danger,
-                  backgroundColor: colors.dangerContainer,
-                  decoration: TextDecoration.lineThrough,
-                ),
-              );
-            case DiffType.equal:
-              return TextSpan(text: s.text);
-          }
-        }).toList(),
-      ),
-      style:
-          TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
+    return FutureBuilder<List<DiffSpan>>(
+      future: _spans,
+      builder: (context, snapshot) {
+        final spans = snapshot.data;
+        if (spans == null) {
+          return const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final colors = context.colors;
+        return Text.rich(
+          TextSpan(
+            children: [
+              for (final s in spans)
+                switch (s.type) {
+                  DiffType.added => TextSpan(
+                      text: s.text,
+                      style: TextStyle(
+                        color: colors.success,
+                        backgroundColor: colors.successContainer,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  DiffType.removed => TextSpan(
+                      text: s.text,
+                      style: TextStyle(
+                        color: colors.danger,
+                        backgroundColor: colors.dangerContainer,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  DiffType.equal => TextSpan(text: s.text),
+                },
+            ],
+          ),
+          style: TextStyle(
+              fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
+        );
+      },
     );
   }
 }

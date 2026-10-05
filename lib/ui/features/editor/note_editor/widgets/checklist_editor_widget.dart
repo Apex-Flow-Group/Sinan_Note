@@ -1,6 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
-import 'dart:convert';
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/ui/features/editor/widgets/checklist_editor.dart';
@@ -37,18 +35,6 @@ class ChecklistEditorWidget extends StatelessWidget {
     this.noteTitle,
   });
 
-  void _accept(String jsonContent) {
-    contentController.text = jsonContent;
-    try {
-      final decoded = jsonDecode(jsonContent);
-      if (decoded is Map && decoded['title'] != null) {
-        onChecklistTitleChanged(decoded['title']);
-      }
-    } catch (e) {
-      // Invalid JSON, ignore
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -66,12 +52,13 @@ class ChecklistEditorWidget extends StatelessWidget {
         onUndoRedoControllerCreated: onUndoRedoControllerCreated,
         onUndoRedoChanged: onUndoRedoChanged,
         onAddItemCreated: onAddItemCreated,
+        onTitleChanged: onChecklistTitleChanged,
         onChanged: (jsonContent) {
-          _accept(jsonContent);
+          contentController.text = jsonContent;
           onContentChanged(jsonContent);
         },
         onLoaded: (jsonContent) {
-          _accept(jsonContent);
+          contentController.text = jsonContent;
           onContentLoaded(jsonContent);
         },
       ),

@@ -22,6 +22,9 @@ class ChecklistEditor extends StatefulWidget {
 
   /// الحالة كما حُمّلت (بصيغة هذا المحرر) — مرجع المقارنة، لا تعديل.
   final ValueChanged<String>? onLoaded;
+
+  /// العنوان كما في المحتوى المُرسَل (بلا فك JSON عند المستقبِل).
+  final ValueChanged<String>? onTitleChanged;
   final Color backgroundColor;
   final VoidCallback? onUndoRedoChanged;
   final Function(ChecklistUndoRedoController)? onUndoRedoControllerCreated;
@@ -33,6 +36,7 @@ class ChecklistEditor extends StatefulWidget {
     required this.initialContent,
     required this.onChanged,
     this.onLoaded,
+    this.onTitleChanged,
     required this.backgroundColor,
     this.initialTitle,
     this.onUndoRedoChanged,
@@ -442,6 +446,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
 
     // ✅ VALIDATION: Prevent saving completely empty checklists
     final title = _titleController.text.trim();
+    widget.onTitleChanged?.call(title);
     final hasContent = title.isNotEmpty ||
         realItems.any((item) => item.text.trim().isNotEmpty);
 

@@ -43,6 +43,16 @@ class _NoteCardWrapperState extends State<NoteCardWrapper> {
   }
 
   @override
+  void didUpdateWidget(NoteCardWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedNoteIdsNotifier != widget.selectedNoteIdsNotifier) {
+      oldWidget.selectedNoteIdsNotifier.removeListener(_onSelectionChanged);
+      widget.selectedNoteIdsNotifier.addListener(_onSelectionChanged);
+      _updateSelection(widget.selectedNoteIdsNotifier.value);
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final provider = context.read<SelectedNoteProvider>();

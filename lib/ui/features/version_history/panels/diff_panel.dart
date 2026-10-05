@@ -44,7 +44,6 @@ class DiffPanel extends StatelessWidget {
     final older = idx < allVersions.length - 1 ? allVersions[idx + 1] : null;
     final newText = NoteText.toDisplayText(version.content);
     final oldText = older != null ? NoteText.toDisplayText(older.content) : '';
-    final spans = older != null ? computeDiff(oldText, newText) : null;
     final actionColor = VersionHistoryController.getActionColor(version.action);
     final actionIcon = VersionHistoryController.getActionIcon(version.action);
 
@@ -90,7 +89,7 @@ class DiffPanel extends StatelessWidget {
             ],
           ),
         ),
-        if (spans != null)
+        if (older != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
@@ -113,8 +112,8 @@ class DiffPanel extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: SizedBox(
               width: double.maxFinite,
-              child: spans != null
-                  ? DiffView(spans: spans)
+              child: older != null
+                  ? DiffView(oldText: oldText, newText: newText)
                   : Text(newText.isEmpty ? l10n.noHistory : newText,
                       style: context.text.titleSmall?.copyWith(
                           fontWeight: FontWeight.normal, height: 1.6)),

@@ -71,15 +71,17 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
 
   @override
   Widget build(BuildContext context) {
-    // كل شيء داخل AnimatedBuilder لضمان قراءة الثيم الصحيح في كل frame
-    return AnimatedBuilder(
-      animation: _waveController,
-      builder: (context, _) {
-        final cs = Theme.of(context).colorScheme;
-        final barColor = AppTheme.scaffoldBackground(cs);
-        final contentColor = cs.onSurface;
+    final cs = Theme.of(context).colorScheme;
+    final barColor = AppTheme.scaffoldBackground(cs);
+    final contentColor = cs.onSurface;
+    final shadow = context.colors.shadow.withValues(alpha: 0.05);
 
-        return Container(
+    // الحركة تدير إطار التوهج وحده؛ الحقل يُبنى مرة ويُمرَّر child
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _waveController,
+        child: _field(context, barColor, contentColor),
+        builder: (context, field) => Container(
           padding: EdgeInsets.all(_focusNode.hasFocus ? 1.5 : 0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
@@ -97,99 +99,100 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                 : null,
             boxShadow: [
               BoxShadow(
-                color: context.colors.shadow.withValues(alpha: 0.05),
+                color: shadow,
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Container(
-            height: 46,
-            decoration: BoxDecoration(
-              color: barColor,
-              borderRadius: BorderRadius.circular(28.5),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Icon(Icons.search,
-                        color: contentColor.withValues(alpha: 0.6), size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: widget.controller,
-                        focusNode: _focusNode,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: context.text.bodyMedium
-                            ?.copyWith(color: contentColor),
-                        cursorColor: CommonPalette.searchGlowStart,
-                        decoration: InputDecoration(
-                          hintText: widget.hintText,
-                          hintStyle: context.text.bodyMedium?.copyWith(
-                              color: contentColor.withValues(alpha: 0.5)),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.only(bottom: 2),
-                          isDense: true,
+          child: field,
+        ),
+      ),
+    );
+  }
+
+  Widget _field(BuildContext context, Color barColor, Color contentColor) {
+    return Container(
+      height: 46,
+      decoration: BoxDecoration(
+        color: barColor,
+        borderRadius: BorderRadius.circular(28.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Icon(Icons.search,
+                  color: contentColor.withValues(alpha: 0.6), size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  textAlignVertical: TextAlignVertical.center,
+                  style: context.text.bodyMedium?.copyWith(color: contentColor),
+                  cursorColor: CommonPalette.searchGlowStart,
+                  decoration: InputDecoration(
+                    hintText: widget.hintText,
+                    hintStyle: context.text.bodyMedium
+                        ?.copyWith(color: contentColor.withValues(alpha: 0.5)),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.only(bottom: 2),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              if (widget.onViewToggle != null || widget.onFilterTap != null)
+                ClipRect(
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOutCubic,
+                    child: SizedBox(
+                      width: _focusNode.hasFocus ? 0 : null,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.onViewToggle != null)
+                              ValueListenableBuilder<String>(
+                                valueListenable: widget.viewTypeNotifier,
+                                builder: (context, viewType, _) {
+                                  return IconButton(
+                                    icon: Icon(
+                                      viewType == 'listCompact'
+                                          ? Icons.view_day
+                                          : viewType == 'listExpanded'
+                                              ? Icons.grid_view
+                                              : Icons.view_headline,
+                                      color:
+                                          contentColor.withValues(alpha: 0.7),
+                                    ),
+                                    onPressed: widget.onViewToggle,
+                                    splashRadius: 24,
+                                  );
+                                },
+                              ),
+                            if (widget.onFilterTap != null)
+                              IconButton(
+                                icon: Icon(Icons.filter_list_rounded,
+                                    color: contentColor.withValues(alpha: 0.7)),
+                                onPressed: widget.onFilterTap,
+                                splashRadius: 24,
+                              ),
+                          ],
                         ),
                       ),
                     ),
-                    if (widget.onViewToggle != null ||
-                        widget.onFilterTap != null)
-                      ClipRect(
-                        child: AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOutCubic,
-                          child: SizedBox(
-                            width: _focusNode.hasFocus ? 0 : null,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const NeverScrollableScrollPhysics(),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (widget.onViewToggle != null)
-                                    ValueListenableBuilder<String>(
-                                      valueListenable: widget.viewTypeNotifier,
-                                      builder: (context, viewType, _) {
-                                        return IconButton(
-                                          icon: Icon(
-                                            viewType == 'listCompact'
-                                                ? Icons.view_day
-                                                : viewType == 'listExpanded'
-                                                    ? Icons.grid_view
-                                                    : Icons.view_headline,
-                                            color: contentColor.withValues(
-                                                alpha: 0.7),
-                                          ),
-                                          onPressed: widget.onViewToggle,
-                                          splashRadius: 24,
-                                        );
-                                      },
-                                    ),
-                                  if (widget.onFilterTap != null)
-                                    IconButton(
-                                      icon: Icon(Icons.filter_list_rounded,
-                                          color: contentColor.withValues(
-                                              alpha: 0.7)),
-                                      onPressed: widget.onFilterTap,
-                                      splashRadius: 24,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

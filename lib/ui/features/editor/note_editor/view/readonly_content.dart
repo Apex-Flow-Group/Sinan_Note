@@ -50,6 +50,14 @@ class ReadOnlyContent extends StatefulWidget {
 }
 
 class _ReadOnlyContentState extends State<ReadOnlyContent> {
+  final _quillFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _quillFocus.dispose();
+    super.dispose();
+  }
+
   String? _plainText;
 
   @override
@@ -183,7 +191,7 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
         textDirection: TextDirection.rtl,
         child: QuillEditor(
           controller: qc,
-          focusNode: FocusNode(),
+          focusNode: _quillFocus,
           scrollController: widget.scrollController,
           config: QuillEditorConfig(
             textDirectionResolver: strongDirectionOf,

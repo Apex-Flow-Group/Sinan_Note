@@ -9,99 +9,8 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/platform/platform_helper.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/widgets/unified_notification_service.dart';
+import 'package:sinan_note/ui/features/editor/widgets/diff_view.dart';
 import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
-
-// ── Diff types ──────────────────────────────────────────────────────────────
-enum _DiffType { equal, added, removed }
-
-class _DiffSpan {
-  final _DiffType type;
-  final String text;
-  const _DiffSpan(this.type, this.text);
-}
-
-// ── Word-level LCS diff ──────────────────────────────────────────────────────
-List<_DiffSpan> _computeDiff(String oldText, String newText) {
-  final a = oldText.split(RegExp(r'(?<=\s)|(?=\s)'));
-  final b = newText.split(RegExp(r'(?<=\s)|(?=\s)'));
-
-  final m = a.length, n = b.length;
-  // LCS table
-  final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
-  for (var i = m - 1; i >= 0; i--) {
-    for (var j = n - 1; j >= 0; j--) {
-      if (a[i] == b[j]) {
-        dp[i][j] = dp[i + 1][j + 1] + 1;
-      } else {
-        dp[i][j] = dp[i + 1][j] > dp[i][j + 1] ? dp[i + 1][j] : dp[i][j + 1];
-      }
-    }
-  }
-
-  final spans = <_DiffSpan>[];
-  var i = 0, j = 0;
-  while (i < m && j < n) {
-    if (a[i] == b[j]) {
-      spans.add(_DiffSpan(_DiffType.equal, a[i]));
-      i++;
-      j++;
-    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-      spans.add(_DiffSpan(_DiffType.removed, a[i]));
-      i++;
-    } else {
-      spans.add(_DiffSpan(_DiffType.added, b[j]));
-      j++;
-    }
-  }
-  while (i < m) {
-    spans.add(_DiffSpan(_DiffType.removed, a[i++]));
-  }
-  while (j < n) {
-    spans.add(_DiffSpan(_DiffType.added, b[j++]));
-  }
-  return spans;
-}
-
-// ── Diff View Widget ─────────────────────────────────────────────────────────
-class _DiffView extends StatelessWidget {
-  final List<_DiffSpan> spans;
-  const _DiffView({required this.spans});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Text.rich(
-      TextSpan(
-        children: spans.map((s) {
-          switch (s.type) {
-            case _DiffType.added:
-              return TextSpan(
-                text: s.text,
-                style: TextStyle(
-                  color: colors.success,
-                  backgroundColor: colors.successContainer,
-                  fontWeight: FontWeight.w500,
-                ),
-              );
-            case _DiffType.removed:
-              return TextSpan(
-                text: s.text,
-                style: TextStyle(
-                  color: colors.danger,
-                  backgroundColor: colors.dangerContainer,
-                  decoration: TextDecoration.lineThrough,
-                ),
-              );
-            case _DiffType.equal:
-              return TextSpan(text: s.text);
-          }
-        }).toList(),
-      ),
-      style:
-          TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
-    );
-  }
-}
 
 // ── Main Sheet ───────────────────────────────────────────────────────────────
 class NoteHistorySheet extends StatelessWidget {
@@ -145,7 +54,6 @@ class NoteHistorySheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final oldText = _toPlainText(version.content);
     final newText = _toPlainText(newerContent);
-    final spans = _computeDiff(oldText, newText);
 
     final screenSize = MediaQuery.of(context).size;
     final isSmall = screenSize.width < 600;
@@ -205,7 +113,7 @@ class NoteHistorySheet extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: SizedBox(
                     width: double.maxFinite,
-                    child: _DiffView(spans: spans),
+                    child: DiffView(oldText: oldText, newText: newText),
                   ),
                 ),
               ),

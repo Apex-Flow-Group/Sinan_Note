@@ -49,6 +49,7 @@ class CodeEditor extends StatefulWidget {
 }
 
 class _CodeEditorState extends State<CodeEditor> {
+  late int _digits;
   late double _gutterWidth;
 
   static Mode? _resolveLanguage(String? lang) {
@@ -115,10 +116,13 @@ class _CodeEditorState extends State<CodeEditor> {
     return painter.width;
   }
 
-  double _calculateGutterWidth(String text) {
-    final lineCount = text.split('\n').length;
+  /// عدد خانات رقم آخر سطر، بلا تقسيم النص.
+  static int _lineDigits(String text) =>
+      ('\n'.allMatches(text).length + 1).toString().length;
+
+  /// يُقاس فقط حين يتغير عدد الخانات، لا مع كل حرف.
+  static double _gutterWidthFor(int digits) {
     // نضيف هامش للتوقع — نحسب للرقم التالي في المرتبة (مثلاً 100 بدل 99)
-    final digits = lineCount.toString().length;
     final nextOrderOfMagnitude = '9' * (digits + 1);
     const fontSize = AppFontSize.noteBody;
     const style = TextStyle(
@@ -135,7 +139,8 @@ class _CodeEditorState extends State<CodeEditor> {
   @override
   void initState() {
     super.initState();
-    _gutterWidth = _calculateGutterWidth(widget.controller.text);
+    _digits = _lineDigits(widget.controller.text);
+    _gutterWidth = _gutterWidthFor(_digits);
     widget.controller.addListener(_onTextChanged);
     _applyLanguage(widget.detectedLanguage);
   }
@@ -159,10 +164,12 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _onTextChanged() {
-    final newWidth = _calculateGutterWidth(widget.controller.text);
-    if (newWidth != _gutterWidth) {
-      setState(() => _gutterWidth = newWidth);
-    }
+    final digits = _lineDigits(widget.controller.text);
+    if (digits == _digits) return;
+    setState(() {
+      _digits = digits;
+      _gutterWidth = _gutterWidthFor(digits);
+    });
   }
 
   @override

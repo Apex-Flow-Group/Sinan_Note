@@ -396,151 +396,143 @@ class _BookModeViewState extends State<BookModeView> {
   Widget _buildQuillPage(Delta pageDelta, double horizontalPadding) {
     final fontFamily = _comfortableFont ? 'Georgia' : null;
 
-    Document doc;
-    try {
-      doc = Document.fromDelta(pageDelta);
-    } catch (_) {
+    return _QuillPage(
+      delta: pageDelta,
       // إذا فشل بناء الـ Document، اعرض كنص عادي
-      final text = pageDelta
-          .toList()
-          .where((op) => op.isInsert && op.data is String)
-          .map((op) => op.data as String)
-          .join();
-      return _buildPlainPage(text, horizontalPadding);
-    }
-
-    final controller = QuillController(
-      document: doc,
-      selection: const TextSelection.collapsed(offset: 0),
-    );
-    controller.readOnly = true;
-
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: DefaultTextStyle.merge(
-        style: TextStyle(fontFamily: fontFamily),
-        child: QuillEditor(
-          controller: controller,
-          focusNode: FocusNode(),
-          scrollController: ScrollController(),
-          config: QuillEditorConfig(
-            textDirectionResolver: strongDirectionOf,
-            autoFocus: false,
-            expands: true,
-            scrollable: true,
-            padding: EdgeInsets.fromLTRB(
-                horizontalPadding, 16, horizontalPadding, 20),
-            showCursor: false,
-            enableInteractiveSelection: true,
-            checkBoxReadOnly: true,
-            customStyles: DefaultStyles(
-              paragraph: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize,
-                  fontFamily: fontFamily,
-                  height: 1.8,
-                  color: widget.textColor,
+      fallback: () => _buildPlainPage(
+          pageDelta
+              .toList()
+              .where((op) => op.isInsert && op.data is String)
+              .map((op) => op.data as String)
+              .join(),
+          horizontalPadding),
+      builder: (controller, focusNode, scrollController) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: DefaultTextStyle.merge(
+          style: TextStyle(fontFamily: fontFamily),
+          child: QuillEditor(
+            controller: controller,
+            focusNode: focusNode,
+            scrollController: scrollController,
+            config: QuillEditorConfig(
+              textDirectionResolver: strongDirectionOf,
+              autoFocus: false,
+              expands: true,
+              scrollable: true,
+              padding: EdgeInsets.fromLTRB(
+                  horizontalPadding, 16, horizontalPadding, 20),
+              showCursor: false,
+              enableInteractiveSelection: true,
+              checkBoxReadOnly: true,
+              customStyles: DefaultStyles(
+                paragraph: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize,
+                    fontFamily: fontFamily,
+                    height: 1.8,
+                    color: widget.textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  VerticalSpacing.zero,
+                  VerticalSpacing.zero,
+                  null,
                 ),
-                HorizontalSpacing.zero,
-                VerticalSpacing.zero,
-                VerticalSpacing.zero,
-                null,
-              ),
-              lists: DefaultListBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize,
-                  fontFamily: fontFamily,
-                  height: 1.8,
-                  color: widget.textColor,
+                lists: DefaultListBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize,
+                    fontFamily: fontFamily,
+                    height: 1.8,
+                    color: widget.textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  VerticalSpacing.zero,
+                  VerticalSpacing.zero,
+                  null,
+                  null,
                 ),
-                HorizontalSpacing.zero,
-                VerticalSpacing.zero,
-                VerticalSpacing.zero,
-                null,
-                null,
-              ),
-              leading: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize,
-                  fontFamily: fontFamily,
-                  height: 1.8,
-                  color: widget.textColor,
+                leading: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize,
+                    fontFamily: fontFamily,
+                    height: 1.8,
+                    color: widget.textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  VerticalSpacing.zero,
+                  VerticalSpacing.zero,
+                  null,
                 ),
-                HorizontalSpacing.zero,
-                VerticalSpacing.zero,
-                VerticalSpacing.zero,
-                null,
-              ),
-              h1: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize + 8,
-                  fontFamily: fontFamily,
-                  fontWeight: FontWeight.bold,
-                  height: 1.6,
-                  color: widget.textColor,
+                h1: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize + 8,
+                    fontFamily: fontFamily,
+                    fontWeight: FontWeight.bold,
+                    height: 1.6,
+                    color: widget.textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  const VerticalSpacing(8, 4),
+                  VerticalSpacing.zero,
+                  null,
                 ),
-                HorizontalSpacing.zero,
-                const VerticalSpacing(8, 4),
-                VerticalSpacing.zero,
-                null,
-              ),
-              h2: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize + 5,
-                  fontFamily: fontFamily,
-                  fontWeight: FontWeight.bold,
-                  height: 1.6,
-                  color: widget.textColor,
+                h2: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize + 5,
+                    fontFamily: fontFamily,
+                    fontWeight: FontWeight.bold,
+                    height: 1.6,
+                    color: widget.textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  const VerticalSpacing(6, 3),
+                  VerticalSpacing.zero,
+                  null,
                 ),
-                HorizontalSpacing.zero,
-                const VerticalSpacing(6, 3),
-                VerticalSpacing.zero,
-                null,
-              ),
-              h3: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize + 3,
-                  fontFamily: fontFamily,
-                  fontWeight: FontWeight.bold,
-                  height: 1.6,
-                  color: widget.textColor,
+                h3: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize + 3,
+                    fontFamily: fontFamily,
+                    fontWeight: FontWeight.bold,
+                    height: 1.6,
+                    color: widget.textColor,
+                  ),
+                  HorizontalSpacing.zero,
+                  const VerticalSpacing(4, 2),
+                  VerticalSpacing.zero,
+                  null,
                 ),
-                HorizontalSpacing.zero,
-                const VerticalSpacing(4, 2),
-                VerticalSpacing.zero,
-                null,
-              ),
-              code: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize - 2,
-                  fontFamily: 'monospace',
-                  height: 1.5,
-                  color: widget.textColor.withValues(alpha: 0.85),
+                code: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize - 2,
+                    fontFamily: 'monospace',
+                    height: 1.5,
+                    color: widget.textColor.withValues(alpha: 0.85),
+                  ),
+                  HorizontalSpacing.zero,
+                  const VerticalSpacing(4, 4),
+                  VerticalSpacing.zero,
+                  BoxDecoration(
+                    color: widget.textColor.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
-                HorizontalSpacing.zero,
-                const VerticalSpacing(4, 4),
-                VerticalSpacing.zero,
-                BoxDecoration(
-                  color: widget.textColor.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              quote: DefaultTextBlockStyle(
-                TextStyle(
-                  fontSize: _fontSize,
-                  fontFamily: fontFamily,
-                  fontStyle: FontStyle.italic,
-                  height: 1.8,
-                  color: widget.textColor.withValues(alpha: 0.8),
-                ),
-                HorizontalSpacing.zero,
-                const VerticalSpacing(4, 4),
-                VerticalSpacing.zero,
-                BoxDecoration(
-                  border: BorderDirectional(
-                    start: BorderSide(
-                      color: widget.textColor.withValues(alpha: 0.3),
-                      width: 3,
+                quote: DefaultTextBlockStyle(
+                  TextStyle(
+                    fontSize: _fontSize,
+                    fontFamily: fontFamily,
+                    fontStyle: FontStyle.italic,
+                    height: 1.8,
+                    color: widget.textColor.withValues(alpha: 0.8),
+                  ),
+                  HorizontalSpacing.zero,
+                  const VerticalSpacing(4, 4),
+                  VerticalSpacing.zero,
+                  BoxDecoration(
+                    border: BorderDirectional(
+                      start: BorderSide(
+                        color: widget.textColor.withValues(alpha: 0.3),
+                        width: 3,
+                      ),
                     ),
                   ),
                 ),
@@ -751,3 +743,68 @@ class _StiffPageScrollPhysics extends PageScrollPhysics {
 }
 
 // (end of file)
+
+/// صفحة Quill للقراءة: تملك متحكماتها وتتخلص منها، وتبنيها مرة لكل صفحة
+/// لا مع كل إعادة بناء.
+class _QuillPage extends StatefulWidget {
+  const _QuillPage({
+    required this.delta,
+    required this.fallback,
+    required this.builder,
+  });
+
+  final Delta delta;
+  final Widget Function() fallback;
+  final Widget Function(QuillController controller, FocusNode focusNode,
+      ScrollController scrollController) builder;
+
+  @override
+  State<_QuillPage> createState() => _QuillPageState();
+}
+
+class _QuillPageState extends State<_QuillPage> {
+  final _focusNode = FocusNode();
+  final _scrollController = ScrollController();
+  QuillController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(_QuillPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.delta, widget.delta)) {
+      _controller?.dispose();
+      _load();
+    }
+  }
+
+  void _load() {
+    try {
+      _controller = QuillController(
+        document: Document.fromDelta(widget.delta),
+        selection: const TextSelection.collapsed(offset: 0),
+      )..readOnly = true;
+    } catch (_) {
+      _controller = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    _focusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = _controller;
+    if (controller == null) return widget.fallback();
+    return widget.builder(controller, _focusNode, _scrollController);
+  }
+}
