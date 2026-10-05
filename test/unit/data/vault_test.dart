@@ -212,6 +212,41 @@ void main() {
       quick.dispose();
     });
 
+    test('wrong secrets lock the vault for a while, escalating', () async {
+      var now = DateTime(2026, 6, 1);
+      final limited =
+          VaultRepository(store: VaultKeyStore(), clock: () => now);
+      await limited.setUp('Pass123!');
+      limited.lock();
+
+      for (var i = 0; i < 4; i++) {
+        expect(await limited.unlockWithPassword('wrong'), isFalse);
+      }
+      expect(await limited.unlockWithRecoveryCode('SN-0000-0000-0000'),
+          isFalse,
+          reason: 'the recovery code shares the counter');
+      await expectLater(limited.unlockWithPassword('Pass123!'),
+          throwsA(isA<VaultAttemptsExceededException>()
+              .having((e) => e.wait, 'wait', const Duration(minutes: 5))));
+
+      now = now.add(const Duration(minutes: 6));
+      for (var i = 0; i < 5; i++) {
+        expect(await limited.unlockWithPassword('wrong'), isFalse);
+        now = now.add(const Duration(minutes: 6));
+      }
+      now = now.subtract(const Duration(minutes: 6));
+      await expectLater(limited.unlockWithPassword('Pass123!'),
+          throwsA(isA<VaultAttemptsExceededException>()
+              .having((e) => e.wait, 'wait', const Duration(minutes: 15))));
+
+      now = now.add(const Duration(minutes: 16));
+      expect(await limited.unlockWithPassword('Pass123!'), isTrue);
+      limited.lock();
+      expect(await limited.unlockWithPassword('wrong'), isFalse,
+          reason: 'success reset the counter: no lock after one miss');
+      limited.dispose();
+    });
+
     test('initialize removes the raw key left by previous versions', () async {
       await vault.setUp('Pass123!');
       await VaultKeyStore().writeBiometricKey(_key());

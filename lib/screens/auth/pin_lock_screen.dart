@@ -17,12 +17,17 @@ class PinLockScreen extends StatefulWidget {
   final bool autoBiometric;
   final bool isDisabling;
 
+  /// قفل التطبيق نفسه لا يُغلق بالرجوع؛ ما عداه (إعداد، تعطيل القفل، دخول
+  /// الخزنة) يمكن التراجع عنه.
+  final bool isAppLock;
+
   const PinLockScreen({
     super.key,
     this.isSetup = false,
     this.onSuccess,
     this.autoBiometric = false,
     this.isDisabling = false,
+    this.isAppLock = false,
   });
 
   @override
@@ -283,7 +288,7 @@ class _PinLockScreenState extends State<PinLockScreen>
     final isCompact = screenHeight < 700;
 
     return PopScope(
-      canPop: widget.isSetup,
+      canPop: !widget.isAppLock,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop && widget.isSetup && _isConfirmStep) {
           setState(() {

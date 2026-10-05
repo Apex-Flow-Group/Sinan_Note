@@ -1185,5 +1185,13 @@
       }
     }
   },
-  "saveFailedKeepEditing": "Couldn't save — your changes are still here"
+  "saveFailedKeepEditing": "Couldn't save — your changes are still here",
+  "vaultTooManyAttempts": "Too many attempts — try again in {minutes} min",
+  "@vaultTooManyAttempts": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }

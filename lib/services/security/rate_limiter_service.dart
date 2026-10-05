@@ -26,8 +26,10 @@ class RateLimiterService {
     final remaining = lockUntil - now;
     
     if (remaining <= 0) {
-      // انتهى وقت القفل - إعادة تعيين
-      await _reset();
+      // انتهى وقت القفل: يُرفع القفل فقط. عدد المحاولات يبقى حتى دخول
+      // ناجح، فيتصاعد القفل (5 دقائق ← 15 ← ساعة) بدل 5 محاولات كل 5 دقائق
+      // إلى الأبد.
+      await prefs.remove(_keyLockUntil);
       return null;
     }
     

@@ -5617,6 +5617,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t save — your changes are still here'**
   String get saveFailedKeepEditing;
+
+  /// No description provided for @vaultTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts — try again in {minutes} min'**
+  String vaultTooManyAttempts(int minutes);
 }
 
 class _AppLocalizationsDelegate

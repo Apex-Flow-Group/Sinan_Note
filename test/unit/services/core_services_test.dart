@@ -44,6 +44,29 @@ void main() {
       expect(await RateLimiterService.getRemainingLockTime(), greaterThan(0));
     });
 
+    test('the lock escalates instead of restarting after it expires',
+        () async {
+      for (var i = 0; i < 5; i++) {
+        await RateLimiterService.recordFailedAttempt();
+      }
+      Future<void> expireLock() async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('pin_lock_until', 0);
+      }
+
+      await expireLock();
+      expect(await RateLimiterService.getRemainingLockTime(), isNull);
+      expect(await RateLimiterService.getRemainingAttempts(), 0,
+          reason: 'expiry lifts the lock, not the count');
+
+      int? lock;
+      for (var i = 0; i < 5; i++) {
+        await expireLock();
+        lock = await RateLimiterService.recordFailedAttempt();
+      }
+      expect(lock, 15 * 60, reason: '10 failures: 15 minutes');
+    });
+
     test('reset clears all state', () async {
       await RateLimiterService.recordFailedAttempt();
       await RateLimiterService.recordFailedAttempt();

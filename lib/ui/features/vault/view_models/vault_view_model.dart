@@ -9,6 +9,9 @@ import 'package:sinan_note/domain/vault_policy.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 
+export 'package:sinan_note/domain/errors.dart'
+    show VaultAttemptsExceededException;
+
 /// مراحل تدوير مفتاح الخزنة كما تراها الواجهة.
 enum VaultResetStep { idle, reEncrypting, completed, failed }
 

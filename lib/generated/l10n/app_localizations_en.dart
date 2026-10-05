@@ -2950,4 +2950,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get saveFailedKeepEditing =>
       'Couldn\'t save — your changes are still here';
+
+  @override
+  String vaultTooManyAttempts(int minutes) {
+    return 'Too many attempts — try again in $minutes min';
+  }
 }

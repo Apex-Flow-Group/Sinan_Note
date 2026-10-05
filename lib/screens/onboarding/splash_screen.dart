@@ -101,6 +101,7 @@ class _SplashScreenState extends State<SplashScreen> {
             MaterialPageRoute(
               builder: (_) => PinLockScreen(
                 isSetup: !hasPinAlready,
+                isAppLock: true,
                 autoBiometric: settings.biometricLockEnabled,
                 onSuccess: () {
                   Navigator.of(context).pop();

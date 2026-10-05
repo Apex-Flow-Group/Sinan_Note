@@ -31,6 +31,14 @@ class VaultLockedException extends NoteException {
   const VaultLockedException(super.message);
 }
 
+/// محاولات خاطئة كثيرة لفتح الخزنة: الانتظار [wait] قبل المحاولة التالية.
+class VaultAttemptsExceededException extends NoteException {
+  const VaultAttemptsExceededException(this.wait)
+      : super('Too many vault unlock attempts');
+
+  final Duration wait;
+}
+
 /// تعذّر فك تشفير قيمة: مفتاح خاطئ أو بيانات معبوث بها أو تالفة.
 class VaultDecryptionException extends NoteException {
   const VaultDecryptionException(super.message);

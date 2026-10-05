@@ -173,6 +173,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
               pageBuilder: (context, animation, secondaryAnimation) =>
                   PinLockScreen(
                 isSetup: false,
+                isAppLock: true,
                 autoBiometric: settings.biometricLockEnabled,
                 onSuccess: () {
                   // مارك الجلسة وافتح القفل مباشرة — بدون requestUnlock
@@ -234,7 +235,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     final isRTL = Directionality.of(context) == TextDirection.rtl;
     final isLargeScreen = PlatformHelper.shouldUseDesktopLayout(context);
 
-    return PopScope(
+    final layout = PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
@@ -313,6 +314,23 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           ),
         ),
       ),
+    );
+    // القفل عند العودة يُغطي المحتوى في الإطار نفسه، قبل أن تظهر شاشة PIN
+    return Stack(
+      children: [
+        layout,
+        Positioned.fill(
+          child: ListenableBuilder(
+            listenable: _securityController,
+            builder: (context, _) => IgnorePointer(
+              ignoring: !_securityController.isLocked,
+              child: _securityController.isLocked
+                  ? ColoredBox(color: Theme.of(context).colorScheme.surface)
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

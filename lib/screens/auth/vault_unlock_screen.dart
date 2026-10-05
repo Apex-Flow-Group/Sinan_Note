@@ -94,8 +94,13 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       _loading = true;
       _errorText = null;
     });
-    final success =
-        await context.read<VaultViewModel>().unlockWithPassword(password);
+    final bool success;
+    try {
+      success =
+          await context.read<VaultViewModel>().unlockWithPassword(password);
+    } on VaultAttemptsExceededException catch (e) {
+      return _showWait(e);
+    }
     if (!mounted) return;
 
     if (success) {
@@ -106,6 +111,16 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
         _loading = false;
       });
     }
+  }
+
+  /// محاولات خاطئة كثيرة: كم يبقى من الانتظار.
+  void _showWait(VaultAttemptsExceededException e) {
+    if (!mounted) return;
+    setState(() {
+      _errorText = AppLocalizations.of(context)!
+          .vaultTooManyAttempts((e.wait.inSeconds / 60).ceil());
+      _loading = false;
+    });
   }
 
   Future<void> _handleBiometricUnlock() async {
@@ -136,9 +151,14 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       _errorText = null;
     });
 
-    final success = await context
-        .read<VaultViewModel>()
-        .unlockWithRecoveryCode(recoveryCode);
+    final bool success;
+    try {
+      success = await context
+          .read<VaultViewModel>()
+          .unlockWithRecoveryCode(recoveryCode);
+    } on VaultAttemptsExceededException catch (e) {
+      return _showWait(e);
+    }
     if (!mounted) return;
 
     if (success) {

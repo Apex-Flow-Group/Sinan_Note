@@ -2936,4 +2936,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get saveFailedKeepEditing => 'تعذّر الحفظ — تعديلاتك ما زالت هنا';
+
+  @override
+  String vaultTooManyAttempts(int minutes) {
+    return 'محاولات خاطئة كثيرة — حاول بعد $minutes دقيقة';
+  }
 }

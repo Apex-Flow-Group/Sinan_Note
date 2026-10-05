@@ -1,7 +1,10 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pointycastle/export.dart' as pc;
 import 'package:sinan_note/services/security/biometric_service.dart';
@@ -64,7 +67,7 @@ class UnifiedLockService {
   /// حفظ PIN جديد (مع PBKDF2 hashing)
   Future<void> setPin(String pin) async {
     final salt = _generateSalt();
-    final hash = _hashPin(pin, salt);
+    final hash = await _hashPin(pin, salt);
     await _storage.write(key: _pinSaltKey, value: base64.encode(salt));
     await _storage.write(key: _pinHashKey, value: base64.encode(hash));
   }
@@ -77,7 +80,7 @@ class UnifiedLockService {
 
     final salt = base64.decode(saltB64);
     final storedHash = base64.decode(storedHashB64);
-    final inputHash = _hashPin(pin, salt);
+    final inputHash = await _hashPin(pin, salt);
 
     if (inputHash.length != storedHash.length) return false;
     int diff = 0;
@@ -138,21 +141,23 @@ class UnifiedLockService {
 
   // ── PBKDF2 helpers ──────────────────────────────────────────────────────────
 
-  Uint8List _generateSalt() {
-    final random = pc.SecureRandom('Fortuna');
-    final seed = Uint8List(32);
-    for (int i = 0; i < 32; i++) {
-      seed[i] = DateTime.now().microsecondsSinceEpoch & 0xFF;
-    }
-    random.seed(pc.KeyParameter(seed));
-    return random.nextBytes(16);
+  /// 16 بايتاً من مولّد النظام الآمن. (كان كل بايت من بذرة Fortuna هو
+  /// البايت الأدنى من الوقت نفسه: نحو 256 ملحاً ممكناً فقط.)
+  static Uint8List _generateSalt() {
+    final random = Random.secure();
+    return Uint8List.fromList(List.generate(16, (_) => random.nextInt(256)));
   }
 
-  Uint8List _hashPin(String pin, Uint8List salt) {
-    final params = pc.Pbkdf2Parameters(salt, 100000, 32);
-    final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64));
-    pbkdf2.init(params);
-    return pbkdf2.process(Uint8List.fromList(utf8.encode(pin)));
-  }
+  /// PBKDF2 بنفس المعاملات (فتبقى أرقام PIN المحفوظة صالحة)، في isolate
+  /// حتى لا تتجمد الواجهة.
+  static Future<Uint8List> _hashPin(String pin, Uint8List salt) =>
+      compute(_pbkdf2, (pin, salt));
+}
+
+Uint8List _pbkdf2((String, Uint8List) input) {
+  final (pin, salt) = input;
+  final pbkdf2 = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64))
+    ..init(pc.Pbkdf2Parameters(salt, 100000, 32));
+  return pbkdf2.process(Uint8List.fromList(utf8.encode(pin)));
 }
 

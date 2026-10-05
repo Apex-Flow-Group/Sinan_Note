@@ -28,6 +28,8 @@ class VaultKeyStore {
   static const _biometricKey = 'vault_master_key';
   static const _biometricEnabled = 'vault_biometric_enabled';
   static const _biometricButtonVisible = 'vault_biometric_button_visible';
+  static const _failedAttempts = 'vault_failed_attempts';
+  static const _lockedUntil = 'vault_locked_until';
 
   /// بقايا إصدارات سابقة لا تُستخدم.
   static const _obsolete = ['vault_session_unlocked'];
@@ -64,6 +66,24 @@ class VaultKeyStore {
       _storage.write(key: _biometricKey, value: base64.encode(key));
 
   Future<void> deleteBiometricKey() => _storage.delete(key: _biometricKey);
+
+  Future<int> failedAttempts() async =>
+      int.tryParse(await _storage.read(key: _failedAttempts) ?? '') ?? 0;
+
+  Future<DateTime?> lockedUntil() async {
+    final ms = int.tryParse(await _storage.read(key: _lockedUntil) ?? '');
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  Future<void> writeAttempts(int failures, DateTime? lockedUntil) async {
+    await _storage.write(key: _failedAttempts, value: '$failures');
+    if (lockedUntil == null) {
+      await _storage.delete(key: _lockedUntil);
+    } else {
+      await _storage.write(
+          key: _lockedUntil, value: '${lockedUntil.millisecondsSinceEpoch}');
+    }
+  }
 
   Future<bool> biometricEnabled() async =>
       await _storage.read(key: _biometricEnabled) == 'true';

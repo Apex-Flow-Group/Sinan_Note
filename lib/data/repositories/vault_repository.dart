@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sinan_note/data/services/vault/key_derivation.dart';
 import 'package:sinan_note/data/services/vault/vault_cipher.dart';
 import 'package:sinan_note/data/services/vault/vault_key_store.dart';
+import 'package:sinan_note/domain/attempt_policy.dart';
 import 'package:sinan_note/domain/errors.dart';
 
 /// جلسة الخزنة: المصدر الوحيد للمفتاح الرئيسي.
@@ -18,9 +19,12 @@ class VaultRepository extends ChangeNotifier {
   VaultRepository({
     VaultKeyStore? store,
     this.autoLockAfter = const Duration(minutes: 5),
-  }) : _store = store ?? VaultKeyStore();
+    DateTime Function()? clock,
+  })  : _store = store ?? VaultKeyStore(),
+        _clock = clock ?? DateTime.now;
 
   final VaultKeyStore _store;
+  final DateTime Function() _clock;
   final Duration autoLockAfter;
 
   Uint8List? _key;
@@ -48,14 +52,34 @@ class VaultRepository extends ChangeNotifier {
     return recoveryCode;
   }
 
-  Future<bool> unlockWithPassword(String password) async {
-    final wrapped = await _store.wrappedByPassword();
-    return wrapped != null && await _unlockWith(wrapped, password);
-  }
+  /// يرمي [VaultAttemptsExceededException] بعد محاولات خاطئة كثيرة.
+  Future<bool> unlockWithPassword(String password) =>
+      _limited(() async {
+        final wrapped = await _store.wrappedByPassword();
+        return wrapped != null && await _unlockWith(wrapped, password);
+      });
 
-  Future<bool> unlockWithRecoveryCode(String code) async {
-    final wrapped = await _store.wrappedByRecovery();
-    return wrapped != null && await _unlockWith(wrapped, code);
+  /// يرمي [VaultAttemptsExceededException] بعد محاولات خاطئة كثيرة.
+  Future<bool> unlockWithRecoveryCode(String code) => _limited(() async {
+        final wrapped = await _store.wrappedByRecovery();
+        return wrapped != null && await _unlockWith(wrapped, code);
+      });
+
+  /// كلمة السر ورمز الاسترداد يشتركان في العدّاد: [AttemptPolicy].
+  Future<bool> _limited(Future<bool> Function() attempt) async {
+    final until = await _store.lockedUntil();
+    final now = _clock();
+    if (until != null && until.isAfter(now)) {
+      throw VaultAttemptsExceededException(until.difference(now));
+    }
+    if (await attempt()) {
+      await _store.writeAttempts(0, null);
+      return true;
+    }
+    final failures = await _store.failedAttempts() + 1;
+    final lock = AttemptPolicy.lockAfter(failures);
+    await _store.writeAttempts(failures, lock == null ? null : now.add(lock));
+    return false;
   }
 
   /// يُستدعى بعد نجاح مصادقة البصمة في الواجهة.
