@@ -35,3 +35,9 @@ class VaultLockedException extends NoteException {
 class VaultDecryptionException extends NoteException {
   const VaultDecryptionException(super.message);
 }
+
+/// تعذّرت المزامنة: لا اتصال، أو لم يُسجَّل الدخول، أو فشل Drive. لا يُقرأ
+/// أبداً على أنه "لا نسخة في السحابة".
+class SyncException extends NoteException {
+  const SyncException(super.message, [super.originalError]);
+}

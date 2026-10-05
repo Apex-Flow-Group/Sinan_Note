@@ -1,205 +1,88 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
-class GoogleDriveHandlers {
+/// أوامر شاشة Google Drive مع رسائلها.
+abstract final class GoogleDriveHandlers {
   static Future<void> handleSignOut(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    try {
-      await CloudSyncGateway.signOut();
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.signOutSuccess,
-        type: NotificationType.success,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: '${l10n.signOutFailed} $e',
-        type: NotificationType.error,
-      );
-    }
+    await _run(context, context.read<SyncViewModel>().signOut,
+        success: l10n.signOutSuccess,
+        failure: l10n.signOutFailed,
+        needsAccount: false);
   }
 
+  /// يدمج مع Drive إن تغيّر ثم يرفع.
   static Future<void> handleSync(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    if (!CloudSyncGateway.isSignedIn) {
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.pleaseSignIn,
-        type: NotificationType.warning,
-      );
-      return;
-    }
-
-    try {
-      await CloudSyncGateway.smartSync();
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: isArabic ? 'تمت المزامنة بنجاح' : l10n.syncSuccess,
-        type: NotificationType.success,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: '${l10n.syncFailed} $e',
-        type: NotificationType.error,
-      );
-    }
+    await _run(context, context.read<SyncViewModel>().sync,
+        success: l10n.syncSuccess, failure: l10n.syncFailed);
   }
 
+  /// "استخدم ما على الجهاز".
   static Future<void> handleUpload(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    if (!CloudSyncGateway.isSignedIn) {
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.pleaseSignIn,
-        type: NotificationType.warning,
-      );
-      return;
-    }
-
-    try {
-      final success = await CloudSyncGateway.upload();
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: success
-            ? l10n.uploadSuccess
-            : isArabic
-                ? 'انتظر 30 ثانية بين كل رفع'
-                : 'Wait 30s between uploads',
-        type: success ? NotificationType.success : NotificationType.warning,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: '${l10n.uploadFailed} $e',
-        type: NotificationType.error,
-      );
-    }
+    await _run(context, context.read<SyncViewModel>().overwriteRemote,
+        success: l10n.uploadSuccess, failure: l10n.uploadFailed);
   }
 
   static Future<void> handleMerge(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    if (!CloudSyncGateway.isSignedIn) {
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.pleaseSignIn,
-        type: NotificationType.warning,
-      );
-      return;
-    }
-    try {
-      await CloudSyncGateway.silentMerge();
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: isArabic ? 'تم الدمج بنجاح' : 'Merge completed successfully',
-        type: NotificationType.success,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: '${l10n.syncFailed} $e',
-        type: NotificationType.error,
-      );
-    }
+    await _run(context, context.read<SyncViewModel>().sync,
+        success: l10n.mergedSuccessfully, failure: l10n.syncFailed);
   }
 
+  /// "استخدم ما في Drive".
   static Future<void> handleDownload(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    if (!CloudSyncGateway.isSignedIn) {
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n.pleaseSignIn,
-        type: NotificationType.warning,
-      );
-      return;
-    }
-
-    try {
-      final success = await CloudSyncGateway.download();
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: success ? l10n.downloadSuccess : l10n.downloadFailed,
-        type: success ? NotificationType.success : NotificationType.error,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      if (e.toString().contains('UPDATE_REQUIRED')) {
-        _showUpdateRequiredDialog(context);
-        return;
-      }
-      UnifiedNotificationService().show(
-        context: context,
-        message: '${l10n.downloadFailed} $e',
-        type: NotificationType.error,
-      );
-    }
+    await _run(context, context.read<SyncViewModel>().replaceLocal,
+        success: l10n.downloadSuccess, failure: l10n.downloadFailed);
   }
 
   static String formatDateTime(BuildContext context, DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-
-    if (difference.inMinutes < 1) {
-      return AppLocalizations.of(context)!.justNow;
-    } else if (difference.inHours < 1) {
-      final m = difference.inMinutes;
-      return isAr ? 'منذ $m دقيقة' : '${m}m ago';
-    } else if (difference.inDays < 1) {
-      final h = difference.inHours;
-      return isAr ? 'منذ $h ساعة' : '${h}h ago';
-    } else if (difference.inDays < 7) {
-      final d = difference.inDays;
-      return isAr ? 'منذ $d يوم' : '${d}d ago';
-    } else {
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
-    }
+    final l10n = AppLocalizations.of(context)!;
+    final difference = DateTime.now().difference(dateTime);
+    if (difference.inMinutes < 1) return l10n.justNow;
+    if (difference.inHours < 1) return l10n.minutesAgo(difference.inMinutes);
+    if (difference.inDays < 1) return l10n.hoursAgo(difference.inHours);
+    if (difference.inDays < 7) return l10n.daysAgo(difference.inDays);
+    return DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
+        .format(dateTime);
   }
 
-  static void _showUpdateRequiredDialog(BuildContext context) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.system_update, color: Colors.orange, size: 48),
-        title: Text(isArabic ? 'تحديث مطلوب' : 'Update Required'),
-        content: Text(
-          isArabic
-              ? 'بياناتك على Drive تم تحديثها بإصدار أحدث من التطبيق.\n\nحدّث التطبيق من Google Play للاستمرار في المزامنة.'
-              : 'Your Drive data was updated by a newer version of the app.\n\nPlease update the app from Google Play to continue syncing.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(isArabic ? 'لاحقاً' : 'Later'),
-          ),
-          FilledButton.icon(
-            icon: const Icon(Icons.open_in_new, size: 18),
-            label: Text(isArabic ? 'تحديث الآن' : 'Update Now'),
-            onPressed: () {
-              Navigator.pop(ctx);
-              // رابط Google Play
-            },
-          ),
-        ],
-      ),
-    );
+  static Future<void> _run(
+    BuildContext context,
+    Future<void> Function() action, {
+    required String success,
+    required String failure,
+    bool needsAccount = true,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (needsAccount && !context.read<SyncViewModel>().isSignedIn) {
+      UnifiedNotificationService().show(
+        context: context,
+        message: l10n.pleaseSignIn,
+        type: NotificationType.warning,
+      );
+      return;
+    }
+    try {
+      await action();
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+          context: context, message: success, type: NotificationType.success);
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      UnifiedNotificationService().show(
+        context: context,
+        message: '$failure ${e is SyncException ? l10n.syncUnavailable : e}',
+        type: NotificationType.error,
+      );
+    }
   }
 }

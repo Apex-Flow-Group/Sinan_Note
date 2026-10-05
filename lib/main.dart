@@ -20,12 +20,17 @@ import 'package:sinan_note/controllers/version_history/version_history_controlle
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
 import 'package:sinan_note/data/repositories/backup_repository.dart';
+import 'package:sinan_note/data/repositories/categories_repository.dart';
 import 'package:sinan_note/data/repositories/notes_repository.dart';
+import 'package:sinan_note/data/repositories/sync_repository.dart';
 import 'package:sinan_note/data/repositories/vault_repository.dart';
 import 'package:sinan_note/data/services/database/app_database.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/data/services/key_value_store.dart';
 import 'package:sinan_note/data/services/legacy_cleanup.dart';
 import 'package:sinan_note/data/services/note_side_effects.dart';
+import 'package:sinan_note/data/services/sync/drive_sync_remote.dart';
+import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/data/services/sync_scheduler.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
@@ -40,12 +45,12 @@ import 'package:sinan_note/screens/other/widget_selection_screen.dart';
 import 'package:sinan_note/screens/shared/settings_screen_responsive.dart';
 import 'package:sinan_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:sinan_note/services/app_update_service.dart';
-import 'package:sinan_note/services/cloud/google_drive_auth.dart';
 import 'package:sinan_note/services/intent_handler_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -85,17 +90,31 @@ void main() async {
 
   // ── نقطة التركيب: البيانات تُنشأ مرة واحدة وتُحقن ─────────────────────
   final database = await AppDatabase.open();
+  final store = PreferencesStore();
+  final tombstones = TombstoneStore(store);
   final vault = VaultRepository();
   await vault.initialize();
   final notes = NotesRepository(
     db: database,
     vault: vault,
     sideEffects: PlatformNoteSideEffects(),
-    deletionLog: PreferencesDeletionLog(),
+    deletionLog: tombstones,
   );
-  final backups = BackupRepository(db: database, notes: notes);
-  final categories = CategoriesProvider();
-  SyncScheduler(notes: notes, afterSync: categories.refreshCategories);
+  final categories = CategoriesRepository(
+      db: database, notes: notes, deletionLog: tombstones, store: store);
+  await categories.load();
+  final backups =
+      BackupRepository(db: database, notes: notes, categories: categories);
+  final sync = SyncRepository(
+    notes: notes,
+    categories: categories,
+    tombstones: tombstones,
+    remote: DriveSyncRemote(),
+    store: store,
+  );
+  await sync.initialize();
+  SyncScheduler(
+      sync: sync, localWrites: [notes.localWrites, categories.localWrites]);
   unawaited(LegacyCleanup.run());
 
   runApp(
@@ -110,7 +129,10 @@ void main() async {
             create: (_) => VaultViewModel(vault: vault, notes: notes)),
         Provider(create: (_) => BackupViewModel(backups: backups)),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
-        ChangeNotifierProvider.value(value: categories),
+        ChangeNotifierProvider(
+            create: (_) => CategoriesProvider(categories: categories)),
+        ChangeNotifierProvider(
+            create: (_) => SyncViewModel(sync: sync, notes: notes)),
         ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
       ],
       child: const ApexNoteApp(),
@@ -406,7 +428,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // عند العودة من الخلفية — نجدد الجلسة بصمت بدون dialog
-      GoogleDriveAuth.refreshSessionIfNeeded();
+      context.read<SyncViewModel>().restoreSession();
       // تثبيت التحديث إذا كان جاهزاً
       AppUpdateService.completeIfDownloaded();
     }

@@ -3,7 +3,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/services/security/rate_limiter_service.dart';
-import 'package:sinan_note/services/storage/compression_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../test_setup.dart';
@@ -13,43 +12,6 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     initializeTestEnvironment();
-  });
-
-  // ══════════════════════════════════════════════════════════════
-  // CompressionService
-  // ══════════════════════════════════════════════════════════════
-  group('CompressionService', () {
-    test('compress then decompress returns original', () {
-      const json = '{"version":"2.0","notes":[]}';
-      final compressed = CompressionService.compress(json);
-      expect(CompressionService.decompress(compressed), json);
-    });
-
-    test('compression reduces size for large data', () {
-      final large =
-          '{"notes":${List.generate(100, (i) => '{"id":$i,"title":"Note $i","content":"Content $i repeated many times"}')}}'
-              .replaceAll('}}', '}}');
-      final compressed = CompressionService.compress(large);
-      expect(compressed.length, lessThan(large.length));
-    });
-
-    test('handles empty string', () {
-      expect(() => CompressionService.compress(''), returnsNormally);
-    });
-
-    test('handles Arabic content', () {
-      const arabic =
-          '{"notes":[{"title":"ملاحظة عربية","content":"محتوى عربي طويل نسبياً"}]}';
-      final compressed = CompressionService.compress(arabic);
-      expect(CompressionService.decompress(compressed), arabic);
-    });
-
-    test('handles special characters', () {
-      const special = '{"content":"Hello\\nWorld\\t😀🎉"}';
-      expect(
-          CompressionService.decompress(CompressionService.compress(special)),
-          special);
-    });
   });
 
   // ══════════════════════════════════════════════════════════════

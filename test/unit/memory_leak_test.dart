@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/services/storage/compression_service.dart';
 
 import '../helpers/test_data_layer.dart';
 import '../test_setup.dart';
@@ -68,30 +67,6 @@ void main() {
       await data.notes.load();
       expect(count, 0);
       await data.dispose();
-    });
-  });
-
-  // ══════════════════════════════════════════════════════════════
-  // 5. الأداء — Compression
-  // ══════════════════════════════════════════════════════════════
-  group('Performance — Compression', () {
-    test('ضغط 1MB من البيانات في أقل من 1000ms', () {
-      final largeData = 'x' * 1024 * 1024; // 1MB
-      final sw = Stopwatch()..start();
-      CompressionService.compress(largeData);
-      sw.stop();
-      expect(sw.elapsedMilliseconds, lessThan(1000));
-    });
-
-    test('ضغط وفك ضغط 100KB في أقل من 200ms', () {
-      final data = 'Note content with Arabic text: مرحبا بالعالم\n' * 1000;
-      final sw = Stopwatch()..start();
-      final compressed = CompressionService.compress(data);
-      final decompressed = CompressionService.decompress(compressed);
-      sw.stop();
-
-      expect(decompressed, equals(data));
-      expect(sw.elapsedMilliseconds, lessThan(200));
     });
   });
 

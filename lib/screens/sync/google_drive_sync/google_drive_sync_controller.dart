@@ -1,14 +1,16 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/sync_step.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
+/// معالج أول مزامنة: تسجيل الدخول، ثم تحديد ما يُفعل بالنسختين.
 class GoogleDriveSyncController extends ChangeNotifier {
+  GoogleDriveSyncController({required SyncViewModel sync}) : _sync = sync;
+
+  final SyncViewModel _sync;
+
   SyncStep _currentStep = SyncStep.signIn;
   String? _errorMessage;
   String? snackBarMessage;
@@ -25,157 +27,89 @@ class GoogleDriveSyncController extends ChangeNotifier {
 
   Future<bool> signIn() async {
     try {
-      final success = await CloudSyncGateway.signIn();
-      if (success) {
-        _currentStep = SyncStep.checking;
-        notifyListeners();
-        await _checkState();
-        return true;
+      if (!await _sync.signIn()) {
+        _fail('Sign in cancelled or failed');
+        return false;
       }
-      _errorMessage = 'Sign in cancelled or failed';
-      _currentStep = SyncStep.error;
-      notifyListeners();
-      return false;
+      _step(SyncStep.checking);
+      await _checkState();
+      return true;
     } on MissingPluginException {
-      _errorMessage = 'Google Sign In is not supported on this platform.';
-      _currentStep = SyncStep.error;
-      notifyListeners();
+      _fail('Google Sign In is not supported on this platform.');
       return false;
-    } catch (e) {
-      _errorMessage = e.toString();
-      _currentStep = SyncStep.error;
-      notifyListeners();
+    } on Object catch (e) {
+      _fail('$e');
       return false;
     }
   }
 
+  /// لا نسخة في Drive ← رفع. الجهاز فارغ ← تنزيل. كلاهما فيه ملاحظات
+  /// بأعداد مختلفة ← يسأل المستخدم. غير ذلك ← دمج. فشل القراءة يوقف كل
+  /// شيء ولا يُقرأ كـ Drive فارغ.
   Future<void> _checkState() async {
     try {
-      final dbService = SqliteDatabaseService();
-      await dbService.database;
+      _localNotesCount = _sync.localNoteCount;
+      final remote = await _sync.remoteNoteCount();
+      _driveNotesCount = remote ?? 0;
+      _hasConflict = remote != null &&
+          _localNotesCount > 0 &&
+          remote > 0 &&
+          remote != _localNotesCount;
 
-      // العادية فقط — الخزنة محلية لا تُحسب
-      final localNotes = await dbService.getAllNotes();
-      _localNotesCount = localNotes.where((n) => !n.isLocked).length;
-
-      final hasBackup = await CloudSyncGateway.hasBackupInCloud();
-      AppLogger.info('hasBackup: $hasBackup', 'SyncController');
-
-      if (hasBackup) {
-        _driveNotesCount = await CloudSyncGateway.getCloudNotesCount();
-      } else {
-        _driveNotesCount = 0;
-      }
-
-      _hasConflict = hasBackup && _driveNotesCount != _localNotesCount;
-
-      if (_localNotesCount == 0 && _driveNotesCount > 0) {
-        await _downloadFromDrive();
-      } else if (_localNotesCount > 0 && _driveNotesCount == 0) {
-        await _executeSync();
+      if (remote == null) {
+        await _perform(_sync.overwriteRemote);
+      } else if (_localNotesCount == 0) {
+        await _perform(_sync.replaceLocal);
       } else if (_hasConflict) {
-        _currentStep = SyncStep.conflict;
-        notifyListeners();
+        _step(SyncStep.conflict);
       } else {
-        await _executeSync();
+        await _perform(_sync.sync);
       }
-    } catch (e) {
-      _errorMessage = e.toString();
-      _currentStep = SyncStep.error;
-      notifyListeners();
+    } on Object catch (e) {
+      _fail('$e');
     }
   }
 
-  Future<void> resolveConflict(String action) async {
+  /// [action]: `useDrive` أو `useDevice` أو `merge`.
+  Future<void> resolveConflict(String action) => _perform(switch (action) {
+        'useDrive' => _sync.replaceLocal,
+        'useDevice' => _sync.overwriteRemote,
+        _ => _sync.sync,
+      });
+
+  Future<void> _perform(Future<void> Function() operation) async {
     try {
-      _currentStep = SyncStep.syncing;
-      notifyListeners();
-
-      bool success = false;
-      if (action == 'useDrive') {
-        success = await CloudSyncGateway.download();
-      } else if (action == 'useDevice') {
-        success = await CloudSyncGateway.upload();
-      } else if (action == 'merge') {
-        success = await CloudSyncGateway.mergeWithDialog(null);
-      }
-
-      if (!success) {
-        _errorMessage = 'Operation failed';
-        _currentStep = SyncStep.error;
-        notifyListeners();
-        return;
-      }
-
-      await CloudSyncGateway.setAutoSync(true);
-      _currentStep = SyncStep.success;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      _currentStep = SyncStep.error;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _downloadFromDrive() async {
-    try {
-      _currentStep = SyncStep.syncing;
-      notifyListeners();
-
-      final success = await CloudSyncGateway.download();
-      if (success) {
-        await CloudSyncGateway.setAutoSync(true);
-        _currentStep = SyncStep.success;
-        notifyListeners();
-      } else {
-        _errorMessage = 'Failed to download from Drive';
-        _currentStep = SyncStep.error;
-        notifyListeners();
-      }
-    } catch (e) {
-      _errorMessage = e.toString();
-      _currentStep = SyncStep.error;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _executeSync() async {
-    try {
-      _currentStep = SyncStep.syncing;
-      notifyListeners();
-
-      final success = await CloudSyncGateway.upload();
-      if (success) {
-        await CloudSyncGateway.setAutoSync(true);
-        _currentStep = SyncStep.success;
-        notifyListeners();
-      } else {
-        _errorMessage = 'Sync failed';
-        _currentStep = SyncStep.error;
-        notifyListeners();
-      }
-    } catch (e) {
-      _errorMessage = e.toString();
-      _currentStep = SyncStep.error;
-      notifyListeners();
+      _step(SyncStep.syncing);
+      await operation();
+      await _sync.setAutoSync(true);
+      _step(SyncStep.success);
+    } on Object catch (e) {
+      _fail('$e');
     }
   }
 
   Future<void> abort() async {
-    await CloudSyncGateway.signOut();
-    _currentStep = SyncStep.signIn;
+    await _sync.signOut();
     _errorMessage = null;
-    notifyListeners();
+    _step(SyncStep.signIn);
   }
 
   void retry() {
-    _currentStep = SyncStep.signIn;
     _errorMessage = null;
-    notifyListeners();
+    _step(SyncStep.signIn);
   }
 
   void consumeSnackBar() {
     snackBarMessage = null;
   }
-}
 
+  void _step(SyncStep step) {
+    _currentStep = step;
+    notifyListeners();
+  }
+
+  void _fail(String message) {
+    _errorMessage = message;
+    _step(SyncStep.error);
+  }
+}

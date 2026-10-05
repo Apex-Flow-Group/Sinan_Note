@@ -3,10 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note_category.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
+import 'package:sinan_note/ui/features/categories/category_issue_text.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/pro_category_tile.dart';
 
@@ -58,7 +60,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final l10n = AppLocalizations.of(context)!;
-    context.read<CategoriesProvider>().seedIfEmpty([
+    context.read<CategoriesProvider>().seedDefaults([
       l10n.catWork,
       l10n.catPersonal,
       l10n.catIdeas,
@@ -86,33 +88,21 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
   }
 
   void _commitAdd(CategoriesProvider provider) async {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    if (provider.categories.length >= kMaxCategories) {
-      _addCtrl.clear();
-      widget.onAddDone();
-      if (!mounted) return;
-      UnifiedNotificationService().show(
-        context: context,
-        message: isArabic
-            ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
-            : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
-        type: NotificationType.info,
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-    final success = await provider.addCategory(_addCtrl.text);
+    final issue = await provider.addCategory(_addCtrl.text);
     _addCtrl.clear();
     widget.onAddDone();
-    if (!success && mounted) {
-      final isAr = Localizations.localeOf(context).languageCode == 'ar';
-      UnifiedNotificationService().show(
-        context: context,
-        message:
-            isAr ? '⚠️ اسم غير صالح أو مكرر' : '⚠️ Invalid or duplicate name',
-        type: NotificationType.error,
-      );
-    }
+    _showIssue(issue);
+  }
+
+  void _showIssue(CategoryIssue? issue) {
+    if (issue == null || !mounted) return;
+    UnifiedNotificationService().show(
+      context: context,
+      message: categoryIssueText(AppLocalizations.of(context)!, issue),
+      type: issue == CategoryIssue.limitReached
+          ? NotificationType.info
+          : NotificationType.error,
+    );
   }
 
   void _startEditing(NoteCategory cat) {
@@ -128,10 +118,11 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
   }
 
   void _commitEdit(CategoriesProvider provider) async {
-    if (_editingId != null) {
-      await provider.renameCategory(_editingId!, _editCtrl.text);
+    final id = _editingId;
+    if (id != null) {
+      _showIssue(await provider.renameCategory(id, _editCtrl.text));
     }
-    setState(() => _editingId = null);
+    if (mounted) setState(() => _editingId = null);
   }
 
   @override
@@ -168,12 +159,12 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
               },
             ),
             ProCategoryTile(
-              isSelected: isOnHomeTab && selected == kProCategoryId,
+              isSelected: isOnHomeTab && selected == CategoryPolicy.proCategoryId,
               scheme: scheme,
               isDark: isDark,
               label: l10n.professional,
               onTap: () {
-                provider.selectCategory(kProCategoryId);
+                provider.selectCategory(CategoryPolicy.proCategoryId);
                 Navigator.pop(context);
                 Navigator.of(context, rootNavigator: true).popUntil(
                     (route) => route.settings.name == '/main' || route.isFirst);
@@ -372,7 +363,7 @@ class _InlineField extends StatelessWidget {
               controller: controller,
               focusNode: focusNode,
               textInputAction: TextInputAction.done,
-              maxLength: kMaxCategoryNameLength,
+              maxLength: CategoryPolicy.maxNameLength,
               maxLines: 1,
               onSubmitted: (_) => onSubmit(),
               style: TextStyle(

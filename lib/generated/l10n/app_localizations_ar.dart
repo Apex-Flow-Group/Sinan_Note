@@ -2183,4 +2183,42 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get openVaultToImportLocked =>
       'افتح الخزنة أولاً لاستيراد الملاحظات المقفلة';
+
+  @override
+  String categoryLimitReached(int max) {
+    return '🎯 وصلت للحد الأقصى! $max كتالوج يكفي لتنظيم العالم كله 😄';
+  }
+
+  @override
+  String get categoryNameInvalid => '⚠️ اسم غير صالح';
+
+  @override
+  String get categoryNameDuplicate => '⚠️ الاسم موجود مسبقاً';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
+  String get syncUnavailable => 'تعذّر الوصول إلى Google Drive';
+
+  @override
+  String get connectionTimedOut => 'انتهت مهلة الاتصال';
+
+  @override
+  String get syncingProgress => 'جارٍ المزامنة...';
+
+  @override
+  String minutesAgo(int count) {
+    return 'منذ $count دقيقة';
+  }
+
+  @override
+  String hoursAgo(int count) {
+    return 'منذ $count ساعة';
+  }
+
+  @override
+  String daysAgo(int count) {
+    return 'منذ $count يوم';
+  }
 }

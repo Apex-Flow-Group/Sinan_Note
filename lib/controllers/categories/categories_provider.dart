@@ -1,167 +1,59 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/material.dart';import 'package:shared_preferences/shared_preferences.dart'; import 'package:sinan_note/domain/models/note_category.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
-const int kMaxCategories = 20;
-const int kMaxCategoryNameLength = 20;
-const int kProCategoryId = -1;
+import 'package:flutter/foundation.dart';
+import 'package:sinan_note/data/repositories/categories_repository.dart';
+import 'package:sinan_note/domain/categories.dart';
+import 'package:sinan_note/domain/models/note_category.dart';
 
+/// التصنيفات للواجهة: القائمة، والتصنيف المختار للتصفية، والأوامر.
 class CategoriesProvider extends ChangeNotifier {
-  final _db = SqliteDatabaseService();
+  CategoriesProvider({required CategoriesRepository categories})
+      : _categories = categories {
+    _categories.addListener(_onCategoriesChanged);
+  }
 
-  List<NoteCategory> _categories = [];
+  final CategoriesRepository _categories;
   int? _selectedCategoryId;
-  bool _isLoading = true;
-  bool _seeded = false;
-  bool _hideProFromHome = false;
 
-  List<NoteCategory> get categories => _categories;
+  List<NoteCategory> get categories => _categories.categories;
+  bool get hideProFromHome => _categories.hideProFromHome;
+  bool get isFull => categories.length >= CategoryPolicy.maxCategories;
+
+  /// تصنيف التصفية في الرئيسية؛ [CategoryPolicy.proCategoryId] للبرمجية.
   int? get selectedCategoryId => _selectedCategoryId;
-  bool get isLoading => _isLoading;
-  bool get hideProFromHome => _hideProFromHome;
 
-  void setHideProFromHome(bool value) {
-    _hideProFromHome = value;
-    notifyListeners();
-    SharedPreferences.getInstance().then(
-      (p) => p.setBool('hide_pro_from_home', value),
-      onError: (_) {},
-    );
-  }
+  /// التصنيفات الافتراضية بلغة المستخدم، مرة واحدة في عمر التثبيت.
+  Future<void> seedDefaults(List<String> names) =>
+      _categories.seedDefaults(names);
 
-  CategoriesProvider() {
-    _init();
-    // أعد تحميل الإعدادات بعد انتهاء أي مزامنة
-    CloudSyncGateway.isSyncing.addListener(_onSyncChanged);
-  }
+  /// يُرجع سبب الرفض، أو null عند النجاح.
+  Future<CategoryIssue?> addCategory(String name) => _categories.add(name);
 
-  void _onSyncChanged() {
-    if (!CloudSyncGateway.isSyncing.value) reloadSettings();
-  }
+  Future<CategoryIssue?> renameCategory(int id, String name) =>
+      _categories.rename(id, name);
 
-  Future<void> _init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _hideProFromHome = prefs.getBool('hide_pro_from_home') ?? false;
-    await _load();
-    if (_categories.isEmpty) await _seedDefaults(null);
-    _isLoading = false;
-    notifyListeners();
-  }
+  Future<void> deleteCategory(int id) => _categories.delete(id);
 
-  Future<void> seedIfEmpty(List<String> names) async {
-    if (_categories.isNotEmpty || _seeded) return;
-    _seeded = true;
-    await _seedDefaults(names);
-  }
-
-  Future<void> _load() async {
-    final all = await _db.getAllCategories();
-    all.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-    // حذف المكررات بناءً على الاسم
-    final seen = <String>{};
-    final unique = <NoteCategory>[];
-    for (final cat in all) {
-      final key = cat.name.trim().toLowerCase();
-      if (!seen.contains(key)) {
-        seen.add(key);
-        unique.add(cat);
-      } else {
-        await _db.deleteCategory(cat.id);
-      }
-    }
-
-    _categories = unique;
-    notifyListeners();
-  }
-
-  Future<void> _seedDefaults(List<String>? names) async {
-    final defaults = names ?? ['Work', 'Personal', 'Ideas', 'Tasks'];
-    for (int i = 0; i < defaults.length; i++) {
-      await _db.insertCategory(NoteCategory(name: defaults[i], sortOrder: i));
-    }
-    await _load();
-  }
-
-  Future<bool> addCategory(String name) async {
-    if (_categories.length >= kMaxCategories) return false;
-    final trimmed = name.trim();
-    if (trimmed.isEmpty || trimmed.length > kMaxCategoryNameLength) {
-      return false;
-    }
-
-    final nextSortOrder =
-        _categories.isEmpty ? 0 : _categories.last.sortOrder + 1;
-    await _db
-        .insertCategory(NoteCategory(name: trimmed, sortOrder: nextSortOrder));
-    CloudSyncGateway.markDirty();
-    _triggerSync();
-    await _load();
-    return true;
-  }
-
-  Future<void> renameCategory(int id, String newName) async {
-    final trimmed = newName.trim();
-    if (trimmed.isEmpty || trimmed.length > kMaxCategoryNameLength) return;
-    final cat = _categories.firstWhere((c) => c.id == id,
-        orElse: () => NoteCategory(id: id, name: trimmed));
-    await _db.updateCategory(cat.copyWith(name: trimmed));
-    CloudSyncGateway.markDirty();
-    _triggerSync();
-    await _load();
-  }
-
-  Future<void> deleteCategory(int id) async {
-    // أزل الـ id من جميع الملاحظات التي تحمله
-    final allNotes = await _db.getAllNotes();
-    for (final note in allNotes) {
-      if (note.categoryIds.contains(id)) {
-        final updated = note.copyWith(
-          categoryIds: note.categoryIds.where((i) => i != id).toList(),
-          isHiddenFromHome:
-              note.categoryIds.length == 1 ? false : note.isHiddenFromHome,
-        );
-        await _db.updateNote(updated);
-      }
-    }
-
-    await _db.deleteCategory(id);
-    CloudSyncGateway.markDirty();
-    _triggerSync();
-    if (_selectedCategoryId == id) _selectedCategoryId = null;
-    await _load();
-  }
-
-  // debounce لمنع رفعات متكررة عند تعديل كتالوجات متعددة
-  Timer? _syncDebounce;
-  void _triggerSync() {
-    _syncDebounce?.cancel();
-    _syncDebounce = Timer(const Duration(seconds: 5), () async {
-      if (!CloudSyncGateway.isSignedIn) return;
-      if (!CloudSyncGateway.autoSyncEnabled.value) return;
-      try {
-        await CloudSyncGateway.smartSync();
-      } catch (_) {}
-    });
-  }
+  void setHideProFromHome(bool value) => _categories.setHideProFromHome(value);
 
   void selectCategory(int? id) {
     _selectedCategoryId = id;
     notifyListeners();
   }
 
-  Future<void> refreshCategories() async => await _load();
-
-  Future<void> reloadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    _hideProFromHome = prefs.getBool('hide_pro_from_home') ?? false;
+  void _onCategoriesChanged() {
+    final selected = _selectedCategoryId;
+    if (selected != null &&
+        selected != CategoryPolicy.proCategoryId &&
+        !categories.any((c) => c.id == selected)) {
+      _selectedCategoryId = null;
+    }
     notifyListeners();
   }
 
   @override
   void dispose() {
-    CloudSyncGateway.isSyncing.removeListener(_onSyncChanged);
-    _syncDebounce?.cancel();
+    _categories.removeListener(_onCategoriesChanged);
     super.dispose();
   }
 }
-

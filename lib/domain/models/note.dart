@@ -127,6 +127,11 @@ class Note {
     );
   }
 
+  /// ما يعرّف الملاحظة نفسها عند غياب uuid مشترك (ملفات الإصدارات القديمة):
+  /// وقت الإنشاء والعنوان والمحتوى.
+  (int, String, String) get fingerprint =>
+      (createdAt.millisecondsSinceEpoch, title, content);
+
   /// نسخة جديدة بهوية جديدة (للتكرار والاستيراد كملاحظة مستقلة).
   Note asNew({DateTime? at}) {
     final now = at ?? DateTime.now();

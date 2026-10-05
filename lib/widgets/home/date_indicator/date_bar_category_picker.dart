@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
@@ -97,10 +98,10 @@ class DateBarCategoryPickerSheet {
                   label: isAr ? 'المحترف' : 'Professional',
                   icon: Icons.workspace_premium_rounded,
                   accent: proColor,
-                  isSelected: selectedId == kProCategoryId,
+                  isSelected: selectedId == CategoryPolicy.proCategoryId,
                   onTap: () {
                     Navigator.pop(context);
-                    categoriesProvider.selectCategory(kProCategoryId);
+                    categoriesProvider.selectCategory(CategoryPolicy.proCategoryId);
                   },
                 ),
                 ...categories.asMap().entries.map((e) => catTile(

@@ -4297,6 +4297,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the vault first to import locked notes'**
   String get openVaultToImportLocked;
+
+  /// No description provided for @categoryLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'🎯 Max reached! {max} catalogs is enough to organize the whole world 😄'**
+  String categoryLimitReached(int max);
+
+  /// No description provided for @categoryNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Invalid name'**
+  String get categoryNameInvalid;
+
+  /// No description provided for @categoryNameDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ This name already exists'**
+  String get categoryNameDuplicate;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @syncUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach Google Drive'**
+  String get syncUnavailable;
+
+  /// No description provided for @connectionTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out'**
+  String get connectionTimedOut;
+
+  /// No description provided for @syncingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncingProgress;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String minutesAgo(int count);
+
+  /// No description provided for @hoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String hoursAgo(int count);
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String daysAgo(int count);
 }
 
 class _AppLocalizationsDelegate

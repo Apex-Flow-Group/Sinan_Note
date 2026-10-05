@@ -6,7 +6,7 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 class MotionNavigationSection extends StatelessWidget {
   const MotionNavigationSection({super.key});
@@ -197,9 +197,9 @@ class MotionNavigationSection extends StatelessWidget {
                     : 'Sync + reload all data + rebuild UI',
                 value: 'full',
                 currentValue: settings.pullToRefreshMode,
-                enabled: CloudSyncGateway.isSignedIn,
+                enabled: ctx.read<SyncViewModel>().isSignedIn,
                 onInfo: () => _showSignInRequired(ctx),
-                onTap: CloudSyncGateway.isSignedIn
+                onTap: ctx.read<SyncViewModel>().isSignedIn
                     ? () {
                         settings.setPullToRefreshMode('full');
                         Navigator.pop(ctx);

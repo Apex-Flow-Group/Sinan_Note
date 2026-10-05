@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/data/repositories/categories_repository.dart';
 import 'package:sinan_note/data/repositories/notes_repository.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/domain/errors.dart' show ValidationException;
@@ -27,12 +27,17 @@ class BackupContents {
 /// الهوية بالـ uuid). الاستبدال لا يمس ملاحظات الخزنة المحلية، وملفات JSON
 /// القديمة لا تكتب شيئاً في مفاتيح الخزنة.
 class BackupRepository {
-  BackupRepository({required Database db, required NotesRepository notes})
-      : _db = db,
+  BackupRepository({
+    required Database db,
+    required NotesRepository notes,
+    required CategoriesRepository categories,
+  })  : _db = db,
+        _categories = categories,
         _notes = notes;
 
   final Database _db;
   final NotesRepository _notes;
+  final CategoriesRepository _categories;
 
   static const _sqliteHeader = 'SQLite format 3\u0000';
 
@@ -101,14 +106,12 @@ class BackupRepository {
   /// يدمج [contents] مع الملاحظات المحلية. يُرجع عدد ما أُضيف أو حُدّث.
   Future<int> merge(BackupContents contents) async {
     final count = await _notes.merge(await _withLocalCategories(contents));
-    await _resetSyncState();
     return count;
   }
 
   /// يستبدل الملاحظات غير المقفلة بـ [contents].
   Future<void> replace(BackupContents contents) async {
     await _notes.replaceUnlocked(await _withLocalCategories(contents));
-    await _resetSyncState();
   }
 
   /// لقطة متسقة من القاعدة (VACUUM INTO) في [directory]. يُرجع مسارها.
@@ -135,36 +138,20 @@ class BackupRepository {
   /// يربط تصنيفات الملاحظات بالتصنيفات المحلية بالاسم، وينشئ الناقص منها.
   /// بلا أسماء (JSON): يبقي فقط الأرقام الموجودة محلياً.
   Future<List<Note>> _withLocalCategories(BackupContents contents) async {
-    final local = await _db.query('categories');
-    final localIds = {for (final r in local) r['id'] as int};
-    final idByName = {
-      for (final r in local) r['name'] as String: r['id'] as int,
-    };
-
-    final map = <int, int>{};
-    var sortOrder = local.length;
-    for (final MapEntry(key: backupId, value: name)
-        in contents.categories.entries) {
-      map[backupId] = idByName[name] ??
-          (idByName[name] = await _db
-              .insert('categories', {'name': name, 'sortOrder': sortOrder++}));
-    }
+    final idByName = await _categories.ensureNamed(contents.categories.values);
+    final localIds = {for (final c in _categories.categories) c.id};
 
     List<int> remap(List<int> ids) => contents.categories.isEmpty
         ? ids.where(localIds.contains).toList()
-        : ids.map((id) => map[id]).whereType<int>().toList();
+        : ids
+            .map((id) => idByName[contents.categories[id]])
+            .whereType<int>()
+            .toSet()
+            .toList();
 
     return [
       for (final n in contents.notes)
         n.copyWith(categoryIds: remap(n.categoryIds)),
     ];
-  }
-
-  /// بعد الاستيراد يرفع الجهاز إلى Drive أولاً بدل أن يُكتب فوقه.
-  static Future<void> _resetSyncState() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('last_upload_timestamp');
-    await prefs.remove('last_known_drive_md5');
-    await prefs.remove('deleted_note_ids');
   }
 }

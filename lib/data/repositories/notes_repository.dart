@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sinan_note/data/repositories/vault_repository.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/data/services/note_side_effects.dart';
+import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/data/services/vault/vault_cipher.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_version.dart';
@@ -137,13 +138,17 @@ class NotesRepository extends ChangeNotifier {
   /// حذف نهائي، مع النسخ السابقة.
   Future<void> delete(List<int> ids) async {
     if (ids.isEmpty) return;
+    final uuids = <String>[];
     await _db.transaction((txn) async {
       for (final id in ids) {
+        final row = await txn.query('notes',
+            columns: ['uuid'], where: 'id = ?', whereArgs: [id]);
+        if (row.isNotEmpty) uuids.add(row.single['uuid'] as String);
         await txn.delete('note_versions', where: 'noteId = ?', whereArgs: [id]);
         await txn.delete('notes', where: 'id = ?', whereArgs: [id]);
       }
     });
-    await _deletionLog.recordDeleted(ids);
+    await _deletionLog.notesDeleted(uuids);
     _notes = [
       for (final n in _notes)
         if (!ids.contains(n.id)) n
@@ -224,7 +229,7 @@ class NotesRepository extends ChangeNotifier {
     final rows = await _db.query('notes');
     final local = rows.map(NoteMapper.fromMap).toList();
     final byUuid = {for (final n in local) n.uuid: n};
-    final fingerprints = local.map(_fingerprint).toSet();
+    final fingerprints = local.map((n) => n.fingerprint).toSet();
 
     final writes = <Note>[];
     for (final note in incoming) {
@@ -233,7 +238,7 @@ class NotesRepository extends ChangeNotifier {
         if (note.updatedAt.isAfter(existing.updatedAt)) {
           writes.add(note.copyWith(id: existing.id));
         }
-      } else if (fingerprints.add(_fingerprint(note))) {
+      } else if (fingerprints.add(note.fingerprint)) {
         writes.add(note.copyWith(id: null));
         byUuid[note.uuid] = note;
       }
@@ -274,8 +279,81 @@ class NotesRepository extends ChangeNotifier {
     _changedLocally();
   }
 
-  static String _fingerprint(Note n) =>
-      '${n.createdAt.millisecondsSinceEpoch}\u0000${n.title}\u0000${n.content}';
+  // ── التصنيفات والمزامنة ──────────────────────────────────────────────────
+
+  /// ينقل الملاحظات من التصنيف [from] إلى [to]، أو يزيله منها إن كان null.
+  /// على الصفوف المخزنة مباشرة: لا يحتاج الخزنة، ولا يُعد تعديلاً للملاحظة.
+  Future<void> reassignCategory(int from, {int? to}) async {
+    final rows = await _db.query('notes',
+        columns: ['id', 'categoryIds', 'isHiddenFromHome'],
+        where: "(',' || categoryIds || ',') LIKE ?",
+        whereArgs: ['%,$from,%']);
+    if (rows.isEmpty) return;
+    await _db.transaction((txn) async {
+      for (final row in rows) {
+        final ids = (row['categoryIds'] as String)
+            .split(',')
+            .map(int.tryParse)
+            .whereType<int>()
+            .where((id) => id != from)
+            .toList();
+        if (to != null && !ids.contains(to)) ids.add(to);
+        await txn.update(
+          'notes',
+          {
+            'categoryIds': ids.join(','),
+            // مخفية من الرئيسية لأنها في تصنيف؟ بلا تصنيف تعود للظهور
+            if (ids.isEmpty) 'isHiddenFromHome': 0,
+          },
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+    });
+    await load();
+  }
+
+  /// يطبق نتيجة دمج المزامنة في transaction واحدة: يكتب [incoming] (بالـ
+  /// uuid؛ المقفلة محلياً لا تُمس) ويحذف [removed]. ليس كتابة محلية فلا
+  /// يُطلق [localWrites]، ولا يُسجَّل الحذف (جاء من الطرف الآخر).
+  Future<void> applySync(
+      {required List<Note> incoming, required Set<String> removed}) async {
+    if (incoming.isEmpty && removed.isEmpty) return;
+    final rows = await _db.query('notes', columns: ['id', 'uuid', 'isLocked']);
+    final local = {for (final r in rows) r['uuid'] as String: r};
+    final written = <Note>[];
+    final deletedIds = <int>[];
+    await _db.transaction((txn) async {
+      for (final note in incoming) {
+        if (note.isLocked) continue;
+        final existing = local[note.uuid];
+        if (existing == null) {
+          final row = _toRow(note)..remove('id');
+          written.add(note.copyWith(id: await txn.insert('notes', row)));
+        } else if (existing['isLocked'] == 0) {
+          final id = existing['id'] as int;
+          await txn.update('notes', _toRow(note.copyWith(id: id)),
+              where: 'id = ?', whereArgs: [id]);
+          written.add(note.copyWith(id: id));
+        }
+      }
+      for (final uuid in removed) {
+        final existing = local[uuid];
+        if (existing == null || existing['isLocked'] != 0) continue;
+        final id = existing['id'] as int;
+        await txn.delete('note_versions', where: 'noteId = ?', whereArgs: [id]);
+        await txn.delete('notes', where: 'id = ?', whereArgs: [id]);
+        deletedIds.add(id);
+      }
+    });
+    await load();
+    for (final note in written) {
+      await _sideEffects.noteChanged(note);
+    }
+    for (final id in deletedIds) {
+      await _sideEffects.noteRemoved(id);
+    }
+  }
 
   // ── الخزنة ───────────────────────────────────────────────────────────────
 

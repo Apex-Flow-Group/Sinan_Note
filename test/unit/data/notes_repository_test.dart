@@ -5,6 +5,7 @@ import 'package:sinan_note/data/repositories/notes_repository.dart';
 import 'package:sinan_note/data/repositories/vault_repository.dart';
 import 'package:sinan_note/data/services/database/notes_schema.dart';
 import 'package:sinan_note/data/services/note_side_effects.dart';
+import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/data/services/vault/vault_cipher.dart';
 import 'package:sinan_note/data/services/vault/vault_key_store.dart';
 import 'package:sinan_note/domain/errors.dart';
@@ -28,9 +29,13 @@ NoteVersion _version(int noteId) => NoteVersion(
     noteId: noteId, title: 'x', content: 'x', timestamp: DateTime.utc(2026));
 
 class _RecordingDeletions implements DeletionLog {
-  final ids = <int>[];
+  final uuids = <String>[];
   @override
-  Future<void> recordDeleted(List<int> deleted) async => ids.addAll(deleted);
+  Future<void> notesDeleted(List<String> deleted) async => uuids.addAll(deleted);
+  @override
+  Future<void> categoryDeleted(String name) async {}
+  @override
+  Future<void> categoryCreated(String name) async {}
 }
 
 void main() {
@@ -139,7 +144,7 @@ void main() {
       await repo.delete([b.id!]);
       expect(repo.cached(b.id!), isNull);
       expect(await repo.history(b.id!), isEmpty);
-      expect(deletions.ids, [b.id]);
+      expect(deletions.uuids, [b.uuid]);
       expect(effects.removed, [b.id]);
     });
 

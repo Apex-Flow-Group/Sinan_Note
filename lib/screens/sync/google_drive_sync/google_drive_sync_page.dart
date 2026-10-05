@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +9,7 @@ import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_conflict_
 import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_progress_widget.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_sign_in_widget.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_success_widget.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class GoogleDriveSyncPage extends StatelessWidget {
@@ -17,7 +18,8 @@ class GoogleDriveSyncPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => GoogleDriveSyncController(),
+      create: (context) =>
+          GoogleDriveSyncController(sync: context.read<SyncViewModel>()),
       child: const _GoogleDriveSyncPageContent(),
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart'
     show ChangeNotifier, ScrollController, TextEditingController, ValueNotifier;
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note.dart';
 
 class NotesFilterController extends ChangeNotifier {
@@ -186,7 +187,7 @@ class NotesFilterController extends ChangeNotifier {
       if (note.isLocked || note.isArchived || note.isTrashed) return false;
       if (!isFiltering && note.isHiddenFromHome) return false;
 
-      if (selectedCategoryId == kProCategoryId) {
+      if (selectedCategoryId == CategoryPolicy.proCategoryId) {
         if (!note.isProfessional) return false;
       } else if (selectedCategoryId != null) {
         if (!note.categoryIds.contains(selectedCategoryId)) return false;

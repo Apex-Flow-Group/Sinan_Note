@@ -8,11 +8,12 @@ import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
-import 'package:sinan_note/services/cloud/google_drive_auth.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/ui/features/categories/category_issue_text.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/categories_panel.dart';
@@ -281,14 +282,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                     if (!Platform.isWindows &&
                         !Platform.isLinux &&
                         !Platform.isMacOS)
-                      ValueListenableBuilder<bool>(
-                        valueListenable: CloudSyncGateway.autoSyncEnabled,
-                        builder: (context, autoSync, _) => _buildDrawerItem(
+                      Selector<SyncViewModel, (bool, bool)>(
+                        selector: (_, sync) => (sync.isSignedIn, sync.autoSync),
+                        builder: (context, state, _) => _buildDrawerItem(
                           context,
                           icon: Icons.cloud_sync_rounded,
                           title: l10n.googleDrive,
-                          subtitle: GoogleDriveAuth.isSignedIn
-                              ? (autoSync
+                          subtitle: state.$1
+                              ? (state.$2
                                   ? l10n.driveSyncOn
                                   : l10n.driveSyncOff)
                               : l10n.driveSignIn,
@@ -398,7 +399,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
             _activeExtraNotifier.value == null &&
             currentTabIndexNotifier.value == 0;
     final selectedName = hasSelection
-        ? (selectedId == kProCategoryId
+        ? (selectedId == CategoryPolicy.proCategoryId
             ? AppLocalizations.of(context)!.professional
             : catProvider.categories
                 .where((c) => c.id == selectedId)
@@ -406,7 +407,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 .firstOrNull)
         : null;
 
-    // ظ†ظپط³ ط§ظ„ط­ط§ظˆظٹط© ظ„ظƒظ„ظٹظ‡ظ…ط§ ظ„طھط«ط¨ظٹطھ ط§ظ„ط­ط¬ظ…
+    // نفس الحاوية لكليهما لتثبيت الحجم
     final isHighlighted = _categoriesExpanded || (hasSelection && isOnHome);
 
     final iconBox = Container(
@@ -446,14 +447,14 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 children: [
                   iconBox,
                   const SizedBox(width: 16),
-                  // â”€â”€â”€ ط§ظ„ظ…ط­طھظˆظ‰ ظٹطھط؛ظٹظ‘ط± ط¨ط§ظ†ظٹظ…ظٹط´ظ† â”€â”€â”€
+                  // ─── المحتوى يتغيّر بانيميشن ───
                   Expanded(
                     child: AnimatedCrossFade(
                       duration: const Duration(milliseconds: 220),
                       crossFadeState: _categoriesExpanded
                           ? CrossFadeState.showSecond
                           : CrossFadeState.showFirst,
-                      // â”€â”€â”€ ظˆط¶ط¹ ط§ظ„ظ†طµ â”€â”€â”€
+                      // ─── وضع النص ───
                       firstChild: Row(
                         children: [
                           Expanded(
@@ -494,33 +495,22 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                               size: 20, color: scheme.onSurfaceVariant),
                         ],
                       ),
-                      // â”€â”€â”€ ظˆط¶ط¹ ط§ظ„ط£ط¯ظˆط§طھ â”€â”€â”€
+                      // ─── وضع الأدوات ───
                       secondChild: Row(
                         children: [
                           DrawerModeBtn(
                             icon: Icons.add_rounded,
                             active: _isAdding,
-                            color: context
-                                        .read<CategoriesProvider>()
-                                        .categories
-                                        .length >=
-                                    kMaxCategories
+                            color: context.read<CategoriesProvider>().isFull
                                 ? scheme.onSurface.withValues(alpha: 0.3)
                                 : scheme.primary,
                             onTap: () {
-                              final isArabic = Localizations.localeOf(context)
-                                      .languageCode ==
-                                  'ar';
-                              if (context
-                                      .read<CategoriesProvider>()
-                                      .categories
-                                      .length >=
-                                  kMaxCategories) {
+                              if (context.read<CategoriesProvider>().isFull) {
                                 UnifiedNotificationService().show(
                                   context: context,
-                                  message: isArabic
-                                      ? '🎯 وصلت للحد الأقصى! 20 كتالوج يكفي لتنظيم العالم كله 😄'
-                                      : '🎯 Max reached! 20 catalogs is enough to organize the whole world 😄',
+                                  message: categoryIssueText(
+                                      AppLocalizations.of(context)!,
+                                      CategoryIssue.limitReached),
                                   type: NotificationType.info,
                                   duration: const Duration(seconds: 3),
                                 );

@@ -759,5 +759,43 @@
         "type": "int"
       }
     }
+  },
+  "categoryLimitReached": "🎯 Max reached! {max} catalogs is enough to organize the whole world 😄",
+  "@categoryLimitReached": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "categoryNameInvalid": "⚠️ Invalid name",
+  "categoryNameDuplicate": "⚠️ This name already exists",
+  "retry": "Retry",
+  "syncUnavailable": "Couldn't reach Google Drive",
+  "connectionTimedOut": "Connection timed out",
+  "syncingProgress": "Syncing...",
+  "minutesAgo": "{count}m ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}d ago",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

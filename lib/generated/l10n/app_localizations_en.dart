@@ -2193,4 +2193,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get openVaultToImportLocked =>
       'Open the vault first to import locked notes';
+
+  @override
+  String categoryLimitReached(int max) {
+    return '🎯 Max reached! $max catalogs is enough to organize the whole world 😄';
+  }
+
+  @override
+  String get categoryNameInvalid => '⚠️ Invalid name';
+
+  @override
+  String get categoryNameDuplicate => '⚠️ This name already exists';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get syncUnavailable => 'Couldn\'t reach Google Drive';
+
+  @override
+  String get connectionTimedOut => 'Connection timed out';
+
+  @override
+  String get syncingProgress => 'Syncing...';
+
+  @override
+  String minutesAgo(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String hoursAgo(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String daysAgo(int count) {
+    return '${count}d ago';
+  }
 }

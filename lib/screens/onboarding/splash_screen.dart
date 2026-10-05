@@ -8,7 +8,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/logger.dart';
@@ -22,8 +21,8 @@ import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -80,20 +79,11 @@ class _SplashScreenState extends State<SplashScreen> {
         if (!mounted) return;
       }
 
-      // Initialize Google Sign-In + smart sync in background
-      await CloudSyncGateway.initializeSignIn();
-      if (CloudSyncGateway.isSignedIn && mounted) {
-        // نأخذ reference للـ providers قبل المزامنة — لأنه بعد الانتقال
-        // من SplashScreen لن يكون mounted وسنفقد الـ context
-        final notesProvider =
-            Provider.of<NotesProvider>(context, listen: false);
-        final categoriesProvider =
-            Provider.of<CategoriesProvider>(context, listen: false);
-        unawaited(CloudSyncGateway.smartSync().then((_) async {
-          await notesProvider.refreshAllNotes(force: true);
-          await categoriesProvider.refreshCategories();
-        }));
-      }
+      // جلسة Google السابقة، ثم مزامنة في الخلفية إن كانت التلقائية مفعّلة.
+      // المستودعات تُخطر الشاشات بما تغيّر.
+      final sync = context.read<SyncViewModel>();
+      await sync.restoreSession();
+      unawaited(sync.syncIfEnabled());
 
       if (!mounted) return;
 

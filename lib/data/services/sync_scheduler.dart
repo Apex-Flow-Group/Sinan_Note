@@ -2,55 +2,46 @@
 
 import 'dart:async';
 
-import 'package:sinan_note/data/repositories/notes_repository.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sinan_note/data/repositories/sync_repository.dart';
 
-/// يرفع التعديلات المحلية في الخلفية: بعد [debounce] من آخر كتابة محلية،
-/// إن كان المستخدم مسجلاً والمزامنة التلقائية مفعّلة، ثم يعيد تحميل
-/// الملاحظات وينفّذ [afterSync] (تحديث التصنيفات مثلاً).
+/// يزامن في الخلفية: بعد [debounce] من آخر تغيير محلي (ملاحظة أو تصنيف)،
+/// إن كان المستخدم مسجلاً والمزامنة التلقائية مفعّلة.
 class SyncScheduler {
   SyncScheduler({
-    required NotesRepository notes,
-    required Future<void> Function() afterSync,
+    required SyncRepository sync,
+    required List<ValueListenable<int>> localWrites,
     this.debounce = const Duration(seconds: 5),
-  })  : _notes = notes,
-        _afterSync = afterSync {
-    _notes.localWrites.addListener(_onLocalWrite);
+  })  : _sync = sync,
+        _sources = localWrites {
+    for (final source in _sources) {
+      source.addListener(_onLocalWrite);
+    }
   }
 
-  final NotesRepository _notes;
-  final Future<void> Function() _afterSync;
+  final SyncRepository _sync;
+  final List<ValueListenable<int>> _sources;
   final Duration debounce;
-
   Timer? _timer;
-  bool _syncing = false;
 
   void _onLocalWrite() {
-    CloudSyncGateway.markDirty();
     _timer?.cancel();
-    _timer = Timer(debounce, _sync);
+    _timer = Timer(debounce, _run);
   }
 
-  Future<void> _sync() async {
-    if (_syncing ||
-        !CloudSyncGateway.isSignedIn ||
-        !CloudSyncGateway.autoSyncEnabled.value) {
-      return;
-    }
-    _syncing = true;
+  Future<void> _run() async {
+    if (!_sync.isSignedIn || !_sync.autoSync) return;
     try {
-      await CloudSyncGateway.smartSync();
-      await _notes.load();
-      await _afterSync();
+      await _sync.sync();
     } on Object {
-      // المزامنة في الخلفية لا تُظهر أخطاء؛ تُعاد مع الكتابة التالية
-    } finally {
-      _syncing = false;
+      // في الخلفية لا تُعرض الأخطاء؛ التغييرات تبقى معلّمة وتُرفع لاحقاً
     }
   }
 
   void dispose() {
     _timer?.cancel();
-    _notes.localWrites.removeListener(_onLocalWrite);
+    for (final source in _sources) {
+      source.removeListener(_onLocalWrite);
+    }
   }
 }

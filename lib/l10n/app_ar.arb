@@ -738,5 +738,15 @@
   "restoreMergedCount": "تم الدمج: أُضيفت أو حُدّثت {count} ملاحظة",
   "restoreReplacedCount": "تم الاستبدال: {count} ملاحظة",
   "unsupportedBackupFile": "هذا الملف ليس نسخة احتياطية يقرؤها هذا الإصدار",
-  "openVaultToImportLocked": "افتح الخزنة أولاً لاستيراد الملاحظات المقفلة"
+  "openVaultToImportLocked": "افتح الخزنة أولاً لاستيراد الملاحظات المقفلة",
+  "categoryLimitReached": "🎯 وصلت للحد الأقصى! {max} كتالوج يكفي لتنظيم العالم كله 😄",
+  "categoryNameInvalid": "⚠️ اسم غير صالح",
+  "categoryNameDuplicate": "⚠️ الاسم موجود مسبقاً",
+  "retry": "إعادة المحاولة",
+  "syncUnavailable": "تعذّر الوصول إلى Google Drive",
+  "connectionTimedOut": "انتهت مهلة الاتصال",
+  "syncingProgress": "جارٍ المزامنة...",
+  "minutesAgo": "منذ {count} دقيقة",
+  "hoursAgo": "منذ {count} ساعة",
+  "daysAgo": "منذ {count} يوم"
 }

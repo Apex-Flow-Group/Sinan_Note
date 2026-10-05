@@ -21,6 +21,10 @@ abstract final class LegacyCleanup {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('vault_reset_backup_path');
       await prefs.remove('vault_reset_backup_date');
+      // سجل الحذف بالأرقام المحلية ومؤشر Drive القديم: حلّ محلهما
+      // sync_tombstones (بالـ uuid)
+      await prefs.remove('deleted_note_ids');
+      await prefs.remove('last_known_drive_md5');
     } on Object {
       // تنظيف اختياري — يُعاد في التشغيل التالي
     }

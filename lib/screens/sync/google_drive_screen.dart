@@ -2,16 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/categories/categories_provider.dart';
-import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:sinan_note/screens/sync/google_drive/google_drive_widgets.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
@@ -26,35 +24,17 @@ class GoogleDriveScreen extends StatefulWidget {
 
 class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   bool _isLoading = false;
-  bool _autoSync = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAutoSyncSetting();
-    _restoreSignInState();
-  }
-
-  Future<void> _restoreSignInState() async {
-    await CloudSyncGateway.initializeSignIn();
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _loadAutoSyncSetting() async {
-    await CloudSyncGateway.loadAutoSyncState();
-    if (!mounted) return;
-    setState(() {
-      _autoSync = CloudSyncGateway.autoSyncEnabled.value;
-    });
+    context.read<SyncViewModel>().restoreSession();
   }
 
   Future<void> _saveAutoSyncSetting(bool value) async {
-    await CloudSyncGateway.setAutoSync(value);
-    if (!mounted) return;
-    setState(() => _autoSync = value);
-    if (value && CloudSyncGateway.isSignedIn) {
-      await _handleSync();
-    }
+    final sync = context.read<SyncViewModel>();
+    await sync.setAutoSync(value);
+    if (value && sync.isSignedIn && mounted) await _handleSync();
   }
 
   Future<void> _handleSignOut() async {
@@ -72,37 +52,19 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
   Future<void> _handleUpload() async {
     setState(() => _isLoading = true);
     await GoogleDriveHandlers.handleUpload(context);
-    if (mounted) {
-      await _refreshUI();
-      setState(() => _isLoading = false);
-    }
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _handleDownload() async {
     setState(() => _isLoading = true);
     await GoogleDriveHandlers.handleDownload(context);
-    if (mounted) {
-      await _refreshUI();
-      setState(() => _isLoading = false);
-    }
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _handleMerge() async {
     setState(() => _isLoading = true);
     await GoogleDriveHandlers.handleMerge(context);
-    if (mounted) {
-      await _refreshUI();
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _refreshUI() async {
-    if (!mounted) return;
-    await Provider.of<NotesProvider>(context, listen: false)
-        .refreshAllNotes(force: true);
-    if (!mounted) return;
-    await Provider.of<CategoriesProvider>(context, listen: false)
-        .refreshCategories();
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
@@ -117,9 +79,10 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     final isDark = settingsProvider.themeMode == ThemeMode.dark ||
         (settingsProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
-    final isSignedIn = CloudSyncGateway.isSignedIn;
-    final userEmail = CloudSyncGateway.currentUserEmail;
-    final lastSyncTime = CloudSyncGateway.lastSyncTime;
+    final sync = context.watch<SyncViewModel>();
+    final isSignedIn = sync.isSignedIn;
+    final userEmail = sync.accountEmail;
+    final lastSyncTime = sync.lastSyncedAt?.toLocal();
     final lastSyncTimeStr = lastSyncTime != null
         ? GoogleDriveHandlers.formatDateTime(context, lastSyncTime)
         : l10n.never;
@@ -185,7 +148,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
               isSignedIn, _handleUpload, _handleDownload, _handleMerge),
           const SizedBox(height: 24),
           GoogleDriveWidgets.buildAutoSyncSection(
-              context, l10n, isDark, _autoSync, isSignedIn, _saveAutoSyncSetting),
+              context, l10n, isDark, context.read<SyncViewModel>().autoSync, isSignedIn,
+              _saveAutoSyncSetting),
         ],
     );
   }
@@ -308,18 +272,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () async {
-              final notesProvider =
-                  Provider.of<NotesProvider>(context, listen: false);
-              final categoriesProvider =
-                  Provider.of<CategoriesProvider>(context, listen: false);
               final syncSuccessMsg = l10n.syncSuccess;
               final result = await AppNavigator.toGoogleDriveSync(context);
               if (result == true && mounted) {
-                await notesProvider.refreshAllNotes(force: true);
-                if (!mounted) return;
-                await categoriesProvider.refreshCategories();
-                if (!mounted) return;
-                setState(() {});
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
                   UnifiedNotificationService().show(
@@ -383,7 +338,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
             padding: const EdgeInsets.all(24),
             children: [
               GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
-                  _autoSync, isSignedIn, _saveAutoSyncSetting),
+                  context.read<SyncViewModel>().autoSync, isSignedIn,
+              _saveAutoSyncSetting),
             ],
           ),
         _ => const SizedBox(),

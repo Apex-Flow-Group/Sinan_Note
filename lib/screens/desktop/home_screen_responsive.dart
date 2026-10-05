@@ -9,6 +9,7 @@ import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/shortcuts/app_shortcuts.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
@@ -268,7 +269,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                             selectedCategoryId: selectedId,
                             categoryName: selectedId == null
                                 ? null
-                                : selectedId == kProCategoryId
+                                : selectedId == CategoryPolicy.proCategoryId
                                     ? l10n.professional
                                     : (cats.categories
                                             .where((c) => c.id == selectedId)

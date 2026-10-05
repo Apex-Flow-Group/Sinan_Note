@@ -673,8 +673,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       );
     }
 
-    // ظˆط¶ط¹ ط§ظ„طھط¹ط¯ظٹظ„ â€” ط§ظ„ظ…ط­ط±ط± ط§ظ„ظƒط§ظ…ظ„
-    // ط¥ط°ط§ ظ„ظ… ظٹظƒطھظ…ظ„ ط¨ظ†ط§ط، QuillController ط¨ط¹ط¯ â€” ظ†ط¹ط±ط¶ skeleton ط¨ط³ظٹط·
+    // وضع التعديل — المحرر الكامل
+    // إذا لم يكتمل بناء QuillController بعد — نعرض skeleton بسيط
     if (!_isQuillReady && !_isReadOnly) {
       return Scaffold(
         backgroundColor: _coordinator.getBackgroundColor(context),

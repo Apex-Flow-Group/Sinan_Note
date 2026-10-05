@@ -16,9 +16,8 @@ import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
 import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
-import 'package:sinan_note/services/sync/sync_transport.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;
@@ -187,72 +186,42 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _onRefresh() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final mode = settings.pullToRefreshMode;
-
     if (mode == 'disabled') return;
 
     // حفظ كل قراءات context قبل أي await
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final categoriesProvider =
-        Provider.of<CategoriesProvider>(context, listen: false);
+    final sync = context.read<SyncViewModel>();
 
-    // فحص الإنترنت أولاً — قبل إظهار الشريط
-    if (mode == 'full') {
-      final hasInternet = await SyncTransport.hasInternet();
-      if (!hasInternet) {
-        _resetPullState();
-        if (mounted) {
-          UnifiedNotificationService().showWithAction(
-            context: context,
-            message:
-                isAr ? 'لا يوجد اتصال بالإنترنت' : 'No internet connection',
-            actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
-            onAction: _onRefresh,
-            type: NotificationType.error,
-            duration: const Duration(seconds: 5),
-          );
-        }
-        return;
-      }
+    void showRetry(String message) {
+      if (!mounted) return;
+      UnifiedNotificationService().showWithAction(
+        context: context,
+        message: message,
+        actionLabel: l10n.retry,
+        onAction: _onRefresh,
+        type: NotificationType.error,
+        duration: const Duration(seconds: 5),
+      );
     }
 
-    // الإنترنت متاح — ابدأ الشريط الآن
     _isRefreshingNotifier.value = true;
     final minDuration = Future.delayed(const Duration(milliseconds: 1500));
-
     try {
       if (mode == 'full') {
-        if (CloudSyncGateway.isSignedIn &&
-            CloudSyncGateway.autoSyncEnabled.value) {
-          await CloudSyncGateway.smartSync()
-              .timeout(const Duration(seconds: 30));
-          while (CloudSyncGateway.isSyncing.value) {
-            await Future.delayed(const Duration(milliseconds: 200));
-          }
+        if (sync.isSignedIn && sync.autoSync) {
+          await sync.sync().timeout(const Duration(seconds: 30));
         }
-
-        await notesProvider.refreshAllNotes(force: true);
-        await categoriesProvider.refreshCategories();
-
         _searchController.clear();
         _activeFilterNotifier.value = null;
         if (mounted) setState(() => _isSearchActive = false);
       } else {
         await notesProvider.refreshAllNotes(force: true);
-        await categoriesProvider.refreshCategories();
       }
     } on TimeoutException {
-      if (mounted) {
-        final isAr = Localizations.localeOf(context).languageCode == 'ar';
-        UnifiedNotificationService().showWithAction(
-          context: context,
-          message: isAr ? 'انتهت مهلة الاتصال' : 'Connection timed out',
-          actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
-          onAction: _onRefresh,
-          type: NotificationType.error,
-          duration: const Duration(seconds: 5),
-        );
-      }
+      showRetry(l10n.connectionTimedOut);
+    } on SyncException {
+      showRetry(l10n.syncUnavailable);
     } finally {
       await minDuration;
       _resetPullState();

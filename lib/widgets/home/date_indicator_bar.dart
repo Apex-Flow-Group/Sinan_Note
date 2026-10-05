@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
+import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/widgets/home/date_indicator/date_bar_category_picker.dart';
@@ -204,7 +205,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
         ]),
       );
     } else if (selectedId != null) {
-      final isProCategory = selectedId == kProCategoryId;
+      final isProCategory = selectedId == CategoryPolicy.proCategoryId;
       final cat = isProCategory
           ? null
           : categoriesProvider.categories

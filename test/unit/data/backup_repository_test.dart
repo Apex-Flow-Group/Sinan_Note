@@ -4,26 +4,19 @@ import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/data/repositories/backup_repository.dart';
+import 'package:sinan_note/data/repositories/categories_repository.dart';
 import 'package:sinan_note/data/repositories/notes_repository.dart';
 import 'package:sinan_note/data/repositories/vault_repository.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/data/services/database/notes_schema.dart';
-import 'package:sinan_note/data/services/note_side_effects.dart';
+import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/data/services/vault/vault_key_store.dart';
 import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import '../../helpers/test_data_layer.dart';
 import '../../test_setup.dart';
-
-class _NoEffects implements NoteSideEffects, DeletionLog {
-  @override
-  Future<void> noteChanged(Note note) async {}
-  @override
-  Future<void> noteRemoved(int id) async {}
-  @override
-  Future<void> recordDeleted(List<int> ids) async {}
-}
 
 Future<Database> _openDb(String path) => databaseFactoryFfi.openDatabase(path,
     options: OpenDatabaseOptions(
@@ -37,6 +30,7 @@ void main() {
   late Database db;
   late VaultRepository vault;
   late NotesRepository notes;
+  late CategoriesRepository categories;
   late BackupRepository backups;
   final t0 = DateTime.utc(2026, 1, 1);
 
@@ -48,13 +42,21 @@ void main() {
     db = await _openDb(inMemoryDatabasePath);
     vault = VaultRepository(store: VaultKeyStore());
     await vault.setUp('Pass123!');
-    final none = _NoEffects();
+    final store = MemoryStore();
+    final tombstones = TombstoneStore(store);
     notes = NotesRepository(
-        db: db, vault: vault, sideEffects: none, deletionLog: none);
-    backups = BackupRepository(db: db, notes: notes);
+        db: db,
+        vault: vault,
+        sideEffects: NoPlatformEffects(),
+        deletionLog: tombstones);
+    categories = CategoriesRepository(
+        db: db, notes: notes, deletionLog: tombstones, store: store);
+    await categories.load();
+    backups = BackupRepository(db: db, notes: notes, categories: categories);
   });
 
   tearDown(() async {
+    categories.dispose();
     notes.dispose();
     vault.dispose();
     await db.close();

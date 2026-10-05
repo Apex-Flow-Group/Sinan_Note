@@ -22,7 +22,7 @@ void main() {
     };
     final missing = requested.where((type) {
       if (main.contains('$type(')) return false;
-      final local = RegExp('create: \\([^)]*\\) => $type\\(');
+      final local = RegExp('create: \\([^)]*\\) =>\\s*$type\\(');
       return !sources.any(local.hasMatch);
     }).toList()
       ..sort();

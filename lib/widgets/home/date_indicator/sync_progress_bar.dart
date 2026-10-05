@@ -2,7 +2,9 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 /// شريط موحّد للسحب والتحديث والمزامنة
 class SyncProgressBar extends StatelessWidget {
@@ -27,13 +29,13 @@ class SyncProgressBar extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     // Priority 1: Google Drive syncing
-    return ValueListenableBuilder<bool>(
-      valueListenable: CloudSyncGateway.isSyncing,
+    return Selector<SyncViewModel, bool>(
+      selector: (_, sync) => sync.isSyncing,
       builder: (context, syncing, _) {
         if (syncing) {
           return _Bar(
             color: colorScheme.primary,
-            label: isAr ? 'جارٍ المزامنة...' : 'Syncing...',
+            label: AppLocalizations.of(context)!.syncingProgress,
           );
         }
 
