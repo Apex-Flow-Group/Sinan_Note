@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/physics/glide_scroll_physics.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -377,8 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: CustomScrollView(
                         controller: _scrollController,
                         cacheExtent: 1500,
-                        physics: const BouncingScrollPhysics(
-                          decelerationRate: ScrollDecelerationRate.fast,
+                        physics: const GlideScrollPhysics(
                           parent: AlwaysScrollableScrollPhysics(),
                         ),
                         slivers: [
