@@ -15,7 +15,6 @@ import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show tabToHomeNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
@@ -72,9 +71,6 @@ class _ReminderDashboardState extends State<ReminderDashboard>
   Future<void> _checkPermissions() async {
     final prefs = await SharedPreferences.getInstance();
     final dismissed = prefs.getBool('reminder_permission_dismissed') ?? false;
-    if (!dismissed) {
-      await NotificationService().checkAllPermissions();
-    }
     if (mounted) {
       setState(() {
         _showPermissionBanner = !dismissed;

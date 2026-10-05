@@ -10,10 +10,10 @@ import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
-import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
+import 'package:sinan_note/ui/features/reminders/view_models/reminder_permissions.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/rename_dialog.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -41,9 +41,7 @@ class EditorDialogHandlers {
 
     if (result != null) {
       if (result['remove'] == true) {
-        if (note?.id != null) {
-          await NotificationService().cancelNotification(note!.id!);
-        }
+        // إلغاء الإشعار يتبع الحفظ (آثار المستودع الجانبية)
         stateManager.reminderDateTime = null;
         stateManager.recurrenceRule = null;
         stateManager.markDirty();
@@ -61,9 +59,9 @@ class EditorDialogHandlers {
       final reminderDateTime = result['dateTime'] as DateTime?;
       final recurrence = result['recurrence'] as String?;
 
-      if (reminderDateTime != null) {
+      if (reminderDateTime != null && context.mounted) {
         final hasExactAlarmPermission =
-            await NotificationService().checkExactAlarmPermission();
+            await context.read<ReminderPermissions>().canScheduleExact();
 
         if (!hasExactAlarmPermission) {
           if (!context.mounted) return;

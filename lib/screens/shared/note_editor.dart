@@ -20,7 +20,7 @@ import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.da
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_save_manager.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/note_readonly_view.dart';
-import 'package:sinan_note/services/keyboard/editor_command_bus.dart';
+import 'package:sinan_note/ui/core/keyboard/editor_command_bus.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';

@@ -182,6 +182,7 @@ class NotesProvider extends ChangeNotifier {
     int? colorIndex,
     bool? isPinned,
     Object? reminderDateTime = _keep,
+    Object? recurrenceRule = _keep,
     List<int>? categoryIds,
     bool? isHiddenFromHome,
   }) =>
@@ -190,9 +191,13 @@ class NotesProvider extends ChangeNotifier {
           isPinned: isPinned,
           categoryIds: categoryIds,
           isHiddenFromHome: isHiddenFromHome,
-          reminderDateTime: identical(reminderDateTime, _keep)
-              ? _notes.cached(id)?.reminderDateTime
-              : reminderDateTime);
+          reminderDateTime: reminderDateTime,
+          recurrenceRule: recurrenceRule);
+
+  /// يضبط تذكير الملاحظة أو يزيله ([at] null). جدولة الإشعار وإلغاؤه
+  /// يتولاهما المستودع (وبنص عام للملاحظة المقفلة).
+  Future<void> setReminder(int id, DateTime? at, {String? recurrence}) =>
+      _notes.updateMeta(id, reminderDateTime: at, recurrenceRule: recurrence);
 
   static const _keep = Object();
 

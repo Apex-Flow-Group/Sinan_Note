@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sinan_note/domain/vault_policy.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/feature_info.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/vault/feature_info.dart';
 import 'package:sinan_note/widgets/common/copy_code_button.dart';
 
 final _vaultPasswordFormatter = FilteringTextInputFormatter.allow(

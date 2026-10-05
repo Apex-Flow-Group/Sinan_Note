@@ -160,6 +160,25 @@ void main() {
       expect(repo.notes.every((n) => n.isPinned), isTrue);
     });
 
+    test('a reminder is set and cleared on the stored row; side effects see it',
+        () async {
+      final a = await repo.save(note('a'));
+      final at = t0.add(const Duration(days: 2));
+      await repo.updateMeta(a.id!,
+          reminderDateTime: at, recurrenceRule: 'daily');
+      expect(repo.cached(a.id!)!.reminderDateTime, at);
+      expect(effects.changed.last.recurrenceRule, 'daily');
+
+      await repo.updateMeta(a.id!, reminderDateTime: null, recurrenceRule: null);
+      expect(repo.cached(a.id!)!.reminderDateTime, isNull);
+      expect(repo.cached(a.id!)!.recurrenceRule, isNull);
+      expect(effects.changed.last.reminderDateTime, isNull);
+
+      await repo.updateMeta(a.id!, colorIndex: 2);
+      expect(repo.cached(a.id!)!.reminderDateTime, isNull,
+          reason: 'untouched fields keep their value');
+    });
+
     test('versions follow the policy and keep at most 20', () async {
       final a = await repo.save(note('a'));
       await repo.recordVersion(a.id!, VersionTrigger.manual);

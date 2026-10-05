@@ -1,7 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/services/code/language_detector.dart';
+import 'package:sinan_note/domain/code/language_detector.dart';
 
 import '../../test_setup.dart';
 

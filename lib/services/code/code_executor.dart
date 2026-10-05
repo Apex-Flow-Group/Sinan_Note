@@ -3,7 +3,7 @@
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:sinan_note/services/code/language_detector.dart';
+import 'package:sinan_note/domain/code/language_detector.dart';
 
 /// تنفيذ الكود محلياً معطّل لأسباب أمنية.
 /// جميع دوال التنفيذ ترجع رسالة توجيه للمستخدم.

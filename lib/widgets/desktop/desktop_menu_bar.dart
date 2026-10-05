@@ -9,7 +9,7 @@ import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/other/about_screen.dart';
 import 'package:sinan_note/screens/shared/backup_wizard_screen.dart';
-import 'package:sinan_note/services/keyboard/editor_command_bus.dart';
+import 'package:sinan_note/ui/core/keyboard/editor_command_bus.dart';
 import 'package:sinan_note/widgets/common/app_dialog.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 

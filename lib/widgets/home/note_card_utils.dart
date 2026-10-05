@@ -3,12 +3,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/domain/code/language_detector.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/code/language_detector.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class NoteCardUtils {

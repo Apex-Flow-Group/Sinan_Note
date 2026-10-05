@@ -53,6 +53,7 @@ import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
+import 'package:sinan_note/ui/features/reminders/view_models/reminder_permissions.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
@@ -139,6 +140,7 @@ void main() async {
             create: (_) => VaultViewModel(vault: vault, notes: notes)),
         Provider(create: (_) => BackupViewModel(backups: backups)),
         Provider(create: (_) => EditorSessions(notes: notes)),
+        Provider(create: (_) => ReminderPermissions()),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
         ChangeNotifierProvider(
             create: (_) => CategoriesProvider(categories: categories)),

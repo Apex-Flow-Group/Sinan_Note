@@ -10,6 +10,7 @@ import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
+import 'package:sinan_note/ui/features/reminders/view_models/reminder_permissions.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../helpers/test_data_layer.dart';
@@ -22,11 +23,9 @@ void main() {
     initializeTestEnvironment();
   });
 
-  setUp(() {
-  });
+  setUp(() {});
 
-  tearDown(() async {
-  });
+  tearDown(() async {});
 
   group('NoteEditorImmersive Integration', () {
     late TestDataLayer data;
@@ -52,6 +51,7 @@ void main() {
           ChangeNotifierProvider.value(value: notesProvider),
           ChangeNotifierProvider.value(value: settingsProvider),
           Provider(create: (_) => EditorSessions(notes: data.notes)),
+          Provider(create: (_) => ReminderPermissions()),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -180,8 +180,8 @@ void main() {
         final writes = data.notes.localWrites.value;
 
         await tester.tap(find.byIcon(Icons.arrow_back_rounded));
-        await tester.runAsync(
-            () => Future.delayed(const Duration(milliseconds: 300)));
+        await tester
+            .runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
         await tester.pumpAndSettle();
 
         expect(data.notes.localWrites.value, writes, reason: 'nothing saved');
@@ -197,15 +197,15 @@ void main() {
         await tester.enterText(find.text('Task 1'), 'Task 1 edited');
         await tester.pumpAndSettle();
         await tester.tap(find.byIcon(Icons.arrow_back_rounded));
-        await tester.runAsync(
-            () => Future.delayed(const Duration(milliseconds: 500)));
+        await tester
+            .runAsync(() => Future.delayed(const Duration(milliseconds: 500)));
         await tester.pumpAndSettle();
 
         expect(data.notes.localWrites.value, greaterThan(writes));
         // رسالة "تم الحفظ" ونسخة السجل تكتمل قبل نهاية الاختبار
         await tester.pump(const Duration(seconds: 5));
-        await tester.runAsync(
-            () => Future.delayed(const Duration(milliseconds: 300)));
+        await tester
+            .runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
       });
     });
 
@@ -456,6 +456,7 @@ void main() {
               ChangeNotifierProvider.value(value: notesProvider),
               ChangeNotifierProvider.value(value: settingsProvider),
               Provider(create: (_) => EditorSessions(notes: data.notes)),
+              Provider(create: (_) => ReminderPermissions()),
             ],
             child: MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,

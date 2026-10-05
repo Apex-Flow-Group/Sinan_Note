@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/feature_info.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/vault/feature_info.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 
 const double _kMaxContentWidth = 600.0;

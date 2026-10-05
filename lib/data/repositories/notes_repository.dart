@@ -99,7 +99,7 @@ class NotesRepository extends ChangeNotifier {
     int? colorIndex,
     bool? isPinned,
     Object? reminderDateTime = _keep,
-    String? recurrenceRule,
+    Object? recurrenceRule = _keep,
     List<int>? categoryIds,
     bool? isHiddenFromHome,
   }) async {
@@ -108,8 +108,12 @@ class NotesRepository extends ChangeNotifier {
     return save(current.copyWith(
       colorIndex: colorIndex,
       isPinned: isPinned,
-      reminderDateTime: reminderDateTime,
-      recurrenceRule: recurrenceRule,
+      reminderDateTime: identical(reminderDateTime, _keep)
+          ? current.reminderDateTime
+          : reminderDateTime,
+      recurrenceRule: identical(recurrenceRule, _keep)
+          ? current.recurrenceRule
+          : recurrenceRule,
       categoryIds: categoryIds,
       isHiddenFromHome: isHiddenFromHome,
     ));

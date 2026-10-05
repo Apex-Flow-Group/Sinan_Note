@@ -8,7 +8,6 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
@@ -233,24 +232,12 @@ class NoteCardActions {
           );
           if (!context.mounted || result == null) return;
           if (result['remove'] == true) {
-            await NotificationService().cancelNotification(note.id!);
-            final updated =
-                note.copyWith(reminderDateTime: null, recurrenceRule: null);
-            await notesProvider.updateNote(updated);
+            await notesProvider.setReminder(note.id!, null);
           } else {
-            final updated = note.copyWith(
-              reminderDateTime: result['dateTime'] as DateTime,
-              recurrenceRule: result['recurrence'] == 'none'
-                  ? null
-                  : result['recurrence'] as String,
-            );
-            await notesProvider.updateNote(updated);
-            await NotificationService().scheduleNotification(
-              id: note.id!,
-              title: note.title,
-              body: NoteCardUtils.fixNoteContent(note.content, maxChars: 100),
-              scheduledTime: result['dateTime'] as DateTime,
-              recurrenceRule: result['recurrence'] == 'none'
+            await notesProvider.setReminder(
+              note.id!,
+              result['dateTime'] as DateTime,
+              recurrence: result['recurrence'] == 'none'
                   ? null
                   : result['recurrence'] as String,
             );

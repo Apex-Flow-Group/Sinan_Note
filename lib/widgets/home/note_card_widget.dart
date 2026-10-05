@@ -17,7 +17,6 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
-import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/home_palette.dart';
@@ -485,16 +484,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                 Provider.of<NotesProvider>(
                                                     context,
                                                     listen: false);
-                                            await NotificationService()
-                                                .cancelNotification(
-                                                    widget.note.id!);
-                                            final updatedNote =
-                                                widget.note.copyWith(
-                                              reminderDateTime: null,
-                                              recurrenceRule: null,
-                                            );
-                                            await notesProvider
-                                                .updateNote(updatedNote);
+                                            // إلغاء الإشعار يتولاه المستودع
+                                            await notesProvider.setReminder(
+                                                widget.note.id!, null);
                                             widget.onNoteChanged();
                                             if (context.mounted) {
                                               UnifiedNotificationService().show(

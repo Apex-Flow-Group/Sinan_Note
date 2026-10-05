@@ -1,10 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/reminders/view_models/reminder_permissions.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class ReminderPickerSheet extends StatefulWidget {
@@ -26,12 +27,12 @@ class ReminderPickerSheet extends StatefulWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    final notificationService = NotificationService();
-    final permissions = await notificationService.checkAllPermissions();
+    final permissions = context.read<ReminderPermissions>();
+    final granted = await permissions.granted();
 
     if (!context.mounted) return null;
 
-    if (!permissions['notifications']! || !permissions['exactAlarm']!) {
+    if (!granted) {
       final shouldRequest = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -54,14 +55,10 @@ class ReminderPickerSheet extends StatefulWidget {
       if (!context.mounted) return null;
 
       if (shouldRequest == true) {
-        await notificationService.requestNotificationPermissions();
+        final nowGranted = await permissions.request();
         if (!context.mounted) return null;
 
-        final newPermissions = await notificationService.checkAllPermissions();
-        if (!context.mounted) return null;
-
-        if (!newPermissions['notifications']! ||
-            !newPermissions['exactAlarm']!) {
+        if (!nowGranted) {
           UnifiedNotificationService().show(
             context: context,
             message: l10n.permissionsDenied,

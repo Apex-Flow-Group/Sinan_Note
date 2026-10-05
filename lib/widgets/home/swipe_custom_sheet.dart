@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
@@ -206,23 +205,14 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
           Navigator.pop(context);
           if (result == null) return;
           if (result['remove'] == true) {
-            await NotificationService().cancelNotification(widget.note.id!);
-            await notesProvider.updateNote(widget.note
-                .copyWith(reminderDateTime: null, recurrenceRule: null));
+            await notesProvider.setReminder(widget.note.id!, null);
           } else {
-            final dt = result['dateTime'] as DateTime;
-            final rec = result['recurrence'] == 'none'
-                ? null
-                : result['recurrence'] as String;
-            await notesProvider.updateNote(widget.note
-                .copyWith(reminderDateTime: dt, recurrenceRule: rec));
-            await NotificationService().scheduleNotification(
-              id: widget.note.id!,
-              title: widget.note.title,
-              body: NoteCardUtils.fixNoteContent(widget.note.content,
-                  maxChars: 100),
-              scheduledTime: dt,
-              recurrenceRule: rec,
+            await notesProvider.setReminder(
+              widget.note.id!,
+              result['dateTime'] as DateTime,
+              recurrence: result['recurrence'] == 'none'
+                  ? null
+                  : result['recurrence'] as String,
             );
           }
           widget.onNoteChanged();
