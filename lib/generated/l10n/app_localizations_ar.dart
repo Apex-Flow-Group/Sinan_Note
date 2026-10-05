@@ -2248,4 +2248,602 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reminderChannelDescription => 'تذكيرات وتنبيهات الملاحظات';
+
+  @override
+  String get selectCatalog => 'اختر كتالوج';
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get jumpToDate => 'انتقل إلى تاريخ';
+
+  @override
+  String get yesterday => 'أمس';
+
+  @override
+  String get refreshing => 'جارٍ التحديث...';
+
+  @override
+  String get releaseToRefresh => 'أطلق للتحديث';
+
+  @override
+  String get noteTypeSimple => 'نص بسيط';
+
+  @override
+  String get noteTypeRich => 'منسقة';
+
+  @override
+  String get pinned => 'مثبتة';
+
+  @override
+  String get hiddenInCatalogs => 'مخفي في الكتالوجات';
+
+  @override
+  String get hiddenPro => 'مخفي (محترف)';
+
+  @override
+  String get hidden => 'مخفي';
+
+  @override
+  String get checklistTaskPlaceholder => 'مهمة';
+
+  @override
+  String get category => 'التصنيف';
+
+  @override
+  String notesArchivedCount(int count) {
+    return '$count ملاحظة مؤرشفة';
+  }
+
+  @override
+  String notesPermanentlyDeletedCount(int count) {
+    return 'تم حذف $count ملاحظة نهائياً';
+  }
+
+  @override
+  String get appShortName => 'Sinan';
+
+  @override
+  String get appNameBilingual => 'Sinan Note | سنان نوت';
+
+  @override
+  String get appTaglineOtherLanguage =>
+      'Your sharp and reliable note-taking companion';
+
+  @override
+  String get startTour => 'ابدأ الجولة';
+
+  @override
+  String get splashLoading => 'جاري التحميل...';
+
+  @override
+  String get splashLoadingServices => 'تحميل الخدمات...';
+
+  @override
+  String get splashLoadingSettings => 'تحميل الإعدادات...';
+
+  @override
+  String get splashSecurityCheck => 'التحقق من الأمان...';
+
+  @override
+  String get splashLoadingNotes => 'تحميل الملاحظات...';
+
+  @override
+  String get splashError => 'حدث خطأ...';
+
+  @override
+  String get termsOfServiceUrl =>
+      'https://apexflow.now/ar/projects/sinan-note/terms';
+
+  @override
+  String get privacyPolicyUrl =>
+      'https://apexflow.now/ar/projects/sinan-note/privacy';
+
+  @override
+  String get sinanAiUrl => 'https://sinanai.net';
+
+  @override
+  String get tourHeadline => 'كل ما تحتاجه في مكان واحد';
+
+  @override
+  String get tourPlainNote => 'ملاحظة نصية بسيطة وسريعة';
+
+  @override
+  String get tourCodeNote => 'محرر كود مع تمييز الصياغة';
+
+  @override
+  String get tourReminderNote => 'تذكير بتاريخ ووقت محدد';
+
+  @override
+  String get tourChecklistNote => 'قائمة مهام تفاعلية';
+
+  @override
+  String get tourOneTimeReminders => 'تذكيرات لمرة واحدة';
+
+  @override
+  String get tourRecurringReminders => 'تذكيرات متكررة يومياً أو أسبوعياً';
+
+  @override
+  String get tourInstantNotification => 'إشعار فوري في الوقت المحدد';
+
+  @override
+  String get tourVaultLocalOnly => 'الخزنة محلية فقط — لا تُرفع أبداً';
+
+  @override
+  String get tourMultiDeviceSync => 'مزامنة بين أجهزة متعددة';
+
+  @override
+  String get tourAgreePrefix => 'أوافق على ';
+
+  @override
+  String get whatsNewHeadline => 'شريط أدوات موحّد ومشاركة أذكى';
+
+  @override
+  String get whatsNewSummary =>
+      'شريط القوائم والبحث أصبحا جزءاً واحداً، المشاركة عبر Apex أصبحت كالمزامنة، وكل وضع عرض يُحفظ منفصلاً.';
+
+  @override
+  String get whatsNew => 'ما الجديد';
+
+  @override
+  String get whatsNewOpenSourceTitle => '🎉 سينان نوت أصبح مفتوح المصدر!';
+
+  @override
+  String get whatsNewOpenSourceSubtitle =>
+      'الكود متاح على GitHub — استكشف، تعلّم، أو شارك في البناء';
+
+  @override
+  String get whatsNewUnifiedToolbarTitle => 'شريط أدوات موحّد';
+
+  @override
+  String get whatsNewUnifiedToolbarDesc =>
+      'شريط القوائم (File, Edit, View, Help) مدمج مع البحث في شريط واحد أنيق على سطح المكتب';
+
+  @override
+  String get whatsNewApexSharingTitle => 'مشاركة ذكية عبر Apex';
+
+  @override
+  String get whatsNewApexSharingDesc =>
+      'الملاحظات المشاركة تصل كاملة بنوعها — تشيك لست، كود، ريتش — وتُعرض بدون حفظ تلقائي';
+
+  @override
+  String get whatsNewViewModesTitle => 'حفظ عرض منفصل';
+
+  @override
+  String get whatsNewViewModesDesc =>
+      'وضع العرض (موسّع/مطوي/شبكة) يُحفظ منفصلاً للجوال وسطح المكتب';
+
+  @override
+  String get whatsNewSavePromptTitle => 'سؤال الحفظ عند الخروج';
+
+  @override
+  String get whatsNewSavePromptDesc =>
+      'الملاحظات المستلمة من الخارج لا تُحفظ تلقائياً — يُسألك عند الخروج';
+
+  @override
+  String get privacyPolicyUpdatedTitle => 'تحديث سياسة الخصوصية';
+
+  @override
+  String get privacyPolicyUpdatedDesc =>
+      'تم تحديث السياسة لتعكس المميزات الجديدة — اضغط للمراجعة';
+
+  @override
+  String get whatsNewThanks =>
+      'شكراً لملاحظاتكم — كل تحسين هنا جاء من تجربتكم الحقيقية.';
+
+  @override
+  String get noEmailAppTitle => 'لا يوجد تطبيق بريد';
+
+  @override
+  String get noEmailAppMessage =>
+      'لم يتم العثور على تطبيق بريد إلكتروني على جهازك.\n\nيمكنك التواصل معنا مباشرة عبر:';
+
+  @override
+  String get copyEmail => 'نسخ البريد';
+
+  @override
+  String get emailCopied => 'تم نسخ البريد الإلكتروني';
+
+  @override
+  String get selectChecklistToPin => 'اختر قائمة للتثبيت';
+
+  @override
+  String get selectNoteToPin => 'اختر ملاحظة للتثبيت';
+
+  @override
+  String get filterAll => 'الكل';
+
+  @override
+  String get filterPinned => 'مثبتة';
+
+  @override
+  String get filterRecent => 'الأحدث';
+
+  @override
+  String resultsCount(int count) {
+    return 'عدد النتائج: $count';
+  }
+
+  @override
+  String get currentlyPinned => 'مثبت حالياً';
+
+  @override
+  String get backupAndRestore => 'النسخ الاحتياطي والاستعادة';
+
+  @override
+  String get backupHomeTitle => 'النسخ الاحتياطي';
+
+  @override
+  String get createBackup => 'إنشاء نسخة احتياطية';
+
+  @override
+  String get yourDataIsSafe => 'بياناتك في أمان';
+
+  @override
+  String get backupHomeSubtitle =>
+      'احفظ نسخة من ملاحظاتك أو استعدها من نسخة سابقة';
+
+  @override
+  String get createBackupDesc => 'صدّر ملاحظاتك كملف JSON أو قاعدة بيانات';
+
+  @override
+  String get restoreDataDesc => 'استورد من ملف JSON أو قاعدة بيانات سابقة';
+
+  @override
+  String get vaultNotesNotExportedHint =>
+      'الملاحظات المشفرة في الخزنة لا تُصدَّر تلقائياً — اختر \"تصدير كامل\" لتضمينها';
+
+  @override
+  String get normalExport => 'تصدير عادي';
+
+  @override
+  String get normalExportDesc =>
+      'ملاحظاتك العادية فقط — نص قابل للقراءة في أي مكان';
+
+  @override
+  String get fullExportWithEncrypted => 'تصدير كامل (مع المشفرة)';
+
+  @override
+  String get fullExportWithEncryptedDesc =>
+      'يشمل الملاحظات المشفرة كـ ciphertext — تحتاج مفتاح الخزنة للاستعادة';
+
+  @override
+  String get dbFileExport => 'ملف .db';
+
+  @override
+  String get dbFileExportDesc => 'نسخة كاملة من قاعدة البيانات — أسرع استعادة';
+
+  @override
+  String get importFromJson => 'استيراد من JSON';
+
+  @override
+  String get importFromJsonDesc =>
+      'استورد من ملف .json — يدعم الدمج أو الاستبدال';
+
+  @override
+  String get restoreDatabase => 'استعادة قاعدة البيانات';
+
+  @override
+  String get restoreDatabaseDesc => 'استعد من ملف .db';
+
+  @override
+  String get chooseFile => 'اختر ملف';
+
+  @override
+  String get encryptedNotesAutoDecryptHint =>
+      'الملاحظات المشفرة تُفك تلقائياً عند توفر مفتاح الخزنة';
+
+  @override
+  String get processing => 'جاري المعالجة...';
+
+  @override
+  String get importCancelled => 'تم إلغاء الاستيراد';
+
+  @override
+  String get restoreCancelled => 'تم إلغاء الاستعادة';
+
+  @override
+  String get homeSearchBar => 'شريط البحث بالرئيسية';
+
+  @override
+  String get bottomNavigationBar => 'شريط التنقل السفلي';
+
+  @override
+  String get barFixed => 'ثابت';
+
+  @override
+  String get barAnimated => 'متحرك';
+
+  @override
+  String selectedCount(int count) {
+    return '$count محدد';
+  }
+
+  @override
+  String get motionAndNavigation => 'الحركة والتنقل';
+
+  @override
+  String get pullToRefreshSetting => 'سحب للتحديث';
+
+  @override
+  String get fullAppRefresh => 'تحديث كامل التطبيق';
+
+  @override
+  String get fullAppRefreshDesc =>
+      'مزامنة + تحديث كل البيانات + إعادة بناء الواجهة';
+
+  @override
+  String get homePageOnlyRefresh => 'تحديث الصفحة الرئيسية فقط';
+
+  @override
+  String get homePageRefresh => 'تحديث الصفحة الرئيسية';
+
+  @override
+  String get homePageRefreshDesc => 'تحديث قائمة الملاحظات فقط';
+
+  @override
+  String get disablePullToRefresh => 'تعطيل السحب للتحديث';
+
+  @override
+  String get backupAndRestoreDesc => 'تصدير واستيراد ملاحظاتك';
+
+  @override
+  String get shareAppMessage =>
+      'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
+
+  @override
+  String get dbInspector => 'فاحص قاعدة البيانات';
+
+  @override
+  String get dbInspectorDesc => 'تقرير SQLite';
+
+  @override
+  String get whatsNewDialogPreview => 'نافذة ما الجديد';
+
+  @override
+  String get whatsNewDialogPreviewDesc => 'معاينة النافذة';
+
+  @override
+  String get tourScreenPreview => 'شاشة الجولة التعريفية';
+
+  @override
+  String get tourScreenPreviewDesc => 'معاينة الجولة التعريفية';
+
+  @override
+  String get fontSampleWord => 'سنان';
+
+  @override
+  String get fontSampleArabic => 'سنان نوت — رفيقك الحاد والموثوق';
+
+  @override
+  String get fontSampleLatin =>
+      'Sinan Note — Your sharp and reliable companion';
+
+  @override
+  String get normalExportNoEncrypted => 'تصدير عادي (بدون مشفرة)';
+
+  @override
+  String get encryptedExportedAsCiphertext =>
+      'الملاحظات المشفرة ستُصدَّر كـ ciphertext — تحتاج مفتاح الخزنة للاستعادة';
+
+  @override
+  String get driveUploadNotice =>
+      'سيتم رفع ملاحظاتك العادية إلى Drive.\nالخزنة المشفرة لا تُرفع أبداً.';
+
+  @override
+  String get downloadFromDrive => 'جلب من Drive';
+
+  @override
+  String get chooseHowToDownload => 'اختر طريقة الجلب';
+
+  @override
+  String get smartMergeDriveDesc =>
+      'يحتفظ بأحدث نسخة من كل ملاحظة.\nالأفضل للمزامنة بين أجهزة متعددة.';
+
+  @override
+  String get fullReplace => 'استبدال كامل';
+
+  @override
+  String get fullReplaceDriveDesc =>
+      'يحذف كل الملاحظات المحلية ويستبدلها بنسخة Drive.\nاستخدم عند إعادة التثبيت فقط.';
+
+  @override
+  String get recommended => 'موصى به';
+
+  @override
+  String get encryptedVault => 'الخزنة المشفرة';
+
+  @override
+  String get vaultLocalOnlyNotice =>
+      '• الخزنة محلية بالكامل — لا تُرفع أبداً إلى Google Drive.\n• لمزامنة الخزنة يجب فك تشفير الملاحظات ونقلها يدوياً.\n• التطبيق غير مسؤول عن فقدان محتوى الخزنة.';
+
+  @override
+  String get driveConnected => 'متصل';
+
+  @override
+  String get simpleEasyInterface => 'واجهة مبسطة وسهلة';
+
+  @override
+  String get accountAndSync => 'الحساب والمزامنة';
+
+  @override
+  String get unknownError => 'خطأ غير معروف';
+
+  @override
+  String get driveSyncUnsupportedPlatform =>
+      'المزامنة مع Google Drive غير متاحة حالياً على هذا النظام\nقيد التطوير';
+
+  @override
+  String get syncTermsVaultLocalOnly =>
+      'الخزنة المشفرة: محلية بالكامل — لا تُرفع أبداً';
+
+  @override
+  String get backup => 'النسخ الاحتياطي';
+
+  @override
+  String get googleDriveComingSoon =>
+      'خدمات Google Drive ستكون متاحة قريباً في التحديث القادم.';
+
+  @override
+  String notesBackupShareSubject(int count) {
+    return 'Sinan Note Backup - $count ملاحظة';
+  }
+
+  @override
+  String get backupServices => 'خدمات النسخ الاحتياطي';
+
+  @override
+  String get backupServicesComingSoon =>
+      'خدمات النسخ الاحتياطي والاستعادة ستكون متاحة قريباً في التحديث القادم.';
+
+  @override
+  String lockedForDuration(String duration) {
+    return 'مقفل لمدة $duration';
+  }
+
+  @override
+  String tryAgainInDuration(String duration) {
+    return 'حاول مرة أخرى بعد $duration';
+  }
+
+  @override
+  String attemptsRemainingCount(int count) {
+    return '$count محاولة متبقية';
+  }
+
+  @override
+  String get passwordRuleMinLength => '8 أحرف على الأقل';
+
+  @override
+  String get passwordRuleNumber => 'رقم واحد على الأقل (0-9)';
+
+  @override
+  String get passwordRuleSymbol => 'رمز واحد على الأقل (!@#\$...)';
+
+  @override
+  String get passwordRuleMatch => 'كلمتا المرور متطابقتان';
+
+  @override
+  String get recoveryCodeFormatHint => 'SN-XXXX-XXXX-XXXX';
+
+  @override
+  String get recoveryCodeOriginHint =>
+      'هذا هو الرقم الطويل الذي حصلت عليه عند إنشاء الخزنة';
+
+  @override
+  String decryptionFailedCount(int count) {
+    return 'فشل فك التشفير ($count)';
+  }
+
+  @override
+  String itemsCount(int count) {
+    return '$count عناصر';
+  }
+
+  @override
+  String get changeVaultPasswordSubtitle => 'تغيير كلمة مرور الخزنة';
+
+  @override
+  String get biometricEnabledMessage => 'تم تفعيل البصمة';
+
+  @override
+  String get biometricDisabledMessage => 'تم تعطيل البصمة';
+
+  @override
+  String get vaultPasswordChanged => 'تم تغيير كلمة المرور بنجاح';
+
+  @override
+  String notesRestoredCount(int count) {
+    return 'تمت استعادة $count ملاحظة';
+  }
+
+  @override
+  String notesMovedToTrashCount(int count) {
+    return 'تم نقل $count ملاحظة إلى المحذوفات';
+  }
+
+  @override
+  String confirmPermanentDeleteNotesCount(int count) {
+    return 'هل تريد حذف $count ملاحظة نهائياً؟';
+  }
+
+  @override
+  String selectedNotesCount(int count) {
+    return '$count محدد';
+  }
+
+  @override
+  String get batteryOptimizationTitle => 'تحسين البطارية';
+
+  @override
+  String get batteryOptimizationHint =>
+      'عطّل تحسين البطارية لضمان عمل التذكيرات بشكل موثوق في الخلفية';
+
+  @override
+  String get vaultError => 'خطأ في الخزنة';
+
+  @override
+  String get googleDriveSyncFailed => 'فشلت المزامنة مع Google Drive';
+
+  @override
+  String get unexpectedError => 'حدث خطأ غير متوقع';
+
+  @override
+  String get errorReportAction => 'إبلاغ';
+
+  @override
+  String get dbInspectorTitle => 'فاحص قاعدة البيانات';
+
+  @override
+  String get editTitle => 'تعديل العنوان';
+
+  @override
+  String get enterTitleHint => 'أدخل العنوان...';
+
+  @override
+  String get searchNotesHint => 'ابحث في الملاحظات';
+
+  @override
+  String get shareNoteTitle => 'مشاركة الملاحظة';
+
+  @override
+  String get chooseSharingMethod => 'اختر طريقة المشاركة';
+
+  @override
+  String get saveFileDialogTitle => 'حفظ الملف';
+
+  @override
+  String get fileSavedSuccessfully => 'تم حفظ الملف بنجاح';
+
+  @override
+  String get fileSaveFailed => 'فشل حفظ الملف';
+
+  @override
+  String get apexSendFailed => 'فشل الإرسال عبر Apex';
+
+  @override
+  String get sendViaApexTransfer => 'إرسال عبر Apex Transfer';
+
+  @override
+  String get sendViaApexTransferSubtitle =>
+      'شارك الملاحظة عبر الشبكة المحلية بدون إنترنت';
+
+  @override
+  String get svgPreviewTitle => 'معاينة SVG';
+
+  @override
+  String invalidSvg(String error) {
+    return 'SVG غير صالح: $error';
+  }
+
+  @override
+  String noteTypeValue(String type) {
+    return 'نوع الملاحظة: $type';
+  }
+
+  @override
+  String daysAgoLong(int count) {
+    return '$count أيام';
+  }
 }

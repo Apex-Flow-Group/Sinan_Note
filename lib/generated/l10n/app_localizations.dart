@@ -4405,6 +4405,1068 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note reminders and alerts'**
   String get reminderChannelDescription;
+
+  /// No description provided for @selectCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Catalog'**
+  String get selectCatalog;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @jumpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to date'**
+  String get jumpToDate;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @refreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing...'**
+  String get refreshing;
+
+  /// No description provided for @releaseToRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to refresh'**
+  String get releaseToRefresh;
+
+  /// No description provided for @noteTypeSimple.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple'**
+  String get noteTypeSimple;
+
+  /// No description provided for @noteTypeRich.
+  ///
+  /// In en, this message translates to:
+  /// **'Rich'**
+  String get noteTypeRich;
+
+  /// No description provided for @pinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get pinned;
+
+  /// No description provided for @hiddenInCatalogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden in catalogs'**
+  String get hiddenInCatalogs;
+
+  /// No description provided for @hiddenPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden (Pro)'**
+  String get hiddenPro;
+
+  /// No description provided for @hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get hidden;
+
+  /// No description provided for @checklistTaskPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get checklistTaskPlaceholder;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @notesArchivedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} note(s) archived'**
+  String notesArchivedCount(int count);
+
+  /// No description provided for @notesPermanentlyDeletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes permanently deleted'**
+  String notesPermanentlyDeletedCount(int count);
+
+  /// No description provided for @appShortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinan'**
+  String get appShortName;
+
+  /// No description provided for @appNameBilingual.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinan Note | سنان نوت'**
+  String get appNameBilingual;
+
+  /// No description provided for @appTaglineOtherLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'رفيقك الحاد والموثوق للتدوين'**
+  String get appTaglineOtherLanguage;
+
+  /// No description provided for @startTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Tour'**
+  String get startTour;
+
+  /// No description provided for @splashLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get splashLoading;
+
+  /// No description provided for @splashLoadingServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading services...'**
+  String get splashLoadingServices;
+
+  /// No description provided for @splashLoadingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading settings...'**
+  String get splashLoadingSettings;
+
+  /// No description provided for @splashSecurityCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Security check...'**
+  String get splashSecurityCheck;
+
+  /// No description provided for @splashLoadingNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading notes...'**
+  String get splashLoadingNotes;
+
+  /// No description provided for @splashError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error occurred...'**
+  String get splashError;
+
+  /// No description provided for @termsOfServiceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'https://apexflow.now/en/projects/sinan-note/terms'**
+  String get termsOfServiceUrl;
+
+  /// No description provided for @privacyPolicyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'https://apexflow.now/en/projects/sinan-note/privacy'**
+  String get privacyPolicyUrl;
+
+  /// No description provided for @sinanAiUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'https://sinanai.net/en'**
+  String get sinanAiUrl;
+
+  /// No description provided for @tourHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything you need in one place'**
+  String get tourHeadline;
+
+  /// No description provided for @tourPlainNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple plain text note'**
+  String get tourPlainNote;
+
+  /// No description provided for @tourCodeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Code editor with syntax highlighting'**
+  String get tourCodeNote;
+
+  /// No description provided for @tourReminderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder with date and time'**
+  String get tourReminderNote;
+
+  /// No description provided for @tourChecklistNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Interactive checklist'**
+  String get tourChecklistNote;
+
+  /// No description provided for @tourOneTimeReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time reminders'**
+  String get tourOneTimeReminders;
+
+  /// No description provided for @tourRecurringReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily or weekly recurring reminders'**
+  String get tourRecurringReminders;
+
+  /// No description provided for @tourInstantNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant notification at set time'**
+  String get tourInstantNotification;
+
+  /// No description provided for @tourVaultLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault is local only — never uploaded'**
+  String get tourVaultLocalOnly;
+
+  /// No description provided for @tourMultiDeviceSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync across multiple devices'**
+  String get tourMultiDeviceSync;
+
+  /// No description provided for @tourAgreePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the '**
+  String get tourAgreePrefix;
+
+  /// No description provided for @whatsNewHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Unified Toolbar & Smarter Sharing'**
+  String get whatsNewHeadline;
+
+  /// No description provided for @whatsNewSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.'**
+  String get whatsNewSummary;
+
+  /// No description provided for @whatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New'**
+  String get whatsNew;
+
+  /// No description provided for @whatsNewOpenSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Sinan Note is now Open Source!'**
+  String get whatsNewOpenSourceTitle;
+
+  /// No description provided for @whatsNewOpenSourceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code is live on GitHub — explore, learn, or contribute'**
+  String get whatsNewOpenSourceSubtitle;
+
+  /// No description provided for @whatsNewUnifiedToolbarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unified Toolbar'**
+  String get whatsNewUnifiedToolbarTitle;
+
+  /// No description provided for @whatsNewUnifiedToolbarDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop'**
+  String get whatsNewUnifiedToolbarDesc;
+
+  /// No description provided for @whatsNewApexSharingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Sharing via Apex'**
+  String get whatsNewApexSharingTitle;
+
+  /// No description provided for @whatsNewApexSharingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving'**
+  String get whatsNewApexSharingDesc;
+
+  /// No description provided for @whatsNewViewModesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate View Modes'**
+  String get whatsNewViewModesTitle;
+
+  /// No description provided for @whatsNewViewModesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View mode (expanded/compact/grid) saved separately for mobile and desktop'**
+  String get whatsNewViewModesDesc;
+
+  /// No description provided for @whatsNewSavePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Prompt on Exit'**
+  String get whatsNewSavePromptTitle;
+
+  /// No description provided for @whatsNewSavePromptDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Received notes are not auto-saved — you\'re asked before closing'**
+  String get whatsNewSavePromptDesc;
+
+  /// No description provided for @privacyPolicyUpdatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy Updated'**
+  String get privacyPolicyUpdatedTitle;
+
+  /// No description provided for @privacyPolicyUpdatedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy updated to reflect new features — tap to review'**
+  String get privacyPolicyUpdatedDesc;
+
+  /// No description provided for @whatsNewThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for your feedback — every improvement here came from your real experience.'**
+  String get whatsNewThanks;
+
+  /// No description provided for @noEmailAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Email App Found'**
+  String get noEmailAppTitle;
+
+  /// No description provided for @noEmailAppMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No email app was found on your device.\n\nYou can contact us directly at:'**
+  String get noEmailAppMessage;
+
+  /// No description provided for @copyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Email'**
+  String get copyEmail;
+
+  /// No description provided for @emailCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Email copied'**
+  String get emailCopied;
+
+  /// No description provided for @selectChecklistToPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Checklist'**
+  String get selectChecklistToPin;
+
+  /// No description provided for @selectNoteToPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Note'**
+  String get selectNoteToPin;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get filterPinned;
+
+  /// No description provided for @filterRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get filterRecent;
+
+  /// No description provided for @resultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Results: {count}'**
+  String resultsCount(int count);
+
+  /// No description provided for @currentlyPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently Pinned'**
+  String get currentlyPinned;
+
+  /// No description provided for @backupAndRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get backupAndRestore;
+
+  /// No description provided for @backupHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get backupHomeTitle;
+
+  /// No description provided for @createBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Backup'**
+  String get createBackup;
+
+  /// No description provided for @yourDataIsSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is safe'**
+  String get yourDataIsSafe;
+
+  /// No description provided for @backupHomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a copy of your notes or restore from a previous backup'**
+  String get backupHomeSubtitle;
+
+  /// No description provided for @createBackupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Export your notes as JSON or database file'**
+  String get createBackupDesc;
+
+  /// No description provided for @restoreDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from a JSON or database backup file'**
+  String get restoreDataDesc;
+
+  /// No description provided for @vaultNotesNotExportedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted vault notes are not exported by default — choose \"Full Export\" to include them'**
+  String get vaultNotesNotExportedHint;
+
+  /// No description provided for @normalExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal Export'**
+  String get normalExport;
+
+  /// No description provided for @normalExportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular notes only — readable anywhere'**
+  String get normalExportDesc;
+
+  /// No description provided for @fullExportWithEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Export (with encrypted)'**
+  String get fullExportWithEncrypted;
+
+  /// No description provided for @fullExportWithEncryptedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes encrypted notes as ciphertext — vault key needed to restore'**
+  String get fullExportWithEncryptedDesc;
+
+  /// No description provided for @dbFileExport.
+  ///
+  /// In en, this message translates to:
+  /// **'.db File'**
+  String get dbFileExport;
+
+  /// No description provided for @dbFileExportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Full database copy — fastest restore'**
+  String get dbFileExportDesc;
+
+  /// No description provided for @importFromJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from JSON'**
+  String get importFromJson;
+
+  /// No description provided for @importFromJsonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from .json file — supports merge or replace'**
+  String get importFromJsonDesc;
+
+  /// No description provided for @restoreDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Database'**
+  String get restoreDatabase;
+
+  /// No description provided for @restoreDatabaseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from a .db file'**
+  String get restoreDatabaseDesc;
+
+  /// No description provided for @chooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose File'**
+  String get chooseFile;
+
+  /// No description provided for @encryptedNotesAutoDecryptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If the file contains encrypted notes and you have the vault key — they will be decrypted automatically'**
+  String get encryptedNotesAutoDecryptHint;
+
+  /// No description provided for @processing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing...'**
+  String get processing;
+
+  /// No description provided for @importCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Import cancelled'**
+  String get importCancelled;
+
+  /// No description provided for @restoreCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore cancelled'**
+  String get restoreCancelled;
+
+  /// No description provided for @homeSearchBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Home search bar'**
+  String get homeSearchBar;
+
+  /// No description provided for @bottomNavigationBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom navigation bar'**
+  String get bottomNavigationBar;
+
+  /// No description provided for @barFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get barFixed;
+
+  /// No description provided for @barAnimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Animated'**
+  String get barAnimated;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @motionAndNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Motion & Navigation'**
+  String get motionAndNavigation;
+
+  /// No description provided for @pullToRefreshSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull to Refresh'**
+  String get pullToRefreshSetting;
+
+  /// No description provided for @fullAppRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Full app refresh'**
+  String get fullAppRefresh;
+
+  /// No description provided for @fullAppRefreshDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync + reload all data + rebuild UI'**
+  String get fullAppRefreshDesc;
+
+  /// No description provided for @homePageOnlyRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Home page only'**
+  String get homePageOnlyRefresh;
+
+  /// No description provided for @homePageRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Home page refresh'**
+  String get homePageRefresh;
+
+  /// No description provided for @homePageRefreshDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh notes list only'**
+  String get homePageRefreshDesc;
+
+  /// No description provided for @disablePullToRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable pull to refresh'**
+  String get disablePullToRefresh;
+
+  /// No description provided for @backupAndRestoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Export and import your notes'**
+  String get backupAndRestoreDesc;
+
+  /// No description provided for @shareAppMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'**
+  String get shareAppMessage;
+
+  /// No description provided for @dbInspector.
+  ///
+  /// In en, this message translates to:
+  /// **'DB Inspector'**
+  String get dbInspector;
+
+  /// No description provided for @dbInspectorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'SQLite report'**
+  String get dbInspectorDesc;
+
+  /// No description provided for @whatsNewDialogPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New Dialog'**
+  String get whatsNewDialogPreview;
+
+  /// No description provided for @whatsNewDialogPreviewDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview the dialog'**
+  String get whatsNewDialogPreviewDesc;
+
+  /// No description provided for @tourScreenPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour Screen'**
+  String get tourScreenPreview;
+
+  /// No description provided for @tourScreenPreviewDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview onboarding tour'**
+  String get tourScreenPreviewDesc;
+
+  /// No description provided for @fontSampleWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinan'**
+  String get fontSampleWord;
+
+  /// No description provided for @fontSampleArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'سنان نوت — رفيقك الحاد والموثوق'**
+  String get fontSampleArabic;
+
+  /// No description provided for @fontSampleLatin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinan Note — Your sharp and reliable companion'**
+  String get fontSampleLatin;
+
+  /// No description provided for @normalExportNoEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal export (no encrypted)'**
+  String get normalExportNoEncrypted;
+
+  /// No description provided for @encryptedExportedAsCiphertext.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted notes exported as ciphertext — vault key needed to restore'**
+  String get encryptedExportedAsCiphertext;
+
+  /// No description provided for @driveUploadNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your regular notes will be uploaded to Drive.\nEncrypted vault notes are never uploaded.'**
+  String get driveUploadNotice;
+
+  /// No description provided for @downloadFromDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Download from Drive'**
+  String get downloadFromDrive;
+
+  /// No description provided for @chooseHowToDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how to download'**
+  String get chooseHowToDownload;
+
+  /// No description provided for @smartMergeDriveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the latest version of each note.\nBest for syncing across multiple devices.'**
+  String get smartMergeDriveDesc;
+
+  /// No description provided for @fullReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Replace'**
+  String get fullReplace;
+
+  /// No description provided for @fullReplaceDriveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes all local notes and replaces with Drive.\nUse only when reinstalling the app.'**
+  String get fullReplaceDriveDesc;
+
+  /// No description provided for @recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommended;
+
+  /// No description provided for @encryptedVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted Vault'**
+  String get encryptedVault;
+
+  /// No description provided for @vaultLocalOnlyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'• The vault is fully local — never uploaded to Google Drive.\n• To sync vault notes, decrypt them manually first.\n• The app is not responsible for vault content loss.'**
+  String get vaultLocalOnlyNotice;
+
+  /// No description provided for @driveConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get driveConnected;
+
+  /// No description provided for @simpleEasyInterface.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple & Easy Interface'**
+  String get simpleEasyInterface;
+
+  /// No description provided for @accountAndSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Sync'**
+  String get accountAndSync;
+
+  /// No description provided for @unknownError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get unknownError;
+
+  /// No description provided for @driveSyncUnsupportedPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive sync isn\'t available on this platform yet\nUnder development'**
+  String get driveSyncUnsupportedPlatform;
+
+  /// No description provided for @syncTermsVaultLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted Vault: fully local — never uploaded'**
+  String get syncTermsVaultLocalOnly;
+
+  /// No description provided for @backup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backup;
+
+  /// No description provided for @googleDriveComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive services will be available soon in the next update.'**
+  String get googleDriveComingSoon;
+
+  /// No description provided for @notesBackupShareSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinan Note Backup - {count} notes'**
+  String notesBackupShareSubject(int count);
+
+  /// No description provided for @backupServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Services'**
+  String get backupServices;
+
+  /// No description provided for @backupServicesComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup and restore services will be available soon in the next update.'**
+  String get backupServicesComingSoon;
+
+  /// No description provided for @lockedForDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked for {duration}'**
+  String lockedForDuration(String duration);
+
+  /// No description provided for @tryAgainInDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {duration}'**
+  String tryAgainInDuration(String duration);
+
+  /// No description provided for @attemptsRemainingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} attempts remaining'**
+  String attemptsRemainingCount(int count);
+
+  /// No description provided for @passwordRuleMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Min 8 characters'**
+  String get passwordRuleMinLength;
+
+  /// No description provided for @passwordRuleNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one number (0-9)'**
+  String get passwordRuleNumber;
+
+  /// No description provided for @passwordRuleSymbol.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one symbol (!@#\$...)'**
+  String get passwordRuleSymbol;
+
+  /// No description provided for @passwordRuleMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords match'**
+  String get passwordRuleMatch;
+
+  /// No description provided for @recoveryCodeFormatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'SN-XXXX-XXXX-XXXX'**
+  String get recoveryCodeFormatHint;
+
+  /// No description provided for @recoveryCodeOriginHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the long code you received when creating the vault'**
+  String get recoveryCodeOriginHint;
+
+  /// No description provided for @decryptionFailedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Decryption failed ({count})'**
+  String decryptionFailedCount(int count);
+
+  /// No description provided for @itemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String itemsCount(int count);
+
+  /// No description provided for @changeVaultPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change vault password'**
+  String get changeVaultPasswordSubtitle;
+
+  /// No description provided for @biometricEnabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric enabled'**
+  String get biometricEnabledMessage;
+
+  /// No description provided for @biometricDisabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric disabled'**
+  String get biometricDisabledMessage;
+
+  /// No description provided for @vaultPasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully'**
+  String get vaultPasswordChanged;
+
+  /// No description provided for @notesRestoredCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes restored'**
+  String notesRestoredCount(int count);
+
+  /// No description provided for @notesMovedToTrashCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes moved to trash'**
+  String notesMovedToTrashCount(int count);
+
+  /// No description provided for @confirmPermanentDeleteNotesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to permanently delete {count} notes?'**
+  String confirmPermanentDeleteNotesCount(int count);
+
+  /// No description provided for @selectedNotesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedNotesCount(int count);
+
+  /// No description provided for @batteryOptimizationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery Optimization'**
+  String get batteryOptimizationTitle;
+
+  /// No description provided for @batteryOptimizationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable battery optimization to ensure reminders work reliably in the background'**
+  String get batteryOptimizationHint;
+
+  /// No description provided for @vaultError.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault error'**
+  String get vaultError;
+
+  /// No description provided for @googleDriveSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with Google Drive failed'**
+  String get googleDriveSyncFailed;
+
+  /// No description provided for @unexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred'**
+  String get unexpectedError;
+
+  /// No description provided for @errorReportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'REPORT'**
+  String get errorReportAction;
+
+  /// No description provided for @dbInspectorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'DB Inspector'**
+  String get dbInspectorTitle;
+
+  /// No description provided for @editTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit title'**
+  String get editTitle;
+
+  /// No description provided for @enterTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter title...'**
+  String get enterTitleHint;
+
+  /// No description provided for @searchNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search notes'**
+  String get searchNotesHint;
+
+  /// No description provided for @shareNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Note'**
+  String get shareNoteTitle;
+
+  /// No description provided for @chooseSharingMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose sharing method'**
+  String get chooseSharingMethod;
+
+  /// No description provided for @saveFileDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save File'**
+  String get saveFileDialogTitle;
+
+  /// No description provided for @fileSavedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'File saved successfully'**
+  String get fileSavedSuccessfully;
+
+  /// No description provided for @fileSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save file'**
+  String get fileSaveFailed;
+
+  /// No description provided for @apexSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send via Apex'**
+  String get apexSendFailed;
+
+  /// No description provided for @sendViaApexTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Send via Apex Transfer'**
+  String get sendViaApexTransfer;
+
+  /// No description provided for @sendViaApexTransferSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share note over local network without internet'**
+  String get sendViaApexTransferSubtitle;
+
+  /// No description provided for @svgPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SVG Preview'**
+  String get svgPreviewTitle;
+
+  /// No description provided for @invalidSvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid SVG: {error}'**
+  String invalidSvg(String error);
+
+  /// No description provided for @noteTypeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Type: {type}'**
+  String noteTypeValue(String type);
+
+  /// No description provided for @daysAgoLong.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String daysAgoLong(int count);
 }
 
 class _AppLocalizationsDelegate

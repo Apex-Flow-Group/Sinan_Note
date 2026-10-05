@@ -815,5 +815,301 @@
   "widgetEmptyChecklist": "Empty checklist",
   "widgetNoteDeleted": "Note deleted",
   "widgetListDeleted": "List deleted",
-  "reminderChannelDescription": "Note reminders and alerts"
+  "reminderChannelDescription": "Note reminders and alerts",
+  "selectCatalog": "Select Catalog",
+  "all": "All",
+  "jumpToDate": "Jump to date",
+  "yesterday": "Yesterday",
+  "refreshing": "Refreshing...",
+  "releaseToRefresh": "Release to refresh",
+  "noteTypeSimple": "Simple",
+  "noteTypeRich": "Rich",
+  "pinned": "Pinned",
+  "hiddenInCatalogs": "Hidden in catalogs",
+  "hiddenPro": "Hidden (Pro)",
+  "hidden": "Hidden",
+  "checklistTaskPlaceholder": "Task",
+  "category": "Category",
+  "notesArchivedCount": "{count} note(s) archived",
+  "@notesArchivedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesPermanentlyDeletedCount": "{count} notes permanently deleted",
+  "@notesPermanentlyDeletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appShortName": "Sinan",
+  "appNameBilingual": "Sinan Note | سنان نوت",
+  "appTaglineOtherLanguage": "رفيقك الحاد والموثوق للتدوين",
+  "startTour": "Start Tour",
+  "splashLoading": "Loading...",
+  "splashLoadingServices": "Loading services...",
+  "splashLoadingSettings": "Loading settings...",
+  "splashSecurityCheck": "Security check...",
+  "splashLoadingNotes": "Loading notes...",
+  "splashError": "Error occurred...",
+  "termsOfServiceUrl": "https://apexflow.now/en/projects/sinan-note/terms",
+  "privacyPolicyUrl": "https://apexflow.now/en/projects/sinan-note/privacy",
+  "sinanAiUrl": "https://sinanai.net/en",
+  "tourHeadline": "Everything you need in one place",
+  "tourPlainNote": "Simple plain text note",
+  "tourCodeNote": "Code editor with syntax highlighting",
+  "tourReminderNote": "Reminder with date and time",
+  "tourChecklistNote": "Interactive checklist",
+  "tourOneTimeReminders": "One-time reminders",
+  "tourRecurringReminders": "Daily or weekly recurring reminders",
+  "tourInstantNotification": "Instant notification at set time",
+  "tourVaultLocalOnly": "Vault is local only — never uploaded",
+  "tourMultiDeviceSync": "Sync across multiple devices",
+  "tourAgreePrefix": "I agree to the ",
+  "whatsNewHeadline": "Unified Toolbar & Smarter Sharing",
+  "whatsNewSummary": "Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.",
+  "whatsNew": "What's New",
+  "whatsNewOpenSourceTitle": "🎉 Sinan Note is now Open Source!",
+  "whatsNewOpenSourceSubtitle": "Code is live on GitHub — explore, learn, or contribute",
+  "whatsNewUnifiedToolbarTitle": "Unified Toolbar",
+  "whatsNewUnifiedToolbarDesc": "Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop",
+  "whatsNewApexSharingTitle": "Smart Sharing via Apex",
+  "whatsNewApexSharingDesc": "Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving",
+  "whatsNewViewModesTitle": "Separate View Modes",
+  "whatsNewViewModesDesc": "View mode (expanded/compact/grid) saved separately for mobile and desktop",
+  "whatsNewSavePromptTitle": "Save Prompt on Exit",
+  "whatsNewSavePromptDesc": "Received notes are not auto-saved — you're asked before closing",
+  "privacyPolicyUpdatedTitle": "Privacy Policy Updated",
+  "privacyPolicyUpdatedDesc": "Policy updated to reflect new features — tap to review",
+  "whatsNewThanks": "Thanks for your feedback — every improvement here came from your real experience.",
+  "noEmailAppTitle": "No Email App Found",
+  "noEmailAppMessage": "No email app was found on your device.\n\nYou can contact us directly at:",
+  "copyEmail": "Copy Email",
+  "emailCopied": "Email copied",
+  "selectChecklistToPin": "Select Checklist",
+  "selectNoteToPin": "Select Note",
+  "filterAll": "All",
+  "filterPinned": "Pinned",
+  "filterRecent": "Recent",
+  "resultsCount": "Results: {count}",
+  "@resultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "currentlyPinned": "Currently Pinned",
+  "backupAndRestore": "Backup & Restore",
+  "backupHomeTitle": "Backup & Restore",
+  "createBackup": "Create Backup",
+  "yourDataIsSafe": "Your data is safe",
+  "backupHomeSubtitle": "Save a copy of your notes or restore from a previous backup",
+  "createBackupDesc": "Export your notes as JSON or database file",
+  "restoreDataDesc": "Import from a JSON or database backup file",
+  "vaultNotesNotExportedHint": "Encrypted vault notes are not exported by default — choose \"Full Export\" to include them",
+  "normalExport": "Normal Export",
+  "normalExportDesc": "Regular notes only — readable anywhere",
+  "fullExportWithEncrypted": "Full Export (with encrypted)",
+  "fullExportWithEncryptedDesc": "Includes encrypted notes as ciphertext — vault key needed to restore",
+  "dbFileExport": ".db File",
+  "dbFileExportDesc": "Full database copy — fastest restore",
+  "importFromJson": "Import from JSON",
+  "importFromJsonDesc": "Import from .json file — supports merge or replace",
+  "restoreDatabase": "Restore Database",
+  "restoreDatabaseDesc": "Restore from a .db file",
+  "chooseFile": "Choose File",
+  "encryptedNotesAutoDecryptHint": "If the file contains encrypted notes and you have the vault key — they will be decrypted automatically",
+  "processing": "Processing...",
+  "importCancelled": "Import cancelled",
+  "restoreCancelled": "Restore cancelled",
+  "homeSearchBar": "Home search bar",
+  "bottomNavigationBar": "Bottom navigation bar",
+  "barFixed": "Fixed",
+  "barAnimated": "Animated",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "motionAndNavigation": "Motion & Navigation",
+  "pullToRefreshSetting": "Pull to Refresh",
+  "fullAppRefresh": "Full app refresh",
+  "fullAppRefreshDesc": "Sync + reload all data + rebuild UI",
+  "homePageOnlyRefresh": "Home page only",
+  "homePageRefresh": "Home page refresh",
+  "homePageRefreshDesc": "Refresh notes list only",
+  "disablePullToRefresh": "Disable pull to refresh",
+  "backupAndRestoreDesc": "Export and import your notes",
+  "shareAppMessage": "Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919",
+  "dbInspector": "DB Inspector",
+  "dbInspectorDesc": "SQLite report",
+  "whatsNewDialogPreview": "What's New Dialog",
+  "whatsNewDialogPreviewDesc": "Preview the dialog",
+  "tourScreenPreview": "Tour Screen",
+  "tourScreenPreviewDesc": "Preview onboarding tour",
+  "fontSampleWord": "Sinan",
+  "fontSampleArabic": "سنان نوت — رفيقك الحاد والموثوق",
+  "fontSampleLatin": "Sinan Note — Your sharp and reliable companion",
+  "normalExportNoEncrypted": "Normal export (no encrypted)",
+  "encryptedExportedAsCiphertext": "Encrypted notes exported as ciphertext — vault key needed to restore",
+  "driveUploadNotice": "Your regular notes will be uploaded to Drive.\nEncrypted vault notes are never uploaded.",
+  "downloadFromDrive": "Download from Drive",
+  "chooseHowToDownload": "Choose how to download",
+  "smartMergeDriveDesc": "Keeps the latest version of each note.\nBest for syncing across multiple devices.",
+  "fullReplace": "Full Replace",
+  "fullReplaceDriveDesc": "Deletes all local notes and replaces with Drive.\nUse only when reinstalling the app.",
+  "recommended": "Recommended",
+  "encryptedVault": "Encrypted Vault",
+  "vaultLocalOnlyNotice": "• The vault is fully local — never uploaded to Google Drive.\n• To sync vault notes, decrypt them manually first.\n• The app is not responsible for vault content loss.",
+  "driveConnected": "Connected",
+  "simpleEasyInterface": "Simple & Easy Interface",
+  "accountAndSync": "Account & Sync",
+  "unknownError": "Unknown error",
+  "driveSyncUnsupportedPlatform": "Google Drive sync isn't available on this platform yet\nUnder development",
+  "syncTermsVaultLocalOnly": "Encrypted Vault: fully local — never uploaded",
+  "backup": "Backup",
+  "googleDriveComingSoon": "Google Drive services will be available soon in the next update.",
+  "notesBackupShareSubject": "Sinan Note Backup - {count} notes",
+  "@notesBackupShareSubject": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupServices": "Backup Services",
+  "backupServicesComingSoon": "Backup and restore services will be available soon in the next update.",
+  "lockedForDuration": "Locked for {duration}",
+  "@lockedForDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "tryAgainInDuration": "Try again in {duration}",
+  "@tryAgainInDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "attemptsRemainingCount": "{count} attempts remaining",
+  "@attemptsRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "passwordRuleMinLength": "Min 8 characters",
+  "passwordRuleNumber": "At least one number (0-9)",
+  "passwordRuleSymbol": "At least one symbol (!@#$...)",
+  "passwordRuleMatch": "Passwords match",
+  "recoveryCodeFormatHint": "SN-XXXX-XXXX-XXXX",
+  "recoveryCodeOriginHint": "This is the long code you received when creating the vault",
+  "decryptionFailedCount": "Decryption failed ({count})",
+  "@decryptionFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsCount": "{count} items",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "changeVaultPasswordSubtitle": "Change vault password",
+  "biometricEnabledMessage": "Biometric enabled",
+  "biometricDisabledMessage": "Biometric disabled",
+  "vaultPasswordChanged": "Password changed successfully",
+  "notesRestoredCount": "{count} notes restored",
+  "@notesRestoredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesMovedToTrashCount": "{count} notes moved to trash",
+  "@notesMovedToTrashCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "confirmPermanentDeleteNotesCount": "Do you want to permanently delete {count} notes?",
+  "@confirmPermanentDeleteNotesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedNotesCount": "{count} selected",
+  "@selectedNotesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batteryOptimizationTitle": "Battery Optimization",
+  "batteryOptimizationHint": "Disable battery optimization to ensure reminders work reliably in the background",
+  "vaultError": "Vault error",
+  "googleDriveSyncFailed": "Sync with Google Drive failed",
+  "unexpectedError": "An unexpected error occurred",
+  "errorReportAction": "REPORT",
+  "dbInspectorTitle": "DB Inspector",
+  "editTitle": "Edit title",
+  "enterTitleHint": "Enter title...",
+  "searchNotesHint": "Search notes",
+  "shareNoteTitle": "Share Note",
+  "chooseSharingMethod": "Choose sharing method",
+  "saveFileDialogTitle": "Save File",
+  "fileSavedSuccessfully": "File saved successfully",
+  "fileSaveFailed": "Failed to save file",
+  "apexSendFailed": "Failed to send via Apex",
+  "sendViaApexTransfer": "Send via Apex Transfer",
+  "sendViaApexTransferSubtitle": "Share note over local network without internet",
+  "svgPreviewTitle": "SVG Preview",
+  "invalidSvg": "Invalid SVG: {error}",
+  "@invalidSvg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noteTypeValue": "Note Type: {type}",
+  "@noteTypeValue": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "daysAgoLong": "{count} days ago",
+  "@daysAgoLong": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

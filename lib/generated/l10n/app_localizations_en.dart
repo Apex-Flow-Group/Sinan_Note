@@ -2258,4 +2258,599 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderChannelDescription => 'Note reminders and alerts';
+
+  @override
+  String get selectCatalog => 'Select Catalog';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get jumpToDate => 'Jump to date';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get refreshing => 'Refreshing...';
+
+  @override
+  String get releaseToRefresh => 'Release to refresh';
+
+  @override
+  String get noteTypeSimple => 'Simple';
+
+  @override
+  String get noteTypeRich => 'Rich';
+
+  @override
+  String get pinned => 'Pinned';
+
+  @override
+  String get hiddenInCatalogs => 'Hidden in catalogs';
+
+  @override
+  String get hiddenPro => 'Hidden (Pro)';
+
+  @override
+  String get hidden => 'Hidden';
+
+  @override
+  String get checklistTaskPlaceholder => 'Task';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String notesArchivedCount(int count) {
+    return '$count note(s) archived';
+  }
+
+  @override
+  String notesPermanentlyDeletedCount(int count) {
+    return '$count notes permanently deleted';
+  }
+
+  @override
+  String get appShortName => 'Sinan';
+
+  @override
+  String get appNameBilingual => 'Sinan Note | سنان نوت';
+
+  @override
+  String get appTaglineOtherLanguage => 'رفيقك الحاد والموثوق للتدوين';
+
+  @override
+  String get startTour => 'Start Tour';
+
+  @override
+  String get splashLoading => 'Loading...';
+
+  @override
+  String get splashLoadingServices => 'Loading services...';
+
+  @override
+  String get splashLoadingSettings => 'Loading settings...';
+
+  @override
+  String get splashSecurityCheck => 'Security check...';
+
+  @override
+  String get splashLoadingNotes => 'Loading notes...';
+
+  @override
+  String get splashError => 'Error occurred...';
+
+  @override
+  String get termsOfServiceUrl =>
+      'https://apexflow.now/en/projects/sinan-note/terms';
+
+  @override
+  String get privacyPolicyUrl =>
+      'https://apexflow.now/en/projects/sinan-note/privacy';
+
+  @override
+  String get sinanAiUrl => 'https://sinanai.net/en';
+
+  @override
+  String get tourHeadline => 'Everything you need in one place';
+
+  @override
+  String get tourPlainNote => 'Simple plain text note';
+
+  @override
+  String get tourCodeNote => 'Code editor with syntax highlighting';
+
+  @override
+  String get tourReminderNote => 'Reminder with date and time';
+
+  @override
+  String get tourChecklistNote => 'Interactive checklist';
+
+  @override
+  String get tourOneTimeReminders => 'One-time reminders';
+
+  @override
+  String get tourRecurringReminders => 'Daily or weekly recurring reminders';
+
+  @override
+  String get tourInstantNotification => 'Instant notification at set time';
+
+  @override
+  String get tourVaultLocalOnly => 'Vault is local only — never uploaded';
+
+  @override
+  String get tourMultiDeviceSync => 'Sync across multiple devices';
+
+  @override
+  String get tourAgreePrefix => 'I agree to the ';
+
+  @override
+  String get whatsNewHeadline => 'Unified Toolbar & Smarter Sharing';
+
+  @override
+  String get whatsNewSummary =>
+      'Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.';
+
+  @override
+  String get whatsNew => 'What\'s New';
+
+  @override
+  String get whatsNewOpenSourceTitle => '🎉 Sinan Note is now Open Source!';
+
+  @override
+  String get whatsNewOpenSourceSubtitle =>
+      'Code is live on GitHub — explore, learn, or contribute';
+
+  @override
+  String get whatsNewUnifiedToolbarTitle => 'Unified Toolbar';
+
+  @override
+  String get whatsNewUnifiedToolbarDesc =>
+      'Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop';
+
+  @override
+  String get whatsNewApexSharingTitle => 'Smart Sharing via Apex';
+
+  @override
+  String get whatsNewApexSharingDesc =>
+      'Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving';
+
+  @override
+  String get whatsNewViewModesTitle => 'Separate View Modes';
+
+  @override
+  String get whatsNewViewModesDesc =>
+      'View mode (expanded/compact/grid) saved separately for mobile and desktop';
+
+  @override
+  String get whatsNewSavePromptTitle => 'Save Prompt on Exit';
+
+  @override
+  String get whatsNewSavePromptDesc =>
+      'Received notes are not auto-saved — you\'re asked before closing';
+
+  @override
+  String get privacyPolicyUpdatedTitle => 'Privacy Policy Updated';
+
+  @override
+  String get privacyPolicyUpdatedDesc =>
+      'Policy updated to reflect new features — tap to review';
+
+  @override
+  String get whatsNewThanks =>
+      'Thanks for your feedback — every improvement here came from your real experience.';
+
+  @override
+  String get noEmailAppTitle => 'No Email App Found';
+
+  @override
+  String get noEmailAppMessage =>
+      'No email app was found on your device.\n\nYou can contact us directly at:';
+
+  @override
+  String get copyEmail => 'Copy Email';
+
+  @override
+  String get emailCopied => 'Email copied';
+
+  @override
+  String get selectChecklistToPin => 'Select Checklist';
+
+  @override
+  String get selectNoteToPin => 'Select Note';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterPinned => 'Pinned';
+
+  @override
+  String get filterRecent => 'Recent';
+
+  @override
+  String resultsCount(int count) {
+    return 'Results: $count';
+  }
+
+  @override
+  String get currentlyPinned => 'Currently Pinned';
+
+  @override
+  String get backupAndRestore => 'Backup & Restore';
+
+  @override
+  String get backupHomeTitle => 'Backup & Restore';
+
+  @override
+  String get createBackup => 'Create Backup';
+
+  @override
+  String get yourDataIsSafe => 'Your data is safe';
+
+  @override
+  String get backupHomeSubtitle =>
+      'Save a copy of your notes or restore from a previous backup';
+
+  @override
+  String get createBackupDesc => 'Export your notes as JSON or database file';
+
+  @override
+  String get restoreDataDesc => 'Import from a JSON or database backup file';
+
+  @override
+  String get vaultNotesNotExportedHint =>
+      'Encrypted vault notes are not exported by default — choose \"Full Export\" to include them';
+
+  @override
+  String get normalExport => 'Normal Export';
+
+  @override
+  String get normalExportDesc => 'Regular notes only — readable anywhere';
+
+  @override
+  String get fullExportWithEncrypted => 'Full Export (with encrypted)';
+
+  @override
+  String get fullExportWithEncryptedDesc =>
+      'Includes encrypted notes as ciphertext — vault key needed to restore';
+
+  @override
+  String get dbFileExport => '.db File';
+
+  @override
+  String get dbFileExportDesc => 'Full database copy — fastest restore';
+
+  @override
+  String get importFromJson => 'Import from JSON';
+
+  @override
+  String get importFromJsonDesc =>
+      'Import from .json file — supports merge or replace';
+
+  @override
+  String get restoreDatabase => 'Restore Database';
+
+  @override
+  String get restoreDatabaseDesc => 'Restore from a .db file';
+
+  @override
+  String get chooseFile => 'Choose File';
+
+  @override
+  String get encryptedNotesAutoDecryptHint =>
+      'If the file contains encrypted notes and you have the vault key — they will be decrypted automatically';
+
+  @override
+  String get processing => 'Processing...';
+
+  @override
+  String get importCancelled => 'Import cancelled';
+
+  @override
+  String get restoreCancelled => 'Restore cancelled';
+
+  @override
+  String get homeSearchBar => 'Home search bar';
+
+  @override
+  String get bottomNavigationBar => 'Bottom navigation bar';
+
+  @override
+  String get barFixed => 'Fixed';
+
+  @override
+  String get barAnimated => 'Animated';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get motionAndNavigation => 'Motion & Navigation';
+
+  @override
+  String get pullToRefreshSetting => 'Pull to Refresh';
+
+  @override
+  String get fullAppRefresh => 'Full app refresh';
+
+  @override
+  String get fullAppRefreshDesc => 'Sync + reload all data + rebuild UI';
+
+  @override
+  String get homePageOnlyRefresh => 'Home page only';
+
+  @override
+  String get homePageRefresh => 'Home page refresh';
+
+  @override
+  String get homePageRefreshDesc => 'Refresh notes list only';
+
+  @override
+  String get disablePullToRefresh => 'Disable pull to refresh';
+
+  @override
+  String get backupAndRestoreDesc => 'Export and import your notes';
+
+  @override
+  String get shareAppMessage =>
+      'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
+
+  @override
+  String get dbInspector => 'DB Inspector';
+
+  @override
+  String get dbInspectorDesc => 'SQLite report';
+
+  @override
+  String get whatsNewDialogPreview => 'What\'s New Dialog';
+
+  @override
+  String get whatsNewDialogPreviewDesc => 'Preview the dialog';
+
+  @override
+  String get tourScreenPreview => 'Tour Screen';
+
+  @override
+  String get tourScreenPreviewDesc => 'Preview onboarding tour';
+
+  @override
+  String get fontSampleWord => 'Sinan';
+
+  @override
+  String get fontSampleArabic => 'سنان نوت — رفيقك الحاد والموثوق';
+
+  @override
+  String get fontSampleLatin =>
+      'Sinan Note — Your sharp and reliable companion';
+
+  @override
+  String get normalExportNoEncrypted => 'Normal export (no encrypted)';
+
+  @override
+  String get encryptedExportedAsCiphertext =>
+      'Encrypted notes exported as ciphertext — vault key needed to restore';
+
+  @override
+  String get driveUploadNotice =>
+      'Your regular notes will be uploaded to Drive.\nEncrypted vault notes are never uploaded.';
+
+  @override
+  String get downloadFromDrive => 'Download from Drive';
+
+  @override
+  String get chooseHowToDownload => 'Choose how to download';
+
+  @override
+  String get smartMergeDriveDesc =>
+      'Keeps the latest version of each note.\nBest for syncing across multiple devices.';
+
+  @override
+  String get fullReplace => 'Full Replace';
+
+  @override
+  String get fullReplaceDriveDesc =>
+      'Deletes all local notes and replaces with Drive.\nUse only when reinstalling the app.';
+
+  @override
+  String get recommended => 'Recommended';
+
+  @override
+  String get encryptedVault => 'Encrypted Vault';
+
+  @override
+  String get vaultLocalOnlyNotice =>
+      '• The vault is fully local — never uploaded to Google Drive.\n• To sync vault notes, decrypt them manually first.\n• The app is not responsible for vault content loss.';
+
+  @override
+  String get driveConnected => 'Connected';
+
+  @override
+  String get simpleEasyInterface => 'Simple & Easy Interface';
+
+  @override
+  String get accountAndSync => 'Account & Sync';
+
+  @override
+  String get unknownError => 'Unknown error';
+
+  @override
+  String get driveSyncUnsupportedPlatform =>
+      'Google Drive sync isn\'t available on this platform yet\nUnder development';
+
+  @override
+  String get syncTermsVaultLocalOnly =>
+      'Encrypted Vault: fully local — never uploaded';
+
+  @override
+  String get backup => 'Backup';
+
+  @override
+  String get googleDriveComingSoon =>
+      'Google Drive services will be available soon in the next update.';
+
+  @override
+  String notesBackupShareSubject(int count) {
+    return 'Sinan Note Backup - $count notes';
+  }
+
+  @override
+  String get backupServices => 'Backup Services';
+
+  @override
+  String get backupServicesComingSoon =>
+      'Backup and restore services will be available soon in the next update.';
+
+  @override
+  String lockedForDuration(String duration) {
+    return 'Locked for $duration';
+  }
+
+  @override
+  String tryAgainInDuration(String duration) {
+    return 'Try again in $duration';
+  }
+
+  @override
+  String attemptsRemainingCount(int count) {
+    return '$count attempts remaining';
+  }
+
+  @override
+  String get passwordRuleMinLength => 'Min 8 characters';
+
+  @override
+  String get passwordRuleNumber => 'At least one number (0-9)';
+
+  @override
+  String get passwordRuleSymbol => 'At least one symbol (!@#\$...)';
+
+  @override
+  String get passwordRuleMatch => 'Passwords match';
+
+  @override
+  String get recoveryCodeFormatHint => 'SN-XXXX-XXXX-XXXX';
+
+  @override
+  String get recoveryCodeOriginHint =>
+      'This is the long code you received when creating the vault';
+
+  @override
+  String decryptionFailedCount(int count) {
+    return 'Decryption failed ($count)';
+  }
+
+  @override
+  String itemsCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get changeVaultPasswordSubtitle => 'Change vault password';
+
+  @override
+  String get biometricEnabledMessage => 'Biometric enabled';
+
+  @override
+  String get biometricDisabledMessage => 'Biometric disabled';
+
+  @override
+  String get vaultPasswordChanged => 'Password changed successfully';
+
+  @override
+  String notesRestoredCount(int count) {
+    return '$count notes restored';
+  }
+
+  @override
+  String notesMovedToTrashCount(int count) {
+    return '$count notes moved to trash';
+  }
+
+  @override
+  String confirmPermanentDeleteNotesCount(int count) {
+    return 'Do you want to permanently delete $count notes?';
+  }
+
+  @override
+  String selectedNotesCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get batteryOptimizationTitle => 'Battery Optimization';
+
+  @override
+  String get batteryOptimizationHint =>
+      'Disable battery optimization to ensure reminders work reliably in the background';
+
+  @override
+  String get vaultError => 'Vault error';
+
+  @override
+  String get googleDriveSyncFailed => 'Sync with Google Drive failed';
+
+  @override
+  String get unexpectedError => 'An unexpected error occurred';
+
+  @override
+  String get errorReportAction => 'REPORT';
+
+  @override
+  String get dbInspectorTitle => 'DB Inspector';
+
+  @override
+  String get editTitle => 'Edit title';
+
+  @override
+  String get enterTitleHint => 'Enter title...';
+
+  @override
+  String get searchNotesHint => 'Search notes';
+
+  @override
+  String get shareNoteTitle => 'Share Note';
+
+  @override
+  String get chooseSharingMethod => 'Choose sharing method';
+
+  @override
+  String get saveFileDialogTitle => 'Save File';
+
+  @override
+  String get fileSavedSuccessfully => 'File saved successfully';
+
+  @override
+  String get fileSaveFailed => 'Failed to save file';
+
+  @override
+  String get apexSendFailed => 'Failed to send via Apex';
+
+  @override
+  String get sendViaApexTransfer => 'Send via Apex Transfer';
+
+  @override
+  String get sendViaApexTransferSubtitle =>
+      'Share note over local network without internet';
+
+  @override
+  String get svgPreviewTitle => 'SVG Preview';
+
+  @override
+  String invalidSvg(String error) {
+    return 'Invalid SVG: $error';
+  }
+
+  @override
+  String noteTypeValue(String type) {
+    return 'Note Type: $type';
+  }
+
+  @override
+  String daysAgoLong(int count) {
+    return '$count days ago';
+  }
 }

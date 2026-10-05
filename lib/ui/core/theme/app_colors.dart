@@ -147,5 +147,12 @@ extension AppThemeContext on BuildContext {
   ThemeData get theme => Theme.of(this);
   ColorScheme get scheme => Theme.of(this).colorScheme;
   TextTheme get text => Theme.of(this).textTheme;
-  AppColors get colors => Theme.of(this).extension<AppColors>()!;
+
+  /// من الثيم؛ ثيم بلا الامتداد (اختبار بـ MaterialApp عارٍ مثلاً) يأخذ
+  /// القيم الافتراضية لسطوعه بدل أن ينهار.
+  AppColors get colors {
+    final theme = Theme.of(this);
+    return theme.extension<AppColors>() ??
+        (theme.brightness == Brightness.dark ? AppColors.dark : AppColors.light);
+  }
 }
