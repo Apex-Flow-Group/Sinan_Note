@@ -12,8 +12,8 @@ import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show tabToHomeNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
@@ -129,7 +129,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
           } else if (searchController.text.isNotEmpty) {
             setState(() => searchController.clear());
           } else {
-            tabToHomeNotifier.value++;
+            context.read<AppNavigation>().goHome();
           }
         },
         child: Stack(

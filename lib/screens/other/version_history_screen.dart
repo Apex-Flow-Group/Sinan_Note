@@ -13,12 +13,12 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/other/version_history/panels/diff_panel.dart';
 import 'package:sinan_note/screens/other/version_history/panels/notes_panel.dart';
 import 'package:sinan_note/screens/other/version_history/panels/versions_panel.dart';
 import 'package:sinan_note/screens/other/version_history/widgets/resizable_divider.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
@@ -274,7 +274,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           onTabSelected: (index) {
             Navigator.of(context, rootNavigator: true)
                 .popUntil((r) => r.settings.name == '/main' || r.isFirst);
-            currentTabIndexNotifier.value = index;
+            context.read<AppNavigation>().tab.value = index;
           },
         ),
         body: SafeArea(

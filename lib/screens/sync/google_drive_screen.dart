@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:sinan_note/screens/sync/google_drive/google_drive_widgets.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
@@ -101,7 +101,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           onTabSelected: (index) {
             Navigator.of(context, rootNavigator: true)
                 .popUntil((r) => r.settings.name == '/main' || r.isFirst);
-            currentTabIndexNotifier.value = index;
+            context.read<AppNavigation>().tab.value = index;
           },
         ),
         body: _isLoading

@@ -2,14 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/shared/settings/sections/data_about_sections.dart';
 import 'package:sinan_note/screens/shared/settings/sections/general_section.dart';
 import 'package:sinan_note/screens/shared/settings/sections/security_section.dart';
 import 'package:sinan_note/screens/shared/settings/sections/swipe_section.dart';
 import 'package:sinan_note/screens/shared/settings_screen.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
 
@@ -70,7 +71,7 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
           onTabSelected: (index) {
             Navigator.of(context, rootNavigator: true)
                 .popUntil((r) => r.settings.name == '/main' || r.isFirst);
-            currentTabIndexNotifier.value = index;
+            context.read<AppNavigation>().tab.value = index;
           },
         ),
         appBar: AppBar(

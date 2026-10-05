@@ -6,7 +6,7 @@ import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note_category.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/ui/features/categories/category_issue_text.dart';
@@ -137,7 +137,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
         final cats = provider.categories;
         final selected = provider.selectedCategoryId;
         // الكتالوجات تُظلل فقط إذا كنت على tab الرئيسية
-        final isOnHomeTab = currentTabIndexNotifier.value == 0;
+        final isOnHomeTab = context.read<AppNavigation>().tab.value == 0;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -155,7 +155,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                 Navigator.pop(context);
                 Navigator.of(context, rootNavigator: true).popUntil(
                     (route) => route.settings.name == '/main' || route.isFirst);
-                currentTabIndexNotifier.value = 0;
+                context.read<AppNavigation>().tab.value = 0;
                 widget.onCategorySelected?.call();
               },
             ),
@@ -169,7 +169,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                 Navigator.pop(context);
                 Navigator.of(context, rootNavigator: true).popUntil(
                     (route) => route.settings.name == '/main' || route.isFirst);
-                currentTabIndexNotifier.value = 0;
+                context.read<AppNavigation>().tab.value = 0;
                 widget.onCategorySelected?.call();
               },
             ),
@@ -206,7 +206,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
                     Navigator.of(context, rootNavigator: true).popUntil(
                         (route) =>
                             route.settings.name == '/main' || route.isFirst);
-                    currentTabIndexNotifier.value = 0;
+                    context.read<AppNavigation>().tab.value = 0;
                     widget.onCategorySelected?.call();
                   }
                 },

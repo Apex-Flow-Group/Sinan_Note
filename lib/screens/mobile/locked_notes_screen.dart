@@ -15,9 +15,9 @@ import 'package:sinan_note/domain/errors.dart' show VaultLockedException;
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
@@ -263,7 +263,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           onTabSelected: (index) {
             Navigator.of(context, rootNavigator: true)
                 .popUntil((r) => r.settings.name == '/main' || r.isFirst);
-            currentTabIndexNotifier.value = index;
+            context.read<AppNavigation>().tab.value = index;
           },
         ),
         body: Stack(

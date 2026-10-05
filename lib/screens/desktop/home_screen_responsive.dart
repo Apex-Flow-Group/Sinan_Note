@@ -12,8 +12,8 @@ import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:sinan_note/widgets/desktop/desktop_selection_actions.dart';
@@ -228,7 +228,7 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
                 },
                 onNotesChanged: () {},
                 onTabSelected: (index) {
-                  currentTabIndexNotifier.value = index;
+                  context.read<AppNavigation>().tab.value = index;
                 },
               ),
               appBar: PreferredSize(

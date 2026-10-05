@@ -10,8 +10,8 @@ import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/home_palette.dart';
 import 'package:sinan_note/ui/features/categories/category_issue_text.dart';
@@ -129,12 +129,12 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
 
     return ListenableBuilder(
       listenable:
-          Listenable.merge([_activeExtraNotifier, currentTabIndexNotifier]),
+          Listenable.merge([_activeExtraNotifier, context.read<AppNavigation>().tab]),
       builder: (context, _) {
         final current = _destinationOf(
           route: currentRoute,
           vaultOpen: _activeExtraNotifier.value == 'vault',
-          tab: currentTabIndexNotifier.value,
+          tab: context.read<AppNavigation>().tab.value,
           tabsInDrawer: tabsInDrawer,
         );
         return Drawer(
@@ -399,7 +399,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
         ((ModalRoute.of(context)?.settings.name ?? '/') == '/main' ||
                 (ModalRoute.of(context)?.settings.name ?? '/') == '/') &&
             _activeExtraNotifier.value == null &&
-            currentTabIndexNotifier.value == 0;
+            context.read<AppNavigation>().tab.value == 0;
     final selectedName = hasSelection
         ? (selectedId == CategoryPolicy.proCategoryId
             ? AppLocalizations.of(context)!.professional

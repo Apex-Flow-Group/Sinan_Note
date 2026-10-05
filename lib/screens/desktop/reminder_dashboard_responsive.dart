@@ -11,9 +11,9 @@ import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/shared/tabs/reminder_dashboard.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
@@ -206,7 +206,7 @@ class _ReminderDashboardResponsiveState
               onTabSelected: (index) {
                 Navigator.of(context, rootNavigator: true)
                     .popUntil((r) => r.settings.name == '/main' || r.isFirst);
-                currentTabIndexNotifier.value = index;
+                context.read<AppNavigation>().tab.value = index;
               },
             ),
             body: Column(

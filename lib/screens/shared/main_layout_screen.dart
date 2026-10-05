@@ -9,17 +9,11 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart'
-    show
-        tabToHomeNotifier,
-        currentTabIndexNotifier,
-        bottomNavHiddenNotifier,
-        pendingIntentNotifier,
-        isMainLayoutActive;
 import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/desktop/code_tab_responsive.dart';
 import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/reminder_dashboard_responsive.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
@@ -45,6 +39,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   bool _showAddMenu = false;
   void Function(NoteMode)? _onModeSelected;
   late final AppLock _lock = context.read<AppLock>();
+  late final AppNavigation _nav = context.read<AppNavigation>();
   DateTime? _lastBackPress;
 
   // ✅ Cache screens to prevent rebuilds
@@ -55,22 +50,15 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   void initState() {
     super.initState();
     _lock.lockState.addListener(_onSecurityChanged);
-    tabToHomeNotifier.addListener(_onBackToHome);
-    currentTabIndexNotifier.addListener(_onTabIndexChanged);
+    _nav.tab.addListener(_onTabIndexChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       PlatformHelper.lockOrientationForMobile(context);
     });
 
-    // ✅ استهلاك الـ pending intent بعد جاهزية MainLayoutScreen
-    // يُنفَّذ هنا بعد اكتمال المصادقة (بصمة أو PIN) لأن SplashScreen لا ينتقل هنا إلا بعد نجاح المصادقة
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // عيّن الـ flag دائماً بمجرد mount MainLayoutScreen
-      isMainLayoutActive = true;
-      _consumePendingIntent();
-    });
-
-    pendingIntentNotifier.addListener(_onPendingIntentChanged);
+    // الشاشة لا تُفتح إلا بعد المصادقة: النوايا المنتظرة تُنفَّذ الآن
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _nav.intents.ready = true);
 
     _sharedDetailsPanel = const DetailsPanel();
     _cachedScreens = [
@@ -105,52 +93,20 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   @override
   void dispose() {
     _lock.lockState.removeListener(_onSecurityChanged);
-    tabToHomeNotifier.removeListener(_onBackToHome);
-    currentTabIndexNotifier.removeListener(_onTabIndexChanged);
-    pendingIntentNotifier.removeListener(_onPendingIntentChanged);
-    isMainLayoutActive = false;
+    _nav.tab.removeListener(_onTabIndexChanged);
+    _nav.intents.ready = false;
     PlatformHelper.unlockOrientation();
     super.dispose();
   }
 
-  bool _isConsumingIntent = false;
-
-  /// الاستماع للـ pending intents التي تصل بعد جاهزية MainLayoutScreen
-  void _onPendingIntentChanged() {
-    if (!mounted || _isConsumingIntent) return;
-    _consumePendingIntent();
-  }
-
-  /// استهلاك الـ pending intent وتفعيل التنفيذ عبر _ApexNoteAppState
-  void _consumePendingIntent() {
-    final data = pendingIntentNotifier.value;
-    if (data == null) return;
-
-    _isConsumingIntent = true;
-
-    // امسح أولاً لمنع التنفيذ المزدوج
-    pendingIntentNotifier.value = null;
-
-    // أعد التعيين — isMainLayoutActive=true الآن، سيُنفَّذ _onPendingIntent في _ApexNoteAppState
-    pendingIntentNotifier.value = Map.from(data);
-
-    _isConsumingIntent = false;
-  }
-
-  void _onBackToHome() {
-    if (_currentIndex != 0 && mounted) {
-      setState(() => _currentIndex = 0);
-    }
-  }
-
   void _onTabIndexChanged() {
-    final newIndex = currentTabIndexNotifier.value;
+    final newIndex = _nav.tab.value;
     if (newIndex != _currentIndex && mounted) {
       setState(() {
         _currentIndex = newIndex;
         if (newIndex != 0) {
           _isScrollHidden = false;
-          bottomNavHiddenNotifier.value = false;
+          _nav.bottomBarHidden.value = false;
         }
       });
     }
@@ -204,16 +160,15 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
     if (isScrollingDown && !_isScrollHidden) {
       setState(() => _isScrollHidden = true);
-      bottomNavHiddenNotifier.value = true;
+      _nav.bottomBarHidden.value = true;
     } else if (!isScrollingDown && _isScrollHidden) {
       setState(() => _isScrollHidden = false);
-      bottomNavHiddenNotifier.value = false;
+      _nav.bottomBarHidden.value = false;
     }
   }
 
   void _toggleMenu() {
     setState(() => _showAddMenu = !_showAddMenu);
-    isMenuOpenNotifier.value = _showAddMenu;
   }
 
   void _onDrawerChanged(bool isOpen) {
@@ -221,7 +176,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       _isDrawerOpen = isOpen;
       if (!isOpen) {
         _isScrollHidden = false;
-        bottomNavHiddenNotifier.value = false;
+        _nav.bottomBarHidden.value = false;
       }
     });
   }
@@ -240,7 +195,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         if (didPop) return;
         if (_currentIndex != 0) {
           setState(() => _currentIndex = 0);
-          currentTabIndexNotifier.value = 0;
+          _nav.tab.value = 0;
           return;
         }
         final now = DateTime.now();
@@ -289,10 +244,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                               _currentIndex = index;
                               if (index != 0) {
                                 _isScrollHidden = false;
-                                bottomNavHiddenNotifier.value = false;
+                                _nav.bottomBarHidden.value = false;
                               }
                             });
-                            currentTabIndexNotifier.value = index;
+                            _nav.tab.value = index;
                           },
                           isScrollHidden: _isScrollHidden,
                           isDrawerOpen: _isDrawerOpen,

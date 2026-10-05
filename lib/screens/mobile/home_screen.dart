@@ -19,8 +19,6 @@ import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
-import 'package:sinan_note/widgets/home/add_menu_widget.dart'
-    show isMenuOpenNotifier;
 import 'package:sinan_note/widgets/home/dialogs/backup_options_dialog.dart';
 import 'package:sinan_note/widgets/home/dialogs/filter_sheet.dart';
 import 'package:sinan_note/widgets/home/home_drawer_widget.dart';
@@ -144,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateToEditor(NoteMode mode) async {
     if (widget.showAddMenu) widget.onToggleMenu();
-    isMenuOpenNotifier.value = false;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final categories = Provider.of<CategoriesProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);

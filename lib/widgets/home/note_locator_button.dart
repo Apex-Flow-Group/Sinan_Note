@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/main.dart' show bottomNavHiddenNotifier;
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 
 /// Registry عالمي يحفظ ارتفاع كل بطاقة بعد بنائها
 class NoteCardKeyRegistry {
@@ -163,7 +163,7 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
         final colorScheme = Theme.of(context).colorScheme;
 
         return ValueListenableBuilder<bool>(
-          valueListenable: bottomNavHiddenNotifier,
+          valueListenable: context.read<AppNavigation>().bottomBarHidden,
           builder: (context, isNavHidden, _) {
             final fabBottom = MediaQuery.of(context).padding.bottom +
                 (isNavHidden ? 0.0 : kBottomNavigationBarHeight) +

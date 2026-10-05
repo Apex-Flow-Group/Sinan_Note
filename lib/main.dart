@@ -51,6 +51,7 @@ import 'package:sinan_note/services/intent_handler_service.dart';
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
@@ -69,20 +70,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Global navigator key for error feedback
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-// Notifier لإعادة التبويب للرئيسية عند Back
-final ValueNotifier<int> tabToHomeNotifier = ValueNotifier<int>(0);
-// Notifier للتبويب الحالي
-final ValueNotifier<int> currentTabIndexNotifier = ValueNotifier<int>(0);
-// Notifier لحالة إخفاء الشريط السفلي عند السحب
-final ValueNotifier<bool> bottomNavHiddenNotifier = ValueNotifier<bool>(false);
-
-/// Pending intent data — يُحفظ هنا عند وصول intent خارجي (ملف / ويدجت / share)
-/// ويُستهلك من MainLayoutScreen بعد اكتمال المصادقة وجاهزية الشاشة الرئيسية
-final ValueNotifier<Map?> pendingIntentNotifier = ValueNotifier<Map?>(null);
-
-/// يُعيَّن true عندما تُصبح MainLayoutScreen نشطة وجاهزة لاستقبال intents
-bool isMainLayoutActive = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -160,6 +147,8 @@ void main() async {
         Provider(create: (_) => AppStartup()),
         Provider(create: (_) => CodeTools()),
         Provider(create: (_) => ApexShare()),
+        Provider(
+            create: (_) => AppNavigation(), dispose: (_, nav) => nav.dispose()),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
         ChangeNotifierProvider(
             create: (_) => CategoriesProvider(categories: categories)),
@@ -182,11 +171,13 @@ class ApexNoteApp extends StatefulWidget {
 class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   static const platform = MethodChannel('com.apexflow.app.sinan/widget');
   static const _intentService = IntentHandlerService();
+  late final IntentInbox _intents = context.read<AppNavigation>().intents;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _intents.execute = _executeIntent;
     NotificationService.onNoteTapped = (noteId) => _storePendingIntent({
           'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
           'note_id': noteId,
@@ -202,23 +193,16 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
             final noteId =
                 int.tryParse(uri.queryParameters['note_id'] ?? '0') ?? 0;
             if (noteId > 0) {
-              if (isMainLayoutActive) {
-                _openNoteById(noteId);
-              } else {
-                _storePendingIntent({
-                  'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
-                  'note_id': noteId
-                });
-              }
+              _storePendingIntent({
+                'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
+                'note_id': noteId
+              });
             } else {
               navigatorKey.currentState?.pushNamed('/widget_selection');
             }
           }
         });
       });
-
-      // ✅ الاستماع للـ pendingIntentNotifier — يُنفّذ الـ intent بعد جاهزية MainLayoutScreen
-      pendingIntentNotifier.addListener(_onPendingIntent);
     }
   }
 
@@ -235,22 +219,13 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
   Future<void> _handleMethodCall(MethodCall call) async {
     if (call.method == 'onIntent' && call.arguments is Map) {
-      // ✅ intents الواردة أثناء تشغيل التطبيق
-      final data = call.arguments as Map;
-      if (isMainLayoutActive) {
-        // التطبيق جاهز — نفّذ مباشرة
-        _executeIntent(data);
-      } else {
-        _storePendingIntent(data);
-      }
+      _storePendingIntent(call.arguments as Map);
     }
   }
 
-  /// حفظ الـ intent للتنفيذ لاحقاً بعد جاهزية MainLayoutScreen
+  /// يُنفَّذ فوراً إن كانت الشاشة الرئيسية جاهزة، وإلا بعد المصادقة.
   void _storePendingIntent(Map data) {
-    if (_intentService.hasValidContent(data)) {
-      pendingIntentNotifier.value = Map.from(data);
-    }
+    if (_intentService.hasValidContent(data)) _intents.deliver(data);
   }
 
   /// تنفيذ الـ intent (يُستدعى من MainLayoutScreen بعد الجاهزية)
@@ -440,24 +415,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    pendingIntentNotifier.removeListener(_onPendingIntent);
+    _intents.execute = null;
     super.dispose();
-  }
-
-  /// يُستدعى عند تغيير الـ pendingIntentNotifier — ينفذ الـ intent فقط إذا كانت MainLayoutScreen جاهزة
-  void _onPendingIntent() {
-    final data = pendingIntentNotifier.value;
-    if (data == null) return;
-
-    // تحقق أن MainLayoutScreen نشطة (أي اكتملت المصادقة وانتهى SplashScreen)
-    if (!isMainLayoutActive) return;
-    if (navigatorKey.currentContext == null) return;
-
-    // امسح أولاً لمنع التنفيذ المزدوج
-    pendingIntentNotifier.value = null;
-
-    // نفّذ
-    _executeIntent(data);
   }
 
   @override
