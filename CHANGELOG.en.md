@@ -4,6 +4,106 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ---
 
+## [3.2.4+3412] — 2026-10 | Clean Rebuild: Reliable Saving, Arabic Editing & Security
+
+A ground-up rebuild of the app's internals: one layered architecture, one writer per table, every rule enforced by tests. Net result since 3.2.4+3409: **+21,453 / −26,171 lines** across 417 files — the app is smaller, lighter and noticeably faster.
+
+### ⚠️ Upgrade Notes
+
+**Update all your devices that sync**
+- Google Drive sync now uses a new file (`sinan_sync_v3.gz`). The old file (`sinan_backup.gz`) is only read, never written, so devices still on an older version are never damaged.
+- Changes made on older devices still arrive on updated ones; changes made on an updated device reach older ones only after they are updated. The What's New screen explains this.
+
+**Old Isar backups are rejected**
+- `.sinannote` files from the Isar era are refused before they can touch the database (previously they could overwrite it).
+
+### ✨ New Features
+
+**Android-style cursor**
+- The cursor handle (tear) is now drawn like Android's: a circle with a sharp tip that touches the bottom of the caret, growing from the tip when it appears.
+- Dragging the handle moves the caret only — the page no longer scrolls with it. The finger-to-caret offset is fixed at grab time, so the caret follows the finger exactly wherever the 48×48 touch target is grabbed.
+- Swiping on the keyboard's space bar (and the left/right arrow keys) now moves the caret visually, following the direction of the caret's line — in an Arabic line, right moves right.
+
+**Arabic diacritics (tashkeel) stay in place**
+- Backspace removes the last mark first (e.g. fatha, then shadda), then the letter — on both the software keyboard and hardware keys.
+- The caret never sits between a letter and its marks: typing after a marked letter no longer moves its mark onto the new letter, and a letter is never deleted from under its marks.
+- Emoji are deleted whole again (the old handler deleted half a character).
+
+**Home screen**
+- Pinned and Others sections when both kinds of notes exist.
+- Native Android fling (glide) on the home screen, drawer and book mode, with the stretch overscroll; pull to refresh still works from the top.
+
+**Backups and history**
+- Restoring a `.db` backup brings back the notes' version history.
+- Backup Merge now truly merges (it used to replace the database): the newer version of the same note wins, other notes are added, categories are matched by name.
+
+**Other**
+- Redesigned "Sign-in required" dialog with a direct button to the Google Drive screen.
+- What's New describes this release.
+- The error log (Settings → share error log) now records every uncaught error, not just biometric failures; it is capped at 512 KB.
+
+### 🔒 Security
+
+**Vault**
+- New vault data layer: AES-GCM encryption with an in-memory session key that expires; existing vaults keep working.
+- Too many wrong vault passwords add a wait: 5 tries, then 5 minutes, 15 minutes, 1 hour.
+- Opening the vault and changing security settings (disabling the app lock, biometrics) require real authentication — they no longer reuse the app-lock session, which let the vault open after a cancelled prompt.
+- The vault closes when the app leaves the foreground, together with its dialogs, and the vault screen releases it on lock.
+
+**Locked notes are never stored or shown in clear**
+- Locked notes stay encrypted on every write path: add, update, duplicate, type conversion, colour/reminder/pin changes, JSON import, copy and bulk actions.
+- Reminder notifications for locked notes show neither title nor content.
+- Links from the home widget or a notification never open a locked note, and choosing a note for the widget (which lists titles) only opens after the app lock.
+
+**App lock and PIN**
+- Each PIN gets its own random salt; hashing runs off the main thread.
+- Failed attempts escalate the lock instead of resetting when a wait expires.
+- When returning to the app, the content is covered in the same frame, before the PIN screen appears.
+
+### 🔧 Bug Fixes
+
+**Editor**
+- Saving rebuilt around one queue per note: no dropped, stale or truncated saves; a note emptied by the user goes to the trash; opening and closing a checklist without changes no longer saves it.
+- The Edit button was invisible in dark mode.
+- Undo/redo in code notes, unique checklist item ids, closing the editor on desktop, controller leaks and full-screen rebuilds on every keystroke.
+
+**Home**
+- Showing/hiding the bottom bar no longer rebuilds the notes grid mid-scroll.
+- The note locator button pointed to the wrong place while searching or filtering.
+- Bulk pin rewrote every note in full one by one; it now sets only the pin flag in one transaction, and undo restores each note's own state.
+- A card wrote its loading state after it was disposed.
+- The reminder badge on cards was English-only and showed a broken character between date and time; it follows the app's language.
+- Catalogs open below the catalogs button; the drawer shows tab items only in the desktop layout, with one highlight.
+
+**Sync, backup, history**
+- Sync identity is a stable uuid per note; deletions are tracked by uuid; a failed download is never read as "no notes".
+- Version history crashed when sorting ("Cannot modify an unmodifiable list").
+- The Pull to Sync toggle on the Drive screen duplicated the refresh setting and was removed.
+
+**Language and theme**
+- Every user-visible text comes from the translations (Arabic and English), including reminders, the home widget and system notification channels, in the app's language.
+- Default categories are created once, in the user's language.
+- Colours come from the theme everywhere; light and dark modes are consistent.
+
+### ⚡ Performance
+
+- Note cards no longer parse their content on every build (preview text ~40× faster) and keep their preview across scrolling.
+- The add menu's full-screen blur is only built while the menu is open; the search field's glow animates its border only.
+- Comparing versions runs in a background isolate, trimming the common start and end first.
+- Checklists and code notes no longer reprocess the whole document on every keystroke; book mode disposes its per-page controllers.
+
+### 🏗️ Architecture
+
+- **Layers:** `ui/features/<feature>` (views + view_models) → `data/repositories` → `data/services`, with pure rules in `domain/`. `NotesRepository` is the only writer of the notes table. The old `screens/`, `widgets/`, `controllers/`, `services/` and `core/` folders are gone.
+- **Rules enforced by tests:** views never reach services or repositories; data and domain never import UI; no hardcoded colours, font sizes or user strings; text direction is derived, never stored; no global mutable state. Zero violations, and any new one fails the build.
+- **Dependency injection:** every service, repository and view model is created once in `main.dart` and provided; no singletons remain.
+- **Text direction** is derived from each line's text at render time (no more stored `direction` attributes).
+- **Quill fork:** small, documented hooks instead of app-side patches — `textDirectionResolver`, `backspaceResolver`, `caretResolver`, and visual left/right caret movement.
+- **CI quality gate** on every push and pull request: generated translations, `dart format`, `flutter analyze`, all tests (495).
+- 16 unreachable files deleted; `GeneratedPluginRegistrant.java` is no longer tracked; Android `targetSdk` 36.
+
+---
+
 ## [3.2.4+3409] — 2026-07 | Unified SafeArea for Bottom Sheets (Tablet Fix)
 
 ### 🔧 Bug Fixes
