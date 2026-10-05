@@ -67,7 +67,8 @@ class CategoriesRepository extends ChangeNotifier {
           CategoryPolicy.sameNameKey(category.name), () => category);
       if (!identical(first, category)) {
         await _notes.reassignCategory(category.id, to: first.id);
-        await _db.delete('categories', where: 'id = ?', whereArgs: [category.id]);
+        await _db
+            .delete('categories', where: 'id = ?', whereArgs: [category.id]);
       }
     }
     _categories = List.unmodifiable(kept.values);
@@ -166,11 +167,11 @@ class CategoriesRepository extends ChangeNotifier {
   }
 
   Future<void> _insertAll(List<String> names) async {
-    var sortOrder =
-        _categories.isEmpty ? 0 : _categories.last.sortOrder + 1;
+    var sortOrder = _categories.isEmpty ? 0 : _categories.last.sortOrder + 1;
     await _db.transaction((txn) async {
       for (final name in names) {
-        await txn.insert('categories', {'name': name, 'sortOrder': sortOrder++});
+        await txn
+            .insert('categories', {'name': name, 'sortOrder': sortOrder++});
       }
     });
   }

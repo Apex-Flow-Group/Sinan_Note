@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,8 +9,9 @@ class GoogleDriveVaultWarningDialog extends StatefulWidget {
   const GoogleDriveVaultWarningDialog({super.key});
 
   @override
-  State<GoogleDriveVaultWarningDialog> createState() => _GoogleDriveVaultWarningDialogState();
-  
+  State<GoogleDriveVaultWarningDialog> createState() =>
+      _GoogleDriveVaultWarningDialogState();
+
   /// Check if warning should be shown
   static Future<bool> shouldShow() async {
     final prefs = await SharedPreferences.getInstance();
@@ -19,7 +19,8 @@ class GoogleDriveVaultWarningDialog extends StatefulWidget {
   }
 }
 
-class _GoogleDriveVaultWarningDialogState extends State<GoogleDriveVaultWarningDialog> {
+class _GoogleDriveVaultWarningDialogState
+    extends State<GoogleDriveVaultWarningDialog> {
   bool _dontShowAgain = false;
 
   @override
@@ -58,9 +59,9 @@ class _GoogleDriveVaultWarningDialogState extends State<GoogleDriveVaultWarningD
                 style: context.text.bodyMedium?.copyWith(height: 1.6),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Don't show again checkbox
             CheckboxListTile(
               value: _dontShowAgain,
@@ -101,4 +102,3 @@ class _GoogleDriveVaultWarningDialogState extends State<GoogleDriveVaultWarningD
     );
   }
 }
-

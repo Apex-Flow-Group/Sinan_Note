@@ -128,8 +128,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
         PlatformHelper.shouldUseDesktopLayout(context);
 
     return ListenableBuilder(
-      listenable:
-          Listenable.merge([_activeExtraNotifier, context.read<AppNavigation>().tab]),
+      listenable: Listenable.merge(
+          [_activeExtraNotifier, context.read<AppNavigation>().tab]),
       builder: (context, _) {
         final current = _destinationOf(
           route: currentRoute,

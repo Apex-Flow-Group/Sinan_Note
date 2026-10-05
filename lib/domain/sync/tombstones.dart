@@ -31,8 +31,7 @@ class Tombstones {
   Tombstones union(Tombstones other) => Tombstones(
         notes: _latest(notes, other.notes),
         categories: _latest(categories, other.categories),
-        revivedCategories:
-            _latest(revivedCategories, other.revivedCategories),
+        revivedCategories: _latest(revivedCategories, other.revivedCategories),
       );
 
   Tombstones withNotes(Iterable<String> uuids, DateTime at) =>

@@ -36,9 +36,8 @@ class SettingsBackupHandlers {
                 }
                 if (!context.mounted) return;
                 try {
-                  final outputPath = await context
-                      .read<BackupViewModel>()
-                      .exportTo(result);
+                  final outputPath =
+                      await context.read<BackupViewModel>().exportTo(result);
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                     context: context,

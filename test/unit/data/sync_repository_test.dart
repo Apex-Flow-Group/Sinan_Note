@@ -136,8 +136,7 @@ void main() {
     expect(b.titles, ['A first note', 'B first note']);
   });
 
-  test('a deletion propagates, and survives a device that missed it',
-      () async {
+  test('a deletion propagates, and survives a device that missed it', () async {
     final note = await a.write('doomed');
     await a.sync.sync();
     await b.sync.sync();

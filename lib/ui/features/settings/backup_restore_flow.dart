@@ -89,8 +89,7 @@ abstract final class BackupRestoreFlow {
                   color: context.scheme.primary, size: 56),
               const SizedBox(height: 16),
               Text(l10n.restoreSuccessful,
-                  style: context.text.titleMedium,
-                  textAlign: TextAlign.center),
+                  style: context.text.titleMedium, textAlign: TextAlign.center),
               const SizedBox(height: 8),
               Text(message,
                   style: context.text.bodyMedium

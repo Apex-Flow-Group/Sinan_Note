@@ -153,6 +153,8 @@ extension AppThemeContext on BuildContext {
   AppColors get colors {
     final theme = Theme.of(this);
     return theme.extension<AppColors>() ??
-        (theme.brightness == Brightness.dark ? AppColors.dark : AppColors.light);
+        (theme.brightness == Brightness.dark
+            ? AppColors.dark
+            : AppColors.light);
   }
 }

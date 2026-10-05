@@ -3,9 +3,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:sinan_note/data/services/security/biometric_service.dart';
 import 'package:sinan_note/data/services/security/rate_limiter_service.dart';
-import 'package:sinan_note/data/services/security/security_gate.dart';
 import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/features/auth/view_models/security_controller.dart';
 
 export 'package:sinan_note/data/services/security/unified_lock_service.dart'
     show LockType;

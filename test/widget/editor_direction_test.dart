@@ -36,8 +36,7 @@ void main() {
       final widget = element.widget as RichText;
       final text = widget.text.toPlainText().trim();
       if (text.isNotEmpty) {
-        directions[text] =
-            widget.textDirection ?? Directionality.of(element);
+        directions[text] = widget.textDirection ?? Directionality.of(element);
       }
     }
     return directions;

@@ -39,8 +39,7 @@ class BackupViewModel {
       {required bool includeVault,
       required String subject,
       required String text}) async {
-    final file = await _backups.exportJson(
-        (await getTemporaryDirectory()).path,
+    final file = await _backups.exportJson((await getTemporaryDirectory()).path,
         includeVault: includeVault);
     await Share.shareXFiles([XFile(file.path, mimeType: 'application/json')],
         subject: subject, text: text);

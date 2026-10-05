@@ -1,12 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
-
 
 /// بيانات زر واحد في الشريط
 class BarEntry {
@@ -84,8 +82,7 @@ class _EditorSelectionPanelState extends State<EditorSelectionPanel> {
     return BarSelectionState.hasSelection;
   }
 
-  List<BarEntry> _buildEntries(
-      BarSelectionState state, AppLocalizations l10n) {
+  List<BarEntry> _buildEntries(BarSelectionState state, AppLocalizations l10n) {
     final ctrl = widget.ctrl;
 
     void doCut() {
@@ -141,9 +138,7 @@ class _EditorSelectionPanelState extends State<EditorSelectionPanel> {
       case BarSelectionState.hasSelection:
         return [
           BarEntry(
-              label: l10n.cut,
-              icon: Icons.content_cut_rounded,
-              action: doCut),
+              label: l10n.cut, icon: Icons.content_cut_rounded, action: doCut),
           BarEntry(
               label: l10n.copy,
               icon: Icons.content_copy_rounded,
@@ -165,9 +160,7 @@ class _EditorSelectionPanelState extends State<EditorSelectionPanel> {
       case BarSelectionState.allSelected:
         return [
           BarEntry(
-              label: l10n.cut,
-              icon: Icons.content_cut_rounded,
-              action: doCut),
+              label: l10n.cut, icon: Icons.content_cut_rounded, action: doCut),
           BarEntry(
               label: l10n.copy,
               icon: Icons.content_copy_rounded,
@@ -282,8 +275,7 @@ class _BarButtonState extends State<_BarButton> {
             Text(
               widget.label,
               style: context.text.labelSmall?.copyWith(
-                  color: widget.textColor,
-                  fontWeight: FontWeight.w500),
+                  color: widget.textColor, fontWeight: FontWeight.w500),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -293,4 +285,3 @@ class _BarButtonState extends State<_BarButton> {
     );
   }
 }
-

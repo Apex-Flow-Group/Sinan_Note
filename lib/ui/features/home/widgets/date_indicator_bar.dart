@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -187,8 +186,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
           const SizedBox(width: 6),
           Text(_filterLabel(activeFilter, l10n),
               style: labelStyle?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600)),
+                  color: colorScheme.primary, fontWeight: FontWeight.w600)),
           const Spacer(),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -211,9 +209,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
           : categoriesProvider.categories
               .where((c) => c.id == selectedId)
               .firstOrNull;
-      final catName = isProCategory
-          ? l10n.professional
-          : (cat?.name ?? '');
+      final catName = isProCategory ? l10n.professional : (cat?.name ?? '');
 
       barChild = Container(
         height: 28,
@@ -228,8 +224,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Text(catName,
                   style: labelStyle?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600)),
+                      color: colorScheme.primary, fontWeight: FontWeight.w600)),
               const SizedBox(width: 2),
               Icon(Icons.expand_more_rounded,
                   size: 14, color: colorScheme.primary),
@@ -305,4 +300,3 @@ class DateIndicatorDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant DateIndicatorDelegate old) => old.child != child;
 }
-

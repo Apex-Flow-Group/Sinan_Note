@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -40,26 +39,33 @@ class EditorOptionsMenu {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (showReminder)
-              tile(Icons.alarm_add_rounded, colors.warning, l10n.reminder, 'reminder'),
+              tile(Icons.alarm_add_rounded, colors.warning, l10n.reminder,
+                  'reminder'),
             if (showConvertToSimple)
-              tile(Icons.note_rounded, scheme.tertiary, l10n.simpleNotes, 'convertToSimple'),
+              tile(Icons.note_rounded, scheme.tertiary, l10n.simpleNotes,
+                  'convertToSimple'),
             if (showConvertToRich)
-              tile(Icons.text_fields_rounded, scheme.tertiary, l10n.richText, 'convertToRich'),
+              tile(Icons.text_fields_rounded, scheme.tertiary, l10n.richText,
+                  'convertToRich'),
             if (showConvertToCode)
-              tile(Icons.code_rounded, scheme.tertiary, l10n.professionalNotes, 'convertToCode'),
+              tile(Icons.code_rounded, scheme.tertiary, l10n.professionalNotes,
+                  'convertToCode'),
             if (showConvertToChecklist)
-              tile(Icons.checklist_rounded, scheme.tertiary, l10n.checklist, 'convertToChecklist'),
+              tile(Icons.checklist_rounded, scheme.tertiary, l10n.checklist,
+                  'convertToChecklist'),
             if (showLock)
               tile(Icons.lock_outline, scheme.primary, l10n.lockNote, 'lock'),
-            tile(Icons.share_rounded, scheme.primary, l10n.actionShare, 'share'),
-            tile(Icons.archive_rounded, colors.success, l10n.actionArchive, 'archive'),
+            tile(
+                Icons.share_rounded, scheme.primary, l10n.actionShare, 'share'),
+            tile(Icons.archive_rounded, colors.success, l10n.actionArchive,
+                'archive'),
             const Divider(height: 1),
             ListTile(
               leading: Icon(Icons.delete_rounded,
                   color: hasContent ? colors.danger : disabled),
               title: Text(l10n.actionDelete,
-                  style: TextStyle(
-                      color: hasContent ? colors.danger : disabled)),
+                  style:
+                      TextStyle(color: hasContent ? colors.danger : disabled)),
               enabled: hasContent,
               onTap: hasContent ? () => Navigator.pop(context, 'delete') : null,
             ),
@@ -70,4 +76,3 @@ class EditorOptionsMenu {
     );
   }
 }
-

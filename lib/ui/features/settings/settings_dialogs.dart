@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -118,8 +118,8 @@ class SettingsDialogs {
         ]);
   }
 
-  static void showSwipeActionDialog(BuildContext context,
-      SettingsProvider settings, bool isRight) {
+  static void showSwipeActionDialog(
+      BuildContext context, SettingsProvider settings, bool isRight) {
     final l10n = AppLocalizations.of(context)!;
     final currentValue =
         isRight ? settings.swipeRightAction : settings.swipeLeftAction;

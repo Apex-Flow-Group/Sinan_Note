@@ -97,7 +97,8 @@ class _DiffView extends StatelessWidget {
           }
         }).toList(),
       ),
-      style: TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
+      style:
+          TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
     );
   }
 }
@@ -137,8 +138,7 @@ class NoteHistorySheet extends StatelessWidget {
     }
   }
 
-  String _toPlainText(String content) =>
-      NoteText.toDisplayText(content);
+  String _toPlainText(String content) => NoteText.toDisplayText(content);
 
   void _showDiffDialog(
       BuildContext context, NoteVersion version, String newerContent) {
@@ -189,8 +189,7 @@ class NoteHistorySheet extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
-                    _legendDot(
-                        ctx.colors.success, ctx.colors.successContainer),
+                    _legendDot(ctx.colors.success, ctx.colors.successContainer),
                     const SizedBox(width: 4),
                     Text(l10n.added, style: ctx.text.labelMedium),
                     const SizedBox(width: 12),

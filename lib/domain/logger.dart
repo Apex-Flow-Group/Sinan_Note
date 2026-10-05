@@ -1,8 +1,6 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/foundation.dart';
-
 
 /// نظام تسجيل موحد للتطبيق
 class AppLogger {
@@ -24,7 +22,8 @@ class AppLogger {
   }
 
   /// أخطاء
-  static void error(String message, [String? tag, Object? error, StackTrace? stackTrace]) {
+  static void error(String message,
+      [String? tag, Object? error, StackTrace? stackTrace]) {
     if (kDebugMode && _enableLogs) {
       debugPrint('$_prefix ${tag != null ? "[$tag]" : ""} ❌ $message');
       if (error != null) debugPrint('Error: $error');
@@ -46,4 +45,3 @@ class AppLogger {
     }
   }
 }
-

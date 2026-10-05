@@ -26,7 +26,6 @@ import 'package:sinan_note/data/services/key_value_store.dart';
 import 'package:sinan_note/data/services/legacy_cleanup.dart';
 import 'package:sinan_note/data/services/note_side_effects.dart';
 import 'package:sinan_note/data/services/notification_service.dart';
-import 'package:sinan_note/data/services/security/security_gate.dart';
 import 'package:sinan_note/data/services/sync/drive_sync_remote.dart';
 import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/data/services/sync_scheduler.dart';
@@ -40,6 +39,7 @@ import 'package:sinan_note/ui/core/navigation/app_navigator.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/archive/archive_screen_responsive.dart';
 import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
+import 'package:sinan_note/ui/features/auth/view_models/security_controller.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/ui/features/categories/view_models/categories_provider.dart';
 import 'package:sinan_note/ui/features/diagnostics/unexpected_error_snack_bar.dart';
@@ -395,8 +395,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   void _openNoteById(int noteId) async {
     try {
       final context = navigatorKey.currentContext;
-      final note =
-          context?.read<NotesProvider>().cachedNote(noteId);
+      final note = context?.read<NotesProvider>().cachedNote(noteId);
       if (note != null && !note.isTrashed) {
         AppNavigator.toEditorViaKey(
           navigatorKey,

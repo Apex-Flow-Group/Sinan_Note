@@ -53,8 +53,7 @@ class VaultRepository extends ChangeNotifier {
   }
 
   /// يرمي [VaultAttemptsExceededException] بعد محاولات خاطئة كثيرة.
-  Future<bool> unlockWithPassword(String password) =>
-      _limited(() async {
+  Future<bool> unlockWithPassword(String password) => _limited(() async {
         final wrapped = await _store.wrappedByPassword();
         return wrapped != null && await _unlockWith(wrapped, password);
       });

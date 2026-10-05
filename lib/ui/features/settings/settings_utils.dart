@@ -121,8 +121,8 @@ class SettingsUtils {
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: SelectableText(log,
-                style: context.text.labelSmall
-                    ?.copyWith(fontFamily: 'monospace')),
+                style:
+                    context.text.labelSmall?.copyWith(fontFamily: 'monospace')),
           ),
         ),
         actions: [

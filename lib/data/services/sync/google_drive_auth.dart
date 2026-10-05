@@ -1,6 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -33,7 +31,8 @@ class GoogleDriveAuth {
         final authClient = await googleSignIn.authenticatedClient();
         if (authClient != null) {
           driveApi = drive.DriveApi(authClient);
-          AppLogger.success('Restored session: ${currentUser!.email}', 'GoogleDrive');
+          AppLogger.success(
+              'Restored session: ${currentUser!.email}', 'GoogleDrive');
         } else {
           // token انتهى — نعيد التهيئة بصمت بدون dialog
           currentUser = null;
@@ -59,7 +58,8 @@ class GoogleDriveAuth {
         driveApi = drive.DriveApi(authClient);
       } else {
         // token منتهي — نعيد المحاولة بصمت
-        final refreshed = await googleSignIn.signInSilently(suppressErrors: true);
+        final refreshed =
+            await googleSignIn.signInSilently(suppressErrors: true);
         if (refreshed != null) {
           currentUser = refreshed;
           final newClient = await googleSignIn.authenticatedClient();
@@ -116,4 +116,3 @@ class GoogleDriveAuth {
     }
   }
 }
-

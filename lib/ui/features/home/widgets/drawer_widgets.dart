@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -115,10 +114,10 @@ class DrawerModeBtn extends StatelessWidget {
         child: Icon(
           icon,
           size: 20,
-          color: active ? color : scheme.onSurfaceVariant.withValues(alpha: 0.6),
+          color:
+              active ? color : scheme.onSurfaceVariant.withValues(alpha: 0.6),
         ),
       ),
     );
   }
 }
-

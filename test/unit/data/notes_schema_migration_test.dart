@@ -64,8 +64,7 @@ void main() {
     await old.close();
 
     db = await AppDatabase.open(path);
-    final notes =
-        (await db!.query('notes')).map(NoteMapper.fromMap).toList();
+    final notes = (await db!.query('notes')).map(NoteMapper.fromMap).toList();
 
     expect(notes.map((n) => n.title).toSet(), {'note 0', 'note 1', 'note 2'});
     expect(notes.map((n) => n.uuid).toSet().length, 3);

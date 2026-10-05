@@ -1,10 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/editor_palette.dart';
-
 
 class ApexMagnifier extends StatelessWidget {
   const ApexMagnifier({required this.dragPosition, super.key});
@@ -145,4 +143,3 @@ class _TeardropShadowPainter extends CustomPainter {
 
 Widget apexMagnifierBuilder(Offset dragPosition) =>
     ApexMagnifier(dragPosition: dragPosition);
-

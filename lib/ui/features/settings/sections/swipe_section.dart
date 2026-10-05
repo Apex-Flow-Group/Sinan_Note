@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -31,8 +31,7 @@ class SwipeSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                Icon(Icons.phone_android_rounded,
-                    size: 16, color: muted),
+                Icon(Icons.phone_android_rounded, size: 16, color: muted),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -150,8 +149,8 @@ class SwipeSection extends StatelessWidget {
                   const EdgeInsetsDirectional.only(start: 72, end: 16),
               leading: Icon(Icons.bolt_rounded, color: primary),
               title: Text(l10n.custom),
-              subtitle: Text(
-                  l10n.selectedCount(settings.swipeCustomActions.length)),
+              subtitle:
+                  Text(l10n.selectedCount(settings.swipeCustomActions.length)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => SettingsDialogs.showCustomActionsDialog(
                   context, settings, l10n),

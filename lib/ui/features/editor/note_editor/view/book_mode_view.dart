@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
@@ -324,7 +323,8 @@ class _BookModeViewState extends State<BookModeView> {
                   ? scheme.primary
                   : widget.textColor.withValues(alpha: 0.7),
             ),
-            tooltip: _showFormatted ? l10n.plainTextView : l10n.formattedTextView,
+            tooltip:
+                _showFormatted ? l10n.plainTextView : l10n.formattedTextView,
             onPressed: () async {
               final next = !_showFormatted;
               setState(() => _showFormatted = next);

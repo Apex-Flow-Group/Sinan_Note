@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,10 +9,12 @@ class GoogleDriveSyncTermsScreen extends StatefulWidget {
   const GoogleDriveSyncTermsScreen({super.key});
 
   @override
-  State<GoogleDriveSyncTermsScreen> createState() => _GoogleDriveSyncTermsScreenState();
+  State<GoogleDriveSyncTermsScreen> createState() =>
+      _GoogleDriveSyncTermsScreenState();
 }
 
-class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen> {
+class _GoogleDriveSyncTermsScreenState
+    extends State<GoogleDriveSyncTermsScreen> {
   bool _agreedToTerms = false;
 
   @override
@@ -106,12 +107,14 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                           const SizedBox(height: 12),
                           Text(
                             l10n.syncTermsRecommendation,
-                            style: context.text.bodyMedium?.copyWith(height: 1.5),
+                            style:
+                                context.text.bodyMedium?.copyWith(height: 1.5),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.syncTermsGoogleTOS,
-                            style: context.text.bodyMedium?.copyWith(height: 1.5),
+                            style:
+                                context.text.bodyMedium?.copyWith(height: 1.5),
                           ),
                         ],
                       ),
@@ -146,7 +149,8 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                     Center(
                       child: TextButton.icon(
                         onPressed: () async {
-                          await const MethodChannel('com.apexflow.app.sinan/launcher')
+                          await const MethodChannel(
+                                  'com.apexflow.app.sinan/launcher')
                               .invokeMethod('launch', l10n.privacyPolicyUrl);
                         },
                         icon: const Icon(Icons.privacy_tip),
@@ -157,7 +161,7 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                 ),
               ),
             ),
-            
+
             // Bottom agreement section
             Container(
               padding: const EdgeInsets.all(24.0),
@@ -176,14 +180,13 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                 children: [
                   CheckboxListTile(
                     value: _agreedToTerms,
-                    onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
+                    onChanged: (val) =>
+                        setState(() => _agreedToTerms = val ?? false),
                     title: Text(l10n.agreeToTerms),
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  
                   const SizedBox(height: 16),
-                  
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -247,4 +250,3 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
     );
   }
 }
-

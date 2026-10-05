@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_version.dart';
@@ -198,8 +197,7 @@ class VersionsBottomSheet extends StatelessWidget {
     }
   }
 
-  String _toPlainText(String content) =>
-      NoteText.toDisplayText(content);
+  String _toPlainText(String content) => NoteText.toDisplayText(content);
   void _showDiffDialog(BuildContext context, NoteVersion older,
       NoteVersion newer, AppLocalizations l10n) {
     final oldText = _toPlainText(older.content);
@@ -242,8 +240,7 @@ class VersionsBottomSheet extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
-                    _legendDot(
-                        ctx.colors.success, ctx.colors.successContainer),
+                    _legendDot(ctx.colors.success, ctx.colors.successContainer),
                     const SizedBox(width: 4),
                     Text(l10n.added, style: ctx.text.labelMedium),
                     const SizedBox(width: 12),
@@ -319,4 +316,3 @@ class VersionsBottomSheet extends StatelessWidget {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 }
-

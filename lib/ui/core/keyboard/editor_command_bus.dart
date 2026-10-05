@@ -63,7 +63,7 @@ class EditorCommandBus extends ChangeNotifier {
     }
   }
 
-  int get listenerCount => _count;  // exposed for debugging
+  int get listenerCount => _count; // exposed for debugging
   int _count = 0;
 
   @override

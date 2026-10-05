@@ -52,8 +52,8 @@ void main() {
     final [a, b] = data.categories.categories;
     final open = await data.notes.save(note('open', [a.id, b.id]));
     final only = await data.notes.save(note('only', [a.id], hidden: true));
-    final locked = await data.notes
-        .save(note('locked', [a.id]).copyWith(isLocked: true));
+    final locked =
+        await data.notes.save(note('locked', [a.id]).copyWith(isLocked: true));
     data.vault.lock();
 
     await data.categories.delete(a.id);
@@ -62,18 +62,18 @@ void main() {
     expect(data.notes.cached(only.id!)!.categoryIds, isEmpty);
     expect(data.notes.cached(only.id!)!.isHiddenFromHome, isFalse,
         reason: 'without a category it shows on home again');
-    final row = await data.db
-        .query('notes', where: 'id = ?', whereArgs: [locked.id]);
+    final row =
+        await data.db.query('notes', where: 'id = ?', whereArgs: [locked.id]);
     expect(row.single['categoryIds'], '');
     expect((await data.tombstones.read()).deletesCategory('a'), isTrue);
   });
 
   test('duplicates left by previous versions are merged into the first',
       () async {
-    final first = await data.db
-        .insert('categories', {'name': 'Ideas', 'sortOrder': 0});
-    final dupe = await data.db
-        .insert('categories', {'name': 'ideas', 'sortOrder': 1});
+    final first =
+        await data.db.insert('categories', {'name': 'Ideas', 'sortOrder': 0});
+    final dupe =
+        await data.db.insert('categories', {'name': 'ideas', 'sortOrder': 1});
     final n = await data.notes.save(note('n', [dupe]));
 
     await data.categories.load();

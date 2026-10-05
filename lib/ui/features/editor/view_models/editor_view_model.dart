@@ -168,7 +168,8 @@ class EditorViewModel extends ChangeNotifier {
     if (id == null) {
       // جديدة: لا تُنشأ فارغة، إلا ملاحظة خزنة جديدة (تُنشأ لتظهر فيها)
       if (draft.isEmpty && !_locked) return false;
-      final saved = await _notes.save(draft.toNewNote(now: _now(), locked: _locked));
+      final saved =
+          await _notes.save(draft.toNewNote(now: _now(), locked: _locked));
       _id = saved.id;
       return _wrote(draft);
     }
@@ -220,7 +221,8 @@ class EditorSessions {
     return session;
   }
 
-  Future<void> flush() => Future.wait([for (final s in _live.toList()) s.flush()]);
+  Future<void> flush() =>
+      Future.wait([for (final s in _live.toList()) s.flush()]);
 }
 
 class _Session extends EditorViewModel {

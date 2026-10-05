@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -10,7 +9,8 @@ class FontFamilySheet extends StatefulWidget {
   final SettingsProvider settings;
   final AppLocalizations l10n;
 
-  const FontFamilySheet({super.key, required this.settings, required this.l10n});
+  const FontFamilySheet(
+      {super.key, required this.settings, required this.l10n});
 
   @override
   State<FontFamilySheet> createState() => _FontFamilySheetState();
@@ -46,7 +46,8 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
                 color: cs.outlineVariant,
@@ -80,11 +81,13 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
               final isSelected = _selected == f.$1;
               final itemFont = f.$1 == 'system' ? null : f.$1;
               return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
                 title: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? cs.primary.withValues(alpha: 0.12)
@@ -105,14 +108,18 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(f.$2,
+                          Text(
+                            f.$2,
                             style: TextStyle(
                               fontFamily: itemFont,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                               color: isSelected ? cs.primary : null,
                             ),
                           ),
-                          Text(f.$3,
+                          Text(
+                            f.$3,
                             style: context.text.labelMedium?.copyWith(
                               fontFamily: itemFont,
                               color: cs.onSurface.withValues(alpha: 0.55),
@@ -134,7 +141,8 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(14),
@@ -170,4 +178,3 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
     );
   }
 }
-

@@ -405,14 +405,14 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
     try {
       if (share) {
         final l10n = AppLocalizations.of(context)!;
-        await context.read<BackupViewModel>().share(
-            subject: l10n.exportBackup, text: l10n.backupSaved);
+        await context
+            .read<BackupViewModel>()
+            .share(subject: l10n.exportBackup, text: l10n.backupSaved);
       } else {
         final dir = await FilePicker.platform.getDirectoryPath();
         if (dir == null) return;
         if (!mounted) return;
-        final outputPath =
-            await context.read<BackupViewModel>().exportTo(dir);
+        final outputPath = await context.read<BackupViewModel>().exportTo(dir);
         if (mounted) {
           UnifiedNotificationService().show(
             context: context,

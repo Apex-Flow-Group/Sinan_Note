@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sinan_note/data/services/security/security_gate.dart';
 import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/domain/logger.dart';
+import 'package:sinan_note/ui/features/auth/view_models/security_controller.dart';
 
 class SettingsProvider with ChangeNotifier {
   /// قيمة تفضيل اللغة التي تعني «اتبع لغة الجهاز».

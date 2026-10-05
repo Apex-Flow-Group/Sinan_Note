@@ -160,7 +160,8 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
               },
             ),
             ProCategoryTile(
-              isSelected: isOnHomeTab && selected == CategoryPolicy.proCategoryId,
+              isSelected:
+                  isOnHomeTab && selected == CategoryPolicy.proCategoryId,
               scheme: scheme,
               isDark: isDark,
               label: l10n.professional,

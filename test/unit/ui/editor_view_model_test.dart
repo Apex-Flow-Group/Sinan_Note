@@ -54,8 +54,8 @@ void main() {
   setUp(() async => data = await TestDataLayer.create());
   tearDown(() => data.dispose());
 
-  Future<Note> stored(String content) => data.notes.save(Note(
-      title: 'title', content: content, createdAt: t0, updatedAt: t0));
+  Future<Note> stored(String content) => data.notes.save(
+      Note(title: 'title', content: content, createdAt: t0, updatedAt: t0));
 
   (EditorViewModel, FakeEditor) open(Note? note) {
     final vm = EditorViewModel(notes: data.notes, note: note);
@@ -85,8 +85,7 @@ void main() {
     expect(data.notes.notes.single.content, 'second');
   });
 
-  test('saves requested during a save are not dropped, and coalesce',
-      () async {
+  test('saves requested during a save are not dropped, and coalesce', () async {
     final note = await stored('v0');
     final (vm, editor) = open(note);
     editor.type('v1');
@@ -201,7 +200,6 @@ void main() {
     expect(vm.takeSavedFlag(), isTrue);
     expect(vm.takeSavedFlag(), isFalse);
   });
-
 }
 
 class _Gone implements DraftSource {

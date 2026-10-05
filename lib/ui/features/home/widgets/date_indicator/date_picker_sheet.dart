@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -60,7 +59,8 @@ class DatePickerSheet {
                   ),
                 ),
                 trailing: Text('$count',
-                    style: ctx.text.bodySmall?.copyWith(color: ctx.colors.muted)),
+                    style:
+                        ctx.text.bodySmall?.copyWith(color: ctx.colors.muted)),
                 onTap: () => Navigator.pop(ctx, date),
               );
             },
@@ -79,4 +79,3 @@ class DatePickerSheet {
     return DateFormat.yMMMMd(l10n.localeName).format(date);
   }
 }
-

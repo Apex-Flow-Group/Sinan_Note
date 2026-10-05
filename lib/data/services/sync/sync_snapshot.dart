@@ -50,9 +50,9 @@ class SyncSnapshot {
       final settings = json['settings'];
       final hidePro =
           settings is Map ? settings['hide_pro_from_home'] as bool? : null;
-      final rawCategories = [...?(json['categories'] as List?)]
-        ..sort((a, b) => ((a as Map)['sortOrder'] as int? ?? 0)
-            .compareTo((b as Map)['sortOrder'] as int? ?? 0));
+      final rawCategories = [...?(json['categories'] as List?)]..sort((a, b) =>
+          ((a as Map)['sortOrder'] as int? ?? 0)
+              .compareTo((b as Map)['sortOrder'] as int? ?? 0));
       return SyncSnapshot(
         notes: _notes(json['notes'] as List? ?? const []),
         categories: {

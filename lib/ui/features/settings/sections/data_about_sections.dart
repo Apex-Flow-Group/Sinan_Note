@@ -60,8 +60,7 @@ class AboutSection extends StatelessWidget {
         ListTile(
           leading: Icon(Icons.share, color: primary),
           title: Text(l10n.shareApp),
-          onTap: () => CustomShareSheet.show(
-              context, l10n.shareAppMessage,
+          onTap: () => CustomShareSheet.show(context, l10n.shareAppMessage,
               appShare: true),
         ),
         ListTile(
@@ -79,8 +78,7 @@ class AboutSection extends StatelessWidget {
           ),
         if (kDebugMode)
           ListTile(
-            leading:
-                Icon(Icons.storage_rounded, color: context.colors.warning),
+            leading: Icon(Icons.storage_rounded, color: context.colors.warning),
             title: Text(l10n.dbInspector),
             subtitle: Text(l10n.dbInspectorDesc),
             onTap: () async {

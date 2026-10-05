@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -76,8 +76,7 @@ class GoogleDriveWidgets {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                          color: context.colors.muted,
-                          shape: BoxShape.circle)),
+                          color: context.colors.muted, shape: BoxShape.circle)),
                   const SizedBox(width: 8),
                   Text(l10n.notSignedIn,
                       style: Theme.of(context).textTheme.bodyLarge),
@@ -187,8 +186,8 @@ class GoogleDriveWidgets {
                           color: primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.cloud_upload,
-                            color: primary, size: 28),
+                        child:
+                            Icon(Icons.cloud_upload, color: primary, size: 28),
                       ),
                       const SizedBox(width: 14),
                       Expanded(

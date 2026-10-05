@@ -31,7 +31,8 @@ NoteVersion _version(int noteId) => NoteVersion(
 class _RecordingDeletions implements DeletionLog {
   final uuids = <String>[];
   @override
-  Future<void> notesDeleted(List<String> deleted) async => uuids.addAll(deleted);
+  Future<void> notesDeleted(List<String> deleted) async =>
+      uuids.addAll(deleted);
   @override
   Future<void> categoryDeleted(String name) async {}
   @override
@@ -169,7 +170,8 @@ void main() {
       expect(repo.cached(a.id!)!.reminderDateTime, at);
       expect(effects.changed.last.recurrenceRule, 'daily');
 
-      await repo.updateMeta(a.id!, reminderDateTime: null, recurrenceRule: null);
+      await repo.updateMeta(a.id!,
+          reminderDateTime: null, recurrenceRule: null);
       expect(repo.cached(a.id!)!.reminderDateTime, isNull);
       expect(repo.cached(a.id!)!.recurrenceRule, isNull);
       expect(effects.changed.last.reminderDateTime, isNull);
@@ -193,7 +195,8 @@ void main() {
       expect((await repo.history(a.id!)).length, 20);
     });
 
-    test('restoreVersion keeps the current state as a version and goes '
+    test(
+        'restoreVersion keeps the current state as a version and goes '
         'through the cache', () async {
       final a = await repo.save(note('a', content: 'first'));
       await repo.recordVersion(a.id!, VersionTrigger.manual);
@@ -254,8 +257,7 @@ void main() {
       final saved = await repo.save(note('t', locked: true));
       await repo.recordVersion(saved.id!, VersionTrigger.forced);
       await repo.recordVersion(saved.id!, VersionTrigger.manual);
-      expect(await repo.restoreVersion(saved.id!, _version(saved.id!)),
-          isNull);
+      expect(await repo.restoreVersion(saved.id!, _version(saved.id!)), isNull);
       await expectStoredSealed(saved.id!);
     });
 

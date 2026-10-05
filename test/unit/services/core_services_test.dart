@@ -44,8 +44,7 @@ void main() {
       expect(await RateLimiterService.getRemainingLockTime(), greaterThan(0));
     });
 
-    test('the lock escalates instead of restarting after it expires',
-        () async {
+    test('the lock escalates instead of restarting after it expires', () async {
       for (var i = 0; i < 5; i++) {
         await RateLimiterService.recordFailedAttempt();
       }

@@ -178,9 +178,9 @@ class _SmartHeaderState extends State<SmartHeader>
                                   Provider.of<NotesProvider>(context,
                                           listen: false)
                                       .duplicateNote(note.id!,
-                                          copyLabel: AppLocalizations.of(
-                                                  context)!
-                                              .noteCopy);
+                                          copyLabel:
+                                              AppLocalizations.of(context)!
+                                                  .noteCopy);
                                 }
                               },
                             );

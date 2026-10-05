@@ -7,6 +7,7 @@ import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/editor/note_editor/core/editor_coordinator.dart';
+
 class ReadOnlyChecklistView extends StatefulWidget {
   final EditorCoordinator coordinator;
   final Color textColor;
@@ -93,10 +94,9 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor: widget.textColor.withValues(alpha: 0.1),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                    progress == 1.0
-                        ? context.colors.success
-                        : context.scheme.primary),
+                valueColor: AlwaysStoppedAnimation<Color>(progress == 1.0
+                    ? context.colors.success
+                    : context.scheme.primary),
                 minHeight: 6,
               ),
             ),
@@ -174,8 +174,7 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                       Expanded(
                         child: Text(
                           item.text.isEmpty ? '...' : item.text,
-                          textDirection:
-                              directionOf(item.text),
+                          textDirection: directionOf(item.text),
                           style: context.text.bodyLarge?.copyWith(
                             height: 1.5,
                             color: item.isDone
@@ -208,4 +207,3 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
     );
   }
 }
-

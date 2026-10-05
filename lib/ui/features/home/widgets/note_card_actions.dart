@@ -107,8 +107,7 @@ class NoteCardActions {
             children: [
               Icon(Icons.delete, size: 18, color: context.colors.danger),
               const SizedBox(width: 8),
-              Text(l10n.delete,
-                  style: TextStyle(color: context.colors.danger)),
+              Text(l10n.delete, style: TextStyle(color: context.colors.danger)),
             ],
           ),
         ),

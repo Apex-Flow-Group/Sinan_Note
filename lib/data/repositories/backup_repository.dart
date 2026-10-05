@@ -83,11 +83,10 @@ class BackupRepository {
       final uuidById = {
         for (final (i, row) in rows.indexed) row['id'] as int: notes[i].uuid,
       };
-      Future<bool> has(String table) async => (await backup.query(
-              'sqlite_master',
-              where: "type = 'table' AND name = ?",
-              whereArgs: [table]))
-          .isNotEmpty;
+      Future<bool> has(String table) async =>
+          (await backup.query('sqlite_master',
+                  where: "type = 'table' AND name = ?", whereArgs: [table]))
+              .isNotEmpty;
 
       final versions = <String, List<NoteVersion>>{};
       if (await has('note_versions')) {
@@ -182,7 +181,8 @@ class BackupRepository {
   Future<({String path, int count})> exportJson(String directory,
       {required bool includeVault}) async {
     final rows = await _db.query('notes',
-        where: includeVault ? 'isTrashed = 0' : 'isTrashed = 0 AND isLocked = 0');
+        where:
+            includeVault ? 'isTrashed = 0' : 'isTrashed = 0 AND isLocked = 0');
     if (rows.isEmpty) throw const ValidationException('No notes to export');
     final notes = rows.map(NoteMapper.fromMap).toList();
     final data = {

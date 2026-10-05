@@ -74,7 +74,8 @@ class NoteDraft {
   /// دمج ثلاثي: كل حقل غيّره المحرر منذ [base] (آخر ما فتحه أو حفظه) يُكتب؛
   /// وما لم يغيّره يبقى كما في [stored] الآن — فلا يمحو المحرر تثبيتاً أو
   /// لوناً أو تذكيراً غيّره غيره وهو مفتوح.
-  Note mergeInto(Note stored, {required NoteDraft base, required DateTime now}) {
+  Note mergeInto(Note stored,
+      {required NoteDraft base, required DateTime now}) {
     T pick<T>(T mine, T opened, T current) => mine == opened ? current : mine;
     final categories = listEquals(categoryIds, base.categoryIds)
         ? stored.categoryIds
@@ -92,8 +93,8 @@ class NoteDraft {
       isProfessional:
           pick(isProfessional, base.isProfessional, stored.isProfessional),
       categoryIds: categories,
-      isHiddenFromHome:
-          pick(isHiddenFromHome, base.isHiddenFromHome, stored.isHiddenFromHome),
+      isHiddenFromHome: pick(
+          isHiddenFromHome, base.isHiddenFromHome, stored.isHiddenFromHome),
       updatedAt: now,
     );
   }

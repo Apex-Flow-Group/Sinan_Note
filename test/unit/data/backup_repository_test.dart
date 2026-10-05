@@ -93,8 +93,10 @@ void main() {
     final backup = await _openDb(path);
     final open = await backup.insert(
         'notes', NoteMapper.toMap(note('with history'))..remove('id'));
-    final locked = await backup.insert('notes',
-        NoteMapper.toMap(note('locked').copyWith(isLocked: true))..remove('id'));
+    final locked = await backup.insert(
+        'notes',
+        NoteMapper.toMap(note('locked').copyWith(isLocked: true))
+          ..remove('id'));
     for (final (id, content, hour) in [
       (open, 'v1', 1),
       (open, 'v2', 2),
@@ -130,7 +132,8 @@ void main() {
     final restored = notes.notes.single;
     expect(await notes.history(restored.id!), hasLength(2));
     final versions = await db.query('note_versions');
-    expect(versions.map((v) => v['content']), isNot(contains('plaintext leak')));
+    expect(
+        versions.map((v) => v['content']), isNot(contains('plaintext leak')));
   });
 
   test('history follows a note that already exists locally', () async {

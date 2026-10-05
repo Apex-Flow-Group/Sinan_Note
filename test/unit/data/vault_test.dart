@@ -214,18 +214,17 @@ void main() {
 
     test('wrong secrets lock the vault for a while, escalating', () async {
       var now = DateTime(2026, 6, 1);
-      final limited =
-          VaultRepository(store: VaultKeyStore(), clock: () => now);
+      final limited = VaultRepository(store: VaultKeyStore(), clock: () => now);
       await limited.setUp('Pass123!');
       limited.lock();
 
       for (var i = 0; i < 4; i++) {
         expect(await limited.unlockWithPassword('wrong'), isFalse);
       }
-      expect(await limited.unlockWithRecoveryCode('SN-0000-0000-0000'),
-          isFalse,
+      expect(await limited.unlockWithRecoveryCode('SN-0000-0000-0000'), isFalse,
           reason: 'the recovery code shares the counter');
-      await expectLater(limited.unlockWithPassword('Pass123!'),
+      await expectLater(
+          limited.unlockWithPassword('Pass123!'),
           throwsA(isA<VaultAttemptsExceededException>()
               .having((e) => e.wait, 'wait', const Duration(minutes: 5))));
 
@@ -235,7 +234,8 @@ void main() {
         now = now.add(const Duration(minutes: 6));
       }
       now = now.subtract(const Duration(minutes: 6));
-      await expectLater(limited.unlockWithPassword('Pass123!'),
+      await expectLater(
+          limited.unlockWithPassword('Pass123!'),
           throwsA(isA<VaultAttemptsExceededException>()
               .having((e) => e.wait, 'wait', const Duration(minutes: 15))));
 
@@ -274,7 +274,8 @@ void main() {
           key: 'vault_master_key_password',
           value: '100000:${iv.base64}:${wrapped.base64}');
       await storage.write(
-          key: 'vault_password_hash', value: await KeyDerivation.hash(password));
+          key: 'vault_password_hash',
+          value: await KeyDerivation.hash(password));
       await storage.write(key: 'vault_master_key', value: masterKey.base64);
       return masterKey.bytes;
     }
@@ -283,8 +284,8 @@ void main() {
         () async {
       final key = await writeLegacyVault('OldPass1!');
       final iv = legacy.IV.fromSecureRandom(16);
-      final ct =
-          legacy.Encrypter(legacy.AES(legacy.Key(key))).encrypt('old note', iv: iv);
+      final ct = legacy.Encrypter(legacy.AES(legacy.Key(key)))
+          .encrypt('old note', iv: iv);
       final oldCiphertext = '${iv.base64}:${ct.base64}';
 
       final vault = VaultRepository(store: VaultKeyStore());

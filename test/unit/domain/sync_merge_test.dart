@@ -9,8 +9,7 @@ void main() {
   DateTime at(int hours) => t0.add(Duration(hours: hours));
   final now = at(100);
 
-  Note note(String uuid, {int edited = 0, String? title, bool? locked}) =>
-      Note(
+  Note note(String uuid, {int edited = 0, String? title, bool? locked}) => Note(
         uuid: uuid,
         title: title ?? uuid,
         content: 'c',
@@ -117,7 +116,8 @@ void main() {
 
     test('matched by name, case-insensitively; missing ones added', () {
       final p = plan(
-          localCategories: [work], remoteCategories: ['work', 'Ideas', 'ideas']);
+          localCategories: [work],
+          remoteCategories: ['work', 'Ideas', 'ideas']);
       expect(p.addedCategories, ['Ideas']);
       expect(p.removedCategories, isEmpty);
     });

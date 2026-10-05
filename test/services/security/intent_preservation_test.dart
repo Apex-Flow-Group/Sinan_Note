@@ -113,8 +113,9 @@ void main() {
       expect(service.hasValidContent({'shared_text': 'x'}), isTrue);
       expect(service.hasValidContent({'file_path': '/a.sinan'}), isTrue);
       expect(
-          service.hasValidContent(
-              {'action': 'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET'}),
+          service.hasValidContent({
+            'action': 'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET'
+          }),
           isTrue);
     });
   });

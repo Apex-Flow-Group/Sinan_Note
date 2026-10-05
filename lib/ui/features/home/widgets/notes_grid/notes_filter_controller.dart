@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart'
     show ChangeNotifier, ScrollController, TextEditingController, ValueNotifier;
 import 'package:sinan_note/domain/categories.dart';
@@ -233,7 +232,6 @@ class NotesFilterController extends ChangeNotifier {
     }
   }
 
-
   @override
   void dispose() {
     searchController.removeListener(_onSearchChanged);
@@ -246,4 +244,3 @@ class NotesFilterController extends ChangeNotifier {
     super.dispose();
   }
 }
-

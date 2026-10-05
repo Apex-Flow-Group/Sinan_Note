@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -29,8 +28,7 @@ class FilterSheet {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text(l10n.noteType,
-                  style: sectionStyle),
+              child: Text(l10n.noteType, style: sectionStyle),
             ),
             ListTile(
               leading: Icon(Icons.note, color: scheme.primary),
@@ -41,7 +39,8 @@ class FilterSheet {
               },
             ),
             ListTile(
-              leading: Icon(Icons.format_paint_rounded, color: scheme.secondary),
+              leading:
+                  Icon(Icons.format_paint_rounded, color: scheme.secondary),
               title: Text(l10n.richNoteMenu),
               onTap: () {
                 Navigator.pop(context);
@@ -59,8 +58,7 @@ class FilterSheet {
             const Divider(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text(l10n.noteStatus,
-                  style: sectionStyle),
+              child: Text(l10n.noteStatus, style: sectionStyle),
             ),
             ListTile(
               leading: Icon(Icons.push_pin, color: colors.gold),
@@ -93,4 +91,3 @@ class FilterSheet {
     );
   }
 }
-

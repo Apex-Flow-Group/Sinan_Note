@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
@@ -93,4 +92,3 @@ class SmoothSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
       isSearchActive != oldDelegate.isSearchActive ||
       hideOnScroll != oldDelegate.hideOnScroll;
 }
-

@@ -4,7 +4,6 @@
 // كل فقرة تحدد اتجاهها من أول حرف مؤثر فيها (نفس منطق المحرر)
 // كتل الكود: syntax highlighting + زر نسخ
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
@@ -200,8 +199,8 @@ class MarkdownViewer extends StatelessWidget {
     final linkColor = isDark
         ? EditorPalette.markdownLinkDark
         : EditorPalette.markdownLinkLight;
-    final base =
-        TextStyle(color: textColor, fontSize: t.bodyLarge?.fontSize, height: 1.6);
+    final base = TextStyle(
+        color: textColor, fontSize: t.bodyLarge?.fontSize, height: 1.6);
 
     return MarkdownStyleSheet(
       p: base,
@@ -326,8 +325,7 @@ class MarkdownViewer extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: textColor.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: textColor.withValues(alpha: 0.2)),
+                    border: Border.all(color: textColor.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -335,7 +333,8 @@ class MarkdownViewer extends StatelessWidget {
                       Icon(Icons.broken_image_outlined,
                           color: textColor.withValues(alpha: 0.4), size: 18),
                       const SizedBox(width: 6),
-                      Text(alt ?? AppLocalizations.of(context)!.imageAltFallback,
+                      Text(
+                          alt ?? AppLocalizations.of(context)!.imageAltFallback,
                           style: TextStyle(
                               color: textColor.withValues(alpha: 0.5),
                               fontSize: context.text.bodySmall?.fontSize)),
@@ -350,4 +349,3 @@ class MarkdownViewer extends StatelessWidget {
     );
   }
 }
-

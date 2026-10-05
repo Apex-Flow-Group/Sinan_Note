@@ -1,9 +1,7 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
-
 
 enum DiffType { equal, added, removed }
 
@@ -32,7 +30,8 @@ List<DiffSpan> computeDiff(String oldText, String newText) {
   while (i < m && j < n) {
     if (a[i] == b[j]) {
       spans.add(DiffSpan(DiffType.equal, a[i]));
-      i++; j++;
+      i++;
+      j++;
     } else if (dp[i + 1][j] >= dp[i][j + 1]) {
       spans.add(DiffSpan(DiffType.removed, a[i]));
       i++;
@@ -41,8 +40,12 @@ List<DiffSpan> computeDiff(String oldText, String newText) {
       j++;
     }
   }
-  while (i < m) { spans.add(DiffSpan(DiffType.removed, a[i++])); }
-  while (j < n) { spans.add(DiffSpan(DiffType.added, b[j++])); }
+  while (i < m) {
+    spans.add(DiffSpan(DiffType.removed, a[i++]));
+  }
+  while (j < n) {
+    spans.add(DiffSpan(DiffType.added, b[j++]));
+  }
   return spans;
 }
 
@@ -80,8 +83,8 @@ class DiffView extends StatelessWidget {
           }
         }).toList(),
       ),
-      style: TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
+      style:
+          TextStyle(fontSize: context.text.bodyMedium?.fontSize, height: 1.6),
     );
   }
 }
-

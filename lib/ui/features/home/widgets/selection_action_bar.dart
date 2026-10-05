@@ -1,10 +1,10 @@
-﻿
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class SelectionActionBar extends StatelessWidget {
-  final ValueNotifier<Set<int>> selectedIdsNotifier;  // 🔥 FIX: Use notifier directly
+  final ValueNotifier<Set<int>>
+      selectedIdsNotifier; // 🔥 FIX: Use notifier directly
   final VoidCallback onClear;
   final VoidCallback onPin;
   final VoidCallback onArchive;
@@ -50,7 +50,8 @@ class SelectionActionBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
                   color: cs.onSurface.withValues(alpha: 0.2),
@@ -66,9 +67,14 @@ class SelectionActionBar extends StatelessWidget {
                 child: Icon(icon, color: iconColor, size: 32),
               ),
               const SizedBox(height: 16),
-              Text(title, style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Text(title,
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text(message, style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6))),
+              Text(message,
+                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6))),
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -77,7 +83,8 @@ class SelectionActionBar extends StatelessWidget {
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 48),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
                       child: Text(AppLocalizations.of(ctx)!.cancel),
                     ),
@@ -94,9 +101,11 @@ class SelectionActionBar extends StatelessWidget {
                         foregroundColor: cs.onPrimary,
                         minimumSize: const Size(0, 48),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(confirmLabel,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -111,7 +120,7 @@ class SelectionActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Set<int>>(
-      valueListenable: selectedIdsNotifier,  // 🔥 Listen directly
+      valueListenable: selectedIdsNotifier, // 🔥 Listen directly
       builder: (context, selectedIds, _) {
         final l10n = AppLocalizations.of(context)!;
         final colors = context.colors;
@@ -137,7 +146,7 @@ class SelectionActionBar extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  '${selectedIds.length}',  // 🔥 Read from live data
+                  '${selectedIds.length}', // 🔥 Read from live data
                   style: context.text.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -145,7 +154,8 @@ class SelectionActionBar extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: Icon(allPinned ? Icons.push_pin : Icons.push_pin_outlined),
+                icon:
+                    Icon(allPinned ? Icons.push_pin : Icons.push_pin_outlined),
                 onPressed: onPin,
                 tooltip: allPinned ? l10n.unpin : l10n.pin,
               ),
@@ -170,7 +180,8 @@ class SelectionActionBar extends StatelessWidget {
                   icon: Icons.delete_outline_rounded,
                   iconColor: colors.danger,
                   title: l10n.deleteNote,
-                  message: l10n.notesPermanentlyDeletedCount(selectedIds.length),
+                  message:
+                      l10n.notesPermanentlyDeletedCount(selectedIds.length),
                   confirmLabel: l10n.delete,
                   confirmColor: colors.danger,
                   onConfirm: onDelete,
@@ -197,4 +208,3 @@ class SelectionActionBar extends StatelessWidget {
     );
   }
 }
-

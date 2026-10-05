@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:math';
@@ -160,4 +160,3 @@ Uint8List _pbkdf2((String, Uint8List) input) {
     ..init(pc.Pbkdf2Parameters(salt, 100000, 32));
   return pbkdf2.process(Uint8List.fromList(utf8.encode(pin)));
 }
-

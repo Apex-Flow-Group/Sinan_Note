@@ -209,9 +209,8 @@ class _ChecklistPreview extends StatelessWidget {
                   color: item.isDone ? done : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: item.isDone
-                        ? done
-                        : titleColor.withValues(alpha: 0.5),
+                    color:
+                        item.isDone ? done : titleColor.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),

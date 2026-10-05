@@ -42,7 +42,8 @@ void main() {
         reason: 'under 5%');
     expect(record(VersionTrigger.sessionEnd, last, 't', '$long${'x' * 40}'),
         isTrue);
-    expect(record(VersionTrigger.sessionEnd, version('t', 'short'), 'x' * 30,
+    expect(
+        record(VersionTrigger.sessionEnd, version('t', 'short'), 'x' * 30,
             'short'),
         isTrue,
         reason: 'a title change counts');

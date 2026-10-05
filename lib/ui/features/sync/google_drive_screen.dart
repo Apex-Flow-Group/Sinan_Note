@@ -138,20 +138,24 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 80),
       children: [
-          // Account Section with New Sync Button
-          _buildAccountSectionWithNewSync(
-              context, l10n, isDark, isSignedIn, userEmail),
-          const SizedBox(height: 24),
-          GoogleDriveWidgets.buildSyncStatusSection(
-              context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
-          const SizedBox(height: 24),
-          GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
-              isSignedIn, _handleUpload, _handleDownload, _handleMerge),
-          const SizedBox(height: 24),
-          GoogleDriveWidgets.buildAutoSyncSection(
-              context, l10n, isDark, context.read<SyncViewModel>().autoSync, isSignedIn,
-              _saveAutoSyncSetting),
-        ],
+        // Account Section with New Sync Button
+        _buildAccountSectionWithNewSync(
+            context, l10n, isDark, isSignedIn, userEmail),
+        const SizedBox(height: 24),
+        GoogleDriveWidgets.buildSyncStatusSection(
+            context, l10n, isDark, lastSyncTimeStr, isSignedIn, _handleSync),
+        const SizedBox(height: 24),
+        GoogleDriveWidgets.buildSyncActionsSection(context, l10n, isDark,
+            isSignedIn, _handleUpload, _handleDownload, _handleMerge),
+        const SizedBox(height: 24),
+        GoogleDriveWidgets.buildAutoSyncSection(
+            context,
+            l10n,
+            isDark,
+            context.read<SyncViewModel>().autoSync,
+            isSignedIn,
+            _saveAutoSyncSetting),
+      ],
     );
   }
 
@@ -332,9 +336,13 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
         1 => ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              GoogleDriveWidgets.buildAutoSyncSection(context, l10n, isDark,
-                  context.read<SyncViewModel>().autoSync, isSignedIn,
-              _saveAutoSyncSetting),
+              GoogleDriveWidgets.buildAutoSyncSection(
+                  context,
+                  l10n,
+                  isDark,
+                  context.read<SyncViewModel>().autoSync,
+                  isSignedIn,
+                  _saveAutoSyncSetting),
             ],
           ),
         _ => const SizedBox(),

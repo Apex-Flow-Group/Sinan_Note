@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -102,7 +101,8 @@ class DateBarCategoryPickerSheet {
                   isSelected: selectedId == CategoryPolicy.proCategoryId,
                   onTap: () {
                     Navigator.pop(context);
-                    categoriesProvider.selectCategory(CategoryPolicy.proCategoryId);
+                    categoriesProvider
+                        .selectCategory(CategoryPolicy.proCategoryId);
                   },
                 ),
                 ...categories.asMap().entries.map((e) => catTile(
@@ -123,4 +123,3 @@ class DateBarCategoryPickerSheet {
     );
   }
 }
-

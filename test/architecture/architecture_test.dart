@@ -113,11 +113,8 @@ final _rules = <_Rule>[
       RegExp(
           r'''\.(insert|update|delete)\(\s*'notes'|(INSERT INTO|UPDATE|DELETE FROM)\s+notes\b''')),
   // A7: البيانات والمجال لا تعرف الواجهة (ولا main.dart)
-  _Rule(
-      'A7',
-      (p, l) => _isDataOrDomain(l),
-      RegExp(
-          r'''\bimport\s+'package:sinan_note/(main\.dart'|ui/)''')),
+  _Rule('A7', (p, l) => _isDataOrDomain(l),
+      RegExp(r'''\bimport\s+'package:sinan_note/(main\.dart'|ui/)''')),
   // A6: لا حالة عامة على مستوى الملف ولا singletons بحالة
   _Rule(
       'A6',
@@ -129,8 +126,7 @@ final _rules = <_Rule>[
       RegExp(r'''\bColors\.(?!transparent\b)[a-z]|\bColor\(0x''')),
   // T3: لا ThemeData.primaryColor (قديم: في الداكن هو لون السطح لا اللون
   // الأساسي) — colorScheme.primary
-  _Rule('T3', (p, l) => l != _Layer.theme,
-      RegExp(r'''\.primaryColor\b''')),
+  _Rule('T3', (p, l) => l != _Layer.theme, RegExp(r'''\.primaryColor\b''')),
   // T2: أحجام الخط من TextTheme
   _Rule('T2', (p, l) => _isUi(l), RegExp(r'''\bfontSize:\s*\d''')),
   // L1: لا نصوص للمستخدم ولا تفرّع لغة في الواجهة
@@ -144,8 +140,7 @@ final _rules = <_Rule>[
           '${_arabicLiteral.pattern}|${_englishUiLiteral.pattern}')),
   // L2: البيانات لا تُنتج نصوصاً للمستخدم. domain/text يعالج اللغة نفسها
   // (حروف عربية في قواعد التطبيع)، وليس نصاً معروضاً.
-  _Rule('L2',
-      (p, l) => _isDataOrDomain(l) && !p.startsWith('lib/domain/text/'),
+  _Rule('L2', (p, l) => _isDataOrDomain(l) && !p.startsWith('lib/domain/text/'),
       _arabicLiteral),
   // D1: لا يُخزَّن اتجاه النص في المستندات
   _Rule(

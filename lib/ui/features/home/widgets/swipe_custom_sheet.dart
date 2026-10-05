@@ -102,9 +102,8 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
     );
   }
 
-  (IconData, String, Color) _actionMeta(
-      String action, AppLocalizations l10n, ColorScheme scheme,
-      AppColors colors) {
+  (IconData, String, Color) _actionMeta(String action, AppLocalizations l10n,
+      ColorScheme scheme, AppColors colors) {
     return switch (action) {
       'delete' => (Icons.delete_outline_rounded, l10n.delete, colors.danger),
       'archive' => (Icons.archive_outlined, l10n.archive, colors.success),
