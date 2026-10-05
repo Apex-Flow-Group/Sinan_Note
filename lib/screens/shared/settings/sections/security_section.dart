@@ -8,8 +8,7 @@ import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 
 class SecuritySection extends StatelessWidget {
   const SecuritySection({super.key});
@@ -49,7 +48,7 @@ class SecuritySection extends StatelessWidget {
                 await settings.setCustomPinEnabled(true);
               }
             } else {
-              final lockType = await UnifiedLockService().getLockType();
+              final lockType = await context.read<AppLock>().getLockType();
               if (lockType == LockType.pin) {
                 if (!context.mounted) return;
                 final result = await Navigator.of(context).push<bool>(
@@ -72,9 +71,11 @@ class SecuritySection extends StatelessWidget {
                 }
               } else {
                 // تغيير إعدادات الأمان يتطلب مصادقة فعلية، لا جلسة سابقة
-                final authenticated = await UnifiedLockService()
-                    .authenticate(context: 'app_lock', reuseSession: false);
-                UnifiedLockService().resetSession();
+                if (!context.mounted) return;
+                final lock = context.read<AppLock>();
+                final authenticated = await lock.authenticate(
+                    context: 'app_lock', reuseSession: false);
+                lock.resetSession();
                 if (authenticated) {
                   await settings.setAppLockEnabled(false);
                   await settings.setBiometricLockEnabled(false);
@@ -87,7 +88,7 @@ class SecuritySection extends StatelessWidget {
         // خيار البصمة — يظهر فقط إذا كان القفل مفعّلاً والجهاز يدعم البيومتري
         if (settings.isAppLockEnabled)
           FutureBuilder<bool>(
-            future: BiometricService.hasBiometrics(),
+            future: context.read<AppLock>().hasBiometrics(),
             builder: (context, snapshot) {
               if (snapshot.data != true) return const SizedBox.shrink();
               return Column(
@@ -100,12 +101,12 @@ class SecuritySection extends StatelessWidget {
                     onChanged: (val) async {
                       if (val) {
                         // تغيير إعدادات الأمان يتطلب مصادقة فعلية، لا جلسة سابقة
-                        final ok = await UnifiedLockService().authenticate(
+                        final ok = await context.read<AppLock>().authenticate(
                             context: 'app_lock', reuseSession: false);
                         if (ok) await settings.setBiometricLockEnabled(true);
                       } else {
                         // تغيير إعدادات الأمان يتطلب مصادقة فعلية، لا جلسة سابقة
-                        final ok = await UnifiedLockService().authenticate(
+                        final ok = await context.read<AppLock>().authenticate(
                             context: 'app_lock', reuseSession: false);
                         if (ok) await settings.setBiometricLockEnabled(false);
                       }

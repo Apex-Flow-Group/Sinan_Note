@@ -1193,5 +1193,29 @@
         "type": "int"
       }
     }
+  },
+  "waitHours": "{count}h",
+  "@waitHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "waitMinutes": "{count}m",
+  "@waitMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "waitSeconds": "{count}s",
+  "@waitSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -2955,4 +2955,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String vaultTooManyAttempts(int minutes) {
     return 'Too many attempts — try again in $minutes min';
   }
+
+  @override
+  String waitHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String waitMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String waitSeconds(int count) {
+    return '${count}s';
+  }
 }

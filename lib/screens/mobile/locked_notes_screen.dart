@@ -18,8 +18,8 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
@@ -40,6 +40,8 @@ class LockedNotesScreen extends StatefulWidget {
 
 class _LockedNotesScreenState extends State<LockedNotesScreen>
     with WidgetsBindingObserver, SearchMixin {
+  late final AppLock _lock = context.read<AppLock>();
+
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
   final ViewType _viewType = ViewType.listExpanded;
   bool _isLoading = true;
@@ -115,7 +117,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // المصادقة البيومترية تمر عبر runVaultOperation (isVaultOperation)
     // عملية طويلة (تدوير المفتاح/الحذف) أو مصادقة جارية: لا إغلاق
-    if (_vault.isBusy || UnifiedLockService().isVaultOperation) {
+    if (_vault.isBusy || _lock.isVaultOperation) {
       return;
     }
 

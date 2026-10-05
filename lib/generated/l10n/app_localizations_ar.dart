@@ -2941,4 +2941,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String vaultTooManyAttempts(int minutes) {
     return 'محاولات خاطئة كثيرة — حاول بعد $minutes دقيقة';
   }
+
+  @override
+  String waitHours(int count) {
+    return '$count س';
+  }
+
+  @override
+  String waitMinutes(int count) {
+    return '$count د';
+  }
+
+  @override
+  String waitSeconds(int count) {
+    return '$count ث';
+  }
 }

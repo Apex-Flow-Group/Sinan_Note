@@ -20,8 +20,7 @@ import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/desktop/code_tab_responsive.dart';
 import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/reminder_dashboard_responsive.dart';
-import 'package:sinan_note/services/security/security_gate.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
 import 'package:sinan_note/widgets/layout/details_panel.dart';
@@ -45,7 +44,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   bool _isDrawerOpen = false;
   bool _showAddMenu = false;
   void Function(NoteMode)? _onModeSelected;
-  final _securityController = SecurityController();
+  late final AppLock _lock = context.read<AppLock>();
   DateTime? _lastBackPress;
 
   // ✅ Cache screens to prevent rebuilds
@@ -55,7 +54,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   @override
   void initState() {
     super.initState();
-    _securityController.addListener(_onSecurityChanged);
+    _lock.lockState.addListener(_onSecurityChanged);
     tabToHomeNotifier.addListener(_onBackToHome);
     currentTabIndexNotifier.addListener(_onTabIndexChanged);
 
@@ -105,7 +104,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   @override
   void dispose() {
-    _securityController.removeListener(_onSecurityChanged);
+    _lock.lockState.removeListener(_onSecurityChanged);
     tabToHomeNotifier.removeListener(_onBackToHome);
     currentTabIndexNotifier.removeListener(_onTabIndexChanged);
     pendingIntentNotifier.removeListener(_onPendingIntentChanged);
@@ -160,7 +159,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   bool _lockScreenVisible = false;
 
   void _onSecurityChanged() {
-    if (!_securityController.isLocked || !mounted) return;
+    if (!_lock.isLocked || !mounted) return;
     // منع فتح شاشة قفل مكررة
     if (_lockScreenVisible) return;
     _lockScreenVisible = true;
@@ -177,8 +176,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                 autoBiometric: settings.biometricLockEnabled,
                 onSuccess: () {
                   // مارك الجلسة وافتح القفل مباشرة — بدون requestUnlock
-                  UnifiedLockService().markAuthenticated();
-                  _securityController.forceUnlock();
+                  _lock.markAuthenticated();
+                  _lock.forceUnlock();
                   _lockScreenVisible = false;
                   Navigator.of(context).pop();
                 },
@@ -321,10 +320,10 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         layout,
         Positioned.fill(
           child: ListenableBuilder(
-            listenable: _securityController,
+            listenable: _lock.lockState,
             builder: (context, _) => IgnorePointer(
-              ignoring: !_securityController.isLocked,
-              child: _securityController.isLocked
+              ignoring: !_lock.isLocked,
+              child: _lock.isLocked
                   ? ColoredBox(color: Theme.of(context).colorScheme.surface)
                   : const SizedBox.shrink(),
             ),

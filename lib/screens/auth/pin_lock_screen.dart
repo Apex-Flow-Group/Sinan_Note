@@ -6,10 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/widgets/pin_numpad_key.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/rate_limiter_service.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 
 class PinLockScreen extends StatefulWidget {
   final bool isSetup;
@@ -36,6 +34,8 @@ class PinLockScreen extends StatefulWidget {
 
 class _PinLockScreenState extends State<PinLockScreen>
     with TickerProviderStateMixin {
+  late final AppLock _lock = context.read<AppLock>();
+
   bool _isConfirmStep = false;
   bool _successHandled = false;
 
@@ -98,8 +98,8 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   Future<void> _checkLockStatus() async {
-    final lockTime = await RateLimiterService.getRemainingLockTime();
-    final attempts = await RateLimiterService.getRemainingAttempts();
+    final lockTime = await _lock.getRemainingLockTime();
+    final attempts = await _lock.getRemainingAttempts();
 
     if (mounted) {
       setState(() {
@@ -116,7 +116,7 @@ class _PinLockScreenState extends State<PinLockScreen>
     Future.delayed(const Duration(seconds: 1), () async {
       if (!mounted || !_isLocked) return;
 
-      final lockTime = await RateLimiterService.getRemainingLockTime();
+      final lockTime = await _lock.getRemainingLockTime();
 
       if (lockTime == null) {
         setState(() {
@@ -134,7 +134,7 @@ class _PinLockScreenState extends State<PinLockScreen>
   Future<void> _initBiometric() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final biometricEnabled = settings.biometricLockEnabled;
-    final has = biometricEnabled && await BiometricService.hasBiometrics();
+    final has = biometricEnabled && await _lock.hasBiometrics();
     if (mounted) setState(() => _biometricAvailable = has);
     if (has && widget.autoBiometric) {
       await Future.delayed(const Duration(milliseconds: 300));
@@ -143,9 +143,9 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   Future<void> _tryBiometric() async {
-    final ok = await BiometricService.authenticate();
+    final ok = await _lock.authenticateBiometric();
     if (ok && mounted) {
-      UnifiedLockService().markAuthenticated();
+      _lock.markAuthenticated();
       widget.onSuccess?.call();
     }
   }
@@ -186,13 +186,13 @@ class _PinLockScreenState extends State<PinLockScreen>
     final l10n = AppLocalizations.of(context)!;
 
     if (!widget.isSetup) {
-      final lockTime = await RateLimiterService.getRemainingLockTime();
+      final lockTime = await _lock.getRemainingLockTime();
       if (lockTime != null) {
         setState(() {
           _isLocked = true;
           _remainingLockTime = lockTime;
           _error = l10n.lockedForDuration(
-              RateLimiterService.formatRemainingTime(lockTime));
+              formatWait(AppLocalizations.of(context)!, lockTime));
           _pin = '';
         });
         _shake();
@@ -228,19 +228,19 @@ class _PinLockScreenState extends State<PinLockScreen>
       }
 
       setState(() => _loading = true);
-      await UnifiedLockService().setPin(_pin);
-      UnifiedLockService().markAuthenticated();
-      await RateLimiterService.reset();
+      await _lock.setPin(_pin);
+      _lock.markAuthenticated();
+      await _lock.resetAttempts();
       _successHandled = true;
       widget.onSuccess?.call();
       if (mounted) setState(() => _loading = false);
     } else {
       setState(() => _loading = true);
       try {
-        final valid = await UnifiedLockService().verifyPin(_pin);
+        final valid = await _lock.verifyPin(_pin);
         if (!valid) {
-          final lockTime = await RateLimiterService.recordFailedAttempt();
-          final attempts = await RateLimiterService.getRemainingAttempts();
+          final lockTime = await _lock.recordFailedAttempt();
+          final attempts = await _lock.getRemainingAttempts();
 
           _shake();
           setState(() {
@@ -248,7 +248,7 @@ class _PinLockScreenState extends State<PinLockScreen>
               _isLocked = true;
               _remainingLockTime = lockTime;
               _error = l10n.lockedForDuration(
-                  RateLimiterService.formatRemainingTime(lockTime));
+                  formatWait(AppLocalizations.of(context)!, lockTime));
               _startLockTimer();
             } else {
               _error = null;
@@ -259,8 +259,8 @@ class _PinLockScreenState extends State<PinLockScreen>
           });
           return;
         }
-        await RateLimiterService.reset();
-        UnifiedLockService().markAuthenticated();
+        await _lock.resetAttempts();
+        _lock.markAuthenticated();
         _successHandled = true;
         widget.onSuccess?.call();
       } finally {
@@ -463,7 +463,7 @@ class _PinLockScreenState extends State<PinLockScreen>
           const SizedBox(height: 2),
           Text(
             l10n.tryAgainInDuration(
-                RateLimiterService.formatRemainingTime(_remainingLockTime)),
+                formatWait(AppLocalizations.of(context)!, _remainingLockTime)),
             style: context.text.labelMedium?.copyWith(
               color: context.colors.danger.withValues(alpha: 0.8),
             ),

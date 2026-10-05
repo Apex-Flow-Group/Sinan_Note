@@ -51,6 +51,7 @@ import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
 import 'package:sinan_note/ui/features/reminders/view_models/reminder_permissions.dart';
@@ -141,6 +142,7 @@ void main() async {
         Provider(create: (_) => BackupViewModel(backups: backups)),
         Provider(create: (_) => EditorSessions(notes: notes)),
         Provider(create: (_) => ReminderPermissions()),
+        Provider(create: (_) => AppLock()),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
         ChangeNotifierProvider(
             create: (_) => CategoriesProvider(categories: categories)),

@@ -20,9 +20,9 @@ import 'package:sinan_note/services/app_update_service.dart';
 import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,6 +33,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  late final AppLock _lock = context.read<AppLock>();
+
   String _statusMessage = '';
   double _progress = 0.0;
 
@@ -88,13 +90,13 @@ class _SplashScreenState extends State<SplashScreen> {
       if (settings.isAppLockEnabled) {
         AppLogger.debug(
             '[Splash] Calling UnifiedLockService.authenticate()...');
-        final lockType = await UnifiedLockService().getLockType();
+        final lockType = await _lock.getLockType();
         AppLogger.debug('[Splash] LockType: $lockType');
 
         if (lockType == LockType.pin) {
           // PIN: عرض شاشة PIN وانتظار النتيجة
           if (!mounted) return;
-          final hasPinAlready = await UnifiedLockService().hasPinSet();
+          final hasPinAlready = await _lock.hasPinSet();
           if (!mounted) return;
           final pinCompleter = Completer<bool>();
           await Navigator.of(context).push(
@@ -117,7 +119,7 @@ class _SplashScreenState extends State<SplashScreen> {
             return;
           }
         } else {
-          final result = await UnifiedLockService().authenticate(
+          final result = await _lock.authenticate(
             context: 'app_lock',
             biometricEnabled: settings.biometricLockEnabled,
           );

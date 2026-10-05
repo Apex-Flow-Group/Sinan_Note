@@ -6,8 +6,8 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/vault/feature_info.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 
@@ -53,7 +53,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   }
 
   Future<void> _checkBiometrics() async {
-    final hasBio = await BiometricService.hasBiometrics();
+    final hasBio = await context.read<AppLock>().hasBiometrics();
     if (mounted) setState(() => _hasBiometrics = hasBio);
   }
 

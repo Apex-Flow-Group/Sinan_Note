@@ -5623,6 +5623,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many attempts — try again in {minutes} min'**
   String vaultTooManyAttempts(int minutes);
+
+  /// No description provided for @waitHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String waitHours(int count);
+
+  /// No description provided for @waitMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String waitMinutes(int count);
+
+  /// No description provided for @waitSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}s'**
+  String waitSeconds(int count);
 }
 
 class _AppLocalizationsDelegate

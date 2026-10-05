@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
 
@@ -19,6 +19,8 @@ class VaultEntryScreen extends StatefulWidget {
 }
 
 class _VaultEntryScreenState extends State<VaultEntryScreen> {
+  late final AppLock _lock = context.read<AppLock>();
+
   @override
   void initState() {
     super.initState();
@@ -38,8 +40,8 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     }
     if (!mounted) return;
 
-    if (await UnifiedLockService().getLockType() == LockType.pin) {
-      final hasPinAlready = await UnifiedLockService().hasPinSet();
+    if (await _lock.getLockType() == LockType.pin) {
+      final hasPinAlready = await _lock.hasPinSet();
       if (!mounted) return;
       // toPinLock يستبدل هذه الشاشة، فالـ Navigator يُحفظ قبلها
       final navigator = Navigator.of(context);
