@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -71,8 +71,9 @@ class SecuritySection extends StatelessWidget {
                   await settings.setBiometricLockEnabled(false);
                 }
               } else {
+                // تغيير إعدادات الأمان يتطلب مصادقة فعلية، لا جلسة سابقة
                 final authenticated = await UnifiedLockService()
-                    .authenticate(context: 'app_lock');
+                    .authenticate(context: 'app_lock', reuseSession: false);
                 UnifiedLockService().resetSession();
                 if (authenticated) {
                   await settings.setAppLockEnabled(false);
@@ -98,12 +99,14 @@ class SecuritySection extends StatelessWidget {
                     value: settings.biometricLockEnabled,
                     onChanged: (val) async {
                       if (val) {
-                        final ok = await UnifiedLockService()
-                            .authenticate(context: 'app_lock');
+                        // تغيير إعدادات الأمان يتطلب مصادقة فعلية، لا جلسة سابقة
+                        final ok = await UnifiedLockService().authenticate(
+                            context: 'app_lock', reuseSession: false);
                         if (ok) await settings.setBiometricLockEnabled(true);
                       } else {
-                        final ok = await UnifiedLockService()
-                            .authenticate(context: 'app_lock');
+                        // تغيير إعدادات الأمان يتطلب مصادقة فعلية، لا جلسة سابقة
+                        final ok = await UnifiedLockService().authenticate(
+                            context: 'app_lock', reuseSession: false);
                         if (ok) await settings.setBiometricLockEnabled(false);
                       }
                     },

@@ -54,18 +54,19 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
     if (lockType == LockType.pin) {
       final hasPinAlready = await UnifiedLockService().hasPinSet();
       if (!mounted) return;
+      // toPinLock يستبدل هذه الشاشة، فـ context هنا يصبح غير مُركّب عند
+      // النجاح وكان الانتقال يفشل بصمت ويعلق المستخدم في شاشة PIN.
+      final navigator = Navigator.of(context);
       VaultNavigator.toPinLock(
         context,
         isSetup: !hasPinAlready,
-        onSuccess: () {
-          VaultNavigator.toLockedNotes(context);
-        },
+        onSuccess: () => VaultNavigator.replaceWithLockedNotes(navigator),
       );
       return;
     }
 
-    final authenticated =
-        await UnifiedLockService().authenticate(context: 'vault_entry');
+    final authenticated = await UnifiedLockService()
+        .authenticate(context: 'vault_entry', reuseSession: false);
     if (!mounted) return;
 
     if (authenticated) {

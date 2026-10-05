@@ -78,7 +78,8 @@ class NoteCardActions {
           if (confirmed == true && context.mounted) {
             HapticFeedback.mediumImpact();
             final noteId = note.id!;
-            await notesProvider.trashNote(noteId);
+            // خيار «حذف نهائي» في الخزنة — trashNote كان يتركها يتيمة
+            await notesProvider.deleteNote(noteId);
             onNoteChanged();
             if (!context.mounted) return;
             UnifiedNotificationService().show(

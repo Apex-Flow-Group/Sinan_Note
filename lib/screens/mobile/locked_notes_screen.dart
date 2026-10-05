@@ -81,14 +81,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     super.dispose();
   }
 
-  // يُضبط على true أثناء أي عملية مصادقة (dialog بيومتري/PIN)
-  // يمنع didChangeAppLifecycleState من إغلاق الشاشة أثناء المصادقة
-  bool _isAuthenticating = false;
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_isAuthenticating ||
-        VaultResetGuard.isActive ||
+    // المصادقة البيومترية تمر عبر runVaultOperation (isVaultOperation)
+    if (VaultResetGuard.isActive ||
         UnifiedLockService().isVaultOperation) {
       return;
     }
@@ -179,7 +175,6 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
     final selected = <int>{};
     if (!mounted) return;
 
-    _isAuthenticating = true;
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -199,7 +194,6 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         ),
       ),
     );
-    if (mounted) _isAuthenticating = false;
   }
 
   @override
@@ -303,8 +297,10 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                               l10n.confirmPermanentDelete,
                               l10n.delete,
                               () async {
+                                // حذف نهائي فعلاً: trashNote كان يتركها مقفلة
+                                // ومحذوفة معاً فلا تظهر في الخزنة ولا السلة
                                 for (final id in _selectedNoteIds) {
-                                  await _providerRef?.trashNote(id);
+                                  await _providerRef?.deleteNote(id);
                                 }
                                 setState(() => _selectedNoteIds.clear());
                                 await _loadLockedNotes();
@@ -443,8 +439,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void _confirmAction(String title, String content, String confirmLabel,
       Future<void> Function() onConfirm) {
     final l10n = AppLocalizations.of(context)!;
-    // نضبط _isAuthenticating لمنع lifecycle من إغلاق الشاشة أثناء الـ dialog
-    _isAuthenticating = true;
+    // لا نوقف قفل الخزنة أثناء الحوار: إن خرج المستخدم من التطبيق تُغلق
+    // الخزنة ويُغلق الحوار معها (exitVault يُخرج كل المسارات فوق /main).
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -465,9 +461,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
           ),
         ],
       ),
-    ).whenComplete(() {
-      if (mounted) _isAuthenticating = false;
-    });
+    );
   }
 }
 

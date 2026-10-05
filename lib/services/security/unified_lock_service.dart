@@ -96,8 +96,14 @@ class UnifiedLockService {
   /// المصادقة الموحّدة — تحدد النوع تلقائياً وتشارك الجلسة
   /// [context]: 'app_lock' | 'vault_entry'
   /// [biometricEnabled]: إذا كان المستخدم فعّل البصمة مع PIN
-  Future<bool> authenticate({String context = 'app_lock', bool biometricEnabled = false}) async {
-    if (_isAuthenticatedThisSession) return true;
+  /// [reuseSession]: false لدخول الخزنة وتغيير إعدادات الأمان — مصادقة فعلية
+  /// كل مرة، لا جلسة سابقة (كانت تفتح الخزنة بعد إلغاء طلب البصمة).
+  Future<bool> authenticate({
+    String context = 'app_lock',
+    bool biometricEnabled = false,
+    bool reuseSession = true,
+  }) async {
+    if (reuseSession && _isAuthenticatedThisSession) return true;
 
     final lockType = await getLockType();
 
@@ -120,6 +126,8 @@ class UnifiedLockService {
         return false;
 
       case LockType.none:
+        // بلا PIN ولا بصمة: قفل التطبيق غير مفعّل، أما الخزنة فلها كلمة سرها
+        if (!reuseSession) return false;
         _isAuthenticatedThisSession = true;
         return true;
     }
