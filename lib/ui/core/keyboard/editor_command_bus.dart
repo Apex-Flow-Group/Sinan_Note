@@ -29,9 +29,6 @@ enum EditorCommand {
 }
 
 class EditorCommandBus extends ChangeNotifier {
-  static final EditorCommandBus _instance = EditorCommandBus._internal();
-  factory EditorCommandBus() => _instance;
-  EditorCommandBus._internal();
 
   // ── المحرر النشط ──────────────────────────────────────────────────────
   int? _activeNoteId;

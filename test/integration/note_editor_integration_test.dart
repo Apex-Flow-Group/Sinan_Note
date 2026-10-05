@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/keyboard/editor_command_bus.dart';
 import 'package:sinan_note/ui/features/editor/note_editor.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
 import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
@@ -51,6 +52,7 @@ void main() {
           ChangeNotifierProvider.value(value: notesProvider),
           ChangeNotifierProvider.value(value: settingsProvider),
           Provider(create: (_) => EditorSessions(notes: data.notes)),
+          ChangeNotifierProvider(create: (_) => EditorCommandBus()),
           Provider(create: (_) => ReminderPermissions()),
         ],
         child: MaterialApp(
@@ -456,6 +458,7 @@ void main() {
               ChangeNotifierProvider.value(value: notesProvider),
               ChangeNotifierProvider.value(value: settingsProvider),
               Provider(create: (_) => EditorSessions(notes: data.notes)),
+              ChangeNotifierProvider(create: (_) => EditorCommandBus()),
               Provider(create: (_) => ReminderPermissions()),
             ],
             child: MaterialApp(

@@ -40,6 +40,7 @@ class DesktopMenuBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final commands = context.read<EditorCommandBus>();
 
     // نستمع لـ SelectedNoteProvider لتحديث القائمة عند تغيير الملاحظة
     return Consumer<SelectedNoteProvider>(
@@ -124,13 +125,13 @@ class DesktopMenuBar extends StatelessWidget {
                 MenuItemButton(
                   shortcut: AppShortcuts.undo,
                   leadingIcon: const Icon(Icons.undo_rounded, size: 16),
-                  onPressed: () => EditorCommandBus().triggerUndo(),
+                  onPressed: () => commands.triggerUndo(),
                   child: Text(l10n.undo),
                 ),
                 MenuItemButton(
                   shortcut: AppShortcuts.redo,
                   leadingIcon: const Icon(Icons.redo_rounded, size: 16),
-                  onPressed: () => EditorCommandBus().triggerRedo(),
+                  onPressed: () => commands.triggerRedo(),
                   child: Text(l10n.redo),
                 ),
 
@@ -141,28 +142,28 @@ class DesktopMenuBar extends StatelessWidget {
                     shortcut: AppShortcuts.bold,
                     leadingIcon:
                         const Icon(Icons.format_bold_rounded, size: 16),
-                    onPressed: () => EditorCommandBus().triggerBold(),
+                    onPressed: () => commands.triggerBold(),
                     child: Text(l10n.bold),
                   ),
                   MenuItemButton(
                     shortcut: AppShortcuts.italic,
                     leadingIcon:
                         const Icon(Icons.format_italic_rounded, size: 16),
-                    onPressed: () => EditorCommandBus().triggerItalic(),
+                    onPressed: () => commands.triggerItalic(),
                     child: Text(l10n.italic),
                   ),
                   MenuItemButton(
                     shortcut: AppShortcuts.underline,
                     leadingIcon:
                         const Icon(Icons.format_underline_rounded, size: 16),
-                    onPressed: () => EditorCommandBus().triggerUnderline(),
+                    onPressed: () => commands.triggerUnderline(),
                     child: Text(l10n.underline),
                   ),
                   MenuItemButton(
                     shortcut: AppShortcuts.strikethrough,
                     leadingIcon: const Icon(Icons.format_strikethrough_rounded,
                         size: 16),
-                    onPressed: () => EditorCommandBus().triggerStrikethrough(),
+                    onPressed: () => commands.triggerStrikethrough(),
                     child: Text(l10n.strikethrough),
                   ),
                 ],
@@ -174,7 +175,7 @@ class DesktopMenuBar extends StatelessWidget {
                   leadingIcon:
                       const Icon(Icons.drive_file_rename_outline, size: 16),
                   onPressed:
-                      hasNote ? () => EditorCommandBus().triggerRename() : null,
+                      hasNote ? () => commands.triggerRename() : null,
                   child: Text(l10n.rename),
                 ),
                 MenuItemButton(
@@ -202,25 +203,25 @@ class DesktopMenuBar extends StatelessWidget {
                     shortcut: AppShortcuts.archive,
                     leadingIcon:
                         const Icon(Icons.inventory_2_rounded, size: 16),
-                    onPressed: () => EditorCommandBus().triggerArchive(),
+                    onPressed: () => commands.triggerArchive(),
                     child: Text(l10n.archive),
                   ),
                   MenuItemButton(
                     shortcut: AppShortcuts.pin,
                     leadingIcon: const Icon(Icons.push_pin_outlined, size: 16),
-                    onPressed: () => EditorCommandBus().triggerPin(),
+                    onPressed: () => commands.triggerPin(),
                     child: Text(l10n.pin),
                   ),
                   MenuItemButton(
                     leadingIcon:
                         const Icon(Icons.label_outline_rounded, size: 16),
-                    onPressed: () => EditorCommandBus().triggerCategory(),
+                    onPressed: () => commands.triggerCategory(),
                     child: Text(l10n.categories),
                   ),
                   MenuItemButton(
                     shortcut: AppShortcuts.duplicate,
                     leadingIcon: const Icon(Icons.copy_outlined, size: 16),
-                    onPressed: () => EditorCommandBus().triggerDuplicate(),
+                    onPressed: () => commands.triggerDuplicate(),
                     child: Text(l10n.duplicate),
                   ),
                   const Divider(),
@@ -228,7 +229,7 @@ class DesktopMenuBar extends StatelessWidget {
                     shortcut: AppShortcuts.delete,
                     leadingIcon:
                         const Icon(Icons.delete_outline_rounded, size: 16),
-                    onPressed: () => EditorCommandBus().triggerDelete(),
+                    onPressed: () => commands.triggerDelete(),
                     child: Text(l10n.delete),
                   ),
                 ],

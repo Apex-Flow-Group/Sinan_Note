@@ -34,6 +34,7 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/input/paste_handler.dart';
+import 'package:sinan_note/ui/core/keyboard/editor_command_bus.dart';
 import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/navigation/app_navigator.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
@@ -155,6 +156,7 @@ void main() async {
         ChangeNotifierProvider(
             create: (_) => SyncViewModel(sync: sync, notes: notes)),
         ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
+        ChangeNotifierProvider(create: (_) => EditorCommandBus()),
       ],
       child: const ApexNoteApp(),
     ),

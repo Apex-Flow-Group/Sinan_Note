@@ -73,6 +73,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   /// المالك الوحيد لحفظ هذه الملاحظة.
   late final EditorViewModel _vm;
+  late final EditorCommandBus _commands =
+      context.read<EditorCommandBus>();
 
   static bool _looksLikeMarkdown(String text) => RegExp(
         r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
@@ -163,11 +165,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     // Add listeners
     _attachListeners();
     // استمع لأوامر القائمة (DesktopMenuBar)
-    EditorCommandBus().addUniqueListener(_onEditorCommand);
+    _commands.addUniqueListener(_onEditorCommand);
     // سجّل هذا المحرر كالمحرر النشط
     final myId = widget.note?.id;
     if (myId != null) {
-      EditorCommandBus().registerEditor(myId, hashCode);
+      _commands.registerEditor(myId, hashCode);
     }
 
     // Show reminder dialog for new reminder notes
@@ -193,9 +195,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   @override
   void dispose() {
-    EditorCommandBus().removeUniqueListener(_onEditorCommand);
+    _commands.removeUniqueListener(_onEditorCommand);
     // ألغِ تسجيل هذا المحرر
-    EditorCommandBus().unregisterEditor(widget.note?.id);
+    _commands.unregisterEditor(widget.note?.id);
     // End version control session to save history (fire-and-forget)
     _endVersionSession();
     _quillChangesSubscription?.cancel();
@@ -1022,13 +1024,13 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   /// يستقبل أوامر من DesktopMenuBar عبر EditorCommandBus
   void _onEditorCommand() {
-    final cmd = EditorCommandBus().lastCommand;
+    final cmd = _commands.lastCommand;
     if (cmd == null) return;
 
     // تحقق أن هذا المحرر هو المحرر النشط
     final myId = _coordinator.savedNoteId ?? widget.note?.id;
-    final activeId = EditorCommandBus().activeNoteId;
-    final activeHash = EditorCommandBus().activeEditorHash;
+    final activeId = _commands.activeNoteId;
+    final activeHash = _commands.activeEditorHash;
     if (myId == null || (activeId != null && myId != activeId)) return;
     if (activeHash != null && hashCode != activeHash) return;
 
