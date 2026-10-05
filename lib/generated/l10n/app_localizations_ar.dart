@@ -2933,4 +2933,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String numbersCount(int count) {
     return '$count رقم';
   }
+
+  @override
+  String get saveFailedKeepEditing => 'تعذّر الحفظ — تعديلاتك ما زالت هنا';
 }

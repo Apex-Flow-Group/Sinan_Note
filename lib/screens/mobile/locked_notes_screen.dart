@@ -20,6 +20,7 @@ import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -135,9 +136,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       if (_showAddMenu) {
         setState(() => _showAddMenu = false);
       }
-      // بعد بقية المراقبين: المحرر المفتوح فوقها يحفظ (ويشفّر) في استدعائه
-      // المتزامن لهذا الحدث نفسه، ثم تُقفل.
-      scheduleMicrotask(() {
+      // بعد بقية المراقبين (المحرر المفتوح فوقها يطلب حفظه في الحدث نفسه)
+      // وبعد اكتمال كتابة كل جلسات التحرير — ثم تُقفل.
+      final sessions = context.read<EditorSessions>();
+      scheduleMicrotask(() async {
+        await sessions.flush();
         _vault.lock();
         _leaveVault();
       });

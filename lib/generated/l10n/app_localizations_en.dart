@@ -2946,4 +2946,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String numbersCount(int count) {
     return '$count numbers';
   }
+
+  @override
+  String get saveFailedKeepEditing =>
+      'Couldn\'t save — your changes are still here';
 }

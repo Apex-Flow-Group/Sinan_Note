@@ -9,6 +9,7 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
+import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../helpers/test_data_layer.dart';
@@ -50,6 +51,7 @@ void main() {
         providers: [
           ChangeNotifierProvider.value(value: notesProvider),
           ChangeNotifierProvider.value(value: settingsProvider),
+          Provider(create: (_) => EditorSessions(notes: data.notes)),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -453,6 +455,7 @@ void main() {
             providers: [
               ChangeNotifierProvider.value(value: notesProvider),
               ChangeNotifierProvider.value(value: settingsProvider),
+              Provider(create: (_) => EditorSessions(notes: data.notes)),
             ],
             child: MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,

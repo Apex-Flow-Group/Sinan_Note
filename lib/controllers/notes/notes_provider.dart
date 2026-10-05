@@ -182,10 +182,14 @@ class NotesProvider extends ChangeNotifier {
     int? colorIndex,
     bool? isPinned,
     Object? reminderDateTime = _keep,
+    List<int>? categoryIds,
+    bool? isHiddenFromHome,
   }) =>
       _notes.updateMeta(id,
           colorIndex: colorIndex,
           isPinned: isPinned,
+          categoryIds: categoryIds,
+          isHiddenFromHome: isHiddenFromHome,
           reminderDateTime: identical(reminderDateTime, _keep)
               ? _notes.cached(id)?.reminderDateTime
               : reminderDateTime);

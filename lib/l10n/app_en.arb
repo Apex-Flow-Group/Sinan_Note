@@ -1184,5 +1184,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "saveFailedKeepEditing": "Couldn't save — your changes are still here"
 }

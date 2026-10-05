@@ -5611,6 +5611,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} numbers'**
   String numbersCount(int count);
+
+  /// No description provided for @saveFailedKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save — your changes are still here'**
+  String get saveFailedKeepEditing;
 }
 
 class _AppLocalizationsDelegate

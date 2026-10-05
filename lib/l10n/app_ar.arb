@@ -957,5 +957,6 @@
   "imageAltFallback": "صورة",
   "whatsNewSafeSyncTitle": "مزامنة أكثر أماناً — حدّث كل أجهزتك",
   "whatsNewSafeSyncDesc": "المزامنة مع Google Drive صارت بملف جديد ولا تكتب فوق ملاحظاتك أبداً. تعديلات الأجهزة التي لم تُحدَّث بعد تصل إلى هنا، لكن تعديلات هذا الجهاز لا تصلها إلا بعد تحديثها.",
-  "numbersCount": "{count} رقم"
+  "numbersCount": "{count} رقم",
+  "saveFailedKeepEditing": "تعذّر الحفظ — تعديلاتك ما زالت هنا"
 }

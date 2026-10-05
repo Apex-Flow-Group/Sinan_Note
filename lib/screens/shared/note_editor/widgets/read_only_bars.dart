@@ -382,12 +382,13 @@ class _CategoryButton extends StatelessWidget {
           note.categoryIds,
           isHiddenFromHome: note.isHiddenFromHome,
         );
-        if (result == null) return;
-        final updated = note.copyWith(
+        if (result == null || note.id == null) return;
+        // التصنيفات فقط، على الصف المخزّن — لا تُكتب نسخة قديمة من الملاحظة
+        await provider.updateNoteMeta(
+          note.id!,
           categoryIds: result['categoryIds'] as List<int>,
           isHiddenFromHome: result['isHiddenFromHome'] as bool,
         );
-        await provider.updateNote(updated);
         await onRefresh();
       },
     );

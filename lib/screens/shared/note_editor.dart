@@ -18,12 +18,12 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_build_methods.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
-import 'package:sinan_note/screens/shared/note_editor/handlers/editor_menu_handlers.dart';
-import 'package:sinan_note/screens/shared/note_editor/state/editor_save_operations.dart';
+import 'package:sinan_note/screens/shared/note_editor/state/editor_save_manager.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:sinan_note/services/keyboard/editor_command_bus.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/editor_palette.dart';
+import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 
@@ -61,10 +61,8 @@ class NoteEditorImmersive extends StatefulWidget {
 }
 
 class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
-    with
-        AutomaticKeepAliveClientMixin,
-        WidgetsBindingObserver,
-        EditorMenuHandlersMixin<NoteEditorImmersive> {
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver
+    implements DraftSource {
   late EditorCoordinator _coordinator;
   AppLocalizations? _l10nRef;
   StreamSubscription? _quillChangesSubscription;
@@ -73,17 +71,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   /// العنوان والمحتوى المخزّنان عند بداية جلسة التحرير الحالية.
   (String, String)? _sessionStart;
 
-  // ── EditorMenuHandlersMixin interface ──────────────────────────────
-  @override
-  EditorCoordinator get menuCoordinator => _coordinator;
-  @override
-  int? get menuNoteId => _coordinator.savedNoteId ?? widget.note?.id;
-  @override
-  bool Function() get menuIsMounted => () => mounted;
-  @override
-  void Function(VoidCallback) get menuSetState => setState;
-  @override
-  Future<void> Function() get menuHandleBack => _handleBack;
+  /// المالك الوحيد لحفظ هذه الملاحظة.
+  late final EditorViewModel _vm;
 
   static bool _looksLikeMarkdown(String text) => RegExp(
         r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',
@@ -121,6 +110,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     _coordinator.initialize(context);
     _isReadOnly = widget.readOnly;
+    _vm = context.read<EditorSessions>().open(
+      widget.note,
+      locked: widget.originallyLocked || (widget.note?.isLocked ?? false),
+    )..attach(this);
 
     // بداية جلسة التحرير: الملاحظة كما خُزّنت عند الفتح
     final opened = widget.note;
@@ -205,6 +198,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _coordinator.quillController?.removeListener(_onQuillSelectionChanged);
     _selectionBarActive.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    // ما كُتب ولم يُحفظ بعد (الحفظ التلقائي المعلّق): يُلتقط الآن ويُكتب
+    _coordinator.autosaveTimer?.cancel();
+    if (!_isReadOnly) unawaited(_vm.save());
+    _vm.dispose();
     _coordinator.dispose();
     super.dispose();
   }
@@ -216,12 +213,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       // حفظ المحتوى فوراً قبل أي شيء آخر — متزامناً حتى التشفير، فإقفال
       // الخزنة في الحدث نفسه يأتي بعده. النسخة بعد اكتمال الحفظ.
       _coordinator.autosaveTimer?.cancel();
-      final saving = _coordinator.stateManager.hasChanges() &&
-              !_coordinator.stateManager.isSaving &&
-              !_isReadOnly
-          ? _saveNoteToDatabase()
-          : Future.value(false);
-      unawaited(saving.then((_) => _endVersionSession()));
+      if (!_isReadOnly) {
+        unawaited(_saveNoteToDatabase().then((_) => _endVersionSession()));
+      }
     }
   }
 
@@ -277,14 +271,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       },
     );
     // حفظ اللون فوراً إذا كانت الملاحظة موجودة مسبقاً
-    final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-    if (noteId != null && _coordinator.stateManager.hasChanges()) {
-      final saved =
-          await _saveNoteToDatabase(forceUpdate: true, isManualSave: true);
-      if (saved) {
-        _coordinator.stateManager.updateSnapshot();
-      }
-    }
+    if (_vm.noteId != null) await _saveNoteToDatabase(isManualSave: true);
   }
 
   void _showHistorySheet() {
@@ -326,52 +313,163 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   // ==================== SAVE METHODS ====================
 
+  /// يحفظ ما في المحرر إن تغيّر ([forceUpdate]: حتى لو لم يتغيّر).
   Future<bool> _saveNoteToDatabase(
-      {bool forceUpdate = false, bool isManualSave = false}) {
-    final effectiveNote = _currentNote ?? widget.note;
-    return EditorSaveOperations.saveToDatabase(
-      coordinator: _coordinator,
-      mode: _currentMode,
-      existingNote: effectiveNote,
-      l10n: _l10nRef,
-      isMounted: () => mounted,
-      onSavedNewId: () {
-        if (mounted) setState(() {});
-      },
-      forceUpdate: forceUpdate,
-      isManualSave: isManualSave,
+      {bool forceUpdate = false, bool isManualSave = false}) async {
+    final wasNew = _vm.noteId == null;
+    final saved = await _vm.save(manual: isManualSave, force: forceUpdate);
+    _coordinator.savedNoteId = _vm.noteId;
+    if (wasNew && _vm.noteId != null && mounted) setState(() {});
+    return saved;
+  }
+
+  Future<void> _saveNote() async {
+    _coordinator.autosaveTimer?.cancel();
+    final saved =
+        await _saveNoteToDatabase(forceUpdate: true, isManualSave: true);
+    if (!mounted) return;
+    if (saved) {
+      _showSaved();
+    } else {
+      _showSaveError();
+    }
+  }
+
+  Future<void> _saveAsMarkdown() async {
+    final saved = await _vm.saveAs((d) => NoteDraft(
+          title: d.title,
+          content: '```\n${_rawText()}\n```',
+          isEmpty: d.isEmpty,
+          colorIndex: d.colorIndex,
+          reminderDateTime: d.reminderDateTime,
+          recurrenceRule: d.recurrenceRule,
+          noteType: 'markdown',
+          isChecklist: d.isChecklist,
+          isProfessional: d.isProfessional,
+          categoryIds: d.categoryIds,
+          isHiddenFromHome: d.isHiddenFromHome,
+        ));
+    if (!mounted) return;
+    if (saved) {
+      UnifiedNotificationService().show(
+        context: context,
+        message: AppLocalizations.of(context)!.savedAsMarkdownSuccess,
+        type: NotificationType.success,
+      );
+    } else {
+      _showSaveError();
+    }
+  }
+
+  Future<void> _saveWithExtension(String extension) async {
+    final language = _coordinator.detectedLanguage;
+    final saved = await _vm.saveAs((d) => NoteDraft(
+          title: d.title,
+          content: _rawText(),
+          isEmpty: d.isEmpty,
+          colorIndex: d.colorIndex,
+          reminderDateTime: d.reminderDateTime,
+          recurrenceRule: d.recurrenceRule,
+          noteType: language == null
+              ? _currentMode.name
+              : _coordinator.smartController.mapLanguageToNoteType(language),
+          isChecklist: d.isChecklist,
+          isProfessional: d.isProfessional,
+          categoryIds: d.categoryIds,
+          isHiddenFromHome: d.isHiddenFromHome,
+        ));
+    if (!mounted) return;
+    if (saved) {
+      UnifiedNotificationService().show(
+        context: context,
+        message: AppLocalizations.of(context)!.savedSuccessfully,
+        type: NotificationType.success,
+      );
+    } else {
+      _showSaveError();
+    }
+  }
+
+  /// النص كما في المتحكم (الكود أو النص الخام) — لتحويلات "حفظ باسم".
+  String _rawText() => _currentMode == NoteMode.code
+      ? _coordinator.codeController!.text
+      : _coordinator.contentController.text;
+
+  // ── DraftSource ───────────────────────────────────────────────────────────
+
+  @override
+  NoteDraft? takeDraft({required bool force}) {
+    final state = _coordinator.stateManager;
+    final newVaultNote = _vm.noteId == null && _vm.isLocked;
+    if (!force && !newVaultNote && !state.hasChanges()) return null;
+
+    final usesQuill = _currentMode != NoteMode.code &&
+        _currentMode != NoteMode.checklist;
+    final quill = _coordinator.quillController;
+    // المستند الكامل لم يُحمّل بعد (معاينة أول 20 سطراً): حفظه يقطع الملاحظة
+    if (usesQuill && (quill == null || !_coordinator.isQuillFullyLoaded) &&
+        (widget.note?.content.isNotEmpty ?? false)) {
+      return null;
+    }
+
+    final existing = _currentNote ?? widget.note;
+    final content = switch (_currentMode) {
+      NoteMode.code => _coordinator.codeController!.text,
+      NoteMode.checklist => _coordinator.contentController.text,
+      _ => quill == null ? '' : QuillMigration.toDeltaJson(quill),
+    };
+    final isEmpty = switch (_currentMode) {
+      NoteMode.checklist =>
+        EditorSaveManager.isContentEmpty(content, NoteMode.checklist),
+      NoteMode.code => content.trim().isEmpty,
+      _ => quill == null || QuillMigration.toPlainText(quill).trim().isEmpty,
+    };
+    final draft = NoteDraft(
+      title: _coordinator
+          .getCurrentTitle(_l10nRef?.newNoteTitle ?? 'New Note'),
+      content: content,
+      isEmpty: isEmpty,
+      colorIndex: state.colorIndex,
+      reminderDateTime: state.reminderDateTime,
+      recurrenceRule: state.recurrenceRule,
+      noteType: EditorSaveManager.determineNoteType(
+        mode: _currentMode,
+        detectedLanguage: _coordinator.detectedLanguage,
+        isLanguageManuallySelected: _coordinator.isLanguageManuallySelected,
+        existingNoteType: existing?.noteType,
+        smartController: _coordinator.smartController,
+      ),
+      isChecklist: _currentMode == NoteMode.checklist,
+      isProfessional:
+          existing?.isProfessional ?? (_currentMode == NoteMode.code),
+      categoryIds: List.of(state.categoryIds),
+      isHiddenFromHome: state.isHiddenFromHome,
+    );
+    state.updateSnapshot();
+    return draft;
+  }
+
+  @override
+  void restoreDraft() => _coordinator.stateManager.markDirty();
+
+  void _showSaved() {
+    UnifiedNotificationService().show(
+      context: context,
+      message: AppLocalizations.of(context)!.noteSaved,
+      type: NotificationType.success,
+      duration: const Duration(seconds: 1),
     );
   }
 
-  Future<void> _saveNote() => EditorSaveOperations.saveManually(
-        context: context,
-        coordinator: _coordinator,
-        mode: _currentMode,
-        existingNote: _currentNote ?? widget.note,
-        l10n: _l10nRef,
-        isMounted: () => mounted,
-        onSavedNewId: () {
-          if (mounted) setState(() {});
-        },
-      );
-
-  Future<void> _saveAsMarkdown() => EditorSaveOperations.saveAsMarkdown(
-        context: context,
-        coordinator: _coordinator,
-        mode: _currentMode,
-        existingNote: _currentNote ?? widget.note,
-        l10n: _l10nRef,
-      );
-
-  Future<void> _saveWithExtension(String extension) =>
-      EditorSaveOperations.saveWithExtension(
-        context: context,
-        coordinator: _coordinator,
-        mode: _currentMode,
-        existingNote: _currentNote ?? widget.note,
-        l10n: _l10nRef,
-        extension: extension,
-      );
+  /// فشل الحفظ: يُعرض ويبقى المحرر مفتوحاً بالتعديلات.
+  void _showSaveError() {
+    if (_vm.error == null) return;
+    UnifiedNotificationService().show(
+      context: context,
+      message: AppLocalizations.of(context)!.saveFailedKeepEditing,
+      type: NotificationType.error,
+    );
+  }
 
   // ==================== LIFECYCLE METHODS ====================
 
@@ -427,11 +525,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
     _coordinator.autosaveTimer?.cancel();
     _coordinator.autosaveTimer = Timer(autosaveDelay, () {
-      if (mounted &&
-          currentText.trim().isNotEmpty &&
-          !_coordinator.stateManager.isSaving) {
-        _saveNoteToDatabase();
-      }
+      if (mounted && currentText.trim().isNotEmpty) _saveNoteToDatabase();
     });
   }
 
@@ -509,67 +603,40 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       return;
     }
 
-    final content = _currentMode == NoteMode.code
-        ? _coordinator.codeController!.text
-        : (_currentMode == NoteMode.checklist
-            ? _coordinator.contentController.text
-            : QuillMigration.toPlainText(_coordinator.quillController!));
-    final title = _coordinator.stateManager.customTitle ??
-        _coordinator.stateManager.checklistTitle ??
-        '';
-
-    final hasContent = content.trim().isNotEmpty || title.trim().isNotEmpty;
-    final hasChanges = _coordinator.stateManager.hasChanges();
+    _coordinator.autosaveTimer?.cancel();
 
     // ملاحظة مستلمة من الخارج — اسأل المستخدم قبل الحفظ
-    if (widget.isSharedPreview && hasContent) {
+    if (widget.isSharedPreview && !_vm.isClosed) {
       final shouldSave = await _showSaveSharedNoteDialog();
       if (!mounted) return;
       if (shouldSave == true) {
-        await _saveNoteToDatabase(isManualSave: true);
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          UnifiedNotificationService().show(
-            context: context,
-            message: l10n!.noteSaved,
-            type: NotificationType.success,
-            duration: const Duration(seconds: 1),
-          );
-        }
+        final saved =
+            await _saveNoteToDatabase(forceUpdate: true, isManualSave: true);
+        if (!mounted) return;
+        if (!saved && _vm.error != null) return _showSaveError();
+        if (saved) _showSaved();
       }
-      if (!mounted) return;
-      if (widget.onClose != null) {
-        widget.onClose!();
-      } else {
-        Navigator.of(context).pop(shouldSave == true);
-      }
+      _close(shouldSave == true);
       return;
     }
 
-    bool didSave = false;
-    if (hasContent && hasChanges) {
-      didSave = await _saveNoteToDatabase(isManualSave: true);
+    if (!_vm.isClosed) {
+      await _saveNoteToDatabase(isManualSave: true);
+      if (!mounted) return;
+      if (_vm.error != null) return _showSaveError();
+      await _endVersionSession();
+      if (!mounted) return;
+      if (_vm.takeSavedFlag()) _showSaved();
     }
+    _close(_vm.noteId != null);
+  }
 
-    // End version control session
-    await _endVersionSession();
-
-    if (didSave && mounted) {
-      final l10n = AppLocalizations.of(context);
-      UnifiedNotificationService().show(
-        context: context,
-        message: l10n!.noteSaved,
-        type: NotificationType.success,
-        duration: const Duration(seconds: 1),
-      );
-    }
-
+  void _close(bool result) {
     if (!mounted) return;
     if (widget.onClose != null) {
       widget.onClose!();
     } else {
-      Navigator.of(context)
-          .pop(_coordinator.savedNoteId != null || widget.note != null);
+      Navigator.of(context).pop(result);
     }
   }
 
@@ -628,20 +695,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
             );
             _coordinator.initialize(context);
             _attachListeners();
-            // ربط quill listener إذا كان الـ mode يستخدم quill
+            // المستند الكامل (لا معاينة أول 20 سطراً) قبل أي تحرير أو حفظ
             if (_currentMode == NoteMode.simple ||
                 _currentMode == NoteMode.rich ||
                 _currentMode == NoteMode.reminder) {
-              _quillChangesSubscription?.cancel();
-              if (_coordinator.quillController != null) {
-                _quillChangesSubscription =
-                    _coordinator.quillController!.document.changes.listen((_) {
-                  _onQuillContentChanged();
-                  _updateUndoRedoState();
-                });
-                _coordinator.quillController!
-                    .addListener(_onQuillSelectionChanged);
-              }
+              _initQuillForEdit();
             }
           } else {
             if (_coordinator.stateManager.customTitle == null &&
@@ -981,48 +1039,57 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
       // ── إدارة الملاحظة ─────────────────────────────────────────────
       case EditorCommand.archive:
-        handleMenuArchive();
+        _archive();
       case EditorCommand.pin:
-        handleMenuPin();
+        _togglePin();
       case EditorCommand.duplicate:
-        handleMenuDuplicate();
+        _duplicate();
       case EditorCommand.delete:
-        handleMenuDelete();
+        _delete();
       case EditorCommand.category:
-        handleMenuCategory();
+        _pickCategory();
     }
   }
 
-  /// أرشفة الملاحظة مع snackbar تراجع
-  @override
-  Future<void> handleMenuArchive() async {
-    final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-    if (noteId == null || !mounted) return;
+  /// أرشفة الملاحظة (بعد حفظ ما فيها) مع snackbar تراجع
+  Future<void> _archive() async {
+    if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    await provider.archiveNote(noteId);
-    if (!mounted) return;
+    final id = _vm.noteId;
+    if (!await _vm.archive()) return _showSaveError();
+    if (!mounted || id == null) return;
     UnifiedNotificationService().showWithUndo(
       context: context,
       message: l10n.movedToArchive,
       type: NotificationType.success,
-      actionKey: 'menu_archive_$noteId',
+      actionKey: 'menu_archive_$id',
       onExecute: () {},
-      onUndo: () async => await provider.unarchiveNote(noteId),
+      onUndo: () async => await provider.unarchiveNote(id),
       undoLabel: l10n.undo,
     );
-    _handleBack();
+    _close(true);
   }
 
-  /// تكرار الملاحظة مع snackbar
-  @override
-  Future<void> handleMenuDuplicate() async {
-    final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-    if (noteId == null || !mounted) return;
+  Future<void> _togglePin() async {
+    final pinned = await _vm.togglePinned();
+    if (pinned == null || !mounted) return _showSaveError();
     final l10n = AppLocalizations.of(context)!;
-    final provider = Provider.of<NotesProvider>(context, listen: false);
-    await provider.duplicateNote(noteId, copyLabel: l10n.noteCopy);
+    UnifiedNotificationService().show(
+      context: context,
+      message: pinned ? l10n.pin : l10n.unpin,
+      type: NotificationType.success,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  /// تكرار الملاحظة (بعد حفظ ما فيها) مع snackbar
+  Future<void> _duplicate() async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final copy = await _vm.duplicate(copyLabel: l10n.noteCopy);
+    if (!mounted) return;
+    if (copy == null) return _showSaveError();
     UnifiedNotificationService().show(
       context: context,
       message: l10n.noteCopied,
@@ -1032,9 +1099,8 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   }
 
   /// حذف الملاحظة — bottom sheet تأكيد مع snackbar تراجع
-  @override
-  Future<void> handleMenuDelete() async {
-    final noteId = _coordinator.savedNoteId ?? widget.note?.id;
+  Future<void> _delete() async {
+    final noteId = _vm.noteId;
     if (noteId == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
@@ -1103,7 +1169,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     );
 
     if (confirm != true || !mounted) return;
-    await provider.trashNote(noteId);
+    if (!await _vm.trash()) return _showSaveError();
     if (!mounted) return;
     UnifiedNotificationService().showWithUndo(
       context: context,
@@ -1114,12 +1180,11 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       onUndo: () async => await provider.restoreNote(noteId),
       undoLabel: l10n.undo,
     );
-    _handleBack();
+    _close(true);
   }
 
   /// فتح منتقي الكتالوج
-  @override
-  Future<void> handleMenuCategory() async {
+  Future<void> _pickCategory() async {
     if (!mounted) return;
     final current = _coordinator.stateManager.categoryIds;
     final result = await CategoryPickerSheet.show(
@@ -1263,22 +1328,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       },
 
       // ─── إدارة الملاحظة (تعمل حتى في وضع القراءة) ────────────────────
-      AppShortcuts.archive: () {
-        final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) handleMenuArchive();
-      },
-      AppShortcuts.pin: () {
-        final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) handleMenuPin();
-      },
-      AppShortcuts.duplicate: () {
-        final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) handleMenuDuplicate();
-      },
-      AppShortcuts.delete: () {
-        final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-        if (noteId != null) handleMenuDelete();
-      },
+      AppShortcuts.archive: _archive,
+      AppShortcuts.pin: _togglePin,
+      AppShortcuts.duplicate: _duplicate,
+      AppShortcuts.delete: _delete,
     };
   }
 }

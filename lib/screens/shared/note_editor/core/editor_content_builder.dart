@@ -80,7 +80,11 @@ class EditorContentBuilder {
         sidePadding: sidePadding,
         totalBottomSpace: totalBottomSpace,
         autoFocus: note == null && !readOnly,
-        readOnly: readOnly,
+        // معاينة أول 20 سطراً للقراءة فقط حتى يُحمّل المستند الكامل: ما يُكتب
+        // فيها كان يضيع حين يحل المستند الكامل محلها
+        readOnly: readOnly ||
+            ((note?.content.isNotEmpty ?? false) &&
+                !coordinator.isQuillFullyLoaded),
         markdownPaste: mode == NoteMode.rich,
         onScroll: onScroll,
         selectionBarActive: selectionBarActive ?? ValueNotifier(false),
