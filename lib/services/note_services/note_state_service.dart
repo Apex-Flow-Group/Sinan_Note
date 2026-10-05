@@ -1,8 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 
 class NoteStateService {
@@ -132,17 +132,7 @@ class NoteStateService {
       return activeNotes;
     }
 
-    // استخدام النص المطبّع للبحث الذكي (يتجاهل التشكيل ويوحّد الألف)
-    final normalizedQuery = Note.normalize(query);
-
-    final results = activeNotes
-        .where((n) =>
-            n.normalizedTitle.contains(normalizedQuery) ||
-            n.normalizedContent.contains(normalizedQuery))
-        .take(100)
-        .toList();
-
-    return results;
+    return activeNotes.where((n) => n.matches(query)).take(100).toList();
   }
 
   void sortNotes({bool immediate = false}) {

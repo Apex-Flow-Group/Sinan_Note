@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -8,6 +8,7 @@ import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart'
     show
@@ -16,7 +17,6 @@ import 'package:sinan_note/main.dart'
         bottomNavHiddenNotifier,
         pendingIntentNotifier,
         isMainLayoutActive;
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/desktop/code_tab_responsive.dart';
 import 'package:sinan_note/screens/desktop/home_screen_responsive.dart';

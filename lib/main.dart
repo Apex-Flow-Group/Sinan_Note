@@ -19,9 +19,10 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/desktop/archive_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/locked_notes_screen_responsive.dart';
 import 'package:sinan_note/screens/desktop/trash_screen_responsive.dart';
@@ -300,10 +301,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
 
       // الصيغة الكاملة (من toMap) — تحتوي 'updatedAt'
       if (json.containsKey('updatedAt')) {
-        json.remove('id');
-        note = Note.fromMap(json);
-        note.createdAt = DateTime.now();
-        note.updatedAt = DateTime.now();
+        note = NoteMapper.fromMap(json).asNew();
       } else {
         // الصيغة القديمة
         note = Note(

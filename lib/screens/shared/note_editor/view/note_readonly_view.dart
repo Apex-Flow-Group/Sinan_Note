@@ -10,12 +10,12 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
-import 'package:sinan_note/core/utils/checklist_formatter.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/book_mode_view.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart';
@@ -263,7 +263,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     // quillController قد يكون preview فقط (أول 20 سطر) في وضع القراءة
     final raw = widget.coordinator.contentController.text;
     final String? deltaJson = QuillMigration.isDelta(raw) ? raw : null;
-    final String plainContent = NoteContentUtils.toDisplayText(raw);
+    final String plainContent = NoteText.toDisplayText(raw);
 
     Navigator.push(
       context,

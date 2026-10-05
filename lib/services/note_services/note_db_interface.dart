@@ -1,10 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 
-import 'package:sinan_note/models/category.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_category.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 
 abstract class NoteDbInterface {
   // Core

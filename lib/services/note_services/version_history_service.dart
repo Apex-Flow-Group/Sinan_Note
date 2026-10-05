@@ -1,7 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 

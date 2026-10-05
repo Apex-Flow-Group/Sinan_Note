@@ -1,7 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/widgets/editor/code_editor_toolbar.dart';
 import 'package:sinan_note/widgets/editor/smart_editor_toolbar.dart';
 import 'package:sinan_note/widgets/editor/toolbars/checklist_bottom_bar.dart';

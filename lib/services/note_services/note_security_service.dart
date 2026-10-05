@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:encrypt/encrypt.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/note_services/note_db_interface.dart';
 import 'package:sinan_note/services/note_services/note_state_service.dart';
 import 'package:sinan_note/services/security/vault_service.dart';

@@ -29,8 +29,7 @@ void main() {
       expect(sim.dx(0.6), lessThan(sim.dx(0.1)));
     });
 
-    test('fling toward the top stops at the top, never into the pull area',
-        () {
+    test('fling toward the top stops at the top, never into the pull area', () {
       final sim = physics.createBallisticSimulation(_metrics(200), -6000)!;
       for (var t = 0.0; t < 3; t += 0.05) {
         expect(sim.x(t), greaterThanOrEqualTo(0));

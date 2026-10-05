@@ -3,9 +3,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:sinan_note/core/utils/checklist_formatter.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
 
 /// خدمة معالجة الـ Intents الخارجية — منطق صرف بدون UI
 ///
@@ -168,12 +169,8 @@ class IntentHandlerService {
 
       // الصيغة الكاملة (من toMap) — تحتوي 'updatedAt'
       if (json.containsKey('updatedAt')) {
-        // أزل id لأن النوت سيُنشأ جديد في الداتابيز
-        json.remove('id');
-        note = Note.fromMap(json);
-        // حدّث التواريخ لأنها نسخة جديدة
-        note.createdAt = DateTime.now();
-        note.updatedAt = DateTime.now();
+        // ملاحظة مستقلة جديدة: هوية وتواريخ جديدة
+        note = NoteMapper.fromMap(json).asNew();
       } else {
         // الصيغة القديمة (title + content + noteType + colorIndex)
         String content = json['content'] as String? ?? '';

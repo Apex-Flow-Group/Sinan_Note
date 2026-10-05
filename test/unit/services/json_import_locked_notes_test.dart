@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/screens/shared/settings/json_import_handler.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 
@@ -49,7 +49,7 @@ void main() {
   });
 
   test('unlocked notes are untouched', () async {
-    final note = _locked('t', 'plain')..isLocked = false;
+    final note = _locked('t', 'plain').copyWith(isLocked: false);
     expect((await JsonImportHandler.secureLockedNote(note)).content, 'plain');
   });
 }

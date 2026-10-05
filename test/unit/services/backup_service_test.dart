@@ -1,6 +1,14 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:flutter_test/flutter_test.dart';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/storage/backup_service.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sqflite_common_ffi/sqflite_ffi.dart';import '../../test_setup.dart';
+import 'dart:convert';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/services/storage/backup_service.dart';
+import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../../test_setup.dart';
+
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -46,7 +54,7 @@ void main() {
         ),
       ];
 
-      final json = jsonEncode(notes.map((n) => n.toMap()).toList());
+      final json = jsonEncode(notes.map((n) => NoteMapper.toMap(n)).toList());
       expect(json, isNotEmpty);
       expect(json, contains('Test 1'));
       expect(json, contains('Test 2'));
@@ -74,7 +82,7 @@ void main() {
       ''';
 
       final List<dynamic> data = jsonDecode(json);
-      final notes = data.map((m) => Note.fromMap(m)).toList();
+      final notes = data.map((m) => NoteMapper.fromMap(m)).toList();
 
       expect(notes.length, 1);
       expect(notes.first.title, 'Imported');
@@ -101,9 +109,9 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      final json = jsonEncode([original.toMap()]);
+      final json = jsonEncode([NoteMapper.toMap(original)]);
       final List<dynamic> data = jsonDecode(json);
-      final imported = data.map((m) => Note.fromMap(m)).toList();
+      final imported = data.map((m) => NoteMapper.fromMap(m)).toList();
 
       expect(imported.first.title, original.title);
       expect(imported.first.colorIndex, original.colorIndex);
@@ -112,4 +120,3 @@ void main() {
     });
   });
 }
-

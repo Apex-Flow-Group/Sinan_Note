@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 class NoteException implements Exception {
   final String message;
@@ -22,7 +22,3 @@ class EncryptionException extends NoteException {
 class ValidationException extends NoteException {
   ValidationException(super.message, [super.originalError]);
 }
-
-
-
-

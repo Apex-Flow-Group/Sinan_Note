@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/widgets/editor/apex_editor_header.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';

@@ -1,12 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/checklist_formatter.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
 import 'package:sinan_note/widgets/editor/diff_view.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 
@@ -198,7 +198,7 @@ class VersionsBottomSheet extends StatelessWidget {
   }
 
   String _toPlainText(String content) =>
-      NoteContentUtils.toDisplayText(content);
+      NoteText.toDisplayText(content);
   void _showDiffDialog(BuildContext context, NoteVersion older,
       NoteVersion newer, AppLocalizations l10n) {
     final oldText = _toPlainText(older.content);

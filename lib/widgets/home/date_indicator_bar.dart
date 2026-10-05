@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/widgets/home/date_indicator/date_bar_category_picker.dart';
 import 'package:sinan_note/widgets/home/date_indicator/date_picker_sheet.dart';
 import 'package:sinan_note/widgets/home/date_indicator/sync_progress_bar.dart';

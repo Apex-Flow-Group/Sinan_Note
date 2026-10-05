@@ -1,7 +1,14 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // ☁️ GOOGLE DRIVE SYNC — اختبارات حقيقية وشاملة
 
-import 'dart:convert';import 'package:flutter_test/flutter_test.dart';import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/storage/compression_service.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';import '../../test_setup.dart';
+import 'dart:convert';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/services/storage/compression_service.dart';
+import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import '../../test_setup.dart';
+
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -64,7 +71,7 @@ void main() {
       final backupData = {
         'version': '2.0',
         'created_at': DateTime.now().toIso8601String(),
-        'notes': notes.map((n) => n.toMap()).toList(),
+        'notes': notes.map((n) => NoteMapper.toMap(n)).toList(),
       };
 
       expect(backupData['version'], '2.0');
@@ -133,7 +140,7 @@ void main() {
 
       final json = jsonEncode({
         'version': '2.0',
-        'notes': notes.map((n) => n.toMap()).toList(),
+        'notes': notes.map((n) => NoteMapper.toMap(n)).toList(),
       });
 
       final compressed = CompressionService.compress(json);
@@ -326,7 +333,7 @@ void main() {
   });
 
   // ══════════════════════════════════════════════════════════════
-  // 5. تسلسل البيانات — Note.toMap / Note.fromMap
+  // 5. تسلسل البيانات — Note.toMap / NoteMapper.fromMap
   // ══════════════════════════════════════════════════════════════
   group('Note Serialization — Backup Data Integrity', () {
     test('toMap ثم fromMap يُرجع نفس البيانات', () {
@@ -346,8 +353,8 @@ void main() {
         isChecklist: false,
       );
 
-      final map = original.toMap();
-      final restored = Note.fromMap(map);
+      final map = NoteMapper.toMap(original);
+      final restored = NoteMapper.fromMap(map);
 
       expect(restored.id, original.id);
       expect(restored.title, original.title);
@@ -375,7 +382,7 @@ void main() {
         'isChecklist': 0,
       };
 
-      final note = Note.fromMap(map);
+      final note = NoteMapper.fromMap(map);
       expect(note.noteType, 'code');
     });
 
@@ -397,7 +404,7 @@ void main() {
         'isChecklist': 0,
       };
 
-      final note = Note.fromMap(map);
+      final note = NoteMapper.fromMap(map);
       expect(note.noteType, 'code');
     });
 
@@ -415,9 +422,9 @@ void main() {
                 noteType: ['simple', 'code', 'checklist', 'reminder'][i % 4],
               ));
 
-      final json = jsonEncode(notes.map((n) => n.toMap()).toList());
+      final json = jsonEncode(notes.map((n) => NoteMapper.toMap(n)).toList());
       final decoded = jsonDecode(json) as List;
-      final restored = decoded.map((m) => Note.fromMap(m)).toList();
+      final restored = decoded.map((m) => NoteMapper.fromMap(m)).toList();
 
       expect(restored.length, 1000);
       for (int i = 0; i < 1000; i++) {
@@ -439,8 +446,8 @@ void main() {
         recurrenceRule: 'daily',
       );
 
-      final map = note.toMap();
-      final restored = Note.fromMap(map);
+      final map = NoteMapper.toMap(note);
+      final restored = NoteMapper.fromMap(map);
 
       expect(restored.reminderDateTime, isNotNull);
       expect(restored.recurrenceRule, 'daily');
@@ -456,8 +463,8 @@ void main() {
         isLocked: true,
       );
 
-      final map = note.toMap();
-      final restored = Note.fromMap(map);
+      final map = NoteMapper.toMap(note);
+      final restored = NoteMapper.fromMap(map);
 
       expect(restored.isLocked, isTrue);
       expect(restored.title, note.title);
@@ -499,4 +506,3 @@ void main() {
     });
   });
 }
-

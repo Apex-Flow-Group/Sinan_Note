@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/widgets/home/notes_grid/height_recorder.dart';
 import 'package:sinan_note/widgets/home/notes_grid/note_card_wrapper.dart';

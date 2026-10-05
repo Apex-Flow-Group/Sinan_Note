@@ -1,12 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
@@ -48,9 +48,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> with SearchMixin {
     var filtered = notes.where((note) {
       if (note.isLocked) return false;
       if (searchQuery.isEmpty) return true;
-      final q = Note.normalize(searchQuery);
-      return note.normalizedTitle.contains(q) ||
-          note.normalizedContent.contains(q);
+      return note.matches(searchQuery);
     }).toList();
 
     if (_sortBy == 'title') {

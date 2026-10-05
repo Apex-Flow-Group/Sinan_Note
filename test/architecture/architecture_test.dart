@@ -78,12 +78,10 @@ bool _isUi(_Layer l) => l == _Layer.ui;
 // ── القواعد ────────────────────────────────────────────────────────────────
 
 class _Rule {
-  const _Rule(this.id, this.appliesTo, this.pattern,
-      {this.skipComments = true});
+  const _Rule(this.id, this.appliesTo, this.pattern);
   final String id;
   final bool Function(String path, _Layer layer) appliesTo;
   final RegExp pattern;
-  final bool skipComments;
 }
 
 final _arabicLiteral = RegExp(r'''(['"])(?:(?!\1).)*[؀-ۿ](?:(?!\1).)*\1''');
@@ -104,10 +102,12 @@ final _rules = <_Rule>[
   // A4: الـ Views لا تستدعي Repository
   _Rule('A4', (p, l) => _isUi(l),
       RegExp(r'''^import\s+'package:sinan_note/data/repositories/''')),
-  // A5: جدول notes يكتبه NotesRepository وحده
+  // A5: جدول notes يكتبه NotesRepository وحده (ومخطط القاعدة وترحيلاته)
   _Rule(
       'A5',
-      (p, l) => p != 'lib/data/repositories/notes_repository.dart',
+      (p, l) =>
+          p != 'lib/data/repositories/notes_repository.dart' &&
+          !p.startsWith('lib/data/services/database/'),
       RegExp(
           r'''\.(insert|update|delete)\(\s*'notes'|(INSERT INTO|UPDATE|DELETE FROM)\s+notes\b''')),
   // A6: لا حالة عامة على مستوى الملف ولا singletons بحالة
@@ -127,8 +127,11 @@ final _rules = <_Rule>[
       (p, l) => _isUi(l) || l == _Layer.viewModel || l == _Layer.other,
       RegExp(
           r'''\bisAr(abic)?\b|languageCode\s*==|''' + _arabicLiteral.pattern)),
-  // L2: البيانات لا تُنتج نصوصاً للمستخدم
-  _Rule('L2', (p, l) => _isDataOrDomain(l), _arabicLiteral),
+  // L2: البيانات لا تُنتج نصوصاً للمستخدم. domain/text يعالج اللغة نفسها
+  // (حروف عربية في قواعد التطبيع)، وليس نصاً معروضاً.
+  _Rule('L2',
+      (p, l) => _isDataOrDomain(l) && !p.startsWith('lib/domain/text/'),
+      _arabicLiteral),
   // D1: لا يُخزَّن اتجاه النص في المستندات
   _Rule(
       'D1',
@@ -159,7 +162,7 @@ Map<String, int> _scan() {
       for (final raw in lines) {
         final line = raw.startsWith('﻿') ? raw.substring(1) : raw;
         final trimmed = line.trimLeft();
-        if (rule.skipComments && trimmed.startsWith('//')) continue;
+        if (trimmed.startsWith('//')) continue;
         final code = _stripTrailingComment(line);
         n += rule.pattern.allMatches(code).length;
       }

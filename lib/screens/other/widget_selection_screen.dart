@@ -1,11 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -69,11 +69,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
 
     // فلتر البحث
     if (searchQuery.isNotEmpty) {
-      final q = Note.normalize(searchQuery);
-      result = result.where((note) {
-        return note.normalizedTitle.contains(q) ||
-            note.normalizedContent.contains(q);
-      }).toList();
+      result = result.where((note) => note.matches(searchQuery)).toList();
     }
 
     // فلتر النوع
@@ -372,7 +368,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                                 ],
                               ),
                               subtitle: Text(
-                                NoteContentUtils.toDisplayText(note.content),
+                                NoteText.toDisplayText(note.content),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),

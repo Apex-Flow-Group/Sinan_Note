@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -6,9 +6,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';

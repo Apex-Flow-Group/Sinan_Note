@@ -1,6 +1,6 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/material.dart';import 'package:shared_preferences/shared_preferences.dart'; import 'package:sinan_note/models/category.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'dart:async';import 'package:flutter/material.dart';import 'package:shared_preferences/shared_preferences.dart'; import 'package:sinan_note/domain/models/note_category.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart'; import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 const int kMaxCategories = 20;
 const int kMaxCategoryNameLength = 20;
 const int kProCategoryId = -1;
@@ -104,8 +104,7 @@ class CategoriesProvider extends ChangeNotifier {
     if (trimmed.isEmpty || trimmed.length > kMaxCategoryNameLength) return;
     final cat = _categories.firstWhere((c) => c.id == id,
         orElse: () => NoteCategory(id: id, name: trimmed));
-    cat.name = trimmed;
-    await _db.updateCategory(cat);
+    await _db.updateCategory(cat.copyWith(name: trimmed));
     CloudSyncGateway.markDirty();
     _triggerSync();
     await _load();

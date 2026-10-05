@@ -9,10 +9,10 @@ import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
@@ -84,8 +84,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // المصادقة البيومترية تمر عبر runVaultOperation (isVaultOperation)
-    if (VaultResetGuard.isActive ||
-        UnifiedLockService().isVaultOperation) {
+    if (VaultResetGuard.isActive || UnifiedLockService().isVaultOperation) {
       return;
     }
 
@@ -380,13 +379,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       );
 
   Widget _buildNotesList(AppLocalizations l10n) {
-    final query = Note.normalize(searchController.text.trim());
     final filtered = _decryptedNotes
         .where((n) => !n.isArchived && !n.isTrashed)
-        .where((n) =>
-            query.isEmpty ||
-            n.normalizedTitle.contains(query) ||
-            n.normalizedContent.contains(query))
+        .where((n) => n.matches(searchController.text))
         .toList();
 
     if (filtered.isEmpty) {

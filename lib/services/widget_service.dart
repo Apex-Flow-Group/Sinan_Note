@@ -7,7 +7,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/logger.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
 class WidgetService {

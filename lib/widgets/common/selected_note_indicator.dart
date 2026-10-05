@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 
 /// مؤشر يساري يطابق تصميم الصفحة الرئيسية — خط صغير + إزاحة خفيفة.
 class SelectedNoteIndicator extends StatelessWidget {

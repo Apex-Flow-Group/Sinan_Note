@@ -1,6 +1,6 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';import 'package:flutter/material.dart';import 'package:sinan_note/models/note.dart';
+import 'dart:async';import 'package:flutter/material.dart';import 'package:sinan_note/domain/models/note.dart';
 // ارتفاع ثابت للعرض المطوي (padding 6*2 + card 60)
 const double _kCompactItemH = 72.0;
 

@@ -1,12 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/checklist_formatter.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/services/code/language_detector.dart';
 
 class NoteCardUtils {
@@ -70,7 +70,7 @@ class NoteCardUtils {
   }
 
   static String fixNoteContent(String content, {int? maxChars = 300}) =>
-      NoteContentUtils.toDisplayText(content, maxChars: maxChars);
+      NoteText.toDisplayText(content, maxChars: maxChars);
 
   static String getDisplayTitle(Note note) {
     if (note.isChecklist && ChecklistFormatter.isValidChecklist(note.content)) {

@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_save_manager.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
@@ -106,20 +106,20 @@ void main() {
 
     test('checklist غير فارغ — title موجود', () {
       const withTitle = '{"title":"مهام","items":[]}';
-      expect(
-          EditorSaveManager.isContentEmpty(withTitle, NoteMode.checklist), false);
+      expect(EditorSaveManager.isContentEmpty(withTitle, NoteMode.checklist),
+          false);
     });
 
     test('checklist غير فارغ — item موجود', () {
       const withItem =
           '{"title":"","items":[{"id":"1","text":"اشتري خبز","isDone":false}]}';
-      expect(
-          EditorSaveManager.isContentEmpty(withItem, NoteMode.checklist), false);
+      expect(EditorSaveManager.isContentEmpty(withItem, NoteMode.checklist),
+          false);
     });
 
     test('checklist — JSON تالف يُعامَل كفارغ', () {
-      expect(
-          EditorSaveManager.isContentEmpty('not-json', NoteMode.checklist), true);
+      expect(EditorSaveManager.isContentEmpty('not-json', NoteMode.checklist),
+          true);
     });
 
     test('checklist — items كلها نصوص فارغة', () {

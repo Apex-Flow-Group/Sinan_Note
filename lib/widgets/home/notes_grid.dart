@@ -1,6 +1,17 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:flutter/material.dart'; import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart'; import 'package:sinan_note/core/utils/app_navigator.dart'; import 'package:sinan_note/core/utils/checklist_formatter.dart'; import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/widgets/effects/premium_card_effect.dart'; import 'package:sinan_note/widgets/home/note_card_utils.dart';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/widgets/effects/premium_card_effect.dart';
+import 'package:sinan_note/widgets/home/note_card_utils.dart';
 class NotesGrid extends StatefulWidget {
   final List<Note> notes;
   final Function() onRefresh;

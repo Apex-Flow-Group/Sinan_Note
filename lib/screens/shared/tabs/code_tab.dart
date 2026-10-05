@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -9,10 +9,10 @@ import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show tabToHomeNotifier;
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
@@ -102,10 +102,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
         .where((n) => n.isProfessional && !n.isArchived && !n.isTrashed)
         .toList();
     if (searchQuery.isNotEmpty) {
-      filtered = filtered.where((note) {
-        return note.normalizedTitle.contains(Note.normalize(searchQuery)) ||
-            note.normalizedContent.contains(Note.normalize(searchQuery));
-      }).toList();
+      filtered = filtered.where((note) => note.matches(searchQuery)).toList();
     }
     if (_sortBy == 'title') {
       filtered.sort((a, b) => a.title.compareTo(b.title));

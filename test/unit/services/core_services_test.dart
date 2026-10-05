@@ -1,12 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/services/note_services/version_history_service.dart';
-import 'package:sinan_note/services/search/smart_search_service.dart';
 import 'package:sinan_note/services/security/rate_limiter_service.dart';
 import 'package:sinan_note/services/storage/compression_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
@@ -495,7 +494,7 @@ void main() {
         createdAt: now,
         updatedAt: now,
       ));
-      await db.logNoteVersion(NoteVersion.create(
+      await db.logNoteVersion(NoteVersion(
         noteId: id,
         title: 'Note',
         content: 'Content',
@@ -516,7 +515,7 @@ void main() {
         updatedAt: now,
         isLocked: true,
       ));
-      await db.logNoteVersion(NoteVersion.create(
+      await db.logNoteVersion(NoteVersion(
         noteId: id,
         title: 'Locked',
         content: 'Secret',
@@ -537,7 +536,7 @@ void main() {
         updatedAt: now,
       ));
       for (int i = 0; i < 25; i++) {
-        await db.logNoteVersion(NoteVersion.create(
+        await db.logNoteVersion(NoteVersion(
           noteId: id,
           title: 'Note $i',
           content: 'Content $i',
@@ -559,7 +558,7 @@ void main() {
         updatedAt: now,
       ));
       for (int i = 0; i < 3; i++) {
-        await db.logNoteVersion(NoteVersion.create(
+        await db.logNoteVersion(NoteVersion(
           noteId: id,
           title: 'Note',
           content: 'Content $i',
@@ -579,7 +578,7 @@ void main() {
         createdAt: now,
         updatedAt: now,
       ));
-      final version = NoteVersion.create(
+      final version = NoteVersion(
         noteId: id,
         title: 'Old Title',
         content: 'Old Content',
@@ -593,107 +592,6 @@ void main() {
       final restored = await db.getNoteById(id);
       expect(restored!.title, 'Old Title');
       expect(restored.content, 'Old Content');
-    });
-  });
-
-  // ══════════════════════════════════════════════════════════════
-  // SmartSearchService
-  // ══════════════════════════════════════════════════════════════
-  group('SmartSearchService', () {
-    late SqliteDatabaseService db;
-    late SmartSearchService service;
-    late DateTime now;
-
-    setUp(() async {
-      SqliteDatabaseService.resetInstance();
-      SqliteDatabaseService.overrideDbPath(':memory:');
-      db = SqliteDatabaseService();
-      service = SmartSearchService();
-      now = DateTime.now();
-    });
-
-    tearDown(() async {
-      await db.closeDB();
-      SqliteDatabaseService.resetInstance();
-    });
-
-    test('empty query returns empty result', () async {
-      final result = await service.search('');
-      expect(result.notes, isEmpty);
-      expect(result.suggestion, isNull);
-    });
-
-    test('whitespace query returns empty result', () async {
-      final result = await service.search('   ');
-      expect(result.notes, isEmpty);
-    });
-
-    test('finds notes by title', () async {
-      await db.insertNote(Note(
-        title: 'Flutter Tutorial',
-        content: 'Content',
-        createdAt: now,
-        updatedAt: now,
-      ));
-      await db.insertNote(Note(
-        title: 'Dart Guide',
-        content: 'Content',
-        createdAt: now,
-        updatedAt: now,
-      ));
-
-      final result = await service.search('Flutter');
-      expect(result.notes.length, 1);
-      expect(result.notes.first.title, 'Flutter Tutorial');
-    });
-
-    test('finds notes by content', () async {
-      await db.insertNote(Note(
-        title: 'Note',
-        content: 'This is about Flutter development',
-        createdAt: now,
-        updatedAt: now,
-      ));
-
-      final result = await service.search('Flutter');
-      expect(result.notes.length, 1);
-    });
-
-    test('search is case insensitive', () async {
-      await db.insertNote(Note(
-        title: 'Flutter',
-        content: 'Content',
-        createdAt: now,
-        updatedAt: now,
-      ));
-
-      final result = await service.search('flutter');
-      expect(result.notes.length, 1);
-    });
-
-    test('no results for non-existent query', () async {
-      await db.insertNote(Note(
-        title: 'Flutter',
-        content: 'Content',
-        createdAt: now,
-        updatedAt: now,
-      ));
-
-      final result = await service.search('xyz123nonexistent');
-      expect(result.notes, isEmpty);
-    });
-
-    test('does not return locked notes', () async {
-      await db.insertNote(Note(
-        title: 'Secret Flutter',
-        content: 'Locked content',
-        createdAt: now,
-        updatedAt: now,
-        isLocked: true,
-      ));
-
-      final result = await service.search('Flutter');
-      expect(result.notes, isEmpty);
     });
   });
 }

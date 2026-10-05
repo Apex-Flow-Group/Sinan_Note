@@ -1,12 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🔁 اختبار مشكلة التكرار في المزامنة — يثبت أن الإصلاح يعمل
 
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../test_setup.dart';
+
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -274,18 +274,6 @@ void main() {
       }
     }
 
-    /// محاكاة المنطق القديم (insertNote)
-    Future<void> simulateDownloadOld(
-        SqliteDatabaseService db, List<Note> driveNotes) async {
-      final allLocal = await db.getAllNotes();
-      for (final n in allLocal) {
-        if (n.id != null && !n.isLocked) await db.deleteNote(n.id!);
-      }
-      for (final n in driveNotes) {
-        await db.insertNote(n); // السلوك القديم
-      }
-    }
-
     test('download ثم silentMerge — لا تكرار مع upsertNote', () async {
       final db = SqliteDatabaseService();
       final now = DateTime.now();
@@ -330,58 +318,6 @@ void main() {
 
       expect((await db.getAllNotes()).length, 3,
           reason: 'download + silentMerge يجب أن تبقى 3 ملاحظات');
-    });
-
-    test('السلوك القديم لـ download يُسبب تكراراً في الدورة التالية', () async {
-      final db = SqliteDatabaseService();
-      final now = DateTime.now();
-
-      // إدراج أولي — الـ ids تبدأ من 1
-      final driveNotes = List.generate(
-          3,
-          (i) => Note(
-                id: i + 1,
-                title: 'ملاحظة ${i + 1}',
-                content: 'محتوى',
-                createdAt: now,
-                updatedAt: now,
-              ));
-      await simulateDownloadOld(db, driveNotes); // ids: 1,2,3
-
-      // دورة ثانية: download قديم — يحذف 1,2,3 ثم يُدرج بـ ids جديدة 4,5,6
-      await simulateDownloadOld(db, driveNotes);
-      final afterSecondDownload = await db.getAllNotes();
-      // الـ ids الجديدة هي 4,5,6 — ليست 1,2,3
-      expect(afterSecondDownload.map((n) => n.id).contains(1), isFalse,
-          reason: 'السلوك القديم يُضيع الـ ids الأصلية بعد كل دورة');
-
-      // الآن silentMerge: Drive يحتوي ids 1,2,3 لكن المحلي 4,5,6 → تكرار
-      final localNotes = await db.getAllNotes();
-      final Map<int, Note> merged = {};
-      for (final n in localNotes) {
-        if (n.id != null) merged[n.id!] = n;
-      }
-      for (final n in driveNotes) {
-        if (n.id == null) continue;
-        final local = merged[n.id!];
-        if (local == null || n.updatedAt.isAfter(local.updatedAt)) {
-          merged[n.id!] = n;
-        }
-      }
-      final allLocal = await db.getAllNotes();
-      final mergedIds = merged.keys.toSet();
-      for (final n in allLocal) {
-        if (n.id != null && !mergedIds.contains(n.id)) {
-          await db.deleteNote(n.id!);
-        }
-      }
-      for (final n in merged.values) {
-        await db.upsertNote(n);
-      }
-
-      // النتيجة: 6 ملاحظات بدل 3 — التكرار الذي أبلغ عنه المستخدمون
-      expect((await db.getAllNotes()).length, greaterThan(3),
-          reason: 'السلوك القديم يُسبب تكراراً في الدورة التالية');
     });
 
     test('5 دورات download + merge متتالية — لا تكرار', () async {
@@ -525,4 +461,3 @@ void main() {
     });
   });
 }
-

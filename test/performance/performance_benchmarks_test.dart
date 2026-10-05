@@ -1,8 +1,7 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/note_services/note_state_service.dart';
 
 void main() {
@@ -118,4 +117,3 @@ void main() {
     });
   });
 }
-

@@ -1,14 +1,16 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // ⚡ MEMORY & PERFORMANCE — اختبارات تسريب الذاكرة والأداء
-
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/note_services/note_state_service.dart';
 import 'package:sinan_note/services/storage/compression_service.dart';
+
 import '../test_setup.dart';
+
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -183,7 +185,7 @@ void main() {
       final notes = List.generate(1000, (i) => note(i));
 
       final sw = Stopwatch()..start();
-      final maps = notes.map((n) => n.toMap()).toList();
+      final maps = notes.map((n) => NoteMapper.toMap(n)).toList();
       sw.stop();
 
       expect(maps.length, 1000);
@@ -191,10 +193,10 @@ void main() {
     });
 
     test('إعادة تحميل 1000 ملاحظة من Map في أقل من 200ms', () {
-      final maps = List.generate(1000, (i) => note(i).toMap());
+      final maps = List.generate(1000, (i) => NoteMapper.toMap(note(i)));
 
       final sw = Stopwatch()..start();
-      final notes = maps.map((m) => Note.fromMap(m)).toList();
+      final notes = maps.map((m) => NoteMapper.fromMap(m)).toList();
       sw.stop();
 
       expect(notes.length, 1000);
@@ -202,4 +204,3 @@ void main() {
     });
   });
 }
-

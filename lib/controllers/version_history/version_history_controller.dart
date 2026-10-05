@@ -1,9 +1,9 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/services/note_services/version_history_service.dart';
 
 const double kColMin = 200.0;
@@ -76,11 +76,7 @@ class VersionHistoryController extends ChangeNotifier {
   List<Note> get filteredNotes {
     var notes = notesWithHistory;
     if (searchQuery.trim().isNotEmpty) {
-      final q = Note.normalize(searchQuery);
-      notes = notes
-          .where((n) =>
-              n.normalizedTitle.contains(q) || n.normalizedContent.contains(q))
-          .toList();
+      notes = notes.where((n) => n.matches(searchQuery)).toList();
     }
     if (sortBy == 'title') {
       notes.sort((a, b) => a.title.compareTo(b.title));

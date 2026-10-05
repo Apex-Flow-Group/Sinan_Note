@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/widgets/home/note_card_widget.dart';
 

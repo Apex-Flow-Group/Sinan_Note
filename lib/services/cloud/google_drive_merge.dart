@@ -1,14 +1,16 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/services/cloud/google_drive_auth.dart';
 import 'package:sinan_note/services/storage/compression_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
@@ -81,7 +83,7 @@ class GoogleDriveMerge {
     final List<dynamic> notesList =
         jsonData is Map<String, dynamic> ? (jsonData['notes'] ?? []) : jsonData;
 
-    return notesList.map((m) => Note.fromMap(m)).toList();
+    return notesList.map((m) => NoteMapper.fromMap(m)).toList();
   }
 
   static Future<String?> _showMergeDialog(

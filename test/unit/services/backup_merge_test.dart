@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/category.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_category.dart';
 import 'package:sinan_note/services/storage/backup_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
@@ -72,15 +72,19 @@ void main() {
     expect(titles, {'local 1', 'local 2', 'from backup A', 'from backup B'});
   });
 
-  test('the same note keeps the newer version', () async {
+  test('the same note (same uuid) keeps the newer version', () async {
+    final original = _note(1, 'original', t0);
+    final newestLocal =
+        _note(2, 'newest local', t0, updated: t0.add(const Duration(hours: 3)));
     final backup = await _buildBackup(tmp, [
-      _note(1, 'edited later', t0, updated: t0.add(const Duration(hours: 5))),
-      _note(2, 'older edit', t0, updated: t0.add(const Duration(hours: 1))),
+      original.copyWith(
+          title: 'edited later', updatedAt: t0.add(const Duration(hours: 5))),
+      newestLocal.copyWith(
+          title: 'older edit', updatedAt: t0.add(const Duration(hours: 1))),
     ]);
     final db = SqliteDatabaseService();
-    await db.upsertNote(_note(1, 'original', t0));
-    await db.upsertNote(_note(2, 'newest local', t0,
-        updated: t0.add(const Duration(hours: 3))));
+    await db.upsertNote(original);
+    await db.upsertNote(newestLocal);
 
     await BackupService().mergeDatabaseFile(backup);
 
@@ -104,17 +108,18 @@ void main() {
     expect((await db.getAllNotes()).length, 2);
   });
 
-  test('a newer copy updates a note that got a new id in an earlier merge',
+  test(
+      'a newer copy updates a note that got a new local id in an earlier merge',
       () async {
     final db = SqliteDatabaseService();
     await db.upsertNote(_note(1, 'local 1', t0));
-    final first = await _buildBackup(
-        tmp, [_note(1, 'imported', t0.add(const Duration(days: 1)))]);
+    final imported = _note(1, 'imported', t0.add(const Duration(days: 1)));
+    final first = await _buildBackup(tmp, [imported]);
     await BackupService().mergeDatabaseFile(first);
 
-    final recolored = _note(1, 'imported', t0.add(const Duration(days: 1)),
-        updated: t0.add(const Duration(days: 1, milliseconds: 1)))
-      ..colorIndex = 4;
+    final recolored = imported.copyWith(
+        colorIndex: 4,
+        updatedAt: t0.add(const Duration(days: 1, milliseconds: 1)));
     await File(first).delete();
     final second = await _buildBackup(tmp, [recolored]);
     await BackupService().mergeDatabaseFile(second);
@@ -125,16 +130,28 @@ void main() {
     expect(notes.firstWhere((n) => n.title == 'local 1').colorIndex, 0);
   });
 
+  test('a note from an old backup without uuid is not duplicated', () async {
+    final db = SqliteDatabaseService();
+    final local = _note(1, 'same note', t0);
+    await db.upsertNote(local);
+    // نسخة قديمة: نفس الملاحظة بهوية مختلفة (الملفات القديمة بلا uuid)
+    final backup =
+        await _buildBackup(tmp, [local.asNew(at: t0).copyWith(id: 9)]);
+
+    expect(await BackupService().mergeDatabaseFile(backup), 0);
+    expect((await db.getAllNotes()).length, 1);
+  });
+
   test('categories are matched by name', () async {
     final backup = await _buildBackup(
       tmp,
       [
-        _note(1, 'work note', t0)..categoryIds = [5],
+        _note(1, 'work note', t0).copyWith(categoryIds: [5]),
       ],
-      categories: [NoteCategory(id: 5, name: 'Work')],
+      categories: [const NoteCategory(id: 5, name: 'Work')],
     );
     final db = SqliteDatabaseService();
-    final localWork = await db.insertCategory(NoteCategory(name: 'Work'));
+    final localWork = await db.insertCategory(const NoteCategory(name: 'Work'));
 
     await BackupService().mergeDatabaseFile(backup);
 

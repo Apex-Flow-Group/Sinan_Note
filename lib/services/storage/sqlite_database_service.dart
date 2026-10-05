@@ -6,10 +6,12 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
-import 'package:sinan_note/models/category.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/data/services/database/notes_schema.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_category.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
+import 'package:sinan_note/domain/text/text_normalizer.dart';
 import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/note_services/note_db_interface.dart';
 import 'package:sqflite/sqflite.dart';
@@ -20,7 +22,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   static Completer<Database>? _initCompleter;
 
   static const _dbName = 'sinan_notes.db';
-  static const _dbVersion = 5;
+  static const _dbVersion = NotesSchema.version;
 
   factory SqliteDatabaseService() {
     _instance ??= SqliteDatabaseService._();
@@ -63,22 +65,9 @@ class SqliteDatabaseService implements NoteDbInterface {
       _db = await openDatabase(
         path,
         version: _dbVersion,
-        onCreate: (db, _) => _createTables(db),
-        onUpgrade: (db, oldVersion, newVersion) async {
-          // Always ensure tables exist
-          await _createTables(db);
-          // v4: add noteType column to note_versions if missing
-          if (oldVersion < 4) {
-            await _migrateToV4(db);
-          }
-          // v5: fix notes with isHiddenFromHome=1 but no categories
-          if (oldVersion < 5) {
-            await _migrateToV5(db);
-          }
-        },
-        // الملاحظة المقفلة لا تُحفظ لها نسخ نصية واضحة. يحذف ما تركته
-        // الإصدارات السابقة (القفل لم يكن يحذف السجل) — رخيص ومتكرر بأمان.
-        onOpen: _purgeLockedNoteVersions,
+        onCreate: (db, _) => NotesSchema.create(db),
+        onUpgrade: (db, from, _) => NotesSchema.upgrade(db, from),
+        onOpen: NotesSchema.onOpen,
       );
       _initCompleter!.complete(_db!);
     } catch (e) {
@@ -114,121 +103,9 @@ class SqliteDatabaseService implements NoteDbInterface {
 
   static Future<String> _dbPath() => getDbPath();
 
-  static Future<void> _createTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS notes (
-        id                INTEGER PRIMARY KEY AUTOINCREMENT,
-        title             TEXT    NOT NULL DEFAULT '',
-        content           TEXT    NOT NULL DEFAULT '',
-        normalizedTitle   TEXT    NOT NULL DEFAULT '',
-        normalizedContent TEXT    NOT NULL DEFAULT '',
-        createdAt         TEXT    NOT NULL,
-        updatedAt         TEXT    NOT NULL,
-        colorIndex        INTEGER NOT NULL DEFAULT 0,
-        isArchived        INTEGER NOT NULL DEFAULT 0,
-        isTrashed         INTEGER NOT NULL DEFAULT 0,
-        reminderDateTime  TEXT,
-        isLocked          INTEGER NOT NULL DEFAULT 0,
-        noteType          TEXT    NOT NULL DEFAULT 'simple',
-        recurrenceRule    TEXT,
-        isCompleted       INTEGER NOT NULL DEFAULT 0,
-        isProfessional    INTEGER NOT NULL DEFAULT 0,
-        isPinned          INTEGER NOT NULL DEFAULT 0,
-        isChecklist       INTEGER NOT NULL DEFAULT 0,
-        categoryIds       TEXT    NOT NULL DEFAULT '',
-        isHiddenFromHome  INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS categories (
-        id        INTEGER PRIMARY KEY AUTOINCREMENT,
-        name      TEXT    NOT NULL,
-        sortOrder INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS note_versions (
-        id        INTEGER PRIMARY KEY AUTOINCREMENT,
-        noteId    INTEGER NOT NULL,
-        title     TEXT    NOT NULL DEFAULT '',
-        content   TEXT    NOT NULL DEFAULT '',
-        timestamp TEXT    NOT NULL,
-        action    TEXT    NOT NULL DEFAULT 'updated',
-        noteType  TEXT    NOT NULL DEFAULT 'simple'
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS deleted_notes (
-        noteId    INTEGER PRIMARY KEY,
-        deletedAt INTEGER NOT NULL
-      )
-    ''');
-    // Indexes
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_notes_updated   ON notes (updatedAt DESC)');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_notes_pinned    ON notes (isPinned DESC)');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_notes_reminder  ON notes (reminderDateTime)');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_versions_noteId ON note_versions (noteId)');
-  }
-
-  static Future<void> _migrateToV5(Database db) async {
-    try {
-      await db.execute(
-        "UPDATE notes SET isHiddenFromHome = 0 WHERE isHiddenFromHome = 1 AND (categoryIds IS NULL OR categoryIds = '')",
-      );
-    } catch (_) {}
-  }
-
-  /// v4 migration: add noteType column to note_versions if it doesn't exist.
-  /// Needed for devices that had the old NativeDbMigrationService schema.
-  static Future<void> _migrateToV4(Database db) async {
-    try {
-      final cols = await db.rawQuery('PRAGMA table_info(note_versions)');
-      final hasNoteType = cols.any((c) => c['name'] == 'noteType');
-      if (!hasNoteType) {
-        await db.execute(
-          "ALTER TABLE note_versions ADD COLUMN noteType TEXT NOT NULL DEFAULT 'simple'",
-        );
-      }
-    } catch (_) {
-      // If migration fails, the table will be recreated on next onCreate
-    }
-  }
-
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  static String _plainContent(String content) =>
-      NoteContentUtils.toDisplayText(content);
-
-  static Map<String, dynamic> _noteToMap(Note note) {
-    String noteType = note.noteType;
-    if (noteType == 'pro' || noteType == 'professional') noteType = 'code';
-    return {
-      if (note.id != null) 'id': note.id,
-      'title': note.title,
-      'content': note.content,
-      'normalizedTitle': Note.normalize(note.title),
-      'normalizedContent': Note.normalize(_plainContent(note.content)),
-      'createdAt': note.createdAt.toUtc().toIso8601String(),
-      'updatedAt': note.updatedAt.toUtc().toIso8601String(),
-      'colorIndex': note.colorIndex.clamp(0, 12),
-      'isArchived': note.isArchived ? 1 : 0,
-      'isTrashed': note.isTrashed ? 1 : 0,
-      'reminderDateTime': note.reminderDateTime?.toUtc().toIso8601String(),
-      'isLocked': note.isLocked ? 1 : 0,
-      'noteType': noteType,
-      'recurrenceRule': note.recurrenceRule,
-      'isCompleted': note.isCompleted ? 1 : 0,
-      'isProfessional': note.isProfessional ? 1 : 0,
-      'isPinned': note.isPinned ? 1 : 0,
-      'isChecklist': note.isChecklist ? 1 : 0,
-      'categoryIds': note.categoryIds.join(','),
-      'isHiddenFromHome': note.isHiddenFromHome ? 1 : 0,
-    };
-  }
+  static Map<String, Object?> _noteToMap(Note note) => NoteMapper.toMap(note);
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
 
@@ -258,7 +135,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   Future<Note?> getNoteById(int id) async {
     final db = await database;
     final rows = await db.query('notes', where: 'id = ?', whereArgs: [id]);
-    return rows.isEmpty ? null : Note.fromMap(rows.first);
+    return rows.isEmpty ? null : NoteMapper.fromMap(rows.first);
   }
 
   @override
@@ -273,7 +150,7 @@ class SqliteDatabaseService implements NoteDbInterface {
         limit: limit,
         offset: offset,
       ))
-          .map(Note.fromMap)
+          .map(NoteMapper.fromMap)
           .toList();
     }, name: 'GetNotes');
   }
@@ -283,7 +160,7 @@ class SqliteDatabaseService implements NoteDbInterface {
     return await ApexErrorManager.monitorDB(() async {
       final db = await database;
       return (await db.query('notes', orderBy: 'isPinned DESC, updatedAt DESC'))
-          .map(Note.fromMap)
+          .map(NoteMapper.fromMap)
           .toList();
     }, name: 'GetAll');
   }
@@ -294,7 +171,7 @@ class SqliteDatabaseService implements NoteDbInterface {
     return (await db.query('notes',
             where: 'isArchived=1 AND isTrashed=0 AND isLocked=0',
             orderBy: 'updatedAt DESC'))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
@@ -303,7 +180,7 @@ class SqliteDatabaseService implements NoteDbInterface {
     final db = await database;
     return (await db.query('notes',
             where: 'isTrashed=1 AND isLocked=0', orderBy: 'updatedAt DESC'))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
@@ -312,7 +189,7 @@ class SqliteDatabaseService implements NoteDbInterface {
     final db = await database;
     return (await db.query('notes',
             where: 'isLocked=1 AND isTrashed=0', orderBy: 'updatedAt DESC'))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
@@ -391,7 +268,7 @@ class SqliteDatabaseService implements NoteDbInterface {
   @override
   Future<List<Note>> searchNotes(String query, {int limit = 100}) async {
     final db = await database;
-    final normalized = Note.normalize(query);
+    final normalized = TextNormalizer.normalize(query);
     final like = '%$normalized%';
     return (await db.query(
       'notes',
@@ -401,7 +278,7 @@ class SqliteDatabaseService implements NoteDbInterface {
       orderBy: 'updatedAt DESC',
       limit: limit,
     ))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
@@ -418,7 +295,7 @@ class SqliteDatabaseService implements NoteDbInterface {
       whereArgs: [now],
       orderBy: 'reminderDateTime ASC',
     ))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
@@ -434,7 +311,7 @@ class SqliteDatabaseService implements NoteDbInterface {
       orderBy: 'reminderDateTime ASC',
       limit: 5,
     ))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
@@ -446,7 +323,7 @@ class SqliteDatabaseService implements NoteDbInterface {
       where: 'recurrenceRule IS NOT NULL AND isTrashed=0 AND isLocked=0',
       orderBy: 'reminderDateTime ASC',
     ))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
@@ -461,18 +338,13 @@ class SqliteDatabaseService implements NoteDbInterface {
       whereArgs: [now],
       orderBy: 'reminderDateTime DESC',
     ))
-        .map(Note.fromMap)
+        .map(NoteMapper.fromMap)
         .toList();
   }
 
   // ── Version Control ───────────────────────────────────────────────────────
 
   static const int _maxVersionsPerNote = 20;
-
-  static Future<void> _purgeLockedNoteVersions(Database db) async {
-    await db.delete('note_versions',
-        where: 'noteId IN (SELECT id FROM notes WHERE isLocked = 1)');
-  }
 
   @override
   Future<void> logNoteVersion(NoteVersion version) async {
@@ -539,14 +411,15 @@ class SqliteDatabaseService implements NoteDbInterface {
   }
 
   NoteVersion _versionFromMap(Map<String, dynamic> m) {
-    return NoteVersion.create(
+    return NoteVersion(
+      id: m['id'] as int,
       noteId: m['noteId'] as int,
       title: m['title'] as String,
       content: m['content'] as String,
       timestamp: DateTime.parse(m['timestamp'] as String),
       action: m['action'] as String? ?? 'updated',
       noteType: m['noteType'] as String? ?? 'simple',
-    )..id = m['id'] as int;
+    );
   }
 
   // ── Categories ────────────────────────────────────────────────────────────

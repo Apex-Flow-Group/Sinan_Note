@@ -1,11 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
 import 'package:sinan_note/widgets/editor/diff_view.dart';
 
 class DiffPanel extends StatelessWidget {
@@ -41,9 +41,9 @@ class DiffPanel extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final idx = allVersions.indexWhere((v) => v.id == version.id);
     final older = idx < allVersions.length - 1 ? allVersions[idx + 1] : null;
-    final newText = NoteContentUtils.toDisplayText(version.content);
+    final newText = NoteText.toDisplayText(version.content);
     final oldText =
-        older != null ? NoteContentUtils.toDisplayText(older.content) : '';
+        older != null ? NoteText.toDisplayText(older.content) : '';
     final spans = older != null ? computeDiff(oldText, newText) : null;
     final actionColor = VersionHistoryController.getActionColor(version.action);
     final actionIcon = VersionHistoryController.getActionIcon(version.action);

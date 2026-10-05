@@ -1,18 +1,19 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 import '../test_setup.dart';
+
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -97,8 +98,9 @@ void main() {
         await tester.pumpAndSettle();
 
         // المحتوى قد يكون في TextField أو في widget مخصص
-        final hasContent = find.text('Existing content').evaluate().isNotEmpty ||
-            find.byType(NoteEditorImmersive).evaluate().isNotEmpty;
+        final hasContent =
+            find.text('Existing content').evaluate().isNotEmpty ||
+                find.byType(NoteEditorImmersive).evaluate().isNotEmpty;
         expect(hasContent, isTrue);
       });
     });
@@ -173,7 +175,8 @@ void main() {
           updatedAt: DateTime.now(),
         );
 
-        await tester.pumpWidget(buildEditor(note: note, mode: NoteMode.reminder));
+        await tester
+            .pumpWidget(buildEditor(note: note, mode: NoteMode.reminder));
         await tester.pumpAndSettle();
 
         expect(find.byType(NoteEditorImmersive), findsOneWidget);
@@ -302,9 +305,11 @@ void main() {
             // قد يظهر dialog أو يخرج مباشرة
           }
         }
-        expect(find.byType(NoteEditorImmersive).evaluate().isNotEmpty ||
-            find.byType(AlertDialog).evaluate().isNotEmpty ||
-            find.byType(Container).evaluate().isNotEmpty, isTrue);
+        expect(
+            find.byType(NoteEditorImmersive).evaluate().isNotEmpty ||
+                find.byType(AlertDialog).evaluate().isNotEmpty ||
+                find.byType(Container).evaluate().isNotEmpty,
+            isTrue);
       });
     });
 
@@ -416,4 +421,3 @@ void main() {
     });
   });
 }
-

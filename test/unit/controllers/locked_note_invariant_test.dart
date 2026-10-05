@@ -3,8 +3,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
@@ -108,7 +108,7 @@ void main() {
 
   test('versions are never logged for a locked note', () async {
     final id = await provider.addNote(locked());
-    await db.logNoteVersion(NoteVersion.create(
+    await db.logNoteVersion(NoteVersion(
       noteId: id,
       title: 'plain',
       content: 'plain',
@@ -119,8 +119,8 @@ void main() {
   });
 
   test('locking deletes the plaintext history of the note', () async {
-    final id = await provider.addNote(locked()..isLocked = false);
-    await db.logNoteVersion(NoteVersion.create(
+    final id = await provider.addNote(locked().copyWith(isLocked: false));
+    await db.logNoteVersion(NoteVersion(
       noteId: id,
       title: 'before lock',
       content: 'before lock',

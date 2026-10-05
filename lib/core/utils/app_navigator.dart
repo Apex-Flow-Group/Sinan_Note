@@ -3,8 +3,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/google_drive_sync_page.dart';
 

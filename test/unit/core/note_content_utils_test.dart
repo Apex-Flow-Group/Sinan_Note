@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 
 /// المسار القديم: بناء QuillController كامل ثم toPlainText.
 String _viaController(String content) =>
@@ -11,7 +11,7 @@ String _viaController(String content) =>
 String _delta(List<Map<String, Object?>> ops) => jsonEncode(ops);
 
 void main() {
-  group('NoteContentUtils.toDisplayText', () {
+  group('NoteText.toDisplayText', () {
     final deltas = {
       'arabic + english lines': _delta([
         {'insert': 'مرحبا بالعالم\n'},
@@ -54,14 +54,13 @@ void main() {
 
     deltas.forEach((name, content) {
       test('matches the full Quill document for $name', () {
-        expect(
-            NoteContentUtils.toDisplayText(content), _viaController(content));
+        expect(NoteText.toDisplayText(content), _viaController(content));
       });
     });
 
     test('plain text is returned as is', () {
-      expect(NoteContentUtils.toDisplayText('just text'), 'just text');
-      expect(NoteContentUtils.toDisplayText('[not json'), '[not json');
+      expect(NoteText.toDisplayText('just text'), 'just text');
+      expect(NoteText.toDisplayText('[not json'), '[not json');
     });
 
     test('checklists keep their display format', () {
@@ -72,18 +71,18 @@ void main() {
           {'text': 'b', 'isDone': false},
         ],
       });
-      expect(NoteContentUtils.toDisplayText(checklist), '☑ a\n☐ b');
+      expect(NoteText.toDisplayText(checklist), '☑ a\n☐ b');
     });
 
     test('empty delta is empty text', () {
-      expect(NoteContentUtils.toDisplayText('[]'), '');
+      expect(NoteText.toDisplayText('[]'), '');
     });
 
     test('maxChars truncates by characters', () {
       final content = _delta([
         {'insert': 'abcdefghij\n'},
       ]);
-      expect(NoteContentUtils.toDisplayText(content, maxChars: 4), 'abcd');
+      expect(NoteText.toDisplayText(content, maxChars: 4), 'abcd');
     });
   });
 }

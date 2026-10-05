@@ -1,6 +1,6 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:crypto/crypto.dart'; import 'package:sinan_note/models/note_version.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'dart:convert';import 'package:crypto/crypto.dart'; import 'package:sinan_note/domain/models/note_version.dart'; import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 /// Ultra-Smart Version Control Service
 /// Philosophy: ONE meaningful version per editing session
 class VersionControlService {
@@ -82,7 +82,7 @@ class VersionControlService {
     }
 
     // ✅ Save ONE version for this session
-    final newVersion = NoteVersion.create(
+    final newVersion = NoteVersion(
       noteId: noteId,
       title: title,
       content: content,
@@ -215,7 +215,7 @@ class VersionControlService {
     }
 
     // ✅ Save manual version
-    final newVersion = NoteVersion.create(
+    final newVersion = NoteVersion(
       noteId: noteId,
       title: title,
       content: content,

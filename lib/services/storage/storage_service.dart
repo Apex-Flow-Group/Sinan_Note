@@ -7,6 +7,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
 class StorageService {
@@ -27,7 +28,7 @@ class StorageService {
       'version': '2.0',
       'created_at': DateTime.now().toIso8601String(),
       'has_locked_notes': includeVault && allNotes.any((n) => n.isLocked),
-      'notes': notes.map((n) => n.toMap()).toList(),
+      'notes': notes.map((n) => NoteMapper.toMap(n)).toList(),
     };
   }
 

@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_content_builder.dart';

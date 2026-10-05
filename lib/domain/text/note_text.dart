@@ -2,12 +2,12 @@
 
 import 'dart:convert';
 
-import 'package:sinan_note/core/utils/checklist_formatter.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
 
 /// نقطة واحدة لتحويل محتوى النوت لنص قابل للعرض
 /// يحل مشكلة Delta JSON الخام الذي يظهر بشكل غير مقروء
-class NoteContentUtils {
-  NoteContentUtils._();
+class NoteText {
+  NoteText._();
 
   /// يحول أي محتوى (Delta JSON / Checklist / نص عادي) لنص قابل للعرض
   /// [maxChars] للتقليص في البطاقات، اتركه null للنص الكامل

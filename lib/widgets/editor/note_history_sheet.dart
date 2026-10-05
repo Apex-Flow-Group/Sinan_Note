@@ -1,11 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note_version.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -135,7 +135,7 @@ class NoteHistorySheet extends StatelessWidget {
   }
 
   String _toPlainText(String content) =>
-      NoteContentUtils.toDisplayText(content);
+      NoteText.toDisplayText(content);
 
   void _showDiffDialog(
       BuildContext context, NoteVersion version, String newerContent) {

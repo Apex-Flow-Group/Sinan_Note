@@ -4,10 +4,9 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/services/apex_share_service.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
@@ -189,16 +188,7 @@ class CustomShareSheet {
       BuildContext context, Note note, bool isArabic) async {
     Navigator.pop(context);
     try {
-      final tmp = await getTemporaryDirectory();
-      final safeTitle = (note.title.isEmpty ? 'note' : note.title)
-          .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-          .trim();
-      final filePath = '${tmp.path}/$safeTitle.sinan';
-
-      // إرسال الملاحظة كنسخة طبق الأصل — نفس صيغة السحابة
-      await File(filePath).writeAsString(jsonEncode(note.toMap()));
-
-      await ApexShareService.openFileInApex(filePath);
+      await ApexShareService.sendNote(note);
     } on PlatformException catch (e) {
       if (!context.mounted) return;
       if (e.code == 'NOT_INSTALLED') {

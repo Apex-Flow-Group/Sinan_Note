@@ -1,12 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 import 'package:flutter/material.dart'
     show ChangeNotifier, ScrollController, TextEditingController, ValueNotifier;
-
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 
 class NotesFilterController extends ChangeNotifier {
   static const int _pageSize = 100;
@@ -209,25 +208,7 @@ class NotesFilterController extends ChangeNotifier {
         }
       }
 
-      if (searchQuery.isEmpty) return true;
-
-      final normalized = Note.normalize(searchQuery);
-      if (note.normalizedTitle.contains(normalized) ||
-          note.normalizedContent.contains(normalized)) {
-        return true;
-      }
-
-      if (normalized.length >= 4) {
-        for (final word in [
-          ...note.normalizedTitle.split(' '),
-          ...note.normalizedContent.split(' ').take(50)
-        ]) {
-          if (word.length >= 3 && _levenshtein(normalized, word) <= 1) {
-            return true;
-          }
-        }
-      }
-      return false;
+      return note.matches(searchQuery, typoTolerant: true);
     }).toList();
   }
 
@@ -251,31 +232,6 @@ class NotesFilterController extends ChangeNotifier {
     }
   }
 
-  int _levenshtein(String s1, String s2) {
-    if (s1 == s2) return 0;
-    if (s1.isEmpty) return s2.length;
-    if (s2.isEmpty) return s1.length;
-    final m = s1.length, n = s2.length;
-    final dp = List.generate(
-        m + 1,
-        (i) => List.generate(
-            n + 1,
-            (j) => i == 0
-                ? j
-                : j == 0
-                    ? i
-                    : 0));
-    for (int i = 1; i <= m; i++) {
-      for (int j = 1; j <= n; j++) {
-        dp[i][j] = s1[i - 1] == s2[j - 1]
-            ? dp[i - 1][j - 1]
-            : 1 +
-                [dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]]
-                    .reduce((a, b) => a < b ? a : b);
-      }
-    }
-    return dp[m][n];
-  }
 
   @override
   void dispose() {

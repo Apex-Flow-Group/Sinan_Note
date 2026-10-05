@@ -2,14 +2,16 @@
 
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/core/utils/logger.dart';
-import 'package:sinan_note/models/category.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_category.dart';
 import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
@@ -136,7 +138,7 @@ class BackupService {
         if (n.id != null) await dbService.deleteNote(n.id!);
       }
       for (var noteMap in notesData) {
-        final note = Note.fromMap(noteMap);
+        final note = NoteMapper.fromMap(noteMap);
         await dbService.upsertNote(note);
       }
 
@@ -179,10 +181,21 @@ class BackupService {
 
       final notes = [
         for (final noteMap in notesData)
-          Note.fromMap(Map<String, dynamic>.from(noteMap as Map)),
+          NoteMapper.fromMap(Map<String, dynamic>.from(noteMap as Map)),
       ];
       return await mergeNotes(notes);
     }, 'Backup_Merge');
+  }
+
+  /// يقرأ ملف ملاحظات JSON (مصفوفة، أو {"notes": [...]}) بأي صيغة سابقة.
+  Future<List<Note>> readNotesFile(String path) async {
+    final dynamic data = jsonDecode(await File(path).readAsString());
+    final List<dynamic> list =
+        data is Map<String, dynamic> ? (data['notes'] ?? []) : data as List;
+    return [
+      for (final map in list)
+        NoteMapper.fromMap(Map<String, Object?>.from(map as Map)),
+    ];
   }
 
   static const _sqliteHeader = 'SQLite format 3\u0000';
@@ -216,7 +229,8 @@ class BackupService {
       final Map<int, String> categories;
       try {
         notes = [
-          for (final row in await backupDb.query('notes')) Note.fromMap(row),
+          for (final row in await backupDb.query('notes'))
+            NoteMapper.fromMap(row),
         ];
         final hasCategories = (await backupDb.query('sqlite_master',
                 where: "type = 'table' AND name = 'categories'"))
@@ -234,11 +248,11 @@ class BackupService {
     }, 'Backup_MergeDb');
   }
 
-  /// يدمج ملاحظات نسخة احتياطية مع الحالية:
-  /// - نفس الملاحظة (نفس id ونفس وقت الإنشاء، أو نفس وقت الإنشاء والعنوان
-  ///   والمحتوى بـ id مختلف) → تبقى النسخة الأحدث، بالـ id المحلي.
-  /// - غير ذلك → تُضاف كملاحظة جديدة بـ id جديد، حتى لو تصادم الـ id
-  ///   مع ملاحظة محلية مختلفة (النسخ من أجهزة/قواعد مختلفة).
+  /// يدمج ملاحظات نسخة احتياطية مع الحالية دون حذف أو استبدال أي ملاحظة محلية:
+  /// - نفس الملاحظة (نفس uuid) ← تبقى النسخة الأحدث تعديلاً، بالـ id المحلي.
+  /// - ملاحظة مطابقة تماماً (وقت الإنشاء والعنوان والمحتوى) ← مكررة، تُتجاهل.
+  ///   هذا ما يميّز ملاحظات النسخ القديمة التي لا تحمل uuid.
+  /// - غير ذلك ← تُضاف بـ id محلي جديد.
   /// التصنيفات تُطابق بالاسم عند توفرها في النسخة.
   /// يُرجع عدد الملاحظات المضافة أو المحدَّثة.
   Future<int> mergeNotes(
@@ -248,13 +262,8 @@ class BackupService {
     final dbService = SqliteDatabaseService();
 
     final localNotes = await dbService.getAllNotes();
-    final localById = {
-      for (final n in localNotes)
-        if (n.id != null) n.id!: n,
-    };
-    final localByFingerprint = {
-      for (final n in localNotes) _fingerprint(n): n,
-    };
+    final localByUuid = {for (final n in localNotes) n.uuid: n};
+    final localFingerprints = localNotes.map(_fingerprint).toSet();
 
     final localCategories = await dbService.getAllCategories();
     final localCategoryIds = localCategories.map((c) => c.id).toSet();
@@ -269,33 +278,31 @@ class BackupService {
       }
     }
 
+    List<int> localCategoriesOf(Note note) =>
+        backupCategories == null || backupCategories.isEmpty
+            ? note.categoryIds.where(localCategoryIds.contains).toList()
+            : note.categoryIds
+                .map((id) => categoryIdMap[id])
+                .whereType<int>()
+                .toList();
+
     int added = 0;
     int updated = 0;
-    for (final note in incoming) {
-      note.categoryIds = backupCategories == null || backupCategories.isEmpty
-          ? note.categoryIds.where(localCategoryIds.contains).toList()
-          : note.categoryIds
-              .map((id) => categoryIdMap[id])
-              .whereType<int>()
-              .toList();
-
-      // نفس الملاحظة: بنفس الـ id، أو بـ id آخر أُعطي لها في دمج سابق
-      final byId = note.id == null ? null : localById[note.id];
-      final local = byId != null && _sameCreation(byId, note)
-          ? byId
-          : localByFingerprint[_fingerprint(note)];
+    for (final backupNote in incoming) {
+      final note =
+          backupNote.copyWith(categoryIds: localCategoriesOf(backupNote));
+      final local = localByUuid[note.uuid];
       if (local != null) {
         if (note.updatedAt.isAfter(local.updatedAt)) {
-          note.id = local.id;
-          await dbService.upsertNote(note);
+          await dbService.upsertNote(note.copyWith(id: local.id));
           updated++;
         }
         continue;
       }
+      if (!localFingerprints.add(_fingerprint(note))) continue;
 
-      note.id = null; // AUTOINCREMENT — مع الحفاظ على تواريخ الملاحظة
-      await dbService.upsertNote(note);
-      localByFingerprint[_fingerprint(note)] = note;
+      await dbService.upsertNote(note.copyWith(id: null));
+      localByUuid[note.uuid] = note;
       added++;
     }
 
@@ -310,9 +317,6 @@ class BackupService {
     return added + updated;
   }
 
-  static bool _sameCreation(Note a, Note b) =>
-      a.createdAt.millisecondsSinceEpoch == b.createdAt.millisecondsSinceEpoch;
-
   static String _fingerprint(Note n) =>
       '${n.createdAt.millisecondsSinceEpoch}\u0000${n.title}\u0000${n.content}';
 
@@ -324,7 +328,8 @@ class BackupService {
       final unlockedNotes = allNotes.where((n) => !n.isLocked).toList();
       final lockedCount = allNotes.length - unlockedNotes.length;
 
-      final json = jsonEncode(unlockedNotes.map((n) => n.toMap()).toList());
+      final json =
+          jsonEncode(unlockedNotes.map((n) => NoteMapper.toMap(n)).toList());
 
       final tempDir = await getTemporaryDirectory();
       final tempPath = join(tempDir.path, 'notes_transfer_temp.json');

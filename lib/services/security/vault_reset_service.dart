@@ -8,7 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/core/utils/logger.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 

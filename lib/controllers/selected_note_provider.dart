@@ -2,7 +2,7 @@
 
 
 import 'package:flutter/foundation.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 
 /// Provider لإدارة حالة الملاحظة المختارة في نمط Master-Details
 /// 

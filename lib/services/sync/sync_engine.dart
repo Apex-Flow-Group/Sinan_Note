@@ -1,11 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/core/utils/logger.dart';
-import 'package:sinan_note/models/category.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_category.dart';
 import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/sync/sync_transport.dart';
@@ -31,7 +32,7 @@ class SyncEngine {
       final backupData = <String, dynamic>{
         'version': '2.0',
         'created_at': DateTime.now().toIso8601String(),
-        'notes': notes.map((n) => n.toMap()).toList(),
+        'notes': notes.map((n) => NoteMapper.toMap(n)).toList(),
         'categories': categories
             .map((c) => {'id': c.id, 'name': c.name, 'sortOrder': c.sortOrder})
             .toList(),
@@ -71,7 +72,7 @@ class SyncEngine {
         if (n.id != null && !n.isLocked) await dbService.deleteNote(n.id!);
       }
       for (final m in regularNotes) {
-        await dbService.upsertNote(Note.fromMap(m));
+        await dbService.upsertNote(NoteMapper.fromMap(m));
       }
       for (final n in lockedLocal) {
         await dbService.updateNote(n);
@@ -221,7 +222,7 @@ class SyncEngine {
     final List<dynamic> list = data['notes'] ?? [];
     return list
         .where((m) => (m['isLocked'] ?? 0) == 0)
-        .map((m) => Note.fromMap(m))
+        .map((m) => NoteMapper.fromMap(m))
         .toList();
   }
 

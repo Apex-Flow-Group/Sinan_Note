@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/widgets/home/notes_grid/notes_filter_controller.dart';
 import 'package:sinan_note/widgets/home/notes_grid/notes_sliver_view.dart';
 

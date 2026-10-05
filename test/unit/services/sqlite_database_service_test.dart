@@ -1,13 +1,13 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 @Tags(['serial'])
 
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_version.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import '../../test_setup.dart';
+
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
@@ -261,7 +261,7 @@ void main() {
         );
         final id = await db.insertNote(note);
 
-        await db.logNoteVersion(NoteVersion.create(
+        await db.logNoteVersion(NoteVersion(
           noteId: id,
           title: note.title,
           content: note.content,
@@ -286,7 +286,7 @@ void main() {
         final t1 = DateTime.now();
         final t2 = t1.add(const Duration(milliseconds: 1));
 
-        await db.logNoteVersion(NoteVersion.create(
+        await db.logNoteVersion(NoteVersion(
           noteId: id,
           title: note.title,
           content: note.content,
@@ -294,7 +294,7 @@ void main() {
           action: 'created',
           noteType: 'simple',
         ));
-        await db.logNoteVersion(NoteVersion.create(
+        await db.logNoteVersion(NoteVersion(
           noteId: id,
           title: 'Updated',
           content: note.content,
@@ -369,4 +369,3 @@ void main() {
     });
   });
 }
-

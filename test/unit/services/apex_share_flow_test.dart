@@ -7,7 +7,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/services/intent_handler_service.dart';
 
 import '../../test_setup.dart';
@@ -46,8 +47,8 @@ void main() {
         categoryIds: [1, 5],
       );
 
-      // ═══ جهة الإرسال: _sendViaApex يستخدم note.toMap() ═══
-      final sinanFileContent = jsonEncode(originalNote.toMap());
+      // ═══ جهة الإرسال: _sendViaApex يستخدم NoteMapper.toMap(note) ═══
+      final sinanFileContent = jsonEncode(NoteMapper.toMap(originalNote));
 
       // تحقق أن الملف يحتوي كل الحقول
       final sentJson = jsonDecode(sinanFileContent) as Map<String, dynamic>;
@@ -96,7 +97,7 @@ void main() {
         isChecklist: true,
       );
 
-      final sinanFileContent = jsonEncode(checklistNote.toMap());
+      final sinanFileContent = jsonEncode(NoteMapper.toMap(checklistNote));
       final filePath = '${tempDir.path}/checklist.sinan';
       await File(filePath).writeAsString(sinanFileContent);
 
@@ -126,7 +127,7 @@ void main() {
         isProfessional: true,
       );
 
-      final sinanFileContent = jsonEncode(codeNote.toMap());
+      final sinanFileContent = jsonEncode(NoteMapper.toMap(codeNote));
       final filePath = '${tempDir.path}/code.sinan';
       await File(filePath).writeAsString(sinanFileContent);
 
@@ -252,7 +253,7 @@ void main() {
       );
 
       // Send
-      final fileContent = jsonEncode(original.toMap());
+      final fileContent = jsonEncode(NoteMapper.toMap(original));
       final filePath = '${tempDir.path}/roundtrip.sinan';
       await File(filePath).writeAsString(fileContent);
 

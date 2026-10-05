@@ -1,8 +1,12 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
 
 /// خدمة فحص وجود Apex Transfer والمشاركة عبره
 ///
@@ -42,6 +46,18 @@ class ApexShareService {
   /// أعد فحص الوجود (بعد عودة المستخدم من Play Store مثلاً)
   static void invalidateCache() {
     _cachedInstalled = null;
+  }
+
+  /// إرسال ملاحظة إلى Apex Transfer كملف .sinan — نسخة طبق الأصل بنفس صيغة
+  /// النسخ الاحتياطية. يرمي [PlatformException] (`NOT_INSTALLED`) إن لم يكن مثبتاً.
+  static Future<void> sendNote(Note note) async {
+    final tmp = await getTemporaryDirectory();
+    final safeTitle = (note.title.isEmpty ? 'note' : note.title)
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .trim();
+    final filePath = '${tmp.path}/$safeTitle.sinan';
+    await File(filePath).writeAsString(jsonEncode(NoteMapper.toMap(note)));
+    await openFileInApex(filePath);
   }
 
   /// فتح ملف .sinan في Apex Transfer

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,10 +8,10 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/shared/tabs/code_tab.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
@@ -92,11 +92,7 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
         .toList();
 
     if (searchQuery.isNotEmpty) {
-      final q = Note.normalize(searchQuery);
-      filtered = filtered
-          .where((n) =>
-              n.normalizedTitle.contains(q) || n.normalizedContent.contains(q))
-          .toList();
+      filtered = filtered.where((n) => n.matches(searchQuery)).toList();
     }
 
     if (_sortBy == 'title') {

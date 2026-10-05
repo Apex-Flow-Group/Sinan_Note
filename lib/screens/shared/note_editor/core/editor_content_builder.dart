@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/checklist_editor_widget.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/code_editor_widget.dart';

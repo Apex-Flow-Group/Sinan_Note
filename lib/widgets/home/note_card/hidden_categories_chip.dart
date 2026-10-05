@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class HiddenCategoriesChip extends StatefulWidget {

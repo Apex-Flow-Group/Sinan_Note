@@ -1,13 +1,11 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
 import 'package:sinan_note/screens/shared/settings/backup_dialogs.dart';
 import 'package:sinan_note/screens/shared/settings/backup_validators.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
@@ -35,24 +33,14 @@ class JsonImportHandler {
         return;
       }
 
-      final file = File(filePath);
-      final jsonString = await file.readAsString();
-      final dynamic jsonData = jsonDecode(jsonString);
-
-      List<dynamic> notesList;
-      if (jsonData is Map<String, dynamic>) {
-        notesList = jsonData['notes'] ?? [];
-      } else {
-        notesList = jsonData;
-      }
-
-      if (notesList.isEmpty) {
+      final notesInFile = await BackupService().readNotesFile(filePath);
+      if (notesInFile.isEmpty) {
         throw Exception(
             lang == 'ar' ? 'لا توجد ملاحظات في الملف' : 'No notes in file');
       }
 
       final notesToImport = <Note>[
-        for (final map in notesList) await secureLockedNote(Note.fromMap(map)),
+        for (final note in notesInFile) await secureLockedNote(note),
       ];
 
       final dbService = SqliteDatabaseService();
@@ -125,7 +113,6 @@ class JsonImportHandler {
       }
     }
     for (final note in notes) {
-      note.updatedAt = DateTime.now();
       await dbService.insertNote(note);
     }
   }

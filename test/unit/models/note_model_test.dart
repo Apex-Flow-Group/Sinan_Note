@@ -1,8 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+import 'dart:convert';
 
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/text/text_normalizer.dart';
 
 void main() {
   group('Note Model', () {
@@ -11,61 +14,66 @@ void main() {
 
     group('normalize()', () {
       test('removes Arabic diacritics', () {
-        expect(Note.normalize('مَرْحَباً'), 'مرحبا');
+        expect(TextNormalizer.normalize('مَرْحَباً'), 'مرحبا');
       });
       test('normalizes alef variants', () {
-        expect(Note.normalize('أإآ'), 'ااا');
+        expect(TextNormalizer.normalize('أإآ'), 'ااا');
       });
       test('normalizes taa marbuta', () {
-        expect(Note.normalize('مدرسة'), 'مدرسه');
+        expect(TextNormalizer.normalize('مدرسة'), 'مدرسه');
       });
       test('normalizes alef maksura', () {
-        expect(Note.normalize('يحيى'), 'يحيي');
+        expect(TextNormalizer.normalize('يحيى'), 'يحيي');
       });
       test('lowercases English', () {
-        expect(Note.normalize('Hello World'), 'hello world');
+        expect(TextNormalizer.normalize('Hello World'), 'hello world');
       });
       test('handles empty string', () {
-        expect(Note.normalize(''), '');
+        expect(TextNormalizer.normalize(''), '');
       });
     });
 
-    group('isEncrypted', () {
-      test('returns true for encrypted content', () {
-        // IV صالح بـ Base64 (16 بايت = 24 حرف Base64) + ciphertext
+    group('matches()', () {
+      test('finds the note by its readable text, not raw Delta JSON', () {
         final note = Note(
-          content: 'AAAAAAAAAAAAAAAAAAAAAA==:encrypteddata',
-          title: '',
+          title: 'Groceries',
+          content: jsonEncode([
+            {'insert': 'milk and bread\n'}
+          ]),
           createdAt: now,
           updatedAt: now,
         );
-        expect(note.isEncrypted, true);
+        expect(note.matches('bread'), isTrue);
+        expect(note.matches('insert'), isFalse);
       });
-      test('returns false for plain content', () {
+      test('ignores Arabic diacritics and alef forms', () {
         final note = Note(
-            title: '', content: 'plain text', createdAt: now, updatedAt: now);
-        expect(note.isEncrypted, false);
+            title: 'أَهْلاً بكم', content: '', createdAt: now, updatedAt: now);
+        expect(note.matches('اهلا'), isTrue);
       });
-      test('returns false for empty content', () {
+      test('typo tolerance is opt-in', () {
+        final note = Note(
+            title: 'meeting notes',
+            content: '',
+            createdAt: now,
+            updatedAt: now);
+        expect(note.matches('meetimg'), isFalse);
+        expect(note.matches('meetimg', typoTolerant: true), isTrue);
+      });
+    });
+
+    group('identity', () {
+      test('a new note gets a uuid; copies keep it; asNew replaces it', () {
         final note =
             Note(title: '', content: '', createdAt: now, updatedAt: now);
-        expect(note.isEncrypted, false);
+        expect(note.uuid, isNotEmpty);
+        expect(note.copyWith(title: 'x').uuid, note.uuid);
+        expect(note.asNew().uuid, isNot(note.uuid));
       });
-      test('returns false for URL with colon', () {
-        final note = Note(
-            title: '',
-            content: 'https://example.com/path',
-            createdAt: now,
-            updatedAt: now);
-        expect(note.isEncrypted, false);
-      });
-      test('returns false for JSON with colon', () {
-        final note = Note(
-            title: '',
-            content: '{"key":"value"}',
-            createdAt: now,
-            updatedAt: now);
-        expect(note.isEncrypted, false);
+      test('copyWith can clear the local id', () {
+        final note =
+            Note(id: 5, title: '', content: '', createdAt: now, updatedAt: now);
+        expect(note.copyWith(id: null).id, isNull);
       });
     });
 
@@ -96,12 +104,6 @@ void main() {
         );
         expect(note.copyWith(reminderDateTime: null).reminderDateTime, isNull);
       });
-      test('auto-updates normalizedTitle', () {
-        final note =
-            Note(title: 'أَهْلاً', content: '', createdAt: now, updatedAt: now);
-        final copy = note.copyWith(title: 'مَرْحَباً');
-        expect(copy.normalizedTitle, Note.normalize('مَرْحَباً'));
-      });
     });
 
     group('toMap() / fromMap()', () {
@@ -118,7 +120,7 @@ void main() {
           noteType: 'code',
           categoryIds: [1, 2, 3],
         );
-        final restored = Note.fromMap(original.toMap());
+        final restored = NoteMapper.fromMap(NoteMapper.toMap(original));
         expect(restored.id, 42);
         expect(restored.title, 'Test');
         expect(restored.colorIndex, 5);
@@ -130,27 +132,27 @@ void main() {
 
       test('fromMap: noteType "pro" → "code"', () {
         final map = _baseMap(now)..['noteType'] = 'pro';
-        expect(Note.fromMap(map).noteType, 'code');
+        expect(NoteMapper.fromMap(map).noteType, 'code');
       });
 
       test('fromMap: noteType "professional" → "code"', () {
         final map = _baseMap(now)..['noteType'] = 'professional';
-        expect(Note.fromMap(map).noteType, 'code');
+        expect(NoteMapper.fromMap(map).noteType, 'code');
       });
 
       test('fromMap: empty categoryIds → []', () {
         final map = _baseMap(now)..['categoryIds'] = '';
-        expect(Note.fromMap(map).categoryIds, isEmpty);
+        expect(NoteMapper.fromMap(map).categoryIds, isEmpty);
       });
 
       test('fromMap: null reminderDateTime → null', () {
         final map = _baseMap(now)..['reminderDateTime'] = null;
-        expect(Note.fromMap(map).reminderDateTime, isNull);
+        expect(NoteMapper.fromMap(map).reminderDateTime, isNull);
       });
 
       test('fromMap: colorIndex out of range → 0', () {
         final map = _baseMap(now)..['colorIndex'] = 999;
-        expect(Note.fromMap(map).colorIndex, 0);
+        expect(NoteMapper.fromMap(map).colorIndex, 0);
       });
 
       test('1000 notes round-trip without data loss', () {
@@ -164,7 +166,7 @@ void main() {
             colorIndex: i % 12,
             noteType: ['simple', 'code', 'checklist'][i % 3],
           );
-          final restored = Note.fromMap(note.toMap());
+          final restored = NoteMapper.fromMap(NoteMapper.toMap(note));
           expect(restored.title, note.title);
           expect(restored.colorIndex, note.colorIndex);
           expect(restored.noteType, note.noteType);
@@ -190,4 +192,3 @@ Map<String, dynamic> _baseMap(DateTime now) => {
       'isPinned': 0,
       'isChecklist': 0,
     };
-

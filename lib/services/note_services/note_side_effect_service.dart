@@ -1,9 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
-import 'package:sinan_note/core/utils/checklist_formatter.dart';
-import 'package:sinan_note/core/utils/note_content_utils.dart';
-import 'package:sinan_note/models/note.dart';
+
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 
@@ -81,7 +82,7 @@ class NoteSideEffectService {
           }
         } else {
           // Convert Delta JSON (or plain text) to readable plain text
-          notificationBody = NoteContentUtils.toDisplayText(
+          notificationBody = NoteText.toDisplayText(
             note.content,
             maxChars: 100,
           );

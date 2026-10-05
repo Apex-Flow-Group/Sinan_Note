@@ -1,15 +1,15 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/core/utils/checklist_formatter.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';

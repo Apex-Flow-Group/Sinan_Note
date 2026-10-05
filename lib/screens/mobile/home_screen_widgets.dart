@@ -2,7 +2,7 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/widgets/home/date_indicator_bar.dart';
 import 'package:sinan_note/widgets/home/note_locator_button.dart';
 

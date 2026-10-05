@@ -1,11 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🛡️ Preservation Behavior Tests — الحفاظ على السلوك الأساسي
 //
 // هذه الاختبارات تؤكد السلوك الأساسي الذي يجب الحفاظ عليه بعد الإصلاح.
 // **النتيجة المتوقعة**: الاختبارات تنجح على الكود غير المُصلح وبعده.
 //
 // **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6**
-
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -73,7 +72,8 @@ void main() {
         bool authPathAvailable = deviceHasBiometrics && isAppLockEnabled;
 
         expect(authPathAvailable, isTrue,
-            reason: 'Biometric auth path must be available when device supports it');
+            reason:
+                'Biometric auth path must be available when device supports it');
       },
     );
 
@@ -164,7 +164,8 @@ void main() {
         // Simulate the condition check from SecurityController._handleInactive()
         bool shouldSetSecureFlag = privacyBlurEnabled;
         expect(shouldSetSecureFlag, isTrue,
-            reason: 'FLAG_SECURE must be set when privacyBlurEnabled=true on inactive');
+            reason:
+                'FLAG_SECURE must be set when privacyBlurEnabled=true on inactive');
       },
     );
 
@@ -174,7 +175,8 @@ void main() {
         const bool privacyBlurEnabled = false;
         bool shouldSetSecureFlag = privacyBlurEnabled;
         expect(shouldSetSecureFlag, isFalse,
-            reason: 'FLAG_SECURE must NOT be set when privacyBlurEnabled=false');
+            reason:
+                'FLAG_SECURE must NOT be set when privacyBlurEnabled=false');
       },
     );
   });
@@ -207,12 +209,14 @@ void main() {
       () async {
         // NOT a bug condition: appLock is disabled, vault works independently
         const bool isAppLockEnabled = false;
-        final bool vaultBiometricEnabled = await VaultService.isBiometricEnabled();
+        final bool vaultBiometricEnabled =
+            await VaultService.isBiometricEnabled();
 
         // Vault biometric should still work independently
         expect(isAppLockEnabled, isFalse);
         expect(vaultBiometricEnabled, isTrue,
-            reason: 'Vault biometric must work independently when app lock is off');
+            reason:
+                'Vault biometric must work independently when app lock is off');
       },
     );
 
@@ -229,4 +233,3 @@ void main() {
     );
   });
 }
-

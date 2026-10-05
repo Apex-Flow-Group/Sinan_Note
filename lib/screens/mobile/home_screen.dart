@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
@@ -12,9 +12,9 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/physics/glide_scroll_physics.dart';
 import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/models/note_mode.dart';
 import 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
 import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';

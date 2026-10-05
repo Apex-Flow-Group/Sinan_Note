@@ -1,11 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // 🐛 Bug Condition Tests — توحيد نظام القفل
 //
 // هذه الاختبارات تثبت أن الخلل تم إصلاحه عبر UnifiedLockService.
 // **النتيجة المتوقعة**: الاختبارات تنجح بعد الإصلاح.
 //
 // **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
-
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -112,7 +111,8 @@ void main() {
   // عند غياب البيومتري → getLockType() يرجع LockType.pin أو LockType.none
   // → لا يُستدعى setAppLockEnabled(false) أو setBiometricEnabled(false)
   // ══════════════════════════════════════════════════════════════════════════════
-  group('Bug Condition: Security Disabled Instead of PIN (Requirement 1.2)', () {
+  group('Bug Condition: Security Disabled Instead of PIN (Requirement 1.2)',
+      () {
     test(
       'When hasBiometrics()=false and appLock=true, '
       'system should NOT disable security '
@@ -130,8 +130,7 @@ void main() {
         expect(
           appLockStillEnabled,
           isTrue,
-          reason:
-              'Expected app lock to remain enabled (with PIN fallback), '
+          reason: 'Expected app lock to remain enabled (with PIN fallback), '
               'but the system disabled it entirely (set appLockEnabled=false). '
               'Fix: UnifiedLockService never calls setAppLockEnabled(false).',
         );
@@ -141,8 +140,7 @@ void main() {
         expect(
           biometricStillEnabled,
           isTrue,
-          reason:
-              'Expected vault biometric to remain enabled, '
+          reason: 'Expected vault biometric to remain enabled, '
               'but setBiometricEnabled(false) was called. '
               'Fix: UnifiedLockService never touches vault biometric setting.',
         );
@@ -164,8 +162,7 @@ void main() {
         expect(
           biometricAfter,
           isTrue,
-          reason:
-              'Expected vault biometric to remain enabled, '
+          reason: 'Expected vault biometric to remain enabled, '
               'but setBiometricEnabled(false) was called. '
               'Fix: Provide PIN fallback via UnifiedLockService without touching biometric setting.',
         );
@@ -195,8 +192,7 @@ void main() {
         expect(
           hasPinSet,
           isTrue,
-          reason:
-              'Expected an alternative authentication method (custom PIN) '
+          reason: 'Expected an alternative authentication method (custom PIN) '
               'to be available when device has no biometric. '
               'Fix: UnifiedLockService provides PIN authentication as fallback.',
         );
@@ -207,8 +203,7 @@ void main() {
             reason: 'PIN verification must work correctly');
 
         final pinInvalid = await service.verifyPin('9999');
-        expect(pinInvalid, isFalse,
-            reason: 'Wrong PIN must be rejected');
+        expect(pinInvalid, isFalse, reason: 'Wrong PIN must be rejected');
 
         // تنظيف
         await service.clearPin();
@@ -216,4 +211,3 @@ void main() {
     );
   });
 }
-
