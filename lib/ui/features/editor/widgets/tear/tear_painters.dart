@@ -1,36 +1,40 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:sinan_note/ui/core/theme/editor_palette.dart';
 
-/// شكل الدمعة أسفل المؤشر
+/// الدمعة أسفل المؤشر بشكل أندرويد (Material): دائرة يخرج من أعلاها رأس
+/// مدبّب يلامس أسفل المؤشر — ربع مربع على الدائرة مُدار 45°.
 class TearPainter extends CustomPainter {
   const TearPainter({required this.color});
   final Color color;
 
+  /// قطر الدائرة كما في مقبض أندرويد.
+  static const diameter = 22.0;
+
+  /// من الرأس إلى أسفل الدائرة: نصف القطر + نصف القطر × √2.
+  static const size = Size(diameter, diameter / 2 * (1 + math.sqrt2));
+
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final cx = w / 2;
-    final r = w * 0.42;
-    final cy = h - r;
-
+    final r = size.width / 2;
     final path = Path()
-      ..moveTo(cx, 0)
-      ..cubicTo(cx + w * 0.04, h * 0.20, cx + r, cy - r * 0.55, cx + r, cy)
-      ..arcToPoint(Offset(cx - r, cy),
-          radius: Radius.circular(r), clockwise: true)
-      ..cubicTo(cx - r, cy - r * 0.55, cx - w * 0.04, h * 0.20, cx, 0)
-      ..close();
-
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.fill
-        ..isAntiAlias = true,
-    );
+      ..addOval(Rect.fromCircle(center: Offset.zero, radius: r))
+      ..addRect(Rect.fromLTWH(-r, -r, r, r));
+    canvas
+      ..save()
+      ..translate(r, size.height - r)
+      // زاوية المربع (−r, −r) تصير إلى الأعلى مباشرة
+      ..rotate(math.pi / 4)
+      ..drawPath(
+        path,
+        Paint()
+          ..color = color
+          ..isAntiAlias = true,
+      )
+      ..restore();
   }
 
   @override

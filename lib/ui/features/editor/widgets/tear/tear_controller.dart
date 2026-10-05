@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
@@ -162,8 +162,6 @@ class _TearWidget extends StatefulWidget {
 
 class _TearWidgetState extends State<_TearWidget>
     with SingleTickerProviderStateMixin {
-  static const double _kW = 22.0;
-  static const double _kH = 34.0;
   static const double _kHit = 48.0;
 
   late AnimationController _anim;
@@ -237,7 +235,7 @@ class _TearWidgetState extends State<_TearWidget>
   }
 
   void _onPointerDown(PointerDownEvent e) {
-    final tearCenterY = _pos.dy + _kH / 2;
+    final tearCenterY = _pos.dy + TearPainter.size.height / 2;
     final dx = (e.position.dx - _pos.dx).abs();
     final dy = (e.position.dy - tearCenterY).abs();
     if (dx < _kHit / 2 && dy < _kHit / 2) {
@@ -362,7 +360,8 @@ class _TearWidgetState extends State<_TearWidget>
               ),
             Positioned(
               left: v.pos.dx - _kHit / 2,
-              top: v.pos.dy - 2,
+              // رأس الدمعة على أسفل المؤشر مباشرة، كما في أندرويد
+              top: v.pos.dy,
               child: child!,
             ),
           ],
@@ -370,12 +369,14 @@ class _TearWidgetState extends State<_TearWidget>
         child: SizedBox(
           width: _kHit,
           height: _kHit,
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: ScaleTransition(
               scale: _scale,
+              alignment: Alignment.topCenter,
               child: CustomPaint(
                 painter: TearPainter(color: color),
-                size: const Size(_kW, _kH),
+                size: TearPainter.size,
               ),
             ),
           ),
