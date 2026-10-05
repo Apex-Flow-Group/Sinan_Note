@@ -707,7 +707,7 @@ abstract class AppLocalizations {
   /// No description provided for @noNotesInFile.
   ///
   /// In en, this message translates to:
-  /// **'No notes in file'**
+  /// **'No notes in this file'**
   String get noNotesInFile;
 
   /// No description provided for @allNotesInFileEmpty.
@@ -3902,41 +3902,11 @@ abstract class AppLocalizations {
   /// **'Do not close the app or turn off your phone until the process is complete.'**
   String get resetVaultDoNotClose;
 
-  /// No description provided for @resetStatusPreparing.
-  ///
-  /// In en, this message translates to:
-  /// **'Preparing...'**
-  String get resetStatusPreparing;
-
-  /// No description provided for @resetStatusBackingUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Reading encryption key...'**
-  String get resetStatusBackingUp;
-
-  /// No description provided for @resetStatusDecrypting.
-  ///
-  /// In en, this message translates to:
-  /// **'Decrypting notes...'**
-  String get resetStatusDecrypting;
-
-  /// No description provided for @resetStatusGeneratingKey.
-  ///
-  /// In en, this message translates to:
-  /// **'Generating new encryption key...'**
-  String get resetStatusGeneratingKey;
-
   /// No description provided for @resetStatusReEncrypting.
   ///
   /// In en, this message translates to:
   /// **'Re-encrypting notes...'**
   String get resetStatusReEncrypting;
-
-  /// No description provided for @resetStatusReplacing.
-  ///
-  /// In en, this message translates to:
-  /// **'Finalizing...'**
-  String get resetStatusReplacing;
 
   /// No description provided for @resetVaultSuccess.
   ///
@@ -4261,6 +4231,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to Sign In'**
   String get goToSignIn;
+
+  /// No description provided for @vaultPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters'**
+  String get vaultPasswordTooShort;
+
+  /// No description provided for @vaultPasswordNeedsDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one number'**
+  String get vaultPasswordNeedsDigit;
+
+  /// No description provided for @vaultPasswordNeedsSymbol.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one symbol'**
+  String get vaultPasswordNeedsSymbol;
+
+  /// No description provided for @vaultPasswordNeedsLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Use English letters, numbers and symbols, with at least one letter'**
+  String get vaultPasswordNeedsLetter;
+
+  /// No description provided for @resetVaultFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset failed. Nothing was changed.'**
+  String get resetVaultFailed;
+
+  /// No description provided for @restoreDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Data'**
+  String get restoreDataTitle;
+
+  /// No description provided for @currentNotesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} notes currently'**
+  String currentNotesCount(int count);
+
+  /// No description provided for @restoreMergedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged: {count} notes added or updated'**
+  String restoreMergedCount(int count);
+
+  /// No description provided for @restoreReplacedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaced: {count} notes'**
+  String restoreReplacedCount(int count);
+
+  /// No description provided for @unsupportedBackupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not a backup this version can read'**
+  String get unsupportedBackupFile;
+
+  /// No description provided for @openVaultToImportLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the vault first to import locked notes'**
+  String get openVaultToImportLocked;
 }
 
 class _AppLocalizationsDelegate

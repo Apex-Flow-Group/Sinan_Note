@@ -40,6 +40,10 @@ class NotesRepository extends ChangeNotifier {
   List<Note> _notes = const [];
   bool _isLoaded = false;
 
+  /// يزداد مع كل كتابة محلية (لا مع [load]) — ما تراقبه المزامنة لترفع
+  /// التغييرات، دون أن تعيد تحميلُها بعد المزامنة تشغيلَها من جديد.
+  final localWrites = ValueNotifier(0);
+
   /// كل الملاحظات غير المقفلة (النشطة والمؤرشفة والمحذوفة)، المثبّتة أولاً ثم
   /// الأحدث تعديلاً.
   List<Note> get notes => _notes;
@@ -83,7 +87,7 @@ class NotesRepository extends ChangeNotifier {
     final stored = await _write(note);
     _remember(stored);
     await _sideEffects.noteChanged(_sealed(stored));
-    notifyListeners();
+    _changedLocally();
     return stored;
   }
 
@@ -147,7 +151,7 @@ class NotesRepository extends ChangeNotifier {
     for (final id in ids) {
       await _sideEffects.noteRemoved(id);
     }
-    notifyListeners();
+    _changedLocally();
   }
 
   /// يقفل أو يفك قفل ملاحظة. يرمي `VaultLockedException` والخزنة مقفلة،
@@ -173,7 +177,7 @@ class NotesRepository extends ChangeNotifier {
       _remember(changed);
     }
     await _sideEffects.noteChanged(_sealed(changed));
-    notifyListeners();
+    _changedLocally();
   }
 
   /// نسخة مستقلة بهوية جديدة. يُرجع الملاحظة الجديدة.
@@ -205,7 +209,104 @@ class NotesRepository extends ChangeNotifier {
     ));
   }
 
+  // ── الاستيراد ────────────────────────────────────────────────────────────
+
+  /// يدمج ملاحظات واردة (نسخة احتياطية/ملف) دون حذف أو استبدال أي ملاحظة
+  /// محلية، في transaction واحدة:
+  /// - نفس الـ uuid ← تبقى النسخة الأحدث تعديلاً (بالـ id المحلي).
+  /// - مطابقة تماماً (وقت الإنشاء والعنوان والمحتوى) ← مكررة، تُتجاهل —
+  ///   هكذا تُعرف ملاحظات النسخ القديمة التي لا تحمل uuid.
+  /// - غير ذلك ← تُضاف بـ id جديد.
+  /// المقفلة المشفّرة تبقى كما هي؛ المقفلة بنص واضح تُشفَّر، فإن كانت الخزنة
+  /// مقفلة يرمي `VaultLockedException` قبل أي كتابة. يُرجع عدد ما أُضيف
+  /// أو حُدّث.
+  Future<int> merge(List<Note> incoming) async {
+    final rows = await _db.query('notes');
+    final local = rows.map(NoteMapper.fromMap).toList();
+    final byUuid = {for (final n in local) n.uuid: n};
+    final fingerprints = local.map(_fingerprint).toSet();
+
+    final writes = <Note>[];
+    for (final note in incoming) {
+      final existing = byUuid[note.uuid];
+      if (existing != null) {
+        if (note.updatedAt.isAfter(existing.updatedAt)) {
+          writes.add(note.copyWith(id: existing.id));
+        }
+      } else if (fingerprints.add(_fingerprint(note))) {
+        writes.add(note.copyWith(id: null));
+        byUuid[note.uuid] = note;
+      }
+    }
+    final rowsToWrite = [for (final n in writes) (n, _toRow(n))];
+    await _db.transaction((txn) async {
+      for (final (note, row) in rowsToWrite) {
+        if (note.id == null) {
+          await txn.insert('notes', row..remove('id'));
+        } else {
+          await txn.update('notes', row, where: 'id = ?', whereArgs: [note.id]);
+        }
+      }
+    });
+    if (writes.isNotEmpty) {
+      await load();
+      _changedLocally();
+    }
+    return writes.length;
+  }
+
+  /// يستبدل الملاحظات غير المقفلة بالواردة، في transaction واحدة. ملاحظات
+  /// الخزنة المحلية لا تُمس. نفس شروط التشفير في [merge].
+  Future<void> replaceUnlocked(List<Note> incoming) async {
+    final rowsToWrite = [
+      for (final n in incoming) _toRow(n.copyWith(id: null))
+    ];
+    await _db.transaction((txn) async {
+      await txn.delete('note_versions',
+          where: 'noteId IN (SELECT id FROM notes WHERE isLocked = 0)');
+      await txn.delete('notes', where: 'isLocked = 0');
+      for (final row in rowsToWrite) {
+        await txn.insert('notes', row..remove('id'),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+    await load();
+    _changedLocally();
+  }
+
+  static String _fingerprint(Note n) =>
+      '${n.createdAt.millisecondsSinceEpoch}\u0000${n.title}\u0000${n.content}';
+
   // ── الخزنة ───────────────────────────────────────────────────────────────
+
+  /// يفك قفل كل الملاحظات المقفلة (قبل حذف الخزنة). يفك كل شيء في الذاكرة
+  /// أولاً: إن تعذّر فك أي ملاحظة يرمي قبل أي كتابة، فلا يضيع شيء.
+  Future<void> unlockAll() async {
+    final opened = [
+      for (final n in await lockedNotes())
+        n.copyWith(isLocked: false, updatedAt: _now()),
+    ];
+    if (opened.isEmpty) return;
+    await _db.transaction((txn) async {
+      for (final n in opened) {
+        await txn.update('notes', NoteMapper.toMap(n),
+            where: 'id = ?', whereArgs: [n.id]);
+      }
+    });
+    opened.forEach(_remember);
+    for (final n in opened) {
+      await _sideEffects.noteChanged(n);
+    }
+    _changedLocally();
+  }
+
+  /// يحذف كل الملاحظات المقفلة نهائياً (حذف الخزنة بمحتواها). لا يحتاج
+  /// الخزنة مفتوحة.
+  Future<void> deleteAllLocked() async {
+    final rows =
+        await _db.query('notes', columns: ['id'], where: 'isLocked = 1');
+    await delete([for (final r in rows) r['id'] as int]);
+  }
 
   /// يعيد تشفير قيم الصيغة القديمة (AES-CTR) بالصيغة الحالية. يُستدعى بعد
   /// فتح الخزنة؛ في transaction واحدة.
@@ -329,7 +430,7 @@ class NotesRepository extends ChangeNotifier {
       if (!n.isLocked) _remember(n);
       await _sideEffects.noteChanged(n);
     }
-    notifyListeners();
+    _changedLocally();
   }
 
   Map<String, Object?> _toRow(Note note) {
@@ -366,6 +467,17 @@ class NotesRepository extends ChangeNotifier {
         if (n.id != note.id) n,
       note,
     ]);
+  }
+
+  void _changedLocally() {
+    localWrites.value++;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    localWrites.dispose();
+    super.dispose();
   }
 
   static List<Note> _sorted(Iterable<Note> notes) => List.unmodifiable(

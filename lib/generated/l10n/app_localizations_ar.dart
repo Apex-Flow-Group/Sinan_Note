@@ -313,7 +313,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fileEmpty => 'الملف فارغ';
 
   @override
-  String get noNotesInFile => 'لا توجد ملاحظات في الملف';
+  String get noNotesInFile => 'لا توجد ملاحظات في هذا الملف';
 
   @override
   String get allNotesInFileEmpty => 'جميع الملاحظات في الملف فارغة';
@@ -1969,22 +1969,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا تغلق التطبيق أو تطفئ الهاتف حتى تكتمل العملية.';
 
   @override
-  String get resetStatusPreparing => 'جاري التحضير...';
-
-  @override
-  String get resetStatusBackingUp => 'جاري قراءة مفتاح التشفير...';
-
-  @override
-  String get resetStatusDecrypting => 'جاري فك تشفير الملاحظات...';
-
-  @override
-  String get resetStatusGeneratingKey => 'جاري إنشاء مفتاح تشفير جديد...';
-
-  @override
   String get resetStatusReEncrypting => 'جاري إعادة تشفير الملاحظات...';
-
-  @override
-  String get resetStatusReplacing => 'جاري الإنهاء...';
 
   @override
   String get resetVaultSuccess => 'تمت إعادة تعيين الخزنة بنجاح!';
@@ -2156,4 +2141,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get goToSignIn => 'الذهاب لتسجيل الدخول';
+
+  @override
+  String get vaultPasswordTooShort => 'استخدم 8 أحرف على الأقل';
+
+  @override
+  String get vaultPasswordNeedsDigit => 'أضف رقماً واحداً على الأقل';
+
+  @override
+  String get vaultPasswordNeedsSymbol => 'أضف رمزاً واحداً على الأقل';
+
+  @override
+  String get vaultPasswordNeedsLetter =>
+      'استخدم حروفاً إنجليزية وأرقاماً ورموزاً، وحرفاً واحداً على الأقل';
+
+  @override
+  String get resetVaultFailed => 'تعذّرت إعادة التعيين، ولم يتغير شيء.';
+
+  @override
+  String get restoreDataTitle => 'استعادة البيانات';
+
+  @override
+  String currentNotesCount(int count) {
+    return 'لديك $count ملاحظة حالياً';
+  }
+
+  @override
+  String restoreMergedCount(int count) {
+    return 'تم الدمج: أُضيفت أو حُدّثت $count ملاحظة';
+  }
+
+  @override
+  String restoreReplacedCount(int count) {
+    return 'تم الاستبدال: $count ملاحظة';
+  }
+
+  @override
+  String get unsupportedBackupFile =>
+      'هذا الملف ليس نسخة احتياطية يقرؤها هذا الإصدار';
+
+  @override
+  String get openVaultToImportLocked =>
+      'افتح الخزنة أولاً لاستيراد الملاحظات المقفلة';
 }

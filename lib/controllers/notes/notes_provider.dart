@@ -1,97 +1,102 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
-
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sinan_note/data/repositories/notes_repository.dart';
+import 'package:sinan_note/data/repositories/vault_repository.dart';
+import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
-import 'package:sinan_note/services/note_services/note_batch_operations_service.dart';
-import 'package:sinan_note/services/note_services/note_security_service.dart';
-import 'package:sinan_note/services/note_services/note_side_effect_service.dart';
-import 'package:sinan_note/services/note_services/note_state_service.dart';
-import 'package:sinan_note/services/note_services/version_control_service.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
+/// ViewModel الملاحظات المشترك للشاشات التي لم تنتقل بعد إلى ViewModel خاص
+/// بميزتها. لا حالة ولا منطق تخزين هنا: كل شيء من [NotesRepository]،
+/// والقوائم المشتقة تُحسب مرة لكل تغيير.
 class NotesProvider extends ChangeNotifier {
-  late final NoteStateService _stateService;
-  late final SqliteDatabaseService _dbService;
-  late final NoteSecurityService _securityService;
-  late final NoteSideEffectService _sideEffectService;
-  late final NoteBatchOperationsService _batchService;
+  NotesProvider({
+    required NotesRepository notes,
+    required VaultRepository vault,
+  })  : _notes = notes,
+        _vault = vault {
+    _notes.addListener(_onNotesChanged);
+    _vault.addListener(_onVaultChanged);
+  }
+
+  final NotesRepository _notes;
+  final VaultRepository _vault;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
-  int _refreshStamp = 0;
+
+  /// يتغير مع كل تغيير في الملاحظات — للواجهات التي تقارن لقطات.
   int get refreshStamp => _refreshStamp;
+  int _refreshStamp = 0;
 
-  NotesProvider({SqliteDatabaseService? dbService}) {
-    _dbService = dbService ?? SqliteDatabaseService();
-    _stateService = NoteStateService();
-    _securityService = NoteSecurityService();
-    _sideEffectService = NoteSideEffectService();
-    _batchService = NoteBatchOperationsService(
-        _dbService, _stateService, _sideEffectService);
+  bool get isInitialDataLoaded => _notes.isLoaded;
 
-    // ✅ Wire up sync completion callback to refresh UI
-    _stateService.onSyncCompleted = _refreshAfterSync;
-  }
+  // ── القوائم المشتقة ──────────────────────────────────────────────────────
 
-  bool get isInitialDataLoaded => _stateService.isInitialDataLoaded;
-  NoteStateService get stateService => _stateService;
-  List<Note> get activeNotes => _stateService.activeNotes;
+  List<Note>? _active, _archived, _trashed, _reminders;
+
   List<Note> get notes => activeNotes;
-  List<Note> get archivedNotes => _stateService.archivedNotes;
-  List<Note> get trashedNotes => _stateService.trashedNotes;
-  List<Note> get reminderNotes => _stateService.reminderNotes;
-  List<Note> get lockedNotes => _stateService.lockedNotes;
-  bool get isVaultUnlocked => _securityService.isVaultUnlocked;
 
-  void unlockVault() => _securityService.unlockVault();
+  List<Note> get activeNotes => _active ??= List.unmodifiable(
+      _notes.notes.where((n) => !n.isTrashed && !n.isArchived));
 
-  void lockVault() {
-    _securityService.lockVault();
-    _securityService.clearLockedSession(_stateService);
+  List<Note> get archivedNotes => _archived ??= List.unmodifiable(
+      _notes.notes.where((n) => n.isArchived && !n.isTrashed));
+
+  List<Note> get trashedNotes =>
+      _trashed ??= List.unmodifiable(_notes.notes.where((n) => n.isTrashed));
+
+  /// التذكيرات القادمة — يُعاد حسابها عند كل تغيير.
+  List<Note> get reminderNotes =>
+      _reminders ??= List.unmodifiable(_notes.notes.where((n) =>
+          !n.isTrashed &&
+          n.reminderDateTime != null &&
+          n.reminderDateTime!.isAfter(DateTime.now())));
+
+  Note? cachedNote(int id) => _notes.cached(id);
+
+  List<Note> searchNotes(String query) =>
+      activeNotes.where((n) => n.matches(query)).take(100).toList();
+
+  void _onNotesChanged() {
+    _active = _archived = _trashed = _reminders = null;
+    _refreshStamp++;
+    if (_silent) return;
     notifyListeners();
   }
+
+  /// حفظ صامت (الحفظ التلقائي أثناء الكتابة): البيانات تتحدث، والقوائم خلف
+  /// المحرر لا تُعاد بناؤها مع كل حفظ.
+  bool _silent = false;
+
+  Future<Note> _save(Note note, {required bool silent}) async {
+    _silent = silent;
+    try {
+      return await _notes.save(note);
+    } finally {
+      _silent = false;
+    }
+  }
+
+  // ── التحميل ──────────────────────────────────────────────────────────────
 
   Future<void> refreshAllNotes({bool force = false}) async {
     if (_isLoading && !force) return;
     _isLoading = true;
     notifyListeners();
     try {
-      final notes = await _dbService.getAllNotes();
-      _stateService.updateAllNotes(notes);
-      _refreshStamp++;
+      await _notes.load();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Called by NoteStateService after background sync completes
-  Future<void> _refreshAfterSync() async {
-    try {
-      final notes = await _dbService.getAllNotes();
-      _stateService.updateAllNotes(notes);
-      _refreshStamp++;
-      notifyListeners();
-    } catch (_) {
-      // Silent failure for background sync refresh
-    }
-  }
-
-  /// تحميل الملاحظات في الخلفية عند أول تشغيل.
-  /// يستخدم fire-and-forget لعدم تأخير الـ UI.
-  /// للتحميل المتزامن استخدم [refreshAllNotes] مباشرة.
+  /// أول تحميل في الخلفية دون انتظار.
   Future<void> loadNotes({bool force = false}) async {
-    if (_isLoading) return;
-    if (!force && _stateService.isInitialDataLoaded) return;
-
-    // ✅ Load in background without blocking UI
-    refreshAllNotes().then((_) {
-      // Silently loaded
-    }).catchError((e) {});
+    if (_isLoading || (!force && _notes.isLoaded)) return;
+    await refreshAllNotes();
   }
 
   Future<List<Note>> getNotes() async {
@@ -99,246 +104,123 @@ class NotesProvider extends ChangeNotifier {
     return activeNotes;
   }
 
-  Future<void> fetchTrashedNotes() async => await refreshAllNotes();
-  Future<void> fetchArchivedNotes() async => await refreshAllNotes();
+  Future<void> fetchTrashedNotes() => refreshAllNotes();
+  Future<void> fetchArchivedNotes() => refreshAllNotes();
 
-  List<Note> searchNotes(String query) => _stateService.searchNotes(query);
+  // ── إنشاء ────────────────────────────────────────────────────────────────
 
-  // ─── Factory Methods ──────────────────────────────────────────────────────
-
-  /// ينشئ ملاحظة افتراضية جاهزة للمحرر — سيد القصر يبني، الأميرة تطلب فقط.
-  ///
-  /// [mode]          : نوع الملاحظة
-  /// [colorIndex]    : لون الملاحظة (من SettingsProvider.getDefaultColorIndex)
-  /// [categoryIds]   : تصنيفات مختارة مسبقاً (اختياري)
   Note createDefaultNote({
     required NoteMode mode,
     required int colorIndex,
     List<int>? categoryIds,
   }) {
+    final now = DateTime.now();
     return Note(
       title: '',
       content: '',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      createdAt: now,
+      updatedAt: now,
       colorIndex: colorIndex,
       noteType: mode.name,
       isChecklist: mode == NoteMode.checklist,
       isProfessional: mode == NoteMode.code,
-      categoryIds: categoryIds ?? [],
+      categoryIds: categoryIds ?? const [],
     );
   }
 
-  /// ينشئ ملاحظة من نص مشارك (Share Intent) — كود مستورد من خارج التطبيق.
+  /// ملاحظة من نص مشارك (Share Intent) — كود مستورد من خارج التطبيق.
   Note createSharedNote({
     required String title,
     required String content,
     required int colorIndex,
   }) {
+    final now = DateTime.now();
     return Note(
       title: title,
       content: content,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      createdAt: now,
+      updatedAt: now,
       colorIndex: colorIndex,
       noteType: NoteMode.code.name,
     );
   }
 
-  ///
-  /// يتولى تحديد [noteType] و [initialContent] بناءً على [mode].
   Note createDefaultLockedNote({required NoteMode mode}) {
-    final String noteType;
-    final bool isChecklist;
-    final bool isProfessional;
-    final String initialContent;
-
-    switch (mode) {
-      case NoteMode.checklist:
-        noteType = 'checklist';
-        isChecklist = true;
-        isProfessional = false;
-        initialContent = '{"title":"","items":[]}';
-        break;
-      case NoteMode.code:
-        noteType = 'code';
-        isChecklist = false;
-        isProfessional = true;
-        initialContent = '';
-        break;
-      default:
-        noteType = 'simple';
-        isChecklist = false;
-        isProfessional = false;
-        initialContent = '';
-    }
-
+    final now = DateTime.now();
     return Note(
       title: '',
-      content: initialContent,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      colorIndex: 0,
-      noteType: noteType,
+      content: mode == NoteMode.checklist ? '{"title":"","items":[]}' : '',
+      createdAt: now,
+      updatedAt: now,
+      noteType: switch (mode) {
+        NoteMode.checklist => 'checklist',
+        NoteMode.code => 'code',
+        _ => 'simple',
+      },
       isLocked: true,
-      isChecklist: isChecklist,
-      isProfessional: isProfessional,
+      isChecklist: mode == NoteMode.checklist,
+      isProfessional: mode == NoteMode.code,
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── كتابة ────────────────────────────────────────────────────────────────
 
-  /// المسار الوحيد لتجهيز ملاحظة للتخزين: المقفلة يُشفَّر عنوانها ومحتواها
-  /// كلٌّ على حدة (أحدهما قد يكون فارغاً)، وما هو مشفّر أصلاً لا يُشفَّر ثانية.
-  @visibleForTesting
-  static Future<Note> sealIfLocked(Note note) async {
-    if (!note.isLocked) return note;
-    Future<String> seal(String text) async =>
-        text.isEmpty || VaultService.isEncrypted(text)
-            ? text
-            : await VaultService.encryptWithMasterKey(text);
-    final title = await seal(note.title);
-    final content = await seal(note.content);
-    if (identical(title, note.title) && identical(content, note.content)) {
-      return note;
-    }
-    return note.copyWith(title: title, content: content);
-  }
-
-  Future<int> addNote(Note note) async {
-    final noteToInsert = await sealIfLocked(note);
-
-    final id = await _dbService.insertNote(noteToInsert);
-    _stateService.addNote(noteToInsert.copyWith(id: id));
-    await _sideEffectService
-        .handleReminderSideEffect(noteToInsert.copyWith(id: id));
-    _refreshStamp++;
-    notifyListeners();
-    return id;
-  }
+  Future<int> addNote(Note note) async => (await _notes.save(note)).id!;
 
   Future<int> updateNote(Note note, {bool silent = false}) async {
-    final noteToUpdate = await sealIfLocked(note);
-
-    final result = await _dbService.updateNote(noteToUpdate);
-    _stateService.updateNote(noteToUpdate);
-    // الآثار الجانبية تأخذ النسخة المخزنة: للمقفلة تعرض نصاً عاماً لا المحتوى
-    await _sideEffectService.handleReminderSideEffect(noteToUpdate);
-    await _sideEffectService.checkAndUpdateIfPinned(noteToUpdate);
-    if (!silent) {
-      _refreshStamp++;
-      notifyListeners();
-    }
-    return result;
+    await _save(note, silent: silent);
+    return 1;
   }
 
-  Future<int> deleteNote(int id) async {
-    await _sideEffectService.cancelReminderSideEffect(id);
-    final result = await _dbService.deleteNote(id) ? 1 : 0;
-    _stateService.removeNote(id);
-    await _sideEffectService.checkAndResetIfPinned(id);
-    notifyListeners();
-    return result;
-  }
+  Future<int> addOrUpdateNote(Note note, {bool silent = false}) async =>
+      (await _save(note, silent: silent)).id!;
 
-  Future<int> archiveNote(int id) async {
-    await _sideEffectService.cancelReminderSideEffect(id);
-    final result = await _dbService.archiveNote(id);
-    // copyWith على الملاحظة الموجودة في الـ state — بدلاً من قراءة DB إضافية
-    final existing = _stateService.getNoteById(id);
-    if (existing != null) {
-      _stateService.updateNote(existing.copyWith(
-        isArchived: true,
-        updatedAt: DateTime.now(),
-      ));
-    }
-    notifyListeners();
-    return result;
-  }
-
-  Future<int> unarchiveNote(int id) async {
-    final result = await _dbService.unarchiveNote(id);
-    final existing = _stateService.getNoteById(id);
-    if (existing != null) {
-      _stateService.updateNote(existing.copyWith(
-        isArchived: false,
-        updatedAt: DateTime.now(),
-      ));
-    }
-    notifyListeners();
-    return result;
-  }
-
-  Future<int> trashNote(int id) async {
-    await _sideEffectService.cancelReminderSideEffect(id);
-    final result = await _dbService.trashNote(id);
-    final existing = _stateService.getNoteById(id);
-    if (existing != null) {
-      _stateService.updateNote(existing.copyWith(
-        isTrashed: true,
-        updatedAt: DateTime.now(),
-      ));
-    }
-    notifyListeners();
-    return result;
-  }
-
-  Future<int> restoreNote(int id) async {
-    final result = await _dbService.restoreNote(id);
-    final existing = _stateService.getNoteById(id);
-    if (existing != null) {
-      _stateService.updateNote(existing.copyWith(
-        isTrashed: false,
-        isArchived: false,
-        updatedAt: DateTime.now(),
-      ));
-      _stateService.sortNotes(immediate: true);
-    }
-    notifyListeners();
-    return result;
-  }
-
-  /// يغيّر خصائص وصفية لملاحظة كما هي مخزنة، دون المرور بنسخة مفكوكة:
-  /// آمن للملاحظات المقفلة (يبقى العنوان والمحتوى مشفرين والقفل قائماً).
   Future<Note?> updateNoteMeta(
     int id, {
     int? colorIndex,
     bool? isPinned,
     Object? reminderDateTime = _keep,
-  }) async {
-    final stored = await _dbService.getNoteById(id);
-    if (stored == null) return null;
-    final updated = stored.copyWith(
-      colorIndex: colorIndex,
-      isPinned: isPinned,
-      reminderDateTime: identical(reminderDateTime, _keep)
-          ? stored.reminderDateTime
-          : reminderDateTime,
-    );
-    await updateNote(updated);
-    return updated;
-  }
+  }) =>
+      _notes.updateMeta(id,
+          colorIndex: colorIndex,
+          isPinned: isPinned,
+          reminderDateTime: identical(reminderDateTime, _keep)
+              ? _notes.cached(id)?.reminderDateTime
+              : reminderDateTime);
 
   static const _keep = Object();
 
-  /// يقلب التثبيت على الصف المخزن. يُرجع الحالة الجديدة، أو null إن لم توجد.
-  Future<bool?> togglePinned(int id) async {
-    final stored = await _dbService.getNoteById(id);
-    if (stored == null) return null;
-    final updated = await updateNoteMeta(id, isPinned: !stored.isPinned);
-    return updated?.isPinned;
+  Future<bool?> togglePinned(int id) => _notes.togglePinned(id);
+
+  Future<int> deleteNote(int id) async {
+    await _notes.delete([id]);
+    return 1;
   }
 
-  Future<int> addOrUpdateNote(Note note, {bool silent = false}) async {
-    if (note.id != null) {
-      await updateNote(note, silent: silent);
-      return note.id!;
-    } else {
-      return await addNote(note);
-    }
+  Future<int> archiveNote(int id) async {
+    await _notes.archive([id]);
+    return 1;
   }
 
-  // insertNote حُذف — استخدم addNote مباشرة (P4)
+  Future<int> unarchiveNote(int id) async {
+    await _notes.unarchive([id]);
+    return 1;
+  }
+
+  Future<int> trashNote(int id) async {
+    await _notes.trash([id]);
+    return 1;
+  }
+
+  Future<int> restoreNote(int id) async {
+    await _notes.restore([id]);
+    return 1;
+  }
+
+  Future<void> trashNotes(List<int> ids) => _notes.trash(ids);
+  Future<void> restoreNotes(List<int> ids) => _notes.restore(ids);
+  Future<void> archiveNotes(List<int> ids) => _notes.archive(ids);
+  Future<void> unarchiveNotes(List<int> ids) => _notes.unarchive(ids);
 
   Future<void> convertNoteType(
     int id, {
@@ -346,117 +228,52 @@ class NotesProvider extends ChangeNotifier {
     required String newNoteType,
     required bool isChecklist,
   }) async {
-    final note = await _dbService.getNoteById(id);
-    if (note == null) return;
-
-    // حفظ نسخة من الحالة الحالية قبل التحويل
-    await VersionControlService().smartLogVersion(
-      noteId: id,
-      title: note.title,
-      content: note.content,
-      isManualAction: true,
-      noteType: note.noteType,
-      forceLog: true,
-    );
-
-    final updated = await sealIfLocked(note.copyWith(
-      content: newContent,
-      noteType: newNoteType,
-      isChecklist: isChecklist,
-      isProfessional: newNoteType == 'code' || newNoteType == 'pro',
-      updatedAt: DateTime.now(),
-    ));
-    await _dbService.updateNote(updated);
-    _stateService.updateNote(updated);
-    _refreshStamp++;
-    notifyListeners();
-    // لا حاجة لـ refreshAllNotes() — _stateService.updateNote() يُحدّث الـ state مباشرة
+    await _notes.convertType(id,
+        content: newContent, noteType: newNoteType, isChecklist: isChecklist);
   }
 
-  Future<int> duplicateNote(int id, {String copyLabel = 'Copy'}) async {
-    final note = await _dbService.getNoteById(id);
-    if (note == null) return -1;
+  Future<int> duplicateNote(int id, {String copyLabel = 'Copy'}) async =>
+      (await _notes.duplicate(id, copyLabel: copyLabel))?.id ?? -1;
 
-    // عنوان المقفلة مشفّر: يُفك قبل إضافة اللاحقة، ثم يُعاد تشفيره عند الحفظ
-    final title = note.isLocked && VaultService.isEncrypted(note.title)
-        ? await VaultService.decryptWithMasterKey(note.title)
-        : note.title;
-    final copy = note.copyWith(
-      id: null,
-      title: title.isEmpty ? copyLabel : '$title - $copyLabel',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      isPinned: false,
-    );
+  // ── الخزنة ───────────────────────────────────────────────────────────────
 
-    final newId = await addNote(copy);
-    return newId;
-  }
+  bool get isVaultUnlocked => _vault.isUnlocked;
 
-  Future<void> trashNotes(List<int> ids) async {
-    await _batchService.batchTrashNotes(ids);
-    notifyListeners();
-  }
+  List<Note> get lockedNotes => _locked;
+  List<Note> _locked = const [];
 
-  Future<void> restoreNotes(List<int> ids) async {
-    await _batchService.batchRestoreNotes(ids);
-    notifyListeners();
-  }
+  /// الملاحظات المقفلة مفكوكة. يرمي [VaultLockedException] والخزنة مقفلة.
+  Future<List<Note>> fetchAndDecryptLockedNotes() async =>
+      _locked = await _notes.lockedNotes();
 
-  Future<void> archiveNotes(List<int> ids) async {
-    await _batchService.batchArchiveNotes(ids);
-    notifyListeners();
-  }
-
-  Future<void> unarchiveNotes(List<int> ids) async {
-    await _batchService.batchUnarchiveNotes(ids);
-    notifyListeners();
-  }
-
-  Future<void> fetchLockedNotes() async {
-    final notes = await _securityService.fetchAndDecryptLockedNotes(_dbService);
-    _stateService.updateLockedNotes(notes);
-    notifyListeners();
-  }
-
-  Future<List<Note>> fetchAndDecryptLockedNotes() async {
-    return await _securityService.fetchAndDecryptLockedNotes(_dbService);
-  }
-
-  /// يُرجع false إن تعذّر فك التشفير عند إزالة القفل — تبقى الملاحظة مقفلة.
+  /// يُرجع false إن كانت الخزنة مقفلة أو تعذّر فك الملاحظة — فتبقى كما هي.
   Future<bool> toggleLockStatus(int id, bool lockStatus) async {
     try {
-      await _securityService.toggleLockStatus(id, lockStatus, _dbService);
+      await _notes.setLocked(id, lockStatus);
+      return true;
     } on VaultLockedException {
       return false;
+    } on VaultDecryptionException {
+      return false;
     }
-    final note = await _dbService.getNoteById(id);
-    if (note != null) {
-      await _sideEffectService.handleReminderSideEffect(note);
-      await _sideEffectService.checkAndUpdateIfPinned(note);
-    }
-    if (note != null) {
-      if (lockStatus) {
-        _stateService.removeNote(id);
-        _stateService.updateLockedNotes([...lockedNotes, note]);
-      } else {
-        _stateService
-            .updateLockedNotes(lockedNotes.where((n) => n.id != id).toList());
-        _stateService.addNote(note);
-      }
-    }
-    notifyListeners();
-    return true;
   }
 
+  void lockVault() => _vault.lock();
+
   void clearLockedSession({bool notify = true}) {
-    _securityService.clearLockedSession(_stateService);
+    _locked = const [];
     if (notify) notifyListeners();
+  }
+
+  void _onVaultChanged() {
+    if (!_vault.isUnlocked) _locked = const [];
+    notifyListeners();
   }
 
   @override
   void dispose() {
-    _stateService.dispose();
+    _notes.removeListener(_onNotesChanged);
+    _vault.removeListener(_onVaultChanged);
     super.dispose();
   }
 }

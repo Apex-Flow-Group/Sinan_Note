@@ -72,6 +72,17 @@ abstract class VaultNavigator {
     );
   }
 
+  /// مثل [toUnlock] بـ Navigator محفوظ — لاستدعائه من شاشة استُبدلت.
+  static void replaceWithUnlock(NavigatorState navigator) {
+    if (!navigator.mounted) return;
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const VaultUnlockScreen(),
+        settings: const RouteSettings(name: '/vault/unlock'),
+      ),
+    );
+  }
+
   /// الانتقال لشاشة إعداد الخزنة لأول مرة (يستبدل الشاشة الحالية)
   /// يُستخدم من VaultEntryScreen حيث /main موجود في الـ stack
   static void toIntro(BuildContext context) {

@@ -2,11 +2,11 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/screens/shared/settings/database_restore_handler.dart';
-import 'package:sinan_note/screens/shared/settings/json_import_handler.dart';
-import 'package:sinan_note/services/storage/backup_service.dart';
+import 'package:sinan_note/screens/shared/settings/backup_restore_flow.dart';
 import 'package:sinan_note/services/storage/storage_service.dart';
+import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class SettingsBackupHandlers {
@@ -34,8 +34,9 @@ class SettingsBackupHandlers {
                   return;
                 }
                 try {
-                  final outputPath =
-                      await BackupService().exportDatabaseToPath(result);
+                  final outputPath = await context
+                      .read<BackupViewModel>()
+                      .exportTo(result);
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
                     context: context,
@@ -59,7 +60,8 @@ class SettingsBackupHandlers {
               onPressed: () async {
                 Navigator.pop(ctx);
                 try {
-                  await BackupService().shareDatabase();
+                  await context.read<BackupViewModel>().share(
+                      subject: l10n.exportBackup, text: l10n.backupSaved);
                 } catch (e) {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
@@ -205,78 +207,18 @@ class SettingsBackupHandlers {
     );
   }
 
+  /// استيراد/استعادة نسخة من أي صيغة (.db أو JSON): دمج أو استبدال.
   static Future<void> handleImportJSON(
-      BuildContext context, AppLocalizations l10n) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.warning),
-        content: Text(l10n.replaceAllNotes),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cancel)),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.replace,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-
-    final result = await FilePicker.platform
-        .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
-    if (result == null || result.files.single.path == null) return;
-
-    final lang =
-        context.mounted ? Localizations.localeOf(context).languageCode : 'en';
-    if (!context.mounted) return;
-    await JsonImportHandler.handle(
-        context, lang, l10n, result.files.single.path!);
-  }
+          BuildContext context, AppLocalizations l10n) =>
+      BackupRestoreFlow.pickAndRun(context);
 
   static Future<void> handleSmartImport(
-      BuildContext context, String lang, AppLocalizations l10n) async {
-    try {
-      final result = await FilePicker.platform.pickFiles(type: FileType.any);
-      if (result == null || result.files.single.path == null) return;
+          BuildContext context, String lang, AppLocalizations l10n) =>
+      BackupRestoreFlow.pickAndRun(context);
 
-      final filePath = result.files.single.path!;
-      final name = result.files.single.name;
-      final isDatabase = name.endsWith('.sinannote') || name.endsWith('.db');
-
-      if (!context.mounted) return;
-      if (isDatabase) {
-        await DatabaseRestoreHandler.handle(context, lang, l10n, filePath);
-      } else {
-        await JsonImportHandler.handle(context, lang, l10n, filePath);
-      }
-    } catch (e) {
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-          context: context,
-          message: e.toString().replaceAll('Exception:', ''),
-          type: NotificationType.error);
-    }
-  }
-
-  static void handleSmartRestore(
-      BuildContext context, String lang, AppLocalizations l10n) async {
-    try {
-      final backupPath = await BackupService().pickBackupFile();
-      if (backupPath == null) return;
-      if (!context.mounted) return;
-      await DatabaseRestoreHandler.handle(context, lang, l10n, backupPath);
-    } catch (e) {
-      if (!context.mounted) return;
-      UnifiedNotificationService().show(
-          context: context,
-          message: e.toString().replaceAll('Exception:', ''),
-          type: NotificationType.error);
-    }
-  }
+  static Future<void> handleSmartRestore(
+          BuildContext context, String lang, AppLocalizations l10n) =>
+      BackupRestoreFlow.pickAndRun(context);
 
   static Widget _actionButton({
     required IconData icon,

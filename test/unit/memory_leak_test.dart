@@ -6,9 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/services/note_services/note_state_service.dart';
 import 'package:sinan_note/services/storage/compression_service.dart';
 
+import '../helpers/test_data_layer.dart';
 import '../test_setup.dart';
 
 void main() {
@@ -55,101 +55,19 @@ void main() {
   });
 
   // ══════════════════════════════════════════════════════════════
-  // 2. تسريب الذاكرة — NoteStateService
-  // ══════════════════════════════════════════════════════════════
-  group('Memory Leak — NoteStateService', () {
-    test('dispose يُلغي كل الـ timers', () {
-      final service = NoteStateService();
-      service.updateAllNotes(List.generate(10, (i) => note(i)));
-      service.sortNotes(); // ينشئ debounce timer
-      service.updateNote(note(1)); // ينشئ sync timer
-      expect(() => service.dispose(), returnsNormally);
-    });
-
-    test('إنشاء وتدمير 50 NoteStateService لا يُسبب مشاكل', () {
-      for (int i = 0; i < 50; i++) {
-        final service = NoteStateService();
-        service.updateAllNotes(List.generate(5, (j) => note(j)));
-        service.dispose();
-      }
-    });
-  });
-
-  // ══════════════════════════════════════════════════════════════
-  // 3. تسريب الذاكرة — NotesProvider
+  // 2. تسريب الذاكرة — NotesProvider
   // ══════════════════════════════════════════════════════════════
   group('Memory Leak — NotesProvider', () {
-    test('NotesProvider يُتلف بدون استثناء', () {
-      final provider = NotesProvider();
-      expect(() => provider.dispose(), returnsNormally);
-    });
-
-    test('NotesProvider مع listeners يُتلف بدون تسريب', () {
-      final provider = NotesProvider();
-      int count = 0;
+    test('NotesProvider يُتلف ويفصل مستمعيه عن المستودع', () async {
+      final data = await TestDataLayer.create();
+      final provider = NotesProvider(notes: data.notes, vault: data.vault);
+      var count = 0;
       provider.addListener(() => count++);
-      expect(() => provider.dispose(), returnsNormally);
-    });
-  });
-
-  // ══════════════════════════════════════════════════════════════
-  // 4. الأداء — NoteStateService
-  // ══════════════════════════════════════════════════════════════
-  group('Performance — NoteStateService', () {
-    test('تحميل 10,000 ملاحظة في أقل من 500ms', () {
-      final service = NoteStateService();
-      final notes = List.generate(10000, (i) => note(i));
-
-      final sw = Stopwatch()..start();
-      service.updateAllNotes(notes);
-      sw.stop();
-
-      expect(sw.elapsedMilliseconds, lessThan(500));
-      service.dispose();
-    });
-
-    test('فلترة 10,000 ملاحظة في أقل من 100ms', () {
-      final service = NoteStateService();
-      service.updateAllNotes(List.generate(10000, (i) => note(i)));
-
-      final sw = Stopwatch()..start();
-      final _ = service.activeNotes;
-      sw.stop();
-
-      expect(sw.elapsedMilliseconds, lessThan(100));
-      service.dispose();
-    });
-
-    test('البحث في 10,000 ملاحظة في أقل من 200ms', () {
-      final service = NoteStateService();
-      service.updateAllNotes(List.generate(10000, (i) => note(i)));
-
-      final sw = Stopwatch()..start();
-      service.searchNotes('Note 5000');
-      sw.stop();
-
-      expect(sw.elapsedMilliseconds, lessThan(200));
-      service.dispose();
-    });
-
-    test('الكاش يُسرِّع القراءة المتكررة', () {
-      final service = NoteStateService();
-      service.updateAllNotes(List.generate(5000, (i) => note(i)));
-
-      // أول قراءة (بناء الكاش)
-      final sw1 = Stopwatch()..start();
-      service.activeNotes;
-      sw1.stop();
-
-      // ثاني قراءة (من الكاش)
-      final sw2 = Stopwatch()..start();
-      service.activeNotes;
-      sw2.stop();
-
-      // الكاش يجب أن يكون أسرع
-      expect(sw2.elapsedMicroseconds,
-          lessThanOrEqualTo(sw1.elapsedMicroseconds + 100));
-      service.dispose();
+      provider.dispose();
+      // بعد الإتلاف لا يصل إشعار من المستودع إلى الـ provider
+      await data.notes.load();
+      expect(count, 0);
+      await data.dispose();
     });
   });
 

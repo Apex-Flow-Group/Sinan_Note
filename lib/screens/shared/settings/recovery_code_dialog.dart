@@ -1,9 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 
 class RecoveryCodeDialog extends StatefulWidget {
   const RecoveryCodeDialog({super.key});
@@ -37,24 +38,15 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
       _errorText = null;
     });
 
-    try {
-      // Verify and unlock with recovery code
-      final success = await VaultService.recoverWithCode(recoveryCode);
-
-      if (success && mounted) {
-        // ✅ Mark vault as unlocked in session
-        await VaultService.markVaultUnlocked();
-        if (!mounted) return;
-        Navigator.pop(context, true); // Success
-      } else {
-        setState(() {
-          _errorText = l10n.invalidRecoveryCode;
-          _isVerifying = false;
-        });
-      }
-    } catch (e) {
+    final success = await context
+        .read<VaultViewModel>()
+        .unlockWithRecoveryCode(recoveryCode);
+    if (!mounted) return;
+    if (success) {
+      Navigator.pop(context, true);
+    } else {
       setState(() {
-        _errorText = 'Error: $e';
+        _errorText = l10n.invalidRecoveryCode;
         _isVerifying = false;
       });
     }

@@ -6,29 +6,28 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import '../helpers/test_data_layer.dart';
 import '../test_setup.dart';
 
 void main() {
   setUpAll(() => initializeTestEnvironment());
 
+  late TestDataLayer data;
   late NotesProvider provider;
   late DateTime now;
 
-  setUp(() {
-    SqliteDatabaseService.resetInstance();
-    SqliteDatabaseService.overrideDbPath(':memory:');
-    provider = NotesProvider();
+  setUp(() async {
+    data = await TestDataLayer.create();
+    provider = NotesProvider(notes: data.notes, vault: data.vault);
     now = DateTime.now();
   });
 
   tearDown(() async {
-    await SqliteDatabaseService().closeDB();
-    SqliteDatabaseService.resetInstance();
     // provider قد يكون تم dispose() في الاختبار نفسه
     try {
       provider.dispose();
     } catch (_) {}
+    await data.dispose();
   });
 
   Note note(
@@ -218,13 +217,13 @@ void main() {
       expect(provider.isVaultUnlocked, isFalse);
     });
 
-    test('unlockVault يفتح الخزنة', () {
-      provider.unlockVault();
+    test('فتح الخزنة ينعكس على isVaultUnlocked', () async {
+      await data.vault.setUp('Pass123!');
       expect(provider.isVaultUnlocked, isTrue);
     });
 
-    test('lockVault يقفل الخزنة ويُطلق notifyListeners', () {
-      provider.unlockVault();
+    test('lockVault يقفل الخزنة ويُطلق notifyListeners', () async {
+      await data.vault.setUp('Pass123!');
       int count = 0;
       provider.addListener(() => count++);
       provider.lockVault();
@@ -233,7 +232,10 @@ void main() {
     });
 
     test('lockVault يمسح الملاحظات المقفلة من الذاكرة', () async {
-      provider.unlockVault();
+      await data.vault.setUp('Pass123!');
+      await provider.addNote(note(title: 'secret', isLocked: true));
+      await provider.fetchAndDecryptLockedNotes();
+      expect(provider.lockedNotes.length, 1);
       provider.lockVault();
       expect(provider.lockedNotes.length, 0);
     });

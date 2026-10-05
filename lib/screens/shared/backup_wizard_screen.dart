@@ -2,13 +2,13 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/backup/backup_wizard_widgets.dart';
-import 'package:sinan_note/screens/shared/settings/database_restore_handler.dart';
-import 'package:sinan_note/screens/shared/settings/json_import_handler.dart';
-import 'package:sinan_note/services/storage/backup_service.dart';
+import 'package:sinan_note/screens/shared/settings/backup_restore_flow.dart';
 import 'package:sinan_note/services/storage/storage_service.dart';
+import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class BackupWizardScreen extends StatefulWidget {
@@ -418,48 +418,28 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
     }
   }
 
-  Future<void> _restoreJson() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-    if (result == null || result.files.single.path == null) return;
-    if (!mounted) return;
-    final lang = Localizations.localeOf(context).languageCode;
-    final l10n = AppLocalizations.of(context)!;
-    await JsonImportHandler.handle(
-      context,
-      lang,
-      l10n,
-      result.files.single.path!,
-    );
-  }
+  Future<void> _restoreJson() => BackupRestoreFlow.pickAndRun(context);
 
-  Future<void> _restoreDatabase() async {
-    final backupPath = await BackupService().pickBackupFile();
-    if (backupPath == null) return;
-    if (!mounted) return;
-    final lang = Localizations.localeOf(context).languageCode;
-    final l10n = AppLocalizations.of(context)!;
-    await DatabaseRestoreHandler.handle(context, lang, l10n, backupPath);
-  }
+  Future<void> _restoreDatabase() => BackupRestoreFlow.pickAndRun(context);
 
   Future<void> _exportDatabase({required bool share}) async {
     setState(() => _isLoading = true);
     try {
       if (share) {
-        await BackupService().shareDatabase();
+        final l10n = AppLocalizations.of(context)!;
+        await context.read<BackupViewModel>().share(
+            subject: l10n.exportBackup, text: l10n.backupSaved);
       } else {
         final dir = await FilePicker.platform.getDirectoryPath();
         if (dir == null) return;
-        final outputPath = await BackupService().exportDatabaseToPath(dir);
+        if (!mounted) return;
+        final outputPath =
+            await context.read<BackupViewModel>().exportTo(dir);
         if (mounted) {
-          final isArabic = Localizations.localeOf(context).languageCode == 'ar';
           UnifiedNotificationService().show(
             context: context,
-            message: isArabic
-                ? 'تم حفظ النسخة الاحتياطية:\n$outputPath'
-                : 'Backup saved:\n$outputPath',
+            message:
+                '${AppLocalizations.of(context)!.backupSaved}\n$outputPath',
             type: NotificationType.success,
             duration: const Duration(seconds: 4),
           );

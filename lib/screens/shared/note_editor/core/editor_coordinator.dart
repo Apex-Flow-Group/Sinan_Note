@@ -17,7 +17,6 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:sinan_note/screens/shared/note_editor/controllers/editor_storage_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
 import 'package:sinan_note/screens/shared/note_editor/utils/note_editor_utils.dart';
 import 'package:sinan_note/services/code/language_detector.dart';
@@ -45,7 +44,6 @@ class EditorCoordinator {
   final FocusNode codeFieldFocusNode = FocusNode();
 
   // Feature Controllers
-  final EditorStorageController storageController = EditorStorageController();
   final EditorFormattingController formattingController =
       EditorFormattingController();
   final EditorSmartController smartController = EditorSmartController();

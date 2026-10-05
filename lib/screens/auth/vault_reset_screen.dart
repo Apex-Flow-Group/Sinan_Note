@@ -1,12 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
-import 'package:sinan_note/services/security/vault_reset_service.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/copy_code_button.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
@@ -40,40 +39,25 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
   bool _obscureConfirm = true;
   String? _passwordError;
 
-  // حالة العملية
-  VaultResetProgress _progress = const VaultResetProgress(
-    status: VaultResetStatus.idle,
-  );
-  StreamSubscription<VaultResetProgress>? _progressSub;
   String? _newRecoveryCode;
   bool _codeSaved = false;
 
   @override
   void dispose() {
-    // إعادة تفعيل حماية الخزنة عند الخروج
-    VaultResetGuard.isActive = false;
-    _progressSub?.cancel();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
   }
 
   Future<void> _authenticateAndProceed() async {
-    VaultResetGuard.isActive = true;
+    final vault = context.read<VaultViewModel>();
     final password = await _showPasswordDialog();
-    if (password == null) {
-      VaultResetGuard.isActive = false;
-      return;
-    }
-    final authenticated = await VaultService.verifyPassword(password);
-    if (!mounted) {
-      VaultResetGuard.isActive = false;
-      return;
-    }
+    if (password == null) return;
+    final authenticated = await vault.verifyPassword(password);
+    if (!mounted) return;
     if (authenticated) {
       setState(() => _currentStep = _ResetStep.newPassword);
     } else {
-      VaultResetGuard.isActive = false;
       UnifiedNotificationService().show(
         context: context,
         message: AppLocalizations.of(context)!.wrongPassword,
@@ -124,7 +108,7 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     final confirm = _confirmController.text;
 
     // التحقق من كلمة المرور
-    final validationError = validateVaultPassword(password);
+    final validationError = validateVaultPassword(AppLocalizations.of(context)!, password);
     if (validationError != null) {
       setState(() => _passwordError = validationError);
       return;
@@ -140,29 +124,21 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
       _passwordError = null;
     });
 
-    // بدء العملية بعد رسم الـ UI
-    final service = VaultResetService();
-    _progressSub = service.progressStream.listen((progress) {
-      if (!mounted) return;
-      setState(() => _progress = progress);
+    _reset(password);
+  }
 
-      if (progress.status == VaultResetStatus.completed) {
-        setState(() {
-          _newRecoveryCode = progress.newRecoveryCode;
-          _currentStep = _ResetStep.showRecoveryCode;
-        });
-      } else if (progress.status == VaultResetStatus.failed) {
-        // العودة لخطوة كلمة المرور مع عرض الخطأ
-        setState(() {
-          _currentStep = _ResetStep.newPassword;
-          _passwordError = progress.errorMessage;
-        });
+  /// مفتاح جديد في transaction واحدة: نجاح كامل أو لا تغيير.
+  Future<void> _reset(String password) async {
+    final code = await context.read<VaultViewModel>().resetKey(password);
+    if (!mounted) return;
+    setState(() {
+      if (code != null) {
+        _newRecoveryCode = code;
+        _currentStep = _ResetStep.showRecoveryCode;
+      } else {
+        _currentStep = _ResetStep.newPassword;
+        _passwordError = AppLocalizations.of(context)!.resetVaultFailed;
       }
-    });
-
-    // تأخير بسيط لضمان رسم شاشة التقدم قبل بدء العملية الثقيلة
-    Future.delayed(const Duration(milliseconds: 100), () {
-      service.executeReset(newPassword: password);
     });
   }
 
@@ -284,7 +260,7 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
           ],
         );
       case _ResetStep.processing:
-        return _ProcessingStep(isDark: isDark, l10n: l10n, progress: _progress);
+        return _ProcessingStep(isDark: isDark, l10n: l10n);
       case _ResetStep.showRecoveryCode:
         return _RecoveryCodeStep(
           isDark: isDark,
@@ -416,30 +392,8 @@ class _WarningStep extends StatelessWidget {
 class _ProcessingStep extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l10n;
-  final VaultResetProgress progress;
 
-  const _ProcessingStep({
-    required this.isDark,
-    required this.l10n,
-    required this.progress,
-  });
-
-  String _statusText(AppLocalizations l10n) {
-    switch (progress.status) {
-      case VaultResetStatus.backingUp:
-        return l10n.resetStatusBackingUp;
-      case VaultResetStatus.decrypting:
-        return l10n.resetStatusDecrypting;
-      case VaultResetStatus.generatingNewKey:
-        return l10n.resetStatusGeneratingKey;
-      case VaultResetStatus.reEncrypting:
-        return l10n.resetStatusReEncrypting;
-      case VaultResetStatus.replacingDatabase:
-        return l10n.resetStatusReplacing;
-      default:
-        return l10n.resetStatusPreparing;
-    }
-  }
+  const _ProcessingStep({required this.isDark, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -458,7 +412,7 @@ class _ProcessingStep extends StatelessWidget {
           ),
           const SizedBox(height: 40),
           Text(
-            _statusText(l10n),
+            l10n.resetStatusReEncrypting,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -466,24 +420,6 @@ class _ProcessingStep extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          if (progress.totalNotes > 0) ...[
-            const SizedBox(height: 20),
-            LinearProgressIndicator(
-              value: progress.progress,
-              backgroundColor: Colors.grey.withValues(alpha: 0.2),
-              color: Colors.deepPurple,
-              minHeight: 6,
-              borderRadius: BorderRadius.circular(3),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '${progress.processedNotes} / ${progress.totalNotes}',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-          ],
           const SizedBox(height: 32),
           Container(
             padding: const EdgeInsets.all(16),

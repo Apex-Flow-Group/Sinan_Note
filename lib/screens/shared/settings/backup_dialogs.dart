@@ -1,8 +1,9 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class BackupDialogs {
@@ -71,14 +72,14 @@ class BackupDialogs {
   static Future<String?> showActionDialog(
     BuildContext context,
     AppLocalizations l10n,
-    String lang,
     int localCount,
   ) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = context.scheme;
+    final warning = context.colors.warning;
     return AppBottomSheet.show<String>(
       context,
       child: AppBottomSheet(
-        title: lang == 'ar' ? 'استعادة البيانات' : 'Restore Data',
+        title: l10n.restoreDataTitle,
         titleIcon: Icons.restore_rounded,
         scrollable: false,
         child: Padding(
@@ -89,21 +90,16 @@ class BackupDialogs {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        color: Colors.orange, size: 22),
+                    Icon(Icons.warning_amber_rounded, color: warning, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        lang == 'ar'
-                            ? 'لديك $localCount ملاحظة حالياً'
-                            : 'You have $localCount notes currently',
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                      child: Text(l10n.currentNotesCount(localCount),
+                          style: context.text.bodyMedium),
                     ),
                   ],
                 ),

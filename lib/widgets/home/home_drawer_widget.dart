@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io' show Platform;
 
@@ -11,9 +11,8 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
 import 'package:sinan_note/services/cloud/google_drive_auth.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/categories_panel.dart';
 import 'package:sinan_note/widgets/home/drawer_widgets.dart';
@@ -550,13 +549,10 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
       return;
     }
 
-    final hasBiometrics = await BiometricService.hasBiometrics();
-    final biometricEnabled = await VaultService.isBiometricEnabled();
-    if (!context.mounted) return;
-
-    if (biometricEnabled && hasBiometrics) {
+    final vault = context.read<VaultViewModel>();
+    if (await vault.canUseBiometrics()) {
       // البصمة أولاً قبل إغلاق الـ Drawer — حتى يبقى context mounted
-      final authenticated = await BiometricService.authenticate();
+      final authenticated = await vault.unlockWithBiometrics();
       if (!context.mounted) return;
 
       // نحفظ reference للـ navigator قبل إغلاق الـ Drawer

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:io';
@@ -21,7 +21,6 @@ import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
-import 'package:sinan_note/services/security/vault_reset_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/widget_service.dart';
@@ -192,7 +191,6 @@ class _SplashScreenState extends State<SplashScreen> {
       ApexDiagnosticsEngine().init(appDir.path);
 
       // حذف النسخ الاحتياطية المنتهية (أقدم من 15 يوم)
-      unawaited(VaultResetService.cleanExpiredBackups());
 
       if (Platform.isAndroid || Platform.isIOS) {
         await NotificationService().initialize();

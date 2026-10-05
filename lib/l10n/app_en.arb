@@ -52,7 +52,7 @@
   "about": "About",
   "appDescription": "Smart and Professional Notes App",
   "allRightsReserved": "© 2025 All rights reserved.",
-  "swipeGestures": "Enable Swipe",
+  "swipeGestures": "Swipe Gestures",
   "swipeGesturesDesc": "Swipe to perform actions",
   "swipeRight": "Swipe Right",
   "swipeLeft": "Swipe Left",
@@ -101,7 +101,7 @@
   "allNotesEmpty": "All notes are empty",
   "noFileSelected": "No file selected",
   "fileEmpty": "File is empty",
-  "noNotesInFile": "No notes in file",
+  "noNotesInFile": "No notes in this file",
   "allNotesInFileEmpty": "All notes in file are empty",
   "readFileFailed": "Failed to read file",
   "shareFileFailed": "Failed to share file",
@@ -116,7 +116,7 @@
   "warning": "Warning!",
   "replaceAllNotes": "All current notes will be replaced. Are you sure?",
   "replace": "Replace",
-  "restoredSuccessfully": "Restored successfully!",
+  "restoredSuccessfully": "Restored successfully",
   "importedSuccessfully": "notes imported successfully!",
   "restore": "Restore",
   "noteRestored": "Note restored",
@@ -203,7 +203,7 @@
   "saveAnyway": "Save Anyway",
   "saveAsMarkdown": "Save as Markdown",
   "detected": "Detected: ",
-  "date": "Date: ",
+  "date": "Date",
   "protectedNote": "Protected Note",
   "verifyingIdentity": "Verifying Identity...",
   "transferSuccess": "Transfer Successful!",
@@ -305,7 +305,6 @@
   "general": "General",
   "editor": "Editor",
   "noteColors": "Note Colors",
-  "swipeGestures": "Swipe Gestures",
   "swipeGesturesMobileHint": "These settings apply to the mobile version only",
   "enabled": "Enabled",
   "disabled": "Disabled",
@@ -338,7 +337,6 @@
   "ok": "OK",
   "restoreSuccessful": "Restore Successful",
   "mergedSuccessfully": "Merged successfully",
-  "restoredSuccessfully": "Restored successfully",
   "createNote": "Create Note",
   "startSending": "Start Sending",
   "manualEntry": "Manual Entry",
@@ -504,7 +502,6 @@
   "permissionsDenied": "Permissions denied. Reminders may not work.",
   "removeReminder": "Remove Reminder",
   "reminderRemoved": "Reminder removed",
-  "date": "Date",
   "time": "Time",
   "repeat": "Repeat",
   "doesNotRepeat": "Does not repeat",
@@ -574,7 +571,7 @@
   "vaultFoundInDrive": "☁️ Vault found in Google Drive",
   "restoreVaultFromDrive": "Restore Vault from Drive",
   "importantInfo": "Important Information",
-  "recoveryCodeInfo": "\u2022 Save this code securely - it's your backup key if you forget your password.\n\n• This code works only on this device. If you switch devices or restore from cloud backup, you'll need to unlock notes first.\n\n• Why? Encryption keys stay on your device for maximum privacy and security.\n\n• Tip: Before syncing to another device, unlock your notes or keep them on this device only.",
+  "recoveryCodeInfo": "• Save this code securely - it's your backup key if you forget your password.\n\n• This code works only on this device. If you switch devices or restore from cloud backup, you'll need to unlock notes first.\n\n• Why? Encryption keys stay on your device for maximum privacy and security.\n\n• Tip: Before syncing to another device, unlock your notes or keep them on this device only.",
   "uploadOptions": "Upload Options",
   "uploadOptionsDesc": "Choose what to upload to Google Drive:",
   "uploadMasterKey": "Upload Master Encryption Key",
@@ -608,7 +605,6 @@
   "searchInTrash": "Search in Trash",
   "searchInVault": "Search in Vault",
   "errorOpeningNote": "Error opening note",
-  "noteType": "Note Type",
   "convertTo": "Convert To",
   "richText": "Rich Text",
   "convertToChecklist": "Convert to Checklist",
@@ -617,7 +613,6 @@
   "convertConfirmPlain": "Checklist will become plain text. Continue?",
   "noteConverted": "Note converted successfully",
   "file": "File",
-  "edit": "Edit",
   "view": "View",
   "help": "Help",
   "pullToRefresh": "Pull to refresh",
@@ -660,12 +655,7 @@
   "resetVaultNewPasswordHint": "Create a new password for your vault. This will replace the old one.",
   "startReset": "Start Reset",
   "resetVaultDoNotClose": "Do not close the app or turn off your phone until the process is complete.",
-  "resetStatusPreparing": "Preparing...",
-  "resetStatusBackingUp": "Reading encryption key...",
-  "resetStatusDecrypting": "Decrypting notes...",
-  "resetStatusGeneratingKey": "Generating new encryption key...",
   "resetStatusReEncrypting": "Re-encrypting notes...",
-  "resetStatusReplacing": "Finalizing...",
   "resetVaultSuccess": "Vault Reset Complete!",
   "saveCodeFirst": "Please save the recovery code first",
   "done": "Done",
@@ -737,5 +727,37 @@
   "signInRequiredMessage": "Sign in to Google Drive to enable this setting.",
   "@signInRequiredMessage": {},
   "goToSignIn": "Go to Sign In",
-  "@goToSignIn": {}
+  "@goToSignIn": {},
+  "vaultPasswordTooShort": "Use at least 8 characters",
+  "vaultPasswordNeedsDigit": "Add at least one number",
+  "vaultPasswordNeedsSymbol": "Add at least one symbol",
+  "vaultPasswordNeedsLetter": "Use English letters, numbers and symbols, with at least one letter",
+  "resetVaultFailed": "Reset failed. Nothing was changed.",
+  "restoreDataTitle": "Restore Data",
+  "currentNotesCount": "You have {count} notes currently",
+  "restoreMergedCount": "Merged: {count} notes added or updated",
+  "restoreReplacedCount": "Replaced: {count} notes",
+  "unsupportedBackupFile": "This file is not a backup this version can read",
+  "openVaultToImportLocked": "Open the vault first to import locked notes",
+  "@currentNotesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@restoreMergedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@restoreReplacedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

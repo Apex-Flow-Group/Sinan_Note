@@ -1,11 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
-import 'dart:io';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sinan_note/data/services/database/app_database.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/data/services/database/notes_schema.dart';
 import 'package:sinan_note/domain/models/note.dart';
@@ -93,12 +91,8 @@ class SqliteDatabaseService implements NoteDbInterface {
 
   /// مسار ملف قاعدة البيانات — مشترك مع BackupService و VaultResetService
   static Future<String> getDbPath() async {
-    if (_dbPathOverride != null) return _dbPathOverride!;
-    if (Platform.isAndroid) {
-      return p.join(await getDatabasesPath(), _dbName);
-    }
-    final dir = await getApplicationDocumentsDirectory();
-    return p.join(dir.path, _dbName);
+    // نفس مسار AppDatabase حرفياً: sqflite يعطي الاتصال نفسه للمسار نفسه
+    return _dbPathOverride ?? await AppDatabase.defaultPath();
   }
 
   static Future<String> _dbPath() => getDbPath();

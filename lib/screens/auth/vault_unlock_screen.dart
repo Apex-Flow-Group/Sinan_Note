@@ -1,13 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
 
@@ -15,8 +14,6 @@ final _passwordFormatter = FilteringTextInputFormatter.allow(
   RegExp(r'[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:,.<>/?\\|`~"]'),
 );
 
-// Password validation is handled by validateVaultPassword() from vault_intro_pages.dart
-// which delegates to VaultService.validatePasswordStrength() — single source of truth.
 
 class VaultUnlockScreen extends StatefulWidget {
   final bool biometricFailed;
@@ -68,11 +65,10 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   }
 
   Future<void> _loadBiometricState() async {
-    final visible = await VaultService.isBiometricButtonVisible();
-    final hasBio = await BiometricService.hasBiometrics();
-    if (mounted) {
-      setState(() => _showBiometricButton = visible && hasBio);
-    }
+    final vault = context.read<VaultViewModel>();
+    final visible = await vault.isBiometricButtonVisible() &&
+        await vault.canUseBiometrics();
+    if (mounted) setState(() => _showBiometricButton = visible);
   }
 
   @override
@@ -98,7 +94,8 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       _loading = true;
       _errorText = null;
     });
-    final success = await VaultService.unlockWithPassword(password);
+    final success =
+        await context.read<VaultViewModel>().unlockWithPassword(password);
     if (!mounted) return;
 
     if (success) {
@@ -115,20 +112,10 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     if (!mounted || _loading) return;
     final l10n = AppLocalizations.of(context)!;
 
-    final authenticated = await UnifiedLockService().runVaultOperation(
-      () => BiometricService.authenticate(),
-    );
+    final opened = await context.read<VaultViewModel>().unlockWithBiometrics();
     if (!mounted) return;
-
-    if (authenticated) {
-      try {
-        await VaultService.getMasterKey();
-        if (!mounted) return;
-        _navigateToVault();
-      } catch (_) {
-        if (!mounted) return;
-        setState(() => _errorText = l10n.enterPassword);
-      }
+    if (opened) {
+      _navigateToVault();
     } else {
       setState(() => _errorText = l10n.authenticationFailed);
     }
@@ -149,7 +136,9 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       _errorText = null;
     });
 
-    final success = await VaultService.recoverWithCode(recoveryCode);
+    final success = await context
+        .read<VaultViewModel>()
+        .unlockWithRecoveryCode(recoveryCode);
     if (!mounted) return;
 
     if (success) {
@@ -173,7 +162,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     final confirm = _confirmPasswordController.text;
     final l10n = AppLocalizations.of(context)!;
 
-    final validationError = validateVaultPassword(newPassword);
+    final validationError = validateVaultPassword(AppLocalizations.of(context)!, newPassword);
     if (validationError != null) {
       setState(() => _errorText = validationError);
       return;
@@ -187,17 +176,9 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       _loading = true;
       _errorText = null;
     });
-    final success = await VaultService.setPasswordAfterRecovery(newPassword);
+    await context.read<VaultViewModel>().setPassword(newPassword);
     if (!mounted) return;
-
-    if (success) {
-      _navigateToVault();
-    } else {
-      setState(() {
-        _errorText = AppLocalizations.of(context)!.decryptionFailed;
-        _loading = false;
-      });
-    }
+    _navigateToVault();
   }
 
   void _navigateToVault() async {

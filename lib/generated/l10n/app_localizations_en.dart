@@ -313,7 +313,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileEmpty => 'File is empty';
 
   @override
-  String get noNotesInFile => 'No notes in file';
+  String get noNotesInFile => 'No notes in this file';
 
   @override
   String get allNotesInFileEmpty => 'All notes in file are empty';
@@ -1978,22 +1978,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Do not close the app or turn off your phone until the process is complete.';
 
   @override
-  String get resetStatusPreparing => 'Preparing...';
-
-  @override
-  String get resetStatusBackingUp => 'Reading encryption key...';
-
-  @override
-  String get resetStatusDecrypting => 'Decrypting notes...';
-
-  @override
-  String get resetStatusGeneratingKey => 'Generating new encryption key...';
-
-  @override
   String get resetStatusReEncrypting => 'Re-encrypting notes...';
-
-  @override
-  String get resetStatusReplacing => 'Finalizing...';
 
   @override
   String get resetVaultSuccess => 'Vault Reset Complete!';
@@ -2166,4 +2151,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goToSignIn => 'Go to Sign In';
+
+  @override
+  String get vaultPasswordTooShort => 'Use at least 8 characters';
+
+  @override
+  String get vaultPasswordNeedsDigit => 'Add at least one number';
+
+  @override
+  String get vaultPasswordNeedsSymbol => 'Add at least one symbol';
+
+  @override
+  String get vaultPasswordNeedsLetter =>
+      'Use English letters, numbers and symbols, with at least one letter';
+
+  @override
+  String get resetVaultFailed => 'Reset failed. Nothing was changed.';
+
+  @override
+  String get restoreDataTitle => 'Restore Data';
+
+  @override
+  String currentNotesCount(int count) {
+    return 'You have $count notes currently';
+  }
+
+  @override
+  String restoreMergedCount(int count) {
+    return 'Merged: $count notes added or updated';
+  }
+
+  @override
+  String restoreReplacedCount(int count) {
+    return 'Replaced: $count notes';
+  }
+
+  @override
+  String get unsupportedBackupFile =>
+      'This file is not a backup this version can read';
+
+  @override
+  String get openVaultToImportLocked =>
+      'Open the vault first to import locked notes';
 }

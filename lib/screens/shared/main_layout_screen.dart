@@ -60,13 +60,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     tabToHomeNotifier.addListener(_onBackToHome);
     currentTabIndexNotifier.addListener(_onTabIndexChanged);
 
-    // تسجيل callback المزامنة فوراً — لضمان عدم فقدان sync events مبكرة
-    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final categoriesProvider =
-        Provider.of<CategoriesProvider>(context, listen: false);
-    notesProvider.stateService.onCategoriesRefreshNeeded =
-        () => categoriesProvider.refreshCategories();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       PlatformHelper.lockOrientationForMobile(context);
     });

@@ -1,15 +1,12 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/vault_reset_service.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -36,14 +33,11 @@ class VaultDialogs {
               },
             ),
             FutureBuilder<bool>(
-              future: Future.wait([
-                VaultService.isBiometricEnabled(),
-                BiometricService.hasBiometrics(),
-              ]).then((r) => r[1]),
+              future: BiometricService.hasBiometrics(),
               builder: (context, snapshot) {
                 if (snapshot.data != true) return const SizedBox.shrink();
                 return FutureBuilder<bool>(
-                  future: VaultService.isBiometricEnabled(),
+                  future: context.read<VaultViewModel>().isBiometricEnabled(),
                   builder: (context, biometricSnapshot) {
                     final isEnabled = biometricSnapshot.data ?? false;
                     return SwitchListTile(
@@ -52,7 +46,9 @@ class VaultDialogs {
                       subtitle: Text(l10n.biometricOptional),
                       value: isEnabled,
                       onChanged: (val) async {
-                        await VaultService.setBiometricEnabled(val);
+                        await context
+                            .read<VaultViewModel>()
+                            .setBiometricEnabled(val);
                         if (!context.mounted) return;
                         Navigator.pop(context);
                         UnifiedNotificationService().show(
@@ -74,7 +70,8 @@ class VaultDialogs {
               builder: (context, snapshot) {
                 if (snapshot.data != true) return const SizedBox.shrink();
                 return FutureBuilder<bool>(
-                  future: VaultService.isBiometricButtonVisible(),
+                  future:
+                      context.read<VaultViewModel>().isBiometricButtonVisible(),
                   builder: (context, visibleSnapshot) {
                     final isVisible = visibleSnapshot.data ?? true;
                     return SwitchListTile(
@@ -83,7 +80,9 @@ class VaultDialogs {
                       subtitle: Text(l10n.showBiometricButtonDesc),
                       value: isVisible,
                       onChanged: (val) async {
-                        await VaultService.setBiometricButtonVisible(val);
+                        await context
+                            .read<VaultViewModel>()
+                            .setBiometricButtonVisible(val);
                         if (!context.mounted) return;
                         Navigator.pop(context);
                       },
@@ -234,10 +233,7 @@ class VaultDialogs {
               onPressed: confirmed
                   ? () async {
                       Navigator.pop(ctx);
-                      await _authenticateAndExecute(
-                        context,
-                        () => _executeDecryptAndDestroy(context),
-                      );
+                      await _executeDecryptAndDestroy(context);
                     }
                   : null,
               style: TextButton.styleFrom(foregroundColor: Colors.orange),
@@ -285,10 +281,7 @@ class VaultDialogs {
               onPressed: confirmed
                   ? () async {
                       Navigator.pop(ctx);
-                      await _authenticateAndExecute(
-                        context,
-                        () => _executeDestroyWithContent(context),
-                      );
+                      await _executeDestroyWithContent(context);
                     }
                   : null,
               style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -300,103 +293,36 @@ class VaultDialogs {
     );
   }
 
-  static Future<void> _authenticateAndExecute(
-    BuildContext context,
-    Future<void> Function() action,
-  ) async {
-    VaultResetGuard.isActive = true;
-    try {
-      await action();
-    } finally {
-      VaultResetGuard.isActive = false;
-    }
-  }
-
-  /// تنفيذ تدمير الخزنة — الجزء المشترك بين الخيارين
-  /// [processNotes]: دالة تُعالج الملاحظات (فك تشفير أو حذف)
-  static Future<void> _executeDestroyVault(
-    BuildContext context,
-    Future<void> Function(SqliteDatabaseService db, List<dynamic> notes)
-        processNotes,
-  ) async {
+  /// يحذف الخزنة. مع [keepNotes] تُفك كل الملاحظات أولاً؛ إن تعذّر فك أي
+  /// منها لا يُحذف شيء.
+  static Future<void> _destroyVault(BuildContext context,
+      {required bool keepNotes}) async {
     final l10n = AppLocalizations.of(context)!;
-
     try {
-      final dbService = SqliteDatabaseService();
-      final lockedNotes = await dbService.getLockedNotes();
-
-      if (lockedNotes.isNotEmpty) {
-        await processNotes(dbService, lockedNotes);
-      }
-
-      await VaultService.clearVault();
-
+      await context.read<VaultViewModel>().destroy(keepNotes: keepNotes);
       if (!context.mounted) return;
-
-      Provider.of<NotesProvider>(context, listen: false)
-          .refreshAllNotes(force: true);
-
       UnifiedNotificationService().show(
         context: context,
         message: l10n.vaultDestroyed,
         type: NotificationType.success,
       );
-
       Navigator.of(context, rootNavigator: true)
           .popUntil((route) => route.settings.name == '/main' || route.isFirst);
-    } catch (e) {
+    } on Object {
       if (!context.mounted) return;
       UnifiedNotificationService().show(
         context: context,
-        message: '${l10n.failed}: $e',
+        message: l10n.decryptionFailed,
         type: NotificationType.error,
       );
     }
   }
 
-  /// فك تشفير كل الملاحظات ثم تدمير الخزنة
-  static Future<void> _executeDecryptAndDestroy(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
+  static Future<void> _executeDecryptAndDestroy(BuildContext context) =>
+      _destroyVault(context, keepNotes: true);
 
-    await _executeDestroyVault(context, (db, notes) async {
-      enc.Key? masterKey;
-      try {
-        masterKey = await VaultService.getMasterKey();
-      } catch (_) {
-        if (!context.mounted) return;
-        UnifiedNotificationService().show(
-          context: context,
-          message: l10n.decryptionFailed,
-          type: NotificationType.error,
-        );
-        return;
-      }
-
-      for (final note in notes) {
-        final decryptedTitle =
-            VaultService.decryptWithKey(note.title, masterKey);
-        final decryptedContent =
-            VaultService.decryptWithKey(note.content, masterKey);
-        await db.updateNote(note.copyWith(
-          title: decryptedTitle,
-          content: decryptedContent,
-          isLocked: false,
-          updatedAt: DateTime.now(),
-        ));
-      }
-
-      VaultService.wipeMasterKey(masterKey);
-    });
-  }
-
-  /// تدمير الخزنة مع كل محتوياتها
-  static Future<void> _executeDestroyWithContent(BuildContext context) async {
-    await _executeDestroyVault(context, (db, notes) async {
-      for (final note in notes) {
-        if (note.id != null) await db.deleteNote(note.id!);
-      }
-    });
-  }
+  static Future<void> _executeDestroyWithContent(BuildContext context) =>
+      _destroyVault(context, keepNotes: false);
 
   static void showChangePassword(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -480,21 +406,10 @@ class VaultDialogs {
                                       () => errorText = l10n.fillAllFields);
                                   return;
                                 }
-                                if (newP.length < 8) {
-                                  setModalState(
-                                      () => errorText = 'Minimum 8 characters');
-                                  return;
-                                }
-                                if (!RegExp(r'[0-9]').hasMatch(newP)) {
-                                  setModalState(() => errorText =
-                                      'Must contain at least one number');
-                                  return;
-                                }
-                                if (!RegExp(
-                                        r'[!@#$%^&*()\-_=+\[\]{};:,.<>/?\\|`~"]')
-                                    .hasMatch(newP)) {
-                                  setModalState(() => errorText =
-                                      'Must contain at least one symbol');
+                                final issue =
+                                    validateVaultPassword(l10n, newP);
+                                if (issue != null) {
+                                  setModalState(() => errorText = issue);
                                   return;
                                 }
                                 if (newP != confirm) {
@@ -503,9 +418,9 @@ class VaultDialogs {
                                   return;
                                 }
                                 setModalState(() => isLoading = true);
-                                final success =
-                                    await VaultService.changePassword(
-                                        old, newP);
+                                final success = await context
+                                    .read<VaultViewModel>()
+                                    .changePassword(old, newP);
                                 if (success && context.mounted) {
                                   Navigator.pop(context);
                                   UnifiedNotificationService().show(

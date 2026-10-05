@@ -1,11 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
 
 /// نقطة الدخول الرئيسية للخزنة.
@@ -25,51 +25,40 @@ class _VaultEntryScreenState extends State<VaultEntryScreen> {
   }
 
   Future<void> _checkVaultStatus() async {
-    final hasNewVault = await VaultService.isVaultSetup();
-    if (!mounted) return;
-
-    if (!hasNewVault) {
-      VaultNavigator.toIntro(context);
+    final vault = context.read<VaultViewModel>();
+    if (!await vault.isSetUp()) {
+      if (mounted) VaultNavigator.toIntro(context);
       return;
     }
-
-    final biometricEnabled = await VaultService.isBiometricEnabled();
-    // تحقق من أن الجهاز يدعم البصمة فعلياً (ويندوز/لينكس لا يدعمان)
-    final hasBiometrics = await BiometricService.hasBiometrics();
-    if (!mounted) return;
-
-    if (biometricEnabled && hasBiometrics) {
-      // الجهاز يدعم البصمة وهي مفعّلة → جرّب البصمة
-      await _authenticateWithBiometric();
-    } else {
-      // ويندوز/لينكس أو البصمة معطلة → شاشة كلمة مرور الخزنة مباشرة
-      VaultNavigator.toUnlock(context);
+    // بلا فتح سريع (أو جهاز بلا بصمة): كلمة سر الخزنة
+    if (!await vault.canUseBiometrics()) {
+      if (mounted) VaultNavigator.toUnlock(context);
+      return;
     }
-  }
-
-  Future<void> _authenticateWithBiometric() async {
-    final lockType = await UnifiedLockService().getLockType();
     if (!mounted) return;
 
-    if (lockType == LockType.pin) {
+    if (await UnifiedLockService().getLockType() == LockType.pin) {
       final hasPinAlready = await UnifiedLockService().hasPinSet();
       if (!mounted) return;
-      // toPinLock يستبدل هذه الشاشة، فـ context هنا يصبح غير مُركّب عند
-      // النجاح وكان الانتقال يفشل بصمت ويعلق المستخدم في شاشة PIN.
+      // toPinLock يستبدل هذه الشاشة، فالـ Navigator يُحفظ قبلها
       final navigator = Navigator.of(context);
       VaultNavigator.toPinLock(
         context,
         isSetup: !hasPinAlready,
-        onSuccess: () => VaultNavigator.replaceWithLockedNotes(navigator),
+        onSuccess: () async {
+          if (await vault.unlockAfterDeviceAuth()) {
+            VaultNavigator.replaceWithLockedNotes(navigator);
+          } else {
+            VaultNavigator.replaceWithUnlock(navigator);
+          }
+        },
       );
       return;
     }
 
-    final authenticated = await UnifiedLockService()
-        .authenticate(context: 'vault_entry', reuseSession: false);
+    final opened = await vault.unlockWithBiometrics();
     if (!mounted) return;
-
-    if (authenticated) {
+    if (opened) {
       VaultNavigator.toLockedNotes(context);
     } else {
       VaultNavigator.toUnlock(context, biometricFailed: true);

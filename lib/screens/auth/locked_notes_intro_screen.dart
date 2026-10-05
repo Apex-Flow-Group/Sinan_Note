@@ -1,15 +1,14 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/feature_info.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 
 const double _kMaxContentWidth = 600.0;
 
@@ -81,7 +80,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     if (_currentPage == 1) {
       final password = _passwordController.text;
       final confirm = _confirmController.text;
-      final validationError = validateVaultPassword(password);
+      final validationError = validateVaultPassword(AppLocalizations.of(context)!, password);
       if (validationError != null) {
         setState(() => _errorText = validationError);
         return;
@@ -98,7 +97,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
       try {
-        final code = await VaultService.setupVault(password);
+        // البصمة تُفعَّل لاحقاً في الصفحة الأخيرة إن اختارها المستخدم
+        final code = await context
+            .read<VaultViewModel>()
+            .setUp(password, biometric: false);
         if (!mounted) return;
         Navigator.pop(context);
         setState(() {
@@ -138,13 +140,11 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
   }
 
   Future<void> _finishSetup({bool enableBiometric = false}) async {
-    await VaultService.setBiometricEnabled(enableBiometric);
+    await context.read<VaultViewModel>().setBiometricEnabled(enableBiometric);
     if (!mounted) return;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     await settings.setLockedIntroSeen(true);
     if (!mounted) return;
-    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    notesProvider.unlockVault();
     VaultNavigator.toLockedNotes(context);
   }
 
@@ -333,8 +333,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
           if (showBiometricButton)
             TextButton(
               onPressed: () async {
-                await VaultService.setBiometricEnabled(false);
-                if (mounted) await _finishSetup(enableBiometric: false);
+                await _finishSetup(enableBiometric: false);
               },
               child: Text(l10n.skipBiometric),
             ),

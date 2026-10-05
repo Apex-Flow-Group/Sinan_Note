@@ -16,7 +16,7 @@ import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
-import 'package:sinan_note/services/security/vault_reset_service.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
@@ -84,7 +84,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // المصادقة البيومترية تمر عبر runVaultOperation (isVaultOperation)
-    if (VaultResetGuard.isActive || UnifiedLockService().isVaultOperation) {
+    // عملية طويلة (تدوير المفتاح/الحذف) أو مصادقة جارية: لا إغلاق
+    if (context.read<VaultViewModel>().isBusy ||
+        UnifiedLockService().isVaultOperation) {
       return;
     }
 

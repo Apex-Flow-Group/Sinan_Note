@@ -87,7 +87,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     final l10n = AppLocalizations.of(context)!;
 
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    final dbNote = provider.stateService.getNoteById(noteId);
+    final dbNote = provider.cachedNote(noteId);
     if (dbNote == null || !mounted) return;
 
     String newContent = dbNote.content;
@@ -187,7 +187,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       isChecklist: targetType == 'checklist',
     );
 
-    final updated = provider.stateService.getNoteById(noteId);
+    final updated = provider.cachedNote(noteId);
     if (updated == null || !mounted) return;
 
     widget.coordinator.contentController.text = updated.content;

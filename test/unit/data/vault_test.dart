@@ -9,8 +9,6 @@ import 'package:sinan_note/data/services/vault/key_derivation.dart';
 import 'package:sinan_note/data/services/vault/vault_cipher.dart';
 import 'package:sinan_note/data/services/vault/vault_key_store.dart';
 import 'package:sinan_note/domain/errors.dart';
-import 'package:sinan_note/services/security/vault_service.dart'
-    show VaultService;
 
 import '../../test_setup.dart';
 
@@ -208,10 +206,34 @@ void main() {
   group('compatibility with vaults created by previous versions', () {
     setUp(_wipeSecureStorage);
 
-    test('old VaultService vault opens with VaultRepository; its notes decrypt',
+    /// مواد خزنة بالصيغة التي كتبها VaultService في الإصدارات السابقة، حرفياً:
+    /// ملح مشترك، مفتاح مغلّف بكلمة السر `100000:iv:ct` (AES-CTR)، بصمة
+    /// PBKDF2 `salt:hash`، والمفتاح الخام مخزّن دائماً.
+    Future<Uint8List> writeLegacyVault(String password) async {
+      const storage = FlutterSecureStorage();
+      final masterKey = legacy.Key.fromSecureRandom(32);
+      final salt = Uint8List.fromList(List.generate(16, (i) => i * 3));
+      await storage.write(key: 'vault_pbkdf2_salt', value: base64.encode(salt));
+      final derived = await KeyDerivation.derive(password, salt);
+      final iv = legacy.IV.fromSecureRandom(16);
+      final wrapped = legacy.Encrypter(legacy.AES(legacy.Key(derived)))
+          .encrypt(masterKey.base64, iv: iv);
+      await storage.write(
+          key: 'vault_master_key_password',
+          value: '100000:${iv.base64}:${wrapped.base64}');
+      await storage.write(
+          key: 'vault_password_hash', value: await KeyDerivation.hash(password));
+      await storage.write(key: 'vault_master_key', value: masterKey.base64);
+      return masterKey.bytes;
+    }
+
+    test('a vault written by previous versions opens; its notes decrypt',
         () async {
-      await VaultService.setupVault('OldPass1!');
-      final oldCiphertext = await VaultService.encryptWithMasterKey('old note');
+      final key = await writeLegacyVault('OldPass1!');
+      final iv = legacy.IV.fromSecureRandom(16);
+      final ct =
+          legacy.Encrypter(legacy.AES(legacy.Key(key))).encrypt('old note', iv: iv);
+      final oldCiphertext = '${iv.base64}:${ct.base64}';
 
       final vault = VaultRepository(store: VaultKeyStore());
       await vault.initialize();

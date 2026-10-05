@@ -18,7 +18,13 @@ import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
+import 'package:sinan_note/data/repositories/notes_repository.dart';
+import 'package:sinan_note/data/repositories/vault_repository.dart';
+import 'package:sinan_note/data/services/database/app_database.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/data/services/legacy_cleanup.dart';
+import 'package:sinan_note/data/services/note_side_effects.dart';
+import 'package:sinan_note/data/services/sync_scheduler.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -35,9 +41,9 @@ import 'package:sinan_note/services/app_update_service.dart';
 import 'package:sinan_note/services/cloud/google_drive_auth.dart';
 import 'package:sinan_note/services/intent_handler_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
-import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -74,14 +80,32 @@ void main() async {
     privacyBlurEnabled: false,
   ));
 
-  // ⚡ Start app immediately - Isar will initialize in SplashScreen
+  // ── نقطة التركيب: البيانات تُنشأ مرة واحدة وتُحقن ─────────────────────
+  final database = await AppDatabase.open();
+  final vault = VaultRepository();
+  await vault.initialize();
+  final notes = NotesRepository(
+    db: database,
+    vault: vault,
+    sideEffects: PlatformNoteSideEffects(),
+    deletionLog: PreferencesDeletionLog(),
+  );
+  final categories = CategoriesProvider();
+  SyncScheduler(notes: notes, afterSync: categories.refreshCategories);
+  unawaited(LegacyCleanup.run());
+
   runApp(
     MultiProvider(
       providers: [
+        Provider.value(value: notes),
+        Provider.value(value: vault),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => NotesProvider()),
+        ChangeNotifierProvider(
+            create: (_) => NotesProvider(notes: notes, vault: vault)),
+        ChangeNotifierProvider(
+            create: (_) => VaultViewModel(vault: vault, notes: notes)),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
-        ChangeNotifierProvider(create: (_) => CategoriesProvider()),
+        ChangeNotifierProvider.value(value: categories),
         ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
       ],
       child: const ApexNoteApp(),
@@ -328,11 +352,14 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     } catch (_) {}
   }
 
+  /// من الويدجت أو الإشعار. الملاحظات غير المقفلة فقط — رابط خارجي لا يفتح
+  /// ملاحظة مقفلة أبداً.
   void _openNoteById(int noteId) async {
     try {
-      final dbService = SqliteDatabaseService();
-      final note = await dbService.getNoteById(noteId);
-      if (note != null) {
+      final context = navigatorKey.currentContext;
+      final note =
+          context == null ? null : context.read<NotesProvider>().cachedNote(noteId);
+      if (note != null && !note.isTrashed) {
         AppNavigator.toEditorViaKey(
           navigatorKey,
           note: note,

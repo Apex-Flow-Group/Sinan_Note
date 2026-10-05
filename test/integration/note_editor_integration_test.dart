@@ -12,6 +12,7 @@ import 'package:sinan_note/screens/shared/note_editor.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import '../helpers/test_data_layer.dart';
 import '../test_setup.dart';
 
 void main() {
@@ -32,18 +33,21 @@ void main() {
   });
 
   group('NoteEditorImmersive Integration', () {
+    late TestDataLayer data;
     late NotesProvider notesProvider;
     late SettingsProvider settingsProvider;
 
     setUp(() async {
-      notesProvider = NotesProvider();
+      data = await TestDataLayer.create();
+      notesProvider = NotesProvider(notes: data.notes, vault: data.vault);
       settingsProvider = SettingsProvider();
       await Future.delayed(const Duration(milliseconds: 100));
     });
 
-    tearDown(() {
+    tearDown(() async {
       notesProvider.dispose();
       settingsProvider.dispose();
+      await data.dispose();
     });
 
     Widget buildEditor({Note? note, NoteMode mode = NoteMode.simple}) {
