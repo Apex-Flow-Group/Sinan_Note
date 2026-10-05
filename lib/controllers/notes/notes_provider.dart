@@ -6,6 +6,8 @@ import 'package:sinan_note/data/repositories/vault_repository.dart';
 import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
+import 'package:sinan_note/domain/versioning.dart';
 
 /// ViewModel الملاحظات المشترك للشاشات التي لم تنتقل بعد إلى ViewModel خاص
 /// بميزتها. لا حالة ولا منطق تخزين هنا: كل شيء من [NotesRepository]،
@@ -235,6 +237,14 @@ class NotesProvider extends ChangeNotifier {
   Future<int> duplicateNote(int id, {String copyLabel = 'Copy'}) async =>
       (await _notes.duplicate(id, copyLabel: copyLabel))?.id ?? -1;
 
+  // ── النسخ السابقة ────────────────────────────────────────────────────────
+
+  /// نسخة من الملاحظة كما هي مخزّنة؛ المقفلة لا نسخ لها أبداً.
+  Future<void> recordVersion(int id, VersionTrigger trigger) =>
+      _notes.recordVersion(id, trigger);
+
+  Future<List<NoteVersion>> history(int id) => _notes.history(id);
+
   // ── الخزنة ───────────────────────────────────────────────────────────────
 
   bool get isVaultUnlocked => _vault.isUnlocked;
@@ -256,13 +266,6 @@ class NotesProvider extends ChangeNotifier {
     } on VaultDecryptionException {
       return false;
     }
-  }
-
-  void lockVault() => _vault.lock();
-
-  void clearLockedSession({bool notify = true}) {
-    _locked = const [];
-    if (notify) notifyListeners();
   }
 
   void _onVaultChanged() {

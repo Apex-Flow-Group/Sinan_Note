@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/versioning.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class EditorSaveManager {
@@ -108,20 +108,9 @@ class EditorSaveManager {
     );
 
     final newId = await provider.addOrUpdateNote(noteToSave, silent: silent);
-
-    // Log version for history
-    try {
-      await VersionControlService().smartLogVersion(
-        noteId: newId,
-        title: title,
-        content: content,
-        isManualAction: !isAutoSave,
-        noteType: noteType,
-      );
-    } catch (e) {
-      // History logging failed, but note was saved
+    if (!isAutoSave) {
+      await provider.recordVersion(newId, VersionTrigger.manual);
     }
-
     return newId;
   }
 

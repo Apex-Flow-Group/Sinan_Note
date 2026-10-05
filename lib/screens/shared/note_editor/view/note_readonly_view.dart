@@ -20,7 +20,6 @@ import 'package:sinan_note/screens/shared/note_editor/view/book_mode_view.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/trash_floating_sheet.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/read_only_bars.dart';
-import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
@@ -170,15 +169,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
       }
     }
 
-    await VersionControlService().smartLogVersion(
-      noteId: noteId,
-      title: dbNote.title,
-      content: dbNote.content,
-      isManualAction: true,
-      noteType: dbNote.noteType,
-      forceLog: true,
-    );
-
+    // convertNoteType يحفظ الحالة السابقة كنسخة
     if (!mounted) return;
     await provider.convertNoteType(
       noteId,

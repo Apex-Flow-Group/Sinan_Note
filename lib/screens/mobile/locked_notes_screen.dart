@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
@@ -9,6 +11,7 @@ import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/core/utils/search_mixin.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
+import 'package:sinan_note/domain/errors.dart' show VaultLockedException;
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
@@ -40,6 +43,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   bool _isLoading = true;
   List<Note> _decryptedNotes = [];
   NotesProvider? _providerRef;
+  late final VaultViewModel _vault;
+  bool _leaving = false;
   bool _showAddMenu = false;
   final Set<int> _selectedNoteIds = {};
 
@@ -47,6 +52,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // الشاشة مالكة جلسة الخزنة: لا قفل بالمهلة وهي ظاهرة، وأي قفل
+    // (خلفية، رجوع، إعادة تعيين) يُخرجها ويمسح ما فُك.
+    _vault = context.read<VaultViewModel>()
+      ..hold()
+      ..addListener(_onVaultChanged);
     initSearch();
     searchController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -57,6 +67,21 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       _providerRef!.addListener(_onProviderChanged);
       _loadLockedNotes();
       _providerRef!.loadNotes();
+    });
+  }
+
+  void _onVaultChanged() {
+    if (!_vault.isUnlocked) _leaveVault();
+  }
+
+  void _leaveVault() {
+    if (_leaving) return;
+    _leaving = true;
+    _decryptedNotes = [];
+    _selectedNoteIds.clear();
+    setDrawerVaultActive(false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) VaultNavigator.exitVault(context);
     });
   }
 
@@ -76,6 +101,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   @override
   void dispose() {
     _providerRef?.removeListener(_onProviderChanged);
+    _vault
+      ..removeListener(_onVaultChanged)
+      ..release();
     WidgetsBinding.instance.removeObserver(this);
     _closeAllSlidables.dispose();
     super.dispose();
@@ -85,7 +113,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // المصادقة البيومترية تمر عبر runVaultOperation (isVaultOperation)
     // عملية طويلة (تدوير المفتاح/الحذف) أو مصادقة جارية: لا إغلاق
-    if (context.read<VaultViewModel>().isBusy ||
+    if (_vault.isBusy ||
         UnifiedLockService().isVaultOperation) {
       return;
     }
@@ -107,18 +135,24 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       if (_showAddMenu) {
         setState(() => _showAddMenu = false);
       }
-      _providerRef?.clearLockedSession(notify: false);
-      setDrawerVaultActive(false);
-      if (mounted) {
-        VaultNavigator.exitVault(context);
-      }
+      // بعد بقية المراقبين: المحرر المفتوح فوقها يحفظ (ويشفّر) في استدعائه
+      // المتزامن لهذا الحدث نفسه، ثم تُقفل.
+      scheduleMicrotask(() {
+        _vault.lock();
+        _leaveVault();
+      });
     }
   }
 
   Future<void> _loadLockedNotes() async {
+    if (_leaving || !_vault.isUnlocked) return;
     setState(() => _isLoading = true);
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    _decryptedNotes = await provider.fetchAndDecryptLockedNotes();
+    try {
+      _decryptedNotes = await provider.fetchAndDecryptLockedNotes();
+    } on VaultLockedException {
+      return; // أُقفلت أثناء القراءة؛ _onVaultChanged يتولى الخروج
+    }
     AppLogger.info(
         'Loaded ${_decryptedNotes.length} locked notes', 'LockedNotes');
     if (mounted) setState(() => _isLoading = false);
@@ -205,16 +239,9 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
       canPop: _selectedNoteIds.isEmpty && searchController.text.isEmpty,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
-          _providerRef?.clearLockedSession(notify: false);
-          _providerRef?.lockVault();
-          setDrawerVaultActive(false);
-          WidgetsBinding.instance.removeObserver(this);
           // رجوع لأول شاشة في الـ stack (MainLayout) بدلاً من VaultEntryScreen
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              VaultNavigator.exitVault(context);
-            }
-          });
+          _vault.lock();
+          _leaveVault();
           return;
         }
         if (_selectedNoteIds.isNotEmpty) {

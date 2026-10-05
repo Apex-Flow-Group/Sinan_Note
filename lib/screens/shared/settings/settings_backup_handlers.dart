@@ -33,6 +33,7 @@ class SettingsBackupHandlers {
                       type: NotificationType.warning);
                   return;
                 }
+                if (!context.mounted) return;
                 try {
                   final outputPath = await context
                       .read<BackupViewModel>()

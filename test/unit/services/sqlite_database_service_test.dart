@@ -4,7 +4,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import '../../test_setup.dart';
 
@@ -248,83 +247,6 @@ void main() {
 
         final expired = await db.getExpiredReminders();
         expect(expired.length, 1);
-      });
-    });
-
-    group('Version Control', () {
-      test('logNoteVersion يُسجّل نسخة', () async {
-        final note = Note(
-          title: 'Test',
-          content: 'Content',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        final id = await db.insertNote(note);
-
-        await db.logNoteVersion(NoteVersion(
-          noteId: id,
-          title: note.title,
-          content: note.content,
-          timestamp: DateTime.now(),
-          action: 'created',
-          noteType: 'simple',
-        ));
-
-        final history = await db.getNoteHistory(id);
-        expect(history.length, 1);
-        expect(history.first.action, 'created');
-      });
-
-      test('logNoteVersion مرتين يُسجّل نسختين', () async {
-        final note = Note(
-          title: 'Test',
-          content: 'Content',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        final id = await db.insertNote(note);
-        final t1 = DateTime.now();
-        final t2 = t1.add(const Duration(milliseconds: 1));
-
-        await db.logNoteVersion(NoteVersion(
-          noteId: id,
-          title: note.title,
-          content: note.content,
-          timestamp: t1,
-          action: 'created',
-          noteType: 'simple',
-        ));
-        await db.logNoteVersion(NoteVersion(
-          noteId: id,
-          title: 'Updated',
-          content: note.content,
-          timestamp: t2,
-          action: 'updated',
-          noteType: 'simple',
-        ));
-
-        final history = await db.getNoteHistory(id);
-        expect(history.length, 2);
-        expect(history.first.action, 'updated');
-      });
-
-      test('keeps max versions limit', () async {
-        final note = Note(
-          title: 'Test',
-          content: 'Content',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-
-        final id = await db.insertNote(note);
-
-        // Create 60 versions
-        for (int i = 0; i < 60; i++) {
-          await db.updateNote(note.copyWith(id: id, title: 'Update $i'));
-        }
-
-        final history = await db.getNoteHistory(id);
-        expect(history.length, lessThanOrEqualTo(50));
       });
     });
 

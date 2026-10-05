@@ -13,6 +13,7 @@ import 'package:sinan_note/core/shortcuts/app_shortcuts.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/versioning.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_build_methods.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
@@ -21,7 +22,6 @@ import 'package:sinan_note/screens/shared/note_editor/handlers/editor_menu_handl
 import 'package:sinan_note/screens/shared/note_editor/state/editor_save_operations.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/note_readonly_view.dart';
 import 'package:sinan_note/services/keyboard/editor_command_bus.dart';
-import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/category_picker_sheet.dart';
 
@@ -67,6 +67,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   AppLocalizations? _l10nRef;
   StreamSubscription? _quillChangesSubscription;
   late bool _isReadOnly;
+
+  /// العنوان والمحتوى المخزّنان عند بداية جلسة التحرير الحالية.
+  (String, String)? _sessionStart;
 
   // ── EditorMenuHandlersMixin interface ──────────────────────────────
   @override
@@ -117,15 +120,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _coordinator.initialize(context);
     _isReadOnly = widget.readOnly;
 
-    // Start version control session for existing notes
-    if (widget.note != null &&
-        widget.note!.id != null &&
-        !widget.note!.isLocked) {
-      VersionControlService().startEditingSession(
-        widget.note!.id!,
-        widget.note!.title,
-        widget.note!.content,
-      );
+    // بداية جلسة التحرير: الملاحظة كما خُزّنت عند الفتح
+    final opened = widget.note;
+    if (opened != null && opened.id != null && !opened.isLocked) {
+      _sessionStart = _sessionKey(opened);
     }
 
     // للنوتات الطويلة: أعد بناء QuillController في isolate بعد أول frame
@@ -213,52 +211,39 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      // حفظ المحتوى فوراً قبل أي شيء آخر
+      // حفظ المحتوى فوراً قبل أي شيء آخر — متزامناً حتى التشفير، فإقفال
+      // الخزنة في الحدث نفسه يأتي بعده. النسخة بعد اكتمال الحفظ.
       _coordinator.autosaveTimer?.cancel();
-      if (_coordinator.stateManager.hasChanges() &&
-          !_coordinator.stateManager.isSaving &&
-          !_isReadOnly) {
-        _saveNoteToDatabase();
-      }
-      _endVersionSession();
-    } else if (state == AppLifecycleState.resumed) {
-      // Restart session when app comes back
-      final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-      if (noteId != null && !_coordinator.initialLockState) {
-        final content = _currentMode == NoteMode.code
-            ? _coordinator.codeController!.text
-            : (_currentMode == NoteMode.checklist
-                ? _coordinator.contentController.text
-                : (_coordinator.quillController != null
-                    ? QuillMigration.toDeltaJson(_coordinator.quillController!)
-                    : ''));
-        final title = _coordinator.getCurrentTitle('');
-        VersionControlService().startEditingSession(noteId, title, content);
-      }
+      final saving = _coordinator.stateManager.hasChanges() &&
+              !_coordinator.stateManager.isSaving &&
+              !_isReadOnly
+          ? _saveNoteToDatabase()
+          : Future.value(false);
+      unawaited(saving.then((_) => _endVersionSession()));
     }
   }
 
-  /// End the version control session, saving history if there were significant changes
+
+  /// نهاية جلسة تحرير: نسخة واحدة إن تغيّرت الملاحظة المخزّنة منذ فُتحت
+  /// (والسياسة في المستودع تقرر إن كان التغيير ذا معنى). المقفلة لا نسخ لها.
   Future<void> _endVersionSession() async {
     final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-    if (noteId == null || _coordinator.initialLockState) return;
-
-    final content = _currentMode == NoteMode.code
-        ? (_coordinator.codeController?.text ?? '')
-        : (_currentMode == NoteMode.checklist
-            ? _coordinator.contentController.text
-            : (_coordinator.quillController != null
-                ? QuillMigration.toDeltaJson(_coordinator.quillController!)
-                : ''));
-    final title = _coordinator.getCurrentTitle('');
-
-    await VersionControlService().endEditingSession(
-      noteId: noteId,
-      title: title,
-      content: content,
-      isLocked: _coordinator.initialLockState,
-    );
+    final start = _sessionStart;
+    if (noteId == null || start == null || _coordinator.initialLockState) {
+      return;
+    }
+    final provider = _coordinator.notesProviderRef;
+    final stored = provider?.cachedNote(noteId);
+    if (provider == null || stored == null) return;
+    final now = _sessionKey(stored);
+    if (now == start) return;
+    _sessionStart = now;
+    await provider.recordVersion(noteId, VersionTrigger.sessionEnd);
   }
+
+  static (String, String) _sessionKey(Note note) =>
+      (note.title, note.content);
+
 
   // ==================== DIALOG METHODS ====================
 

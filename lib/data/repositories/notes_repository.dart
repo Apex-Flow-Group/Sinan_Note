@@ -199,7 +199,7 @@ class NotesRepository extends ChangeNotifier {
   }) async {
     final current = await find(id);
     if (current == null) return null;
-    await recordVersion(current, VersionTrigger.forced);
+    await _recordVersion(current, VersionTrigger.forced);
     return save(current.copyWith(
       content: content,
       noteType: noteType,
@@ -346,8 +346,38 @@ class NotesRepository extends ChangeNotifier {
 
   // ── النسخ السابقة ────────────────────────────────────────────────────────
 
-  /// يحفظ نسخة من [note] حسب [VersionPolicy]. لا نسخ للملاحظات المقفلة.
-  Future<void> recordVersion(Note note, VersionTrigger trigger) async {
+  /// يحفظ نسخة من الملاحظة كما هي مخزّنة الآن، حسب [VersionPolicy]. لا نسخ
+  /// للملاحظات المقفلة أبداً — يُقرأ ذلك من القاعدة لا من المستدعي.
+  Future<void> recordVersion(int id, VersionTrigger trigger) async {
+    final stored = await _row(id);
+    if (stored != null) await _recordVersion(stored, trigger);
+  }
+
+  /// ملاحظات غير مقفلة لها نسخ سابقة.
+  Future<List<Note>> notesWithHistory() async {
+    final rows = await _db.query('notes',
+        where: 'isLocked = 0 AND id IN (SELECT noteId FROM note_versions)');
+    return _sorted(rows.map(NoteMapper.fromMap));
+  }
+
+  /// يعيد الملاحظة إلى [version] بعد حفظ حالتها الحالية كنسخة.
+  Future<Note?> restoreVersion(int id, NoteVersion version) async {
+    final current = await _row(id);
+    if (current == null || current.isLocked) return null;
+    await _recordVersion(current, VersionTrigger.forced);
+    final noteType =
+        version.noteType.isNotEmpty ? version.noteType : current.noteType;
+    return save(current.copyWith(
+      title: version.title,
+      content: version.content,
+      noteType: noteType,
+      isChecklist: noteType == 'checklist',
+      isProfessional: noteType == 'code',
+      updatedAt: _now(),
+    ));
+  }
+
+  Future<void> _recordVersion(Note note, VersionTrigger trigger) async {
     final id = note.id;
     if (id == null || note.isLocked) return;
     final last = await lastVersion(id);
@@ -364,7 +394,7 @@ class NotesRepository extends ChangeNotifier {
         'title': note.title,
         'content': note.content,
         'timestamp': _now().toUtc().toIso8601String(),
-        'action': trigger.name,
+        'action': trigger.action,
         'noteType': note.noteType,
       });
       await txn.rawDelete(

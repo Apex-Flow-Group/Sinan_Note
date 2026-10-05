@@ -2,16 +2,21 @@
 
 import 'package:sinan_note/domain/models/note_version.dart';
 
-/// متى تُحفظ نسخة جديدة من ملاحظة.
+/// متى تُحفظ نسخة جديدة من ملاحظة. [action] هو ما يُخزَّن ويُعرض — بنفس
+/// القيم التي كتبتها الإصدارات السابقة.
 enum VersionTrigger {
   /// حفظ صريح من المستخدم: يُسجَّل ما لم يطابق آخر نسخة حرفياً.
-  manual,
+  manual('manual_save'),
 
   /// نهاية جلسة تحرير: يُسجَّل فقط إن كان التغيير ذا معنى.
-  sessionEnd,
+  sessionEnd('session_end'),
 
-  /// قبل عملية تغيّر المحتوى جذرياً (تحويل النوع): يُسجَّل دائماً.
-  forced,
+  /// قبل عملية تغيّر المحتوى جذرياً (تحويل النوع، استعادة نسخة): دائماً.
+  forced('manual_save');
+
+  const VersionTrigger(this.action);
+
+  final String action;
 }
 
 /// قواعد النسخ — بلا حالة.

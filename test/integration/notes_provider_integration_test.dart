@@ -222,21 +222,21 @@ void main() {
       expect(provider.isVaultUnlocked, isTrue);
     });
 
-    test('lockVault يقفل الخزنة ويُطلق notifyListeners', () async {
+    test('قفل الخزنة يُطلق notifyListeners', () async {
       await data.vault.setUp('Pass123!');
       int count = 0;
       provider.addListener(() => count++);
-      provider.lockVault();
+      data.vault.lock();
       expect(provider.isVaultUnlocked, isFalse);
       expect(count, greaterThan(0));
     });
 
-    test('lockVault يمسح الملاحظات المقفلة من الذاكرة', () async {
+    test('قفل الخزنة يمسح الملاحظات المقفلة من الذاكرة', () async {
       await data.vault.setUp('Pass123!');
       await provider.addNote(note(title: 'secret', isLocked: true));
       await provider.fetchAndDecryptLockedNotes();
       expect(provider.lockedNotes.length, 1);
-      provider.lockVault();
+      data.vault.lock();
       expect(provider.lockedNotes.length, 0);
     });
   });

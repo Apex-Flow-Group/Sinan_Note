@@ -7,7 +7,6 @@ import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/note_services/version_control_service.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -135,28 +134,15 @@ class NoteConversionSheet {
     }
     // simple/code → rich: النص كما هو (QuillController يبنيه عند الفتح)
 
-    // حفظ نسخة قبل التحويل
-    if (note.id != null) {
-      await VersionControlService().smartLogVersion(
-        noteId: note.id!,
-        title: note.title,
-        content: note.content,
-        isManualAction: true,
-        noteType: note.noteType,
-        forceLog: true,
-      );
-    }
-
-    final updatedNote = note.copyWith(
-      noteType: targetType == 'checklist' ? 'checklist' : targetType,
-      isProfessional: targetType == 'code',
+    // يحفظ الحالة السابقة كنسخة ثم يكتب النوع والمحتوى الجديدين
+    final id = note.id;
+    if (id == null) return;
+    await provider.convertNoteType(
+      id,
+      newContent: newContent,
+      newNoteType: targetType,
       isChecklist: targetType == 'checklist',
-      content: newContent,
-      updatedAt: DateTime.now(),
     );
-
-    await provider.updateNote(updatedNote);
-    await provider.loadNotes(force: true);
     onConverted();
 
     if (context.mounted) {

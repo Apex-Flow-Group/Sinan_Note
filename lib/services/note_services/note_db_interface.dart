@@ -34,10 +34,7 @@ abstract class NoteDbInterface {
   Future<List<Note>> getExpiredReminders();
 
   // Versions
-  Future<void>             logNoteVersion(NoteVersion version);
   Future<List<NoteVersion>> getNoteHistory(int noteId);
-  Future<NoteVersion?>     getLastNoteVersion(int noteId);
-  Future<void>             keepMaxVersions(int noteId, int maxLimit);
   Future<int>              deleteNoteVersions(int noteId);
 
   // Categories

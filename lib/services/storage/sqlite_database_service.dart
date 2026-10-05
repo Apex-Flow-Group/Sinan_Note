@@ -19,7 +19,6 @@ class SqliteDatabaseService implements NoteDbInterface {
   static SqliteDatabaseService? _instance;
   static Completer<Database>? _initCompleter;
 
-  static const _dbName = 'sinan_notes.db';
   static const _dbVersion = NotesSchema.version;
 
   factory SqliteDatabaseService() {
@@ -338,30 +337,6 @@ class SqliteDatabaseService implements NoteDbInterface {
 
   // ── Version Control ───────────────────────────────────────────────────────
 
-  static const int _maxVersionsPerNote = 20;
-
-  @override
-  Future<void> logNoteVersion(NoteVersion version) async {
-    final db = await database;
-    // حارس أخير لكل مسارات التسجيل: المحرر يعمل على نسخة مفكوكة معلَّمة
-    // isLocked=false، فالحكم لحالة الصف المخزن لا لما يمرره المستدعي.
-    final locked = await db.query('notes',
-        columns: ['id'],
-        where: 'id = ? AND isLocked = 1',
-        whereArgs: [version.noteId],
-        limit: 1);
-    if (locked.isNotEmpty) return;
-    await db.insert('note_versions', {
-      'noteId': version.noteId,
-      'title': version.title,
-      'content': version.content,
-      'timestamp': version.timestamp.toUtc().toIso8601String(),
-      'action': version.action,
-      'noteType': version.noteType,
-    });
-    await keepMaxVersions(version.noteId, _maxVersionsPerNote);
-  }
-
   @override
   Future<List<NoteVersion>> getNoteHistory(int noteId) async {
     final db = await database;
@@ -371,30 +346,6 @@ class SqliteDatabaseService implements NoteDbInterface {
             orderBy: 'timestamp DESC'))
         .map(_versionFromMap)
         .toList();
-  }
-
-  @override
-  Future<NoteVersion?> getLastNoteVersion(int noteId) async {
-    final db = await database;
-    final rows = await db.query('note_versions',
-        where: 'noteId = ?',
-        whereArgs: [noteId],
-        orderBy: 'timestamp DESC',
-        limit: 1);
-    return rows.isEmpty ? null : _versionFromMap(rows.first);
-  }
-
-  @override
-  Future<void> keepMaxVersions(int noteId, int maxLimit) async {
-    final db = await database;
-    final rows = await db.query('note_versions',
-        where: 'noteId = ?', whereArgs: [noteId], orderBy: 'timestamp DESC');
-    if (rows.length > maxLimit) {
-      final toDelete = rows.skip(maxLimit).map((r) => r['id'] as int).toList();
-      await db.delete('note_versions',
-          where: 'id IN (${toDelete.map((_) => '?').join(',')})',
-          whereArgs: toDelete);
-    }
   }
 
   @override

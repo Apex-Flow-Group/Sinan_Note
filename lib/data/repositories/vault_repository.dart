@@ -11,8 +11,9 @@ import 'package:sinan_note/domain/errors.dart';
 /// جلسة الخزنة: المصدر الوحيد للمفتاح الرئيسي.
 ///
 /// المفتاح المفكوك في الذاكرة فقط ما دامت الخزنة مفتوحة، ويُمسح عند [lock]
-/// أو بعد [autoLockAfter] بلا استخدام. أي تشفير/فك تشفير والخزنة مقفلة يرمي
-/// [VaultLockedException] — لا مسار يصل للمحتوى دون مصادقة.
+/// أو بعد [autoLockAfter] بلا استخدام — إلا ما دامت شاشة تحجزها مفتوحة
+/// ([hold])، فتلك تقفلها صراحةً عند خروجها. أي تشفير/فك تشفير والخزنة
+/// مقفلة يرمي [VaultLockedException] — لا مسار يصل للمحتوى دون مصادقة.
 class VaultRepository extends ChangeNotifier {
   VaultRepository({
     VaultKeyStore? store,
@@ -24,6 +25,7 @@ class VaultRepository extends ChangeNotifier {
 
   Uint8List? _key;
   Timer? _autoLock;
+  int _holds = 0;
 
   bool get isUnlocked => _key != null;
 
@@ -77,6 +79,19 @@ class VaultRepository extends ChangeNotifier {
   Future<bool> verifyPassword(String password) async {
     final hash = await _store.passwordHash();
     return hash != null && await KeyDerivation.verify(password, hash);
+  }
+
+  /// تبقي الخزنة مفتوحة بلا مهلة ما دامت الشاشة التي فتحتها ظاهرة؛ القراءة
+  /// والكتابة فيها لا تُقطع بالمؤقت. كل [hold] يقابله [release].
+  void hold() {
+    _holds++;
+    _autoLock?.cancel();
+  }
+
+  void release() {
+    if (_holds == 0) return;
+    _holds--;
+    if (_key != null) _restartAutoLock();
   }
 
   void lock() {
@@ -194,6 +209,7 @@ class VaultRepository extends ChangeNotifier {
 
   void _restartAutoLock() {
     _autoLock?.cancel();
+    if (_holds > 0) return;
     _autoLock = Timer(autoLockAfter, lock);
   }
 

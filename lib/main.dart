@@ -16,6 +16,7 @@ import 'package:sinan_note/controllers/master_width_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
 import 'package:sinan_note/data/repositories/backup_repository.dart';
@@ -362,7 +363,7 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
     try {
       final context = navigatorKey.currentContext;
       final note =
-          context == null ? null : context.read<NotesProvider>().cachedNote(noteId);
+          context?.read<NotesProvider>().cachedNote(noteId);
       if (note != null && !note.isTrashed) {
         AppNavigator.toEditorViaKey(
           navigatorKey,
@@ -469,7 +470,11 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
                 '/locked': (context) => const LockedNotesScreenResponsive(),
                 '/widget_selection': (context) => const WidgetSelectionScreen(),
                 '/drive': (context) => const GoogleDriveScreenResponsive(),
-                '/history': (context) => const VersionHistoryScreen(),
+                '/history': (context) => ChangeNotifierProvider(
+                      create: (_) => VersionHistoryController(
+                          notes: context.read<NotesRepository>()),
+                      child: const VersionHistoryScreen(),
+                    ),
               },
               debugShowCheckedModeBanner: false,
             );

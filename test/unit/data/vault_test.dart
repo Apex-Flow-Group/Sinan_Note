@@ -195,6 +195,23 @@ void main() {
       quick.dispose();
     });
 
+    test('a held vault does not time out; release restarts the timeout',
+        () async {
+      final quick = VaultRepository(
+          store: VaultKeyStore(),
+          autoLockAfter: const Duration(milliseconds: 50));
+      await quick.setUp('Pass123!');
+      quick.hold();
+      quick.open(quick.seal('x'));
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(quick.isUnlocked, isTrue);
+
+      quick.release();
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(quick.isUnlocked, isFalse);
+      quick.dispose();
+    });
+
     test('initialize removes the raw key left by previous versions', () async {
       await vault.setUp('Pass123!');
       await VaultKeyStore().writeBiometricKey(_key());

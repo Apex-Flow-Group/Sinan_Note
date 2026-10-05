@@ -36,7 +36,7 @@ class VersionHistoryScreen extends StatefulWidget {
 }
 
 class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
-  final _ctrl = VersionHistoryController();
+  late final _ctrl = context.read<VersionHistoryController>();
   final _searchController = TextEditingController();
   final _pageController = PageController();
 
@@ -62,7 +62,6 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
 
   @override
   void dispose() {
-    _ctrl.dispose();
     _searchController.dispose();
     _pageController.dispose();
     super.dispose();
@@ -239,11 +238,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     );
 
     if (!mounted || confirmed != true) return;
-    await _ctrl.restoreVersion(
-      version,
-      note,
-      Provider.of<NotesProvider>(context, listen: false),
-    );
+    await _ctrl.restoreVersion(version, note);
     if (!mounted) return;
     UnifiedNotificationService().show(
       context: context,

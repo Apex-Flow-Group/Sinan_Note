@@ -86,6 +86,11 @@ class VaultViewModel extends ChangeNotifier {
 
   void lock() => _vault.lock();
 
+  /// شاشة الخزنة ظاهرة: لا قفل بالمهلة. [release] عند زوالها.
+  void hold() => _vault.hold();
+
+  void release() => _vault.release();
+
   /// الملاحظات المقفلة مفكوكة. يرمي [VaultLockedException] والخزنة مقفلة.
   Future<List<Note>> lockedNotes() => _notes.lockedNotes();
 

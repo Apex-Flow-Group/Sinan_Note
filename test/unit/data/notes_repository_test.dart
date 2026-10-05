@@ -9,6 +9,7 @@ import 'package:sinan_note/data/services/vault/vault_cipher.dart';
 import 'package:sinan_note/data/services/vault/vault_key_store.dart';
 import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/domain/versioning.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -22,6 +23,9 @@ class _RecordingEffects implements NoteSideEffects {
   @override
   Future<void> noteRemoved(int id) async => removed.add(id);
 }
+
+NoteVersion _version(int noteId) => NoteVersion(
+    noteId: noteId, title: 'x', content: 'x', timestamp: DateTime.utc(2026));
 
 class _RecordingDeletions implements DeletionLog {
   final ids = <int>[];
@@ -131,7 +135,7 @@ void main() {
       await repo.archive([a.id!]);
       expect(repo.cached(a.id!)!.isArchived, isTrue);
 
-      await repo.recordVersion(repo.cached(b.id!)!, VersionTrigger.manual);
+      await repo.recordVersion(b.id!, VersionTrigger.manual);
       await repo.delete([b.id!]);
       expect(repo.cached(b.id!), isNull);
       expect(await repo.history(b.id!), isEmpty);
@@ -141,15 +145,41 @@ void main() {
 
     test('versions follow the policy and keep at most 20', () async {
       final a = await repo.save(note('a'));
-      await repo.recordVersion(a, VersionTrigger.manual);
-      await repo.recordVersion(a, VersionTrigger.manual);
+      await repo.recordVersion(a.id!, VersionTrigger.manual);
+      await repo.recordVersion(a.id!, VersionTrigger.manual);
       expect((await repo.history(a.id!)).length, 1, reason: 'identical');
+      expect((await repo.lastVersion(a.id!))!.action, 'manual_save');
 
       for (var i = 0; i < 25; i++) {
-        await repo.recordVersion(
-            a.copyWith(content: 'v$i'), VersionTrigger.forced);
+        await repo.save(a.copyWith(content: 'v$i'));
+        await repo.recordVersion(a.id!, VersionTrigger.forced);
       }
       expect((await repo.history(a.id!)).length, 20);
+    });
+
+    test('restoreVersion keeps the current state as a version and goes '
+        'through the cache', () async {
+      final a = await repo.save(note('a', content: 'first'));
+      await repo.recordVersion(a.id!, VersionTrigger.manual);
+      final first = (await repo.lastVersion(a.id!))!;
+      await repo.save(a.copyWith(content: 'second'));
+
+      await repo.restoreVersion(a.id!, first);
+
+      expect(repo.cached(a.id!)!.content, 'first');
+      expect((await repo.history(a.id!)).map((v) => v.content),
+          containsAll(['first', 'second']));
+    });
+
+    test('notesWithHistory lists only unlocked notes that have versions',
+        () async {
+      final a = await repo.save(note('a'));
+      await repo.save(note('b'));
+      await repo.recordVersion(a.id!, VersionTrigger.manual);
+      expect((await repo.notesWithHistory()).map((n) => n.title), ['a']);
+
+      await repo.setLocked(a.id!, true);
+      expect(await repo.notesWithHistory(), isEmpty);
     });
   });
 
@@ -186,13 +216,16 @@ void main() {
 
     test('versions are never recorded for a locked note', () async {
       final saved = await repo.save(note('t', locked: true));
-      await repo.recordVersion(saved, VersionTrigger.forced);
+      await repo.recordVersion(saved.id!, VersionTrigger.forced);
+      await repo.recordVersion(saved.id!, VersionTrigger.manual);
+      expect(await repo.restoreVersion(saved.id!, _version(saved.id!)),
+          isNull);
       await expectStoredSealed(saved.id!);
     });
 
     test('locking seals the note and deletes its plaintext history', () async {
       final a = await repo.save(note('diary'));
-      await repo.recordVersion(a, VersionTrigger.manual);
+      await repo.recordVersion(a.id!, VersionTrigger.manual);
 
       await repo.setLocked(a.id!, true);
 
