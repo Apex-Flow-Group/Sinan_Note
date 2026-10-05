@@ -10,6 +10,8 @@ import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/home_palette.dart';
 import 'package:sinan_note/widgets/effects/premium_card_effect.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 class NotesGrid extends StatefulWidget {
@@ -33,7 +35,8 @@ class NotesGrid extends StatefulWidget {
 }
 
 class _NotesGridState extends State<NotesGrid> {
-  Widget _buildChecklistPreview(Note note, Color textColor) {
+  Widget _buildChecklistPreview(
+      Note note, Color textColor, TextTheme textTheme) {
     try {
       final items = (jsonDecode(note.content) as List)
           .map((e) => ChecklistItem.fromJson(e))
@@ -55,8 +58,7 @@ class _NotesGridState extends State<NotesGrid> {
                       const SizedBox(width: 6),
                       Expanded(
                           child: Text(item.text,
-                              style: TextStyle(
-                                  fontSize: 13,
+                              style: textTheme.bodySmall?.copyWith(
                                   color: textColor.withAlpha(0.8.toInt()),
                                   decoration: item.isDone
                                       ? TextDecoration.lineThrough
@@ -72,7 +74,7 @@ class _NotesGridState extends State<NotesGrid> {
       return Text(note.content,
           maxLines: 6,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 14, color: textColor));
+          style: textTheme.bodyMedium?.copyWith(color: textColor));
     }
   }
 
@@ -80,6 +82,7 @@ class _NotesGridState extends State<NotesGrid> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     Provider.of<SettingsProvider>(context);
+    final textTheme = context.text;
 
     if (widget.notes.isEmpty) {
       return Center(child: Text(l10n.noNotes));
@@ -95,9 +98,12 @@ class _NotesGridState extends State<NotesGrid> {
         final note = widget.notes[index];
         final bool isLightColor =
             Color(note.colorIndex).computeLuminance() > 0.5;
-        final Color textColor = isLightColor ? Colors.black87 : Colors.white;
-        final Color contentColor =
-            isLightColor ? Colors.grey[700]! : Colors.grey[300]!;
+        final Color textColor = isLightColor
+            ? HomePalette.noteTitleOnLight
+            : HomePalette.noteTitleOnDark;
+        final Color contentColor = isLightColor
+            ? HomePalette.noteBodyOnLight
+            : HomePalette.noteBodyOnDark;
 
         return GestureDetector(
           onTap: () async {
@@ -120,10 +126,8 @@ class _NotesGridState extends State<NotesGrid> {
                       Expanded(
                         child: Text(
                           note.title,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: textColor),
+                          style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold, color: textColor),
                         ),
                       ),
                       if (note.isLocked)
@@ -134,21 +138,20 @@ class _NotesGridState extends State<NotesGrid> {
                   // SECURITY: Never render body for locked notes
                   note.isLocked
                       ? Text(
-                          'Protected Content',
-                          style: TextStyle(
-                            fontSize: 14,
+                          l10n.protectedContent,
+                          style: textTheme.bodyMedium?.copyWith(
                             color: contentColor.withAlpha(0.6.toInt()),
                             fontStyle: FontStyle.italic,
                           ),
                         )
                       : note.noteType == 'checklist'
-                          ? _buildChecklistPreview(note, textColor)
+                          ? _buildChecklistPreview(note, textColor, textTheme)
                           : Text(
                               note.content,
                               maxLines: 6,
                               overflow: TextOverflow.ellipsis,
-                              style:
-                                  TextStyle(fontSize: 14, color: contentColor),
+                              style: textTheme.bodyMedium
+                                  ?.copyWith(color: contentColor),
                             ),
                 ],
               ),

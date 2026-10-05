@@ -9,6 +9,7 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/permanent_delete_sheet.dart';
@@ -105,9 +106,10 @@ class NoteCardActions {
           value: 'delete',
           child: Row(
             children: [
-              const Icon(Icons.delete, size: 18, color: Colors.red),
+              Icon(Icons.delete, size: 18, color: context.colors.danger),
               const SizedBox(width: 8),
-              Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+              Text(l10n.delete,
+                  style: TextStyle(color: context.colors.danger)),
             ],
           ),
         ),
@@ -124,6 +126,8 @@ class NoteCardActions {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final colors = context.colors;
+    final scheme = context.scheme;
 
     IconData icon;
     Color color;
@@ -132,7 +136,7 @@ class NoteCardActions {
     switch (action) {
       case 'delete':
         icon = Icons.delete_outline;
-        color = Colors.red.shade600;
+        color = colors.danger;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -160,7 +164,7 @@ class NoteCardActions {
         break;
       case 'archive':
         icon = Icons.archive_outlined;
-        color = Colors.green.shade600;
+        color = colors.success;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -188,7 +192,7 @@ class NoteCardActions {
         break;
       case 'share':
         icon = Icons.share_outlined;
-        color = Colors.blue.shade600;
+        color = scheme.primary;
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -215,7 +219,7 @@ class NoteCardActions {
         break;
       case 'reminder':
         icon = Icons.alarm_rounded;
-        color = Colors.orange.shade600;
+        color = colors.warning;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -256,7 +260,7 @@ class NoteCardActions {
         break;
       case 'category':
         icon = Icons.label_outlined;
-        color = Colors.teal.shade600;
+        color = scheme.tertiary;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -278,7 +282,7 @@ class NoteCardActions {
         break;
       case 'duplicate':
         icon = Icons.copy_all_rounded;
-        color = Colors.purple.shade600;
+        color = scheme.secondary;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -294,7 +298,7 @@ class NoteCardActions {
         break;
       case 'custom':
         icon = Icons.bolt_rounded;
-        color = Colors.indigo.shade600;
+        color = colors.info;
         onTap = () {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -310,7 +314,7 @@ class NoteCardActions {
         break;
       case 'restore':
         icon = Icons.restore;
-        color = Colors.green.shade600;
+        color = colors.success;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -333,7 +337,7 @@ class NoteCardActions {
         break;
       case 'permanent_delete':
         icon = Icons.delete_forever;
-        color = Colors.red.shade700;
+        color = colors.danger;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -349,7 +353,7 @@ class NoteCardActions {
         break;
       case 'unarchive':
         icon = Icons.unarchive_outlined;
-        color = Colors.green.shade600;
+        color = colors.success;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -372,7 +376,7 @@ class NoteCardActions {
         break;
       case 'trash_from_archive':
         icon = Icons.delete_outline;
-        color = Colors.red.shade600;
+        color = colors.danger;
         onTap = () async {
           HapticFeedback.mediumImpact();
           Slidable.of(context)?.close();
@@ -402,7 +406,7 @@ class NoteCardActions {
     return CustomSlidableAction(
       onPressed: (_) => onTap(),
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
+      foregroundColor: scheme.onPrimary,
       borderRadius: borderRadius,
       child: Align(
         alignment: borderRadius ==
@@ -421,7 +425,7 @@ class NoteCardActions {
               color: color,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 26, color: Colors.white),
+            child: Icon(icon, size: 26, color: scheme.onPrimary),
           ),
         ),
       ),

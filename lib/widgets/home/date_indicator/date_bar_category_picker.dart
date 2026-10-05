@@ -4,13 +4,14 @@
 import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/domain/categories.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class DateBarCategoryPickerSheet {
   static void show(
       BuildContext context, CategoriesProvider categoriesProvider) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     final categories = categoriesProvider.categories;
     final selectedId = categoriesProvider.selectedCategoryId;
     final scheme = Theme.of(context).colorScheme;
@@ -74,7 +75,7 @@ class DateBarCategoryPickerSheet {
     AppBottomSheet.show(
       context,
       child: AppBottomSheet(
-        title: isAr ? 'اختر كتالوج' : 'Select Catalog',
+        title: l10n.selectCatalog,
         titleIcon: Icons.label_outline_rounded,
         scrollable: false,
         child: Flexible(
@@ -85,7 +86,7 @@ class DateBarCategoryPickerSheet {
               shrinkWrap: true,
               children: [
                 catTile(
-                  label: isAr ? 'الكل' : 'All',
+                  label: l10n.all,
                   icon: Icons.all_inbox_rounded,
                   accent: scheme.primary,
                   isSelected: selectedId == null,
@@ -95,7 +96,7 @@ class DateBarCategoryPickerSheet {
                   },
                 ),
                 catTile(
-                  label: isAr ? 'المحترف' : 'Professional',
+                  label: l10n.professional,
                   icon: Icons.workspace_premium_rounded,
                   accent: proColor,
                   isSelected: selectedId == CategoryPolicy.proCategoryId,

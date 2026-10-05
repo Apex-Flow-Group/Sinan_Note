@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 // Global notifier for menu state
 final ValueNotifier<bool> isMenuOpenNotifier = ValueNotifier<bool>(false);
@@ -69,6 +70,8 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
   Widget build(BuildContext context) {
     final bool isVisible = widget.showMenu || _controller.isAnimating;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final scrim = context.colors.scrim;
+    final primary = context.scheme.primary;
 
     return PopScope(
       canPop: !widget.showMenu,
@@ -102,11 +105,9 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
                           ),
                           child: Container(
                             color: isVisible
-                                ? (isDark
-                                    ? Colors.black.withValues(
-                                        alpha: 0.2 * _controller.value)
-                                    : Colors.black.withValues(
-                                        alpha: 0.05 * _controller.value))
+                                ? scrim.withValues(
+                                    alpha: (isDark ? 0.2 : 0.05) *
+                                        _controller.value)
                                 : Colors.transparent,
                           ),
                         ),
@@ -128,13 +129,13 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [Colors.blue[400]!, Colors.blue[600]!],
+                  colors: [primary.withValues(alpha: 0.85), primary],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withValues(alpha: 0.4),
+                    color: primary.withValues(alpha: 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -143,7 +144,7 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
               child: FloatingActionButton(
                 heroTag: null,
                 onPressed: widget.onToggle,
-                backgroundColor: Colors.blue,
+                backgroundColor: primary,
                 elevation: 0,
                 child: AnimatedRotation(
                   turns: widget.showMenu ? 0.125 : 0,
@@ -245,6 +246,10 @@ class _AnimatedMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labelStyle = context.text.labelLarge?.copyWith(
+      color: color,
+      fontWeight: FontWeight.bold,
+    );
     return ScaleTransition(
       scale: animation,
       alignment: Alignment.bottomRight,
@@ -311,11 +316,7 @@ class _AnimatedMenuItem extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     title,
-                                    style: TextStyle(
-                                      color: color,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: labelStyle,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),

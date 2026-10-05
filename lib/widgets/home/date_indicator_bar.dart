@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/widgets/home/date_indicator/date_bar_category_picker.dart';
 import 'package:sinan_note/widgets/home/date_indicator/date_picker_sheet.dart';
@@ -111,29 +113,27 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    if (date == today) return isAr ? 'اليوم' : 'Today';
-    if (date == yesterday) return isAr ? 'أمس' : 'Yesterday';
+    final l10n = AppLocalizations.of(context)!;
+    if (date == today) return l10n.today;
+    if (date == yesterday) return l10n.yesterday;
     if (now.difference(date).inDays < 7) {
-      return DateFormat(isAr ? 'EEEE' : 'EEEE', isAr ? 'ar' : 'en')
-          .format(date);
+      return DateFormat.EEEE(l10n.localeName).format(date);
     }
-    return DateFormat(isAr ? 'd MMM yyyy' : 'MMM d, yyyy', isAr ? 'ar' : 'en')
-        .format(date);
+    return DateFormat.yMMMd(l10n.localeName).format(date);
   }
 
-  String _filterLabel(String filter, bool isAr) {
+  String _filterLabel(String filter, AppLocalizations l10n) {
     switch (filter) {
       case 'type:simple':
-        return isAr ? 'نص بسيط' : 'Simple';
+        return l10n.noteTypeSimple;
       case 'type:rich':
-        return isAr ? 'منسقة' : 'Rich';
+        return l10n.noteTypeRich;
       case 'type:checklist':
-        return isAr ? 'قائمة مهام' : 'Checklist';
+        return l10n.checklistNote;
       case 'pinned:true':
-        return isAr ? 'مثبتة' : 'Pinned';
+        return l10n.pinned;
       case 'category:none':
-        return isAr ? 'بدون تصنيف' : 'No category';
+        return l10n.noCategory;
       default:
         return filter;
     }
@@ -172,7 +172,8 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     final categoriesProvider = context.watch<CategoriesProvider>();
     final selectedId = categoriesProvider.selectedCategoryId;
     final activeFilter = widget.activeFilterNotifier.value;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
+    final labelStyle = context.text.labelMedium;
 
     Widget barChild;
 
@@ -184,9 +185,8 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
         child: Row(children: [
           Icon(Icons.filter_list_rounded, size: 13, color: colorScheme.primary),
           const SizedBox(width: 6),
-          Text(_filterLabel(activeFilter, isAr),
-              style: TextStyle(
-                  fontSize: 12,
+          Text(_filterLabel(activeFilter, l10n),
+              style: labelStyle?.copyWith(
                   color: colorScheme.primary,
                   fontWeight: FontWeight.w600)),
           const Spacer(),
@@ -212,7 +212,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
               .where((c) => c.id == selectedId)
               .firstOrNull;
       final catName = isProCategory
-          ? (isAr ? 'المحترف' : 'Professional')
+          ? l10n.professional
           : (cat?.name ?? '');
 
       barChild = Container(
@@ -227,8 +227,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
                 DateBarCategoryPickerSheet.show(context, categoriesProvider),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Text(catName,
-                  style: TextStyle(
-                      fontSize: 12,
+                  style: labelStyle?.copyWith(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w600)),
               const SizedBox(width: 2),
@@ -268,8 +267,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
                 size: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
             const SizedBox(width: 6),
             Text(_formatDate(_visibleDate!),
-                style: TextStyle(
-                    fontSize: 12,
+                style: labelStyle?.copyWith(
                     color: colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w500)),
             const Spacer(),

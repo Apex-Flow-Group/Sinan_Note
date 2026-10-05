@@ -7,7 +7,9 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/code/language_detector.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class NoteCardUtils {
   /// أنواع الملاحظات البرمجية — مصدر واحد للحقيقة
@@ -145,11 +147,26 @@ class NoteCardUtils {
     return '.txt';
   }
 
-  static Widget buildChecklistPreview(String content, Color titleColor) {
+  static Widget buildChecklistPreview(String content, Color titleColor) =>
+      _ChecklistPreview(content: content, titleColor: titleColor);
+}
+
+/// معاينة أول ثلاث مهام في بطاقة الملاحظة.
+class _ChecklistPreview extends StatelessWidget {
+  const _ChecklistPreview({required this.content, required this.titleColor});
+
+  final String content;
+  final Color titleColor;
+
+  @override
+  Widget build(BuildContext context) {
     final items = ChecklistFormatter.parseJson(content)
         .where((item) => item.text.trim().isNotEmpty)
         .take(3)
         .toList();
+    final itemStyle = context.text.bodyMedium;
+    final taskPlaceholder =
+        AppLocalizations.of(context)!.checklistTaskPlaceholder;
     if (items.isEmpty) {
       return Row(
         textDirection: TextDirection.ltr,
@@ -167,14 +184,16 @@ class NoteCardUtils {
           ),
           const SizedBox(width: 8),
           Text(
-            'Task',
-            style: TextStyle(
-                fontSize: 14, color: titleColor.withValues(alpha: 0.3)),
+            taskPlaceholder,
+            style:
+                itemStyle?.copyWith(color: titleColor.withValues(alpha: 0.3)),
           ),
         ],
       );
     }
 
+    final done = context.colors.success;
+    final onDone = context.scheme.onPrimary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items.map((item) {
@@ -187,25 +206,24 @@ class NoteCardUtils {
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(
-                  color: item.isDone ? Colors.green : Colors.transparent,
+                  color: item.isDone ? done : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: item.isDone
-                        ? Colors.green
+                        ? done
                         : titleColor.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
                 child: item.isDone
-                    ? const Icon(Icons.check, size: 12, color: Colors.white)
+                    ? Icon(Icons.check, size: 12, color: onDone)
                     : null,
               ),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
-                  item.text.isEmpty ? 'Task' : item.text,
-                  style: TextStyle(
-                    fontSize: 14,
+                  item.text.isEmpty ? taskPlaceholder : item.text,
+                  style: itemStyle?.copyWith(
                     color: item.isDone
                         ? titleColor.withValues(alpha: 0.5)
                         : titleColor.withValues(alpha: 0.8),

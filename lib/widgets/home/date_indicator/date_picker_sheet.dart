@@ -4,6 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class DatePickerSheet {
@@ -19,12 +21,12 @@ class DatePickerSheet {
         .toList()
       ..sort((a, b) => b.compareTo(a));
 
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
 
     return AppBottomSheet.show<DateTime>(
       context,
       child: AppBottomSheet(
-        title: isAr ? 'انتقل إلى تاريخ' : 'Jump to date',
+        title: l10n.jumpToDate,
         titleIcon: Icons.calendar_month_outlined,
         scrollable: false,
         child: ConstrainedBox(
@@ -49,7 +51,7 @@ class DatePickerSheet {
                         ? Theme.of(ctx).colorScheme.primary
                         : Colors.transparent),
                 title: Text(
-                  _formatDate(date, isAr),
+                  _formatDate(date, l10n),
                   style: TextStyle(
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
@@ -58,7 +60,7 @@ class DatePickerSheet {
                   ),
                 ),
                 trailing: Text('$count',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                    style: ctx.text.bodySmall?.copyWith(color: ctx.colors.muted)),
                 onTap: () => Navigator.pop(ctx, date),
               );
             },
@@ -68,14 +70,13 @@ class DatePickerSheet {
     );
   }
 
-  static String _formatDate(DateTime date, bool isAr) {
+  static String _formatDate(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    if (date == today) return isAr ? 'اليوم' : 'Today';
-    if (date == yesterday) return isAr ? 'أمس' : 'Yesterday';
-    return DateFormat(isAr ? 'd MMMM yyyy' : 'MMMM d, yyyy', isAr ? 'ar' : 'en')
-        .format(date);
+    if (date == today) return l10n.today;
+    if (date == yesterday) return l10n.yesterday;
+    return DateFormat.yMMMMd(l10n.localeName).format(date);
   }
 }
 

@@ -7,6 +7,7 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -62,6 +63,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.colors;
 
     return Visibility(
       visible: !_hidden,
@@ -77,7 +79,8 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: widget.actions.map((action) {
-              final (icon, label, color) = _actionMeta(action, l10n, scheme);
+              final (icon, label, color) =
+                  _actionMeta(action, l10n, scheme, colors);
               return ListTile(
                 leading: Container(
                   width: 40,
@@ -101,14 +104,15 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
   }
 
   (IconData, String, Color) _actionMeta(
-      String action, AppLocalizations l10n, ColorScheme scheme) {
+      String action, AppLocalizations l10n, ColorScheme scheme,
+      AppColors colors) {
     return switch (action) {
-      'delete' => (Icons.delete_outline_rounded, l10n.delete, Colors.red),
-      'archive' => (Icons.archive_outlined, l10n.archive, Colors.green),
-      'share' => (Icons.share_outlined, l10n.share, Colors.blue),
-      'reminder' => (Icons.alarm_rounded, l10n.reminder, Colors.orange),
+      'delete' => (Icons.delete_outline_rounded, l10n.delete, colors.danger),
+      'archive' => (Icons.archive_outlined, l10n.archive, colors.success),
+      'share' => (Icons.share_outlined, l10n.share, scheme.primary),
+      'reminder' => (Icons.alarm_rounded, l10n.reminder, colors.warning),
       'category' => (Icons.label_outlined, l10n.categories, scheme.primary),
-      'duplicate' => (Icons.copy_all_rounded, l10n.noteCopy, Colors.purple),
+      'duplicate' => (Icons.copy_all_rounded, l10n.noteCopy, scheme.secondary),
       _ => (Icons.help_outline, action, scheme.onSurface),
     };
   }

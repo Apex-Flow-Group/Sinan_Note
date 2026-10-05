@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 /// Bottom sheet موحد لاختيار الفلتر في الشاشة الرئيسية
@@ -12,6 +13,10 @@ class FilterSheet {
     required ValueNotifier<String?> activeFilterNotifier,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final scheme = context.scheme;
+    final sectionStyle = context.text.labelMedium
+        ?.copyWith(fontWeight: FontWeight.bold, color: colors.muted);
 
     AppBottomSheet.show(
       context,
@@ -25,13 +30,10 @@ class FilterSheet {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Text(l10n.noteType,
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey)),
+                  style: sectionStyle),
             ),
             ListTile(
-              leading: const Icon(Icons.note, color: Colors.blue),
+              leading: Icon(Icons.note, color: scheme.primary),
               title: Text(l10n.simpleNotes),
               onTap: () {
                 Navigator.pop(context);
@@ -39,7 +41,7 @@ class FilterSheet {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.format_paint_rounded, color: Colors.purple),
+              leading: Icon(Icons.format_paint_rounded, color: scheme.secondary),
               title: Text(l10n.richNoteMenu),
               onTap: () {
                 Navigator.pop(context);
@@ -47,7 +49,7 @@ class FilterSheet {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.checklist, color: Colors.green),
+              leading: Icon(Icons.checklist, color: colors.success),
               title: Text(l10n.checklists),
               onTap: () {
                 Navigator.pop(context);
@@ -58,13 +60,10 @@ class FilterSheet {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Text(l10n.noteStatus,
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey)),
+                  style: sectionStyle),
             ),
             ListTile(
-              leading: const Icon(Icons.push_pin, color: Colors.red),
+              leading: Icon(Icons.push_pin, color: colors.gold),
               title: Text(l10n.pinnedOnly),
               onTap: () {
                 Navigator.pop(context);
@@ -72,7 +71,7 @@ class FilterSheet {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.label_off_outlined, color: Colors.grey),
+              leading: Icon(Icons.label_off_outlined, color: colors.muted),
               title: Text(l10n.noCategory),
               onTap: () {
                 Navigator.pop(context);
@@ -81,7 +80,7 @@ class FilterSheet {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.clear_all, color: Colors.red),
+              leading: Icon(Icons.clear_all, color: colors.danger),
               title: Text(l10n.clearFilter),
               onTap: () {
                 Navigator.pop(context);

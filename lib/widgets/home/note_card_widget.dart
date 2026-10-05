@@ -19,6 +19,8 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/home_palette.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/desktop/note_context_menu.dart';
@@ -69,6 +71,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late Color _baseColor;
   late Color _titleColor;
   late Color _contentColor;
+  TextStyle? _titleStyle;
+  TextStyle? _contentStyle;
+  TextStyle? _lockedContentStyle;
   late ui.TextDirection _titleDirection;
   late ui.TextDirection _contentDirection;
   final _loadingNotifier = ValueNotifier<bool>(false);
@@ -152,8 +157,18 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     _baseColor =
         AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
     final isLight = _baseColor.computeLuminance() > 0.5;
-    _titleColor = isLight ? Colors.black87 : Colors.white;
-    _contentColor = isLight ? Colors.grey[700]! : Colors.grey[300]!;
+    _titleColor =
+        isLight ? HomePalette.noteTitleOnLight : HomePalette.noteTitleOnDark;
+    _contentColor =
+        isLight ? HomePalette.noteBodyOnLight : HomePalette.noteBodyOnDark;
+    final text = context.text;
+    _titleStyle = text.titleMedium
+        ?.copyWith(fontWeight: FontWeight.bold, color: _titleColor);
+    _contentStyle = text.bodyMedium?.copyWith(color: _contentColor);
+    _lockedContentStyle = text.bodyMedium?.copyWith(
+      color: _contentColor.withValues(alpha: 0.6),
+      fontStyle: FontStyle.italic,
+    );
   }
 
   void _cacheNoteData() {
@@ -175,7 +190,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
 
     final noteColor = _baseColor;
     final Color titleColor = _titleColor;
-    final Color contentColor = _contentColor;
+    final colors = context.colors;
+    final Color extColor =
+        widget.note.noteType == 'markdown' ? colors.warning : colors.info;
     final bool isTrash = widget.source == 'trash';
     final bool isArchive = widget.source == 'archive';
     final bool enableSwipe = !widget.selectionMode &&
@@ -324,10 +341,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                       ? Text(
                                           _displayTitle,
                                           textDirection: _titleDirection,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: titleColor),
+                                          style: _titleStyle,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         )
@@ -340,10 +354,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                             children: [
                                               Text(
                                                 _displayTitle,
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    color: titleColor),
+                                                style: _titleStyle,
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -357,14 +368,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: contentColor
-                                                            .withValues(
-                                                                alpha: 0.6),
-                                                        fontStyle:
-                                                            FontStyle.italic,
-                                                      ),
+                                                      style:
+                                                          _lockedContentStyle,
                                                     )
                                                   : _isChecklist
                                                       ? NoteCardUtils
@@ -379,10 +384,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                           maxLines: 4,
                                                           overflow: TextOverflow
                                                               .ellipsis,
-                                                          style: TextStyle(
-                                                            fontSize: 14,
-                                                            color: contentColor,
-                                                          ),
+                                                          style:
+                                                              _contentStyle,
                                                         ),
                                             ],
                                           ),
@@ -424,7 +427,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                       .note.reminderDateTime!
                                       .isBefore(DateTime.now());
                                   final badgeColor =
-                                      isExpired ? Colors.red : Colors.orange;
+                                      isExpired ? colors.danger : colors.warning;
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 4),
@@ -449,8 +452,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                         Flexible(
                                           child: Text(
                                             '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} � ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
-                                            style: TextStyle(
-                                              fontSize: 11,
+                                            style: context.text.labelSmall
+                                                ?.copyWith(
                                               color: badgeColor,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -510,12 +513,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color:
-                                            widget.note.noteType == 'markdown'
-                                                ? Colors.orange
-                                                    .withValues(alpha: 0.15)
-                                                : Colors.blue
-                                                    .withValues(alpha: 0.15),
+                                        color: extColor.withValues(
+                                            alpha: 0.15),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Row(
@@ -524,20 +523,14 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                           Icon(
                                             Icons.code,
                                             size: 12,
-                                            color: widget.note.noteType ==
-                                                    'markdown'
-                                                ? Colors.orange.shade700
-                                                : Colors.blue.shade700,
+                                            color: extColor,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
                                             _fileExtension,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: widget.note.noteType ==
-                                                      'markdown'
-                                                  ? Colors.orange.shade700
-                                                  : Colors.blue.shade700,
+                                            style: context.text.labelSmall
+                                                ?.copyWith(
+                                              color: extColor,
                                               fontWeight: FontWeight.w600,
                                               fontFamily: 'monospace',
                                             ),

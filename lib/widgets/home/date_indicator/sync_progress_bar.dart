@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 /// شريط موحّد للسحب والتحديث والمزامنة
@@ -25,7 +26,7 @@ class SyncProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
     // Priority 1: Google Drive syncing
@@ -35,7 +36,7 @@ class SyncProgressBar extends StatelessWidget {
         if (syncing) {
           return _Bar(
             color: colorScheme.primary,
-            label: AppLocalizations.of(context)!.syncingProgress,
+            label: l10n.syncingProgress,
           );
         }
 
@@ -47,20 +48,21 @@ class SyncProgressBar extends StatelessWidget {
               if (refreshing) {
                 return _Bar(
                   color: colorScheme.primary,
-                  label: isAr ? 'جارٍ التحديث...' : 'Refreshing...',
+                  label: l10n.refreshing,
                 );
               }
-              return _buildPull(context, colorScheme, isAr);
+              return _buildPull(context, colorScheme, l10n);
             },
           );
         }
 
-        return _buildPull(context, colorScheme, isAr);
+        return _buildPull(context, colorScheme, l10n);
       },
     );
   }
 
-  Widget _buildPull(BuildContext context, ColorScheme colorScheme, bool isAr) {
+  Widget _buildPull(
+      BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
     if (pullDistanceNotifier == null) {
       if (showLabelOnly) return const SizedBox.shrink();
       return child;
@@ -79,9 +81,7 @@ class SyncProgressBar extends StatelessWidget {
         // نفس شكل شريط التحديث/المزامنة لكن مع تقدم
         return _Bar(
           color: ready ? colorScheme.primary : colorScheme.onSurfaceVariant,
-          label: ready
-              ? (isAr ? 'أطلق للتحديث' : 'Release to refresh')
-              : (isAr ? 'اسحب للتحديث' : 'Pull to refresh'),
+          label: ready ? l10n.releaseToRefresh : l10n.pullToRefresh,
           progress: progress,
           spinning: ready,
         );
@@ -135,8 +135,7 @@ class _Bar extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: context.text.labelMedium?.copyWith(
                     color: color,
                     fontWeight: FontWeight.w600,
                   ),

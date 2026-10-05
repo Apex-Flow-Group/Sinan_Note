@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class HiddenCategoriesChip extends StatefulWidget {
@@ -74,11 +76,10 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
   }
 
   void _showAllCategories(BuildContext context, List<String> names) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     AppBottomSheet.show(
       context,
       child: AppBottomSheet(
-        title: isAr ? 'مخفي في الكتالوجات' : 'Hidden in catalogs',
+        title: AppLocalizations.of(context)!.hiddenInCatalogs,
         titleIcon: Icons.visibility_off_rounded,
         scrollable: false,
         child: Column(
@@ -99,7 +100,8 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
   @override
   Widget build(BuildContext context) {
     final catProvider = context.read<CategoriesProvider>();
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
+    final labelSmall = context.text.labelSmall;
 
     Widget content;
 
@@ -111,9 +113,8 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
               size: 12, color: widget.titleColor.withValues(alpha: 0.5)),
           const SizedBox(width: 4),
           Text(
-            isAr ? 'مخفي (محترف)' : 'Hidden (Pro)',
-            style: TextStyle(
-              fontSize: 11,
+            l10n.hiddenPro,
+            style: labelSmall?.copyWith(
               color: widget.titleColor.withValues(alpha: 0.5),
             ),
           ),
@@ -141,9 +142,8 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
             const SizedBox(width: 4),
             if (catNames.isEmpty)
               Text(
-                isAr ? 'مخفي' : 'Hidden',
-                style: TextStyle(
-                    fontSize: 11,
+                l10n.hidden,
+                style: labelSmall?.copyWith(
                     color: widget.titleColor.withValues(alpha: 0.5)),
               )
             else
@@ -158,8 +158,7 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
                       ),
                       child: Text(
                         name,
-                        style: TextStyle(
-                          fontSize: 10,
+                        style: labelSmall?.copyWith(
                           color: widget.titleColor.withValues(alpha: 0.55),
                           fontWeight: FontWeight.w500,
                         ),
@@ -175,8 +174,7 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
                 ),
                 child: Text(
                   '+$extra',
-                  style: TextStyle(
-                    fontSize: 10,
+                  style: labelSmall?.copyWith(
                     color: widget.titleColor.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w600,
                   ),

@@ -7,6 +7,7 @@ import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/domain/models/note_category.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/ui/features/categories/category_issue_text.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -366,8 +367,7 @@ class _InlineField extends StatelessWidget {
               maxLength: CategoryPolicy.maxNameLength,
               maxLines: 1,
               onSubmitted: (_) => onSubmit(),
-              style: TextStyle(
-                fontSize: 14,
+              style: context.text.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w500,
                 color: scheme.onSurface,
               ),

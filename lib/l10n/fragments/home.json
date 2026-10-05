@@ -1,0 +1,26 @@
+{
+  "selectCatalog": { "en": "Select Catalog", "ar": "اختر كتالوج" },
+  "all": { "en": "All", "ar": "الكل" },
+  "jumpToDate": { "en": "Jump to date", "ar": "انتقل إلى تاريخ" },
+  "yesterday": { "en": "Yesterday", "ar": "أمس" },
+  "refreshing": { "en": "Refreshing...", "ar": "جارٍ التحديث..." },
+  "releaseToRefresh": { "en": "Release to refresh", "ar": "أطلق للتحديث" },
+  "noteTypeSimple": { "en": "Simple", "ar": "نص بسيط" },
+  "noteTypeRich": { "en": "Rich", "ar": "منسقة" },
+  "pinned": { "en": "Pinned", "ar": "مثبتة" },
+  "hiddenInCatalogs": { "en": "Hidden in catalogs", "ar": "مخفي في الكتالوجات" },
+  "hiddenPro": { "en": "Hidden (Pro)", "ar": "مخفي (محترف)" },
+  "hidden": { "en": "Hidden", "ar": "مخفي" },
+  "checklistTaskPlaceholder": { "en": "Task", "ar": "مهمة" },
+  "category": { "en": "Category", "ar": "التصنيف" },
+  "notesArchivedCount": {
+    "en": "{count} note(s) archived",
+    "ar": "{count} ملاحظة مؤرشفة",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "notesPermanentlyDeletedCount": {
+    "en": "{count} notes permanently deleted",
+    "ar": "تم حذف {count} ملاحظة نهائياً",
+    "placeholders": { "count": { "type": "int" } }
+  }
+}

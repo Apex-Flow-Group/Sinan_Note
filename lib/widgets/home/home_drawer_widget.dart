@@ -12,6 +12,8 @@ import 'package:sinan_note/domain/categories.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/auth/vault_entry_screen.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/home_palette.dart';
 import 'package:sinan_note/ui/features/categories/category_issue_text.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
@@ -293,7 +295,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                                   ? l10n.driveSyncOn
                                   : l10n.driveSyncOff)
                               : l10n.driveSignIn,
-                          iconColor: const Color(0xFF4285F4),
+                          iconColor: HomePalette.googleBlue,
                           scheme: scheme,
                           isDark: isDark,
                           isActive: current == _Destination.drive,
@@ -311,7 +313,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                       icon: Icons.manage_history_rounded,
                       title: l10n.noteHistory,
                       subtitle: l10n.noteHistory,
-                      iconColor: Colors.orange,
+                      iconColor: context.colors.warning,
                       scheme: scheme,
                       isDark: isDark,
                       isActive: current == _Destination.history,
@@ -352,8 +354,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                 ),
                 child: Text(
                   '© 2025 Apex Flow Group',
-                  style:
-                      TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                  style: context.text.labelSmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ),
             ],
@@ -464,8 +466,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                               children: [
                                 Text(
                                   l10n.categories,
-                                  style: TextStyle(
-                                    fontSize: 12,
+                                  style: context.text.labelMedium?.copyWith(
                                     color: hasSelection
                                         ? scheme.primary
                                         : scheme.onSurfaceVariant,
@@ -683,8 +684,8 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
           ),
           subtitle: subtitle != null
               ? Text(subtitle,
-                  style:
-                      TextStyle(fontSize: 12, color: scheme.onSurfaceVariant))
+                  style: context.text.labelMedium
+                      ?.copyWith(color: scheme.onSurfaceVariant))
               : null,
           onTap: () {
             _collapseCategories();

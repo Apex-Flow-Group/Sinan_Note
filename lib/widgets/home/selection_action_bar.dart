@@ -1,6 +1,7 @@
 ﻿
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class SelectionActionBar extends StatelessWidget {
   final ValueNotifier<Set<int>> selectedIdsNotifier;  // 🔥 FIX: Use notifier directly
@@ -90,7 +91,7 @@ class SelectionActionBar extends StatelessWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: confirmColor,
-                        foregroundColor: Colors.white,
+                        foregroundColor: cs.onPrimary,
                         minimumSize: const Size(0, 48),
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -112,14 +113,16 @@ class SelectionActionBar extends StatelessWidget {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: selectedIdsNotifier,  // 🔥 Listen directly
       builder: (context, selectedIds, _) {
+        final l10n = AppLocalizations.of(context)!;
+        final colors = context.colors;
         return Container(
           height: 60,
           decoration: BoxDecoration(
-            color: isDark ? Colors.grey[850] : Colors.grey[200],
+            color: context.scheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: colors.shadow,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -130,13 +133,12 @@ class SelectionActionBar extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: onClear,
-                tooltip: 'Clear',
+                tooltip: l10n.clear,
               ),
               Expanded(
                 child: Text(
                   '${selectedIds.length}',  // 🔥 Read from live data
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: context.text.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -145,47 +147,47 @@ class SelectionActionBar extends StatelessWidget {
               IconButton(
                 icon: Icon(allPinned ? Icons.push_pin : Icons.push_pin_outlined),
                 onPressed: onPin,
-                tooltip: allPinned ? 'Unpin' : 'Pin',
+                tooltip: allPinned ? l10n.unpin : l10n.pin,
               ),
               IconButton(
                 icon: const Icon(Icons.archive_outlined),
                 onPressed: () => _confirmAction(
                   context,
                   icon: Icons.archive_outlined,
-                  iconColor: Colors.orange,
-                  title: AppLocalizations.of(context)!.archive,
-                  message: '${selectedIds.length} ${AppLocalizations.of(context)!.notesArchived}',
-                  confirmLabel: AppLocalizations.of(context)!.archive,
-                  confirmColor: Colors.orange,
+                  iconColor: colors.warning,
+                  title: l10n.archive,
+                  message: l10n.notesArchivedCount(selectedIds.length),
+                  confirmLabel: l10n.archive,
+                  confirmColor: colors.warning,
                   onConfirm: onArchive,
                 ),
-                tooltip: 'Archive',
+                tooltip: l10n.actionArchive,
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () => _confirmAction(
                   context,
                   icon: Icons.delete_outline_rounded,
-                  iconColor: Colors.red,
-                  title: AppLocalizations.of(context)!.deleteNote,
-                  message: '${selectedIds.length} ${AppLocalizations.of(context)!.notesDeleted}',
-                  confirmLabel: AppLocalizations.of(context)!.delete,
-                  confirmColor: Colors.red,
+                  iconColor: colors.danger,
+                  title: l10n.deleteNote,
+                  message: l10n.notesPermanentlyDeletedCount(selectedIds.length),
+                  confirmLabel: l10n.delete,
+                  confirmColor: colors.danger,
                   onConfirm: onDelete,
                 ),
-                tooltip: 'Delete',
+                tooltip: l10n.actionDelete,
               ),
               IconButton(
                 icon: const Icon(Icons.label_outline),
                 onPressed: onCategory,
-                tooltip: 'Category',
-                color: onCategory == null ? Colors.grey : null,
+                tooltip: l10n.category,
+                color: onCategory == null ? colors.muted : null,
               ),
               IconButton(
                 icon: const Icon(Icons.share_outlined),
                 onPressed: onShare,
-                tooltip: 'Share',
-                color: onShare == null ? Colors.grey : null,
+                tooltip: l10n.actionShare,
+                color: onShare == null ? colors.muted : null,
               ),
               const SizedBox(width: 8),
             ],

@@ -6,6 +6,7 @@ import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/home/notes_grid/height_recorder.dart';
 import 'package:sinan_note/widgets/home/notes_grid/note_card_wrapper.dart';
 
@@ -112,13 +113,15 @@ class _NotesSliverViewState extends State<NotesSliverView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.note_add_outlined, size: 80, color: Colors.grey[400]),
+              Icon(Icons.note_add_outlined,
+                  size: 80, color: context.colors.muted),
               const SizedBox(height: 16),
               Builder(builder: (ctx) {
                 final l10n = Localizations.of(ctx, AppLocalizations);
                 return Text(
                   l10n?.noNotes ?? 'No notes',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  style: ctx.text.titleLarge?.copyWith(
+                      fontWeight: FontWeight.normal, color: ctx.colors.muted),
                 );
               }),
             ],
@@ -170,8 +173,7 @@ class _NotesSliverViewState extends State<NotesSliverView> {
             const SizedBox(width: 5),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
+              style: context.text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,
                 color: color,
