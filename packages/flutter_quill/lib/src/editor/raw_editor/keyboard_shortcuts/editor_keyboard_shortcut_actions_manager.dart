@@ -1,6 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
+import '../../../delta/delta_diff.dart';
+import '../../../document/attribute.dart';
+import '../../../document/nodes/block.dart';
+import '../../../document/nodes/node.dart';
 import '../raw_editor_state.dart';
 import '../raw_editor_text_boundaries.dart';
 import 'editor_keyboard_shortcut_actions.dart';
@@ -94,6 +98,33 @@ class EditorKeyboardShortcutsActionsManager {
           DirectionalTextEditingIntent intent) =>
       QuillEditorDocumentBoundary(rawEditorState.textEditingValue);
 
+  /// The caret's line is drawn right-to-left (a list takes its block's
+  /// direction, as it is drawn).
+  bool _isRtlAtCaret() {
+    final ambient = Directionality.of(context);
+    final selection = rawEditorState.textEditingValue.selection;
+    if (!selection.isValid) return ambient == TextDirection.rtl;
+    final line = rawEditorState.controller.document
+        .queryChild(selection.extentOffset)
+        .node;
+    if (line == null) return ambient == TextDirection.rtl;
+    final parent = line.parent;
+    final Node node = parent is Block &&
+            parent.style.attributes.containsKey(Attribute.list.key)
+        ? parent
+        : line;
+    return resolveNodeDirection(node, ambient,
+            rawEditorState.widget.config.textDirectionResolver) ==
+        TextDirection.rtl;
+  }
+
+  /// Left/right arrows are visual, as on native Android (where keyboards move
+  /// the caret by sending them, e.g. a swipe on the space bar): in a
+  /// right-to-left line, "right" moves back in the text.
+  Action<T> _visual<T extends DirectionalCaretMovementIntent>(
+          ContextAction<T> logical, T Function(T intent) reversed) =>
+      _VisualHorizontalAction<T>(logical, reversed, _isRtlAtCaret);
+
   Action<T> _makeOverridable<T extends Intent>(Action<T> defaultAction) {
     return Action<T>.overridable(
         context: context, defaultAction: defaultAction);
@@ -142,16 +173,29 @@ class EditorKeyboardShortcutsActionsManager {
             rawEditorState, _linebreak)),
 
     // Extend/Move Selection
-    ExtendSelectionByCharacterIntent: _makeOverridable(
-        QuillEditorUpdateTextSelectionAction<ExtendSelectionByCharacterIntent>(
-      rawEditorState,
-      false,
-      _characterBoundary,
+    ExtendSelectionByCharacterIntent: _makeOverridable(_visual(
+      QuillEditorUpdateTextSelectionAction<ExtendSelectionByCharacterIntent>(
+        rawEditorState,
+        false,
+        _characterBoundary,
+      ),
+      (i) => ExtendSelectionByCharacterIntent(
+        forward: !i.forward,
+        collapseSelection: i.collapseSelection,
+      ),
     )),
-    ExtendSelectionToNextWordBoundaryIntent: _makeOverridable(
-        QuillEditorUpdateTextSelectionAction<
-                ExtendSelectionToNextWordBoundaryIntent>(
-            rawEditorState, true, _nextWordBoundary)),
+    ExtendSelectionToNextWordBoundaryIntent: _makeOverridable(_visual(
+      QuillEditorUpdateTextSelectionAction<
+          ExtendSelectionToNextWordBoundaryIntent>(
+        rawEditorState,
+        true,
+        _nextWordBoundary,
+      ),
+      (i) => ExtendSelectionToNextWordBoundaryIntent(
+        forward: !i.forward,
+        collapseSelection: i.collapseSelection,
+      ),
+    )),
     ExtendSelectionToLineBreakIntent: _makeOverridable(
         QuillEditorUpdateTextSelectionAction<ExtendSelectionToLineBreakIntent>(
             rawEditorState, true, _linebreak)),
@@ -201,4 +245,26 @@ class EditorKeyboardShortcutsActionsManager {
   };
 
   Map<Type, Action<Intent>> get actions => _actions;
+}
+
+/// Hands a horizontal caret intent to the logical action, reversed when the
+/// caret's line is right-to-left.
+class _VisualHorizontalAction<T extends DirectionalCaretMovementIntent>
+    extends ContextAction<T> {
+  _VisualHorizontalAction(this.logical, this.reversed, this.isRtl);
+
+  final ContextAction<T> logical;
+  final T Function(T intent) reversed;
+  final bool Function() isRtl;
+
+  @override
+  Object? invoke(T intent, [BuildContext? context]) =>
+      logical.invoke(isRtl() ? reversed(intent) : intent, context);
+
+  @override
+  bool isEnabled(T intent, [BuildContext? context]) =>
+      logical.isEnabled(intent, context);
+
+  @override
+  bool get isActionEnabled => logical.isActionEnabled;
 }
