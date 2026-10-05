@@ -224,30 +224,42 @@ class NotesRepository extends ChangeNotifier {
   /// - غير ذلك ← تُضاف بـ id جديد.
   /// المقفلة المشفّرة تبقى كما هي؛ المقفلة بنص واضح تُشفَّر، فإن كانت الخزنة
   /// مقفلة يرمي `VaultLockedException` قبل أي كتابة. يُرجع عدد ما أُضيف
-  /// أو حُدّث.
-  Future<int> merge(List<Note> incoming) async {
+  /// أو حُدّث، والرقم المحلي لكل واردة (بما فيها المكررة) بالـ uuid الوارد.
+  Future<({int written, Map<String, int> localIds})> merge(
+      List<Note> incoming) async {
     final rows = await _db.query('notes');
     final local = rows.map(NoteMapper.fromMap).toList();
     final byUuid = {for (final n in local) n.uuid: n};
-    final fingerprints = local.map((n) => n.fingerprint).toSet();
+    final byFingerprint = {for (final n in local) n.fingerprint: n};
 
     final writes = <Note>[];
+    // uuid الوارد ← uuid الملاحظة التي تمثله (محلية أو أول وارد بنفس البصمة)
+    final sameAs = <String, String>{};
     for (final note in incoming) {
-      final existing = byUuid[note.uuid];
-      if (existing != null) {
-        if (note.updatedAt.isAfter(existing.updatedAt)) {
-          writes.add(note.copyWith(id: existing.id));
-        }
-      } else if (fingerprints.add(note.fingerprint)) {
+      final existing = byUuid[note.uuid] ?? byFingerprint[note.fingerprint];
+      if (existing == null) {
         writes.add(note.copyWith(id: null));
         byUuid[note.uuid] = note;
+        byFingerprint[note.fingerprint] = note;
+        sameAs[note.uuid] = note.uuid;
+        continue;
+      }
+      sameAs[note.uuid] = existing.uuid;
+      if (existing.id != null &&
+          existing.uuid == note.uuid &&
+          note.updatedAt.isAfter(existing.updatedAt)) {
+        writes.add(note.copyWith(id: existing.id));
       }
     }
+    final idByUuid = {
+      for (final n in local)
+        if (n.id != null) n.uuid: n.id!,
+    };
     final rowsToWrite = [for (final n in writes) (n, _toRow(n))];
     await _db.transaction((txn) async {
       for (final (note, row) in rowsToWrite) {
         if (note.id == null) {
-          await txn.insert('notes', row..remove('id'));
+          idByUuid[note.uuid] = await txn.insert('notes', row..remove('id'));
         } else {
           await txn.update('notes', row, where: 'id = ?', whereArgs: [note.id]);
         }
@@ -257,26 +269,74 @@ class NotesRepository extends ChangeNotifier {
       await load();
       _changedLocally();
     }
-    return writes.length;
+    return (
+      written: writes.length,
+      localIds: {
+        for (final MapEntry(:key, :value) in sameAs.entries)
+          if (idByUuid[value] case final id?) key: id,
+      },
+    );
   }
 
   /// يستبدل الملاحظات غير المقفلة بالواردة، في transaction واحدة. ملاحظات
   /// الخزنة المحلية لا تُمس. نفس شروط التشفير في [merge].
-  Future<void> replaceUnlocked(List<Note> incoming) async {
+  /// يُرجع الرقم المحلي لكل واردة بالـ uuid.
+  Future<Map<String, int>> replaceUnlocked(List<Note> incoming) async {
     final rowsToWrite = [
-      for (final n in incoming) _toRow(n.copyWith(id: null))
+      for (final n in incoming) (n.uuid, _toRow(n.copyWith(id: null)))
     ];
+    final localIds = <String, int>{};
     await _db.transaction((txn) async {
       await txn.delete('note_versions',
           where: 'noteId IN (SELECT id FROM notes WHERE isLocked = 0)');
       await txn.delete('notes', where: 'isLocked = 0');
-      for (final row in rowsToWrite) {
-        await txn.insert('notes', row..remove('id'),
+      for (final (uuid, row) in rowsToWrite) {
+        localIds[uuid] = await txn.insert('notes', row..remove('id'),
             conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
     await load();
     _changedLocally();
+    return localIds;
+  }
+
+  /// يضيف نسخاً سابقة مستوردة ([versions]: الرقم المحلي للملاحظة ← نسخها).
+  /// المقفلة لا تأخذ نسخاً، والموجودة (نفس الوقت والمحتوى) لا تتكرر،
+  /// ويبقى لكل ملاحظة أحدث [VersionPolicy.maxVersionsPerNote].
+  Future<void> importVersions(Map<int, List<NoteVersion>> versions) async {
+    if (versions.isEmpty) return;
+    await _db.transaction((txn) async {
+      for (final MapEntry(key: id, value: list) in versions.entries) {
+        final note = await txn.query('notes',
+            columns: ['isLocked'], where: 'id = ?', whereArgs: [id]);
+        if (note.isEmpty || note.single['isLocked'] != 0) continue;
+        final existing = {
+          for (final r in await txn.query('note_versions',
+              columns: ['timestamp', 'content'],
+              where: 'noteId = ?',
+              whereArgs: [id]))
+            (r['timestamp'], r['content']),
+        };
+        for (final v in list) {
+          final timestamp = v.timestamp.toUtc().toIso8601String();
+          if (!existing.add((timestamp, v.content))) continue;
+          await txn.insert('note_versions', {
+            'noteId': id,
+            'title': v.title,
+            'content': v.content,
+            'timestamp': timestamp,
+            'action': v.action,
+            'noteType': v.noteType,
+          });
+        }
+        await txn.rawDelete(
+          'DELETE FROM note_versions WHERE noteId = ? AND id NOT IN '
+          '(SELECT id FROM note_versions WHERE noteId = ? '
+          'ORDER BY timestamp DESC LIMIT ?)',
+          [id, id, VersionPolicy.maxVersionsPerNote],
+        );
+      }
+    });
   }
 
   // ── التصنيفات والمزامنة ──────────────────────────────────────────────────
@@ -487,7 +547,7 @@ class NotesRepository extends ChangeNotifier {
   Future<List<NoteVersion>> history(int noteId) async {
     final rows = await _db.query('note_versions',
         where: 'noteId = ?', whereArgs: [noteId], orderBy: 'timestamp DESC');
-    return rows.map(_versionFrom).toList();
+    return rows.map(NoteMapper.versionFromMap).toList();
   }
 
   Future<NoteVersion?> lastVersion(int noteId) async {
@@ -496,7 +556,7 @@ class NotesRepository extends ChangeNotifier {
         whereArgs: [noteId],
         orderBy: 'timestamp DESC',
         limit: 1);
-    return rows.isEmpty ? null : _versionFrom(rows.first);
+    return rows.isEmpty ? null : NoteMapper.versionFromMap(rows.first);
   }
 
   // ── داخلي ────────────────────────────────────────────────────────────────
@@ -594,15 +654,5 @@ class NotesRepository extends ChangeNotifier {
             if (a.isPinned != b.isPinned) return a.isPinned ? -1 : 1;
             return b.updatedAt.compareTo(a.updatedAt);
           }),
-      );
-
-  static NoteVersion _versionFrom(Map<String, Object?> m) => NoteVersion(
-        id: m['id'] as int,
-        noteId: m['noteId'] as int,
-        title: m['title'] as String,
-        content: m['content'] as String,
-        timestamp: DateTime.parse(m['timestamp'] as String),
-        action: m['action'] as String? ?? 'update',
-        noteType: m['noteType'] as String? ?? 'simple',
       );
 }

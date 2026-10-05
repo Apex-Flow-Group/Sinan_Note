@@ -2,6 +2,7 @@
 
 import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/domain/text/text_normalizer.dart';
 
 /// تحويل [Note] من وإلى صف SQLite / خريطة JSON (نفس الشكل في القاعدة
@@ -73,4 +74,14 @@ abstract final class NoteMapper {
 
   static int _colorIndex(Object? value) =>
       value is int && value >= 0 && value < 12 ? value : 0;
+
+  static NoteVersion versionFromMap(Map<String, Object?> m) => NoteVersion(
+        id: m['id'] as int? ?? 0,
+        noteId: m['noteId'] as int,
+        title: m['title'] as String? ?? '',
+        content: m['content'] as String? ?? '',
+        timestamp: DateTime.parse(m['timestamp'] as String),
+        action: m['action'] as String? ?? 'update',
+        noteType: m['noteType'] as String? ?? 'simple',
+      );
 }

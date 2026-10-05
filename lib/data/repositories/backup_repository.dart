@@ -9,16 +9,24 @@ import 'package:sinan_note/data/repositories/notes_repository.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
 import 'package:sinan_note/domain/errors.dart' show ValidationException;
 import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// محتوى نسخة احتياطية مقروءة، قبل أي كتابة.
 class BackupContents {
-  const BackupContents({required this.notes, required this.categories});
+  const BackupContents({
+    required this.notes,
+    required this.categories,
+    this.versions = const {},
+  });
 
   final List<Note> notes;
 
   /// تصنيفات النسخة: رقمها في النسخة ← اسمها.
   final Map<int, String> categories;
+
+  /// النسخ السابقة لكل ملاحظة (بالـ uuid). ملفات JSON لا تحملها.
+  final Map<String, List<NoteVersion>> versions;
 }
 
 /// قراءة النسخ الاحتياطية وكتابتها في القاعدة، وتصديرها.
@@ -69,17 +77,35 @@ class BackupRepository {
     final backup = await databaseFactory.openDatabase(path,
         options: OpenDatabaseOptions(readOnly: true, singleInstance: false));
     try {
-      final notes = [
-        for (final row in await backup.query('notes')) NoteMapper.fromMap(row),
-      ];
-      final hasCategories = (await backup.query('sqlite_master',
-              where: "type = 'table' AND name = 'categories'"))
+      final rows = await backup.query('notes');
+      // ملف بلا uuid يأخذ هوية جديدة هنا؛ النسخ تتبع رقمها في الملف
+      final notes = [for (final row in rows) NoteMapper.fromMap(row)];
+      final uuidById = {
+        for (final (i, row) in rows.indexed) row['id'] as int: notes[i].uuid,
+      };
+      Future<bool> has(String table) async => (await backup.query(
+              'sqlite_master',
+              where: "type = 'table' AND name = ?",
+              whereArgs: [table]))
           .isNotEmpty;
-      return BackupContents(notes: notes, categories: {
-        if (hasCategories)
-          for (final row in await backup.query('categories'))
-            row['id'] as int: row['name'] as String,
-      });
+
+      final versions = <String, List<NoteVersion>>{};
+      if (await has('note_versions')) {
+        for (final row in await backup.query('note_versions')) {
+          final version = NoteMapper.versionFromMap(row);
+          final uuid = uuidById[version.noteId];
+          if (uuid != null) (versions[uuid] ??= []).add(version);
+        }
+      }
+      return BackupContents(
+        notes: notes,
+        categories: {
+          if (await has('categories'))
+            for (final row in await backup.query('categories'))
+              row['id'] as int: row['name'] as String,
+        },
+        versions: versions,
+      );
     } finally {
       await backup.close();
     }
@@ -109,13 +135,24 @@ class BackupRepository {
 
   /// يدمج [contents] مع الملاحظات المحلية. يُرجع عدد ما أُضيف أو حُدّث.
   Future<int> merge(BackupContents contents) async {
-    final count = await _notes.merge(await _withLocalCategories(contents));
-    return count;
+    final result = await _notes.merge(await _withLocalCategories(contents));
+    await _importVersions(contents, result.localIds);
+    return result.written;
   }
 
   /// يستبدل الملاحظات غير المقفلة بـ [contents].
   Future<void> replace(BackupContents contents) async {
-    await _notes.replaceUnlocked(await _withLocalCategories(contents));
+    final localIds =
+        await _notes.replaceUnlocked(await _withLocalCategories(contents));
+    await _importVersions(contents, localIds);
+  }
+
+  Future<void> _importVersions(
+      BackupContents contents, Map<String, int> localIds) async {
+    await _notes.importVersions({
+      for (final MapEntry(key: uuid, value: list) in contents.versions.entries)
+        if (localIds[uuid] case final id?) id: list,
+    });
   }
 
   /// لقطة متسقة من القاعدة (VACUUM INTO) في [directory]. يُرجع مسارها.

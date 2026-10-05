@@ -87,6 +87,59 @@ void main() {
     return path;
   }
 
+  /// نسخة .db فيها ملاحظة بنسختين سابقتين، ومقفلة بنسخة (من إصدار قديم).
+  Future<String> dbWithHistory() async {
+    final path = '${tmp.path}/history.db';
+    final backup = await _openDb(path);
+    final open = await backup.insert(
+        'notes', NoteMapper.toMap(note('with history'))..remove('id'));
+    final locked = await backup.insert('notes',
+        NoteMapper.toMap(note('locked').copyWith(isLocked: true))..remove('id'));
+    for (final (id, content, hour) in [
+      (open, 'v1', 1),
+      (open, 'v2', 2),
+      (locked, 'plaintext leak', 3),
+    ]) {
+      await backup.insert('note_versions', {
+        'noteId': id,
+        'title': 't',
+        'content': content,
+        'timestamp': t0.add(Duration(hours: hour)).toIso8601String(),
+        'action': 'manual_save',
+        'noteType': 'simple',
+      });
+    }
+    await backup.close();
+    return path;
+  }
+
+  test('restoring a .db brings back version history, once', () async {
+    final path = await dbWithHistory();
+    await backups.merge(await backups.read(path));
+    await backups.merge(await backups.read(path));
+
+    final restored = notes.notes.singleWhere((n) => n.title == 'with history');
+    expect((await notes.history(restored.id!)).map((v) => v.content),
+        ['v2', 'v1']);
+  });
+
+  test('replace also restores history; locked notes never get versions',
+      () async {
+    await backups.replace(await backups.read(await dbWithHistory()));
+
+    final restored = notes.notes.single;
+    expect(await notes.history(restored.id!), hasLength(2));
+    final versions = await db.query('note_versions');
+    expect(versions.map((v) => v['content']), isNot(contains('plaintext leak')));
+  });
+
+  test('history follows a note that already exists locally', () async {
+    final local = await notes.save(note('with history'));
+    await backups.merge(await backups.read(await dbWithHistory()));
+    expect(await notes.history(local.id!), hasLength(2),
+        reason: 'matched by fingerprint, versions attached to the local note');
+  });
+
   test('merge adds new notes and keeps local ones with colliding row ids',
       () async {
     await notes.save(note('local 1'));
