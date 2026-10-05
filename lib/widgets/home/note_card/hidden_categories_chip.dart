@@ -1,5 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -51,9 +50,10 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
     if (route != null && _routeAnimation == null) {
       _routeAnimation = route.animation;
       _routeAnimation!.addStatusListener(_onRouteStatus);
-      // إذا الـ route مكتمل بالفعل — اظهر مباشرة
+      // إذا الـ route مكتمل بالفعل — اظهر مباشرة بلا حركة: البطاقة تُبنى من
+      // جديد كلما دخلت الشاشة أثناء التمرير، وتحريك ارتفاعها يزحزح الشبكة.
       if (_routeAnimation!.status == AnimationStatus.completed) {
-        _ctrl.forward();
+        _ctrl.value = 1;
       }
     }
   }
@@ -203,4 +203,3 @@ class _HiddenCategoriesChipState extends State<HiddenCategoriesChip>
     );
   }
 }
-

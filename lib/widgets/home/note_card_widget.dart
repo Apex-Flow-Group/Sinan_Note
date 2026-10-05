@@ -75,14 +75,59 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     r'[\u0600-\u06FF\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
   );
 
+  static final _latinRegex = RegExp(r'[a-zA-Z]');
+
+  /// أول حرف قوي يحدد الاتجاه. البحث بالـ RegExp على النص كاملاً مرة واحدة
+  /// بدل إنشاء نص وRegExp لكل محرف.
   static ui.TextDirection _detectDirection(String text) {
-    if (text.isEmpty) return ui.TextDirection.rtl;
-    for (final char in text.runes) {
-      final c = String.fromCharCode(char);
-      if (_rtlRegex.hasMatch(c)) return ui.TextDirection.rtl;
-      if (RegExp(r'[a-zA-Z]').hasMatch(c)) return ui.TextDirection.ltr;
+    final rtl = text.indexOf(_rtlRegex);
+    final ltr = text.indexOf(_latinRegex);
+    if (ltr == -1) return ui.TextDirection.rtl;
+    if (rtl == -1) return ui.TextDirection.ltr;
+    return rtl < ltr ? ui.TextDirection.rtl : ui.TextDirection.ltr;
+  }
+
+  /// ما يُشتق من محتوى الملاحظة يُحسب مرة لكل (id, updatedAt) ويبقى بعد خروج
+  /// البطاقة من الشاشة — البطاقات لا تحتفظ بحالتها أثناء التمرير.
+  static final _previewCache = <int, _CardPreview>{};
+  static const _previewCacheLimit = 3000;
+
+  /// [cache] = false لبطاقات الخزنة: نسخها مفكوكة، ولا يجوز أن يبقى نصها في
+  /// ذاكرة ثابتة بعد إغلاق الخزنة.
+  static _CardPreview _previewFor(Note note, {required bool cache}) {
+    final id = cache ? note.id : null;
+    final cached = id == null ? null : _previewCache[id];
+    if (cached != null &&
+        cached.updatedAt == note.updatedAt &&
+        cached.contentLength == note.content.length &&
+        cached.title == note.title) {
+      return cached;
     }
-    return ui.TextDirection.rtl;
+
+    final title = NoteCardUtils.getDisplayTitle(note);
+    final content = NoteCardUtils.fixNoteContent(note.content);
+    final showExt = NoteCardUtils.shouldShowExtension(note.noteType);
+    final preview = _CardPreview(
+      updatedAt: note.updatedAt,
+      contentLength: note.content.length,
+      title: note.title,
+      displayTitle: title,
+      displayContent: content,
+      isChecklist: ChecklistFormatter.isValidChecklist(note.content),
+      shouldShowExt: showExt,
+      fileExtension: showExt
+          ? NoteCardUtils.getFileExtension(note.content, note.noteType)
+          : '',
+      titleDirection: _detectDirection(title),
+      contentDirection: _detectDirection(content),
+    );
+    if (id != null) {
+      if (_previewCache.length >= _previewCacheLimit) {
+        _previewCache.remove(_previewCache.keys.first);
+      }
+      _previewCache[id] = preview;
+    }
+    return preview;
   }
 
   @override
@@ -127,16 +172,15 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   }
 
   void _cacheNoteData() {
-    _displayTitle = NoteCardUtils.getDisplayTitle(widget.note);
-    _displayContent = NoteCardUtils.fixNoteContent(widget.note.content);
-    _isChecklist = ChecklistFormatter.isValidChecklist(widget.note.content);
-    _shouldShowExt = NoteCardUtils.shouldShowExtension(widget.note.noteType);
-    _fileExtension = _shouldShowExt
-        ? NoteCardUtils.getFileExtension(
-            widget.note.content, widget.note.noteType)
-        : '';
-    _titleDirection = _detectDirection(_displayTitle);
-    _contentDirection = _detectDirection(_displayContent);
+    final preview = _previewFor(widget.note,
+        cache: widget.source != 'locked' && !widget.note.isLocked);
+    _displayTitle = preview.displayTitle;
+    _displayContent = preview.displayContent;
+    _isChecklist = preview.isChecklist;
+    _shouldShowExt = preview.shouldShowExt;
+    _fileExtension = preview.fileExtension;
+    _titleDirection = preview.titleDirection;
+    _contentDirection = preview.contentDirection;
   }
 
   @override
@@ -584,4 +628,30 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
       ),
     );
   }
+}
+
+class _CardPreview {
+  const _CardPreview({
+    required this.updatedAt,
+    required this.contentLength,
+    required this.title,
+    required this.displayTitle,
+    required this.displayContent,
+    required this.isChecklist,
+    required this.shouldShowExt,
+    required this.fileExtension,
+    required this.titleDirection,
+    required this.contentDirection,
+  });
+
+  final DateTime updatedAt;
+  final int contentLength;
+  final String title;
+  final String displayTitle;
+  final String displayContent;
+  final bool isChecklist;
+  final bool shouldShowExt;
+  final String fileExtension;
+  final ui.TextDirection titleDirection;
+  final ui.TextDirection contentDirection;
 }

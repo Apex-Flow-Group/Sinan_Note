@@ -135,20 +135,25 @@ class _NotesSliverViewState extends State<NotesSliverView> {
         56 +
         8;
 
-    // عنوان واحد بلا مقابل لا يفصل شيئاً — القسمان يظهران فقط عند وجود الاثنين
-    if (_pinnedNotes.isEmpty || _unpinnedNotes.isEmpty) {
-      return _buildNotesSliver(_filteredNotes, bottomPadding);
-    }
-
+    // عنوان واحد بلا مقابل لا يفصل شيئاً — القسمان يظهران فقط عند وجود الاثنين.
+    // الجذر SliverMainAxisGroup دائماً، والقسم الرئيسي بمفتاح ثابت، حتى لا
+    // يُعاد بناء الشبكة كلها عند تثبيت أول ملاحظة أو إلغاء آخر تثبيت.
+    final sectioned = _pinnedNotes.isNotEmpty && _unpinnedNotes.isNotEmpty;
     final l10n = AppLocalizations.of(context);
     return SliverMainAxisGroup(
       slivers: [
-        _buildSectionLabel(
-            l10n?.sectionPinned ?? 'Pinned', Icons.push_pin_rounded),
-        _buildNotesSliver(_pinnedNotes, 0, showLoader: false, lazy: false),
-        _buildSectionLabel(
-            l10n?.sectionOthers ?? 'Others', Icons.sticky_note_2_rounded),
-        _buildNotesSliver(_unpinnedNotes, bottomPadding),
+        if (sectioned) ...[
+          _buildSectionLabel(
+              l10n?.sectionPinned ?? 'Pinned', Icons.push_pin_rounded),
+          _buildNotesSliver(_pinnedNotes, 0, showLoader: false, lazy: false),
+          _buildSectionLabel(
+              l10n?.sectionOthers ?? 'Others', Icons.sticky_note_2_rounded),
+        ],
+        KeyedSubtree(
+          key: const ValueKey('home_main_section'),
+          child: _buildNotesSliver(
+              sectioned ? _unpinnedNotes : _filteredNotes, bottomPadding),
+        ),
       ],
     );
   }
@@ -191,6 +196,10 @@ class _NotesSliverViewState extends State<NotesSliverView> {
         EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding);
     final loader = showLoader && _hasMore;
     final childCount = notes.length + (loader ? 1 : 0);
+    final indexById = <int, int>{
+      for (var i = 0; i < notes.length; i++)
+        if (notes[i].id != null) notes[i].id!: i,
+    };
 
     Widget item(int index, String source) {
       if (index == notes.length) {
@@ -239,11 +248,8 @@ class _NotesSliverViewState extends State<NotesSliverView> {
         delegate: SliverChildBuilderDelegate(
           (context, index) => item(index, 'home_list'),
           childCount: childCount,
-          findChildIndexCallback: (key) {
-            if (key is! ValueKey<int>) return null;
-            final index = notes.indexWhere((n) => n.id == key.value);
-            return index == -1 ? null : index;
-          },
+          findChildIndexCallback: (key) =>
+              key is ValueKey<int> ? indexById[key.value] : null,
           addAutomaticKeepAlives: false,
           addRepaintBoundaries: true,
         ),

@@ -1,6 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:ui';import 'package:flutter/material.dart';import 'package:sinan_note/generated/l10n/app_localizations.dart'; import 'package:sinan_note/models/note_mode.dart';
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/models/note_mode.dart';
+
 // Global notifier for menu state
 final ValueNotifier<bool> isMenuOpenNotifier = ValueNotifier<bool>(false);
 
@@ -73,41 +77,44 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
       child: Stack(
         children: [
           // Background Blur - Excludes bottom navigation bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: IgnorePointer(
-              ignoring: !isVisible,
-              child: GestureDetector(
-                onTap: widget.onToggle,
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return ClipRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(
-                          sigmaX: 10.0 * _controller.value,
-                          sigmaY: 10.0 * _controller.value,
+          // يُبنى فقط والقائمة ظاهرة: BackdropFilter بحجم الشاشة يُركَّب في كل
+          // إطار تمرير حتى بقوة تمويه صفر.
+          if (isVisible)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                ignoring: !isVisible,
+                child: GestureDetector(
+                  onTap: widget.onToggle,
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(
+                            sigmaX: 10.0 * _controller.value,
+                            sigmaY: 10.0 * _controller.value,
+                          ),
+                          child: Container(
+                            color: isVisible
+                                ? (isDark
+                                    ? Colors.black.withValues(
+                                        alpha: 0.2 * _controller.value)
+                                    : Colors.black.withValues(
+                                        alpha: 0.05 * _controller.value))
+                                : Colors.transparent,
+                          ),
                         ),
-                        child: Container(
-                          color: isVisible
-                              ? (isDark
-                                  ? Colors.black.withValues(
-                                      alpha: 0.2 * _controller.value)
-                                  : Colors.black.withValues(
-                                      alpha: 0.05 * _controller.value))
-                              : Colors.transparent,
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
-          ),
           // Menu items without SafeArea
           if (isVisible) Stack(children: _buildAnimatedMenuItems(context)),
           // FAB outside SafeArea - fixed position
@@ -181,9 +188,8 @@ class _AddMenuWidgetState extends State<AddMenuWidget>
       },
     ];
 
-    final double fabBottom = MediaQuery.of(context).padding.bottom +
-        kBottomNavigationBarHeight +
-        16;
+    final double fabBottom =
+        MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16;
     const double fabSize = 56.0;
     const double itemSpacing = 8.0;
     final double baseBottom = fabBottom + fabSize + itemSpacing;
@@ -328,4 +334,3 @@ class _AnimatedMenuItem extends StatelessWidget {
     );
   }
 }
-
