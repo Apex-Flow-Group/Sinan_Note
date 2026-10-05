@@ -29,6 +29,7 @@ import 'package:sinan_note/data/services/note_side_effects.dart';
 import 'package:sinan_note/data/services/notification_service.dart';
 import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/data/services/sync/drive_sync_remote.dart';
+import 'package:sinan_note/data/services/sync/google_drive_auth.dart';
 import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/data/services/sync_scheduler.dart';
 import 'package:sinan_note/data/services/widget_service.dart';
@@ -49,6 +50,7 @@ import 'package:sinan_note/ui/features/categories/view_models/categories_provide
 import 'package:sinan_note/ui/features/diagnostics/view_models/diagnostics.dart';
 import 'package:sinan_note/ui/features/editor/view_models/code_tools.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
+import 'package:sinan_note/ui/features/home/widgets/note_card/note_previews.dart';
 import 'package:sinan_note/ui/features/home/widgets/note_card_utils.dart';
 import 'package:sinan_note/ui/features/layout/view_models/master_width_provider.dart';
 import 'package:sinan_note/ui/features/layout/view_models/selected_note_provider.dart';
@@ -122,12 +124,14 @@ void main() async {
   await categories.load();
   final backups =
       BackupRepository(db: database, notes: notes, categories: categories);
+  final driveAuth = GoogleDriveAuth();
   final sync = SyncRepository(
     notes: notes,
     categories: categories,
     tombstones: tombstones,
-    remote: DriveSyncRemote(),
-    legacy: DriveSyncRemote(fileName: DriveSyncRemote.legacyFileName),
+    remote: DriveSyncRemote(auth: driveAuth),
+    legacy: DriveSyncRemote(
+        auth: driveAuth, fileName: DriveSyncRemote.legacyFileName),
     store: store,
   );
   await sync.initialize();
@@ -174,6 +178,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
         ChangeNotifierProvider(create: (_) => EditorCommandBus()),
         Provider(create: (_) => UnifiedNotificationService()),
+        Provider(create: (_) => NotePreviews()),
       ],
       child: ApexNoteApp(notifications: notifications, widgets: homeWidgets),
     ),

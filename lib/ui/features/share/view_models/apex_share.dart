@@ -1,11 +1,26 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:sinan_note/data/services/share/apex_share_service.dart';
 import 'package:sinan_note/domain/models/note.dart';
 
 /// المشاركة عبر تطبيق Apex File Share.
 class ApexShare {
-  Future<bool> isInstalled() => ApexShareService.isInstalled();
-  Future<void> send(Note note) => ApexShareService.sendNote(note);
+  bool? _installed;
+
+  /// يُفحص مرة لكل تشغيل.
+  Future<bool> isInstalled() async =>
+      _installed ??= await ApexShareService.isInstalled();
+
+  /// يرمي [PlatformException] (`NOT_INSTALLED`) إن أُزيل التطبيق.
+  Future<void> send(Note note) async {
+    try {
+      await ApexShareService.sendNote(note);
+    } on PlatformException catch (e) {
+      if (e.code == 'NOT_INSTALLED') _installed = false;
+      rethrow;
+    }
+  }
+
   String get storeUrl => ApexShareService.playStoreUrl;
 }

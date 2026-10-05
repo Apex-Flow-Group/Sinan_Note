@@ -79,10 +79,17 @@ final _rules = <_Rule>[
   // A7: البيانات والمجال لا تعرف الواجهة (ولا main.dart)
   _Rule('A7', (p, l) => _isDataOrDomain(l),
       RegExp(r'''\bimport\s+'package:sinan_note/(main\.dart'|ui/)''')),
-  // A6: لا حالة عامة على مستوى الملف ولا singletons بحالة
-  _Rule('A6', (p, l) => true, RegExp(
-      // static [final|late final] Type [_]instance — كان النمط يفوّت final
-      r'''^final\s+(ValueNotifier|ChangeNotifier|StreamController)\b|^\s*static\s+(?:late\s+)?(?:final\s+)?\w+\??\s+_?instance\b''')),
+  // A6: لا حالة عامة: لا notifiers على مستوى الملف، ولا singletons، ولا
+  // حقول static قابلة للتغيير. الاستثناء الوحيد AppStrings: نقطة إعداد
+  // واحدة يعيّنها main للنصوص خارج شجرة الويدجت.
+  _Rule(
+      'A6',
+      (p, l) => p != 'lib/data/services/app_strings.dart',
+      RegExp(
+          // static [final|late final] Type [_]instance — كان النمط يفوّت final
+          r'''^final\s+(ValueNotifier|ChangeNotifier|StreamController)\b|^\s*static\s+(?:late\s+)?(?:final\s+)?\w+\??\s+_?instance\b|'''
+          // static Type name = / ; (ليس const ولا final ولا getter)
+          r'''^\s*static\s+(?!const\b|final\b|get\b)(?:late\s+)?[\w<>?,() ]+?\s+_?[a-z]\w*\s*(?:=(?!>)|;)''')),
   // T1: الألوان من الثيم فقط
   _Rule('T1', (p, l) => l != _Layer.theme,
       RegExp(r'''\bColors\.(?!transparent\b)[a-z]|\bColor\(0x''')),

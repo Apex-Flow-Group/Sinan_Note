@@ -37,7 +37,11 @@ abstract interface class SyncRemote {
 
 /// ملف واحد مضغوط (gzip) في Google Drive.
 class DriveSyncRemote implements SyncRemote {
-  DriveSyncRemote({this.fileName = currentFileName});
+  DriveSyncRemote(
+      {required GoogleDriveAuth auth, this.fileName = currentFileName})
+      : _auth = auth;
+
+  final GoogleDriveAuth _auth;
 
   /// ملف هذا الإصدار وما بعده.
   static const currentFileName = 'sinan_sync_v3.gz';
@@ -49,25 +53,25 @@ class DriveSyncRemote implements SyncRemote {
   final String fileName;
 
   @override
-  bool get isSignedIn => GoogleDriveAuth.isSignedIn;
+  bool get isSignedIn => _auth.isSignedIn;
 
   @override
-  String? get accountEmail => GoogleDriveAuth.currentUserEmail;
+  String? get accountEmail => _auth.currentUserEmail;
 
   @override
   Future<void> restoreSession() async {
-    await GoogleDriveAuth.initializeSignIn();
-    await GoogleDriveAuth.refreshSessionIfNeeded();
+    await _auth.initializeSignIn();
+    await _auth.refreshSessionIfNeeded();
   }
 
   @override
-  Future<bool> signIn() => GoogleDriveAuth.signIn();
+  Future<bool> signIn() => _auth.signIn();
 
   @override
-  Future<void> signOut() => GoogleDriveAuth.signOut();
+  Future<void> signOut() => _auth.signOut();
 
   drive.DriveApi get _api =>
-      GoogleDriveAuth.driveApi ?? (throw const SyncException('Not signed in'));
+      _auth.driveApi ?? (throw const SyncException('Not signed in'));
 
   @override
   Future<RemoteFile?> stat() async {

@@ -8,9 +8,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/ui/core/navigation/app_navigator.dart';
 import 'package:sinan_note/ui/core/platform/platform_helper.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
@@ -22,6 +20,7 @@ import 'package:sinan_note/ui/features/categories/view_models/categories_provide
 import 'package:sinan_note/ui/features/home/desktop/note_context_menu.dart';
 import 'package:sinan_note/ui/features/home/home_screen.dart' show ViewType;
 import 'package:sinan_note/ui/features/home/widgets/note_card/hidden_categories_chip.dart';
+import 'package:sinan_note/ui/features/home/widgets/note_card/note_previews.dart';
 import 'package:sinan_note/ui/features/home/widgets/note_card/slidable_auto_closer.dart';
 import 'package:sinan_note/ui/features/home/widgets/note_card_actions.dart';
 import 'package:sinan_note/ui/features/home/widgets/note_card_utils.dart';
@@ -77,49 +76,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late ui.TextDirection _contentDirection;
   final _loadingNotifier = ValueNotifier<bool>(false);
 
-  /// ما يُشتق من محتوى الملاحظة يُحسب مرة لكل (id, updatedAt) ويبقى بعد خروج
-  /// البطاقة من الشاشة — البطاقات لا تحتفظ بحالتها أثناء التمرير.
-  static final _previewCache = <int, _CardPreview>{};
-  static const _previewCacheLimit = 3000;
-
-  /// [cache] = false لبطاقات الخزنة: نسخها مفكوكة، ولا يجوز أن يبقى نصها في
-  /// ذاكرة ثابتة بعد إغلاق الخزنة.
-  static _CardPreview _previewFor(Note note, {required bool cache}) {
-    final id = cache ? note.id : null;
-    final cached = id == null ? null : _previewCache[id];
-    if (cached != null &&
-        cached.updatedAt == note.updatedAt &&
-        cached.contentLength == note.content.length &&
-        cached.title == note.title) {
-      return cached;
-    }
-
-    final title = NoteCardUtils.getDisplayTitle(note);
-    final content = NoteCardUtils.fixNoteContent(note.content);
-    final showExt = NoteCardUtils.shouldShowExtension(note.noteType);
-    final preview = _CardPreview(
-      updatedAt: note.updatedAt,
-      contentLength: note.content.length,
-      title: note.title,
-      displayTitle: title,
-      displayContent: content,
-      isChecklist: ChecklistFormatter.isValidChecklist(note.content),
-      shouldShowExt: showExt,
-      fileExtension: showExt
-          ? NoteCardUtils.getFileExtension(note.content, note.noteType)
-          : '',
-      titleDirection: directionOf(title),
-      contentDirection: directionOf(content),
-    );
-    if (id != null) {
-      if (_previewCache.length >= _previewCacheLimit) {
-        _previewCache.remove(_previewCache.keys.first);
-      }
-      _previewCache[id] = preview;
-    }
-    return preview;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -172,7 +128,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   }
 
   void _cacheNoteData() {
-    final preview = _previewFor(widget.note,
+    final preview = context.read<NotePreviews>().of(widget.note,
         cache: widget.source != 'locked' && !widget.note.isLocked);
     _displayTitle = preview.displayTitle;
     _displayContent = preview.displayContent;
@@ -613,30 +569,4 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
       ),
     );
   }
-}
-
-class _CardPreview {
-  const _CardPreview({
-    required this.updatedAt,
-    required this.contentLength,
-    required this.title,
-    required this.displayTitle,
-    required this.displayContent,
-    required this.isChecklist,
-    required this.shouldShowExt,
-    required this.fileExtension,
-    required this.titleDirection,
-    required this.contentDirection,
-  });
-
-  final DateTime updatedAt;
-  final int contentLength;
-  final String title;
-  final String displayTitle;
-  final String displayContent;
-  final bool isChecklist;
-  final bool shouldShowExt;
-  final String fileExtension;
-  final ui.TextDirection titleDirection;
-  final ui.TextDirection contentDirection;
 }

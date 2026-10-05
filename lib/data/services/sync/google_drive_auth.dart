@@ -5,8 +5,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:sinan_note/domain/logger.dart';
 
+/// جلسة Google Drive. نسخة واحدة يتشاركها ملفا المزامنة (الحالي والقديم).
 class GoogleDriveAuth {
-  static final GoogleSignIn googleSignIn = GoogleSignIn(
+  final GoogleSignIn googleSignIn = GoogleSignIn(
     scopes: [
       drive.DriveApi.driveFileScope,
       'https://www.googleapis.com/auth/drive.appdata',
@@ -14,15 +15,15 @@ class GoogleDriveAuth {
     ],
   );
 
-  static GoogleSignInAccount? currentUser;
-  static drive.DriveApi? driveApi;
+  GoogleSignInAccount? currentUser;
+  drive.DriveApi? driveApi;
 
-  static bool get isSignedIn => currentUser != null;
-  static String? get currentUserEmail => currentUser?.email;
+  bool get isSignedIn => currentUser != null;
+  String? get currentUserEmail => currentUser?.email;
 
-  static bool _initialized = false;
+  bool _initialized = false;
 
-  static Future<void> initializeSignIn() async {
+  Future<void> initializeSignIn() async {
     if (_initialized) return;
     _initialized = true;
     try {
@@ -50,7 +51,7 @@ class GoogleDriveAuth {
   }
 
   /// إعادة تهيئة الجلسة عند العودة من الخلفية
-  static Future<void> refreshSessionIfNeeded() async {
+  Future<void> refreshSessionIfNeeded() async {
     if (currentUser == null) return;
     try {
       final authClient = await googleSignIn.authenticatedClient();
@@ -81,7 +82,7 @@ class GoogleDriveAuth {
     }
   }
 
-  static Future<bool> signIn() async {
+  Future<bool> signIn() async {
     try {
       currentUser = await googleSignIn.signIn();
       if (currentUser == null) return false;
@@ -96,23 +97,9 @@ class GoogleDriveAuth {
     }
   }
 
-  static Future<void> signOut() async {
+  Future<void> signOut() async {
     await googleSignIn.signOut();
     currentUser = null;
     driveApi = null;
-  }
-
-  static Future<drive.File?> findFile(String fileName) async {
-    try {
-      final fileList = await driveApi!.files.list(
-        q: "name='$fileName' and trashed=false",
-        spaces: 'drive',
-        $fields: 'files(id, name, modifiedTime, md5Checksum)',
-      );
-      return fileList.files?.isNotEmpty == true ? fileList.files!.first : null;
-    } catch (e) {
-      AppLogger.error('Find file error', 'GoogleDrive', e);
-      return null;
-    }
   }
 }

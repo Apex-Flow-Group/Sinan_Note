@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
+import 'dart:math';
 
 /// Checklist item model
 class ChecklistItem {
@@ -25,8 +26,8 @@ class ChecklistItem {
 
   /// معرّف جديد فريد ولو أُنشئت عناصر كثيرة في اللحظة نفسها.
   static String newId() =>
-      '${DateTime.now().microsecondsSinceEpoch}_${_sequence++}';
-  static int _sequence = 0;
+      '${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1 << 32)}';
+  static final _random = Random();
 
   factory ChecklistItem.fromJson(Map<String, dynamic> json) => ChecklistItem(
         id: json['id'] ?? newId(),
