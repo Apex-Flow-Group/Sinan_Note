@@ -89,8 +89,6 @@
   "L2|lib/services/code/smart_analyzer.dart": 7,
   "L2|lib/services/diagnostics/apex_diagnostics_engine.dart": 1,
   "L2|lib/services/diagnostics/apex_error_manager.dart": 4,
-  "L2|lib/services/note_services/note_side_effect_service.dart": 1,
-  "L2|lib/services/notification_service.dart": 4,
   "T1|lib/controllers/version_history/version_history_controller.dart": 6,
   "T1|lib/screens/auth/locked_notes_intro_screen.dart": 14,
   "T1|lib/screens/auth/pin_lock_screen.dart": 44,

@@ -2245,4 +2245,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get widgetListDeleted => 'حُذفت القائمة';
+
+  @override
+  String get reminderChannelDescription => 'تذكيرات وتنبيهات الملاحظات';
 }

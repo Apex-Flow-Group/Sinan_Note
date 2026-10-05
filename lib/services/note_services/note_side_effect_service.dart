@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:sinan_note/core/l10n/app_strings.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
@@ -91,7 +92,9 @@ class NoteSideEffectService {
         // Schedule notification
         await notificationService.scheduleNotification(
           id: note.id!,
-          title: note.isLocked || note.title.isEmpty ? 'تذكير' : note.title,
+          title: note.isLocked || note.title.isEmpty
+              ? AppStrings.current.reminder
+              : note.title,
           body: notificationBody,
           scheduledTime: note.reminderDateTime!,
           recurrenceRule: note.recurrenceRule,

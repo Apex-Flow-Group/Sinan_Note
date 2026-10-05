@@ -4399,6 +4399,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'List deleted'**
   String get widgetListDeleted;
+
+  /// No description provided for @reminderChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Note reminders and alerts'**
+  String get reminderChannelDescription;
 }
 
 class _AppLocalizationsDelegate

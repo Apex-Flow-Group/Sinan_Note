@@ -755,5 +755,6 @@
   "widgetEmptyNote": "ملاحظة فارغة",
   "widgetEmptyChecklist": "قائمة فارغة",
   "widgetNoteDeleted": "حُذفت الملاحظة",
-  "widgetListDeleted": "حُذفت القائمة"
+  "widgetListDeleted": "حُذفت القائمة",
+  "reminderChannelDescription": "تذكيرات وتنبيهات الملاحظات"
 }

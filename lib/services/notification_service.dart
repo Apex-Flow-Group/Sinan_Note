@@ -1,6 +1,13 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:io';import 'package:flutter_local_notifications/flutter_local_notifications.dart'; import 'package:flutter_timezone/flutter_timezone.dart';import 'package:sinan_note/core/utils/logger.dart'; import 'package:timezone/data/latest_all.dart' as tz; import 'package:timezone/timezone.dart' as tz;
+import 'dart:io';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:sinan_note/core/l10n/app_strings.dart';
+import 'package:sinan_note/core/utils/logger.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -39,10 +46,11 @@ class NotificationService {
     }
 
     // إنشاء قناة الإشعارات بأعلى أولوية
-    const androidChannel = AndroidNotificationChannel(
+    // اسم القناة ووصفها يظهران في إعدادات النظام: بلغة التطبيق
+    final androidChannel = AndroidNotificationChannel(
       'sinan_note_reminders',
-      'تذكيرات',
-      description: 'تذكيرات وتنبيهات الملاحظات',
+      AppStrings.current.reminders,
+      description: AppStrings.current.reminderChannelDescription,
       importance: Importance.max,
       playSound: true,
       enableVibration: true,
@@ -164,11 +172,11 @@ class NotificationService {
 
     final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         'sinan_note_reminders',
-        'تذكيرات',
-        channelDescription: 'تذكيرات وتنبيهات الملاحظات',
+        AppStrings.current.reminders,
+        channelDescription: AppStrings.current.reminderChannelDescription,
         importance: Importance.max,
         priority: Priority.high,
         playSound: true,
@@ -250,4 +258,3 @@ class NotificationService {
     if (noteId != null) onNoteTapped?.call(noteId);
   }
 }
-

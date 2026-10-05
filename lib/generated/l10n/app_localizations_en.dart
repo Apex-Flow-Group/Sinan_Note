@@ -2255,4 +2255,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetListDeleted => 'List deleted';
+
+  @override
+  String get reminderChannelDescription => 'Note reminders and alerts';
 }
