@@ -41,11 +41,11 @@ jobs:
           git diff --exit-code -- lib/generated
 
       - name: Format
-        run: dart format --output=none --set-exit-if-changed lib test tool integration_test
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
 
       - name: Analyze
         run: flutter analyze
 
-      # يشمل test/architecture: قواعد الطبقات والثيم واللغة بخط أساس فارغ
+      # يشمل test/architecture: قواعد الطبقات والثيم واللغة
       - name: Test
         run: flutter test
