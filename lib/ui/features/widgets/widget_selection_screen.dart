@@ -1,0 +1,342 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/text/note_text.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/widgets/unified_notification_service.dart';
+import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
+import 'package:sinan_note/ui/features/widgets/view_models/home_widgets.dart';
+
+class WidgetSelectionScreen extends StatefulWidget {
+  final String widgetType; // 'note' or 'checklist'
+  final int currentNoteId; // النوت الحالية المثبتة
+
+  const WidgetSelectionScreen({
+    super.key,
+    this.widgetType = 'note',
+    this.currentNoteId = 0,
+  });
+
+  @override
+  State<WidgetSelectionScreen> createState() => _WidgetSelectionScreenState();
+}
+
+class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
+  List<Note> notes = [];
+  List<Note> filteredNotes = [];
+  bool isLoading = true;
+  String searchQuery = '';
+  String filterType = 'all'; // 'all', 'pinned', 'recent'
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotes();
+  }
+
+  Future<void> _loadNotes() async {
+    final allNotes = context.read<NotesProvider>().notes;
+    setState(() {
+      if (widget.widgetType == 'checklist') {
+        notes = allNotes
+            .where((n) =>
+                n.isLocked == false &&
+                n.isTrashed == false &&
+                n.isArchived == false &&
+                (n.isChecklist == true || n.noteType == 'checklist'))
+            .toList();
+      } else {
+        notes = allNotes
+            .where((n) =>
+                n.isLocked == false &&
+                n.isTrashed == false &&
+                n.isArchived == false &&
+                n.isChecklist != true &&
+                n.noteType != 'checklist')
+            .toList();
+      }
+      _applyFilter();
+      isLoading = false;
+    });
+  }
+
+  void _applyFilter() {
+    List<Note> result = List.from(notes);
+
+    // فلتر البحث
+    if (searchQuery.isNotEmpty) {
+      result = result.where((note) => note.matches(searchQuery)).toList();
+    }
+
+    // فلتر النوع
+    if (filterType == 'pinned') {
+      result = result.where((n) => n.isPinned).toList();
+    } else if (filterType == 'recent') {
+      result.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      result = result.take(10).toList();
+    } else {
+      // all: مثبتة أولاً ثم الأحدث
+      result.sort((a, b) {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.updatedAt.compareTo(a.updatedAt);
+      });
+    }
+
+    setState(() {
+      filteredNotes = result;
+    });
+  }
+
+  Future<void> _selectNoteForWidget(Note note) async {
+    final l10n = AppLocalizations.of(context)!;
+    await context.read<HomeWidgets>().pin(note);
+
+    if (!mounted) return;
+    final title = note.title.isEmpty
+        ? (widget.widgetType == 'checklist' ? l10n.checklist : l10n.note)
+        : note.title;
+
+    UnifiedNotificationService().show(
+      context: context,
+      message: '${l10n.widgetPinned} "$title"',
+      type: NotificationType.success,
+    );
+
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.widgetType == 'checklist'
+            ? l10n.selectChecklistToPin
+            : l10n.selectNoteToPin),
+        centerTitle: true,
+        actions: [
+          // فلتر النوع
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.filter_list),
+            onSelected: (value) {
+              setState(() {
+                filterType = value;
+                _applyFilter();
+              });
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'all',
+                child: Row(
+                  children: [
+                    Icon(Icons.list,
+                        color: filterType == 'all'
+                            ? Theme.of(context).colorScheme.primary
+                            : null),
+                    const SizedBox(width: 8),
+                    Text(l10n.filterAll),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'pinned',
+                child: Row(
+                  children: [
+                    Icon(Icons.push_pin,
+                        color: filterType == 'pinned'
+                            ? Theme.of(context).colorScheme.primary
+                            : null),
+                    const SizedBox(width: 8),
+                    Text(l10n.filterPinned),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'recent',
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time,
+                        color: filterType == 'recent'
+                            ? Theme.of(context).colorScheme.primary
+                            : null),
+                    const SizedBox(width: 8),
+                    Text(l10n.filterRecent),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // شريط البحث
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: l10n.searchNotes,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            searchQuery = '';
+                            _applyFilter();
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                  _applyFilter();
+                });
+              },
+            ),
+          ),
+
+          // عداد النتائج
+          if (!isLoading && filteredNotes.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  Text(
+                    l10n.resultsCount(filteredNotes.length),
+                    style: context.text.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+                  if (widget.currentNoteId > 0) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        l10n.currentlyPinned,
+                        style: context.text.labelSmall?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+          // قائمة النتائج
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredNotes.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              searchQuery.isNotEmpty
+                                  ? Icons.search_off
+                                  : Icons.note_add_outlined,
+                              size: 80,
+                              color: context.colors.muted,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              searchQuery.isNotEmpty
+                                  ? l10n.noResults
+                                  : l10n.noNotesAvailable,
+                              style: context.text.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: context.colors.muted),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: filteredNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = filteredNotes[index];
+                          final isCurrentlyPinned =
+                              note.id == widget.currentNoteId;
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            elevation: isCurrentlyPinned ? 4 : 1,
+                            color: isCurrentlyPinned
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer
+                                    .withValues(alpha: 0.3)
+                                : null,
+                            child: ListTile(
+                              leading: Icon(
+                                note.isPinned ? Icons.push_pin : Icons.note,
+                                color: isCurrentlyPinned
+                                    ? Theme.of(context).colorScheme.primary
+                                    : (note.isPinned
+                                        ? context.colors.gold
+                                        : null),
+                              ),
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      note.title.isNotEmpty
+                                          ? note.title
+                                          : l10n.untitled,
+                                      style: TextStyle(
+                                        fontWeight: isCurrentlyPinned
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isCurrentlyPinned)
+                                    Icon(
+                                      Icons.check_circle,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      size: 20,
+                                    ),
+                                ],
+                              ),
+                              subtitle: Text(
+                                NoteText.toDisplayText(note.content),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: Icon(
+                                Icons.chevron_right,
+                                color: isCurrentlyPinned
+                                    ? Theme.of(context).colorScheme.primary
+                                    : context.colors.muted,
+                              ),
+                              onTap: () => _selectNoteForWidget(note),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+}

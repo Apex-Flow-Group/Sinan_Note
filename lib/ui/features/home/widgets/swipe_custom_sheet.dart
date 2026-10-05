@@ -1,0 +1,239 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/widgets/app_bottom_sheet.dart';
+import 'package:sinan_note/ui/core/widgets/custom_share_sheet.dart';
+import 'package:sinan_note/ui/core/widgets/unified_notification_service.dart';
+import 'package:sinan_note/ui/features/editor/widgets/category_picker_sheet.dart';
+import 'package:sinan_note/ui/features/editor/widgets/reminder_picker_sheet.dart';
+import 'package:sinan_note/ui/features/home/widgets/note_card_utils.dart';
+import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
+
+class SwipeCustomSheet {
+  static Future<void> show(
+    BuildContext context, {
+    required Note note,
+    required List<String> actions,
+    required VoidCallback onNoteChanged,
+  }) {
+    return AppBottomSheet.show(
+      context,
+      isScrollControlled: true,
+      child: _SwipeCustomSheetContent(
+        note: note,
+        actions: actions,
+        onNoteChanged: onNoteChanged,
+      ),
+    );
+  }
+}
+
+class _SwipeCustomSheetContent extends StatefulWidget {
+  final Note note;
+  final List<String> actions;
+  final VoidCallback onNoteChanged;
+
+  const _SwipeCustomSheetContent({
+    required this.note,
+    required this.actions,
+    required this.onNoteChanged,
+  });
+
+  @override
+  State<_SwipeCustomSheetContent> createState() =>
+      _SwipeCustomSheetContentState();
+}
+
+class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
+  bool _hidden = false;
+
+  Future<void> _withHide(Future<void> Function() fn) async {
+    setState(() => _hidden = true);
+    await fn();
+    if (mounted) setState(() => _hidden = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.colors;
+
+    return Visibility(
+      visible: !_hidden,
+      maintainState: true,
+      maintainAnimation: true,
+      maintainSize: true,
+      child: AppBottomSheet(
+        title: l10n.custom,
+        titleIcon: Icons.bolt_rounded,
+        scrollable: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: widget.actions.map((action) {
+              final (icon, label, color) =
+                  _actionMeta(action, l10n, scheme, colors);
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                title: Text(label),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                onTap: () => _execute(context, action, l10n),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  (IconData, String, Color) _actionMeta(
+      String action, AppLocalizations l10n, ColorScheme scheme,
+      AppColors colors) {
+    return switch (action) {
+      'delete' => (Icons.delete_outline_rounded, l10n.delete, colors.danger),
+      'archive' => (Icons.archive_outlined, l10n.archive, colors.success),
+      'share' => (Icons.share_outlined, l10n.share, scheme.primary),
+      'reminder' => (Icons.alarm_rounded, l10n.reminder, colors.warning),
+      'category' => (Icons.label_outlined, l10n.categories, scheme.primary),
+      'duplicate' => (Icons.copy_all_rounded, l10n.noteCopy, scheme.secondary),
+      _ => (Icons.help_outline, action, scheme.onSurface),
+    };
+  }
+
+  Future<void> _execute(
+      BuildContext context, String action, AppLocalizations l10n) async {
+    HapticFeedback.mediumImpact();
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+
+    switch (action) {
+      case 'delete':
+        Navigator.pop(context);
+        final delId = widget.note.id!;
+        await notesProvider.trashNote(delId);
+        widget.onNoteChanged();
+        if (!context.mounted) return;
+        UnifiedNotificationService().showWithUndo(
+          context: context,
+          message: '${l10n.movedTo} "${widget.note.title}" ${l10n.toTrash}',
+          actionKey: 'custom_delete_$delId',
+          type: NotificationType.info,
+          onExecute: () {},
+          onUndo: () async {
+            await notesProvider.restoreNote(delId);
+            widget.onNoteChanged();
+          },
+          undoLabel: l10n.undo,
+        );
+
+      case 'archive':
+        Navigator.pop(context);
+        final archId = widget.note.id!;
+        await notesProvider.archiveNote(archId);
+        widget.onNoteChanged();
+        if (!context.mounted) return;
+        UnifiedNotificationService().showWithUndo(
+          context: context,
+          message: '${l10n.movedTo} "${widget.note.title}" ${l10n.toArchive}',
+          actionKey: 'custom_archive_$archId',
+          type: NotificationType.success,
+          onExecute: () {},
+          onUndo: () async {
+            await notesProvider.unarchiveNote(archId);
+            widget.onNoteChanged();
+          },
+          undoLabel: l10n.undo,
+        );
+
+      case 'share':
+        Navigator.pop(context);
+        if (!context.mounted) return;
+        CustomShareSheet.show(
+          context,
+          '${widget.note.title}\n\n${NoteCardUtils.fixNoteContent(widget.note.content, maxChars: null)}',
+          subject: widget.note.title,
+          note: widget.note,
+          onNoteCopied: () async {
+            await notesProvider.duplicateNote(widget.note.id!,
+                copyLabel: l10n.noteCopy);
+            widget.onNoteChanged();
+            if (!context.mounted) return;
+            UnifiedNotificationService().show(
+              context: context,
+              message: l10n.copyCreated,
+              type: NotificationType.success,
+            );
+          },
+        );
+
+      case 'duplicate':
+        Navigator.pop(context);
+        await notesProvider.duplicateNote(widget.note.id!,
+            copyLabel: l10n.noteCopy);
+        widget.onNoteChanged();
+        if (!context.mounted) return;
+        UnifiedNotificationService().show(
+          context: context,
+          message: l10n.copyCreated,
+          type: NotificationType.success,
+        );
+
+      case 'reminder':
+        await _withHide(() async {
+          final result = await ReminderPickerSheet.show(
+            context,
+            widget.note.reminderDateTime,
+            widget.note.recurrenceRule,
+            Theme.of(context).colorScheme.surface,
+          );
+          if (!context.mounted) return;
+          Navigator.pop(context);
+          if (result == null) return;
+          if (result['remove'] == true) {
+            await notesProvider.setReminder(widget.note.id!, null);
+          } else {
+            await notesProvider.setReminder(
+              widget.note.id!,
+              result['dateTime'] as DateTime,
+              recurrence: result['recurrence'] == 'none'
+                  ? null
+                  : result['recurrence'] as String,
+            );
+          }
+          widget.onNoteChanged();
+        });
+
+      case 'category':
+        await _withHide(() async {
+          final result = await CategoryPickerSheet.show(
+            context,
+            widget.note.categoryIds,
+            isHiddenFromHome: widget.note.isHiddenFromHome,
+          );
+          if (!context.mounted) return;
+          Navigator.pop(context);
+          if (result == null) return;
+          await notesProvider.updateNote(widget.note.copyWith(
+            categoryIds: (result['categoryIds'] as List).cast<int>(),
+            isHiddenFromHome: result['isHiddenFromHome'] as bool,
+          ));
+          widget.onNoteChanged();
+        });
+    }
+  }
+}

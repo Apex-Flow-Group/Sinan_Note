@@ -3,11 +3,11 @@
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:sinan_note/core/utils/logger.dart';
-import 'package:sinan_note/services/app_update_service.dart';
-import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
-import 'package:sinan_note/services/notification_service.dart';
-import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/data/services/app_update_service.dart';
+import 'package:sinan_note/data/services/diagnostics/apex_diagnostics_engine.dart';
+import 'package:sinan_note/data/services/notification_service.dart';
+import 'package:sinan_note/data/services/widget_service.dart';
+import 'package:sinan_note/domain/logger.dart';
 
 /// تهيئة خدمات المنصة عند بدء التطبيق.
 class AppStartup {

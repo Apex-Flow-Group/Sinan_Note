@@ -1,7 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'package:sinan_note/data/services/note_side_effect_service.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/services/note_services/note_side_effect_service.dart';
 
 /// ما يحدث خارج القاعدة عند تغيّر ملاحظة: التذكيرات وويدجت الشاشة الرئيسية.
 /// يستقبل الملاحظة كما خُزّنت؛ المقفلة تُعرض بنص عام لا بمحتواها.

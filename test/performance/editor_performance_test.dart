@@ -4,7 +4,7 @@
 
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/core/utils/paste_handler.dart';
+import 'package:sinan_note/ui/core/input/paste_handler.dart';
 
 // ── مولّد نصوص ─────────────────────────────────────────────────────────────
 

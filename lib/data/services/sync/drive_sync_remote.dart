@@ -5,8 +5,8 @@ import 'dart:convert';
 import 'dart:io' show gzip;
 
 import 'package:googleapis/drive/v3.dart' as drive;
+import 'package:sinan_note/data/services/sync/google_drive_auth.dart';
 import 'package:sinan_note/domain/errors.dart' show SyncException;
-import 'package:sinan_note/services/cloud/google_drive_auth.dart';
 
 /// بصمة ملف السحابة: تكفي لمعرفة إن تغيّر منذ آخر رفع.
 class RemoteFile {

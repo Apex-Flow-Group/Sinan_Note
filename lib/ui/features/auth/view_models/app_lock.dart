@@ -1,13 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/foundation.dart';
+import 'package:sinan_note/data/services/security/biometric_service.dart';
+import 'package:sinan_note/data/services/security/rate_limiter_service.dart';
+import 'package:sinan_note/data/services/security/security_gate.dart';
+import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/rate_limiter_service.dart';
-import 'package:sinan_note/services/security/security_gate.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
 
-export 'package:sinan_note/services/security/unified_lock_service.dart'
+export 'package:sinan_note/data/services/security/unified_lock_service.dart'
     show LockType;
 
 /// قفل التطبيق للواجهات: PIN، البصمة، محاولات PIN، وحالة القفل.

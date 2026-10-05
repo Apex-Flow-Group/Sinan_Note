@@ -1,6 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 
 import '../../test_setup.dart';
 

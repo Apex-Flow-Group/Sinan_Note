@@ -2,8 +2,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
-import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
-import 'package:sinan_note/screens/shared/note_editor/state/editor_save_manager.dart';
+import 'package:sinan_note/ui/features/editor/note_editor/controllers/editor_smart_controller.dart';
+import 'package:sinan_note/ui/features/editor/note_editor/state/editor_save_manager.dart';
 
 void main() {
   group('isContentEmpty', () {

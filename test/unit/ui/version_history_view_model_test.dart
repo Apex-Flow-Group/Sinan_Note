@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/versioning.dart';
+import 'package:sinan_note/ui/features/version_history/view_models/version_history_controller.dart';
 
 import '../../helpers/test_data_layer.dart';
 import '../../test_setup.dart';

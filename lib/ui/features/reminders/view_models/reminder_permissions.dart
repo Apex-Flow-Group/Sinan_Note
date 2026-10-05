@@ -1,6 +1,6 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/data/services/notification_service.dart';
 
 /// أذونات التذكيرات للواجهات (الإشعارات والتنبيهات الدقيقة).
 class ReminderPermissions {

@@ -3,11 +3,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:sinan_note/data/repositories/notes_repository.dart';
 import 'package:sinan_note/data/repositories/vault_repository.dart';
+import 'package:sinan_note/data/services/security/biometric_service.dart';
+import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/vault_policy.dart';
-import 'package:sinan_note/services/security/biometric_service.dart';
-import 'package:sinan_note/services/security/unified_lock_service.dart';
 
 export 'package:sinan_note/domain/errors.dart'
     show VaultAttemptsExceededException;

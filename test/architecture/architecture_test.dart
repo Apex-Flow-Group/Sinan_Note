@@ -52,21 +52,15 @@ void main() {
 
 enum _Layer { ui, viewModel, dataService, repository, domain, theme, other }
 
-/// الطبقة حسب المسار؛ يشمل المجلدات القديمة حتى تُنقل.
+/// الطبقة حسب المسار.
 _Layer _layerOf(String path) {
   bool under(String dir) => path.startsWith('lib/$dir/');
-  if (under('ui/core/theme') ||
-      under('core/theme') ||
-      path == 'lib/core/utils/adaptive_color.dart') {
-    return _Layer.theme;
-  }
-  if (path.contains('/view_models/') || under('controllers')) {
-    return _Layer.viewModel;
-  }
-  if (under('ui') || under('screens') || under('widgets')) return _Layer.ui;
+  if (under('ui/core/theme')) return _Layer.theme;
+  if (path.contains('/view_models/')) return _Layer.viewModel;
+  if (under('ui')) return _Layer.ui;
   if (under('data/repositories')) return _Layer.repository;
-  if (under('data') || under('services')) return _Layer.dataService;
-  if (under('domain') || under('models')) return _Layer.domain;
+  if (under('data')) return _Layer.dataService;
+  if (under('domain')) return _Layer.domain;
   return _Layer.other;
 }
 
@@ -97,7 +91,7 @@ final _englishUiLiteral = RegExp(
 final _rules = <_Rule>[
   // A1: الواجهة لا تصل لخدمات البيانات مباشرة
   _Rule('A1', (p, l) => _isUi(l),
-      RegExp(r'''^import\s+'package:sinan_note/(services|data/services)/''')),
+      RegExp(r'''^import\s+'package:sinan_note/data/services/''')),
   // A2: البيانات والمجال بلا Flutter UI
   _Rule(
       'A2',
@@ -106,7 +100,7 @@ final _rules = <_Rule>[
           r'''^import\s+'package:flutter/(material|widgets|cupertino)\.dart'|\bBuildContext\b''')),
   // A3: المجال لا يعتمد على البيانات
   _Rule('A3', (p, l) => l == _Layer.domain,
-      RegExp(r'''^import\s+'package:sinan_note/(services|data)/''')),
+      RegExp(r'''^import\s+'package:sinan_note/data/''')),
   // A4: الـ Views لا تستدعي Repository
   _Rule('A4', (p, l) => _isUi(l),
       RegExp(r'''^import\s+'package:sinan_note/data/repositories/''')),
@@ -123,7 +117,7 @@ final _rules = <_Rule>[
       'A7',
       (p, l) => _isDataOrDomain(l),
       RegExp(
-          r'''\bimport\s+'package:sinan_note/(main\.dart'|(screens|widgets|controllers|ui)/)''')),
+          r'''\bimport\s+'package:sinan_note/(main\.dart'|ui/)''')),
   // A6: لا حالة عامة على مستوى الملف ولا singletons بحالة
   _Rule(
       'A6',

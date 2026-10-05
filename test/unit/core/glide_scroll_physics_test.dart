@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/core/physics/glide_scroll_physics.dart';
+import 'package:sinan_note/ui/core/physics/glide_scroll_physics.dart';
 
 ScrollMetrics _metrics(double pixels, {double max = 5000}) {
   return FixedScrollMetrics(

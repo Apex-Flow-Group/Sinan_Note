@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
+import 'package:sinan_note/ui/core/quill/quill_migration.dart';
 
 /// المسار القديم: بناء QuillController كامل ثم toPlainText.
 String _viaController(String content) =>

@@ -1,0 +1,640 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/text/checklist.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
+import 'package:sinan_note/ui/core/navigation/app_navigator.dart';
+import 'package:sinan_note/ui/core/platform/platform_helper.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/home_palette.dart';
+import 'package:sinan_note/ui/core/theme/note_palette.dart';
+import 'package:sinan_note/ui/core/widgets/effects/premium_card_effect.dart';
+import 'package:sinan_note/ui/core/widgets/unified_notification_service.dart';
+import 'package:sinan_note/ui/features/categories/view_models/categories_provider.dart';
+import 'package:sinan_note/ui/features/home/desktop/note_context_menu.dart';
+import 'package:sinan_note/ui/features/home/home_screen.dart' show ViewType;
+import 'package:sinan_note/ui/features/home/widgets/note_card/hidden_categories_chip.dart';
+import 'package:sinan_note/ui/features/home/widgets/note_card/slidable_auto_closer.dart';
+import 'package:sinan_note/ui/features/home/widgets/note_card_actions.dart';
+import 'package:sinan_note/ui/features/home/widgets/note_card_utils.dart';
+import 'package:sinan_note/ui/features/layout/view_models/selected_note_provider.dart';
+import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
+import 'package:sinan_note/ui/features/settings/view_models/settings_provider.dart';
+
+class NoteCardWidget extends StatefulWidget {
+  final Note note;
+  final ViewType viewType;
+  final ValueNotifier<int> closeAllSlidables;
+  final VoidCallback onNoteChanged;
+  final VoidCallback onLongPress;
+  final VoidCallback? onTap;
+  final bool isSelected;
+  final bool selectionMode;
+  final bool isCurrentlyOpen;
+  final bool isFiltering;
+  final String source;
+
+  const NoteCardWidget({
+    super.key,
+    required this.note,
+    required this.viewType,
+    required this.closeAllSlidables,
+    required this.onNoteChanged,
+    required this.onLongPress,
+    required this.source,
+    required this.isFiltering,
+    this.onTap,
+    this.isSelected = false,
+    this.selectionMode = false,
+    this.isCurrentlyOpen = false,
+  });
+
+  @override
+  State<NoteCardWidget> createState() => _NoteCardWidgetState();
+}
+
+class _NoteCardWidgetState extends State<NoteCardWidget> {
+  late String _displayTitle;
+  late String _displayContent;
+  late bool _isChecklist;
+  late bool _shouldShowExt;
+  late String _fileExtension;
+  late Color _baseColor;
+  late Color _titleColor;
+  late Color _contentColor;
+  TextStyle? _titleStyle;
+  TextStyle? _contentStyle;
+  TextStyle? _lockedContentStyle;
+  late ui.TextDirection _titleDirection;
+  late ui.TextDirection _contentDirection;
+  final _loadingNotifier = ValueNotifier<bool>(false);
+
+  /// ما يُشتق من محتوى الملاحظة يُحسب مرة لكل (id, updatedAt) ويبقى بعد خروج
+  /// البطاقة من الشاشة — البطاقات لا تحتفظ بحالتها أثناء التمرير.
+  static final _previewCache = <int, _CardPreview>{};
+  static const _previewCacheLimit = 3000;
+
+  /// [cache] = false لبطاقات الخزنة: نسخها مفكوكة، ولا يجوز أن يبقى نصها في
+  /// ذاكرة ثابتة بعد إغلاق الخزنة.
+  static _CardPreview _previewFor(Note note, {required bool cache}) {
+    final id = cache ? note.id : null;
+    final cached = id == null ? null : _previewCache[id];
+    if (cached != null &&
+        cached.updatedAt == note.updatedAt &&
+        cached.contentLength == note.content.length &&
+        cached.title == note.title) {
+      return cached;
+    }
+
+    final title = NoteCardUtils.getDisplayTitle(note);
+    final content = NoteCardUtils.fixNoteContent(note.content);
+    final showExt = NoteCardUtils.shouldShowExtension(note.noteType);
+    final preview = _CardPreview(
+      updatedAt: note.updatedAt,
+      contentLength: note.content.length,
+      title: note.title,
+      displayTitle: title,
+      displayContent: content,
+      isChecklist: ChecklistFormatter.isValidChecklist(note.content),
+      shouldShowExt: showExt,
+      fileExtension: showExt
+          ? NoteCardUtils.getFileExtension(note.content, note.noteType)
+          : '',
+      titleDirection: directionOf(title),
+      contentDirection: directionOf(content),
+    );
+    if (id != null) {
+      if (_previewCache.length >= _previewCacheLimit) {
+        _previewCache.remove(_previewCache.keys.first);
+      }
+      _previewCache[id] = preview;
+    }
+    return preview;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cacheNoteData();
+  }
+
+  @override
+  void didUpdateWidget(NoteCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.note.updatedAt != widget.note.updatedAt ||
+        oldWidget.note.id != widget.note.id) {
+      setState(() {
+        _cacheNoteData();
+        _cacheColors();
+      });
+    } else if (oldWidget.note.colorIndex != widget.note.colorIndex) {
+      setState(() => _cacheColors());
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _cacheColors();
+  }
+
+  @override
+  void dispose() {
+    _loadingNotifier.dispose();
+    super.dispose();
+  }
+
+  void _cacheColors() {
+    final brightness = Theme.of(context).brightness;
+    _baseColor =
+        AppColorPalette.palette[widget.note.colorIndex].getColor(brightness);
+    final isLight = _baseColor.computeLuminance() > 0.5;
+    _titleColor =
+        isLight ? HomePalette.noteTitleOnLight : HomePalette.noteTitleOnDark;
+    _contentColor =
+        isLight ? HomePalette.noteBodyOnLight : HomePalette.noteBodyOnDark;
+    final text = context.text;
+    _titleStyle = text.titleMedium
+        ?.copyWith(fontWeight: FontWeight.bold, color: _titleColor);
+    _contentStyle = text.bodyMedium?.copyWith(color: _contentColor);
+    _lockedContentStyle = text.bodyMedium?.copyWith(
+      color: _contentColor.withValues(alpha: 0.6),
+      fontStyle: FontStyle.italic,
+    );
+  }
+
+  void _cacheNoteData() {
+    final preview = _previewFor(widget.note,
+        cache: widget.source != 'locked' && !widget.note.isLocked);
+    _displayTitle = preview.displayTitle;
+    _displayContent = preview.displayContent;
+    _isChecklist = preview.isChecklist;
+    _shouldShowExt = preview.shouldShowExt;
+    _fileExtension = preview.fileExtension;
+    _titleDirection = preview.titleDirection;
+    _contentDirection = preview.contentDirection;
+  }
+
+  /// موعد التذكير بلغة التطبيق: "الأحد، 5 أكتوبر · 3:30 م".
+  static String _reminderLabel(BuildContext context, DateTime at) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return '${DateFormat.MMMEd(locale).format(at)} · '
+        '${DateFormat.jm(locale).format(at)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+
+    final noteColor = _baseColor;
+    final Color titleColor = _titleColor;
+    final colors = context.colors;
+    final Color extColor =
+        widget.note.noteType == 'markdown' ? colors.warning : colors.info;
+    final bool isTrash = widget.source == 'trash';
+    final bool isArchive = widget.source == 'archive';
+    final bool enableSwipe = !widget.selectionMode &&
+        (isTrash ||
+            isArchive ||
+            (settings.swipeEnabled && !widget.note.isLocked));
+
+    final String rightAction = isTrash
+        ? 'restore'
+        : isArchive
+            ? 'unarchive'
+            : settings.swipeRightAction;
+    final String leftAction = isTrash
+        ? 'permanent_delete'
+        : isArchive
+            ? 'trash_from_archive'
+            : settings.swipeLeftAction;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Slidable(
+        key: Key(widget.note.id.toString()),
+        groupTag: 'notes_group',
+        closeOnScroll: false,
+        enabled: enableSwipe,
+        startActionPane: enableSwipe
+            ? ActionPane(
+                motion: const DrawerMotion(),
+                extentRatio: 0.25,
+                dragDismissible: false,
+                children: [
+                  NoteCardActions.buildCustomSlidableAction(
+                    action: rightAction,
+                    context: context,
+                    borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(16)),
+                    note: widget.note,
+                    onNoteChanged: widget.onNoteChanged,
+                  ),
+                ],
+              )
+            : null,
+        endActionPane: enableSwipe
+            ? ActionPane(
+                motion: const DrawerMotion(),
+                extentRatio: 0.25,
+                dragDismissible: false,
+                children: [
+                  NoteCardActions.buildCustomSlidableAction(
+                    action: leftAction,
+                    context: context,
+                    borderRadius: const BorderRadius.horizontal(
+                        right: Radius.circular(16)),
+                    note: widget.note,
+                    onNoteChanged: widget.onNoteChanged,
+                  ),
+                ],
+              )
+            : null,
+        child: SlidableAutoCloser(
+          closerNotifier: widget.closeAllSlidables,
+          child: Listener(
+            onPointerDown: (event) {
+              widget.closeAllSlidables.value++;
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onSecondaryTapDown: (details) {
+                final isDesktop = PlatformHelper.isWideDisplay(context);
+                // قائمة السياق العامة لا تعرف الخزنة: «تكرار» فيها ينشئ نسخة
+                // غير مقفلة من النص المفكوك، و«حذف» يتركها يتيمة.
+                final isVault =
+                    widget.source == 'locked' || widget.note.isLocked;
+                if (isDesktop && !widget.selectionMode && !isVault) {
+                  NoteContextMenu.show(
+                      context, widget.note, widget.onNoteChanged,
+                      source: widget.source);
+                }
+              },
+              onTap: () async {
+                if (widget.selectionMode && widget.onTap != null) {
+                  widget.onTap!();
+                } else if (!widget.selectionMode) {
+                  final isDesktop = PlatformHelper.isWideDisplay(context);
+                  if (isDesktop) {
+                    final selectedNoteProvider =
+                        Provider.of<SelectedNoteProvider>(context,
+                            listen: false);
+                    selectedNoteProvider.selectNote(widget.note);
+                  } else {
+                    if (widget.note.isLocked && widget.source == 'locked') {
+                      final mode = NoteCardUtils.getNoteMode(widget.note);
+                      final decryptedNote =
+                          widget.note.copyWith(isLocked: false);
+                      final result = await AppNavigator.toEditor(
+                        context,
+                        note: decryptedNote,
+                        mode: mode,
+                        skipAuthentication: true,
+                        originallyLocked: true,
+                      );
+                      if ((result == true || result == null) && mounted) {
+                        widget.onNoteChanged();
+                      }
+                    } else {
+                      final mode = NoteCardUtils.getNoteMode(widget.note);
+                      _loadingNotifier.value = true;
+                      final result = await AppNavigator.toEditor(
+                        context,
+                        note: widget.note,
+                        mode: mode,
+                        readOnly: true,
+                      );
+                      // البطاقة قد تُزال أثناء المحرر (حذف، أرشفة، مزامنة)
+                      if (mounted) _loadingNotifier.value = false;
+                      if ((result == true || result == null) && mounted) {
+                        widget.onNoteChanged();
+                      }
+                    }
+                  }
+                }
+              },
+              onLongPress: () {
+                HapticFeedback.mediumImpact();
+                widget.onLongPress();
+              },
+              child: PremiumCardEffect(
+                baseColor: noteColor,
+                enableMotion: false,
+                isSelected: widget.isSelected,
+                child: Stack(
+                  clipBehavior: Clip.hardEdge,
+                  children: [
+                    ClipRect(
+                      clipBehavior: Clip.hardEdge,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: widget.viewType == ViewType.listCompact
+                                      ? Text(
+                                          _displayTitle,
+                                          textDirection: _titleDirection,
+                                          style: _titleStyle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        )
+                                      : Directionality(
+                                          textDirection: _titleDirection,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                _displayTitle,
+                                                style: _titleStyle,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              // خارج الخزنة (source != 'locked') لا يُعرض نص الملاحظة المقفلة،
+                                              // بل عبارة "محتوى محمي" فقط
+                                              (widget.note.isLocked &&
+                                                      widget.source != 'locked')
+                                                  ? Text(
+                                                      l10n.protectedContent,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style:
+                                                          _lockedContentStyle,
+                                                    )
+                                                  : _isChecklist
+                                                      ? NoteCardUtils
+                                                          .buildChecklistPreview(
+                                                              widget
+                                                                  .note.content,
+                                                              titleColor)
+                                                      : Text(
+                                                          _displayContent,
+                                                          textDirection:
+                                                              _contentDirection,
+                                                          maxLines: 4,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: _contentStyle,
+                                                        ),
+                                            ],
+                                          ),
+                                        ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (widget.note.isPinned)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Icon(Icons.push_pin,
+                                            size: 18,
+                                            color: titleColor.withValues(
+                                                alpha: 0.7)),
+                                      ),
+                                    if (widget.note.isLocked)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Icon(Icons.lock,
+                                            size: 20, color: titleColor),
+                                      ),
+                                    if (widget.note.isLocked &&
+                                        !widget.selectionMode)
+                                      NoteCardActions.buildLockedNoteMenu(
+                                          context,
+                                          widget.note,
+                                          titleColor,
+                                          widget.onNoteChanged),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            if (widget.note.reminderDateTime != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Builder(builder: (context) {
+                                  final isExpired = widget
+                                      .note.reminderDateTime!
+                                      .isBefore(DateTime.now());
+                                  final badgeColor = isExpired
+                                      ? colors.danger
+                                      : colors.warning;
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: badgeColor.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color:
+                                              badgeColor.withValues(alpha: 0.4),
+                                          width: 0.8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                            isExpired
+                                                ? Icons.alarm_off
+                                                : Icons.alarm,
+                                            size: 14,
+                                            color: badgeColor),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            _reminderLabel(context,
+                                                widget.note.reminderDateTime!),
+                                            style: context.text.labelSmall
+                                                ?.copyWith(
+                                              color: badgeColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                        if (widget.note.recurrenceRule !=
+                                            null) ...[
+                                          const SizedBox(width: 4),
+                                          Icon(Icons.repeat,
+                                              size: 12, color: badgeColor),
+                                        ],
+                                        const SizedBox(width: 4),
+                                        InkWell(
+                                          onTap: () async {
+                                            HapticFeedback.lightImpact();
+                                            final notesProvider =
+                                                Provider.of<NotesProvider>(
+                                                    context,
+                                                    listen: false);
+                                            // إلغاء الإشعار يتولاه المستودع
+                                            await notesProvider.setReminder(
+                                                widget.note.id!, null);
+                                            widget.onNoteChanged();
+                                            if (context.mounted) {
+                                              UnifiedNotificationService().show(
+                                                context: context,
+                                                message: l10n.reminderRemoved,
+                                                type: NotificationType.info,
+                                              );
+                                            }
+                                          },
+                                          child: Icon(Icons.close,
+                                              size: 14,
+                                              color: badgeColor.withValues(
+                                                  alpha: 0.8)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              ),
+                            if (_shouldShowExt)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: extColor.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.code,
+                                            size: 12,
+                                            color: extColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _fileExtension,
+                                            style: context.text.labelSmall
+                                                ?.copyWith(
+                                              color: extColor,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (widget.viewType != ViewType.listCompact)
+                              Builder(builder: (context) {
+                                final hideProFromHome = context
+                                    .read<CategoriesProvider>()
+                                    .hideProFromHome;
+                                final showChip = widget.note.isHiddenFromHome ||
+                                    (widget.isFiltering &&
+                                        widget.note.isProfessional &&
+                                        hideProFromHome);
+                                if (!showChip) return const SizedBox.shrink();
+                                return HiddenCategoriesChip(
+                                  note: widget.note,
+                                  titleColor: titleColor,
+                                  isProHidden: widget.note.isProfessional &&
+                                      hideProFromHome &&
+                                      !widget.note.isHiddenFromHome,
+                                );
+                              }),
+                          ],
+                        ),
+                      ),
+                    ), // ClipRect
+                    if (widget.selectionMode)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: noteColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            widget.isSelected
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            color: widget.isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : titleColor.withValues(alpha: 0.5),
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    // مؤشر تحميل أثناء فتح الملاحظة (بناء Quill مسبقاً)
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _loadingNotifier,
+                      builder: (_, loading, __) => loading
+                          ? Positioned(
+                              top: 8,
+                              right: 8,
+                              child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: titleColor.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardPreview {
+  const _CardPreview({
+    required this.updatedAt,
+    required this.contentLength,
+    required this.title,
+    required this.displayTitle,
+    required this.displayContent,
+    required this.isChecklist,
+    required this.shouldShowExt,
+    required this.fileExtension,
+    required this.titleDirection,
+    required this.contentDirection,
+  });
+
+  final DateTime updatedAt;
+  final int contentLength;
+  final String title;
+  final String displayTitle;
+  final String displayContent;
+  final bool isChecklist;
+  final bool shouldShowExt;
+  final String fileExtension;
+  final ui.TextDirection titleDirection;
+  final ui.TextDirection contentDirection;
+}

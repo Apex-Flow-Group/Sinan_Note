@@ -4,7 +4,7 @@
 // المصادقة: تنتظر حتى تجهز الشاشة الرئيسية، ثم تُنفَّذ مرة واحدة فقط.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/services/intent_handler_service.dart';
+import 'package:sinan_note/data/services/intent_handler_service.dart';
 import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 
 const _view = 'com.apexflow.app.sinan.ACTION_VIEW_NOTE';

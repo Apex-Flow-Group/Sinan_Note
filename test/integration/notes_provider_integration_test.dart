@@ -4,8 +4,8 @@
 @Tags(['serial'])
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
 import '../helpers/test_data_layer.dart';
 import '../test_setup.dart';
 

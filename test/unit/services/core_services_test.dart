@@ -2,7 +2,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sinan_note/services/security/rate_limiter_service.dart';
+import 'package:sinan_note/data/services/security/rate_limiter_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../test_setup.dart';

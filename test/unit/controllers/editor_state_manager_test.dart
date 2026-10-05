@@ -2,7 +2,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sinan_note/domain/models/note.dart';
-import 'package:sinan_note/screens/shared/note_editor/state/editor_state_manager.dart';
+import 'package:sinan_note/ui/features/editor/note_editor/state/editor_state_manager.dart';
 
 void main() {
   group('EditorStateManager', () {

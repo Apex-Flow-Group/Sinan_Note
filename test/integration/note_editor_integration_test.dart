@@ -3,14 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/screens/shared/note_editor.dart';
+import 'package:sinan_note/ui/features/editor/note_editor.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
+import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
 import 'package:sinan_note/ui/features/reminders/view_models/reminder_permissions.dart';
+import 'package:sinan_note/ui/features/settings/view_models/settings_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../helpers/test_data_layer.dart';

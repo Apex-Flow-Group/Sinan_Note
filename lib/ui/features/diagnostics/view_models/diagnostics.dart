@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:share_plus/share_plus.dart';
+import 'package:sinan_note/data/services/diagnostics/apex_diagnostics_engine.dart';
 import 'package:sinan_note/data/services/diagnostics/database_report.dart';
-import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
 
 /// أدوات التشخيص للواجهات: سجل الأخطاء وتقرير القاعدة.
 class Diagnostics {
