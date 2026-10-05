@@ -8,10 +8,9 @@ import 'package:sinan_note/domain/logger.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+/// إشعارات التذكير. يُنشأ مرة في نقطة التركيب؛ على سطح المكتب لا يفعل شيئاً.
 class NotificationService {
-  static final NotificationService _instance = NotificationService._internal();
-  factory NotificationService() => _instance;
-  NotificationService._internal();
+  static bool get isSupported => Platform.isAndroid || Platform.isIOS;
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
@@ -145,6 +144,7 @@ class NotificationService {
     String? recurrenceRule,
     String? payload,
   }) async {
+    if (!isSupported) return;
     // Verify permissions before scheduling
     if (Platform.isAndroid) {
       final hasNotificationPerm = await checkNotificationPermission();
@@ -241,6 +241,7 @@ class NotificationService {
   }
 
   Future<void> cancelNotification(int id) async {
+    if (!isSupported) return;
     try {
       await _notifications.cancel(id: id);
     } catch (e) {
@@ -249,11 +250,11 @@ class NotificationService {
     }
   }
 
-  /// يُعيَّن في نقطة التركيب: ما يحدث عند لمس تذكير ملاحظة (يمر بقفل
-  /// التطبيق، ولا يفتح ملاحظة مقفلة).
-  static void Function(int noteId)? onNoteTapped;
+  /// ما يحدث عند لمس تذكير ملاحظة (يعيّنه التطبيق؛ يمر بقفل التطبيق، ولا
+  /// يفتح ملاحظة مقفلة).
+  void Function(int noteId)? onNoteTapped;
 
-  static void _onNotificationTapped(NotificationResponse response) {
+  void _onNotificationTapped(NotificationResponse response) {
     final noteId = int.tryParse(response.payload ?? '');
     if (noteId != null) onNoteTapped?.call(noteId);
   }

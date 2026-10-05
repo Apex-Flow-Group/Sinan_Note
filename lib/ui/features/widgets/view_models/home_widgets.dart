@@ -5,7 +5,7 @@ import 'package:sinan_note/domain/models/note.dart';
 
 /// ويدجت الشاشة الرئيسية للواجهات.
 class HomeWidgets {
-  HomeWidgets([WidgetService? service]) : _service = service ?? WidgetService();
+  HomeWidgets(this._service);
 
   final WidgetService _service;
 

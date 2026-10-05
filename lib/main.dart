@@ -3,13 +3,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:home_widget/home_widget.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/data/repositories/backup_repository.dart';
 import 'package:sinan_note/data/repositories/categories_repository.dart';
@@ -20,7 +21,7 @@ import 'package:sinan_note/data/services/app_strings.dart';
 import 'package:sinan_note/data/services/app_update_service.dart';
 import 'package:sinan_note/data/services/database/app_database.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
-import 'package:sinan_note/data/services/diagnostics/apex_error_manager.dart';
+import 'package:sinan_note/data/services/diagnostics/error_log.dart';
 import 'package:sinan_note/data/services/intent_handler_service.dart';
 import 'package:sinan_note/data/services/key_value_store.dart';
 import 'package:sinan_note/data/services/legacy_cleanup.dart';
@@ -44,7 +45,6 @@ import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/auth/view_models/security_controller.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/ui/features/categories/view_models/categories_provider.dart';
-import 'package:sinan_note/ui/features/diagnostics/unexpected_error_snack_bar.dart';
 import 'package:sinan_note/ui/features/diagnostics/view_models/diagnostics.dart';
 import 'package:sinan_note/ui/features/editor/view_models/code_tools.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
@@ -95,12 +95,25 @@ void main() async {
   final database = await AppDatabase.open();
   final store = PreferencesStore();
   final tombstones = TombstoneStore(store);
+  final errorLog = ErrorLog((await getApplicationDocumentsDirectory()).path);
+  // كل خطأ لم يُلتقط يُسجَّل؛ المستخدم يشارك السجل من الإعدادات
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    unawaited(errorLog.record(details.exception, details.stack, 'FLUTTER'));
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    unawaited(errorLog.record(error, stack, 'ASYNC'));
+    return false;
+  };
+  final notifications = NotificationService();
+  final homeWidgets = WidgetService();
   final vault = VaultRepository();
   await vault.initialize();
   final notes = NotesRepository(
     db: database,
     vault: vault,
-    sideEffects: PlatformNoteSideEffects(),
+    sideEffects: PlatformNoteSideEffects(
+        notifications: notifications, widgets: homeWidgets),
     deletionLog: tombstones,
   );
   final categories = CategoriesRepository(
@@ -120,11 +133,6 @@ void main() async {
   SyncScheduler(
       sync: sync, localWrites: [notes.localWrites, categories.localWrites]);
   unawaited(LegacyCleanup.run());
-  // الخطأ غير المتوقع في خدمة: رسالة للمستخدم من الواجهة
-  ApexErrorManager.onUnexpected = (operation) {
-    final context = navigatorKey.currentContext;
-    if (context != null) showUnexpectedError(context, operation);
-  };
   // خارج شجرة الويدجت (ويدجت الشاشة الرئيسية، نافذة البصمة) بلغة التطبيق
   AppStrings.configure(() {
     final context = navigatorKey.currentContext;
@@ -146,11 +154,13 @@ void main() async {
                 VaultViewModel(vault: vault, notes: notes, lock: lock)),
         Provider(create: (_) => BackupViewModel(backups: backups)),
         Provider(create: (_) => EditorSessions(notes: notes)),
-        Provider(create: (_) => ReminderPermissions()),
+        Provider(create: (_) => ReminderPermissions(notifications)),
         Provider(create: (_) => AppLock(lock: lock, security: security)),
-        Provider(create: (_) => HomeWidgets()),
-        Provider(create: (_) => Diagnostics()),
-        Provider(create: (_) => AppStartup()),
+        Provider(create: (_) => HomeWidgets(homeWidgets)),
+        Provider(create: (_) => Diagnostics(errorLog)),
+        Provider(
+            create: (_) =>
+                AppStartup(notifications: notifications, widgets: homeWidgets)),
         Provider(create: (_) => CodeTools()),
         Provider(create: (_) => ApexShare()),
         Provider(
@@ -163,13 +173,21 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
         ChangeNotifierProvider(create: (_) => EditorCommandBus()),
       ],
-      child: const ApexNoteApp(),
+      child: ApexNoteApp(notifications: notifications, widgets: homeWidgets),
     ),
   );
 }
 
 class ApexNoteApp extends StatefulWidget {
-  const ApexNoteApp({super.key});
+  const ApexNoteApp({
+    super.key,
+    required this.notifications,
+    required this.widgets,
+  });
+
+  /// مصادر النوايا الخارجية: لمس تذكير، ولمس ويدجت.
+  final NotificationService notifications;
+  final WidgetService widgets;
 
   @override
   State<ApexNoteApp> createState() => _ApexNoteAppState();
@@ -179,13 +197,14 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   static const platform = MethodChannel('com.apexflow.app.sinan/widget');
   static const _intentService = IntentHandlerService();
   late final IntentInbox _intents = context.read<AppNavigation>().intents;
+  StreamSubscription<Uri?>? _widgetClicks;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _intents.execute = _executeIntent;
-    NotificationService.onNoteTapped = (noteId) => _storePendingIntent({
+    widget.notifications.onNoteTapped = (noteId) => _storePendingIntent({
           'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
           'note_id': noteId,
         });
@@ -194,20 +213,22 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
       platform.setMethodCallHandler(_handleMethodCall);
 
       // 🔄 الاستماع للضغط على الويدجت عندما يكون التطبيق في الخلفية
-      WidgetService().initialize().then((_) {
-        HomeWidget.widgetClicked.listen((Uri? uri) {
-          if (uri != null) {
-            final noteId =
-                int.tryParse(uri.queryParameters['note_id'] ?? '0') ?? 0;
-            if (noteId > 0) {
-              _storePendingIntent({
-                'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
-                'note_id': noteId
-              });
-            } else {
-              navigatorKey.currentState?.pushNamed('/widget_selection');
-            }
-          }
+      // اختيار ملاحظة للويدجت يمر أيضاً بالقفل (يعرض عناوين الملاحظات)
+      widget.widgets.initialize().then((_) {
+        if (!mounted) return;
+        _widgetClicks = widget.widgets.clicks.listen((uri) {
+          if (uri == null) return;
+          final noteId =
+              int.tryParse(uri.queryParameters['note_id'] ?? '0') ?? 0;
+          _storePendingIntent(noteId > 0
+              ? {
+                  'action': 'com.apexflow.app.sinan.ACTION_VIEW_NOTE',
+                  'note_id': noteId
+                }
+              : {
+                  'action':
+                      'com.apexflow.app.sinan.ACTION_SELECT_NOTE_FOR_WIDGET'
+                });
         });
       });
     }
@@ -422,6 +443,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _intents.execute = null;
+    widget.notifications.onNoteTapped = null;
+    _widgetClicks?.cancel();
     super.dispose();
   }
 

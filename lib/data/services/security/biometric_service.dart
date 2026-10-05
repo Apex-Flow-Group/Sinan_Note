@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:sinan_note/data/services/app_strings.dart';
-import 'package:sinan_note/data/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/domain/logger.dart';
 
 class BiometricService {
@@ -51,9 +50,6 @@ class BiometricService {
 
   /// المصادقة باستخدام البصمة أو كلمة مرور الجهاز
   static Future<bool> authenticate() async {
-    return await ApexErrorManager.monitorCritical(() async {
-      final result = await authenticateOrNull();
-      return result ?? false;
-    }, 'BiometricAuth');
+    return await authenticateOrNull() ?? false;
   }
 }

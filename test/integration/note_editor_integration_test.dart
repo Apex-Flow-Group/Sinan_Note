@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/data/services/notification_service.dart';
 import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
@@ -57,7 +58,7 @@ void main() {
           ChangeNotifierProvider.value(value: settingsProvider),
           Provider(create: (_) => EditorSessions(notes: data.notes)),
           ChangeNotifierProvider(create: (_) => EditorCommandBus()),
-          Provider(create: (_) => ReminderPermissions()),
+          Provider(create: (_) => ReminderPermissions(NotificationService())),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -463,7 +464,8 @@ void main() {
               ChangeNotifierProvider.value(value: settingsProvider),
               Provider(create: (_) => EditorSessions(notes: data.notes)),
               ChangeNotifierProvider(create: (_) => EditorCommandBus()),
-              Provider(create: (_) => ReminderPermissions()),
+              Provider(
+                  create: (_) => ReminderPermissions(NotificationService())),
             ],
             child: MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,

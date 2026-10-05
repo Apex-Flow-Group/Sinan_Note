@@ -4,8 +4,7 @@ import 'package:sinan_note/data/services/notification_service.dart';
 
 /// أذونات التذكيرات للواجهات (الإشعارات والتنبيهات الدقيقة).
 class ReminderPermissions {
-  ReminderPermissions([NotificationService? service])
-      : _service = service ?? NotificationService();
+  ReminderPermissions(this._service);
 
   final NotificationService _service;
 
