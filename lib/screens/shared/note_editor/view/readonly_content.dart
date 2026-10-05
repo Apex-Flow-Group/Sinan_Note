@@ -4,10 +4,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/view/readonly_checklist_view.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
@@ -184,6 +184,7 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
           focusNode: FocusNode(),
           scrollController: widget.scrollController,
           config: QuillEditorConfig(
+            textDirectionResolver: strongDirectionOf,
             autoFocus: false,
             expands: true,
             scrollable: true,
@@ -324,7 +325,7 @@ class _ReadOnlyContentState extends State<ReadOnlyContent> {
         itemCount: paragraphs.length,
         itemBuilder: (_, i) {
           final para = paragraphs[i];
-          final dir = TextDirectionUtils.getDirectionForParagraph(para);
+          final dir = directionOf(para);
           return Directionality(
             textDirection: dir,
             child: Padding(

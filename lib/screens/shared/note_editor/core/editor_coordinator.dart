@@ -13,7 +13,6 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/core/utils/apex_smart_controller.dart';
 import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
@@ -279,20 +278,6 @@ class EditorCoordinator {
       final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
       ctrl.replaceText(offset, deleteLen, result.text!, null);
       ctrl.formatText(offset, result.text!.length, const ColorAttribute(null));
-      final lines = result.text!.split('\n');
-      int pos = offset;
-      for (final line in lines) {
-        if (line.isNotEmpty) {
-          final isRtl =
-              TextDirectionUtils.getDirection(line) == TextDirection.rtl;
-          ctrl.formatText(
-            pos + line.length,
-            1,
-            isRtl ? const DirectionAttribute(null) : Attribute.rtl,
-          );
-        }
-        pos += line.length + 1;
-      }
     } else {
       final ctrl = contentController;
       final sel = ctrl.selection;

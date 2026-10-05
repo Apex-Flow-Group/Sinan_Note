@@ -4,9 +4,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -60,7 +60,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   void initState() {
     super.initState();
     _parseContent();
-    _titleDirection = TextDirectionUtils.getDirection(_titleController.text);
+    _titleDirection = directionOf(_titleController.text);
     _titleController.addListener(_notifyParent);
     _titleController.addListener(_onTitleChanged);
     // Expose addItem to parent
@@ -70,7 +70,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   }
 
   void _onTitleChanged() {
-    final newDir = TextDirectionUtils.getDirection(_titleController.text);
+    final newDir = directionOf(_titleController.text);
     if (newDir != _titleDirection) {
       setState(() => _titleDirection = newDir);
     }

@@ -86,10 +86,14 @@ class QuillEditorConfig {
     this.readOnlyMouseCursor = SystemMouseCursors.text,
     this.onPerformAction,
     @experimental this.customLeadingBlockBuilder,
+    this.textDirectionResolver,
   });
 
   @experimental
   final LeadingBlockNodeBuilder? customLeadingBlockBuilder;
+
+  /// See [QuillRawEditorConfig.textDirectionResolver].
+  final TextDirectionResolver? textDirectionResolver;
 
   /// The text placeholder in the quill editor
   final String? placeholder;
@@ -476,6 +480,7 @@ class QuillEditorConfig {
 
   QuillEditorConfig copyWith({
     LeadingBlockNodeBuilder? customLeadingBlockBuilder,
+    TextDirectionResolver? textDirectionResolver,
     String? placeholder,
     List<CharacterShortcutEvent>? characterShortcutEvents,
     List<SpaceShortcutEvent>? spaceShortcutEvents,
@@ -535,6 +540,8 @@ class QuillEditorConfig {
     return QuillEditorConfig(
       customLeadingBlockBuilder:
           customLeadingBlockBuilder ?? this.customLeadingBlockBuilder,
+      textDirectionResolver:
+          textDirectionResolver ?? this.textDirectionResolver,
       placeholder: placeholder ?? this.placeholder,
       characterShortcutEvents:
           characterShortcutEvents ?? this.characterShortcutEvents,

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
 import 'package:sinan_note/widgets/editor/apex_magnifier.dart';
 import 'package:sinan_note/widgets/editor/quill_editor_controller.dart';
@@ -296,6 +297,7 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                     focusNode: widget.focusNode,
                     scrollController: _ctrl.scrollController,
                     config: QuillEditorConfig(
+                      textDirectionResolver: strongDirectionOf,
                       unknownEmbedBuilder: _unknownEmbedBuilder,
                       editorKey: _editorKey,
                       autoFocus: widget.autoFocus,

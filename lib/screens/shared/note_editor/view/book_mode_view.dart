@@ -1,14 +1,13 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/editor/markdown_viewer.dart';
 
@@ -187,9 +186,8 @@ class _BookModeViewState extends State<BookModeView> {
       _totalPages = _plainPages!.length;
     } else {
       try {
-        final rawDelta = Delta.fromJson(jsonDecode(widget.deltaJson!) as List);
-        final fixedDelta = QuillMigration.fixDeltaDirections(rawDelta);
-        _deltaPages = _splitDeltaIntoPages(fixedDelta);
+        _deltaPages = _splitDeltaIntoPages(
+            QuillMigration.deltaFromContent(widget.deltaJson!));
         _totalPages = _deltaPages!.length;
       } catch (_) {
         _plainPages = _splitPlainIntoPages(widget.plainContent ?? '');
@@ -426,6 +424,7 @@ class _BookModeViewState extends State<BookModeView> {
           focusNode: FocusNode(),
           scrollController: ScrollController(),
           config: QuillEditorConfig(
+            textDirectionResolver: strongDirectionOf,
             autoFocus: false,
             expands: true,
             scrollable: true,
@@ -559,7 +558,7 @@ class _BookModeViewState extends State<BookModeView> {
 
     final firstNonEmpty =
         paragraphs.firstWhere((p) => p.trim().isNotEmpty, orElse: () => '');
-    final pageDir = TextDirectionUtils.getDirectionForParagraph(firstNonEmpty);
+    final pageDir = directionOf(firstNonEmpty);
 
     return Directionality(
       textDirection: pageDir,
@@ -569,7 +568,7 @@ class _BookModeViewState extends State<BookModeView> {
         itemCount: paragraphs.length,
         itemBuilder: (_, i) {
           final para = paragraphs[i];
-          final dir = TextDirectionUtils.getDirectionForParagraph(para);
+          final dir = directionOf(para);
           return Directionality(
             textDirection: dir,
             child: Padding(

@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
 
 /// Standalone widget for rendering a single checklist item.
 ///
@@ -53,7 +53,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
   @override
   void initState() {
     super.initState();
-    _textDirection = TextDirectionUtils.getDirection(widget.controller.text);
+    _textDirection = directionOf(widget.controller.text);
     widget.controller.addListener(_updateDirection);
   }
 
@@ -63,7 +63,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller.removeListener(_updateDirection);
       widget.controller.addListener(_updateDirection);
-      _textDirection = TextDirectionUtils.getDirection(widget.controller.text);
+      _textDirection = directionOf(widget.controller.text);
     }
   }
 
@@ -74,7 +74,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget>
   }
 
   void _updateDirection() {
-    final newDir = TextDirectionUtils.getDirection(widget.controller.text);
+    final newDir = directionOf(widget.controller.text);
     if (newDir != _textDirection) {
       setState(() => _textDirection = newDir);
     }

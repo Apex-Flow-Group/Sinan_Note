@@ -7,6 +7,7 @@ import '../../../common/utils/font.dart';
 import '../../../controller/quill_controller.dart';
 import '../../../delta/delta_diff.dart';
 import '../../../document/attribute.dart';
+import '../../raw_editor/config/raw_editor_config.dart';
 import '../../../document/nodes/block.dart';
 import '../../../document/nodes/line.dart';
 import '../../../editor_toolbar_shared/color.dart';
@@ -84,6 +85,7 @@ class EditableTextBlock extends StatelessWidget {
     this.customStyleBuilder,
     this.customLinkPrefixes = const <String>[],
     this.customLeadingBlockBuilder,
+    this.textDirectionResolver,
     super.key,
   });
 
@@ -97,6 +99,7 @@ class EditableTextBlock extends StatelessWidget {
   final Color color;
   final DefaultStyles? styles;
   final LeadingBlockNodeBuilder? customLeadingBlockBuilder;
+  final TextDirectionResolver? textDirectionResolver;
   final bool enableInteractiveSelection;
   final bool hasFocus;
   final EdgeInsets? contentPadding;
@@ -173,9 +176,15 @@ class EditableTextBlock extends StatelessWidget {
       indentLevelCounts.clear();
     }
     var index = 0;
+    final isList = block.style.attributes.containsKey(Attribute.list.key);
+    var previousDirection = textDirection;
     for (final line in Iterable.castFrom<dynamic, Line>(block.children)) {
       index++;
-      final nodeTextDirection = getDirectionOfNode(line, textDirection);
+      final nodeTextDirection = isList && textDirectionResolver != null
+          ? textDirection
+          : resolveNodeDirection(
+              line, previousDirection, textDirectionResolver);
+      previousDirection = nodeTextDirection;
       final editableTextLine = EditableTextLine(
           line,
           _buildLeading(

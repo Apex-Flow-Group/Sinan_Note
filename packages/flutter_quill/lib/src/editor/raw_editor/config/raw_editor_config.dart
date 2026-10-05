@@ -72,7 +72,13 @@ class QuillRawEditorConfig {
     this.onPerformAction,
     @experimental this.customLeadingBuilder,
     this.quillMagnifierBuilder,
+    this.textDirectionResolver,
   });
+
+  /// Derives each line's direction from its text. Returns null when the text
+  /// has no character that decides it (the line then follows the previous
+  /// one). When unset, the `direction` attribute is used.
+  final TextDirectionResolver? textDirectionResolver;
 
   /// Controls whether this editor has keyboard focus.
   final FocusNode focusNode;
@@ -414,3 +420,6 @@ class QuillRawEditorConfig {
   /// Used to build the [QuillMagnifier] when long-pressing/dragging selection
   final QuillMagnifierBuilder? quillMagnifierBuilder;
 }
+
+/// Direction of a line of text, or null when the text does not decide it.
+typedef TextDirectionResolver = TextDirection? Function(String text);

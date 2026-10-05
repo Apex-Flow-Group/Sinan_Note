@@ -18,6 +18,7 @@ import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/desktop/note_context_menu.dart';
@@ -71,22 +72,6 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
   late ui.TextDirection _titleDirection;
   late ui.TextDirection _contentDirection;
   final _loadingNotifier = ValueNotifier<bool>(false);
-  static final _rtlRegex = RegExp(
-    r'[\u0600-\u06FF\u0590-\u05FF\u07C0-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
-  );
-
-  static final _latinRegex = RegExp(r'[a-zA-Z]');
-
-  /// أول حرف قوي يحدد الاتجاه. البحث بالـ RegExp على النص كاملاً مرة واحدة
-  /// بدل إنشاء نص وRegExp لكل محرف.
-  static ui.TextDirection _detectDirection(String text) {
-    final rtl = text.indexOf(_rtlRegex);
-    final ltr = text.indexOf(_latinRegex);
-    if (ltr == -1) return ui.TextDirection.rtl;
-    if (rtl == -1) return ui.TextDirection.ltr;
-    return rtl < ltr ? ui.TextDirection.rtl : ui.TextDirection.ltr;
-  }
-
   /// ما يُشتق من محتوى الملاحظة يُحسب مرة لكل (id, updatedAt) ويبقى بعد خروج
   /// البطاقة من الشاشة — البطاقات لا تحتفظ بحالتها أثناء التمرير.
   static final _previewCache = <int, _CardPreview>{};
@@ -118,8 +103,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
       fileExtension: showExt
           ? NoteCardUtils.getFileExtension(note.content, note.noteType)
           : '',
-      titleDirection: _detectDirection(title),
-      contentDirection: _detectDirection(content),
+      titleDirection: directionOf(title),
+      contentDirection: directionOf(content),
     );
     if (id != null) {
       if (_previewCache.length >= _previewCacheLimit) {

@@ -577,6 +577,7 @@ class QuillRawEditorState extends EditorState
     // to the next EditableTextBlock
     var prevNodeOl = false;
     var clearIndents = false;
+    var previousDirection = _textDirection;
 
     for (final node in doc.root.children) {
       final attrs = node.style.attributes;
@@ -587,7 +588,11 @@ class QuillRawEditorState extends EditorState
       }
 
       prevNodeOl = attrs[Attribute.list.key] == Attribute.ol;
-      final nodeTextDirection = getDirectionOfNode(node, _textDirection);
+      final nodeTextDirection = resolveNodeDirection(
+          node, previousDirection, widget.config.textDirectionResolver);
+      if (widget.config.textDirectionResolver != null) {
+        previousDirection = nodeTextDirection;
+      }
       if (node is Line) {
         final editableTextLine =
             _getEditableTextLineFromNode(node, context, attrs);
@@ -598,6 +603,7 @@ class QuillRawEditorState extends EditorState
           block: node,
           controller: controller,
           customLeadingBlockBuilder: widget.config.customLeadingBuilder,
+          textDirectionResolver: widget.config.textDirectionResolver,
           textDirection: nodeTextDirection,
           scrollBottomInset: widget.config.scrollBottomInset,
           horizontalSpacing: _getHorizontalSpacingForBlock(node, _styles),

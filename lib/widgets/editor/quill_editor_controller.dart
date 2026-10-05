@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 
@@ -7,8 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
-import 'package:sinan_note/widgets/editor/quill_editor_state_mixin.dart';
 import 'package:sinan_note/widgets/editor/tear/tear.dart';
 
 class QuillEditorController {
@@ -22,22 +20,17 @@ class QuillEditorController {
 
   late final GlobalKey<EditorState> editorKey;
   late final TearController tearHandle;
-  final scrollController = StableScrollController();
+  final scrollController = ScrollController();
 
   // ── flags ──────────────────────────────────────────────────────────────────
-  bool isFormatting = false;
   bool isPasting = false;
   bool isKeyboardOpening = false;
   bool isLoading = true;
-  bool isDirectionFormatting = false;
-  bool isHandlingEnter = false;
   bool isDraggingSelection = false;
   bool isDraggingTear = false;
   bool _suppressBar = false;
 
-  TextDirection textDirection = TextDirection.rtl;
   StreamSubscription? _docChangeSub;
-  Timer? _onChangedDebounce;
 
   // ── tashkeel ───────────────────────────────────────────────────────────────
   static const _harakat = {
@@ -77,10 +70,6 @@ class QuillEditorController {
   // ── init / dispose ─────────────────────────────────────────────────────────
   void init(bool readOnly) {
     quillController.readOnly = readOnly;
-    final initialText = quillController.document.toPlainText();
-    textDirection = TextDirectionUtils.getDirection(initialText);
-
-    quillController.addListener(onChanged);
     quillController.addListener(onSelectionChangedForBar);
     focusNode.addListener(onFocusChanged);
     _docChangeSub = quillController.document.changes.listen(onDocumentChange);
@@ -88,11 +77,7 @@ class QuillEditorController {
     // لا نُسجّل tearHandle.onSelectionChanged هنا —
     // editorKey لم يُربط بعد. نُسجّله بعد أول build عبر didFirstBuild()
     tearHandle.onDragStarted = () => isDraggingTear = true;
-    tearHandle.onDragEnded = () {
-      isDraggingTear = false;
-      // نعالج الاتجاه مرة واحدة بعد انتهاء السحب
-      _processOnChanged();
-    };
+    tearHandle.onDragEnded = () => isDraggingTear = false;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isLoading = false;
@@ -108,11 +93,9 @@ class QuillEditorController {
 
   void dispose() {
     _suppressBar = true;
-    _onChangedDebounce?.cancel();
     selectionBarActive.value = false;
     tearHandle.dispose();
     focusNode.removeListener(onFocusChanged);
-    quillController.removeListener(onChanged);
     quillController.removeListener(onSelectionChangedForBar);
     quillController.removeListener(tearHandle.onSelectionChanged);
     scrollController.removeListener(onScrollChanged);
@@ -208,7 +191,7 @@ class QuillEditorController {
     final isOnlyNewline =
         ops.length <= 2 && ops.any((op) => op.isInsert && op.data == '\n');
 
-    if (!isFormatting && !isDirectionFormatting && !isPasting) {
+    if (!isPasting) {
       if (!isOnlyNewline) {
         // كتابة عادية أو حذف — أخفِ الدمعة، ستعود عبر onTypingDone
         tearHandle.onTextChanged();
@@ -225,200 +208,10 @@ class QuillEditorController {
 
     if (!isOnlyNewline) return;
 
-    // إذا كنا في قائمة — ورّث الاتجاه من الـ block الحالي بدون إعادة حساب
-    final currentAttrs = quillController.getSelectionStyle().attributes;
-    final isList = currentAttrs['list'] != null;
-    if (isList) {
-      isHandlingEnter = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        isHandlingEnter = false;
-        scrollToCursor();
-        tearHandle.showOnTap(editorKey: editorKey);
-      });
-      return;
-    }
-
-    final plainText = quillController.document.toPlainText();
-    final cursorOffset =
-        quillController.selection.baseOffset.clamp(0, plainText.length);
-
-    final newlinePos = cursorOffset > 0 ? cursorOffset - 1 : 0;
-    final prevLineStart =
-        newlinePos > 0 ? plainText.lastIndexOf('\n', newlinePos - 1) : -1;
-    final prevLine = plainText.substring(
-      prevLineStart < 0 ? 0 : prevLineStart + 1,
-      newlinePos,
-    );
-
-    // سطر فارغ — لا نطبّق direction، الاتجاه يُطبَّق عند أول كتابة
-    if (prevLine.trim().isEmpty) {
-      isHandlingEnter = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        isHandlingEnter = false;
-        scrollToCursor();
-        tearHandle.showOnTap(editorKey: editorKey);
-      });
-      return;
-    }
-
-    final dir = TextDirectionUtils.getDirection(prevLine);
-
-    isHandlingEnter = true;
-    // أعد إظهار الدمعة في السطر الجديد — frame واحد يكفي لاستقرار الكرسور
+    // سطر جديد: الدمعة تتبع المؤشر بعد استقراره
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollToCursor();
       tearHandle.showOnTap(editorKey: editorKey);
-    });
-    if (!isFormatting && !isDirectionFormatting && !isDraggingSelection) {
-      applyEnterDirection(dir);
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      isHandlingEnter = false;
-    });
-  }
-
-  // ── onChanged ──────────────────────────────────────────────────────────────
-  void onChanged() {
-    if (isFormatting ||
-        isPasting ||
-        isKeyboardOpening ||
-        isDirectionFormatting ||
-        isHandlingEnter ||
-        isDraggingSelection ||
-        tearHandle.isDragging) {
-      return;
-    }
-    _onChangedDebounce?.cancel();
-    _onChangedDebounce =
-        Timer(const Duration(milliseconds: 50), _processOnChanged);
-  }
-
-  void _processOnChanged() {
-    if (isFormatting ||
-        isPasting ||
-        isDirectionFormatting ||
-        isHandlingEnter ||
-        tearHandle.isDragging) {
-      return;
-    }
-
-    final plainText = quillController.document.toPlainText();
-
-    final selection = quillController.selection;
-    if (!selection.isValid || plainText.trim().isEmpty) return;
-
-    final offset = selection.baseOffset.clamp(0, plainText.length);
-    final lineStart = plainText.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
-    final lineEnd = plainText.indexOf('\n', offset);
-    final currentLine = plainText.substring(
-      lineStart < 0 ? 0 : lineStart + 1,
-      lineEnd < 0 ? plainText.length : lineEnd,
-    );
-
-    // إذا كان الـ block قائمة (list) — لا نتدخل في اتجاهه
-    // الاتجاه يُحدد عند التحميل بـ fixDeltaDirections ويثبت لكل القائمة
-    final blockAttrs = quillController.getSelectionStyle().attributes;
-    final isList = blockAttrs['list'] != null;
-    if (isList) {
-      // فقط نحدّث textDirection للـ widget بناءً على الـ attribute الموجود
-      final currentAttr = blockAttrs['direction'];
-      final blockIsLtr = currentAttr?.value == 'rtl';
-      final blockDir = blockIsLtr ? TextDirection.ltr : TextDirection.rtl;
-      if (blockDir != textDirection) {
-        textDirection = blockDir;
-        rebuild();
-      }
-      return;
-    }
-
-    // اتجاه السطر الحالي
-    final effectiveDir = currentLine.trim().isEmpty
-        ? _getPrevNonEmptyLineDirFast(plainText, lineStart)
-        : TextDirectionUtils.getDirection(currentLine);
-
-    final isRtl = effectiveDir == TextDirection.rtl;
-    final currentAttr = blockAttrs['direction'];
-    final currentIsLtr = currentAttr?.value == 'rtl';
-
-    // طبّق فقط إذا يوجد حرف صريح (عربي أو إنجليزي) أو رقم في السطر
-    // الأرقام الإنجليزية (0-9) = LTR، الهندية (٠-٩) = RTL
-    final hasExplicitDir =
-        RegExp(r'[a-zA-Z0-9\u0600-\u06FF\u0750-\u077F]').hasMatch(currentLine);
-    if (hasExplicitDir && currentIsLtr == isRtl) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (isFormatting || isDirectionFormatting || isDraggingSelection) {
-          return;
-        }
-        applyDirectionFormat(() {
-          if (isRtl) {
-            quillController.formatSelection(const DirectionAttribute(null));
-          } else {
-            quillController.formatSelection(Attribute.rtl);
-          }
-          quillController.formatSelection(const AlignAttribute(null));
-        });
-      });
-    }
-
-    if (effectiveDir != textDirection) {
-      textDirection = effectiveDir;
-      rebuild();
-    }
-  }
-
-  // ── direction ──────────────────────────────────────────────────────────────
-  TextDirection getLineDirection(String text, int offset) {
-    final lineStart = text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0);
-    final lineEnd = text.indexOf('\n', offset);
-    final line = text.substring(
-      lineStart < 0 ? 0 : lineStart + 1,
-      lineEnd < 0 ? text.length : lineEnd,
-    );
-    if (line.trim().isEmpty) return getPrevNonEmptyLineDirection(text, offset);
-    return TextDirectionUtils.getDirection(line);
-  }
-
-  TextDirection getPrevNonEmptyLineDirection(String text, int offset) {
-    return _getPrevNonEmptyLineDirFast(
-        text, text.lastIndexOf('\n', offset > 0 ? offset - 1 : 0));
-  }
-
-  /// نسخة سريعة — تمشي للخلف بدون split
-  TextDirection _getPrevNonEmptyLineDirFast(String text, int lineStartIndex) {
-    int end = lineStartIndex; // نهاية السطر السابق (الـ \n)
-    while (end > 0) {
-      final start = text.lastIndexOf('\n', end - 1);
-      final line = text.substring(start < 0 ? 0 : start + 1, end);
-      if (line.trim().isNotEmpty) {
-        return TextDirectionUtils.getDirection(line);
-      }
-      end = start < 0 ? 0 : start;
-      if (start < 0) break;
-    }
-    return TextDirection.rtl;
-  }
-
-  void applyEnterDirection(TextDirection dir) {
-    applyDirectionFormat(() {
-      if (dir == TextDirection.ltr) {
-        quillController.formatSelection(Attribute.rtl);
-      } else {
-        quillController.formatSelection(const DirectionAttribute(null));
-      }
-      quillController.formatSelection(const AlignAttribute(null));
-    });
-  }
-
-  void applyDirectionFormat(VoidCallback fn) {
-    if (isFormatting || isDirectionFormatting) return;
-    isFormatting = true;
-    isDirectionFormatting = true;
-    scrollController.freezed = true;
-    fn();
-    isFormatting = false;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      scrollController.freezed = false;
-      isDirectionFormatting = false;
     });
   }
 
@@ -520,44 +313,11 @@ class QuillEditorController {
       pastePlainText(markdownEnabled: markdownEnabled);
       return KeyEventResult.handled;
     }
-    if (event.logicalKey == LogicalKeyboardKey.enter ||
-        event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-      handleEnterKey();
-      return KeyEventResult.ignored;
-    }
     if (event.logicalKey == LogicalKeyboardKey.backspace) {
       return deleteWithTashkeelAwareness()
           ? KeyEventResult.handled
           : KeyEventResult.ignored;
     }
     return KeyEventResult.ignored;
-  }
-
-  void handleEnterKey() {
-    final plainText = quillController.document.toPlainText();
-    final offset =
-        quillController.selection.baseOffset.clamp(0, plainText.length);
-    final lineStart = offset > 0 ? plainText.lastIndexOf('\n', offset - 1) : -1;
-    final lineEnd = plainText.indexOf('\n', offset);
-    final currentLine = plainText.substring(
-      lineStart < 0 ? 0 : lineStart + 1,
-      lineEnd < 0 ? plainText.length : lineEnd,
-    );
-
-    // إذا كان السطر الحالي فارغاً — نضع isHandlingEnter لمنع onChanged من التدخل،
-    // لكن لا نطبّق direction لأن formatSelection تتداخل مع Quill وتمنع إدراج السطر الجديد
-    // onDocumentChange سيعالج الاتجاه بعد ما يُنفَّذ Enter
-    isHandlingEnter = true;
-    if (currentLine.trim().isNotEmpty &&
-        !isFormatting &&
-        !isDirectionFormatting &&
-        !isDraggingSelection) {
-      final dir = TextDirectionUtils.getDirection(currentLine);
-      applyEnterDirection(dir);
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      isHandlingEnter = false;
-      scrollToCursor();
-    });
   }
 }

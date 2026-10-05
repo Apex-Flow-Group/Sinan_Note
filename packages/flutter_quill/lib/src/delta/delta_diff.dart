@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart' show immutable;
 
 import '../../quill_delta.dart';
 import '../document/attribute.dart';
+import '../document/nodes/block.dart';
 import '../document/nodes/node.dart';
+import '../editor/raw_editor/config/raw_editor_config.dart';
 
 // Diff between two texts - old text and new text
 @immutable
@@ -92,6 +94,25 @@ int getPositionDelta(Delta user, Delta actual) {
     }
   }
   return diff;
+}
+
+/// Direction of [node]: from its text when [resolver] is given (a list takes
+/// the direction of its first item that decides one), else [fallback];
+/// without a resolver, from the `direction` attribute.
+TextDirection resolveNodeDirection(
+  Node node,
+  TextDirection fallback,
+  TextDirectionResolver? resolver,
+) {
+  if (resolver == null) return getDirectionOfNode(node, fallback);
+  if (node is Block) {
+    for (final line in node.children) {
+      final direction = resolver(line.toPlainText());
+      if (direction != null) return direction;
+    }
+    return fallback;
+  }
+  return resolver(node.toPlainText()) ?? fallback;
 }
 
 TextDirection getDirectionOfNode(Node node, [TextDirection? currentDirection]) {

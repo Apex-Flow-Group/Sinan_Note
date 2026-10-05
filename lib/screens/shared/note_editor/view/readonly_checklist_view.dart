@@ -3,9 +3,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/text_direction_utils.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
+import 'package:sinan_note/ui/core/direction/text_direction.dart';
 class ReadOnlyChecklistView extends StatefulWidget {
   final EditorCoordinator coordinator;
   final Color textColor;
@@ -173,7 +173,7 @@ class _ReadOnlyChecklistViewState extends State<ReadOnlyChecklistView> {
                         child: Text(
                           item.text.isEmpty ? '...' : item.text,
                           textDirection:
-                              TextDirectionUtils.getDirection(item.text),
+                              directionOf(item.text),
                           style: TextStyle(
                             fontSize: 16,
                             height: 1.5,
