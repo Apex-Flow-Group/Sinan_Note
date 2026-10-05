@@ -171,7 +171,11 @@ class _TearWidgetState extends State<_TearWidget>
   double _lineBottom = 0;
   bool _dragging = false;
   int _lastOffset = -1;
-  int _lastDragMs = 0;
+  Duration _lastDragTime = Duration.zero;
+
+  /// بُعد الإصبع عن أسفل المؤشر عند بدء السحب؛ يبقى ثابتاً أثناءه فلا يقفز
+  /// المؤشر أينما لُمس مربع الدمعة.
+  Offset _grab = Offset.zero;
 
   /// لون الكرسر الأصلي — نحفظه لاستعادته عند انتهاء السحب
   Color? _originalCursorColor;
@@ -234,34 +238,35 @@ class _TearWidgetState extends State<_TearWidget>
     super.dispose();
   }
 
-  void _onPointerDown(PointerDownEvent e) {
-    final tearCenterY = _pos.dy + TearPainter.size.height / 2;
-    final dx = (e.position.dx - _pos.dx).abs();
-    final dy = (e.position.dy - tearCenterY).abs();
-    if (dx < _kHit / 2 && dy < _kHit / 2) {
-      HapticFeedback.mediumImpact();
+  /// لمسة على مربع الدمعة: يبدأ السحب، والصفحة تحتها لا تستلم اللمسة.
+  void _onTearDown(PointerDownEvent e) {
+    HapticFeedback.mediumImpact();
+    _grab = e.position - _pos;
 
-      // أخفِ كرسر Quill الحقيقي بجعل لونه شفاف
-      final state = widget.getEditorKey()?.currentState;
-      if (state != null) {
-        _originalCursorColor = state.cursorCont.color.value;
-        state.cursorCont.color.value = Colors.transparent;
-      }
-
-      // أوقف تصحيحات BiDi
-      BiDiCursorCorrectionMiddleware.pauseFor(widget.quillController);
-
-      widget.onDragStart();
-      setState(() => _dragging = true);
-      _magNotifier.value =
-          (pos: _pos, lineTop: _lineTop, lineBottom: _lineBottom);
+    // أخفِ كرسر Quill الحقيقي بجعل لونه شفاف
+    final state = widget.getEditorKey()?.currentState;
+    if (state != null) {
+      _originalCursorColor = state.cursorCont.color.value;
+      state.cursorCont.color.value = Colors.transparent;
     }
+
+    // أوقف تصحيحات BiDi
+    BiDiCursorCorrectionMiddleware.pauseFor(widget.quillController);
+
+    widget.onDragStart();
+    setState(() => _dragging = true);
+    _magNotifier.value =
+        (pos: _pos, lineTop: _lineTop, lineBottom: _lineBottom);
   }
 
-  void _updateDrag(Offset globalPos) {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - _lastDragMs < 16) return;
-    _lastDragMs = now;
+  /// [last]: رفع الإصبع — موضعه الأخير يُطبَّق دائماً ولو تجاوزه التحديد.
+  void _updateDrag(PointerEvent e, {bool last = false}) {
+    // تحديث واحد لكل إطار، بتوقيت الحدث نفسه
+    if (!last &&
+        e.timeStamp - _lastDragTime < const Duration(milliseconds: 16)) {
+      return;
+    }
+    _lastDragTime = e.timeStamp;
 
     final state = widget.getEditorKey()?.currentState;
     if (state == null) return;
@@ -273,9 +278,10 @@ class _TearWidgetState extends State<_TearWidget>
       return;
     }
 
-    // نقطة الحساب: مكان الإصبع مع إزاحة للأعلى (الإصبع على الدمعة تحت الكرسر)
-    final pos = re.getPositionForOffset(
-        Offset(globalPos.dx, globalPos.dy - widget.lineHeight));
+    // أسفل المؤشر حيث يقوده الإصبع، ثم منتصف السطر فوقه
+    final caretBottom = e.position - _grab;
+    final pos = re
+        .getPositionForOffset(caretBottom.translate(0, -widget.lineHeight / 2));
 
     if (pos.offset != _lastOffset) {
       _lastOffset = pos.offset;
@@ -332,15 +338,18 @@ class _TearWidgetState extends State<_TearWidget>
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
 
+    // الشاشة كلها تتابع حركة الإصبع أثناء السحب؛ خارج السحب تمر اللمسات
+    // للصفحة. بدء السحب من مربع الدمعة وحده.
     return Listener(
       behavior:
           _dragging ? HitTestBehavior.opaque : HitTestBehavior.translucent,
-      onPointerDown: _onPointerDown,
       onPointerMove: (e) {
-        if (_dragging) _updateDrag(e.position);
+        if (_dragging) _updateDrag(e);
       },
       onPointerUp: (e) {
-        if (_dragging) _endDrag();
+        if (!_dragging) return;
+        _updateDrag(e, last: true);
+        _endDrag();
       },
       onPointerCancel: (e) {
         if (_dragging) _endDrag();
@@ -358,25 +367,30 @@ class _TearWidgetState extends State<_TearWidget>
                 lineBottom: v.lineBottom,
                 bgColor: widget.bgColor,
               ),
+            // مربع لمس 48×48 حول الدمعة (حجم أندرويد)، رأسها على أسفل المؤشر
             Positioned(
               left: v.pos.dx - _kHit / 2,
-              // رأس الدمعة على أسفل المؤشر مباشرة، كما في أندرويد
-              top: v.pos.dy,
+              top: v.pos.dy + TearPainter.size.height / 2 - _kHit / 2,
               child: child!,
             ),
           ],
         ),
-        child: SizedBox(
-          width: _kHit,
-          height: _kHit,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ScaleTransition(
-              scale: _scale,
-              alignment: Alignment.topCenter,
-              child: CustomPaint(
-                painter: TearPainter(color: color),
-                size: TearPainter.size,
+        child: Listener(
+          // المربع كله يستقبل اللمسة ويحجبها عن الصفحة: ما يبدأ السحب هو
+          // نفسه ما يمنع التمرير
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: _onTearDown,
+          child: SizedBox(
+            width: _kHit,
+            height: _kHit,
+            child: Center(
+              child: ScaleTransition(
+                scale: _scale,
+                alignment: Alignment.topCenter,
+                child: CustomPaint(
+                  painter: TearPainter(color: color),
+                  size: TearPainter.size,
+                ),
               ),
             ),
           ),
