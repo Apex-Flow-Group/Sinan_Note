@@ -69,6 +69,36 @@ class AppTheme {
         : scheme.surfaceContainerHigh;
   }
 
+  /// سلّم أحجام الخطوط — بقيم ما يستخدمه التطبيق فعلاً، فلا يتغيّر شكله.
+  /// الواجهات تطلب `context.text.bodySmall` لا `fontSize: 13`:
+  ///
+  /// | الحجم | النمط |
+  /// |---|---|
+  /// | 10–11 | labelSmall |
+  /// | 12 | labelMedium |
+  /// | 13 | bodySmall |
+  /// | 14 | bodyMedium (labelLarge للأزرار) |
+  /// | 15 | titleSmall |
+  /// | 16 | bodyLarge (titleMedium للعريض) |
+  /// | 18 | titleLarge |
+  /// | 20–22 | headlineSmall |
+  /// | 24 | headlineMedium |
+  /// | 28 | headlineLarge |
+  static const textScale = TextTheme(
+    labelSmall: TextStyle(fontSize: 11),
+    labelMedium: TextStyle(fontSize: 12),
+    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+    bodySmall: TextStyle(fontSize: 13),
+    bodyMedium: TextStyle(fontSize: 14),
+    bodyLarge: TextStyle(fontSize: 16),
+    titleSmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+    titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+    headlineSmall: TextStyle(fontSize: 22),
+    headlineMedium: TextStyle(fontSize: 24),
+    headlineLarge: TextStyle(fontSize: 28),
+  );
+
   static ThemeData _build(ColorScheme scheme, String? fontFamily) {
     final scaffoldBg = AppTheme.scaffoldBackground(scheme);
     final secondaryBg = AppTheme.secondaryBackground(scheme);
@@ -79,6 +109,7 @@ class AppTheme {
         scheme.brightness == Brightness.dark ? AppColors.dark : AppColors.light,
       ],
       fontFamily: fontFamily,
+      textTheme: textScale,
       scaffoldBackgroundColor: scaffoldBg,
       appBarTheme: AppBarTheme(
         backgroundColor: secondaryBg,
@@ -86,6 +117,11 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         elevation: 0,
+        titleTextStyle: TextStyle(
+          fontSize: 22,
+          fontFamily: fontFamily,
+          color: scheme.onSurface,
+        ),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: secondaryBg,
           statusBarIconBrightness: scheme.brightness == Brightness.dark

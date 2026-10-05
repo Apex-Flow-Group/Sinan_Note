@@ -86,6 +86,11 @@ class _Rule {
 
 final _arabicLiteral = RegExp(r'''(['"])(?:(?!\1).)*[؀-ۿ](?:(?!\1).)*\1''');
 
+/// نص إنجليزي معروض: `Text('…')` أو وسيط نصي للمستخدم (title, message,
+/// tooltip…) فيه حرفان لاتينيان خارج الـ interpolation.
+final _englishUiLiteral = RegExp(
+    r'''(\bText\(\s*|\b(?:title|subtitle|message|label|hintText|labelText|tooltip|helperText|errorText|actionLabel|semanticLabel|semanticsLabel)\s*:\s*)(?:const\s+)?(['"])(?:\$\{[^}]*\}|\$\w+(?!\w)|[^'"$])*?[A-Za-z]{2}''');
+
 final _rules = <_Rule>[
   // A1: الواجهة لا تصل لخدمات البيانات مباشرة
   _Rule('A1', (p, l) => _isUi(l),
@@ -124,7 +129,7 @@ final _rules = <_Rule>[
           r'''^final\s+(ValueNotifier|ChangeNotifier|StreamController)\b|^\s*static\s+\w+\??\s+_instance\b''')),
   // T1: الألوان من الثيم فقط
   _Rule('T1', (p, l) => l != _Layer.theme,
-      RegExp(r'''\bColors\.[a-z]|\bColor\(0x''')),
+      RegExp(r'''\bColors\.(?!transparent\b)[a-z]|\bColor\(0x''')),
   // T2: أحجام الخط من TextTheme
   _Rule('T2', (p, l) => _isUi(l), RegExp(r'''\bfontSize:\s*\d''')),
   // L1: لا نصوص للمستخدم ولا تفرّع لغة في الواجهة
@@ -132,7 +137,8 @@ final _rules = <_Rule>[
       'L1',
       (p, l) => _isUi(l) || l == _Layer.viewModel || l == _Layer.other,
       RegExp(
-          r'''\bisAr(abic)?\b|languageCode\s*==|''' + _arabicLiteral.pattern)),
+          r'''\bisAr(abic)?\b|languageCode\s*==|'''
+          '${_arabicLiteral.pattern}|${_englishUiLiteral.pattern}')),
   // L2: البيانات لا تُنتج نصوصاً للمستخدم. domain/text يعالج اللغة نفسها
   // (حروف عربية في قواعد التطبيع)، وليس نصاً معروضاً.
   _Rule('L2',
