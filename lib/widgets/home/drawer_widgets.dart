@@ -77,7 +77,6 @@ class _CategoriesPanelWrapperState extends State<CategoriesPanelWrapper> {
         thickness: 3,
         child: SingleChildScrollView(
           controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
           child: panel,
         ),
       ),

@@ -367,7 +367,6 @@ class _BookModeViewState extends State<BookModeView> {
     if (widget.isMarkdown) {
       final pageText = _plainPages![index];
       return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
         padding:
             EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 20),
         child: MarkdownViewer(
@@ -565,7 +564,6 @@ class _BookModeViewState extends State<BookModeView> {
     return Directionality(
       textDirection: pageDir,
       child: ListView.builder(
-        physics: const BouncingScrollPhysics(),
         padding:
             EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 20),
         itemCount: paragraphs.length,
