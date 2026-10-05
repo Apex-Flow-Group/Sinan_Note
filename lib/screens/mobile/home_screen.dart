@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
@@ -223,12 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       if (mode == 'full') {
-        final pullToSyncEnabled = (await SharedPreferences.getInstance())
-                .getBool('google_drive_pull_to_refresh') ??
-            false;
         if (CloudSyncGateway.isSignedIn &&
-            CloudSyncGateway.autoSyncEnabled.value &&
-            pullToSyncEnabled) {
+            CloudSyncGateway.autoSyncEnabled.value) {
           await CloudSyncGateway.smartSync()
               .timeout(const Duration(seconds: 30));
           while (CloudSyncGateway.isSyncing.value) {
