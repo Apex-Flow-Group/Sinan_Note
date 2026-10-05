@@ -2386,11 +2386,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourAgreePrefix => 'I agree to the ';
 
   @override
-  String get whatsNewHeadline => 'Unified Toolbar & Smarter Sharing';
+  String get whatsNewHeadline => 'A Sturdier Editor, Sharper Arabic';
 
   @override
   String get whatsNewSummary =>
-      'Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.';
+      'Saving, the cursor and the lock were rebuilt from the inside: your writing is never lost, diacritics stay put, and the cursor behaves like Android.';
 
   @override
   String get whatsNew => 'What\'s New';
@@ -2401,34 +2401,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get whatsNewOpenSourceSubtitle =>
       'Code is live on GitHub — explore, learn, or contribute';
-
-  @override
-  String get whatsNewUnifiedToolbarTitle => 'Unified Toolbar';
-
-  @override
-  String get whatsNewUnifiedToolbarDesc =>
-      'Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop';
-
-  @override
-  String get whatsNewApexSharingTitle => 'Smart Sharing via Apex';
-
-  @override
-  String get whatsNewApexSharingDesc =>
-      'Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving';
-
-  @override
-  String get whatsNewViewModesTitle => 'Separate View Modes';
-
-  @override
-  String get whatsNewViewModesDesc =>
-      'View mode (expanded/compact/grid) saved separately for mobile and desktop';
-
-  @override
-  String get whatsNewSavePromptTitle => 'Save Prompt on Exit';
-
-  @override
-  String get whatsNewSavePromptDesc =>
-      'Received notes are not auto-saved — you\'re asked before closing';
 
   @override
   String get privacyPolicyUpdatedTitle => 'Privacy Policy Updated';
@@ -2974,4 +2946,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get codeRunDisabled =>
       '🔒 Running code locally is disabled for security.\n\nFor now you can:\n• Save the code as a file and run it externally\n• Use an online compiler\n• Copy it to your development environment';
+
+  @override
+  String get whatsNewReliableSaveTitle => 'Saves you can trust';
+
+  @override
+  String get whatsNewReliableSaveDesc =>
+      'Every edit is saved once and in order, and opening then closing a note no longer saves it.';
+
+  @override
+  String get whatsNewTashkeelTitle => 'Diacritics stay in place';
+
+  @override
+  String get whatsNewTashkeelDesc =>
+      'Backspace removes a mark before its letter, and typing after a marked letter no longer moves its mark onto the new one.';
+
+  @override
+  String get whatsNewCursorTitle => 'An Android-style cursor';
+
+  @override
+  String get whatsNewCursorDesc =>
+      'The cursor handle looks like Android’s and dragging it no longer scrolls the page; swiping on the space bar follows the line’s direction.';
+
+  @override
+  String get whatsNewStrongerLockTitle => 'A stronger lock';
+
+  @override
+  String get whatsNewStrongerLockDesc =>
+      'Your PIN is better protected, repeated wrong vault attempts add a wait, and choosing a note for the widget goes through the lock.';
 }

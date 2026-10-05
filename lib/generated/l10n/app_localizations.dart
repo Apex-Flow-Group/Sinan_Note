@@ -4649,13 +4649,13 @@ abstract class AppLocalizations {
   /// No description provided for @whatsNewHeadline.
   ///
   /// In en, this message translates to:
-  /// **'Unified Toolbar & Smarter Sharing'**
+  /// **'A Sturdier Editor, Sharper Arabic'**
   String get whatsNewHeadline;
 
   /// No description provided for @whatsNewSummary.
   ///
   /// In en, this message translates to:
-  /// **'Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.'**
+  /// **'Saving, the cursor and the lock were rebuilt from the inside: your writing is never lost, diacritics stay put, and the cursor behaves like Android.'**
   String get whatsNewSummary;
 
   /// No description provided for @whatsNew.
@@ -4675,54 +4675,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Code is live on GitHub — explore, learn, or contribute'**
   String get whatsNewOpenSourceSubtitle;
-
-  /// No description provided for @whatsNewUnifiedToolbarTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Unified Toolbar'**
-  String get whatsNewUnifiedToolbarTitle;
-
-  /// No description provided for @whatsNewUnifiedToolbarDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop'**
-  String get whatsNewUnifiedToolbarDesc;
-
-  /// No description provided for @whatsNewApexSharingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Smart Sharing via Apex'**
-  String get whatsNewApexSharingTitle;
-
-  /// No description provided for @whatsNewApexSharingDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving'**
-  String get whatsNewApexSharingDesc;
-
-  /// No description provided for @whatsNewViewModesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Separate View Modes'**
-  String get whatsNewViewModesTitle;
-
-  /// No description provided for @whatsNewViewModesDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'View mode (expanded/compact/grid) saved separately for mobile and desktop'**
-  String get whatsNewViewModesDesc;
-
-  /// No description provided for @whatsNewSavePromptTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Save Prompt on Exit'**
-  String get whatsNewSavePromptTitle;
-
-  /// No description provided for @whatsNewSavePromptDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Received notes are not auto-saved — you\'re asked before closing'**
-  String get whatsNewSavePromptDesc;
 
   /// No description provided for @privacyPolicyUpdatedTitle.
   ///
@@ -5647,6 +5599,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'🔒 Running code locally is disabled for security.\n\nFor now you can:\n• Save the code as a file and run it externally\n• Use an online compiler\n• Copy it to your development environment'**
   String get codeRunDisabled;
+
+  /// No description provided for @whatsNewReliableSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves you can trust'**
+  String get whatsNewReliableSaveTitle;
+
+  /// No description provided for @whatsNewReliableSaveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Every edit is saved once and in order, and opening then closing a note no longer saves it.'**
+  String get whatsNewReliableSaveDesc;
+
+  /// No description provided for @whatsNewTashkeelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diacritics stay in place'**
+  String get whatsNewTashkeelTitle;
+
+  /// No description provided for @whatsNewTashkeelDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Backspace removes a mark before its letter, and typing after a marked letter no longer moves its mark onto the new one.'**
+  String get whatsNewTashkeelDesc;
+
+  /// No description provided for @whatsNewCursorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'An Android-style cursor'**
+  String get whatsNewCursorTitle;
+
+  /// No description provided for @whatsNewCursorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The cursor handle looks like Android’s and dragging it no longer scrolls the page; swiping on the space bar follows the line’s direction.'**
+  String get whatsNewCursorDesc;
+
+  /// No description provided for @whatsNewStrongerLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A stronger lock'**
+  String get whatsNewStrongerLockTitle;
+
+  /// No description provided for @whatsNewStrongerLockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your PIN is better protected, repeated wrong vault attempts add a wait, and choosing a note for the widget goes through the lock.'**
+  String get whatsNewStrongerLockDesc;
 }
 
 class _AppLocalizationsDelegate

@@ -870,19 +870,11 @@
   "tourVaultLocalOnly": "Vault is local only — never uploaded",
   "tourMultiDeviceSync": "Sync across multiple devices",
   "tourAgreePrefix": "I agree to the ",
-  "whatsNewHeadline": "Unified Toolbar & Smarter Sharing",
-  "whatsNewSummary": "Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.",
+  "whatsNewHeadline": "A Sturdier Editor, Sharper Arabic",
+  "whatsNewSummary": "Saving, the cursor and the lock were rebuilt from the inside: your writing is never lost, diacritics stay put, and the cursor behaves like Android.",
   "whatsNew": "What's New",
   "whatsNewOpenSourceTitle": "🎉 Sinan Note is now Open Source!",
   "whatsNewOpenSourceSubtitle": "Code is live on GitHub — explore, learn, or contribute",
-  "whatsNewUnifiedToolbarTitle": "Unified Toolbar",
-  "whatsNewUnifiedToolbarDesc": "Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop",
-  "whatsNewApexSharingTitle": "Smart Sharing via Apex",
-  "whatsNewApexSharingDesc": "Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving",
-  "whatsNewViewModesTitle": "Separate View Modes",
-  "whatsNewViewModesDesc": "View mode (expanded/compact/grid) saved separately for mobile and desktop",
-  "whatsNewSavePromptTitle": "Save Prompt on Exit",
-  "whatsNewSavePromptDesc": "Received notes are not auto-saved — you're asked before closing",
   "privacyPolicyUpdatedTitle": "Privacy Policy Updated",
   "privacyPolicyUpdatedDesc": "Policy updated to reflect new features — tap to review",
   "whatsNewThanks": "Thanks for your feedback — every improvement here came from your real experience.",
@@ -1218,5 +1210,13 @@
       }
     }
   },
-  "codeRunDisabled": "🔒 Running code locally is disabled for security.\n\nFor now you can:\n• Save the code as a file and run it externally\n• Use an online compiler\n• Copy it to your development environment"
+  "codeRunDisabled": "🔒 Running code locally is disabled for security.\n\nFor now you can:\n• Save the code as a file and run it externally\n• Use an online compiler\n• Copy it to your development environment",
+  "whatsNewReliableSaveTitle": "Saves you can trust",
+  "whatsNewReliableSaveDesc": "Every edit is saved once and in order, and opening then closing a note no longer saves it.",
+  "whatsNewTashkeelTitle": "Diacritics stay in place",
+  "whatsNewTashkeelDesc": "Backspace removes a mark before its letter, and typing after a marked letter no longer moves its mark onto the new one.",
+  "whatsNewCursorTitle": "An Android-style cursor",
+  "whatsNewCursorDesc": "The cursor handle looks like Android’s and dragging it no longer scrolls the page; swiping on the space bar follows the line’s direction.",
+  "whatsNewStrongerLockTitle": "A stronger lock",
+  "whatsNewStrongerLockDesc": "Your PIN is better protected, repeated wrong vault attempts add a wait, and choosing a note for the widget goes through the lock."
 }

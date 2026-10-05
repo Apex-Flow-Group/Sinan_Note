@@ -2377,11 +2377,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tourAgreePrefix => 'أوافق على ';
 
   @override
-  String get whatsNewHeadline => 'شريط أدوات موحّد ومشاركة أذكى';
+  String get whatsNewHeadline => 'محرر أمتن وعربية أدق';
 
   @override
   String get whatsNewSummary =>
-      'شريط القوائم والبحث أصبحا جزءاً واحداً، المشاركة عبر Apex أصبحت كالمزامنة، وكل وضع عرض يُحفظ منفصلاً.';
+      'أعدنا بناء الحفظ والمؤشر والقفل من الداخل: كتابتك لا تضيع، والتشكيل يبقى في مكانه، والمؤشر يتصرف كما في أندرويد.';
 
   @override
   String get whatsNew => 'ما الجديد';
@@ -2392,34 +2392,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get whatsNewOpenSourceSubtitle =>
       'الكود متاح على GitHub — استكشف، تعلّم، أو شارك في البناء';
-
-  @override
-  String get whatsNewUnifiedToolbarTitle => 'شريط أدوات موحّد';
-
-  @override
-  String get whatsNewUnifiedToolbarDesc =>
-      'شريط القوائم (File, Edit, View, Help) مدمج مع البحث في شريط واحد أنيق على سطح المكتب';
-
-  @override
-  String get whatsNewApexSharingTitle => 'مشاركة ذكية عبر Apex';
-
-  @override
-  String get whatsNewApexSharingDesc =>
-      'الملاحظات المشاركة تصل كاملة بنوعها — تشيك لست، كود، ريتش — وتُعرض بدون حفظ تلقائي';
-
-  @override
-  String get whatsNewViewModesTitle => 'حفظ عرض منفصل';
-
-  @override
-  String get whatsNewViewModesDesc =>
-      'وضع العرض (موسّع/مطوي/شبكة) يُحفظ منفصلاً للجوال وسطح المكتب';
-
-  @override
-  String get whatsNewSavePromptTitle => 'سؤال الحفظ عند الخروج';
-
-  @override
-  String get whatsNewSavePromptDesc =>
-      'الملاحظات المستلمة من الخارج لا تُحفظ تلقائياً — يُسألك عند الخروج';
 
   @override
   String get privacyPolicyUpdatedTitle => 'تحديث سياسة الخصوصية';
@@ -2960,4 +2932,32 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get codeRunDisabled =>
       '🔒 تشغيل الكود على الجهاز معطّل لأسباب أمنية.\n\nيمكنك الآن:\n• حفظ الكود كملف وتشغيله خارج التطبيق\n• استخدام مترجم على الإنترنت\n• نسخه إلى بيئة التطوير لديك';
+
+  @override
+  String get whatsNewReliableSaveTitle => 'حفظ لا يضيع';
+
+  @override
+  String get whatsNewReliableSaveDesc =>
+      'كل تعديل يُحفظ مرة واحدة وبالترتيب، ولا تُحفظ الملاحظة لمجرد فتحها وإغلاقها.';
+
+  @override
+  String get whatsNewTashkeelTitle => 'التشكيل في مكانه';
+
+  @override
+  String get whatsNewTashkeelDesc =>
+      'الحذف يزيل الحركة قبل حرفها، والكتابة بعد حرف مُشكَّل لا تنقل حركته إلى الحرف الجديد.';
+
+  @override
+  String get whatsNewCursorTitle => 'مؤشر بطابع أندرويد';
+
+  @override
+  String get whatsNewCursorDesc =>
+      'دمعة المؤشر بشكل أندرويد وسحبها لا يحرك الصفحة، والسحب على زر المسافة يتبع اتجاه السطر.';
+
+  @override
+  String get whatsNewStrongerLockTitle => 'قفل أقوى';
+
+  @override
+  String get whatsNewStrongerLockDesc =>
+      'رمز PIN محمي بشكل أقوى، ومهلة انتظار بعد محاولات خاطئة متكررة لفتح الخزنة، واختيار ملاحظة للويدجت يمر بالقفل.';
 }
