@@ -1,81 +1,43 @@
 # lib/ — هيكل الكود
 
-المعمارية: **Clean Architecture** مع **Provider** لإدارة الحالة.
-
----
-
-## الهيكل
+MVVM بطبقات: **View → ViewModel → Repository → Service**، مع Provider للحقن.
+القواعد مفروضة باختبار `test/architecture/architecture_test.dart`، وأي مخالفة تُفشل CI.
 
 ```
 lib/
-├── controllers/
-│   ├── categories/
-│   │   └── categories_provider.dart        # إدارة الكتالوجات + الكتالوج الافتراضي (kProCategoryId)
-│   ├── notes/
-│   │   └── notes_provider.dart             # CRUD الملاحظات + الحالة العامة
-│   ├── settings/
-│   │   └── settings_provider.dart          # إعدادات المستخدم
-│   ├── version_history/
-│   │   └── version_history_controller.dart # إدارة حالة شاشة تاريخ الإصدارات
-│   ├── master_width_provider.dart          # عرض لوحة Master (Desktop)
-│   └── selected_note_provider.dart         # النوت المفتوحة حالياً (Master-Details)
-│
-├── core/
-│   ├── constants/                      # ثوابت التطبيق
-│   ├── shortcuts/
-│   │   └── app_shortcuts.dart          # اختصارات لوحة المفاتيح (سطح مكتب)
-│   ├── theme/                          # الثيمات
-│   └── utils/
-│       ├── adaptive_color.dart         # لوحة الألوان التكيفية
-│       ├── apex_smart_controller.dart  # TextEditingController مخصص
-│       ├── checklist_formatter.dart    # تحويل JSON ↔ نص للقوائم
-│       ├── logger.dart                 # نظام logging (debug only)
-│       ├── note_content_utils.dart     # تحويل موحد لمحتوى النوت (Delta/Checklist/نص)
-│       ├── platform_helper.dart        # كشف المنصة
-│       ├── quill_migration.dart        # تحويل Delta JSON ↔ plain text
-│       ├── search_mixin.dart           # Mixin مشترك لمنطق البحث
-│       └── text_direction_utils.dart   # كشف RTL/LTR تلقائي
-│
-├── models/
-│   ├── category.dart / category.g.dart # نموذج الكتالوج (Isar)
-│   ├── note.dart / note.g.dart         # نموذج الملاحظة (Isar)
-│   ├── note_version.dart               # نموذج تاريخ الإصدارات
-│   ├── note_mode.dart                  # enum: simple/code/checklist/reminder/rich
-│   ├── feature_info.dart               # معلومات الميزات الجديدة
-│   └── exceptions.dart                 # استثناءات مخصصة
-│
-├── screens/          → راجع lib/screens/README.md
-├── services/         → راجع lib/services/README.md
-│
-└── widgets/
-    ├── common/       # مكونات مشتركة (ShareSheet, GlowingSearchField...)
-    ├── desktop/      # قائمة سياق سطح المكتب
-    ├── editor/       # أدوات المحرر (Toolbar, CodeEditor, ChecklistEditor...)
-    ├── effects/      # تأثيرات بصرية (PremiumCardEffect)
-    ├── home/         # بطاقات الملاحظات، الشبكة، الشريط الجانبي
-    └── navigation/   # شريط التنقل السفلي والجانبي
+├── main.dart          # نقطة التركيب: تُنشأ القاعدة والمستودعات مرة وتُحقن
+├── domain/            # Dart خالص: النماذج والقواعد (دمج المزامنة، الإصدارات،
+│                      #   مسودة المحرر، سياسة المحاولات، معالجة النص)
+├── data/
+│   ├── repositories/  # مصدر الحقيقة: Notes (الكاتب الوحيد لجدول notes)،
+│   │                  #   Vault، Categories، Sync، Backup
+│   └── services/      # بلا حالة وبلا واجهة: SQLite، تشفير الخزنة، Drive،
+│                      #   الإشعارات، ويدجت الشاشة الرئيسية، الأمان، التشخيص
+├── ui/
+│   ├── core/          # مشترك: theme، direction، navigation، input، widgets
+│   └── features/<f>/  # الشاشات، و view_models/ لكل ميزة
+├── l10n/              # app_ar.arb / app_en.arb
+└── generated/         # flutter gen-l10n (لا يُعدَّل يدوياً)
 ```
 
----
+## القواعد
 
-## تدفق البيانات
+| | القاعدة |
+|---|---|
+| A1، A4 | الواجهة لا تستورد `data/services` ولا `data/repositories`؛ تمر عبر ViewModel |
+| A2، A7 | `data` و`domain` بلا Flutter UI ولا `BuildContext`، ولا تعرف `ui` ولا `main.dart` |
+| A3 | `domain` لا يعتمد على `data` |
+| A5 | جدول `notes` يكتبه `NotesRepository` وحده |
+| A6 | لا حالة عامة على مستوى الملف؛ الحالة المشتركة تُحقن (مثل `AppNavigation`) |
+| T1–T3 | الألوان من `context.colors` و`colorScheme`، والخطوط من `TextTheme` |
+| L1، L2 | لا نصوص للمستخدم في الكود: كلها من `AppLocalizations` (أو `AppStrings` خارج الشجرة) |
+| D1 | لا يُخزَّن اتجاه النص في المستندات؛ يُشتق عند العرض (`ui/core/direction`) |
 
-```
-UI (Screens/Widgets)
-    ↕ Provider.of / context.watch
-Controllers (NotesProvider, CategoriesProvider, SettingsProvider)
-    ↕ await
-Services (NoteStateService, SecurityService...)
-    ↕ Isar
-Database (note.g.dart / category.g.dart)
-```
+## إضافة ميزة
 
----
-
-## قواعد المعمارية
-
-- **Screens** لا تتصل بـ Database مباشرة — تمر عبر Provider
-- **Services** لا تعرف شيئاً عن الـ UI
-- **Models** بيانات فقط، لا منطق
-- كل تحويل لمحتوى النوت يمر عبر `NoteContentUtils.toDisplayText()`
-- كل logging عبر `AppLogger` فقط (يُعطَّل تلقائياً في release)
+1. القواعد الخالصة في `domain/`، مع اختبار وحدة.
+2. الوصول للبيانات عبر مستودع موجود، أو مستودع جديد في `data/repositories`.
+3. ViewModel في `ui/features/<f>/view_models/`، يُسجَّل في `main.dart`
+   (`test/architecture/providers_test.dart` يتحقق من ذلك).
+4. الشاشة في `ui/features/<f>/` تقرأ الـ ViewModel فقط.
+5. النصوص في `l10n/app_*.arb` ثم `flutter gen-l10n`.
