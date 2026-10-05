@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+
 /// Bottom sheet لاستيراد الملاحظات غير المقفلة إلى الخزنة.
 ///
 /// يُعرض من [LockedNotesScreen._showImportSheet].
@@ -66,12 +68,12 @@ class _VaultImportSheetState extends State<VaultImportSheet> {
               .map((i) =>
                   '${i['isDone'] == true ? '☑' : '☐'} ${i['text'] ?? ''}')
               .join('  ');
-          if (content.isEmpty) content = '${items.length} items';
+          if (content.isEmpty) content = l10n.itemsCount(items.length);
         } else {
-          content = 'Checklist';
+          content = l10n.checklist;
         }
       } catch (_) {
-        content = 'Checklist';
+        content = l10n.checklist;
       }
     } else {
       final raw = note.content.trim();
@@ -151,17 +153,15 @@ class _VaultImportSheetState extends State<VaultImportSheet> {
                   Expanded(
                     child: Text(
                       l10n.importNotes,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      style: context.text.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
                   if (widget.selected.isNotEmpty)
                     Text(
-                      '${widget.selected.length} ${l10n.selected}',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w600),
+                      l10n.selectedCount(widget.selected.length),
+                      style: context.text.bodySmall?.copyWith(
+                          color: scheme.primary, fontWeight: FontWeight.w600),
                     ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -218,11 +218,10 @@ class _VaultImportSheetState extends State<VaultImportSheet> {
                         onSelected: (_) => setState(() => _filter = null),
                         showCheckmark: false,
                         selectedColor: scheme.primary,
-                        labelStyle: TextStyle(
+                        labelStyle: context.text.labelMedium?.copyWith(
                           color: _filter == null
                               ? scheme.onPrimary
                               : scheme.onSurface,
-                          fontSize: 12,
                           fontWeight: _filter == null
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -245,10 +244,9 @@ class _VaultImportSheetState extends State<VaultImportSheet> {
                               setState(() => _filter = isActive ? null : f.$1),
                           showCheckmark: false,
                           selectedColor: scheme.primary,
-                          labelStyle: TextStyle(
+                          labelStyle: context.text.labelMedium?.copyWith(
                             color:
                                 isActive ? scheme.onPrimary : scheme.onSurface,
-                            fontSize: 12,
                             fontWeight:
                                 isActive ? FontWeight.w600 : FontWeight.normal,
                           ),
@@ -266,7 +264,7 @@ class _VaultImportSheetState extends State<VaultImportSheet> {
               child: visible.isEmpty
                   ? Center(
                       child: Text(l10n.noResults,
-                          style: const TextStyle(color: Colors.grey)))
+                          style: TextStyle(color: context.colors.muted)))
                   : ListView.builder(
                       itemCount: visible.length,
                       itemBuilder: (context, i) {
@@ -319,4 +317,3 @@ class _VaultImportSheetState extends State<VaultImportSheet> {
     );
   }
 }
-

@@ -8,6 +8,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/feature_info.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 
 const double _kMaxContentWidth = 600.0;
@@ -61,17 +62,17 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             icon: Icons.lock_outline,
             title: l10n.secureVault,
             description: l10n.vaultFullyEncrypted,
-            color: Colors.orange),
+            color: context.colors.vault),
         FeatureInfo(
             icon: Icons.file_download_outlined,
             title: l10n.importFromInside,
             description: l10n.noLockButtonsOutside,
-            color: Colors.blue),
+            color: context.scheme.primary),
         FeatureInfo(
             icon: Icons.security,
             title: l10n.sessionProtection,
             description: l10n.dataEncryptedOnExit,
-            color: Colors.green),
+            color: context.colors.success),
       ];
 
   Future<void> _handleNext() async {
@@ -80,7 +81,8 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     if (_currentPage == 1) {
       final password = _passwordController.text;
       final confirm = _confirmController.text;
-      final validationError = validateVaultPassword(AppLocalizations.of(context)!, password);
+      final validationError =
+          validateVaultPassword(AppLocalizations.of(context)!, password);
       if (validationError != null) {
         setState(() => _errorText = validationError);
         return;
@@ -159,16 +161,15 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final pageCount =
         _hasBiometrics ? _pagesWithBiometrics : _pagesWithoutBiometrics;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: context.scheme.surface,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        backgroundColor: context.scheme.surface,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
@@ -179,7 +180,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
               icon: const Icon(Icons.close_rounded, size: 18),
               label: Text(l10n.close),
               style: TextButton.styleFrom(
-                foregroundColor: isDark ? Colors.grey[300] : Colors.grey[700],
+                foregroundColor: context.scheme.onSurfaceVariant,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 shape: RoundedRectangleBorder(
@@ -218,11 +219,10 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                           itemBuilder: (context, index) {
                             if (index == 0) {
                               return VaultFeaturesPage(
-                                  isDark: isDark, features: _getFeatures(l10n));
+                                  features: _getFeatures(l10n));
                             }
                             if (index == 1) {
                               return VaultPasswordPage(
-                                isDark: isDark,
                                 passwordController: _passwordController,
                                 confirmController: _confirmController,
                                 obscurePassword: _obscurePassword,
@@ -239,7 +239,6 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                             }
                             if (index == 2) {
                               return VaultRecoveryPage(
-                                isDark: isDark,
                                 recoveryCode: _recoveryCode,
                                 codeSaved: _codeSaved,
                                 errorText: _errorText,
@@ -248,14 +247,14 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                               );
                             }
                             if (index == 3) {
-                              return VaultBiometricPage(isDark: isDark);
+                              return const VaultBiometricPage();
                             }
                             return const SizedBox();
                           },
                         ),
                       ),
                       _buildIndicators(pageCount),
-                      _buildBottomButton(isDark, pageCount, l10n),
+                      _buildBottomButton(pageCount, l10n),
                     ],
                   ),
                 ),
@@ -271,7 +270,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                     width: 480,
                     child: Card(
                       elevation: 3,
-                      shadowColor: Colors.black26,
+                      shadowColor: context.colors.shadow,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -303,7 +302,9 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
             width: _currentPage == index ? 24 : 8,
             height: 8,
             decoration: BoxDecoration(
-              color: _currentPage == index ? Colors.orange : Colors.grey[400],
+              color: _currentPage == index
+                  ? context.colors.vault
+                  : context.scheme.outlineVariant,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -312,7 +313,7 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
     );
   }
 
-  Widget _buildBottomButton(bool isDark, int pageCount, AppLocalizations l10n) {
+  Widget _buildBottomButton(int pageCount, AppLocalizations l10n) {
     final isLastPage = _currentPage == pageCount - 1;
     final isButtonEnabled = _currentPage == 1
         ? _passwordController.text.length >= 8 &&
@@ -353,12 +354,12 @@ class _LockedNotesIntroScreenState extends State<LockedNotesIntroScreen> {
                 showBiometricButton
                     ? l10n.enableBiometricAccess
                     : (_currentPage == 2 ? l10n.continueAction : l10n.next),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
+                backgroundColor: context.colors.vault,
+                foregroundColor: context.colors.onVault,
+                textStyle: context.text.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 elevation: 2,

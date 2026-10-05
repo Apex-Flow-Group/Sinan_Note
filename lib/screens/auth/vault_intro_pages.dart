@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:sinan_note/domain/vault_policy.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/feature_info.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/copy_code_button.dart';
 
 final _vaultPasswordFormatter = FilteringTextInputFormatter.allow(
@@ -22,10 +23,8 @@ String? validateVaultPassword(AppLocalizations l10n, String password) =>
     };
 
 class VaultFeaturesPage extends StatelessWidget {
-  final bool isDark;
   final List<FeatureInfo> features;
-  const VaultFeaturesPage(
-      {super.key, required this.isDark, required this.features});
+  const VaultFeaturesPage({super.key, required this.features});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,7 @@ class VaultFeaturesPage extends StatelessWidget {
           const SizedBox(height: 20),
           ...features.map((f) => Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: _FeatureCard(feature: f, isDark: isDark),
+                child: _FeatureCard(feature: f),
               )),
           const SizedBox(height: 20),
         ],
@@ -48,8 +47,7 @@ class VaultFeaturesPage extends StatelessWidget {
 
 class _FeatureCard extends StatelessWidget {
   final FeatureInfo feature;
-  final bool isDark;
-  const _FeatureCard({required this.feature, required this.isDark});
+  const _FeatureCard({required this.feature});
 
   @override
   Widget build(BuildContext context) {
@@ -77,15 +75,13 @@ class _FeatureCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(feature.title,
-                    style: TextStyle(
-                        fontSize: 16,
+                    style: context.text.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87)),
+                        color: context.scheme.onSurface)),
                 const SizedBox(height: 4),
                 Text(feature.description,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                    style: context.text.bodySmall
+                        ?.copyWith(color: context.colors.muted)),
               ],
             ),
           ),
@@ -96,7 +92,6 @@ class _FeatureCard extends StatelessWidget {
 }
 
 class VaultPasswordPage extends StatefulWidget {
-  final bool isDark;
   final TextEditingController passwordController;
   final TextEditingController confirmController;
   final bool obscurePassword;
@@ -107,12 +102,13 @@ class VaultPasswordPage extends StatefulWidget {
   final VoidCallback onChanged;
   final VoidCallback onSubmit;
   final IconData headerIcon;
-  final Color headerColor;
+
+  /// لون أيقونة الرأس؛ الافتراضي `scheme.secondary`.
+  final Color? headerColor;
   final String? headerTitle;
 
   const VaultPasswordPage({
     super.key,
-    required this.isDark,
     required this.passwordController,
     required this.confirmController,
     required this.obscurePassword,
@@ -123,7 +119,7 @@ class VaultPasswordPage extends StatefulWidget {
     required this.onChanged,
     required this.onSubmit,
     this.headerIcon = Icons.vpn_key,
-    this.headerColor = Colors.purple,
+    this.headerColor,
     this.headerTitle,
   });
 
@@ -164,15 +160,16 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
             Icon(
               met ? Icons.check_circle : Icons.radio_button_unchecked,
               size: 16,
-              color: met ? Colors.green : Colors.purple.withValues(alpha: 0.6),
+              color: met
+                  ? context.colors.success
+                  : context.scheme.secondary.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 6),
             Text(label,
-                style: TextStyle(
-                    fontSize: 12,
+                style: context.text.labelMedium?.copyWith(
                     color: met
-                        ? Colors.green
-                        : Colors.purple.withValues(alpha: 0.8))),
+                        ? context.colors.success
+                        : context.scheme.secondary.withValues(alpha: 0.8))),
           ],
         ),
       );
@@ -181,6 +178,7 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isCompact = MediaQuery.of(context).size.height < 700;
+    final headerColor = widget.headerColor ?? context.scheme.secondary;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(32, isCompact ? 12 : 32, 32, 32),
@@ -191,33 +189,31 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: widget.headerColor.withValues(alpha: 0.1),
+              color: headerColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(widget.headerIcon, size: 50, color: widget.headerColor),
+            child: Icon(widget.headerIcon, size: 50, color: headerColor),
           ),
           const SizedBox(height: 24),
           Text(widget.headerTitle ?? l10n.createPassword,
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: widget.isDark ? Colors.white : Colors.black87),
+              style: context.text.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold, color: context.scheme.onSurface),
               textAlign: TextAlign.center),
           const SizedBox(height: 24),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.purple.withValues(alpha: 0.08),
+              color: context.scheme.secondary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _req('Min 8 characters', _hasLength),
-                _req('At least one number (0-9)', _hasNumber),
-                _req('At least one symbol (!@#\$...)', _hasSymbol),
-                _req('Passwords match', _passwordsMatch),
+                _req(l10n.passwordRuleMinLength, _hasLength),
+                _req(l10n.passwordRuleNumber, _hasNumber),
+                _req(l10n.passwordRuleSymbol, _hasSymbol),
+                _req(l10n.passwordRuleMatch, _passwordsMatch),
               ],
             ),
           ),
@@ -270,7 +266,8 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
           if (widget.errorText != null) ...[
             const SizedBox(height: 12),
             Text(widget.errorText!,
-                style: const TextStyle(color: Colors.red, fontSize: 14)),
+                style: context.text.bodyMedium
+                    ?.copyWith(color: context.scheme.error)),
           ],
           const SizedBox(height: 20),
         ],
@@ -280,7 +277,6 @@ class _VaultPasswordPageState extends State<VaultPasswordPage> {
 }
 
 class VaultRecoveryPage extends StatelessWidget {
-  final bool isDark;
   final String? recoveryCode;
   final bool codeSaved;
   final String? errorText;
@@ -288,7 +284,6 @@ class VaultRecoveryPage extends StatelessWidget {
 
   const VaultRecoveryPage({
     super.key,
-    required this.isDark,
     required this.recoveryCode,
     required this.codeSaved,
     this.errorText,
@@ -308,30 +303,28 @@ class VaultRecoveryPage extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.1),
+              color: context.colors.danger.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.shield, size: 50, color: Colors.red),
+            child: Icon(Icons.shield, size: 50, color: context.colors.danger),
           ),
           const SizedBox(height: 24),
           Text(l10n.recoveryCode,
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87),
+              style: context.text.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold, color: context.scheme.onSurface),
               textAlign: TextAlign.center),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
+              color: context.colors.vault.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange, width: 2),
+              border: Border.all(color: context.colors.vault, width: 2),
             ),
             child: Text(
               recoveryCode ?? '',
-              style: const TextStyle(
-                  fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: context.text.headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 2),
               textAlign: TextAlign.center,
             ),
           ),
@@ -350,21 +343,18 @@ class VaultRecoveryPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12)),
               collapsedShape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
-              backgroundColor: Colors.blue.withValues(alpha: 0.05),
-              collapsedBackgroundColor: Colors.blue.withValues(alpha: 0.05),
-              leading:
-                  const Icon(Icons.info_outline, color: Colors.blue, size: 24),
+              backgroundColor: context.colors.info.withValues(alpha: 0.05),
+              collapsedBackgroundColor:
+                  context.colors.info.withValues(alpha: 0.05),
+              leading: Icon(Icons.info_outline,
+                  color: context.colors.info, size: 24),
               title: Text(l10n.importantInfo,
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blue)),
+                  style: context.text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600, color: context.colors.info)),
               children: [
                 Text(l10n.recoveryCodeInfo,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? Colors.grey[400] : Colors.grey[700],
-                        height: 1.6),
+                    style: context.text.bodySmall
+                        ?.copyWith(color: context.colors.muted, height: 1.6),
                     textAlign: TextAlign.start),
               ],
             ),
@@ -378,7 +368,8 @@ class VaultRecoveryPage extends StatelessWidget {
           ),
           if (errorText != null)
             Text(errorText!,
-                style: const TextStyle(color: Colors.red, fontSize: 14)),
+                style: context.text.bodyMedium
+                    ?.copyWith(color: context.scheme.error)),
           const SizedBox(height: 20),
         ],
       ),
@@ -387,8 +378,7 @@ class VaultRecoveryPage extends StatelessWidget {
 }
 
 class VaultBiometricPage extends StatelessWidget {
-  final bool isDark;
-  const VaultBiometricPage({super.key, required this.isDark});
+  const VaultBiometricPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -408,25 +398,22 @@ class VaultBiometricPage extends StatelessWidget {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.teal.withValues(alpha: 0.1),
+                    color: context.scheme.tertiary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.fingerprint,
-                      size: 60, color: Colors.teal),
+                  child: Icon(Icons.fingerprint,
+                      size: 60, color: context.scheme.tertiary),
                 ),
                 const SizedBox(height: 40),
                 Text(l10n.enableBiometric,
-                    style: TextStyle(
-                        fontSize: 28,
+                    style: context.text.headlineLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87),
+                        color: context.scheme.onSurface),
                     textAlign: TextAlign.center),
                 const SizedBox(height: 20),
                 Text(l10n.biometricOptional,
-                    style: TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        color: isDark ? Colors.grey[300] : Colors.grey[700]),
+                    style: context.text.bodyLarge?.copyWith(
+                        height: 1.5, color: context.scheme.onSurfaceVariant),
                     textAlign: TextAlign.center),
               ],
             ),

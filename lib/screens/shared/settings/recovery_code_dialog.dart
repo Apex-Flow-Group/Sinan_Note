@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 
 class RecoveryCodeDialog extends StatefulWidget {
@@ -55,17 +55,16 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.vpn_key, color: Colors.orange),
+          Icon(Icons.vpn_key, color: context.colors.vault),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               l10n.recoveryCode,
-              style: const TextStyle(fontSize: 20),
+              style: context.text.headlineSmall,
             ),
           ),
         ],
@@ -77,40 +76,38 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
           children: [
             Text(
               l10n.enterRecoveryCode,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.grey[300] : Colors.grey[700],
-              ),
+              style: context.text.bodyMedium
+                  ?.copyWith(color: context.scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _recoveryController,
               autofocus: true,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
+              style: context.text.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
               ),
               decoration: InputDecoration(
-                hintText: 'SN-XXXX-XXXX-XXXX',
+                hintText: l10n.recoveryCodeFormatHint,
                 hintStyle: TextStyle(
-                  color: Colors.grey[400],
+                  color: context.colors.muted,
                   letterSpacing: 1,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.orange, width: 2),
+                  borderSide: BorderSide(color: context.colors.vault, width: 2),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                  borderSide: BorderSide(
+                      color: context.scheme.outlineVariant, width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.orange, width: 2),
+                  borderSide: BorderSide(color: context.colors.vault, width: 2),
                 ),
-                prefixIcon: const Icon(Icons.vpn_key, color: Colors.orange),
+                prefixIcon: Icon(Icons.vpn_key, color: context.colors.vault),
               ),
               onChanged: (_) => setState(() => _errorText = null),
               onSubmitted: (_) => _handleRecover(),
@@ -120,19 +117,20 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
+                  color: context.scheme.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red, width: 1),
+                  border: Border.all(color: context.scheme.error, width: 1),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline,
-                        color: Colors.red, size: 20),
+                    Icon(Icons.error_outline,
+                        color: context.scheme.error, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _errorText!,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                        style: context.text.bodySmall
+                            ?.copyWith(color: context.scheme.error),
                       ),
                     ),
                   ],
@@ -143,19 +141,18 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: context.colors.info.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  Icon(Icons.info_outline,
+                      color: context.colors.info, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      Localizations.localeOf(context).languageCode == 'ar'
-                          ? 'هذا هو الرقم الطويل الذي حصلت عليه عند إنشاء الخزنة'
-                          : 'This is the long code you received when creating the vault',
-                      style: const TextStyle(fontSize: 12),
+                      l10n.recoveryCodeOriginHint,
+                      style: context.text.labelMedium,
                     ),
                   ),
                 ],
@@ -172,11 +169,11 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
         ElevatedButton.icon(
           onPressed: _isVerifying ? null : _handleRecover,
           icon: _isVerifying
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2, color: context.colors.onVault),
                 )
               : const Icon(Icons.lock_open),
           label: Text(
@@ -184,8 +181,8 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            foregroundColor: Colors.white,
+            backgroundColor: context.colors.vault,
+            foregroundColor: context.colors.onVault,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
         ),
@@ -193,4 +190,3 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
     );
   }
 }
-

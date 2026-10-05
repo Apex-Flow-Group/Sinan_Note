@@ -1,10 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/copy_code_button.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -108,7 +108,8 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     final confirm = _confirmController.text;
 
     // التحقق من كلمة المرور
-    final validationError = validateVaultPassword(AppLocalizations.of(context)!, password);
+    final validationError =
+        validateVaultPassword(AppLocalizations.of(context)!, password);
     if (validationError != null) {
       setState(() => _passwordError = validationError);
       return;
@@ -144,7 +145,6 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
@@ -167,7 +167,7 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
           child: SafeArea(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              child: _buildCurrentStep(isDark, l10n),
+              child: _buildCurrentStep(l10n),
             ),
           ),
         ),
@@ -175,11 +175,10 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     );
   }
 
-  Widget _buildCurrentStep(bool isDark, AppLocalizations l10n) {
+  Widget _buildCurrentStep(AppLocalizations l10n) {
     switch (_currentStep) {
       case _ResetStep.warning:
         return _WarningStep(
-          isDark: isDark,
           l10n: l10n,
           onProceed: _authenticateAndProceed,
         );
@@ -188,7 +187,6 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
           children: [
             Expanded(
               child: VaultPasswordPage(
-                isDark: isDark,
                 passwordController: _passwordController,
                 confirmController: _confirmController,
                 obscurePassword: _obscurePassword,
@@ -210,25 +208,21 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
+                      color: context.colors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.3)),
+                          color: context.colors.warning.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber,
-                            color: Colors.amber, size: 20),
+                        Icon(Icons.warning_amber,
+                            color: context.colors.warning, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             l10n.resetVaultDoNotClose,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? Colors.amber[200]
-                                  : Colors.amber[800],
-                            ),
+                            style: context.text.labelMedium
+                                ?.copyWith(color: context.scheme.onSurface),
                           ),
                         ),
                       ],
@@ -246,8 +240,8 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
                       icon: const Icon(Icons.refresh),
                       label: Text(l10n.startReset),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.colors.vault,
+                        foregroundColor: context.colors.onVault,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -260,10 +254,9 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
           ],
         );
       case _ResetStep.processing:
-        return _ProcessingStep(isDark: isDark, l10n: l10n);
+        return _ProcessingStep(l10n: l10n);
       case _ResetStep.showRecoveryCode:
         return _RecoveryCodeStep(
-          isDark: isDark,
           l10n: l10n,
           recoveryCode: _newRecoveryCode ?? '',
           codeSaved: _codeSaved,
@@ -290,12 +283,10 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _WarningStep extends StatelessWidget {
-  final bool isDark;
   final AppLocalizations l10n;
   final VoidCallback onProceed;
 
   const _WarningStep({
-    required this.isDark,
     required this.l10n,
     required this.onProceed,
   });
@@ -312,29 +303,27 @@ class _WarningStep extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
+              color: context.colors.warning.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child:
-                const Icon(Icons.warning_amber, size: 50, color: Colors.orange),
+            child: Icon(Icons.warning_amber,
+                size: 50, color: context.colors.warning),
           ),
           const SizedBox(height: 32),
           Text(
             l10n.resetVaultWarningTitle,
-            style: TextStyle(
-              fontSize: 22,
+            style: context.text.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: context.scheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             l10n.resetVaultWarningBody,
-            style: TextStyle(
-              fontSize: 15,
+            style: context.text.titleSmall?.copyWith(
               height: 1.6,
-              color: isDark ? Colors.grey[300] : Colors.grey[700],
+              color: context.scheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
@@ -342,21 +331,21 @@ class _WarningStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.08),
+              color: context.colors.danger.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+              border: Border.all(
+                  color: context.colors.danger.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: Colors.red, size: 20),
+                Icon(Icons.info_outline,
+                    color: context.colors.danger, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.resetVaultBackupHint,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark ? Colors.red[200] : Colors.red[700],
-                    ),
+                    style: context.text.bodySmall
+                        ?.copyWith(color: context.colors.danger),
                   ),
                 ),
               ],
@@ -371,8 +360,8 @@ class _WarningStep extends StatelessWidget {
               icon: const Icon(Icons.lock_outline),
               label: Text(l10n.enterVaultPassword),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
+                backgroundColor: context.colors.vault,
+                foregroundColor: context.colors.onVault,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
@@ -390,10 +379,9 @@ class _WarningStep extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _ProcessingStep extends StatelessWidget {
-  final bool isDark;
   final AppLocalizations l10n;
 
-  const _ProcessingStep({required this.isDark, required this.l10n});
+  const _ProcessingStep({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -402,21 +390,20 @@ class _ProcessingStep extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 80,
             height: 80,
             child: CircularProgressIndicator(
               strokeWidth: 6,
-              color: Colors.deepPurple,
+              color: context.scheme.secondary,
             ),
           ),
           const SizedBox(height: 40),
           Text(
             l10n.resetStatusReEncrypting,
-            style: TextStyle(
-              fontSize: 18,
+            style: context.text.titleLarge?.copyWith(
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.black87,
+              color: context.scheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
@@ -424,20 +411,20 @@ class _ProcessingStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.08),
+              color: context.colors.danger.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                const Icon(Icons.do_not_disturb, color: Colors.red, size: 20),
+                Icon(Icons.do_not_disturb,
+                    color: context.colors.danger, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.resetVaultDoNotClose,
-                    style: TextStyle(
-                      fontSize: 13,
+                    style: context.text.bodySmall?.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.red[200] : Colors.red[700],
+                      color: context.colors.danger,
                     ),
                   ),
                 ),
@@ -455,7 +442,6 @@ class _ProcessingStep extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _RecoveryCodeStep extends StatelessWidget {
-  final bool isDark;
   final AppLocalizations l10n;
   final String recoveryCode;
   final bool codeSaved;
@@ -463,7 +449,6 @@ class _RecoveryCodeStep extends StatelessWidget {
   final VoidCallback onDone;
 
   const _RecoveryCodeStep({
-    required this.isDark,
     required this.l10n,
     required this.recoveryCode,
     required this.codeSaved,
@@ -483,43 +468,40 @@ class _RecoveryCodeStep extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
+              color: context.colors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child:
-                const Icon(Icons.check_circle, size: 50, color: Colors.green),
+            child: Icon(Icons.check_circle,
+                size: 50, color: context.colors.success),
           ),
           const SizedBox(height: 24),
           Text(
             l10n.resetVaultSuccess,
-            style: TextStyle(
-              fontSize: 22,
+            style: context.text.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: context.scheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           Text(
             l10n.recoveryCode,
-            style: TextStyle(
-              fontSize: 16,
+            style: context.text.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.grey[300] : Colors.grey[700],
+              color: context.scheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
+              color: context.colors.vault.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange, width: 2),
+              border: Border.all(color: context.colors.vault, width: 2),
             ),
             child: Text(
               recoveryCode,
-              style: const TextStyle(
-                fontSize: 22,
+              style: context.text.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
               ),
@@ -545,8 +527,8 @@ class _RecoveryCodeStep extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onDone,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
+                backgroundColor: context.colors.success,
+                foregroundColor: context.scheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
@@ -13,7 +14,6 @@ import 'package:sinan_note/widgets/layout/vault_desktop_wrapper.dart';
 final _passwordFormatter = FilteringTextInputFormatter.allow(
   RegExp(r'[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:,.<>/?\\|`~"]'),
 );
-
 
 class VaultUnlockScreen extends StatefulWidget {
   final bool biometricFailed;
@@ -162,7 +162,8 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     final confirm = _confirmPasswordController.text;
     final l10n = AppLocalizations.of(context)!;
 
-    final validationError = validateVaultPassword(AppLocalizations.of(context)!, newPassword);
+    final validationError =
+        validateVaultPassword(AppLocalizations.of(context)!, newPassword);
     if (validationError != null) {
       setState(() => _errorText = validationError);
       return;
@@ -194,7 +195,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: context.scheme.surface,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -203,8 +204,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-          systemNavigationBarColor:
-              isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          systemNavigationBarColor: context.scheme.surface,
           systemNavigationBarIconBrightness:
               isDark ? Brightness.light : Brightness.dark,
         ),
@@ -228,8 +228,8 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                     height: 100,
                     decoration: BoxDecoration(
                       color: _unlocked
-                          ? Colors.green.withValues(alpha: 0.15)
-                          : Colors.orange.withValues(alpha: 0.1),
+                          ? context.colors.success.withValues(alpha: 0.15)
+                          : context.colors.vault.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: AnimatedSwitcher(
@@ -238,7 +238,9 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                         _unlocked ? Icons.lock_open : Icons.lock_outline,
                         key: ValueKey(_unlocked),
                         size: 50,
-                        color: _unlocked ? Colors.green : Colors.orange,
+                        color: _unlocked
+                            ? context.colors.success
+                            : context.colors.vault,
                       ),
                     ),
                   ),
@@ -253,7 +255,8 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                   const SizedBox(height: 12),
                   Text(
                     _errorText!,
-                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                    style: context.text.bodyMedium
+                        ?.copyWith(color: context.scheme.error),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -266,13 +269,13 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   }
 
   Widget _buildPasswordMode(AppLocalizations l10n) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           l10n.enterVaultPassword,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style:
+              context.text.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 28),
@@ -306,23 +309,23 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           child: ElevatedButton(
             onPressed: _loading ? null : _handlePasswordUnlock,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
+              backgroundColor: context.colors.vault,
+              foregroundColor: context.colors.onVault,
+              textStyle: context.text.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
             child: _loading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2))
+                        color: context.colors.onVault, strokeWidth: 2))
                 : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     const Icon(Icons.lock_open),
                     const SizedBox(width: 8),
-                    Text(l10n.unlock,
-                        style: const TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.bold)),
+                    Text(l10n.unlock),
                   ]),
           ),
         ),
@@ -336,22 +339,16 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
               // فاصل
               Row(
                 children: [
-                  Expanded(
-                      child:
-                          Divider(color: Colors.grey.withValues(alpha: 0.3))),
+                  Expanded(child: Divider(color: context.colors.subtle)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       l10n.orText,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? Colors.grey[500] : Colors.grey[500],
-                      ),
+                      style: context.text.bodySmall
+                          ?.copyWith(color: context.colors.muted),
                     ),
                   ),
-                  Expanded(
-                      child:
-                          Divider(color: Colors.grey.withValues(alpha: 0.3))),
+                  Expanded(child: Divider(color: context.colors.subtle)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -364,11 +361,11 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                       const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: Colors.orange.withValues(alpha: 0.4),
+                      color: context.colors.vault.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    color: Colors.orange.withValues(alpha: 0.06),
+                    color: context.colors.vault.withValues(alpha: 0.06),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -377,13 +374,13 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.12),
+                          color: context.colors.vault.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.fingerprint,
                           size: 30,
-                          color: Colors.orange,
+                          color: context.colors.vault,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -393,21 +390,16 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                           children: [
                             Text(
                               l10n.authenticateWithBiometric,
-                              style: TextStyle(
-                                fontSize: 15,
+                              style: context.text.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white : Colors.black87,
+                                color: context.scheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               l10n.biometricLoginHint,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                              ),
+                              style: context.text.labelMedium
+                                  ?.copyWith(color: context.colors.muted),
                             ),
                           ],
                         ),
@@ -415,7 +407,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
                       Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 14,
-                        color: Colors.orange.withValues(alpha: 0.7),
+                        color: context.colors.vault.withValues(alpha: 0.7),
                       ),
                     ],
                   ),
@@ -441,11 +433,13 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(l10n.recoverVault,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: context.text.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center),
         const SizedBox(height: 16),
         Text(l10n.enterRecoveryCode,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style:
+                context.text.bodyLarge?.copyWith(color: context.colors.muted),
             textAlign: TextAlign.center),
         const SizedBox(height: 32),
         TextField(
@@ -454,7 +448,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           onSubmitted: (_) => _handleRecoveryRestore(),
           decoration: InputDecoration(
             labelText: l10n.recoveryCode,
-            hintText: 'SN-XXXX-XXXX-XXXX',
+            hintText: l10n.recoveryCodeFormatHint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             prefixIcon: const Icon(Icons.vpn_key),
           ),
@@ -466,26 +460,26 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
           child: ElevatedButton(
             onPressed: _loading ? null : _handleRecoveryRestore,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
+              backgroundColor: context.colors.vault,
+              foregroundColor: context.colors.onVault,
+              textStyle: context.text.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
             ),
             child: _loading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2),
+                        color: context.colors.onVault, strokeWidth: 2),
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.restore),
                       const SizedBox(width: 8),
-                      Text(l10n.restore,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(l10n.restore),
                     ],
                   ),
           ),
@@ -503,19 +497,17 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
   }
 
   Widget _buildNewPasswordMode(AppLocalizations l10n) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         VaultPasswordPage(
-          isDark: isDark,
           passwordController: _newPasswordController,
           confirmController: _confirmPasswordController,
           obscurePassword: _obscureNew,
           obscureConfirm: _obscureConfirm,
           errorText: _errorText,
           headerIcon: Icons.check_circle,
-          headerColor: Colors.green,
+          headerColor: context.colors.success,
           headerTitle: l10n.vaultRecovered,
           onTogglePassword: () => setState(() => _obscureNew = !_obscureNew),
           onToggleConfirm: () =>
@@ -530,23 +522,23 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
             child: ElevatedButton(
               onPressed: _loading ? null : _handleSetNewPassword,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
+                backgroundColor: context.colors.success,
+                foregroundColor: context.scheme.onPrimary,
+                textStyle: context.text.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
               child: _loading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
+                          color: context.scheme.onPrimary, strokeWidth: 2))
                   : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       const Icon(Icons.check),
                       const SizedBox(width: 8),
-                      Text(l10n.save,
-                          style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.bold)),
+                      Text(l10n.save),
                     ]),
             ),
           ),

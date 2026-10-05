@@ -6,6 +6,7 @@ import 'package:sinan_note/core/utils/vault_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/auth/vault_intro_pages.dart';
 import 'package:sinan_note/services/security/biometric_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -26,7 +27,7 @@ class VaultDialogs {
             ListTile(
               leading: const Icon(Icons.vpn_key),
               title: Text(l10n.createPassword),
-              subtitle: const Text('Change vault password'),
+              subtitle: Text(l10n.changeVaultPasswordSubtitle),
               onTap: () {
                 Navigator.pop(context);
                 showChangePassword(context);
@@ -53,8 +54,9 @@ class VaultDialogs {
                         Navigator.pop(context);
                         UnifiedNotificationService().show(
                           context: context,
-                          message:
-                              val ? 'Biometric enabled' : 'Biometric disabled',
+                          message: val
+                              ? l10n.biometricEnabledMessage
+                              : l10n.biometricDisabledMessage,
                           type: val
                               ? NotificationType.success
                               : NotificationType.info,
@@ -93,7 +95,7 @@ class VaultDialogs {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.restart_alt, color: Colors.orange),
+              leading: Icon(Icons.restart_alt, color: context.colors.vault),
               title: Text(l10n.resetVault),
               subtitle: Text(l10n.resetVaultSubtitle),
               onTap: () {
@@ -103,7 +105,7 @@ class VaultDialogs {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.delete_forever, color: Colors.red),
+              leading: Icon(Icons.delete_forever, color: context.colors.danger),
               title: Text(l10n.destroyVault),
               subtitle: Text(l10n.destroyVaultSubtitle),
               onTap: () {
@@ -120,7 +122,6 @@ class VaultDialogs {
 
   static void _showDestroyVaultDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     AppBottomSheet.show(
       context,
@@ -138,22 +139,21 @@ class VaultDialogs {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.08),
+                  color: context.colors.danger.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: context.colors.danger.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber,
-                        color: Colors.red, size: 24),
+                    Icon(Icons.warning_amber,
+                        color: context.colors.danger, size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         l10n.destroyVaultWarning,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? Colors.red[200] : Colors.red[800],
-                        ),
+                        style: context.text.bodySmall
+                            ?.copyWith(color: context.colors.danger),
                       ),
                     ),
                   ],
@@ -162,12 +162,13 @@ class VaultDialogs {
               const SizedBox(height: 20),
               // خيار 1: فك التشفير ثم تدمير الخزنة
               ListTile(
-                leading: const Icon(Icons.lock_open, color: Colors.orange),
+                leading: Icon(Icons.lock_open, color: context.colors.vault),
                 title: Text(l10n.decryptAndDestroy),
                 subtitle: Text(l10n.decryptAndDestroyDesc),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.orange.withValues(alpha: 0.3)),
+                  side: BorderSide(
+                      color: context.colors.vault.withValues(alpha: 0.3)),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -177,12 +178,14 @@ class VaultDialogs {
               const SizedBox(height: 12),
               // خيار 2: تدمير مع المحتوى
               ListTile(
-                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                leading:
+                    Icon(Icons.delete_forever, color: context.colors.danger),
                 title: Text(l10n.destroyWithContent),
                 subtitle: Text(l10n.destroyWithContentDesc),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+                  side: BorderSide(
+                      color: context.colors.danger.withValues(alpha: 0.3)),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -217,7 +220,7 @@ class VaultDialogs {
                     setDialogState(() => confirmed = val ?? false),
                 title: Text(
                   l10n.confirmDestroyCheckbox,
-                  style: const TextStyle(fontSize: 13),
+                  style: ctx.text.bodySmall,
                 ),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
@@ -236,7 +239,7 @@ class VaultDialogs {
                       await _executeDecryptAndDestroy(context);
                     }
                   : null,
-              style: TextButton.styleFrom(foregroundColor: Colors.orange),
+              style: TextButton.styleFrom(foregroundColor: ctx.colors.vault),
               child: Text(l10n.confirm),
             ),
           ],
@@ -265,7 +268,7 @@ class VaultDialogs {
                     setDialogState(() => confirmed = val ?? false),
                 title: Text(
                   l10n.confirmDestroyCheckbox,
-                  style: const TextStyle(fontSize: 13),
+                  style: ctx.text.bodySmall,
                 ),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
@@ -284,7 +287,7 @@ class VaultDialogs {
                       await _executeDestroyWithContent(context);
                     }
                   : null,
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              style: TextButton.styleFrom(foregroundColor: ctx.colors.danger),
               child: Text(l10n.confirm),
             ),
           ],
@@ -379,8 +382,8 @@ class VaultDialogs {
                   if (errorText != null) ...[
                     const SizedBox(height: 10),
                     Text(errorText!,
-                        style:
-                            const TextStyle(color: Colors.red, fontSize: 13)),
+                        style: context.text.bodySmall
+                            ?.copyWith(color: context.scheme.error)),
                   ],
                   const SizedBox(height: 16),
                   Row(
@@ -406,8 +409,7 @@ class VaultDialogs {
                                       () => errorText = l10n.fillAllFields);
                                   return;
                                 }
-                                final issue =
-                                    validateVaultPassword(l10n, newP);
+                                final issue = validateVaultPassword(l10n, newP);
                                 if (issue != null) {
                                   setModalState(() => errorText = issue);
                                   return;
@@ -425,7 +427,7 @@ class VaultDialogs {
                                   Navigator.pop(context);
                                   UnifiedNotificationService().show(
                                     context: context,
-                                    message: 'Password changed successfully',
+                                    message: l10n.vaultPasswordChanged,
                                     type: NotificationType.success,
                                   );
                                 } else {
@@ -436,11 +438,12 @@ class VaultDialogs {
                                 }
                               },
                         icon: isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
+                                    strokeWidth: 2,
+                                    color: context.scheme.onPrimary),
                               )
                             : const Icon(Icons.check_rounded),
                         tooltip: l10n.save,

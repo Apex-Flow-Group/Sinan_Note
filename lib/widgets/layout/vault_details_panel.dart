@@ -7,6 +7,7 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sinan_note/widgets/layout/empty_details_view.dart';
 
@@ -91,11 +92,12 @@ class _VaultDetailsPanelState extends State<VaultDetailsPanel> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+            Icon(Icons.error_outline, size: 64, color: context.colors.danger),
             const SizedBox(height: 16),
             Text(
               l10n.errorOpeningNote,
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+              style: context.text.titleLarge
+                  ?.copyWith(color: context.colors.muted),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

@@ -1,0 +1,72 @@
+{
+  "lockedForDuration": {
+    "en": "Locked for {duration}",
+    "ar": "مقفل لمدة {duration}",
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "tryAgainInDuration": {
+    "en": "Try again in {duration}",
+    "ar": "حاول مرة أخرى بعد {duration}",
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "attemptsRemainingCount": {
+    "en": "{count} attempts remaining",
+    "ar": "{count} محاولة متبقية",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "passwordRuleMinLength": {
+    "en": "Min 8 characters",
+    "ar": "8 أحرف على الأقل"
+  },
+  "passwordRuleNumber": {
+    "en": "At least one number (0-9)",
+    "ar": "رقم واحد على الأقل (0-9)"
+  },
+  "passwordRuleSymbol": {
+    "en": "At least one symbol (!@#$...)",
+    "ar": "رمز واحد على الأقل (!@#$...)"
+  },
+  "passwordRuleMatch": {
+    "en": "Passwords match",
+    "ar": "كلمتا المرور متطابقتان"
+  },
+  "recoveryCodeFormatHint": {
+    "en": "SN-XXXX-XXXX-XXXX",
+    "ar": "SN-XXXX-XXXX-XXXX"
+  },
+  "recoveryCodeOriginHint": {
+    "en": "This is the long code you received when creating the vault",
+    "ar": "هذا هو الرقم الطويل الذي حصلت عليه عند إنشاء الخزنة"
+  },
+  "selectedCount": {
+    "en": "{count} selected",
+    "ar": "{count} محدد",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "decryptionFailedCount": {
+    "en": "Decryption failed ({count})",
+    "ar": "فشل فك التشفير ({count})",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "itemsCount": {
+    "en": "{count} items",
+    "ar": "{count} عناصر",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "changeVaultPasswordSubtitle": {
+    "en": "Change vault password",
+    "ar": "تغيير كلمة مرور الخزنة"
+  },
+  "biometricEnabledMessage": {
+    "en": "Biometric enabled",
+    "ar": "تم تفعيل البصمة"
+  },
+  "biometricDisabledMessage": {
+    "en": "Biometric disabled",
+    "ar": "تم تعطيل البصمة"
+  },
+  "vaultPasswordChanged": {
+    "en": "Password changed successfully",
+    "ar": "تم تغيير كلمة المرور بنجاح"
+  }
+}

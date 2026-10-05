@@ -19,6 +19,7 @@ import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/vault_import_sheet.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -113,8 +114,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // المصادقة البيومترية تمر عبر runVaultOperation (isVaultOperation)
     // عملية طويلة (تدوير المفتاح/الحذف) أو مصادقة جارية: لا إغلاق
-    if (_vault.isBusy ||
-        UnifiedLockService().isVaultOperation) {
+    if (_vault.isBusy || UnifiedLockService().isVaultOperation) {
       return;
     }
 
@@ -268,7 +268,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                 Builder(builder: (ctx) {
                   if (_selectedNoteIds.isNotEmpty) {
                     return SearchableHeader(
-                      title: '${_selectedNoteIds.length} ${l10n.selected}',
+                      title: l10n.selectedCount(_selectedNoteIds.length),
                       isSearching: false,
                       searchController: searchController,
                       onToggleSearch: () {},
@@ -310,8 +310,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                                 if (failed > 0 && mounted) {
                                   UnifiedNotificationService().show(
                                     context: this.context,
-                                    message:
-                                        '${l10n.decryptionFailed} ($failed)',
+                                    message: l10n.decryptionFailedCount(failed),
                                     type: NotificationType.error,
                                   );
                                 }
@@ -402,7 +401,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
             Text(l10n.decryptingVault,
-                style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                style: context.text.bodyLarge
+                    ?.copyWith(color: context.colors.muted)),
           ],
         ),
       );
@@ -418,10 +418,11 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.lock_open, size: 80, color: Colors.grey),
+            Icon(Icons.lock_open, size: 80, color: context.colors.muted),
             const SizedBox(height: 16),
             Text(l10n.noLockedNotes,
-                style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                style: context.text.titleLarge
+                    ?.copyWith(color: context.colors.muted)),
           ],
         ),
       );

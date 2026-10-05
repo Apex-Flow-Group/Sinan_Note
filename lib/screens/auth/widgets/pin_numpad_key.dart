@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// زر مفردة في لوحة أرقام PIN
 class PinNumpadKey extends StatelessWidget {
@@ -29,20 +30,22 @@ class PinNumpadKey extends StatelessWidget {
       child: Material(
         color: color != null
             ? color!.withValues(alpha: 0.08)
-            : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
+            : context.scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(size / 2),
         elevation: isDark ? 0 : 1,
-        shadowColor: Colors.black12,
+        shadowColor: context.colors.shadow,
         child: InkWell(
           borderRadius: BorderRadius.circular(size / 2),
           onTap: onTap,
           onLongPress: onLongPress,
-          splashColor: (color ?? Colors.blue).withValues(alpha: 0.15),
-          highlightColor: (color ?? Colors.blue).withValues(alpha: 0.08),
+          splashColor:
+              (color ?? context.scheme.primary).withValues(alpha: 0.15),
+          highlightColor:
+              (color ?? context.scheme.primary).withValues(alpha: 0.08),
           child: Center(
             child: IconTheme(
               data: IconThemeData(
-                color: color ?? (isDark ? Colors.white : Colors.black87),
+                color: color ?? context.scheme.onSurface,
               ),
               child: child,
             ),
@@ -82,10 +85,9 @@ class PinNumpadRow extends StatelessWidget {
               onTap: () => onDigit(d),
               child: Text(
                 d,
-                style: TextStyle(
-                  fontSize: 22,
+                style: context.text.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: context.scheme.onSurface,
                 ),
               ),
             ),
