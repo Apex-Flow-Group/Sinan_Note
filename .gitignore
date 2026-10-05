@@ -27,8 +27,8 @@ migrate_working_dir/
 # Kiro IDE settings
 .kiro/
 
-# Archive folder
-archive/
+# Archive folder (root only — lib/ui/features/archive is code)
+/archive/
 
 # Store assets (screenshots for Play Store — kept externally)
 store_assets/
