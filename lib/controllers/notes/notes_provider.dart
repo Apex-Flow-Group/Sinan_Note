@@ -188,17 +188,25 @@ class NotesProvider extends ChangeNotifier {
 
   // ─────────────────────────────────────────────────────────────────────────
 
-  Future<int> addNote(Note note) async {
-    Note noteToInsert = note;
-    if (note.isLocked && note.content.isNotEmpty) {
-      final encryptedTitle = note.title.isNotEmpty
-          ? await VaultService.encryptWithMasterKey(note.title)
-          : '';
-      final encryptedContent =
-          await VaultService.encryptWithMasterKey(note.content);
-      noteToInsert =
-          note.copyWith(title: encryptedTitle, content: encryptedContent);
+  /// المسار الوحيد لتجهيز ملاحظة للتخزين: المقفلة يُشفَّر عنوانها ومحتواها
+  /// كلٌّ على حدة (أحدهما قد يكون فارغاً)، وما هو مشفّر أصلاً لا يُشفَّر ثانية.
+  @visibleForTesting
+  static Future<Note> sealIfLocked(Note note) async {
+    if (!note.isLocked) return note;
+    Future<String> seal(String text) async =>
+        text.isEmpty || VaultService.isEncrypted(text)
+            ? text
+            : await VaultService.encryptWithMasterKey(text);
+    final title = await seal(note.title);
+    final content = await seal(note.content);
+    if (identical(title, note.title) && identical(content, note.content)) {
+      return note;
     }
+    return note.copyWith(title: title, content: content);
+  }
+
+  Future<int> addNote(Note note) async {
+    final noteToInsert = await sealIfLocked(note);
 
     final id = await _dbService.insertNote(noteToInsert);
     _stateService.addNote(noteToInsert.copyWith(id: id));
@@ -210,23 +218,13 @@ class NotesProvider extends ChangeNotifier {
   }
 
   Future<int> updateNote(Note note, {bool silent = false}) async {
-    Note noteToUpdate = note;
-    if (note.isLocked && note.content.isNotEmpty) {
-      if (!VaultService.isEncrypted(note.content)) {
-        final encryptedTitle = note.title.isNotEmpty
-            ? await VaultService.encryptWithMasterKey(note.title)
-            : '';
-        final encryptedContent =
-            await VaultService.encryptWithMasterKey(note.content);
-        noteToUpdate =
-            note.copyWith(title: encryptedTitle, content: encryptedContent);
-      }
-    }
+    final noteToUpdate = await sealIfLocked(note);
 
     final result = await _dbService.updateNote(noteToUpdate);
     _stateService.updateNote(noteToUpdate);
-    await _sideEffectService.handleReminderSideEffect(note);
-    await _sideEffectService.checkAndUpdateIfPinned(note);
+    // الآثار الجانبية تأخذ النسخة المخزنة: للمقفلة تعرض نصاً عاماً لا المحتوى
+    await _sideEffectService.handleReminderSideEffect(noteToUpdate);
+    await _sideEffectService.checkAndUpdateIfPinned(noteToUpdate);
     if (!silent) {
       _refreshStamp++;
       notifyListeners();
@@ -300,6 +298,37 @@ class NotesProvider extends ChangeNotifier {
     return result;
   }
 
+  /// يغيّر خصائص وصفية لملاحظة كما هي مخزنة، دون المرور بنسخة مفكوكة:
+  /// آمن للملاحظات المقفلة (يبقى العنوان والمحتوى مشفرين والقفل قائماً).
+  Future<Note?> updateNoteMeta(
+    int id, {
+    int? colorIndex,
+    bool? isPinned,
+    Object? reminderDateTime = _keep,
+  }) async {
+    final stored = await _dbService.getNoteById(id);
+    if (stored == null) return null;
+    final updated = stored.copyWith(
+      colorIndex: colorIndex,
+      isPinned: isPinned,
+      reminderDateTime: identical(reminderDateTime, _keep)
+          ? stored.reminderDateTime
+          : reminderDateTime,
+    );
+    await updateNote(updated);
+    return updated;
+  }
+
+  static const _keep = Object();
+
+  /// يقلب التثبيت على الصف المخزن. يُرجع الحالة الجديدة، أو null إن لم توجد.
+  Future<bool?> togglePinned(int id) async {
+    final stored = await _dbService.getNoteById(id);
+    if (stored == null) return null;
+    final updated = await updateNoteMeta(id, isPinned: !stored.isPinned);
+    return updated?.isPinned;
+  }
+
   Future<int> addOrUpdateNote(Note note, {bool silent = false}) async {
     if (note.id != null) {
       await updateNote(note, silent: silent);
@@ -330,13 +359,13 @@ class NotesProvider extends ChangeNotifier {
       forceLog: true,
     );
 
-    final updated = note.copyWith(
+    final updated = await sealIfLocked(note.copyWith(
       content: newContent,
       noteType: newNoteType,
       isChecklist: isChecklist,
       isProfessional: newNoteType == 'code' || newNoteType == 'pro',
       updatedAt: DateTime.now(),
-    );
+    ));
     await _dbService.updateNote(updated);
     _stateService.updateNote(updated);
     _refreshStamp++;
@@ -348,9 +377,13 @@ class NotesProvider extends ChangeNotifier {
     final note = await _dbService.getNoteById(id);
     if (note == null) return -1;
 
+    // عنوان المقفلة مشفّر: يُفك قبل إضافة اللاحقة، ثم يُعاد تشفيره عند الحفظ
+    final title = note.isLocked && VaultService.isEncrypted(note.title)
+        ? await VaultService.decryptWithMasterKey(note.title)
+        : note.title;
     final copy = note.copyWith(
       id: null,
-      title: note.title.isEmpty ? copyLabel : '${note.title} - $copyLabel',
+      title: title.isEmpty ? copyLabel : '$title - $copyLabel',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       isPinned: false,
@@ -390,9 +423,18 @@ class NotesProvider extends ChangeNotifier {
     return await _securityService.fetchAndDecryptLockedNotes(_dbService);
   }
 
-  Future<void> toggleLockStatus(int id, bool lockStatus) async {
-    await _securityService.toggleLockStatus(id, lockStatus, _dbService);
+  /// يُرجع false إن تعذّر فك التشفير عند إزالة القفل — تبقى الملاحظة مقفلة.
+  Future<bool> toggleLockStatus(int id, bool lockStatus) async {
+    try {
+      await _securityService.toggleLockStatus(id, lockStatus, _dbService);
+    } on VaultLockedException {
+      return false;
+    }
     final note = await _dbService.getNoteById(id);
+    if (note != null) {
+      await _sideEffectService.handleReminderSideEffect(note);
+      await _sideEffectService.checkAndUpdateIfPinned(note);
+    }
     if (note != null) {
       if (lockStatus) {
         _stateService.removeNote(id);
@@ -404,6 +446,7 @@ class NotesProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
+    return true;
   }
 
   void clearLockedSession({bool notify = true}) {

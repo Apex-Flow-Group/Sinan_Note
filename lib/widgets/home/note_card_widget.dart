@@ -1,4 +1,4 @@
-﻿// Copyright � 2025 Apex Flow Group. All rights reserved.
+// Copyright � 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui' as ui;
 
@@ -260,7 +260,11 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
               behavior: HitTestBehavior.opaque,
               onSecondaryTapDown: (details) {
                 final isDesktop = PlatformHelper.isWideDisplay(context);
-                if (isDesktop && !widget.selectionMode) {
+                // قائمة السياق العامة لا تعرف الخزنة: «تكرار» فيها ينشئ نسخة
+                // غير مقفلة من النص المفكوك، و«حذف» يتركها يتيمة.
+                final isVault =
+                    widget.source == 'locked' || widget.note.isLocked;
+                if (isDesktop && !widget.selectionMode && !isVault) {
                   NoteContextMenu.show(
                       context, widget.note, widget.onNoteChanged,
                       source: widget.source);

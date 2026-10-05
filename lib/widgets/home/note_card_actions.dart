@@ -47,13 +47,13 @@ class NoteCardActions {
           );
 
           if (confirmed == true && context.mounted) {
-            await notesProvider.toggleLockStatus(note.id!, false);
+            final ok = await notesProvider.toggleLockStatus(note.id!, false);
             onNoteChanged();
             if (!context.mounted) return;
             UnifiedNotificationService().show(
               context: context,
-              message: l10n.noteUnlocked,
-              type: NotificationType.success,
+              message: ok ? l10n.noteUnlocked : l10n.decryptionFailed,
+              type: ok ? NotificationType.success : NotificationType.error,
             );
           }
         } else if (value == 'delete') {

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:io';
@@ -76,6 +76,9 @@ class SqliteDatabaseService implements NoteDbInterface {
             await _migrateToV5(db);
           }
         },
+        // الملاحظة المقفلة لا تُحفظ لها نسخ نصية واضحة. يحذف ما تركته
+        // الإصدارات السابقة (القفل لم يكن يحذف السجل) — رخيص ومتكرر بأمان.
+        onOpen: _purgeLockedNoteVersions,
       );
       _initCompleter!.complete(_db!);
     } catch (e) {
@@ -466,9 +469,22 @@ class SqliteDatabaseService implements NoteDbInterface {
 
   static const int _maxVersionsPerNote = 20;
 
+  static Future<void> _purgeLockedNoteVersions(Database db) async {
+    await db.delete('note_versions',
+        where: 'noteId IN (SELECT id FROM notes WHERE isLocked = 1)');
+  }
+
   @override
   Future<void> logNoteVersion(NoteVersion version) async {
     final db = await database;
+    // حارس أخير لكل مسارات التسجيل: المحرر يعمل على نسخة مفكوكة معلَّمة
+    // isLocked=false، فالحكم لحالة الصف المخزن لا لما يمرره المستدعي.
+    final locked = await db.query('notes',
+        columns: ['id'],
+        where: 'id = ? AND isLocked = 1',
+        whereArgs: [version.noteId],
+        limit: 1);
+    if (locked.isNotEmpty) return;
     await db.insert('note_versions', {
       'noteId': version.noteId,
       'title': version.title,
@@ -639,4 +655,3 @@ class SqliteDatabaseService implements NoteDbInterface {
   @override
   Future<void> runLegacyHistoryCleanup() async {}
 }
-

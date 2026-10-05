@@ -283,10 +283,11 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
   Future<void> _removeReminder() async {
     if (_currentNote.id == null) return;
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    final updated = _currentNote.copyWith(reminderDateTime: null);
-    await provider.updateNote(updated);
+    // _currentNote قد تكون نسخة مفكوكة لملاحظة مقفلة — نعدّل العمود فقط
+    await provider.updateNoteMeta(_currentNote.id!, reminderDateTime: null);
     if (!mounted) return;
-    setState(() => _currentNote = updated);
+    setState(
+        () => _currentNote = _currentNote.copyWith(reminderDateTime: null));
   }
 
   Future<void> _onReminder() async {
@@ -302,11 +303,12 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     );
     if (result == null || !mounted) return;
 
-    final updatedNote = note.copyWith(
+    if (note.id == null) return;
+    await provider.updateNoteMeta(
+      note.id!,
       reminderDateTime:
           result['remove'] == true ? null : result['dateTime'] as DateTime?,
     );
-    await provider.updateNote(updatedNote);
     await _onRefresh();
   }
 
@@ -424,10 +426,13 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     widget.coordinator.stateManager.colorIndex = selectedIndex;
     widget.coordinator.stateManager.markDirty();
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    final updated = _currentNote.copyWith(colorIndex: selectedIndex);
-    await provider.updateNote(updated);
+    if (_currentNote.id != null) {
+      await provider.updateNoteMeta(_currentNote.id!,
+          colorIndex: selectedIndex);
+    }
     if (!mounted) return;
-    setState(() => _currentNote = updated);
+    setState(
+        () => _currentNote = _currentNote.copyWith(colorIndex: selectedIndex));
   }
 
   Future<void> _onRefresh() async {

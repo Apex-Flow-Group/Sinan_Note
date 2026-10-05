@@ -3,13 +3,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:sinan_note/models/note.dart';
-import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 
 class StorageService {
@@ -103,63 +100,4 @@ class StorageService {
     final ts = DateTime.now().millisecondsSinceEpoch;
     return includeVault ? 'sinan_notes_full_$ts.json' : 'sinan_notes_$ts.json';
   }
-
-  // ── Import ────────────────────────────────────────────────────────────────
-
-  Future<int> importNotesFromDevice() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-    if (result == null || result.files.single.path == null) {
-      throw Exception('لم يتم اختيار ملف');
-    }
-
-    final file = File(result.files.single.path!);
-    final jsonString = await file.readAsString();
-    if (jsonString.isEmpty) throw Exception('الملف فارغ');
-
-    final dynamic jsonData = jsonDecode(jsonString);
-    List<dynamic> notesList;
-
-    if (jsonData is Map<String, dynamic>) {
-      notesList = jsonData['notes'] ?? [];
-    } else {
-      notesList = jsonData;
-    }
-
-    if (notesList.isEmpty) throw Exception('لا توجد ملاحظات في الملف');
-
-    // لو الملف يحتوي مشفرة وعنده مفتاح → يفك تلقائياً
-    final hasKey = await VaultService.isVaultSetup();
-    final notes = <Note>[];
-    for (final map in notesList) {
-      final note = Note.fromMap(map);
-      if (note.isLocked && hasKey && VaultService.isEncrypted(note.content)) {
-        try {
-          final decTitle = await VaultService.decryptWithMasterKey(note.title);
-          final decContent =
-              await VaultService.decryptWithMasterKey(note.content);
-          notes.add(note.copyWith(title: decTitle, content: decContent));
-        } catch (_) {
-          notes.add(note); // يستعيدها مشفرة لو فشل الفك
-        }
-      } else {
-        notes.add(note);
-      }
-    }
-
-    int count = 0;
-    for (final note in notes) {
-      if (note.content.isEmpty) continue;
-      await SqliteDatabaseService().insertNote(
-        note.copyWith(id: null, updatedAt: DateTime.now()),
-      );
-      count++;
-    }
-
-    if (count == 0) throw Exception('جميع الملاحظات في الملف فارغة');
-    return count;
-  }
 }
-

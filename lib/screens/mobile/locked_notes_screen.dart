@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -275,12 +275,24 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                               l10n.unlockNoteConfirmation,
                               l10n.unlock,
                               () async {
+                                var failed = 0;
                                 for (final id in _selectedNoteIds) {
-                                  await _providerRef?.toggleLockStatus(
-                                      id, false);
+                                  final ok = await _providerRef
+                                          ?.toggleLockStatus(id, false) ??
+                                      false;
+                                  if (!ok) failed++;
                                 }
+                                if (!mounted) return;
                                 setState(() => _selectedNoteIds.clear());
                                 await _loadLockedNotes();
+                                if (failed > 0 && mounted) {
+                                  UnifiedNotificationService().show(
+                                    context: this.context,
+                                    message:
+                                        '${l10n.decryptionFailed} ($failed)',
+                                    type: NotificationType.error,
+                                  );
+                                }
                               },
                             ),
                           ),

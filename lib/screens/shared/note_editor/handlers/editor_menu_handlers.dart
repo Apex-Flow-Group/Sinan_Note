@@ -44,11 +44,10 @@ mixin EditorMenuHandlersMixin<T extends StatefulWidget> on State<T> {
     if (noteId == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<NotesProvider>(context, listen: false);
-    final notes = provider.notes;
-    final note = notes.where((n) => n.id == noteId).firstOrNull;
-    if (note == null) return;
-    final wasPinned = note.isPinned;
-    await provider.updateNote(note.copyWith(isPinned: !wasPinned));
+    // من الصف المخزن لا من نسخة المحرر: لا يرجع المحتوى، ويعمل للمقفلة
+    final pinned = await provider.togglePinned(noteId);
+    if (pinned == null) return;
+    final wasPinned = !pinned;
     if (!mounted) return;
     UnifiedNotificationService().show(
       context: context,

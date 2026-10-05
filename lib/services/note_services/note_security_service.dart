@@ -1,6 +1,12 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';import 'package:encrypt/encrypt.dart'; import 'package:sinan_note/models/note.dart'; import 'package:sinan_note/services/note_services/note_db_interface.dart'; import 'package:sinan_note/services/note_services/note_state_service.dart'; import 'package:sinan_note/services/security/vault_service.dart';
+import 'dart:convert';
+import 'package:encrypt/encrypt.dart';
+import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/services/note_services/note_db_interface.dart';
+import 'package:sinan_note/services/note_services/note_state_service.dart';
+import 'package:sinan_note/services/security/vault_service.dart';
+
 class NoteSecurityService {
   bool _isVaultUnlocked = false;
   DateTime? _vaultUnlockedAt;
@@ -75,10 +81,10 @@ class NoteSecurityService {
 
     if (lockStatus) {
       // 🔒 Encrypting
-      if (note.title.isNotEmpty) {
+      if (note.title.isNotEmpty && !VaultService.isEncrypted(note.title)) {
         finalTitle = await VaultService.encryptWithMasterKey(note.title);
       }
-      if (note.content.isNotEmpty) {
+      if (note.content.isNotEmpty && !VaultService.isEncrypted(note.content)) {
         // ✅ For checklist: validate JSON before encryption
         if (note.isChecklist || note.noteType == 'checklist') {
           finalContent = _normalizeChecklistJson(note.content);
@@ -92,6 +98,12 @@ class NoteSecurityService {
       }
       if (note.content.isNotEmpty) {
         finalContent = await VaultService.decryptWithMasterKey(note.content);
+        // فك التشفير يُرجع المدخل نفسه عند الفشل — لا نحفظ النص المشفّر
+        // كأنه المحتوى ثم نزيل القفل.
+        if (VaultService.isEncrypted(finalContent) ||
+            VaultService.isEncrypted(finalTitle)) {
+          throw VaultLockedException('Failed to decrypt note $id');
+        }
         // ✅ For checklist: validate JSON after decryption
         if (note.isChecklist || note.noteType == 'checklist') {
           finalContent = _normalizeChecklistJson(finalContent);
@@ -107,6 +119,8 @@ class NoteSecurityService {
     );
 
     await dbService.updateNote(updatedNote);
+    // نسخ ما قبل القفل نص واضح — لا تبقى بعده
+    if (lockStatus) await dbService.deleteNoteVersions(id);
   }
 
   void clearLockedSession(NoteStateService stateService) {
@@ -124,4 +138,3 @@ class NoteSecurityService {
     }
   }
 }
-

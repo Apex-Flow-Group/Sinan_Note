@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 import 'dart:io';
@@ -366,6 +366,19 @@ class WidgetService {
       final service = WidgetService();
       final isChecklistNote = note.isChecklist || note.noteType == 'checklist';
 
+      // الملاحظة المقفلة لا يُكتب محتواها في الويدجت ولا في SharedPreferences
+      if (note.isLocked) {
+        if (note.id == pinnedNoteId || note.id == pinnedChecklistId) {
+          await service.updateNoteWidget(note.copyWith(
+            title: '🔒',
+            content: '',
+            isChecklist: false,
+            noteType: 'simple',
+          ));
+        }
+        return;
+      }
+
       if (note.id == pinnedNoteId && !isChecklistNote) {
         await service.updateNoteWidget(note);
       } else if (note.id == pinnedChecklistId && isChecklistNote) {
@@ -417,4 +430,3 @@ void _widgetBackgroundCallback(Uri? uri) async {
     }
   }
 }
-

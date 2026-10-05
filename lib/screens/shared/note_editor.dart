@@ -1030,27 +1030,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _handleBack();
   }
 
-  /// تثبيت/إلغاء تثبيت الملاحظة مع snackbar
-  @override
-  Future<void> handleMenuPin() async {
-    final noteId = _coordinator.savedNoteId ?? widget.note?.id;
-    if (noteId == null || !mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final provider = Provider.of<NotesProvider>(context, listen: false);
-    final note = widget.note ??
-        provider.notes
-            .firstWhere((n) => n.id == noteId, orElse: () => widget.note!);
-    final wasPinned = note.isPinned;
-    await provider.updateNote(note.copyWith(isPinned: !wasPinned));
-    if (!mounted) return;
-    UnifiedNotificationService().show(
-      context: context,
-      message: wasPinned ? l10n.unpin : l10n.pin,
-      type: NotificationType.success,
-      duration: const Duration(seconds: 2),
-    );
-  }
-
   /// تكرار الملاحظة مع snackbar
   @override
   Future<void> handleMenuDuplicate() async {
