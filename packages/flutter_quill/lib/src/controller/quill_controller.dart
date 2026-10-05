@@ -461,6 +461,25 @@ class QuillController extends ChangeNotifier {
     super.dispose();
   }
 
+  /// Text the caret resolver sees: one character before the caret and up to
+  /// this many after it (enough for any run of combining marks).
+  static const _caretWindow = 16;
+
+  void _resolveCaret(int end) {
+    final resolve = config.caretResolver;
+    if (resolve == null || !_selection.isCollapsed) return;
+    final caret = _selection.baseOffset;
+    if (caret <= 0 || caret >= end) return;
+    final from = caret - 1;
+    final window =
+        document.getPlainText(from, math.min(_caretWindow + 1, end - from));
+    final resolved = from + resolve(window, caret - from);
+    if (resolved != caret) {
+      _selection = TextSelection.collapsed(
+          offset: math.min(resolved, end), affinity: _selection.affinity);
+    }
+  }
+
   void _updateSelection(TextSelection textSelection,
       {bool insertNewline = false}) {
     _selection = textSelection;
@@ -468,6 +487,7 @@ class QuillController extends ChangeNotifier {
     _selection = selection.copyWith(
         baseOffset: math.min(selection.baseOffset, end),
         extentOffset: math.min(selection.extentOffset, end));
+    _resolveCaret(end);
     if (keepStyleOnNewLine) {
       if (insertNewline && selection.start > 0) {
         final style = document.collectStyle(selection.start - 1, 0);

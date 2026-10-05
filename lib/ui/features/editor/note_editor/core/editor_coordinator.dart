@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/domain/code/language_detector.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/ui/core/input/arabic_marks_editing.dart';
 import 'package:sinan_note/ui/core/input/bidi_cursor_middleware.dart';
 import 'package:sinan_note/ui/core/input/clipboard_guard.dart';
 import 'package:sinan_note/ui/core/input/content_guard.dart';
@@ -130,6 +131,7 @@ class EditorCoordinator {
           quillController = QuillController(
             document: Document.fromDelta(delta),
             selection: const TextSelection.collapsed(offset: 0),
+            config: noteControllerConfig,
           );
         } else {
           // نوت قصير: ابنِ مباشرة — سريع بدون isolate
@@ -197,6 +199,7 @@ class EditorCoordinator {
     quillController = QuillController(
       document: doc,
       selection: const TextSelection.collapsed(offset: 0),
+      config: noteControllerConfig,
     );
     isQuillFullyLoaded = true;
     _attachQuillGuard();

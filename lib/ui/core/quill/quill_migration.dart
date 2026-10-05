@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
+import 'package:sinan_note/ui/core/input/arabic_marks_editing.dart';
 
 /// Top-level function — تعمل في isolate منفصل عبر compute()
 /// تبني Delta JSON من محتوى النوت (نص عادي أو Delta موجود)
@@ -18,6 +19,7 @@ class QuillMigration {
       QuillController(
         document: Document.fromDelta(deltaFromContent(content)),
         selection: const TextSelection.collapsed(offset: 0),
+        config: noteControllerConfig,
       );
 
   /// Delta المستند من محتوى الملاحظة. اتجاه النص لا يُخزَّن: يُحسب عند الرسم

@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/direction/text_direction.dart';
-import 'package:sinan_note/ui/core/input/backspace_resolver.dart';
+import 'package:sinan_note/ui/core/input/arabic_marks_editing.dart';
 import 'package:sinan_note/ui/core/input/bidi_cursor_middleware.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
