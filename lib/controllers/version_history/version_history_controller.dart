@@ -71,17 +71,15 @@ class VersionHistoryController extends ChangeNotifier {
   Future<int> getVersionCount(int noteId) async =>
       (await _notes.history(noteId)).length;
 
+  /// قائمة جديدة في كل مرة — لا تعدّل [notesWithHistory].
   List<Note> get filteredNotes {
-    var notes = notesWithHistory;
-    if (searchQuery.trim().isNotEmpty) {
-      notes = notes.where((n) => n.matches(searchQuery)).toList();
-    }
-    if (sortBy == 'title') {
-      notes.sort((a, b) => a.title.compareTo(b.title));
-    } else {
-      notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    }
-    return notes;
+    final query = searchQuery.trim();
+    return [
+      for (final n in notesWithHistory)
+        if (query.isEmpty || n.matches(query)) n,
+    ]..sort(sortBy == 'title'
+        ? (a, b) => a.title.compareTo(b.title)
+        : (a, b) => b.updatedAt.compareTo(a.updatedAt));
   }
 
   static IconData getActionIcon(String action) {
