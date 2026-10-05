@@ -1,0 +1,51 @@
+name: Quality
+
+# بوابة الجودة: كل push وPR على develop وmain
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: 3.41.6
+          cache: true
+
+      # الاختبارات تستخدم sqflite_common_ffi
+      - name: Install SQLite
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # النصوص المولَّدة مطابقة لملفات arb
+      - name: Localizations are generated
+        run: |
+          flutter gen-l10n
+          git diff --exit-code -- lib/generated
+
+      - name: Format
+        run: dart format --output=none --set-exit-if-changed lib test tool integration_test
+
+      - name: Analyze
+        run: flutter analyze
+
+      # يشمل test/architecture: قواعد الطبقات والثيم واللغة بخط أساس فارغ
+      - name: Test
+        run: flutter test

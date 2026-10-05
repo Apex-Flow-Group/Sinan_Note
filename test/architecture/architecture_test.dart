@@ -1,50 +1,14 @@
-// قواعد docs/code-review-2026-10/architecture.md، مفروضة على الكود.
-//
-// كل قاعدة تعدّ مخالفاتها لكل ملف. baseline.json يحفظ مخالفات ما قبل إعادة
-// البناء كسقّاطة (ratchet):
-//   - مخالفة جديدة، أو عدد أكبر في ملف ← يفشل.
-//   - عدد أقل من خط الأساس ← يفشل حتى يُحدَّث الملف، فلا يعود ما أُصلح.
-// تحديث خط الأساس بعد إصلاح حقيقي فقط:
-//   flutter test test/architecture --dart-define=UPDATE_ARCH_BASELINE=true
+// قواعد الطبقات والثيم واللغة، مفروضة على الكود: أي مخالفة تُفشل الاختبار.
+// (بدأت كسقّاطة بخط أساس لمخالفات ما قبل إعادة البناء، ووصلت إلى صفر.)
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const _update = bool.fromEnvironment('UPDATE_ARCH_BASELINE');
-final _baselineFile = File('test/architecture/baseline.json');
-
 void main() {
-  test('architecture rules (see docs/code-review-2026-10/architecture.md)', () {
-    final violations = _scan();
-
-    if (_update) {
-      _baselineFile.writeAsStringSync(
-          '${const JsonEncoder.withIndent('  ').convert(violations)}\n');
-      return;
-    }
-
-    final baseline = _baselineFile.existsSync()
-        ? (jsonDecode(_baselineFile.readAsStringSync()) as Map)
-            .map((k, v) => MapEntry(k as String, v as int))
-        : <String, int>{};
-
-    final problems = <String>[];
-    for (final MapEntry(:key, :value) in violations.entries) {
-      final allowed = baseline[key] ?? 0;
-      if (value > allowed) {
-        problems.add('NEW   $key: $value (baseline $allowed)');
-      }
-    }
-    for (final MapEntry(:key, :value) in baseline.entries) {
-      final now = violations[key] ?? 0;
-      if (now < value) {
-        problems.add('FIXED $key: $now (baseline $value) — update baseline');
-      }
-    }
-
-    expect(problems, isEmpty, reason: problems.join('\n'));
+  test('architecture rules', () {
+    final violations = _scan().entries.map((e) => '${e.key}: ${e.value}');
+    expect(violations, isEmpty, reason: violations.join('\n'));
   });
 }
 
