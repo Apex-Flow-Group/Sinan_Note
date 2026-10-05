@@ -29,7 +29,6 @@ enum EditorCommand {
 }
 
 class EditorCommandBus extends ChangeNotifier {
-
   // ── المحرر النشط ──────────────────────────────────────────────────────
   int? _activeNoteId;
   int? _activeEditorHash;

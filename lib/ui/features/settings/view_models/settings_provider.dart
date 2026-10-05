@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -76,7 +76,14 @@ class SettingsProvider with ChangeNotifier {
   bool get isInitialized => _isInitialized;
   bool get isLoaded => _isInitialized;
 
-  SettingsProvider() {
+  final UnifiedLockService _lock;
+  final SecurityController _security;
+
+  SettingsProvider({
+    required UnifiedLockService lock,
+    required SecurityController security,
+  })  : _lock = lock,
+        _security = security {
     Future.microtask(
       () => _loadSettings().catchError((e) {
         AppLogger.debug('Error loading settings: $e');
@@ -199,7 +206,7 @@ class SettingsProvider with ChangeNotifier {
     _isAppLockEnabled = enabled;
     notifyListeners();
     await _savePref('appLockEnabled', enabled);
-    if (!enabled) UnifiedLockService().resetSession();
+    if (!enabled) _lock.resetSession();
     _updateSecurityController();
   }
 
@@ -213,7 +220,7 @@ class SettingsProvider with ChangeNotifier {
     _customPinEnabled = enabled;
     notifyListeners();
     await _savePref('customPinEnabled', enabled);
-    if (!enabled) await UnifiedLockService().clearPin();
+    if (!enabled) await _lock.clearPin();
     _updateSecurityController();
   }
 
@@ -343,7 +350,7 @@ class SettingsProvider with ChangeNotifier {
     );
 
     // Skip update if config hasn't changed
-    final controller = SecurityController();
+    final controller = _security;
     if (controller.config.lockEnabled == newConfig.lockEnabled &&
         controller.config.lockDelaySeconds == newConfig.lockDelaySeconds &&
         controller.config.privacyBlurEnabled == newConfig.privacyBlurEnabled &&

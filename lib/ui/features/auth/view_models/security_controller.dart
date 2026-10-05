@@ -20,11 +20,12 @@ class SecurityConfig {
   });
 }
 
-/// Singleton Security Controller - Black Box Pattern
+/// حالة قفل التطبيق: تراقب دورة حياة التطبيق وتقفل بعد المهلة.
+/// تُنشأ مرة في نقطة التركيب.
 class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
-  static final SecurityController _instance = SecurityController._internal();
-  factory SecurityController() => _instance;
-  SecurityController._internal();
+  SecurityController({required UnifiedLockService lock}) : _lock = lock;
+
+  final UnifiedLockService _lock;
 
   static const _platform = MethodChannel('com.apexflow.app.sinan/security');
 
@@ -139,7 +140,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     if (_isAuthenticating) return;
 
     // 🛡️ Guard Clause #3: Already authenticated this session via UnifiedLockService?
-    if (UnifiedLockService().isAuthenticatedThisSession) {
+    if (_lock.isAuthenticatedThisSession) {
       _isLocked = false;
       _pausedTime = null;
       notifyListeners();
@@ -151,7 +152,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
 
     try {
-      final authenticated = await UnifiedLockService().authenticate(
+      final authenticated = await _lock.authenticate(
         context: 'app_lock',
         biometricEnabled: _config.biometricEnabled,
       );
@@ -187,7 +188,7 @@ class SecurityController extends ChangeNotifier with WidgetsBindingObserver {
   void lock() {
     _isLocked = true;
     _pausedTime = DateTime.now();
-    UnifiedLockService().resetSession();
+    _lock.resetSession();
     notifyListeners();
   }
 

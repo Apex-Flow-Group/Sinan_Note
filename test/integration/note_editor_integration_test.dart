@@ -3,10 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/keyboard/editor_command_bus.dart';
+import 'package:sinan_note/ui/features/auth/view_models/security_controller.dart';
 import 'package:sinan_note/ui/features/editor/note_editor.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
 import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
@@ -36,7 +38,9 @@ void main() {
     setUp(() async {
       data = await TestDataLayer.create();
       notesProvider = NotesProvider(notes: data.notes, vault: data.vault);
-      settingsProvider = SettingsProvider();
+      final lock = UnifiedLockService();
+      settingsProvider = SettingsProvider(
+          lock: lock, security: SecurityController(lock: lock));
       await Future.delayed(const Duration(milliseconds: 100));
     });
 

@@ -26,6 +26,7 @@ import 'package:sinan_note/data/services/key_value_store.dart';
 import 'package:sinan_note/data/services/legacy_cleanup.dart';
 import 'package:sinan_note/data/services/note_side_effects.dart';
 import 'package:sinan_note/data/services/notification_service.dart';
+import 'package:sinan_note/data/services/security/unified_lock_service.dart';
 import 'package:sinan_note/data/services/sync/drive_sync_remote.dart';
 import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/data/services/sync_scheduler.dart';
@@ -82,11 +83,13 @@ void main() async {
   }
 
   // 🔒 Initialize SecurityController IMMEDIATELY (lightweight)
-  SecurityController().initialize(const SecurityConfig(
-    lockEnabled: false,
-    lockDelaySeconds: 0,
-    privacyBlurEnabled: false,
-  ));
+  final lock = UnifiedLockService();
+  final security = SecurityController(lock: lock)
+    ..initialize(const SecurityConfig(
+      lockEnabled: false,
+      lockDelaySeconds: 0,
+      privacyBlurEnabled: false,
+    ));
 
   // ── نقطة التركيب: البيانات تُنشأ مرة واحدة وتُحقن ─────────────────────
   final database = await AppDatabase.open();
@@ -134,15 +137,17 @@ void main() async {
       providers: [
         Provider.value(value: notes),
         Provider.value(value: vault),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(
+            create: (_) => SettingsProvider(lock: lock, security: security)),
         ChangeNotifierProvider(
             create: (_) => NotesProvider(notes: notes, vault: vault)),
         ChangeNotifierProvider(
-            create: (_) => VaultViewModel(vault: vault, notes: notes)),
+            create: (_) =>
+                VaultViewModel(vault: vault, notes: notes, lock: lock)),
         Provider(create: (_) => BackupViewModel(backups: backups)),
         Provider(create: (_) => EditorSessions(notes: notes)),
         Provider(create: (_) => ReminderPermissions()),
-        Provider(create: (_) => AppLock()),
+        Provider(create: (_) => AppLock(lock: lock, security: security)),
         Provider(create: (_) => HomeWidgets()),
         Provider(create: (_) => Diagnostics()),
         Provider(create: (_) => AppStartup()),

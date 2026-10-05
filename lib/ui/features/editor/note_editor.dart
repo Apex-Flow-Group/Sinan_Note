@@ -73,8 +73,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
 
   /// المالك الوحيد لحفظ هذه الملاحظة.
   late final EditorViewModel _vm;
-  late final EditorCommandBus _commands =
-      context.read<EditorCommandBus>();
+  late final EditorCommandBus _commands = context.read<EditorCommandBus>();
 
   static bool _looksLikeMarkdown(String text) => RegExp(
         r'(^#{1,6} |\*\*|__| *[-*+] | *\d+\. |^> |```|`[^`])',

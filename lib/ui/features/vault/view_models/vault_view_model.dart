@@ -21,13 +21,16 @@ class VaultViewModel extends ChangeNotifier {
   VaultViewModel({
     required VaultRepository vault,
     required NotesRepository notes,
+    required UnifiedLockService lock,
   })  : _vault = vault,
-        _notes = notes {
+        _notes = notes,
+        _lock = lock {
     _vault.addListener(notifyListeners);
   }
 
   final VaultRepository _vault;
   final NotesRepository _notes;
+  final UnifiedLockService _lock;
 
   bool get isUnlocked => _vault.isUnlocked;
 
@@ -59,8 +62,8 @@ class VaultViewModel extends ChangeNotifier {
       await BiometricService.hasBiometrics();
 
   Future<bool> unlockWithBiometrics() async {
-    final authenticated = await UnifiedLockService()
-        .runVaultOperation(BiometricService.authenticate);
+    final authenticated =
+        await _lock.runVaultOperation(BiometricService.authenticate);
     return authenticated && await unlockAfterDeviceAuth();
   }
 

@@ -15,10 +15,6 @@ enum LockType { biometric, pin, none }
 /// خدمة القفل الموحّدة — Singleton
 /// تحدد نوع القفل (بيومتري أو PIN) وتشارك حالة المصادقة بين الأنظمة
 class UnifiedLockService {
-  static final UnifiedLockService _instance = UnifiedLockService._internal();
-  factory UnifiedLockService() => _instance;
-  UnifiedLockService._internal();
-
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );

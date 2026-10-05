@@ -13,10 +13,10 @@ export 'package:sinan_note/data/services/security/unified_lock_service.dart'
 /// قفل التطبيق للواجهات: PIN، البصمة، محاولات PIN، وحالة القفل.
 class AppLock {
   AppLock({
-    UnifiedLockService? lock,
-    SecurityController? security,
-  })  : _lock = lock ?? UnifiedLockService(),
-        _security = security ?? SecurityController();
+    required UnifiedLockService lock,
+    required SecurityController security,
+  })  : _lock = lock,
+        _security = security;
 
   final UnifiedLockService _lock;
   final SecurityController _security;

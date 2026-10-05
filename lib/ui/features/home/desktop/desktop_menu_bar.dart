@@ -174,8 +174,7 @@ class DesktopMenuBar extends StatelessWidget {
                   shortcut: AppShortcuts.rename,
                   leadingIcon:
                       const Icon(Icons.drive_file_rename_outline, size: 16),
-                  onPressed:
-                      hasNote ? () => commands.triggerRename() : null,
+                  onPressed: hasNote ? () => commands.triggerRename() : null,
                   child: Text(l10n.rename),
                 ),
                 MenuItemButton(
