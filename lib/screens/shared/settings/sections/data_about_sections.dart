@@ -1,7 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/onboarding/tour_screen.dart';
 import 'package:sinan_note/screens/onboarding/whats_new_dialog.dart';
@@ -10,8 +11,9 @@ import 'package:sinan_note/screens/other/support_form_screen.dart';
 import 'package:sinan_note/screens/shared/backup_wizard_screen.dart';
 import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
-import 'package:sinan_note/services/storage/db_inspector_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/diagnostics/db_inspector_sheet.dart';
+import 'package:sinan_note/ui/features/diagnostics/view_models/diagnostics.dart';
 import 'package:sinan_note/widgets/common/app_dialog.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 
@@ -81,7 +83,10 @@ class AboutSection extends StatelessWidget {
                 Icon(Icons.storage_rounded, color: context.colors.warning),
             title: Text(l10n.dbInspector),
             subtitle: Text(l10n.dbInspectorDesc),
-            onTap: () => DbInspectorService.showReport(context),
+            onTap: () async {
+              final report = await context.read<Diagnostics>().databaseReport();
+              if (context.mounted) await showDbInspector(context, report);
+            },
           ),
         if (kDebugMode)
           ListTile(

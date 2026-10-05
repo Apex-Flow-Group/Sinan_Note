@@ -1,14 +1,4 @@
 {
-  "A1|lib/screens/onboarding/splash_screen.dart": 5,
-  "A1|lib/screens/other/widget_selection_screen.dart": 1,
-  "A1|lib/screens/shared/note_editor/controllers/editor_smart_controller.dart": 1,
-  "A1|lib/screens/shared/note_editor/core/editor_toolbar_builder.dart": 1,
-  "A1|lib/screens/shared/note_editor/widgets/read_only_bars.dart": 1,
-  "A1|lib/screens/shared/settings/sections/data_about_sections.dart": 1,
-  "A1|lib/screens/shared/settings/settings_utils.dart": 1,
-  "A1|lib/widgets/common/custom_share_sheet.dart": 1,
-  "A2|lib/services/diagnostics/apex_error_manager.dart": 1,
-  "A2|lib/services/storage/db_inspector_service.dart": 3,
   "A6|lib/main.dart": 4,
   "A6|lib/widgets/home/add_menu_widget.dart": 1
 }

@@ -1,28 +1,21 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/main.dart' show navigatorKey;
 import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/onboarding/whats_new_dialog.dart';
 import 'package:sinan_note/screens/shared/main_layout_screen.dart';
-import 'package:sinan_note/services/app_update_service.dart';
-import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
-import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
-import 'package:sinan_note/services/notification_service.dart';
-import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
+import 'package:sinan_note/ui/features/onboarding/view_models/app_startup.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -42,10 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Set navigator key immediately
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ApexErrorManager.setNavigatorKey(navigatorKey);
-      _initApp();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initApp());
   }
 
   void _updateStatus(String message, double progress) {
@@ -158,9 +148,10 @@ class _SplashScreenState extends State<SplashScreen> {
       );
 
       // فحص التحديثات في الخلفية بعد التشغيل
+      final startup = context.read<AppStartup>();
       unawaited(Future.delayed(
         const Duration(seconds: 3),
-        AppUpdateService.checkForUpdate,
+        startup.checkForUpdate,
       ));
 
       // تشويق النسخة النهائية
@@ -171,23 +162,8 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  Future<void> _initBackgroundServices() async {
-    try {
-      final appDir = await getApplicationDocumentsDirectory();
-      ApexDiagnosticsEngine().init(appDir.path);
-
-      // حذف النسخ الاحتياطية المنتهية (أقدم من 15 يوم)
-
-      if (Platform.isAndroid || Platform.isIOS) {
-        await NotificationService().initialize();
-        if (Platform.isAndroid) {
-          await WidgetService().initialize();
-        }
-      }
-    } catch (e) {
-      AppLogger.error('Background services init error', 'SplashScreen', e);
-    }
-  }
+  Future<void> _initBackgroundServices() =>
+      context.read<AppStartup>().initServices();
 
   Future<void> _checkAndShowWhatsNew() async {
     final prefs = await SharedPreferences.getInstance();

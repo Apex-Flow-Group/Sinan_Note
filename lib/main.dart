@@ -46,6 +46,7 @@ import 'package:sinan_note/screens/other/widget_selection_screen.dart';
 import 'package:sinan_note/screens/shared/settings_screen_responsive.dart';
 import 'package:sinan_note/screens/sync/google_drive_screen_responsive.dart';
 import 'package:sinan_note/services/app_update_service.dart';
+import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/intent_handler_service.dart';
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
@@ -53,10 +54,16 @@ import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
+import 'package:sinan_note/ui/features/diagnostics/unexpected_error_snack_bar.dart';
+import 'package:sinan_note/ui/features/diagnostics/view_models/diagnostics.dart';
+import 'package:sinan_note/ui/features/editor/view_models/code_tools.dart';
 import 'package:sinan_note/ui/features/editor/view_models/editor_view_model.dart';
+import 'package:sinan_note/ui/features/onboarding/view_models/app_startup.dart';
 import 'package:sinan_note/ui/features/reminders/view_models/reminder_permissions.dart';
+import 'package:sinan_note/ui/features/share/view_models/apex_share.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/ui/features/vault/view_models/vault_view_model.dart';
+import 'package:sinan_note/ui/features/widgets/view_models/home_widgets.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -122,6 +129,11 @@ void main() async {
   SyncScheduler(
       sync: sync, localWrites: [notes.localWrites, categories.localWrites]);
   unawaited(LegacyCleanup.run());
+  // الخطأ غير المتوقع في خدمة: رسالة للمستخدم من الواجهة
+  ApexErrorManager.onUnexpected = (operation) {
+    final context = navigatorKey.currentContext;
+    if (context != null) showUnexpectedError(context, operation);
+  };
   // خارج شجرة الويدجت (ويدجت الشاشة الرئيسية، نافذة البصمة) بلغة التطبيق
   AppStrings.configure(() {
     final context = navigatorKey.currentContext;
@@ -143,6 +155,11 @@ void main() async {
         Provider(create: (_) => EditorSessions(notes: notes)),
         Provider(create: (_) => ReminderPermissions()),
         Provider(create: (_) => AppLock()),
+        Provider(create: (_) => HomeWidgets()),
+        Provider(create: (_) => Diagnostics()),
+        Provider(create: (_) => AppStartup()),
+        Provider(create: (_) => CodeTools()),
+        Provider(create: (_) => ApexShare()),
         ChangeNotifierProvider(create: (_) => SelectedNoteProvider()),
         ChangeNotifierProvider(
             create: (_) => CategoriesProvider(categories: categories)),

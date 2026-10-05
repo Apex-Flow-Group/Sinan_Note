@@ -6,7 +6,6 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:sinan_note/domain/code/language_detector.dart';
 import 'package:sinan_note/domain/text/smart_analyzer.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/code/code_executor.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class EditorSmartController {
@@ -372,11 +371,6 @@ class EditorSmartController {
     return null;
   }
 
-  Future<String> executeCode(String code, String? language) async {
-    if (language == null) return 'Unable to detect language';
-    return await CodeExecutor.executeCode(code, language);
-  }
-
   String? detectLanguage(String code) => LanguageDetector.detectLanguage(code);
 
   String getExtensionForLanguage(String language) {
@@ -433,14 +427,8 @@ class EditorSmartController {
       );
       return;
     }
-    UnifiedNotificationService().show(
-      context: context,
-      message: '${l10n.executingCode} ($detectedLanguage)',
-      type: NotificationType.info,
-      duration: const Duration(seconds: 1),
-    );
-    final output = await executeCode(code, detectedLanguage);
-    if (!context.mounted) return;
+    // التشغيل المحلي معطّل لأسباب أمنية
+    final output = l10n.codeRunDisabled;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

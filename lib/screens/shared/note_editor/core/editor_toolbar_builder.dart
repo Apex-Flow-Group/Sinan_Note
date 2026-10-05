@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
@@ -12,8 +13,8 @@ import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatt
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
-import 'package:sinan_note/services/code/code_export_service.dart';
 import 'package:sinan_note/ui/core/theme/editor_palette.dart';
+import 'package:sinan_note/ui/features/editor/view_models/code_tools.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/svg_preview_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -243,8 +244,9 @@ class EditorToolbarBuilder {
                         .getCurrentTitle(l10nSnap?.newNoteTitle ?? 'code');
                     final code = coordinator.codeController!.text;
                     final lang = coordinator.detectedLanguage;
+                    final tools = context.read<CodeTools>();
                     try {
-                      final path = await CodeExportService.saveToDownloads(
+                      final path = await tools.saveToDownloads(
                         code: code,
                         language: lang,
                         fileName: title,

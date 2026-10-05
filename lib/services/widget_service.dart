@@ -133,6 +133,25 @@ class WidgetService {
     await HomeWidget.saveWidgetData<int>('checklist_completed', 0);
   }
 
+  /// يثبّت [note] في الويدجت المناسب: قائمة مهام أو ملاحظة.
+  Future<void> pin(Note note) async {
+    final id = note.id;
+    if (id == null) return;
+    if (note.isChecklist || note.noteType == 'checklist') {
+      final stats = _parseChecklistStats(note.content);
+      await updateChecklistWidget(
+        id,
+        note.title.isEmpty ? AppStrings.current.checklist : note.title,
+        note.content,
+        note.colorIndex,
+        totalItems: stats['total'] ?? 0,
+        completedItems: stats['completed'] ?? 0,
+      );
+    } else {
+      await updateNoteWidget(note);
+    }
+  }
+
   Future<void> updateNoteWidget(Note note) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 

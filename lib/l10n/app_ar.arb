@@ -962,5 +962,6 @@
   "vaultTooManyAttempts": "محاولات خاطئة كثيرة — حاول بعد {minutes} دقيقة",
   "waitHours": "{count} س",
   "waitMinutes": "{count} د",
-  "waitSeconds": "{count} ث"
+  "waitSeconds": "{count} ث",
+  "codeRunDisabled": "🔒 تشغيل الكود على الجهاز معطّل لأسباب أمنية.\n\nيمكنك الآن:\n• حفظ الكود كملف وتشغيله خارج التطبيق\n• استخدام مترجم على الإنترنت\n• نسخه إلى بيئة التطوير لديك"
 }

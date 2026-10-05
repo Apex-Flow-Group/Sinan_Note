@@ -5641,6 +5641,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}s'**
   String waitSeconds(int count);
+
+  /// No description provided for @codeRunDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'🔒 Running code locally is disabled for security.\n\nFor now you can:\n• Save the code as a file and run it externally\n• Use an online compiler\n• Copy it to your development environment'**
+  String get codeRunDisabled;
 }
 
 class _AppLocalizationsDelegate

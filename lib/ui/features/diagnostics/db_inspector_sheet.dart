@@ -1,82 +1,21 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
-// DB Inspector — يعرض تقرير كامل عن SQLite
-
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sinan_note/data/services/database/app_database.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sqflite/sqflite.dart';
 
-class DbInspectorService {
-  static Future<void> showReport(BuildContext context) async {
-    final report = await _buildReport();
-    if (!context.mounted) return;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SafeArea(
-        top: false,
-        child: _ReportSheet(report: report),
-      ),
-    );
-  }
-
-  static Future<Map<String, dynamic>> _buildReport() async {
-    final result = <String, dynamic>{};
-
-    // ── SQLite ─────────────────────────────────────────────────────────────
-    try {
-      final dbPath = await _getSqlitePath();
-      final exists = await File(dbPath).exists();
-      if (!exists) {
-        result['sqlite'] = {'error': 'File not found: $dbPath'};
-      } else {
-        final fileSize = await File(dbPath).length();
-        final db = await openDatabase(dbPath, readOnly: true);
-        final tables = await db
-            .rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
-        final counts = <String, int>{};
-        for (final t in tables) {
-          final name = t['name'] as String;
-          if (name.startsWith('sqlite_')) continue;
-          final r = await db.rawQuery('SELECT COUNT(*) as c FROM "$name"');
-          counts[name] = (r.first['c'] as int?) ?? 0;
-        }
-        Future<int> notesWhere(String flag) async =>
-            Sqflite.firstIntValue(await db
-                .rawQuery('SELECT COUNT(*) FROM notes WHERE $flag = 1')) ??
-            0;
-        result['notes_summary'] = {
-          'notes': counts['notes'] ?? 0,
-          'locked': await notesWhere('isLocked'),
-          'archived': await notesWhere('isArchived'),
-          'trashed': await notesWhere('isTrashed'),
-          'categories': counts['categories'] ?? 0,
-          'versions': counts['note_versions'] ?? 0,
-        };
-        // عناوين الملاحظات المقفلة مشفّرة؛ لا تُعرض
-        final sample = await db.rawQuery(
-            "SELECT id, CASE WHEN isLocked = 1 THEN '🔒' ELSE title END "
-            'AS title, noteType, isLocked FROM notes LIMIT 5');
-        await db.close();
-        result['sqlite'] = {
-          'path': dbPath,
-          'size_kb': (fileSize / 1024).toStringAsFixed(1),
-          'tables': counts,
-          'sample': sample,
-        };
-      }
-    } catch (e) {
-      result['sqlite'] = {'error': e.toString()};
-    }
-
-    return result;
-  }
-
-  static Future<String> _getSqlitePath() => AppDatabase.defaultPath();
+/// يعرض تقرير قاعدة البيانات في ورقة سفلية (أداة المطوّر).
+Future<void> showDbInspector(
+    BuildContext context, Map<String, dynamic> report) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => SafeArea(
+      top: false,
+      child: _ReportSheet(report: report),
+    ),
+  );
 }
 
 // ── Report Sheet ───────────────────────────────────────────────────────────

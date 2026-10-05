@@ -2970,4 +2970,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String waitSeconds(int count) {
     return '${count}s';
   }
+
+  @override
+  String get codeRunDisabled =>
+      '🔒 Running code locally is disabled for security.\n\nFor now you can:\n• Save the code as a file and run it externally\n• Use an online compiler\n• Copy it to your development environment';
 }

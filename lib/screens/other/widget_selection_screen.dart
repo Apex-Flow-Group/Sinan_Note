@@ -1,6 +1,5 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,8 +7,8 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
-import 'package:sinan_note/services/widget_service.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/features/widgets/view_models/home_widgets.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class WidgetSelectionScreen extends StatefulWidget {
@@ -95,19 +94,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
 
   Future<void> _selectNoteForWidget(Note note) async {
     final l10n = AppLocalizations.of(context)!;
-    if (widget.widgetType == 'checklist') {
-      final stats = _parseChecklistStats(note.content);
-      await WidgetService().updateChecklistWidget(
-        note.id ?? 0,
-        note.title.isEmpty ? l10n.checklist : note.title,
-        note.content,
-        note.colorIndex,
-        totalItems: stats['total'] ?? 0,
-        completedItems: stats['completed'] ?? 0,
-      );
-    } else {
-      await WidgetService().updateNoteWidget(note);
-    }
+    await context.read<HomeWidgets>().pin(note);
 
     if (!mounted) return;
     final title = note.title.isEmpty
@@ -121,37 +108,6 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
     );
 
     Navigator.pop(context);
-  }
-
-  Map<String, int> _parseChecklistStats(String content) {
-    try {
-      final decoded = content.isNotEmpty
-          ? (content.startsWith('[') || content.startsWith('{')
-              ? _parseJson(content)
-              : <dynamic>[])
-          : <dynamic>[];
-
-      List items = [];
-      if (decoded is Map && decoded.containsKey('items')) {
-        items = decoded['items'];
-      } else if (decoded is List) {
-        items = decoded;
-      }
-
-      final total = items.length;
-      final completed = items.where((item) => item['isDone'] == true).length;
-      return {'total': total, 'completed': completed};
-    } catch (e) {
-      return {'total': 0, 'completed': 0};
-    }
-  }
-
-  dynamic _parseJson(String content) {
-    try {
-      return const JsonDecoder().convert(content);
-    } catch (e) {
-      return null;
-    }
   }
 
   @override

@@ -2956,4 +2956,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String waitSeconds(int count) {
     return '$count ث';
   }
+
+  @override
+  String get codeRunDisabled =>
+      '🔒 تشغيل الكود على الجهاز معطّل لأسباب أمنية.\n\nيمكنك الآن:\n• حفظ الكود كملف وتشغيله خارج التطبيق\n• استخدام مترجم على الإنترنت\n• نسخه إلى بيئة التطوير لديك';
 }
