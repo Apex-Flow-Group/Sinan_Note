@@ -684,6 +684,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinnedOnly => 'المثبتة فقط';
 
   @override
+  String get sectionPinned => 'مثبت';
+
+  @override
+  String get sectionOthers => 'أخرى';
+
+  @override
   String get noCategory => 'بدون تصنيف';
 
   @override

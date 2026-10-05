@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -33,6 +33,8 @@ class NotesSliverView extends StatefulWidget {
 
 class _NotesSliverViewState extends State<NotesSliverView> {
   List<Note> _filteredNotes = [];
+  List<Note> _pinnedNotes = const [];
+  List<Note> _unpinnedNotes = const [];
   String _viewTypeName = 'listCompact';
   bool _hasMore = false;
   bool _isFiltering = false;
@@ -55,7 +57,7 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   @override
   void initState() {
     super.initState();
-    _filteredNotes = widget.filteredNotesNotifier.value;
+    _setNotes(widget.filteredNotesNotifier.value);
     _viewTypeName = widget.viewTypeNotifier.value;
     _hasMore = widget.hasMoreNotifier.value;
     _isFiltering = widget.isFilteringNotifier.value;
@@ -79,7 +81,14 @@ class _NotesSliverViewState extends State<NotesSliverView> {
   void _onHasMoreChanged() =>
       setState(() => _hasMore = widget.hasMoreNotifier.value);
   void _onNotesChanged() =>
-      setState(() => _filteredNotes = widget.filteredNotesNotifier.value);
+      setState(() => _setNotes(widget.filteredNotesNotifier.value));
+
+  void _setNotes(List<Note> notes) {
+    _filteredNotes = notes;
+    _pinnedNotes = notes.where((n) => n.isPinned).toList(growable: false);
+    _unpinnedNotes = notes.where((n) => !n.isPinned).toList(growable: false);
+  }
+
   void _onViewTypeChanged() =>
       setState(() => _viewTypeName = widget.viewTypeNotifier.value);
 
@@ -126,44 +135,113 @@ class _NotesSliverViewState extends State<NotesSliverView> {
         56 +
         8;
 
+    // عنوان واحد بلا مقابل لا يفصل شيئاً — القسمان يظهران فقط عند وجود الاثنين
+    if (_pinnedNotes.isEmpty || _unpinnedNotes.isEmpty) {
+      return _buildNotesSliver(_filteredNotes, bottomPadding);
+    }
+
+    final l10n = AppLocalizations.of(context);
+    return SliverMainAxisGroup(
+      slivers: [
+        _buildSectionLabel(
+            l10n?.sectionPinned ?? 'Pinned', Icons.push_pin_rounded),
+        _buildNotesSliver(_pinnedNotes, 0, showLoader: false, lazy: false),
+        _buildSectionLabel(
+            l10n?.sectionOthers ?? 'Others', Icons.sticky_note_2_rounded),
+        _buildNotesSliver(_unpinnedNotes, bottomPadding),
+      ],
+    );
+  }
+
+  Widget _buildSectionLabel(String label, IconData icon) {
+    final color =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45);
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 2),
+        child: Row(
+          children: [
+            Icon(icon, size: 13, color: color),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// [lazy] يجب أن يكون `false` لكل قسم ما عدا الأخير:
+  /// نسختان كسولتان من `SliverMasonryGrid` في نفس ScrollView تجمّدان التمرير
+  /// قبل نهاية القائمة. قسم المثبّتات صغير، فبناؤه دفعة واحدة رخيص.
+  Widget _buildNotesSliver(
+    List<Note> notes,
+    double bottomPadding, {
+    bool showLoader = true,
+    bool lazy = true,
+  }) {
+    final padding =
+        EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding);
+    final loader = showLoader && _hasMore;
+    final childCount = notes.length + (loader ? 1 : 0);
+
+    Widget item(int index, String source) {
+      if (index == notes.length) {
+        return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()));
+      }
+      return _buildCard(notes[index], source);
+    }
+
+    if (_viewType == ViewType.grid && !lazy) {
+      return SliverPadding(
+        padding: padding,
+        sliver: SliverToBoxAdapter(
+          child: MasonryGridView.count(
+            crossAxisCount: _getCrossAxisCount(context),
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            shrinkWrap: true,
+            primary: false,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: childCount,
+            itemBuilder: (context, index) => item(index, 'home_grid'),
+          ),
+        ),
+      );
+    }
+
     if (_viewType == ViewType.grid) {
       return SliverPadding(
-        padding:
-            EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding),
+        padding: padding,
         sliver: SliverMasonryGrid.count(
           crossAxisCount: _getCrossAxisCount(context),
           mainAxisSpacing: 6,
           crossAxisSpacing: 6,
-          childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index == _filteredNotes.length) {
-              return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()));
-            }
-            return _buildCard(_filteredNotes[index], 'home_grid');
-          },
+          childCount: childCount,
+          itemBuilder: (context, index) => item(index, 'home_grid'),
         ),
       );
     }
 
     return SliverPadding(
-      padding:
-          EdgeInsets.only(left: 4, right: 4, top: 4, bottom: bottomPadding),
+      padding: padding,
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            if (index == _filteredNotes.length) {
-              return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()));
-            }
-            return _buildCard(_filteredNotes[index], 'home_list');
-          },
-          childCount: _filteredNotes.length + (_hasMore ? 1 : 0),
+          (context, index) => item(index, 'home_list'),
+          childCount: childCount,
           findChildIndexCallback: (key) {
             if (key is! ValueKey<int>) return null;
-            final index = _filteredNotes.indexWhere((n) => n.id == key.value);
+            final index = notes.indexWhere((n) => n.id == key.value);
             return index == -1 ? null : index;
           },
           addAutomaticKeepAlives: false,

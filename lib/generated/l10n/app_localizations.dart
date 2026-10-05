@@ -1442,6 +1442,18 @@ abstract class AppLocalizations {
   /// **'Pinned Only'**
   String get pinnedOnly;
 
+  /// No description provided for @sectionPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get sectionPinned;
+
+  /// No description provided for @sectionOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get sectionOthers;
+
   /// No description provided for @noCategory.
   ///
   /// In en, this message translates to:

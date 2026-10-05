@@ -224,6 +224,8 @@
   "reminderNotes": "Reminder Notes",
   "checklists": "Checklists",
   "pinnedOnly": "Pinned Only",
+  "sectionPinned": "Pinned",
+  "sectionOthers": "Others",
   "noCategory": "No category",
   "decryptingVault": "Decrypting Vault...",
   "noLockedNotes": "No locked notes",
