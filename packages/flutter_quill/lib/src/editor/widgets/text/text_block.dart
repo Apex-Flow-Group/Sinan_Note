@@ -197,7 +197,7 @@ class EditableTextBlock extends StatelessWidget {
           ),
           TextLine(
             line: line,
-            textDirection: textDirection,
+            textDirection: nodeTextDirection,
             embedBuilder: embedBuilder,
             textSpanBuilder: textSpanBuilder,
             customStyleBuilder: customStyleBuilder,
@@ -212,7 +212,7 @@ class EditableTextBlock extends StatelessWidget {
           ),
           indentWidthBuilder(block, context, count, numberPointWidthBuilder),
           _getSpacingForLine(line, index, count, defaultStyles),
-          textDirection,
+          nodeTextDirection,
           textSelection,
           color,
           enableInteractiveSelection,

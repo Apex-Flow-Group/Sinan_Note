@@ -594,8 +594,8 @@ class QuillRawEditorState extends EditorState
         previousDirection = nodeTextDirection;
       }
       if (node is Line) {
-        final editableTextLine =
-            _getEditableTextLineFromNode(node, context, attrs);
+        final editableTextLine = _getEditableTextLineFromNode(
+            node, context, attrs, nodeTextDirection);
         result.add(Directionality(
             textDirection: nodeTextDirection, child: editableTextLine));
       } else if (node is Block) {
@@ -649,10 +649,13 @@ class QuillRawEditorState extends EditorState
   }
 
   EditableTextLine _getEditableTextLineFromNode(
-      Line node, BuildContext context, Map<String, Attribute<dynamic>> attrs) {
+      Line node,
+      BuildContext context,
+      Map<String, Attribute<dynamic>> attrs,
+      TextDirection lineDirection) {
     final textLine = TextLine(
       line: node,
-      textDirection: _textDirection,
+      textDirection: lineDirection,
       embedBuilder: widget.config.embedBuilder,
       textSpanBuilder: widget.config.textSpanBuilder,
       customStyleBuilder: widget.config.customStyleBuilder,
@@ -671,7 +674,7 @@ class QuillRawEditorState extends EditorState
         textLine,
         _getHorizontalSpacingForLine(node, _styles),
         _getVerticalSpacingForLine(node, _styles),
-        _textDirection,
+        lineDirection,
         controller.selection,
         widget.config.selectionColor,
         widget.config.enableInteractiveSelection,
