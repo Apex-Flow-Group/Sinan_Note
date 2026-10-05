@@ -8,6 +8,7 @@ import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/backup/backup_wizard_widgets.dart';
 import 'package:sinan_note/screens/shared/settings/backup_restore_flow.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -37,7 +38,6 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final scheme = Theme.of(context).colorScheme;
     final isWide = PlatformHelper.isWideDisplay(context);
 
@@ -57,31 +57,30 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           automaticallyImplyLeading: false,
           title: Text(
             isWide
-                ? (isArabic ? 'النسخ الاحتياطي والاستعادة' : 'Backup & Restore')
+                ? l10n.backupAndRestore
                 : _flow == null
-                    ? (isArabic ? 'النسخ الاحتياطي' : 'Backup & Restore')
+                    ? l10n.backupHomeTitle
                     : _flow == 'backup'
-                        ? (isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup')
-                        : (isArabic ? 'استعادة البيانات' : 'Restore Data'),
+                        ? l10n.createBackup
+                        : l10n.restoreDataTitle,
           ),
           centerTitle: true,
         ),
         body: _isLoading
-            ? _buildLoading(isArabic)
+            ? _buildLoading(l10n)
             : isWide
-                ? _buildWideLayout(l10n, isArabic, scheme)
+                ? _buildWideLayout(l10n, scheme)
                 : _flow == null
-                    ? _buildHome(l10n, isArabic, scheme)
+                    ? _buildHome(l10n, scheme)
                     : _flow == 'backup'
-                        ? _buildBackupFlow(l10n, isArabic, scheme)
-                        : _buildRestoreFlow(l10n, isArabic, scheme),
+                        ? _buildBackupFlow(l10n, scheme)
+                        : _buildRestoreFlow(l10n, scheme),
       ),
     );
   }
 
   // ── Wide Layout (Master-Details) ──────────────────────────────────────────
-  Widget _buildWideLayout(
-      AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
+  Widget _buildWideLayout(AppLocalizations l10n, ColorScheme scheme) {
     return Row(
       children: [
         // Master — قائمة الخيارات
@@ -94,24 +93,24 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
               Icon(Icons.shield_outlined, size: 48, color: scheme.primary),
               const SizedBox(height: 12),
               Text(
-                isArabic ? 'بياناتك في أمان' : 'Your data is safe',
-                style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                l10n.yourDataIsSafe,
+                style: context.text.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               BackupSideItem(
                 icon: Icons.cloud_upload_outlined,
-                label: isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup',
+                label: l10n.createBackup,
                 selected: _flow == 'backup',
                 color: scheme.primary,
                 onTap: () => setState(() => _flow = 'backup'),
               ),
               BackupSideItem(
                 icon: Icons.cloud_download_outlined,
-                label: isArabic ? 'استعادة البيانات' : 'Restore Data',
+                label: l10n.restoreDataTitle,
                 selected: _flow == 'restore',
-                color: Colors.green,
+                color: context.colors.success,
                 onTap: () => setState(() => _flow = 'restore'),
               ),
             ],
@@ -121,15 +120,15 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
         // Details — المحتوى
         Expanded(
           child: _flow == 'backup'
-              ? _buildBackupFlow(l10n, isArabic, scheme)
-              : _buildRestoreFlow(l10n, isArabic, scheme),
+              ? _buildBackupFlow(l10n, scheme)
+              : _buildRestoreFlow(l10n, scheme),
         ),
       ],
     );
   }
 
   // ── Home ──────────────────────────────────────────────────────────────────
-  Widget _buildHome(AppLocalizations l10n, bool isArabic, ColorScheme scheme) {
+  Widget _buildHome(AppLocalizations l10n, ColorScheme scheme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -138,36 +137,32 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           Icon(Icons.shield_outlined, size: 72, color: scheme.primary),
           const SizedBox(height: 16),
           Text(
-            isArabic ? 'بياناتك في أمان' : 'Your data is safe',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            l10n.yourDataIsSafe,
+            style: context.text.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            isArabic
-                ? 'احفظ نسخة من ملاحظاتك أو استعدها من نسخة سابقة'
-                : 'Save a copy of your notes or restore from a previous backup',
-            style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+            l10n.backupHomeSubtitle,
+            style: context.text.bodyMedium
+                ?.copyWith(color: scheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
           FlowCard(
             icon: Icons.cloud_upload_outlined,
             color: scheme.primary,
-            title: isArabic ? 'إنشاء نسخة احتياطية' : 'Create Backup',
-            subtitle: isArabic
-                ? 'صدّر ملاحظاتك كملف JSON أو قاعدة بيانات'
-                : 'Export your notes as JSON or database file',
+            title: l10n.createBackup,
+            subtitle: l10n.createBackupDesc,
             onTap: () => setState(() => _flow = 'backup'),
           ),
           const SizedBox(height: 16),
           FlowCard(
             icon: Icons.cloud_download_outlined,
-            color: Colors.green,
-            title: isArabic ? 'استعادة البيانات' : 'Restore Data',
-            subtitle: isArabic
-                ? 'استورد من ملف JSON أو قاعدة بيانات سابقة'
-                : 'Import from a JSON or database backup file',
+            color: context.colors.success,
+            title: l10n.restoreDataTitle,
+            subtitle: l10n.restoreDataDesc,
             onTap: () => setState(() => _flow = 'restore'),
           ),
           const SizedBox(height: 32),
@@ -187,13 +182,9 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    isArabic
-                        ? 'الملاحظات المشفرة في الخزنة لا تُصدَّر تلقائياً — اختر "تصدير كامل" لتضمينها'
-                        : 'Encrypted vault notes are not exported by default — choose "Full Export" to include them',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    l10n.vaultNotesNotExportedHint,
+                    style: context.text.labelMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -205,11 +196,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   }
 
   // ── Backup Flow ───────────────────────────────────────────────────────────
-  Widget _buildBackupFlow(
-    AppLocalizations l10n,
-    bool isArabic,
-    ColorScheme scheme,
-  ) {
+  Widget _buildBackupFlow(AppLocalizations l10n, ColorScheme scheme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -217,26 +204,24 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
         children: [
           BackupSectionHeader(
             icon: Icons.description_outlined,
-            label: isArabic ? 'تصدير JSON' : 'JSON Export',
+            label: l10n.exportJson,
             color: scheme.primary,
           ),
           const SizedBox(height: 12),
           BackupOptionTile(
             icon: Icons.note_outlined,
-            title: isArabic ? 'تصدير عادي' : 'Normal Export',
-            subtitle: isArabic
-                ? 'ملاحظاتك العادية فقط — نص قابل للقراءة في أي مكان'
-                : 'Regular notes only — readable anywhere',
+            title: l10n.normalExport,
+            subtitle: l10n.normalExportDesc,
             color: scheme.primary,
             actions: [
               BackupActionBtn(
                 icon: Icons.save_alt,
-                label: isArabic ? 'حفظ' : 'Save',
+                label: l10n.save,
                 onTap: () => _exportJson(includeVault: false, share: false),
               ),
               BackupActionBtn(
                 icon: Icons.share,
-                label: isArabic ? 'مشاركة' : 'Share',
+                label: l10n.share,
                 onTap: () => _exportJson(includeVault: false, share: true),
               ),
             ],
@@ -244,22 +229,18 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           const SizedBox(height: 12),
           BackupOptionTile(
             icon: Icons.lock_outlined,
-            title: isArabic
-                ? 'تصدير كامل (مع المشفرة)'
-                : 'Full Export (with encrypted)',
-            subtitle: isArabic
-                ? 'يشمل الملاحظات المشفرة كـ ciphertext — تحتاج مفتاح الخزنة للاستعادة'
-                : 'Includes encrypted notes as ciphertext — vault key needed to restore',
-            color: Colors.orange,
+            title: l10n.fullExportWithEncrypted,
+            subtitle: l10n.fullExportWithEncryptedDesc,
+            color: context.colors.vault,
             actions: [
               BackupActionBtn(
                 icon: Icons.save_alt,
-                label: isArabic ? 'حفظ' : 'Save',
+                label: l10n.save,
                 onTap: () => _exportJson(includeVault: true, share: false),
               ),
               BackupActionBtn(
                 icon: Icons.share,
-                label: isArabic ? 'مشاركة' : 'Share',
+                label: l10n.share,
                 onTap: () => _exportJson(includeVault: true, share: true),
               ),
             ],
@@ -267,26 +248,24 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           const SizedBox(height: 24),
           BackupSectionHeader(
             icon: Icons.storage_outlined,
-            label: isArabic ? 'تصدير قاعدة البيانات' : 'Database Export',
-            color: Colors.teal,
+            label: l10n.exportDatabase,
+            color: scheme.tertiary,
           ),
           const SizedBox(height: 12),
           BackupOptionTile(
             icon: Icons.storage_outlined,
-            title: isArabic ? 'ملف .db' : '.db File',
-            subtitle: isArabic
-                ? 'نسخة كاملة من قاعدة البيانات — أسرع استعادة'
-                : 'Full database copy — fastest restore',
-            color: Colors.teal,
+            title: l10n.dbFileExport,
+            subtitle: l10n.dbFileExportDesc,
+            color: scheme.tertiary,
             actions: [
               BackupActionBtn(
                 icon: Icons.save_alt,
-                label: isArabic ? 'حفظ' : 'Save',
+                label: l10n.save,
                 onTap: () => _exportDatabase(share: false),
               ),
               BackupActionBtn(
                 icon: Icons.share,
-                label: isArabic ? 'مشاركة' : 'Share',
+                label: l10n.share,
                 onTap: () => _exportDatabase(share: true),
               ),
             ],
@@ -297,11 +276,8 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
   }
 
   // ── Restore Flow ──────────────────────────────────────────────────────────
-  Widget _buildRestoreFlow(
-    AppLocalizations l10n,
-    bool isArabic,
-    ColorScheme scheme,
-  ) {
+  Widget _buildRestoreFlow(AppLocalizations l10n, ColorScheme scheme) {
+    final success = context.colors.success;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -309,15 +285,13 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
         children: [
           BackupOptionTile(
             icon: Icons.upload_file_outlined,
-            title: isArabic ? 'استيراد من JSON' : 'Import from JSON',
-            subtitle: isArabic
-                ? 'استورد من ملف .json — يدعم الدمج أو الاستبدال'
-                : 'Import from .json file — supports merge or replace',
-            color: Colors.green,
+            title: l10n.importFromJson,
+            subtitle: l10n.importFromJsonDesc,
+            color: success,
             actions: [
               BackupActionBtn(
                 icon: Icons.folder_open,
-                label: isArabic ? 'اختر ملف' : 'Choose File',
+                label: l10n.chooseFile,
                 onTap: () => _restoreJson(),
               ),
             ],
@@ -326,15 +300,13 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           // استعادة .db (SQLite) — النسخ القديمة بصيغة Isar تُرفض لأنها تتلف القاعدة
           BackupOptionTile(
             icon: Icons.storage_outlined,
-            title: isArabic ? 'استعادة قاعدة البيانات' : 'Restore Database',
-            subtitle: isArabic
-                ? 'استعد من ملف .db'
-                : 'Restore from a .db file',
-            color: Colors.purple,
+            title: l10n.restoreDatabase,
+            subtitle: l10n.restoreDatabaseDesc,
+            color: scheme.secondary,
             actions: [
               BackupActionBtn(
                 icon: Icons.folder_open,
-                label: isArabic ? 'اختر ملف' : 'Choose File',
+                label: l10n.chooseFile,
                 onTap: () => _restoreDatabase(),
               ),
             ],
@@ -343,21 +315,19 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.08),
+              color: success.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              border: Border.all(color: success.withValues(alpha: 0.3)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.auto_fix_high, size: 18, color: Colors.green),
+                Icon(Icons.auto_fix_high, size: 18, color: success),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    isArabic
-                        ? 'الملاحظات المشفرة تُفك تلقائياً عند توفر مفتاح الخزنة'
-                        : 'If the file contains encrypted notes and you have the vault key — they will be decrypted automatically',
-                    style: const TextStyle(fontSize: 12, color: Colors.green),
+                    l10n.encryptedNotesAutoDecryptHint,
+                    style: context.text.labelMedium?.copyWith(color: success),
                   ),
                 ),
               ],
@@ -368,13 +338,13 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
     );
   }
 
-  Widget _buildLoading(bool isArabic) => Center(
+  Widget _buildLoading(AppLocalizations l10n) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text(isArabic ? 'جاري المعالجة...' : 'Processing...'),
+            Text(l10n.processing),
           ],
         ),
       );

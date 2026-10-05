@@ -59,7 +59,7 @@ class _SyncSignInWidgetState extends State<SyncSignInWidget> {
             const SizedBox(height: 8),
             Text(
               _isUnsupportedPlatform
-                  ? 'المزامنة مع Google Drive غير متاحة حالياً على هذا النظام\nقيد التطوير'
+                  ? l10n.driveSyncUnsupportedPlatform
                   : l10n.syncTermsRegularNotes,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: _isUnsupportedPlatform
@@ -73,7 +73,7 @@ class _SyncSignInWidgetState extends State<SyncSignInWidget> {
               FilledButton.icon(
                 onPressed: null,
                 icon: const Icon(Icons.lock_clock_rounded),
-                label: const Text('قريباً'),
+                label: Text(l10n.soon),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,

@@ -9,6 +9,7 @@ import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_conflict_
 import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_progress_widget.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_sign_in_widget.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/widgets/sync_success_widget.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -128,7 +129,7 @@ class _GoogleDriveSyncPageContentState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            Icon(Icons.error_outline, size: 64, color: context.colors.danger),
             const SizedBox(height: 16),
             Text(
               l10n.syncFailed,
@@ -136,7 +137,7 @@ class _GoogleDriveSyncPageContentState
             ),
             const SizedBox(height: 8),
             Text(
-              controller.errorMessage ?? 'Unknown error',
+              controller.errorMessage ?? l10n.unknownError,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -144,9 +145,7 @@ class _GoogleDriveSyncPageContentState
             FilledButton.icon(
               onPressed: controller.retry,
               icon: const Icon(Icons.refresh),
-              label: Text(Localizations.localeOf(context).languageCode == 'ar'
-                  ? 'إعادة المحاولة'
-                  : 'Retry'),
+              label: Text(l10n.retry),
             ),
           ],
         ),

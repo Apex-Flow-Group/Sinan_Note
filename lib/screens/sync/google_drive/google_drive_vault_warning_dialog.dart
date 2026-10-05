@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class GoogleDriveVaultWarningDialog extends StatefulWidget {
   const GoogleDriveVaultWarningDialog({super.key});
@@ -24,16 +25,17 @@ class _GoogleDriveVaultWarningDialogState extends State<GoogleDriveVaultWarningD
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final vault = context.colors.vault;
 
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.info_outline, color: Colors.orange, size: 28),
+          Icon(Icons.info_outline, color: vault, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               l10n.disclaimer,
-              style: const TextStyle(fontSize: 18),
+              style: context.text.titleLarge,
             ),
           ),
         ],
@@ -47,13 +49,13 @@ class _GoogleDriveVaultWarningDialogState extends State<GoogleDriveVaultWarningD
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
+                color: vault.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange, width: 2),
+                border: Border.all(color: vault, width: 2),
               ),
               child: Text(
                 l10n.googleDriveVaultWarning,
-                style: const TextStyle(fontSize: 14, height: 1.6),
+                style: context.text.bodyMedium?.copyWith(height: 1.6),
               ),
             ),
             
@@ -65,7 +67,8 @@ class _GoogleDriveVaultWarningDialogState extends State<GoogleDriveVaultWarningD
               onChanged: (val) => setState(() => _dontShowAgain = val ?? false),
               title: Text(
                 l10n.dontShowAgain,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: context.text.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               controlAffinity: ListTileControlAffinity.leading,
               contentPadding: EdgeInsets.zero,
@@ -89,8 +92,8 @@ class _GoogleDriveVaultWarningDialogState extends State<GoogleDriveVaultWarningD
             }
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            foregroundColor: Colors.white,
+            backgroundColor: vault,
+            foregroundColor: context.colors.onVault,
           ),
           child: Text(l10n.continueAction),
         ),

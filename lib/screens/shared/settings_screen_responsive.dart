@@ -2,8 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
@@ -53,12 +51,6 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = Provider.of<SettingsProvider>(context);
-    final systemLocale =
-        View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system'
-        ? systemLocale
-        : settings.languageCode;
     final colorScheme = Theme.of(context).colorScheme;
 
     final sections = [
@@ -139,7 +131,7 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
                     duration: const Duration(milliseconds: 200),
                     child: KeyedSubtree(
                       key: ValueKey(_selectedIndex),
-                      child: _buildSection(_selectedIndex, currentLang),
+                      child: _buildSection(_selectedIndex),
                     ),
                   ),
                 ),
@@ -151,13 +143,13 @@ class _SettingsDesktopState extends State<_SettingsDesktop> {
     );
   }
 
-  Widget _buildSection(int index, String currentLang) {
+  Widget _buildSection(int index) {
     return switch (index) {
       0 => _wrap(const GeneralSection()),
       1 => _wrap(const SwipeSection()),
       2 => _wrap(const SecuritySection()),
-      3 => _wrap(DataSection(currentLang: currentLang)),
-      4 => _wrap(AboutSection(version: _version, currentLang: currentLang)),
+      3 => _wrap(const DataSection()),
+      4 => _wrap(AboutSection(version: _version)),
       _ => const SizedBox(),
     };
   }

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class GoogleDriveWidgets {
   static Widget buildAccountSection(
@@ -39,8 +40,9 @@ class GoogleDriveWidgets {
                   Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
-                          color: Colors.green, shape: BoxShape.circle)),
+                      decoration: BoxDecoration(
+                          color: context.colors.success,
+                          shape: BoxShape.circle)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -74,7 +76,8 @@ class GoogleDriveWidgets {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                          color: Colors.grey[400], shape: BoxShape.circle)),
+                          color: context.colors.muted,
+                          shape: BoxShape.circle)),
                   const SizedBox(width: 8),
                   Text(l10n.notSignedIn,
                       style: Theme.of(context).textTheme.bodyLarge),
@@ -158,7 +161,8 @@ class GoogleDriveWidgets {
     VoidCallback? onDownload,
     VoidCallback? onMerge,
   ) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final primary = context.scheme.primary;
+    final success = context.colors.success;
 
     void showUploadSheet() {
       showModalBottomSheet(
@@ -180,11 +184,11 @@ class GoogleDriveWidgets {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withValues(alpha: 0.1),
+                          color: primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.cloud_upload,
-                            color: Colors.blue, size: 28),
+                        child: Icon(Icons.cloud_upload,
+                            color: primary, size: 28),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -208,13 +212,11 @@ class GoogleDriveWidgets {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.06),
+                      color: primary.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      isAr
-                          ? 'سيتم رفع ملاحظاتك العادية إلى Drive.\nالخزنة المشفرة لا تُرفع أبداً.'
-                          : 'Your regular notes will be uploaded to Drive.\nEncrypted vault notes are never uploaded.',
+                      l10n.driveUploadNotice,
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
@@ -238,7 +240,7 @@ class GoogleDriveWidgets {
                             onUpload?.call();
                           },
                           icon: const Icon(Icons.cloud_upload, size: 18),
-                          label: Text(isAr ? 'رفع' : 'Upload'),
+                          label: Text(l10n.upload),
                         ),
                       ),
                     ],
@@ -273,11 +275,11 @@ class GoogleDriveWidgets {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.cloud_download,
-                            color: Colors.green, size: 28),
+                        child: Icon(Icons.cloud_download,
+                            color: success, size: 28),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -285,7 +287,7 @@ class GoogleDriveWidgets {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isAr ? 'جلب من Drive' : 'Download from Drive',
+                              l10n.downloadFromDrive,
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -293,9 +295,7 @@ class GoogleDriveWidgets {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              isAr
-                                  ? 'اختر طريقة الجلب'
-                                  : 'Choose how to download',
+                              l10n.chooseHowToDownload,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -309,13 +309,10 @@ class GoogleDriveWidgets {
                   _buildDownloadOption(
                     context: context,
                     icon: Icons.merge,
-                    iconColor: Colors.blue,
-                    title: isAr ? 'دمج ذكي' : 'Smart Merge',
-                    description: isAr
-                        ? 'يحتفظ بأحدث نسخة من كل ملاحظة.\nالأفضل للمزامنة بين أجهزة متعددة.'
-                        : 'Keeps the latest version of each note.\nBest for syncing across multiple devices.',
+                    iconColor: primary,
+                    title: l10n.smartMerge,
+                    description: l10n.smartMergeDriveDesc,
                     recommended: true,
-                    isAr: isAr,
                     onTap: () {
                       Navigator.pop(ctx);
                       onMerge?.call();
@@ -327,13 +324,10 @@ class GoogleDriveWidgets {
                   _buildDownloadOption(
                     context: context,
                     icon: Icons.download_for_offline,
-                    iconColor: Colors.orange,
-                    title: isAr ? 'استبدال كامل' : 'Full Replace',
-                    description: isAr
-                        ? 'يحذف كل الملاحظات المحلية ويستبدلها بنسخة Drive.\nاستخدم عند إعادة التثبيت فقط.'
-                        : 'Deletes all local notes and replaces with Drive.\nUse only when reinstalling the app.',
+                    iconColor: context.colors.warning,
+                    title: l10n.fullReplace,
+                    description: l10n.fullReplaceDriveDesc,
                     recommended: false,
-                    isAr: isAr,
                     onTap: () {
                       Navigator.pop(ctx);
                       onDownload?.call();
@@ -382,9 +376,9 @@ class GoogleDriveWidgets {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
+                    color: primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8)),
-                child: const Icon(Icons.cloud_upload, color: Colors.blue),
+                child: Icon(Icons.cloud_upload, color: primary),
               ),
               title: Text(l10n.uploadDatabase),
               subtitle: Text(l10n.uploadDatabaseDesc),
@@ -398,9 +392,9 @@ class GoogleDriveWidgets {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8)),
-                child: const Icon(Icons.cloud_download, color: Colors.green),
+                child: Icon(Icons.cloud_download, color: success),
               ),
               title: Text(l10n.downloadDatabase),
               subtitle: Text(l10n.downloadDatabaseDesc),
@@ -422,7 +416,7 @@ class GoogleDriveWidgets {
     bool isSignedIn,
     ValueChanged<bool>? onChanged,
   ) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final vault = context.colors.vault;
     return Column(
       children: [
         Card(
@@ -462,33 +456,29 @@ class GoogleDriveWidgets {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: 0.08),
+            color: vault.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+            border: Border.all(color: vault.withValues(alpha: 0.4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.lock, color: Colors.orange, size: 20),
+                  Icon(Icons.lock, color: vault, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    isArabic ? 'الخزنة المشفرة' : 'Encrypted Vault',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.orange),
+                    l10n.encryptedVault,
+                    style: TextStyle(fontWeight: FontWeight.bold, color: vault),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Text(
-                isArabic
-                    ? '• الخزنة محلية بالكامل — لا تُرفع أبداً إلى Google Drive.\n• لمزامنة الخزنة يجب فك تشفير الملاحظات ونقلها يدوياً.\n• التطبيق غير مسؤول عن فقدان محتوى الخزنة.'
-                    : '• The vault is fully local — never uploaded to Google Drive.\n• To sync vault notes, decrypt them manually first.\n• The app is not responsible for vault content loss.',
-                style: TextStyle(
-                  fontSize: 13,
+                l10n.vaultLocalOnlyNotice,
+                style: context.text.bodySmall?.copyWith(
                   height: 1.6,
-                  color: isDark ? Colors.grey[300] : Colors.grey[800],
+                  color: context.scheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -505,9 +495,10 @@ class GoogleDriveWidgets {
     required String title,
     required String description,
     required bool recommended,
-    required bool isAr,
     required VoidCallback onTap,
   }) {
+    final primary = context.scheme.primary;
+    final warning = context.colors.warning;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -516,14 +507,14 @@ class GoogleDriveWidgets {
         decoration: BoxDecoration(
           border: Border.all(
             color: recommended
-                ? Colors.blue.withValues(alpha: 0.5)
-                : Colors.orange.withValues(alpha: 0.4),
+                ? primary.withValues(alpha: 0.5)
+                : warning.withValues(alpha: 0.4),
             width: recommended ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(12),
           color: recommended
-              ? Colors.blue.withValues(alpha: 0.04)
-              : Colors.orange.withValues(alpha: 0.04),
+              ? primary.withValues(alpha: 0.04)
+              : warning.withValues(alpha: 0.04),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,13 +545,13 @@ class GoogleDriveWidgets {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.blue,
+                            color: primary,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            isAr ? 'موصى به' : 'Recommended',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 10),
+                            AppLocalizations.of(context)!.recommended,
+                            style: context.text.labelSmall
+                                ?.copyWith(color: context.scheme.onPrimary),
                           ),
                         ),
                       ],

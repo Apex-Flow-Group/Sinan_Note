@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 // ── Reusable Widgets ──────────────────────────────────────────────────────
 
@@ -50,18 +51,14 @@ class FlowCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: context.text.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: context.text.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -94,8 +91,7 @@ class BackupSectionHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
+          style: context.text.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: color,
           ),
@@ -143,18 +139,14 @@ class BackupOptionTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: context.text.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: context.text.labelMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -195,7 +187,7 @@ class BackupActionBtn extends StatelessWidget {
     return FilledButton.tonalIcon(
       onPressed: onTap,
       icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 13)),
+      label: Text(label, style: context.text.bodySmall),
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         minimumSize: Size.zero,

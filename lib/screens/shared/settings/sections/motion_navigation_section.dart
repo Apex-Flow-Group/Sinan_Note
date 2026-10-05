@@ -6,6 +6,7 @@ import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
+import 'package:sinan_note/ui/core/theme/settings_palette.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 class MotionNavigationSection extends StatelessWidget {
@@ -16,18 +17,17 @@ class MotionNavigationSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
     final primary = Theme.of(context).colorScheme.primary;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return SettingsSectionCard(
-      title: isAr ? 'الحركة والتنقل' : 'Motion & Navigation',
+      title: l10n.motionAndNavigation,
       icon: Icons.animation_rounded,
       children: [
         // ── Pull to Refresh ─────────────────────────────────────────
         ListTile(
           leading: Icon(Icons.swipe_down_rounded, color: primary),
-          title: Text(isAr ? 'سحب للتحديث' : 'Pull to Refresh'),
+          title: Text(l10n.pullToRefreshSetting),
           subtitle:
-              Text(_pullToRefreshSubtitle(context, settings.pullToRefreshMode)),
+              Text(_pullToRefreshSubtitle(l10n, settings.pullToRefreshMode)),
           onTap: () => _showPullToRefreshDialog(context, settings),
         ),
 
@@ -43,24 +43,23 @@ class MotionNavigationSection extends StatelessWidget {
     );
   }
 
-  String _pullToRefreshSubtitle(BuildContext context, String mode) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+  String _pullToRefreshSubtitle(AppLocalizations l10n, String mode) {
     switch (mode) {
       case 'full':
-        return isAr ? 'تحديث كامل التطبيق' : 'Full app refresh';
+        return l10n.fullAppRefresh;
       case 'normal':
-        return isAr ? 'تحديث الصفحة الرئيسية فقط' : 'Home page only';
+        return l10n.homePageOnlyRefresh;
       case 'disabled':
-        return isAr ? 'معطّل' : 'Disabled';
+        return l10n.disabled;
       default:
-        return isAr ? 'تحديث كامل التطبيق' : 'Full app refresh';
+        return l10n.fullAppRefresh;
     }
   }
 
   void _showSignInRequired(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    const googleBlue = Color(0xFF4285F4);
+    const googleBlue = SettingsPalette.googleBlue;
 
     showDialog<void>(
       context: context,
@@ -134,7 +133,7 @@ class MotionNavigationSection extends StatelessWidget {
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor: googleBlue,
-                        foregroundColor: Colors.white,
+                        foregroundColor: SettingsPalette.onGoogleBlue,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -155,7 +154,7 @@ class MotionNavigationSection extends StatelessWidget {
 
   void _showPullToRefreshDialog(
       BuildContext context, SettingsProvider settings) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -184,17 +183,15 @@ class MotionNavigationSection extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                isAr ? 'سحب للتحديث' : 'Pull to Refresh',
+                l10n.pullToRefreshSetting,
                 style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
               ),
               const SizedBox(height: 8),
               _PullRefreshOption(
-                title: isAr ? 'تحديث كامل التطبيق' : 'Full app refresh',
-                subtitle: isAr
-                    ? 'مزامنة + تحديث كل البيانات + إعادة بناء الواجهة'
-                    : 'Sync + reload all data + rebuild UI',
+                title: l10n.fullAppRefresh,
+                subtitle: l10n.fullAppRefreshDesc,
                 value: 'full',
                 currentValue: settings.pullToRefreshMode,
                 enabled: ctx.read<SyncViewModel>().isSignedIn,
@@ -207,10 +204,8 @@ class MotionNavigationSection extends StatelessWidget {
                     : null,
               ),
               _PullRefreshOption(
-                title: isAr ? 'تحديث الصفحة الرئيسية' : 'Home page refresh',
-                subtitle: isAr
-                    ? 'تحديث قائمة الملاحظات فقط'
-                    : 'Refresh notes list only',
+                title: l10n.homePageRefresh,
+                subtitle: l10n.homePageRefreshDesc,
                 value: 'normal',
                 currentValue: settings.pullToRefreshMode,
                 onTap: () {
@@ -219,9 +214,8 @@ class MotionNavigationSection extends StatelessWidget {
                 },
               ),
               _PullRefreshOption(
-                title: isAr ? 'معطّل' : 'Disabled',
-                subtitle:
-                    isAr ? 'تعطيل السحب للتحديث' : 'Disable pull to refresh',
+                title: l10n.disabled,
+                subtitle: l10n.disablePullToRefresh,
                 value: 'disabled',
                 currentValue: settings.pullToRefreshMode,
                 onTap: () {

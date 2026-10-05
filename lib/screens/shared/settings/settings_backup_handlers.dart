@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/domain/errors.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/settings/backup_restore_flow.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/backup/view_models/backup_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -84,7 +85,6 @@ class SettingsBackupHandlers {
 
   static void showExportDialog(
       BuildContext context, String lang, AppLocalizations l10n) {
-    final isArabic = lang == 'ar';
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -95,10 +95,8 @@ class SettingsBackupHandlers {
           children: [
             // ── تصدير عادي ──
             Text(
-              isArabic
-                  ? 'تصدير عادي (بدون مشفرة)'
-                  : 'Normal export (no encrypted)',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              l10n.normalExportNoEncrypted,
+              style: ctx.text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _actionButton(
@@ -154,23 +152,19 @@ class SettingsBackupHandlers {
             const Divider(height: 24),
             // ── تصدير كامل ──
             Text(
-              isArabic
-                  ? 'تصدير كامل (مع المشفرة)'
-                  : 'Full export (with encrypted)',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              l10n.fullExportWithEncrypted,
+              style: ctx.text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             Container(
               margin: const EdgeInsets.only(top: 6, bottom: 8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
+                color: ctx.colors.vault.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                isArabic
-                    ? 'الملاحظات المشفرة ستُصدَّر كـ ciphertext — تحتاج مفتاح الخزنة للاستعادة'
-                    : 'Encrypted notes exported as ciphertext — vault key needed to restore',
-                style: const TextStyle(fontSize: 12, color: Colors.orange),
+                l10n.encryptedExportedAsCiphertext,
+                style: ctx.text.labelMedium?.copyWith(color: ctx.colors.vault),
               ),
             ),
             _actionButton(

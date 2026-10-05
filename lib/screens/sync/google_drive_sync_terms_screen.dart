@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class GoogleDriveSyncTermsScreen extends StatefulWidget {
   const GoogleDriveSyncTermsScreen({super.key});
@@ -18,10 +19,11 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = context.scheme;
+    final colors = context.colors;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -42,120 +44,110 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.1),
+                          color: colors.warning.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.cloud_sync,
                           size: 50,
-                          color: Colors.orange,
+                          color: colors.warning,
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Title
                     Text(
                       l10n.syncTermsTitle,
-                      style: const TextStyle(
-                        fontSize: 24,
+                      style: context.text.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Regular notes info
                     _buildInfoCard(
                       icon: Icons.note,
                       title: l10n.syncTermsRegularNotes,
-                      color: Colors.blue,
-                      isDark: isDark,
+                      color: colors.info,
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Vault notes info — الخزنة محلية دائماً
                     _buildInfoCard(
                       icon: Icons.lock,
-                      title: Localizations.localeOf(context).languageCode == 'ar'
-                          ? 'الخزنة المشفرة: محلية بالكامل — لا تُرفع أبداً'
-                          : 'Encrypted Vault: fully local — never uploaded',
-                      color: Colors.orange,
-                      isDark: isDark,
+                      title: l10n.syncTermsVaultLocalOnly,
+                      color: colors.vault,
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Important notes
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
+                        color: colors.warning.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange, width: 2),
+                        border: Border.all(color: colors.warning, width: 2),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             l10n.syncTermsGoogleAccess,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: context.text.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             l10n.syncTermsRecommendation,
-                            style: const TextStyle(fontSize: 14, height: 1.5),
+                            style: context.text.bodyMedium?.copyWith(height: 1.5),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.syncTermsGoogleTOS,
-                            style: const TextStyle(fontSize: 14, height: 1.5),
+                            style: context.text.bodyMedium?.copyWith(height: 1.5),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Compression info
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
+                        color: colors.info.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.compress, color: Colors.blue, size: 30),
+                          Icon(Icons.compress, color: colors.info, size: 30),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Text(
                               l10n.compressionEnabled,
-                              style: const TextStyle(fontSize: 14),
+                              style: context.text.bodyMedium,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Privacy policy link
                     Center(
                       child: TextButton.icon(
                         onPressed: () async {
-                          final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-                          final url = isArabic
-                              ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
-                              : 'https://apexflow.now/en/projects/sinan-note/privacy';
                           await const MethodChannel('com.apexflow.app.sinan/launcher')
-                              .invokeMethod('launch', url);
+                              .invokeMethod('launch', l10n.privacyPolicyUrl);
                         },
                         icon: const Icon(Icons.privacy_tip),
                         label: Text(l10n.readPrivacyPolicyLink),
@@ -170,10 +162,10 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
             Container(
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                color: scheme.surfaceContainer,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: colors.shadow,
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -202,15 +194,14 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
                       icon: const Icon(Icons.check_circle),
                       label: Text(
                         l10n.agreeAndEnable,
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: context.text.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey,
+                        backgroundColor: colors.success,
+                        foregroundColor: scheme.surface,
+                        disabledBackgroundColor: scheme.surfaceContainerHighest,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -230,7 +221,6 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
     required IconData icon,
     required String title,
     required Color color,
-    required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -246,10 +236,9 @@ class _GoogleDriveSyncTermsScreenState extends State<GoogleDriveSyncTermsScreen>
           Expanded(
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 14,
+              style: context.text.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: context.scheme.onSurface,
               ),
             ),
           ),

@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class SyncVaultWarningWidget extends StatefulWidget {
   const SyncVaultWarningWidget({super.key});
@@ -50,10 +51,10 @@ class _SyncVaultWarningWidgetState extends State<SyncVaultWarningWidget> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
+                color: context.colors.vault.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.orange.withValues(alpha: 0.3),
+                  color: context.colors.vault.withValues(alpha: 0.3),
                   width: 2,
                 ),
               ),
@@ -99,7 +100,8 @@ class _SyncVaultWarningWidgetState extends State<SyncVaultWarningWidget> {
                   child: FilledButton(
                     onPressed: _handleContinue,
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: context.colors.vault,
+                      foregroundColor: context.colors.onVault,
                     ),
                     child: Text(l10n.continueAction),
                   ),

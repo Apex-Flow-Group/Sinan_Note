@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class SyncSuccessWidget extends StatefulWidget {
   const SyncSuccessWidget({super.key});
@@ -27,6 +28,7 @@ class _SyncSuccessWidgetState extends State<SyncSuccessWidget> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final success = context.colors.success;
 
     return Center(
       child: Column(
@@ -36,13 +38,13 @@ class _SyncSuccessWidgetState extends State<SyncSuccessWidget> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
+              color: success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.check_circle,
               size: 64,
-              color: Colors.green,
+              color: success,
             ),
           ),
 
@@ -52,7 +54,7 @@ class _SyncSuccessWidgetState extends State<SyncSuccessWidget> {
           Text(
             l10n.syncSuccess,
             style: theme.textTheme.titleLarge?.copyWith(
-              color: Colors.green,
+              color: success,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class SettingsUtils {
@@ -70,24 +71,24 @@ class SettingsUtils {
     }
   }
 
-  static Color getSwipeActionColor(String action) {
+  static Color getSwipeActionColor(BuildContext context, String action) {
     switch (action) {
       case 'delete':
-        return const Color(0xFFE53935); // أحمر
+        return context.colors.danger;
       case 'archive':
-        return const Color(0xFF1E88E5); // أزرق
+        return context.colors.info;
       case 'share':
-        return const Color(0xFF43A047); // أخضر
+        return context.colors.success;
       case 'reminder':
-        return const Color(0xFFF57C00); // برتقالي
+        return context.colors.warning;
       case 'category':
-        return const Color(0xFF8E24AA); // بنفسجي
+        return context.scheme.secondary;
       case 'duplicate':
-        return const Color(0xFF00897B); // تيل
+        return context.scheme.tertiary;
       case 'custom':
-        return const Color(0xFFFFB300); // ذهبي
+        return context.colors.gold;
       default:
-        return const Color(0xFFE53935);
+        return context.colors.danger;
     }
   }
 
@@ -107,7 +108,7 @@ class SettingsUtils {
   }
 
   static void showDiagnostics(
-      BuildContext context, AppLocalizations l10n, String lang) async {
+      BuildContext context, AppLocalizations l10n) async {
     final rawLog = await ApexDiagnosticsEngine().getErrorLog();
     final log = rawLog == 'لا توجد أخطاء مسجلة' ? l10n.noErrorsLogged : rawLog;
     if (!context.mounted) return;
@@ -119,7 +120,8 @@ class SettingsUtils {
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: SelectableText(log,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 10)),
+                style: context.text.labelSmall
+                    ?.copyWith(fontFamily: 'monospace')),
           ),
         ),
         actions: [
@@ -150,10 +152,9 @@ class SettingsUtils {
       padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 8),
       child: Text(
         title,
-        style: TextStyle(
-          fontSize: 14,
+        style: context.text.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.primary,
+          color: context.scheme.primary,
         ),
       ),
     );

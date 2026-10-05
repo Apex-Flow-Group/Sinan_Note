@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/sync/google_drive_sync/google_drive_sync_controller.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class SyncConflictWidget extends StatelessWidget {
   const SyncConflictWidget({super.key});
@@ -54,7 +55,7 @@ class SyncConflictWidget extends StatelessWidget {
             _buildCountCard(
               context,
               icon: Icons.phone_android,
-              color: Colors.blue,
+              color: theme.colorScheme.primary,
               label: l10n.onDevice,
               count: controller.localNotesCount,
             ),
@@ -65,7 +66,7 @@ class SyncConflictWidget extends StatelessWidget {
             _buildCountCard(
               context,
               icon: Icons.cloud,
-              color: Colors.green,
+              color: context.colors.success,
               label: l10n.onDrive,
               count: controller.driveNotesCount,
             ),

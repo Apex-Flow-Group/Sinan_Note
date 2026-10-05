@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class FontFamilySheet extends StatefulWidget {
   final SettingsProvider settings;
@@ -28,7 +29,6 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
     final cs = Theme.of(context).colorScheme;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     final fonts = [
       ('system', l10n.fontFamilySystem, l10n.fontFamilySystemDesc),
@@ -49,7 +49,7 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
               width: 40, height: 4,
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: Colors.grey[400],
+                color: cs.outlineVariant,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -61,7 +61,8 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
                   const Icon(Icons.font_download_outlined, size: 20),
                   const SizedBox(width: 8),
                   Text(l10n.fontFamily,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: context.text.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold)),
                   const Spacer(),
                   IconButton(
                     icon: Icon(Icons.check_rounded, color: cs.primary),
@@ -91,10 +92,9 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        isAr ? 'سنان' : 'Sinan',
-                        style: TextStyle(
+                        l10n.fontSampleWord,
+                        style: context.text.bodyMedium?.copyWith(
                           fontFamily: itemFont,
-                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: isSelected ? cs.primary : cs.onSurface,
                         ),
@@ -113,9 +113,8 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
                             ),
                           ),
                           Text(f.$3,
-                            style: TextStyle(
+                            style: context.text.labelMedium?.copyWith(
                               fontFamily: itemFont,
-                              fontSize: 12,
                               color: cs.onSurface.withValues(alpha: 0.55),
                             ),
                           ),
@@ -145,20 +144,18 @@ class _FontFamilySheetState extends State<FontFamilySheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'سنان نوت — رفيقك الحاد والموثوق',
-                      style: TextStyle(
+                      l10n.fontSampleArabic,
+                      style: context.text.titleSmall?.copyWith(
                         fontFamily: previewFont,
-                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Sinan Note — Your sharp and reliable companion',
-                      style: TextStyle(
+                      l10n.fontSampleLatin,
+                      style: context.text.bodySmall?.copyWith(
                         fontFamily: previewFont,
-                        fontSize: 13,
                         color: cs.onSurface.withValues(alpha: 0.6),
                       ),
                     ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
@@ -14,7 +15,7 @@ class BackupOptionsDialog {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('النسخ الاحتياطي'),
+        title: Text(l10n.backup),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -27,7 +28,7 @@ class BackupOptionsDialog {
                     label: Text(l10n.googleDrive),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: Colors.grey,
+                      backgroundColor: ctx.scheme.surfaceContainerHighest,
                     ),
                     onPressed: () {
                       Navigator.pop(ctx);
@@ -35,8 +36,7 @@ class BackupOptionsDialog {
                         context: context,
                         builder: (dialogCtx) => AlertDialog(
                           title: Text(l10n.googleDrive),
-                          content: const Text(
-                              'خدمات Google Drive ستكون متاحة قريباً في التحديث القادم.'),
+                          content: Text(l10n.googleDriveComingSoon),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(dialogCtx),
@@ -54,14 +54,13 @@ class BackupOptionsDialog {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.orange,
+                        color: ctx.scheme.tertiary,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'قريباً',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
+                      child: Text(
+                        l10n.soon,
+                        style: ctx.text.labelSmall?.copyWith(
+                            color: ctx.scheme.onTertiary,
                             fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -83,7 +82,7 @@ class BackupOptionsDialog {
                       .map((n) => '${n.title}\n${n.plainText}\n---')
                       .join('\n\n');
                   CustomShareSheet.show(context, backup,
-                      subject: 'Sinan Note Backup - ${allNotes.length} ملاحظة');
+                      subject: l10n.notesBackupShareSubject(allNotes.length));
                 } catch (e) {
                   if (!context.mounted) return;
                   UnifiedNotificationService().show(
@@ -97,7 +96,7 @@ class BackupOptionsDialog {
             const SizedBox(height: 10),
             ElevatedButton.icon(
               icon: const Icon(Icons.backup),
-              label: const Text('خدمات النسخ الاحتياطي'),
+              label: Text(l10n.backupServices),
               style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50)),
               onPressed: () {
@@ -105,9 +104,8 @@ class BackupOptionsDialog {
                 showDialog(
                   context: context,
                   builder: (dialogCtx) => AlertDialog(
-                    title: const Text('خدمات النسخ الاحتياطي'),
-                    content: const Text(
-                        'خدمات النسخ الاحتياطي والاستعادة ستكون متاحة قريباً في التحديث القادم.'),
+                    title: Text(l10n.backupServices),
+                    content: Text(l10n.backupServicesComingSoon),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogCtx),

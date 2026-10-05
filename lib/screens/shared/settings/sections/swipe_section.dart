@@ -8,6 +8,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/settings/settings_dialogs.dart';
 import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class SwipeSection extends StatelessWidget {
   const SwipeSection({super.key});
@@ -16,14 +17,8 @@ class SwipeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
-    final systemLocale =
-        View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system'
-        ? systemLocale
-        : settings.languageCode;
-
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final primary = Theme.of(context).colorScheme.primary;
+    final muted = context.colors.muted;
 
     final isDesktop = PlatformHelper.shouldUseDesktopLayout(context);
 
@@ -37,14 +32,13 @@ class SwipeSection extends StatelessWidget {
             child: Row(
               children: [
                 Icon(Icons.phone_android_rounded,
-                    size: 16, color: Colors.grey[500]),
+                    size: 16, color: muted),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.swipeGesturesMobileHint,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
+                    style: context.text.labelMedium?.copyWith(
+                      color: muted,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -68,16 +62,15 @@ class SwipeSection extends StatelessWidget {
                         children: [
                           Icon(Icons.search_rounded, color: primary),
                           const SizedBox(width: 16),
-                          Text(
-                              isAr ? 'شريط البحث بالرئيسية' : 'Home search bar',
+                          Text(l10n.homeSearchBar,
                               style: Theme.of(context).textTheme.bodyLarge),
                         ],
                       ),
                       const SizedBox(height: 8),
                       _ToggleButtons(
                         value: settings.hideSearchOnScroll,
-                        labelFalse: isAr ? 'ثابت' : 'Fixed',
-                        labelTrue: isAr ? 'متحرك' : 'Animated',
+                        labelFalse: l10n.barFixed,
+                        labelTrue: l10n.barAnimated,
                         onChanged: settings.setHideSearchOnScroll,
                       ),
                     ],
@@ -95,18 +88,15 @@ class SwipeSection extends StatelessWidget {
                         children: [
                           Icon(Icons.more_horiz_rounded, color: primary),
                           const SizedBox(width: 16),
-                          Text(
-                              isAr
-                                  ? 'شريط التنقل السفلي'
-                                  : 'Bottom navigation bar',
+                          Text(l10n.bottomNavigationBar,
                               style: Theme.of(context).textTheme.bodyLarge),
                         ],
                       ),
                       const SizedBox(height: 8),
                       _ToggleButtons(
                         value: settings.hideNavOnScroll,
-                        labelFalse: isAr ? 'ثابت' : 'Fixed',
-                        labelTrue: isAr ? 'متحرك' : 'Animated',
+                        labelFalse: l10n.barFixed,
+                        labelTrue: l10n.barAnimated,
                         onChanged: settings.setHideNavOnScroll,
                       ),
                     ],
@@ -135,9 +125,9 @@ class SwipeSection extends StatelessWidget {
             trailing: Icon(
                 SettingsUtils.getSwipeActionIcon(settings.swipeRightAction),
                 color: SettingsUtils.getSwipeActionColor(
-                    settings.swipeRightAction)),
-            onTap: () => SettingsDialogs.showSwipeActionDialog(
-                context, settings, true, currentLang),
+                    context, settings.swipeRightAction)),
+            onTap: () =>
+                SettingsDialogs.showSwipeActionDialog(context, settings, true),
           ),
           ListTile(
             contentPadding:
@@ -149,9 +139,9 @@ class SwipeSection extends StatelessWidget {
             trailing: Icon(
                 SettingsUtils.getSwipeActionIcon(settings.swipeLeftAction),
                 color: SettingsUtils.getSwipeActionColor(
-                    settings.swipeLeftAction)),
-            onTap: () => SettingsDialogs.showSwipeActionDialog(
-                context, settings, false, currentLang),
+                    context, settings.swipeLeftAction)),
+            onTap: () =>
+                SettingsDialogs.showSwipeActionDialog(context, settings, false),
           ),
           if (settings.swipeRightAction == 'custom' ||
               settings.swipeLeftAction == 'custom')
@@ -161,7 +151,7 @@ class SwipeSection extends StatelessWidget {
               leading: Icon(Icons.bolt_rounded, color: primary),
               title: Text(l10n.custom),
               subtitle: Text(
-                  '${settings.swipeCustomActions.length} ${l10n.selected}'),
+                  l10n.selectedCount(settings.swipeCustomActions.length)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => SettingsDialogs.showCustomActionsDialog(
                   context, settings, l10n),
@@ -266,8 +256,7 @@ class _Btn extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12,
+          style: context.text.labelMedium?.copyWith(
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
             color: selected ? cs.primary : cs.onSurfaceVariant,
           ),

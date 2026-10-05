@@ -7,66 +7,6 @@ import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class BackupDialogs {
-  static Future<bool?> showEncryptionAgreement(
-    BuildContext context,
-    AppLocalizations l10n,
-    String lang,
-    int lockedCount,
-  ) {
-    bool agreed = false;
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Row(
-            children: [
-              const Icon(Icons.info_outline, color: Colors.orange, size: 22),
-              const SizedBox(width: 8),
-              Expanded(
-                  child: Text(l10n.disclaimer,
-                      style: const TextStyle(fontSize: 16))),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                lang == 'ar'
-                    ? 'لديك $lockedCount ملاحظة مقفلة.\n\nيرجى الاحتفاظ بالمفتاح الأساسي (Recovery Code)، ستحتاجه لفتح الملاحظات المقفلة.'
-                    : 'You have $lockedCount locked notes.\n\nPlease keep your Master Key (Recovery Code), you will need it to unlock your notes.',
-                style: const TextStyle(fontSize: 14, height: 1.5),
-              ),
-              const SizedBox(height: 16),
-              CheckboxListTile(
-                value: agreed,
-                onChanged: (val) => setDialogState(() => agreed = val ?? false),
-                title: Text(
-                  lang == 'ar' ? 'موافق' : 'I Agree',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(l10n.cancel)),
-            ElevatedButton(
-              onPressed: agreed ? () => Navigator.pop(ctx, true) : null,
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: agreed ? Colors.orange : Colors.grey),
-              child: Text(l10n.continueAction),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// اختيار دمج / استبدال / إلغاء عند الاستعادة فوق ملاحظات موجودة.
   /// يُرجع 'merge' أو 'replace' أو 'cancel' (أو null عند الإغلاق).
   static Future<String?> showActionDialog(

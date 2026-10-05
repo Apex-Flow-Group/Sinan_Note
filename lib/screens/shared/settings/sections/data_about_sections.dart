@@ -11,12 +11,12 @@ import 'package:sinan_note/screens/shared/backup_wizard_screen.dart';
 import 'package:sinan_note/screens/shared/settings/settings_utils.dart';
 import 'package:sinan_note/screens/shared/settings/widgets/settings_section_card.dart';
 import 'package:sinan_note/services/storage/db_inspector_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_dialog.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 
 class DataSection extends StatelessWidget {
-  final String currentLang;
-  const DataSection({super.key, required this.currentLang});
+  const DataSection({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +26,9 @@ class DataSection extends StatelessWidget {
       icon: Icons.storage_rounded,
       children: [
         ListTile(
-          leading: const Icon(Icons.backup_outlined, color: Color(0xFF2E7D32)),
-          title: Text(currentLang == 'ar'
-              ? 'النسخ الاحتياطي والاستعادة'
-              : 'Backup & Restore'),
-          subtitle: Text(currentLang == 'ar'
-              ? 'تصدير واستيراد ملاحظاتك'
-              : 'Export and import your notes'),
+          leading: Icon(Icons.backup_outlined, color: context.colors.success),
+          title: Text(l10n.backupAndRestore),
+          subtitle: Text(l10n.backupAndRestoreDesc),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => AppDialog.show(context, const BackupWizardScreen()),
         ),
@@ -43,9 +39,7 @@ class DataSection extends StatelessWidget {
 
 class AboutSection extends StatelessWidget {
   final String version;
-  final String currentLang;
-  const AboutSection(
-      {super.key, required this.version, required this.currentLang});
+  const AboutSection({super.key, required this.version});
 
   @override
   Widget build(BuildContext context) {
@@ -64,12 +58,9 @@ class AboutSection extends StatelessWidget {
         ListTile(
           leading: Icon(Icons.share, color: primary),
           title: Text(l10n.shareApp),
-          onTap: () {
-            final msg = currentLang == 'ar'
-                ? 'جرّب Sinan Note — تطبيق الملاحظات الذكي والآمن! تشفير AES-256 ، محرر كود، قوائم مهام وتذكيرات. حمّله مجاناً من Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919'
-                : 'Try Sinan Note — The smart & secure notes app! AES-256 encryption, code editor, checklists & reminders. Free on Google Play:\nhttps://play.google.com/store/apps/dev?id=5409981776310932919';
-            CustomShareSheet.show(context, msg, appShare: true);
-          },
+          onTap: () => CustomShareSheet.show(
+              context, l10n.shareAppMessage,
+              appShare: true),
         ),
         ListTile(
           leading: Icon(Icons.info_outline, color: primary),
@@ -79,32 +70,32 @@ class AboutSection extends StatelessWidget {
         ),
         if (kDebugMode)
           ListTile(
-            leading: const Icon(Icons.bug_report, color: Colors.red),
+            leading: Icon(Icons.bug_report, color: context.colors.danger),
             title: Text(l10n.diagnostics),
             subtitle: Text(l10n.developersOnly),
-            onTap: () =>
-                SettingsUtils.showDiagnostics(context, l10n, currentLang),
-          ),
-        if (kDebugMode)
-          ListTile(
-            leading: const Icon(Icons.storage_rounded, color: Colors.orange),
-            title: const Text('DB Inspector'),
-            subtitle: const Text('SQLite report'),
-            onTap: () => DbInspectorService.showReport(context),
+            onTap: () => SettingsUtils.showDiagnostics(context, l10n),
           ),
         if (kDebugMode)
           ListTile(
             leading:
-                const Icon(Icons.celebration_rounded, color: Colors.purple),
-            title: const Text('What\'s New Dialog'),
-            subtitle: const Text('Preview the dialog'),
+                Icon(Icons.storage_rounded, color: context.colors.warning),
+            title: Text(l10n.dbInspector),
+            subtitle: Text(l10n.dbInspectorDesc),
+            onTap: () => DbInspectorService.showReport(context),
+          ),
+        if (kDebugMode)
+          ListTile(
+            leading: Icon(Icons.celebration_rounded,
+                color: context.scheme.secondary),
+            title: Text(l10n.whatsNewDialogPreview),
+            subtitle: Text(l10n.whatsNewDialogPreviewDesc),
             onTap: () => WhatsNewDialog.show(context),
           ),
         if (kDebugMode)
           ListTile(
-            leading: const Icon(Icons.tour_rounded, color: Colors.teal),
-            title: const Text('Tour Screen'),
-            subtitle: const Text('Preview onboarding tour'),
+            leading: Icon(Icons.tour_rounded, color: context.scheme.tertiary),
+            title: Text(l10n.tourScreenPreview),
+            subtitle: Text(l10n.tourScreenPreviewDesc),
             onTap: () => AppDialog.show(context, const TourScreen()),
           ),
       ],

@@ -8,6 +8,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/sync/google_drive/google_drive_handlers.dart';
 import 'package:sinan_note/screens/sync/google_drive/google_drive_widgets.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -161,12 +162,16 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     bool isSignedIn,
     String? userEmail,
   ) {
+    final scheme = context.scheme;
+    final onCard = scheme.onPrimary;
+    final onCardDim = onCard.withValues(alpha: 0.7);
+
     if (isSignedIn) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade600, Colors.blue.shade900],
+            colors: [scheme.primary, scheme.onPrimaryContainer],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -176,14 +181,13 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.cloud_done, color: Colors.white, size: 28),
+                Icon(Icons.cloud_done, color: onCard, size: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.account,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                    style: context.text.titleLarge?.copyWith(
+                      color: onCard,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -192,7 +196,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: onCard.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -201,13 +205,13 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                       Container(
                           width: 7,
                           height: 7,
-                          decoration: const BoxDecoration(
-                              color: Color(0xFF69F0AE),
+                          decoration: BoxDecoration(
+                              color: context.colors.success,
                               shape: BoxShape.circle)),
                       const SizedBox(width: 5),
-                      const Text('Connected',
-                          style:
-                              TextStyle(fontSize: 11, color: Colors.white70)),
+                      Text(l10n.driveConnected,
+                          style: context.text.labelSmall
+                              ?.copyWith(color: onCardDim)),
                     ],
                   ),
                 ),
@@ -216,13 +220,12 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.email_outlined,
-                    color: Colors.white70, size: 16),
+                Icon(Icons.email_outlined, color: onCardDim, size: 16),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     userEmail ?? '',
-                    style: const TextStyle(fontSize: 13, color: Colors.white70),
+                    style: context.text.bodySmall?.copyWith(color: onCardDim),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -230,7 +233,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
                   onPressed: _handleSignOut,
                   child: Text(l10n.signOut,
                       style:
-                          const TextStyle(color: Colors.white70, fontSize: 13)),
+                          context.text.bodySmall?.copyWith(color: onCardDim)),
                 ),
               ],
             ),
@@ -244,7 +247,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade400, Colors.purple.shade400],
+          colors: [scheme.primary, scheme.tertiary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -252,22 +255,19 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.cloud, color: Colors.white, size: 48),
+          Icon(Icons.cloud, color: onCard, size: 48),
           const SizedBox(height: 12),
           Text(
             l10n.googleDriveSync,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
+            style: context.text.headlineSmall?.copyWith(
+              color: onCard,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            Localizations.localeOf(context).languageCode == 'ar'
-                ? 'واجهة مبسطة وسهلة'
-                : 'Simple & Easy Interface',
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            l10n.simpleEasyInterface,
+            style: context.text.bodyMedium?.copyWith(color: onCardDim),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -288,8 +288,8 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
             icon: const Icon(Icons.login),
             label: Text(l10n.signIn),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue.shade700,
+              backgroundColor: onCard,
+              foregroundColor: scheme.primary,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
           ),
@@ -307,14 +307,9 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
     String lastSyncTimeStr,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-
     final sections = [
-      (
-        icon: Icons.account_circle_outlined,
-        label: isAr ? 'الحساب والمزامنة' : 'Account & Sync'
-      ),
-      (icon: Icons.settings_outlined, label: isAr ? 'الإعدادات' : 'Settings'),
+      (icon: Icons.account_circle_outlined, label: l10n.accountAndSync),
+      (icon: Icons.settings_outlined, label: l10n.settings),
     ];
 
     return _GoogleDriveDesktopMasterDetails(

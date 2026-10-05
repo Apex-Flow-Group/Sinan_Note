@@ -1,9 +1,7 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/shared/settings/sections/data_about_sections.dart';
@@ -40,12 +38,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = context.watch<SettingsProvider>();
-    final systemLocale =
-        View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system'
-        ? systemLocale
-        : settings.languageCode;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
@@ -59,7 +51,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       ),
       body: widget.isDesktopLayout
-          ? _buildDesktopLayout(currentLang)
+          ? _buildDesktopLayout()
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 700),
@@ -72,8 +64,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const BetaSection(),
                     const SwipeSection(),
                     const SecuritySection(),
-                    DataSection(currentLang: currentLang),
-                    AboutSection(version: _version, currentLang: currentLang),
+                    const DataSection(),
+                    AboutSection(version: _version),
                   ],
                 ),
               ),
@@ -81,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildDesktopLayout(String currentLang) {
+  Widget _buildDesktopLayout() {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1400),
@@ -106,9 +98,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   const SecuritySection(),
                   const SizedBox(height: 24),
-                  DataSection(currentLang: currentLang),
+                  const DataSection(),
                   const SizedBox(height: 24),
-                  AboutSection(version: _version, currentLang: currentLang),
+                  AboutSection(version: _version),
                 ],
               ),
             ),

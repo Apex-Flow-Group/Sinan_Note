@@ -71,6 +71,7 @@ class SettingsDialogs {
 
   static void showLanguageDialog(
       BuildContext context, SettingsProvider settings, AppLocalizations l10n) {
+    final currentValue = settings.languageCode;
     _showSheet(context,
         title: l10n.language,
         titleIcon: Icons.language_rounded,
@@ -78,17 +79,17 @@ class SettingsDialogs {
           _SheetOption(
               label: l10n.system,
               icon: Icons.phone_android_rounded,
-              selected: settings.languageCode == 'system',
+              selected: currentValue == 'system',
               onTap: () => settings.setLanguage('system')),
           _SheetOption(
               label: l10n.arabic,
               icon: Icons.translate_rounded,
-              selected: settings.languageCode == 'ar',
+              selected: currentValue == 'ar',
               onTap: () => settings.setLanguage('ar')),
           _SheetOption(
               label: l10n.english,
               icon: Icons.translate_rounded,
-              selected: settings.languageCode == 'en',
+              selected: currentValue == 'en',
               onTap: () => settings.setLanguage('en')),
         ]);
   }
@@ -118,7 +119,7 @@ class SettingsDialogs {
   }
 
   static void showSwipeActionDialog(BuildContext context,
-      SettingsProvider settings, bool isRight, String lang) {
+      SettingsProvider settings, bool isRight) {
     final l10n = AppLocalizations.of(context)!;
     final currentValue =
         isRight ? settings.swipeRightAction : settings.swipeLeftAction;
@@ -143,43 +144,43 @@ class SettingsDialogs {
         _SheetOption(
             label: l10n.delete,
             icon: Icons.delete_outline_rounded,
-            color: SettingsUtils.getSwipeActionColor('delete'),
+            color: SettingsUtils.getSwipeActionColor(context, 'delete'),
             selected: currentValue == 'delete',
             onTap: () => set('delete')),
         _SheetOption(
             label: l10n.actionArchive,
             icon: Icons.archive_outlined,
-            color: SettingsUtils.getSwipeActionColor('archive'),
+            color: SettingsUtils.getSwipeActionColor(context, 'archive'),
             selected: currentValue == 'archive',
             onTap: () => set('archive')),
         _SheetOption(
             label: l10n.share,
             icon: Icons.share_outlined,
-            color: SettingsUtils.getSwipeActionColor('share'),
+            color: SettingsUtils.getSwipeActionColor(context, 'share'),
             selected: currentValue == 'share',
             onTap: () => set('share')),
         _SheetOption(
             label: l10n.reminder,
             icon: Icons.alarm_rounded,
-            color: SettingsUtils.getSwipeActionColor('reminder'),
+            color: SettingsUtils.getSwipeActionColor(context, 'reminder'),
             selected: currentValue == 'reminder',
             onTap: () => set('reminder')),
         _SheetOption(
             label: l10n.categories,
             icon: Icons.label_outlined,
-            color: SettingsUtils.getSwipeActionColor('category'),
+            color: SettingsUtils.getSwipeActionColor(context, 'category'),
             selected: currentValue == 'category',
             onTap: () => set('category')),
         _SheetOption(
             label: l10n.noteCopy,
             icon: Icons.copy_all_rounded,
-            color: SettingsUtils.getSwipeActionColor('duplicate'),
+            color: SettingsUtils.getSwipeActionColor(context, 'duplicate'),
             selected: currentValue == 'duplicate',
             onTap: () => set('duplicate')),
         _SheetOption(
             label: l10n.custom,
             icon: Icons.bolt_rounded,
-            color: SettingsUtils.getSwipeActionColor('custom'),
+            color: SettingsUtils.getSwipeActionColor(context, 'custom'),
             selected: currentValue == 'custom',
             onTap: () => set('custom')),
       ],
@@ -193,37 +194,37 @@ class SettingsDialogs {
         'delete',
         l10n.delete,
         Icons.delete_outline_rounded,
-        SettingsUtils.getSwipeActionColor('delete')
+        SettingsUtils.getSwipeActionColor(context, 'delete')
       ),
       (
         'archive',
         l10n.actionArchive,
         Icons.archive_outlined,
-        SettingsUtils.getSwipeActionColor('archive')
+        SettingsUtils.getSwipeActionColor(context, 'archive')
       ),
       (
         'share',
         l10n.share,
         Icons.share_outlined,
-        SettingsUtils.getSwipeActionColor('share')
+        SettingsUtils.getSwipeActionColor(context, 'share')
       ),
       (
         'reminder',
         l10n.reminder,
         Icons.alarm_rounded,
-        SettingsUtils.getSwipeActionColor('reminder')
+        SettingsUtils.getSwipeActionColor(context, 'reminder')
       ),
       (
         'category',
         l10n.categories,
         Icons.label_outlined,
-        SettingsUtils.getSwipeActionColor('category')
+        SettingsUtils.getSwipeActionColor(context, 'category')
       ),
       (
         'duplicate',
         l10n.noteCopy,
         Icons.copy_all_rounded,
-        SettingsUtils.getSwipeActionColor('duplicate')
+        SettingsUtils.getSwipeActionColor(context, 'duplicate')
       ),
     ];
 
