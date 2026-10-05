@@ -14,6 +14,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/archive_screen.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -126,7 +127,7 @@ class _ArchiveScreenResponsiveState extends State<ArchiveScreenResponsive>
     if (!mounted) return;
     UnifiedNotificationService().showWithUndo(
       context: context,
-      message: '${ids.length} notes restored',
+      message: AppLocalizations.of(context)!.notesRestoredCount(ids.length),
       actionKey: 'archive_restore',
       type: NotificationType.success,
       onExecute: () {},
@@ -146,7 +147,7 @@ class _ArchiveScreenResponsiveState extends State<ArchiveScreenResponsive>
     if (!mounted) return;
     UnifiedNotificationService().showWithUndo(
       context: context,
-      message: '${ids.length} notes moved to trash',
+      message: AppLocalizations.of(context)!.notesMovedToTrashCount(ids.length),
       actionKey: 'archive_delete',
       type: NotificationType.info,
       onExecute: () {},
@@ -240,8 +241,8 @@ class _ArchiveScreenResponsiveState extends State<ArchiveScreenResponsive>
                           IconButton(
                             icon: Icon(Icons.unarchive,
                                 color: _selectedNoteIds.isNotEmpty
-                                    ? Colors.green
-                                    : Colors.grey),
+                                    ? context.colors.success
+                                    : context.colors.muted),
                             onPressed: _selectedNoteIds.isNotEmpty
                                 ? _restoreSelected
                                 : null,
@@ -249,8 +250,8 @@ class _ArchiveScreenResponsiveState extends State<ArchiveScreenResponsive>
                           IconButton(
                             icon: Icon(Icons.delete,
                                 color: _selectedNoteIds.isNotEmpty
-                                    ? Colors.red
-                                    : Colors.grey),
+                                    ? context.colors.danger
+                                    : context.colors.muted),
                             onPressed: _selectedNoteIds.isNotEmpty
                                 ? _deleteSelected
                                 : null,

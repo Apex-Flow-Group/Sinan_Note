@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 
 /// شريط بحث موحد — مطابق لـ SearchableHeader في نسخة Native
@@ -149,8 +151,8 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                   borderRadius: BorderRadius.circular(24),
                                   boxShadow: [
                                     BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.05),
+                                      color: context.colors.shadow
+                                          .withValues(alpha: 0.05),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -188,8 +190,8 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                         children: [
                                           Text(
                                             widget.title,
-                                            style: TextStyle(
-                                              fontSize: 15,
+                                            style: context.text.titleSmall
+                                                ?.copyWith(
                                               fontWeight: FontWeight.w500,
                                               color: hintColor,
                                             ),
@@ -210,8 +212,8 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                               ),
                                               child: Text(
                                                 '${widget.noteCount}',
-                                                style: TextStyle(
-                                                  fontSize: 12,
+                                                style: context.text.labelMedium
+                                                    ?.copyWith(
                                                   fontWeight: FontWeight.w600,
                                                   color: hintColor,
                                                 ),
@@ -239,16 +241,17 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                                 decoration: InputDecoration(
                                                   hintText: _hintText(context),
                                                   border: InputBorder.none,
-                                                  hintStyle: TextStyle(
-                                                      color: hintColor,
-                                                      fontSize: 15),
+                                                  hintStyle: context
+                                                      .text.titleSmall
+                                                      ?.copyWith(
+                                                          color: hintColor),
                                                   isDense: true,
                                                   contentPadding:
                                                       EdgeInsets.zero,
                                                 ),
-                                                style: TextStyle(
-                                                    fontSize: 15,
-                                                    color: textColor),
+                                                style: context.text.titleSmall
+                                                    ?.copyWith(
+                                                        color: textColor),
                                               ),
                                             ),
                                             if (widget.searchController.text
@@ -424,8 +427,9 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                                 children: [
                                                   Text(
                                                     widget.title,
-                                                    style: TextStyle(
-                                                      fontSize: 13,
+                                                    style: context
+                                                        .text.bodySmall
+                                                        ?.copyWith(
                                                       color: hintColor,
                                                     ),
                                                     overflow:
@@ -449,8 +453,9 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                                       ),
                                                       child: Text(
                                                         '${widget.noteCount}',
-                                                        style: TextStyle(
-                                                          fontSize: 11,
+                                                        style: context
+                                                            .text.labelSmall
+                                                            ?.copyWith(
                                                           fontWeight:
                                                               FontWeight.w600,
                                                           color: hintColor,
@@ -482,16 +487,20 @@ class _SearchableHeaderState extends State<SearchableHeader>
                                                               context),
                                                           border:
                                                               InputBorder.none,
-                                                          hintStyle: TextStyle(
-                                                              color: hintColor,
-                                                              fontSize: 13),
+                                                          hintStyle: context
+                                                              .text.bodySmall
+                                                              ?.copyWith(
+                                                                  color:
+                                                                      hintColor),
                                                           isDense: true,
                                                           contentPadding:
                                                               EdgeInsets.zero,
                                                         ),
-                                                        style: TextStyle(
-                                                            fontSize: 13,
-                                                            color: textColor),
+                                                        style: context
+                                                            .text.bodySmall
+                                                            ?.copyWith(
+                                                                color:
+                                                                    textColor),
                                                       ),
                                                     ),
                                                   ],
@@ -541,7 +550,6 @@ class _SearchableHeaderState extends State<SearchableHeader>
   }
 
   String _hintText(BuildContext context) {
-    final locale = Localizations.localeOf(context).languageCode;
-    return locale == 'ar' ? 'ابحث في الملاحظات' : 'Search notes';
+    return AppLocalizations.of(context)!.searchNotesHint;
   }
 }

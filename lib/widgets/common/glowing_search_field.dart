@@ -1,6 +1,12 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:math';import 'package:flutter/material.dart';import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/core/theme/common_palette.dart';
+
 class GlowingSearchField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
@@ -78,8 +84,8 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                 ? LinearGradient(
                     colors: [
                       barColor,
-                      const Color(0xFF00D4FF).withValues(alpha: 0.5),
-                      const Color(0xFF7B2FFF).withValues(alpha: 0.5),
+                      CommonPalette.searchGlowStart.withValues(alpha: 0.5),
+                      CommonPalette.searchGlowEnd.withValues(alpha: 0.5),
                       barColor,
                     ],
                     stops: const [0.0, 0.4, 0.6, 1.0],
@@ -88,7 +94,7 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                 : null,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: context.colors.shadow.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -114,13 +120,13 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
                         controller: widget.controller,
                         focusNode: _focusNode,
                         textAlignVertical: TextAlignVertical.center,
-                        style: TextStyle(color: contentColor, fontSize: 14),
-                        cursorColor: const Color(0xFF00D4FF),
+                        style: context.text.bodyMedium
+                            ?.copyWith(color: contentColor),
+                        cursorColor: CommonPalette.searchGlowStart,
                         decoration: InputDecoration(
                           hintText: widget.hintText,
-                          hintStyle: TextStyle(
-                              color: contentColor.withValues(alpha: 0.5),
-                              fontSize: 14),
+                          hintStyle: context.text.bodyMedium?.copyWith(
+                              color: contentColor.withValues(alpha: 0.5)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.only(bottom: 2),
                           isDense: true,
@@ -184,4 +190,3 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
     );
   }
 }
-

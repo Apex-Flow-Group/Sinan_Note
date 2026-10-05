@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// يُغلّف محتوى شاشات الخزنة ليكون مناسباً لسطح المكتب.
 /// على Desktop (عرض >= 600): محتوى مركزي بعرض 480px داخل Card.
@@ -28,7 +29,7 @@ class VaultDesktopWrapper extends StatelessWidget {
                 width: maxWidth,
                 child: Card(
                   elevation: 3,
-                  shadowColor: Colors.black26,
+                  shadowColor: context.colors.shadow,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),

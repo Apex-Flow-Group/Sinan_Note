@@ -14,6 +14,7 @@ import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show tabToHomeNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
@@ -394,12 +395,12 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.code_off,
-                                      size: 80, color: Colors.grey[400]),
+                                      size: 80, color: context.scheme.outline),
                                   const SizedBox(height: 16),
                                   Text(
                                     strings.noProfessionalNotes,
-                                    style: TextStyle(
-                                        fontSize: 16, color: Colors.grey[600]),
+                                    style: context.text.bodyLarge
+                                        ?.copyWith(color: context.colors.muted),
                                   ),
                                 ],
                               ),

@@ -14,6 +14,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/shared/tabs/reminder_dashboard.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -252,8 +253,8 @@ class _ReminderDashboardResponsiveState
                           IconButton(
                             icon: Icon(Icons.archive,
                                 color: _selectedNoteIds.isNotEmpty
-                                    ? Colors.orange
-                                    : Colors.grey),
+                                    ? context.colors.warning
+                                    : context.colors.muted),
                             onPressed: _selectedNoteIds.isNotEmpty
                                 ? _archiveSelected
                                 : null,
@@ -261,8 +262,8 @@ class _ReminderDashboardResponsiveState
                           IconButton(
                             icon: Icon(Icons.delete,
                                 color: _selectedNoteIds.isNotEmpty
-                                    ? Colors.red
-                                    : Colors.grey),
+                                    ? context.colors.danger
+                                    : context.colors.muted),
                             onPressed: _selectedNoteIds.isNotEmpty
                                 ? _deleteSelected
                                 : null,
@@ -390,12 +391,11 @@ class _ReminderDashboardResponsiveState
                           ),
                           dividerHeight: 0,
                           labelColor: Theme.of(context).colorScheme.primary,
-                          unselectedLabelColor:
-                              isDark ? Colors.grey[400] : Colors.grey[600],
-                          labelStyle: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13),
-                          unselectedLabelStyle: const TextStyle(
-                              fontWeight: FontWeight.normal, fontSize: 13),
+                          unselectedLabelColor: context.colors.muted,
+                          labelStyle: context.text.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                          unselectedLabelStyle: context.text.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.normal),
                           labelPadding: EdgeInsets.zero,
                           tabs: [
                             Tab(text: l10n.upcoming, height: 34),
@@ -445,7 +445,7 @@ class _ReminderDashboardResponsiveState
                       ? Icons.event_repeat
                       : Icons.alarm_off,
               size: 80,
-              color: Colors.grey[400],
+              color: context.scheme.outline,
             ),
             const SizedBox(height: 16),
             Text(
@@ -454,7 +454,8 @@ class _ReminderDashboardResponsiveState
                   : type == 'scheduled'
                       ? l10n.noScheduledReminders
                       : l10n.noExpiredReminders,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style:
+                  context.text.bodyLarge?.copyWith(color: context.colors.muted),
             ),
           ],
         ),

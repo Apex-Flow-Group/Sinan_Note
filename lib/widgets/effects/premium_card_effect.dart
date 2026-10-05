@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class PremiumCardEffect extends StatefulWidget {
   final Widget child;
@@ -70,8 +71,8 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
 
     // الحسبة الذكية للون الحافة الأساسي (أغمق أو أفتح حسب الوضع)
     final Color baseBorderColor = brightness == Brightness.light
-        ? Color.lerp(widget.baseColor, Colors.black, 0.15)!
-        : Color.lerp(widget.baseColor, Colors.white, 0.25)!;
+        ? Color.lerp(widget.baseColor, context.scheme.onSurface, 0.15)!
+        : Color.lerp(widget.baseColor, context.scheme.onSurface, 0.25)!;
 
     final Color effectiveBorderColor = widget.isSelected
         ? Theme.of(context).colorScheme.secondary
@@ -87,8 +88,7 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
               : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(
-                  alpha: brightness == Brightness.light ? 0.10 : 0.28),
+              color: context.colors.shadow,
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -104,7 +104,6 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
       child: AnimatedBuilder(
         animation: _glowAnimation!,
         builder: (context, child) {
-          final br = Theme.of(context).brightness;
           return Container(
             decoration: BoxDecoration(
               color: widget.baseColor,
@@ -116,8 +115,7 @@ class _PremiumCardEffectState extends State<PremiumCardEffect>
                   : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black
-                      .withValues(alpha: br == Brightness.light ? 0.10 : 0.28),
+                  color: context.colors.shadow,
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

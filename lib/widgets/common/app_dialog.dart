@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// يفتح الشاشة كـ Dialog عائم على الشاشات الكبيرة (>= 800px)
 /// وكـ push عادي على الشاشات الصغيرة
@@ -19,7 +20,7 @@ class AppDialog {
         context: context,
         barrierDismissible: true,
         barrierLabel: '',
-        barrierColor: Colors.black54,
+        barrierColor: context.colors.scrim,
         transitionDuration: const Duration(milliseconds: 280),
         pageBuilder: (_, __, ___) => Center(
           child: ConstrainedBox(

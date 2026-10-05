@@ -14,6 +14,7 @@ import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';
 import 'package:sinan_note/widgets/desktop/desktop_selection_actions.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart';
@@ -679,12 +680,11 @@ class _UnifiedToolbarState extends State<_UnifiedToolbar>
                   child: TextField(
                     controller: widget.searchController,
                     focusNode: widget.searchFocusNode,
-                    style:
-                        TextStyle(fontSize: 13, color: colorScheme.onSurface),
+                    style: context.text.bodySmall
+                        ?.copyWith(color: colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: widget.searchHint,
-                      hintStyle: TextStyle(
-                        fontSize: 13,
+                      hintStyle: context.text.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                       border: InputBorder.none,
@@ -714,7 +714,7 @@ class _UnifiedToolbarState extends State<_UnifiedToolbar>
                 Chip(
                   avatar: const Icon(Icons.label_rounded, size: 14),
                   label: Text(widget.categoryName!,
-                      style: const TextStyle(fontSize: 12)),
+                      style: context.text.labelMedium),
                   deleteIcon: const Icon(Icons.close, size: 14),
                   onDeleted: widget.onCategoryDismiss,
                   visualDensity: VisualDensity.compact,
@@ -816,9 +816,9 @@ class _SelectionBar extends StatelessWidget {
                   SizedBox(
                     width: 120,
                     child: Text(
-                      '${selectedIds.length} ${l10n.selected}',
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w500),
+                      l10n.selectedNotesCount(selectedIds.length),
+                      style: context.text.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),

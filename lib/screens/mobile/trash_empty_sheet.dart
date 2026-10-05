@@ -1,10 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class TrashEmptySheet extends StatelessWidget {
@@ -46,17 +46,16 @@ class TrashEmptySheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: context.colors.danger.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.delete_forever_rounded,
-                  size: 36, color: Colors.red),
+              child: Icon(Icons.delete_forever_rounded,
+                  size: 36, color: context.colors.danger),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.permanentDelete,
-              style: TextStyle(
-                fontSize: 18,
+              style: context.text.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
               ),
@@ -65,18 +64,16 @@ class TrashEmptySheet extends StatelessWidget {
             Text(
               l10n.confirmDeleteAll,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
+              style: context.text.bodyMedium?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 6),
             Text(
               l10n.notesCount(trashedNotes.length),
-              style: const TextStyle(
-                fontSize: 13,
+              style: context.text.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Colors.red,
+                color: context.colors.danger,
               ),
             ),
             const SizedBox(height: 24),
@@ -103,7 +100,7 @@ class TrashEmptySheet extends StatelessWidget {
                       }
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: context.colors.danger,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -119,4 +116,3 @@ class TrashEmptySheet extends StatelessWidget {
     );
   }
 }
-

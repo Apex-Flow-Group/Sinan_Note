@@ -6,6 +6,7 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
@@ -243,17 +244,17 @@ class _ContextSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.restore, color: Colors.green),
+              leading: Icon(Icons.restore, color: context.colors.success),
               title: Text(l10n.restore,
-                  style: const TextStyle(color: Colors.green)),
+                  style: TextStyle(color: context.colors.success)),
               onTap: () => Navigator.pop(context, 'restore'),
             ),
             const Divider(height: 1),
             ListTile(
-              leading:
-                  const Icon(Icons.delete_forever_rounded, color: Colors.red),
+              leading: Icon(Icons.delete_forever_rounded,
+                  color: context.colors.danger),
               title: Text(l10n.permanentDelete,
-                  style: const TextStyle(color: Colors.red)),
+                  style: TextStyle(color: context.colors.danger)),
               onTap: () => Navigator.pop(context, 'permanent_delete'),
             ),
             const SizedBox(height: 8),
@@ -292,9 +293,9 @@ class _ContextSheet extends StatelessWidget {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.delete_rounded, color: Colors.red),
-              title:
-                  Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+              leading: Icon(Icons.delete_rounded, color: context.colors.danger),
+              title: Text(l10n.delete,
+                  style: TextStyle(color: context.colors.danger)),
               onTap: () => Navigator.pop(context, 'delete'),
             ),
             const SizedBox(height: 8),
@@ -338,8 +339,9 @@ class _ContextSheet extends StatelessWidget {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.delete_rounded, color: Colors.red),
-            title: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+            leading: Icon(Icons.delete_rounded, color: context.colors.danger),
+            title: Text(l10n.delete,
+                style: TextStyle(color: context.colors.danger)),
             onTap: () => Navigator.pop(context, 'delete'),
           ),
           const SizedBox(height: 8),

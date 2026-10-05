@@ -1,8 +1,7 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 
 class RenameDialog extends StatefulWidget {
   final String initialTitle;
@@ -56,6 +55,7 @@ class _RenameDialogState extends State<RenameDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final dialogBg = widget.backgroundColor ??
         theme.dialogTheme.backgroundColor ??
         theme.colorScheme.surface;
@@ -66,7 +66,7 @@ class _RenameDialogState extends State<RenameDialog> {
     return AlertDialog(
       backgroundColor: dialogBg,
       title: Text(
-        widget.titleText ?? 'تعديل العنوان',
+        widget.titleText ?? l10n.editTitle,
         style: TextStyle(color: dialogText),
       ),
       content: TextField(
@@ -74,7 +74,7 @@ class _RenameDialogState extends State<RenameDialog> {
         autofocus: true,
         style: TextStyle(color: dialogText),
         decoration: InputDecoration(
-          hintText: widget.hintText ?? 'أدخل العنوان...',
+          hintText: widget.hintText ?? l10n.enterTitleHint,
           hintStyle: TextStyle(color: dialogText.withValues(alpha: 0.5)),
           border: const OutlineInputBorder(),
           enabledBorder: OutlineInputBorder(
@@ -90,14 +90,14 @@ class _RenameDialogState extends State<RenameDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            widget.cancelText ?? 'إلغاء',
+            widget.cancelText ?? l10n.cancel,
             style: TextStyle(color: dialogText.withValues(alpha: 0.7)),
           ),
         ),
         TextButton(
           onPressed: _submit,
           child: Text(
-            widget.saveText ?? 'حفظ',
+            widget.saveText ?? l10n.save,
             style: TextStyle(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
@@ -108,4 +108,3 @@ class _RenameDialogState extends State<RenameDialog> {
     );
   }
 }
-

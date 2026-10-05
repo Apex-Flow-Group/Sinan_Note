@@ -1,8 +1,8 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -38,7 +38,7 @@ class BottomNavBar extends StatelessWidget {
             color: appBarColor,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: context.colors.shadow.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, -5),
               ),
@@ -81,4 +81,3 @@ class BottomNavBar extends StatelessWidget {
     );
   }
 }
-

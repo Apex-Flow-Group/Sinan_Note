@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sinan_note/data/repositories/notes_repository.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_version.dart';
+import 'package:sinan_note/ui/core/theme/common_palette.dart';
 
 const double kColMin = 200.0;
 const double kColMax = 480.0;
@@ -99,20 +100,22 @@ class VersionHistoryController extends ChangeNotifier {
     }
   }
 
+  /// لون هوية ثابت لكل نوع إجراء — ألوان فئوية لا دلالية، فهي في
+  /// [CommonPalette].
   static Color getActionColor(String action) {
     switch (action) {
       case 'manual_save':
-        return Colors.green;
+        return CommonPalette.versionManualSave;
       case 'auto_save':
-        return Colors.blue;
+        return CommonPalette.versionAutoSave;
       case 'created':
-        return Colors.purple;
+        return CommonPalette.versionCreated;
       case 'archived':
-        return Colors.orange;
+        return CommonPalette.versionArchived;
       case 'restored':
-        return Colors.teal;
+        return CommonPalette.versionRestored;
       default:
-        return Colors.grey;
+        return CommonPalette.versionOther;
     }
   }
 }

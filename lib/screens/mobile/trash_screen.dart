@@ -8,6 +8,7 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/mobile/trash_empty_sheet.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -163,8 +164,8 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                           IconButton(
                             icon: Icon(Icons.restore,
                                 color: _selectedNotes.isNotEmpty
-                                    ? Colors.green
-                                    : Colors.grey),
+                                    ? context.colors.success
+                                    : context.colors.muted),
                             onPressed: _selectedNotes.isNotEmpty
                                 ? () => _restoreSelectedNotes(
                                     notesProvider, trashedNotes, l10n)
@@ -173,16 +174,17 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                           IconButton(
                             icon: Icon(Icons.delete_forever,
                                 color: _selectedNotes.isNotEmpty
-                                    ? Colors.red
-                                    : Colors.grey),
+                                    ? context.colors.danger
+                                    : context.colors.muted),
                             onPressed: _selectedNotes.isNotEmpty
                                 ? () async {
                                     final confirm = await showDialog<bool>(
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title: Text(l10n.permanentDelete),
-                                        content: Text(
-                                            '${l10n.confirmPermanentDeleteMultiple} ${_selectedNotes.length} ${l10n.notesQuestion}'),
+                                        content: Text(l10n
+                                            .confirmPermanentDeleteNotesCount(
+                                                _selectedNotes.length)),
                                         actions: [
                                           TextButton(
                                               onPressed: () =>
@@ -192,8 +194,9 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                                               onPressed: () =>
                                                   Navigator.pop(ctx, true),
                                               child: Text(l10n.delete,
-                                                  style: const TextStyle(
-                                                      color: Colors.red))),
+                                                  style: TextStyle(
+                                                      color: context
+                                                          .colors.danger))),
                                         ],
                                       ),
                                     );
@@ -309,14 +312,14 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.delete_outline,
-                                    size: 80, color: Colors.grey[400]),
+                                    size: 80, color: context.scheme.outline),
                                 const SizedBox(height: 16),
                                 Text(
                                   searchController.text.isEmpty
                                       ? (l10n.emptyTrash)
                                       : (l10n.noResults),
-                                  style: TextStyle(
-                                      fontSize: 18, color: Colors.grey[600]),
+                                  style: context.text.titleLarge
+                                      ?.copyWith(color: context.colors.muted),
                                 ),
                               ],
                             ),

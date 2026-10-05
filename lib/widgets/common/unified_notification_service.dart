@@ -17,6 +17,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/widgets/common/notification_snack_bar.dart';
 
 /// نوع الإشعار
@@ -206,7 +207,7 @@ class UnifiedNotificationService {
       type: type,
       duration: duration,
       position: position,
-      actionLabel: undoLabel ?? 'تراجع',
+      actionLabel: undoLabel ?? AppLocalizations.of(context)!.undo,
       onAction: () {
         _pendingActions[actionKey]?.cancel();
         _pendingActions.remove(actionKey);

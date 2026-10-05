@@ -1,8 +1,7 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
-
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// شريط بحث متحرك يتوسع ليدفع العنوان ويتقلص عند الإغلاق
 class AnimatedSearchBar extends StatefulWidget {
@@ -108,11 +107,11 @@ class AnimatedSearchBarState extends State<AnimatedSearchBar>
                       decoration: InputDecoration(
                         hintText: widget.hintText,
                         border: InputBorder.none,
-                        hintStyle: TextStyle(color: Colors.grey[500]),
+                        hintStyle: TextStyle(color: context.colors.muted),
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      style: const TextStyle(fontSize: 16),
+                      style: context.text.bodyLarge,
                     ),
                   ),
                 ),
@@ -124,4 +123,3 @@ class AnimatedSearchBarState extends State<AnimatedSearchBar>
     );
   }
 }
-

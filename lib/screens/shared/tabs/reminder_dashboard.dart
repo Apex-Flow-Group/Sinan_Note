@@ -16,6 +16,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show tabToHomeNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/services/notification_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
@@ -382,17 +383,16 @@ class _ReminderDashboardState extends State<ReminderDashboard>
                                         indicatorColor:
                                             Theme.of(context).primaryColor,
                                         labelColor: isDark
-                                            ? Colors.white
+                                            ? context.scheme.onSurface
                                             : Theme.of(context).primaryColor,
-                                        unselectedLabelColor: isDark
-                                            ? Colors.grey[400]
-                                            : Colors.grey[600],
-                                        labelStyle: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14),
-                                        unselectedLabelStyle: const TextStyle(
-                                            fontWeight: FontWeight.normal,
-                                            fontSize: 14),
+                                        unselectedLabelColor:
+                                            context.colors.muted,
+                                        labelStyle: context.text.bodyMedium
+                                            ?.copyWith(
+                                                fontWeight: FontWeight.w600),
+                                        unselectedLabelStyle:
+                                            context.text.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.normal),
                                         physics:
                                             const NeverScrollableScrollPhysics(),
                                         tabs: [
@@ -541,23 +541,26 @@ class _BatteryBannerState extends State<_BatteryBanner> {
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.15),
+          color: context.colors.warning.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+          border:
+              Border.all(color: context.colors.warning.withValues(alpha: 0.3)),
         ),
         child: _expanded ? _buildExpanded() : _buildCollapsed(),
       ),
     );
   }
 
-  Widget _buildCollapsed() => const Row(
+  Widget _buildCollapsed() => Row(
         children: [
-          Icon(Icons.battery_alert, color: Colors.orange, size: 24),
-          SizedBox(width: 12),
+          Icon(Icons.battery_alert, color: context.colors.warning, size: 24),
+          const SizedBox(width: 12),
           Expanded(
-              child: Text('Battery Optimization',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
-          Icon(Icons.expand_more, size: 20),
+              child: Text(
+                  AppLocalizations.of(context)!.batteryOptimizationTitle,
+                  style: context.text.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.bold))),
+          const Icon(Icons.expand_more, size: 20),
         ],
       );
 
@@ -566,12 +569,14 @@ class _BatteryBannerState extends State<_BatteryBanner> {
         children: [
           Row(
             children: [
-              const Icon(Icons.battery_alert, color: Colors.orange, size: 24),
+              Icon(Icons.battery_alert,
+                  color: context.colors.warning, size: 24),
               const SizedBox(width: 12),
-              const Expanded(
-                  child: Text('Battery Optimization',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14))),
+              Expanded(
+                  child: Text(
+                      AppLocalizations.of(context)!.batteryOptimizationTitle,
+                      style: context.text.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.bold))),
               IconButton(
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: () async {
@@ -583,16 +588,16 @@ class _BatteryBannerState extends State<_BatteryBanner> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-              'Disable battery optimization to ensure reminders work reliably in the background',
-              style: TextStyle(fontSize: 12)),
+          Text(AppLocalizations.of(context)!.batteryOptimizationHint,
+              style: context.text.labelMedium),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: openAppSettings,
             icon: const Icon(Icons.settings, size: 18),
-            label: const Text('Open Settings'),
+            label: Text(AppLocalizations.of(context)!.openSettings),
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                backgroundColor: context.colors.warning,
+                foregroundColor: context.scheme.surface),
           ),
         ],
       );
@@ -638,7 +643,7 @@ class _ReminderTabView extends StatelessWidget {
                             ? Icons.event_repeat
                             : Icons.alarm_off,
                     size: 80,
-                    color: Colors.grey[400],
+                    color: context.scheme.outline,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -647,7 +652,8 @@ class _ReminderTabView extends StatelessWidget {
                         : type == 'scheduled'
                             ? strings.noScheduledReminders
                             : strings.noExpiredReminders,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    style: context.text.bodyLarge
+                        ?.copyWith(color: context.colors.muted),
                   ),
                 ],
               ),

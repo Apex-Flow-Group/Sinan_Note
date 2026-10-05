@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/diagnostics/apex_diagnostics_engine.dart';
 
 /// خطورة الخطأ — تحدد السلوك
@@ -36,30 +37,33 @@ class ApexErrorManager {
     } catch (e, stack) {
       await _engine.logError(error: e, stackTrace: stack, context: context);
       if (severity == ApexErrorSeverity.unexpected) {
-        _showSnackbar(userMessage ?? _defaultMessage(context));
+        _showSnackbar(userMessage, context);
       }
       rethrow;
     }
   }
 
-  static String _defaultMessage(String ctx) {
-    if (ctx.startsWith('DB::')) return 'خطأ في قاعدة البيانات';
-    if (ctx.startsWith('VAULT::')) return 'خطأ في الخزنة';
-    if (ctx.startsWith('SYNC::')) return 'فشلت المزامنة مع Google Drive';
-    return 'حدث خطأ غير متوقع';
+  /// الرسالة الافتراضية حسب بادئة سياق العملية، بلغة الواجهة.
+  static String _defaultMessage(AppLocalizations l10n, String ctx) {
+    if (ctx.startsWith('DB::')) return l10n.databaseError;
+    if (ctx.startsWith('VAULT::')) return l10n.vaultError;
+    if (ctx.startsWith('SYNC::')) return l10n.googleDriveSyncFailed;
+    return l10n.unexpectedError;
   }
 
-  static void _showSnackbar(String message) {
+  static void _showSnackbar(String? userMessage, String errorContext) {
     final context = _navigatorKey?.currentState?.context;
     if (context == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade900,
+        content: Text(userMessage ?? _defaultMessage(l10n, errorContext)),
+        backgroundColor: scheme.error,
         duration: const Duration(seconds: 6),
-        action: const SnackBarAction(
-          label: 'REPORT',
-          textColor: Colors.yellow,
+        action: SnackBarAction(
+          label: l10n.errorReportAction,
+          textColor: scheme.onError,
           onPressed: _shareErrorLog,
         ),
       ),

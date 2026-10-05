@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
 
@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// SVG Service - Preview and export SVG files
 class SvgService {
@@ -45,7 +47,6 @@ class _SvgPreviewSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -53,7 +54,7 @@ class _SvgPreviewSheet extends StatelessWidget {
       maxChildSize: 0.95,
       builder: (_, scrollController) => Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          color: scheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -78,9 +79,8 @@ class _SvgPreviewSheet extends StatelessWidget {
                   Icon(Icons.image_outlined, size: 18, color: scheme.primary),
                   const SizedBox(width: 8),
                   Text(
-                    'SVG Preview',
-                    style: TextStyle(
-                      fontSize: 15,
+                    AppLocalizations.of(context)!.svgPreviewTitle,
+                    style: context.text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurface,
                     ),
@@ -100,7 +100,7 @@ class _SvgPreviewSheet extends StatelessWidget {
                 controller: scrollController,
                 padding: const EdgeInsets.all(24),
                 child: Center(
-                  child: _buildSvgWidget(scheme),
+                  child: _buildSvgWidget(context, scheme),
                 ),
               ),
             ),
@@ -110,7 +110,7 @@ class _SvgPreviewSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildSvgWidget(ColorScheme scheme) {
+  Widget _buildSvgWidget(BuildContext context, ColorScheme scheme) {
     try {
       return SvgPicture.string(
         svgCode,
@@ -121,13 +121,14 @@ class _SvgPreviewSheet extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
+          color: context.colors.danger.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+          border:
+              Border.all(color: context.colors.danger.withValues(alpha: 0.3)),
         ),
         child: Text(
-          'Invalid SVG: $e',
-          style: const TextStyle(color: Colors.red, fontSize: 13),
+          AppLocalizations.of(context)!.invalidSvg('$e'),
+          style: context.text.bodySmall?.copyWith(color: context.colors.danger),
         ),
       );
     }

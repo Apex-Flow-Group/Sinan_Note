@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 // DB Inspector — يعرض تقرير كامل عن SQLite
 
 import 'dart:io';
@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sinan_note/data/services/database/app_database.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DbInspectorService {
@@ -87,7 +88,8 @@ class _ReportSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
     final text = _formatReport(report);
 
     return DraggableScrollableSheet(
@@ -96,7 +98,7 @@ class _ReportSheet extends StatelessWidget {
       maxChildSize: 0.95,
       builder: (_, sc) => Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          color: scheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -117,21 +119,20 @@ class _ReportSheet extends StatelessWidget {
               child: Row(
                 children: [
                   const SizedBox(width: 8),
-                  const Icon(Icons.storage_rounded,
-                      size: 18, color: Colors.orange),
+                  Icon(Icons.storage_rounded, size: 18, color: scheme.tertiary),
                   const SizedBox(width: 8),
-                  const Text('DB Inspector',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  Text(l10n.dbInspectorTitle,
+                      style: textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600)),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.copy_rounded, size: 20),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: text));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Copied'),
-                          duration: Duration(seconds: 1),
+                        SnackBar(
+                          content: Text(l10n.copied),
+                          duration: const Duration(seconds: 1),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
@@ -153,23 +154,18 @@ class _ReportSheet extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF12121F)
-                        : const Color(0xFFF6F8FA),
+                    color: scheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.08),
+                      color: scheme.onSurface.withValues(alpha: 0.08),
                     ),
                   ),
                   child: SelectableText(
                     text,
-                    style: TextStyle(
+                    style: textTheme.labelMedium?.copyWith(
                       fontFamily: 'monospace',
-                      fontSize: 12,
                       height: 1.6,
-                      color: isDark ? Colors.white70 : Colors.black87,
+                      color: scheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
                 ),

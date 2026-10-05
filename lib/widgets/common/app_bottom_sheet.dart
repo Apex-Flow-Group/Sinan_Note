@@ -1,7 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// Base widget موحد لكل bottom sheets في التطبيق.
 ///
@@ -122,8 +123,7 @@ class AppBottomSheet extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title!,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: context.text.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),

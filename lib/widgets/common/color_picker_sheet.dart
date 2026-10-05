@@ -1,9 +1,9 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/common_palette.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 
 /// مكون مشترك لاختيار لون النوتة — Bottom Sheet
@@ -58,7 +58,7 @@ class _ColorPickerSheetContentState extends State<_ColorPickerSheetContent> {
     final isDark = brightness == Brightness.dark;
 
     final sheetBg = isDark ? scheme.surfaceContainerHigh : scheme.surface;
-    final handleColor = isDark ? Colors.white24 : Colors.black12;
+    final handleColor = scheme.outlineVariant;
 
     return Container(
       decoration: BoxDecoration(
@@ -66,7 +66,7 @@ class _ColorPickerSheetContentState extends State<_ColorPickerSheetContent> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
+            color: scheme.shadow.withValues(alpha: isDark ? 0.4 : 0.12),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -95,7 +95,6 @@ class _ColorPickerSheetContentState extends State<_ColorPickerSheetContent> {
                 l10n.chooseColor,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
               ),
               const SizedBox(height: 20),
@@ -152,7 +151,7 @@ class _ColorCircle extends StatelessWidget {
     final borderColor = isSelected
         ? Theme.of(context).colorScheme.primary
         : needsBorder
-            ? Colors.black12
+            ? Theme.of(context).colorScheme.outlineVariant
             : Colors.transparent;
     final borderWidth = isSelected ? 3.0 : 1.5;
 
@@ -181,12 +180,11 @@ class _ColorCircle extends StatelessWidget {
                 Icons.check_rounded,
                 size: 22,
                 color: color.computeLuminance() > 0.5
-                    ? Colors.black54
-                    : Colors.white,
+                    ? CommonPalette.onLightSwatch
+                    : CommonPalette.onDarkSwatch,
               )
             : null,
       ),
     );
   }
 }
-

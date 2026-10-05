@@ -7,9 +7,12 @@ import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 
 class SettingsProvider with ChangeNotifier {
+  /// قيمة تفضيل اللغة التي تعني «اتبع لغة الجهاز».
+  static const _followSystemLanguage = 'system';
+
   ThemeMode _themeMode = ThemeMode.system;
   double _textScaleFactor = 1.0;
-  String _languageCode = 'system';
+  String _languageCode = _followSystemLanguage;
   String _fontFamily = 'system'; // 'system' | 'Cairo' | 'Tajawal'
   String _swipeRightAction = 'category';
   String _swipeLeftAction = 'share';
@@ -267,7 +270,7 @@ class SettingsProvider with ChangeNotifier {
       }
       _textScaleFactor = prefs.getDouble('textScale') ?? 1.0;
       _fontFamily = prefs.getString('fontFamily') ?? 'system';
-      _languageCode = prefs.getString('language') ?? 'system';
+      _languageCode = prefs.getString('language') ?? _followSystemLanguage;
       _swipeRightAction = prefs.getString('swipeRight') ?? 'category';
       _swipeLeftAction = prefs.getString('swipeLeft') ?? 'share';
       _swipeEnabled = prefs.getBool('swipeEnabled') ?? true;
@@ -314,10 +317,10 @@ class SettingsProvider with ChangeNotifier {
     }
   }
 
-  Locale? get locale {
-    if (_languageCode == 'system') return null;
-    return Locale(_languageCode);
-  }
+  Locale? get locale => switch (_languageCode) {
+        _followSystemLanguage => null,
+        final code => Locale(code),
+      };
 
   int getDefaultColorIndex(String mode) {
     return _defaultColorIndices[mode] ?? _defaultBlueIndex;

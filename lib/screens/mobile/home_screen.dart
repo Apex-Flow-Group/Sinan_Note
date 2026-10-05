@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'importBackup': l10n.importBackup,
                 'googleDrive': l10n.googleDrive,
                 'share': l10n.share,
-                'soon': 'قريباً',
+                'soon': l10n.soon,
               }),
               onNotesChanged: () {},
             ),

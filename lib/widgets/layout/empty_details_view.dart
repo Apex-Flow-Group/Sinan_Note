@@ -1,11 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// Widget يعرض شاشة فارغة عندما لا توجد ملاحظة مختارة
-/// 
+///
 /// يستخدم في Details Panel عندما:
 /// - لم يختر المستخدم أي ملاحظة بعد
 /// - تم مسح الملاحظة المختارة
@@ -16,7 +16,8 @@ class EmptyDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35);
+    final color =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35);
 
     return Center(
       child: Column(
@@ -28,11 +29,10 @@ class EmptyDetailsView extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             l10n.selectNote,
-            style: TextStyle(fontSize: 16, color: color),
+            style: context.text.bodyLarge?.copyWith(color: color),
           ),
         ],
       ),
     );
   }
 }
-

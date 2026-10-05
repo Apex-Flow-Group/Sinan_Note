@@ -6,6 +6,7 @@ import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 import 'package:sinan_note/widgets/layout/note_list_tile.dart';
 
@@ -55,7 +56,8 @@ class MasterPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    final content = notes.isEmpty ? _buildEmptyState(l10n) : _buildNotesList();
+    final content =
+        notes.isEmpty ? _buildEmptyState(context, l10n) : _buildNotesList();
 
     // إذا كان هناك عنوان AppBar، نعرض Column مع AppBar
     if (appBarTitle != null) {
@@ -134,7 +136,7 @@ class MasterPanel extends StatelessWidget {
   }
 
   /// بناء حالة القائمة الفارغة
-  Widget _buildEmptyState(AppLocalizations l10n) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -142,14 +144,13 @@ class MasterPanel extends StatelessWidget {
           Icon(
             Icons.note_outlined,
             size: 64,
-            color: Colors.grey[400],
+            color: context.scheme.outline,
           ),
           const SizedBox(height: 16),
           Text(
             l10n.noNotes,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
+            style: context.text.bodyLarge?.copyWith(
+              color: context.colors.muted,
             ),
           ),
         ],

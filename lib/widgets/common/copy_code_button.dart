@@ -1,9 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
-
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 /// زر نسخ الكود مع animation علامة صح — بدون SnackBar
 class CopyCodeButton extends StatefulWidget {
@@ -56,8 +55,9 @@ class _CopyCodeButtonState extends State<CopyCodeButton>
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        _copied ? Colors.green : Theme.of(context).colorScheme.primary;
+    final color = _copied
+        ? context.colors.success
+        : Theme.of(context).colorScheme.primary;
 
     return ScaleTransition(
       scale: _scaleAnim,
@@ -96,9 +96,8 @@ class _CopyCodeButtonState extends State<CopyCodeButton>
                 const SizedBox(width: 8),
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 250),
-                  style: TextStyle(
+                  style: context.text.titleSmall!.copyWith(
                     color: color,
-                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
                   child: Text(
@@ -114,4 +113,3 @@ class _CopyCodeButtonState extends State<CopyCodeButton>
     );
   }
 }
-

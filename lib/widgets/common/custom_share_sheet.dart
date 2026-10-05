@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/apex_share_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,7 +21,6 @@ class CustomShareSheet {
       bool appShare = false}) {
     final strings = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final isArabic = Directionality.of(context) == TextDirection.rtl;
 
     showModalBottomSheet(
       context: context,
@@ -51,9 +51,7 @@ class CustomShareSheet {
 
               // Title
               Text(
-                appShare
-                    ? (isArabic ? 'مشاركة التطبيق' : 'Share App')
-                    : (isArabic ? 'مشاركة الملاحظة' : 'Share Note'),
+                appShare ? strings.shareApp : strings.shareNoteTitle,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
@@ -63,7 +61,7 @@ class CustomShareSheet {
 
               // Subtitle
               Text(
-                isArabic ? 'اختر طريقة المشاركة' : 'Choose sharing method',
+                strings.chooseSharingMethod,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -77,7 +75,7 @@ class CustomShareSheet {
                   if (!appShare)
                     _ShareOption(
                       icon: Icons.file_download_outlined,
-                      label: isArabic ? 'حفظ' : 'Save',
+                      label: strings.save,
                       onTap: () async {
                         try {
                           final extension =
@@ -87,7 +85,7 @@ class CustomShareSheet {
                               : '${subject!.replaceAll(RegExp(r'[<>:"/\|?*]'), '_')}.$extension';
                           final bytes = Uint8List.fromList(utf8.encode(text));
                           final result = await FilePicker.platform.saveFile(
-                            dialogTitle: isArabic ? 'حفظ الملف' : 'Save File',
+                            dialogTitle: strings.saveFileDialogTitle,
                             fileName: fileName,
                             type: FileType.any,
                             bytes: bytes,
@@ -97,9 +95,7 @@ class CustomShareSheet {
                           if (result != null) {
                             UnifiedNotificationService().show(
                               context: context,
-                              message: isArabic
-                                  ? 'تم حفظ الملف بنجاح'
-                                  : 'File saved successfully',
+                              message: strings.fileSavedSuccessfully,
                               type: NotificationType.success,
                               duration: const Duration(seconds: 2),
                             );
@@ -109,9 +105,7 @@ class CustomShareSheet {
                           Navigator.pop(context);
                           UnifiedNotificationService().show(
                             context: context,
-                            message: isArabic
-                                ? 'فشل حفظ الملف'
-                                : 'Failed to save file',
+                            message: strings.fileSaveFailed,
                             type: NotificationType.error,
                           );
                         }
@@ -119,7 +113,7 @@ class CustomShareSheet {
                     ),
                   _ShareOption(
                     icon: Icons.share_outlined,
-                    label: isArabic ? 'مشاركة' : 'Share',
+                    label: strings.share,
                     onTap: () {
                       Navigator.pop(context);
                       Share.share(text, subject: subject);
@@ -127,7 +121,7 @@ class CustomShareSheet {
                   ),
                   _ShareOption(
                     icon: Icons.copy_outlined,
-                    label: isArabic ? 'نسخ' : 'Copy',
+                    label: strings.copy,
                     onTap: () async {
                       Navigator.pop(context);
                       await Clipboard.setData(ClipboardData(text: text));
@@ -135,9 +129,7 @@ class CustomShareSheet {
                       if (context.mounted) {
                         UnifiedNotificationService().show(
                           context: context,
-                          message: isArabic
-                              ? 'تم النسخ إلى الحافظة'
-                              : strings.textCopiedToClipboard,
+                          message: strings.textCopiedToClipboard,
                           type: NotificationType.success,
                           duration: const Duration(seconds: 2),
                         );
@@ -147,7 +139,7 @@ class CustomShareSheet {
                   if (note != null)
                     _ShareOption(
                       icon: Icons.copy_all,
-                      label: isArabic ? 'نسخة' : 'Duplicate',
+                      label: strings.duplicate,
                       onTap: () {
                         Navigator.pop(context);
                         if (onNoteCopied != null) onNoteCopied();
@@ -164,8 +156,7 @@ class CustomShareSheet {
                   builder: (context, snapshot) {
                     if (snapshot.data != true) return const SizedBox.shrink();
                     return _ApexSendTile(
-                      isArabic: isArabic,
-                      onTap: () => _sendViaApex(context, note, isArabic),
+                      onTap: () => _sendViaApex(context, note),
                       colorScheme: colorScheme,
                     );
                   },
@@ -184,8 +175,7 @@ class CustomShareSheet {
     return ext.startsWith('.') ? ext.substring(1) : ext;
   }
 
-  static void _sendViaApex(
-      BuildContext context, Note note, bool isArabic) async {
+  static void _sendViaApex(BuildContext context, Note note) async {
     Navigator.pop(context);
     try {
       await ApexShareService.sendNote(note);
@@ -198,8 +188,7 @@ class CustomShareSheet {
       } else {
         UnifiedNotificationService().show(
           context: context,
-          message:
-              isArabic ? 'فشل الإرسال عبر Apex' : 'Failed to send via Apex',
+          message: AppLocalizations.of(context)!.apexSendFailed,
           type: NotificationType.error,
         );
       }
@@ -207,7 +196,7 @@ class CustomShareSheet {
       if (!context.mounted) return;
       UnifiedNotificationService().show(
         context: context,
-        message: isArabic ? 'فشل الإرسال عبر Apex' : 'Failed to send via Apex',
+        message: AppLocalizations.of(context)!.apexSendFailed,
         type: NotificationType.error,
       );
     }
@@ -215,18 +204,17 @@ class CustomShareSheet {
 }
 
 class _ApexSendTile extends StatelessWidget {
-  final bool isArabic;
   final VoidCallback onTap;
   final ColorScheme colorScheme;
 
   const _ApexSendTile({
-    required this.isArabic,
     required this.onTap,
     required this.colorScheme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Material(
       color: colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(16),
@@ -244,8 +232,8 @@ class _ApexSendTile extends StatelessWidget {
                   color: colorScheme.primary,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.send_rounded,
-                    color: Colors.white, size: 22),
+                child: Icon(Icons.send_rounded,
+                    color: colorScheme.onPrimary, size: 22),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -253,22 +241,16 @@ class _ApexSendTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isArabic
-                          ? 'إرسال عبر Apex Transfer'
-                          : 'Send via Apex Transfer',
-                      style: TextStyle(
+                      l10n.sendViaApexTransfer,
+                      style: context.text.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
                         color: colorScheme.onPrimaryContainer,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isArabic
-                          ? 'شارك الملاحظة عبر الشبكة المحلية بدون إنترنت'
-                          : 'Share note over local network without internet',
-                      style: TextStyle(
-                        fontSize: 12,
+                      l10n.sendViaApexTransferSubtitle,
+                      style: context.text.labelMedium?.copyWith(
                         color: colorScheme.onPrimaryContainer
                             .withValues(alpha: 0.7),
                       ),

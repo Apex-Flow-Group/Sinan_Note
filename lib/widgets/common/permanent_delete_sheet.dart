@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/app_bottom_sheet.dart';
 
 class PermanentDeleteSheet extends StatelessWidget {
@@ -25,17 +26,16 @@ class PermanentDeleteSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: context.colors.danger.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.delete_forever_rounded,
-                  size: 36, color: Colors.red),
+              child: Icon(Icons.delete_forever_rounded,
+                  size: 36, color: context.colors.danger),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.permanentDelete,
-              style: TextStyle(
-                fontSize: 18,
+              style: context.text.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
               ),
@@ -44,8 +44,7 @@ class PermanentDeleteSheet extends StatelessWidget {
             Text(
               l10n.confirmPermanentDelete,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
+              style: context.text.bodyMedium?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
@@ -68,7 +67,7 @@ class PermanentDeleteSheet extends StatelessWidget {
                   child: FilledButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: context.colors.danger,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),

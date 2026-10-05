@@ -1,6 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 /// يبني محتوى الـ SnackBar لخدمة الإشعارات
@@ -11,20 +12,20 @@ class NotificationSnackBar {
     NotificationConfig config,
     ScaffoldMessengerState messenger,
   ) {
+    final foreground = getForegroundColor(config.type, context);
     return Row(
       children: [
         Icon(
           getIcon(config.type),
-          color: Colors.white,
+          color: foreground,
           size: 22,
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             config.message,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
+            style: context.text.bodyMedium?.copyWith(
+              color: foreground,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 2,
@@ -32,10 +33,10 @@ class NotificationSnackBar {
           ),
         ),
         if (config.actionLabel != null && config.onAction != null)
-          buildActionButton(config, messenger),
+          buildActionButton(context, config, messenger, foreground),
         if (config.dismissible && config.actionLabel == null)
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white, size: 18),
+            icon: Icon(Icons.close, color: foreground, size: 18),
             onPressed: () => messenger.hideCurrentSnackBar(),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -46,8 +47,10 @@ class NotificationSnackBar {
 
   /// بناء زر الإجراء مع المؤقت الدائري
   static Widget buildActionButton(
+    BuildContext context,
     NotificationConfig config,
     ScaffoldMessengerState messenger,
+    Color foreground,
   ) {
     if (config.showProgress) {
       if (config.executedEarlyNotifier != null) {
@@ -64,18 +67,17 @@ class NotificationSnackBar {
                   builder: (_, v, __) => CircularProgressIndicator(
                     value: v,
                     strokeWidth: 2.5,
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.white),
+                    backgroundColor: foreground.withValues(alpha: 0.2),
+                    valueColor: AlwaysStoppedAnimation<Color>(foreground),
                   ),
                 ),
               );
             }
-            return buildProgressWithUndo(config, messenger);
+            return buildProgressWithUndo(config, messenger, foreground);
           },
         );
       }
-      return buildProgressWithUndo(config, messenger);
+      return buildProgressWithUndo(config, messenger, foreground);
     } else {
       return TextButton(
         onPressed: () {
@@ -83,14 +85,13 @@ class NotificationSnackBar {
           config.onAction?.call();
         },
         style: TextButton.styleFrom(
-          foregroundColor: Colors.white,
+          foregroundColor: foreground,
           padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         child: Text(
           config.actionLabel!,
-          style: const TextStyle(
+          style: context.text.bodyMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            fontSize: 14,
           ),
         ),
       );
@@ -101,6 +102,7 @@ class NotificationSnackBar {
   static Widget buildProgressWithUndo(
     NotificationConfig config,
     ScaffoldMessengerState messenger,
+    Color foreground,
   ) {
     return Stack(
       alignment: Alignment.center,
@@ -115,14 +117,14 @@ class NotificationSnackBar {
               child: CircularProgressIndicator(
                 value: 1.0 - value,
                 strokeWidth: 2.5,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                backgroundColor: foreground.withValues(alpha: 0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(foreground),
               ),
             );
           },
         ),
         IconButton(
-          icon: const Icon(Icons.undo, color: Colors.white, size: 20),
+          icon: Icon(Icons.undo, color: foreground, size: 20),
           onPressed: () {
             messenger.hideCurrentSnackBar();
             config.onAction?.call();
@@ -136,17 +138,31 @@ class NotificationSnackBar {
 
   /// لون خلفية الإشعار حسب النوع
   static Color getBackgroundColor(NotificationType type, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.colors;
     switch (type) {
       case NotificationType.success:
-        return isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);
+        return colors.success;
       case NotificationType.error:
-        return isDark ? const Color(0xFFC62828) : const Color(0xFFE53935);
+        return colors.danger;
       case NotificationType.warning:
-        return isDark ? const Color(0xFFEF6C00) : const Color(0xFFFB8C00);
+        return colors.warning;
       case NotificationType.info:
-        return isDark ? const Color(0xFF1565C0) : const Color(0xFF1E88E5);
+        return colors.info;
     }
+  }
+
+  /// لون النص والأيقونات فوق خلفية الإشعار: أيّ طرفي الثيم (السطح أو ما
+  /// عليه) أوضح تبايناً مع لون الخلفية.
+  static Color getForegroundColor(NotificationType type, BuildContext context) {
+    final background = getBackgroundColor(type, context);
+    final scheme = context.scheme;
+    final backgroundIsDark =
+        ThemeData.estimateBrightnessForColor(background) == Brightness.dark;
+    final surfaceIsDark =
+        ThemeData.estimateBrightnessForColor(scheme.surface) == Brightness.dark;
+    return backgroundIsDark == surfaceIsDark
+        ? scheme.onSurface
+        : scheme.surface;
   }
 
   /// أيقونة الإشعار حسب النوع

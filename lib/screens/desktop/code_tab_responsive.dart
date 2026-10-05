@@ -14,6 +14,7 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show currentTabIndexNotifier;
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
 import 'package:sinan_note/screens/shared/tabs/code_tab.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/selected_note_indicator.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -227,8 +228,8 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
                           IconButton(
                             icon: Icon(Icons.archive,
                                 color: _selectedNoteIds.isNotEmpty
-                                    ? Colors.orange
-                                    : Colors.grey),
+                                    ? context.colors.warning
+                                    : context.colors.muted),
                             onPressed: _selectedNoteIds.isNotEmpty
                                 ? _archiveSelected
                                 : null,
@@ -236,8 +237,8 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
                           IconButton(
                             icon: Icon(Icons.delete,
                                 color: _selectedNoteIds.isNotEmpty
-                                    ? Colors.red
-                                    : Colors.grey),
+                                    ? context.colors.danger
+                                    : context.colors.muted),
                             onPressed: _selectedNoteIds.isNotEmpty
                                 ? _deleteSelected
                                 : null,
@@ -354,11 +355,12 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.code_off, size: 80, color: Colors.grey[400]),
+            Icon(Icons.code_off, size: 80, color: context.scheme.outline),
             const SizedBox(height: 16),
             Text(
               l10n.noProfessionalNotes,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style:
+                  context.text.bodyLarge?.copyWith(color: context.colors.muted),
             ),
           ],
         ),
