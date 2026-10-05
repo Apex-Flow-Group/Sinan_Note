@@ -1,8 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sinan_note/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/core/theme/app_theme.dart';
 
 /// شريط بحث موحد — مطابق لـ SearchableHeader في نسخة Native
 /// فريم مستدير يحتوي أيقونة بحث + عنوان، عند الضغط يتحول لحقل بحث

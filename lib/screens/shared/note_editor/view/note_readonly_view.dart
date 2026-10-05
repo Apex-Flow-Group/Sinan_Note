@@ -9,7 +9,6 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
-import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
@@ -22,6 +21,7 @@ import 'package:sinan_note/screens/shared/note_editor/view/readonly_content.dart
 import 'package:sinan_note/screens/shared/note_editor/view/trash_floating_sheet.dart';
 import 'package:sinan_note/screens/shared/note_editor/widgets/read_only_bars.dart';
 import 'package:sinan_note/services/note_services/version_control_service.dart';
+import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/widgets/common/color_picker_sheet.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';

@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 
 /// مصدر واحد لكل إعدادات الثيم.
@@ -75,6 +76,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      extensions: [
+        scheme.brightness == Brightness.dark ? AppColors.dark : AppColors.light,
+      ],
       fontFamily: fontFamily,
       scaffoldBackgroundColor: scaffoldBg,
       appBarTheme: AppBarTheme(

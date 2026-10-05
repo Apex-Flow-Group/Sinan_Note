@@ -7,7 +7,6 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
-import 'package:sinan_note/core/utils/adaptive_color.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
 import 'package:sinan_note/domain/models/note.dart';
@@ -20,6 +19,7 @@ import 'package:sinan_note/screens/other/version_history/panels/diff_panel.dart'
 import 'package:sinan_note/screens/other/version_history/panels/notes_panel.dart';
 import 'package:sinan_note/screens/other/version_history/panels/versions_panel.dart';
 import 'package:sinan_note/screens/other/version_history/widgets/resizable_divider.dart';
+import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/desktop/desktop_menu_bar.dart';

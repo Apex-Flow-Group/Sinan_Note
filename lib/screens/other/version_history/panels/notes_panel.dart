@@ -2,12 +2,12 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/adaptive_color.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/checklist.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/mobile/home_screen.dart' show ViewType;
+import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/effects/premium_card_effect.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 

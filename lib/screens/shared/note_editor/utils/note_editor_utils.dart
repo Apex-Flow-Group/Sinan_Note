@@ -1,8 +1,8 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 import 'package:flutter/material.dart';
-import 'package:sinan_note/core/utils/adaptive_color.dart';
+import 'package:sinan_note/ui/core/theme/note_palette.dart';
 
 /// Utility methods for NoteEditor (pure functions, no state)
 class NoteEditorUtils {

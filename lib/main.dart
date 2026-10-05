@@ -16,7 +16,6 @@ import 'package:sinan_note/controllers/master_width_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
-import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
 import 'package:sinan_note/data/services/database/note_mapper.dart';
@@ -38,6 +37,7 @@ import 'package:sinan_note/services/intent_handler_service.dart';
 import 'package:sinan_note/services/security/security_gate.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/widgets/home/note_card_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 

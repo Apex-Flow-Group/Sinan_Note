@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:async';
 import 'dart:convert';
@@ -10,7 +10,6 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
-import 'package:sinan_note/core/constants/app_text_styles.dart';
 import 'package:sinan_note/core/utils/apex_smart_controller.dart';
 import 'package:sinan_note/core/utils/bidi_cursor_middleware.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
@@ -25,6 +24,7 @@ import 'package:sinan_note/screens/shared/note_editor/utils/note_editor_utils.da
 import 'package:sinan_note/services/code/language_detector.dart';
 import 'package:sinan_note/services/security/clipboard_guard.dart';
 import 'package:sinan_note/services/security/content_guard.dart';
+import 'package:sinan_note/ui/core/theme/app_font_size.dart';
 import 'package:sinan_note/widgets/editor/checklist_undo_redo_controller.dart';
 
 /// Central coordinator for all editor operations

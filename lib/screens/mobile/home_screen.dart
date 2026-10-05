@@ -10,7 +10,6 @@ import 'package:sinan_note/controllers/categories/categories_provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/physics/glide_scroll_physics.dart';
-import 'package:sinan_note/core/theme/app_theme.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
@@ -19,6 +18,7 @@ import 'package:sinan_note/screens/mobile/home_screen_widgets.dart';
 import 'package:sinan_note/screens/mobile/home_scrollbar.dart';
 import 'package:sinan_note/services/sync/cloud_sync_gateway.dart';
 import 'package:sinan_note/services/sync/sync_transport.dart';
+import 'package:sinan_note/ui/core/theme/app_theme.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:sinan_note/widgets/home/add_menu_widget.dart'
     show isMenuOpenNotifier;

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 
 import 'package:flutter/material.dart';
@@ -26,7 +26,7 @@ import 'package:highlight/languages/swift.dart';
 import 'package:highlight/languages/typescript.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:highlight/languages/yaml.dart';
-import 'package:sinan_note/core/constants/app_text_styles.dart';
+import 'package:sinan_note/ui/core/theme/app_font_size.dart';
 
 class CodeEditor extends StatefulWidget {
   final CodeController controller;
