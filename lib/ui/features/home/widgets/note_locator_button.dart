@@ -2,59 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
+import 'package:sinan_note/ui/features/home/widgets/notes_grid/note_list_layout.dart';
 import 'package:sinan_note/ui/features/layout/view_models/selected_note_provider.dart';
-import 'package:sinan_note/ui/features/notes/view_models/notes_provider.dart';
-
-/// Registry عالمي يحفظ ارتفاع كل بطاقة بعد بنائها
-class NoteCardKeyRegistry {
-  NoteCardKeyRegistry._();
-  static final NoteCardKeyRegistry instance = NoteCardKeyRegistry._();
-
-  /// ارتفاع كل بطاقة محفوظ بعد أول بناء لها
-  final Map<int, double> _heights = {};
-
-  void recordHeight(int noteId, double height) {
-    _heights[noteId] = height;
-  }
-
-  void remove(int noteId) => _heights.remove(noteId);
-
-  Map<int, double> get heights => _heights;
-
-  /// مجموع ارتفاعات كل البطاقات المحفوظة
-  double totalHeight(List<Note> orderedNotes, {double fallbackHeight = 72.0}) {
-    return orderedNotes.fold(
-        0, (sum, n) => sum + (_heights[n.id] ?? fallbackHeight));
-  }
-
-  /// يحسب الـ offset المتراكم للبطاقة بناءً على ترتيب القائمة
-  /// مع استخدام الارتفاعات المحفوظة لكل بطاقة
-  double estimateOffset(int noteId, List<Note> orderedNotes,
-      {double fallbackHeight = 72.0}) {
-    double offset = 0;
-    for (final note in orderedNotes) {
-      if (note.id == noteId) break;
-      offset += _heights[note.id] ?? fallbackHeight;
-    }
-    return offset;
-  }
-
-  /// هل الـ offset داخل الـ viewport الحالي؟
-  bool isVisible(
-      int noteId, List<Note> orderedNotes, ScrollController scrollController,
-      {double fallbackHeight = 72.0}) {
-    if (!scrollController.hasClients) return false;
-    final offset =
-        estimateOffset(noteId, orderedNotes, fallbackHeight: fallbackHeight);
-    final height = _heights[noteId] ?? fallbackHeight;
-    final scrollOffset = scrollController.offset;
-    final viewportHeight = scrollController.position.viewportDimension;
-    return offset >= scrollOffset &&
-        offset + height <= scrollOffset + viewportHeight;
-  }
-}
 
 /// زر يحدد موضع النوتة المفتوحة في القائمة ويمرر إليها
 class NoteLocatorButton extends StatefulWidget {
@@ -110,17 +60,15 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
     }
     if (!widget.scrollController.hasClients) return;
 
-    final notes = Provider.of<NotesProvider>(context, listen: false).notes;
-    final registry = NoteCardKeyRegistry.instance;
-    final isVis =
-        registry.isVisible(selectedNote.id!, notes, widget.scrollController);
-
-    if (isVis) {
+    final layout = context.read<NoteListLayout>();
+    final offset = layout.offsetOf(selectedNote.id!);
+    // غير معروضة (مُفلترة) أو ظاهرة: لا اتجاه
+    if (offset == null ||
+        layout.isVisible(selectedNote.id!, widget.scrollController)) {
       if (_direction.value != null) _direction.value = null;
       return;
     }
 
-    final offset = registry.estimateOffset(selectedNote.id!, notes);
     final scrollOffset = widget.scrollController.offset;
     final viewportHeight = widget.scrollController.position.viewportDimension;
 
@@ -140,9 +88,8 @@ class _NoteLocatorButtonState extends State<NoteLocatorButton> {
     if (selectedNote == null || selectedNote.id == null) return;
     if (!widget.scrollController.hasClients) return;
 
-    final notes = Provider.of<NotesProvider>(context, listen: false).notes;
-    final offset =
-        NoteCardKeyRegistry.instance.estimateOffset(selectedNote.id!, notes);
+    final offset = context.read<NoteListLayout>().offsetOf(selectedNote.id!);
+    if (offset == null) return;
 
     final target = (offset - 8.0)
         .clamp(0.0, widget.scrollController.position.maxScrollExtent);

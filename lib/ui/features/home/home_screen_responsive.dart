@@ -18,6 +18,7 @@ import 'package:sinan_note/ui/features/home/widgets/dialogs/backup_options_dialo
 import 'package:sinan_note/ui/features/home/widgets/dialogs/filter_sheet.dart';
 import 'package:sinan_note/ui/features/home/widgets/home_drawer_widget.dart';
 import 'package:sinan_note/ui/features/home/widgets/note_locator_button.dart';
+import 'package:sinan_note/ui/features/home/widgets/notes_grid/note_list_layout.dart';
 import 'package:sinan_note/ui/features/home/widgets/notes_grid_view.dart';
 import 'package:sinan_note/ui/features/layout/details_panel.dart';
 import 'package:sinan_note/ui/features/layout/master_details_layout.dart';
@@ -160,18 +161,22 @@ class _HomeScreenResponsiveState extends State<HomeScreenResponsive> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveLayoutWrapper(
-      // Mobile Layout - الشاشة التقليدية
-      mobileLayout: HomeScreen(
-        sharedText: widget.sharedText,
-        onDrawerChanged: widget.onDrawerChanged,
-        showAddMenu: widget.showAddMenu,
-        onToggleMenu: widget.onToggleMenu,
-        onRegisterModeHandler: widget.onRegisterModeHandler,
-      ),
+    // تخطيط القائمة المعروضة، مشترك بين وضعي الموبايل وسطح المكتب
+    return Provider(
+      create: (_) => NoteListLayout(),
+      child: ResponsiveLayoutWrapper(
+        // Mobile Layout - الشاشة التقليدية
+        mobileLayout: HomeScreen(
+          sharedText: widget.sharedText,
+          onDrawerChanged: widget.onDrawerChanged,
+          showAddMenu: widget.showAddMenu,
+          onToggleMenu: widget.onToggleMenu,
+          onRegisterModeHandler: widget.onRegisterModeHandler,
+        ),
 
-      // Master-Details Layout - للشاشات الكبيرة
-      masterDetailsLayout: _buildMasterDetailsLayout(context),
+        // Master-Details Layout - للشاشات الكبيرة
+        masterDetailsLayout: _buildMasterDetailsLayout(context),
+      ),
     );
   }
 

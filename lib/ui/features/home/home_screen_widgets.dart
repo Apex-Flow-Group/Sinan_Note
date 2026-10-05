@@ -1,9 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/ui/features/home/widgets/date_indicator_bar.dart';
-import 'package:sinan_note/ui/features/home/widgets/note_locator_button.dart';
+import 'package:sinan_note/ui/features/home/widgets/notes_grid/note_list_layout.dart';
 
 class HomeScreenPopScope extends StatelessWidget {
   final bool canPop;
@@ -74,7 +75,7 @@ class DateBarHeader extends StatelessWidget {
         child: DateIndicatorBar(
           scrollController: scrollController,
           filteredNotesNotifier: filteredNotesNotifier,
-          noteHeights: NoteCardKeyRegistry.instance.heights,
+          noteHeights: context.read<NoteListLayout>().heights,
           activeFilterNotifier: activeFilterNotifier,
           isPullingNotifier: isPullingNotifier,
           pullDistanceNotifier: pullDistanceNotifier,

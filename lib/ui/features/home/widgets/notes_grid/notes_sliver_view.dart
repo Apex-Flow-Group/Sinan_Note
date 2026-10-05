@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/platform/platform_helper.dart';
@@ -9,6 +10,7 @@ import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/home/home_screen.dart' show ViewType;
 import 'package:sinan_note/ui/features/home/widgets/notes_grid/height_recorder.dart';
 import 'package:sinan_note/ui/features/home/widgets/notes_grid/note_card_wrapper.dart';
+import 'package:sinan_note/ui/features/home/widgets/notes_grid/note_list_layout.dart';
 
 class NotesSliverView extends StatefulWidget {
   final ValueNotifier<String> viewTypeNotifier;
@@ -88,6 +90,8 @@ class _NotesSliverViewState extends State<NotesSliverView> {
     _filteredNotes = notes;
     _pinnedNotes = notes.where((n) => n.isPinned).toList(growable: false);
     _unpinnedNotes = notes.where((n) => !n.isPinned).toList(growable: false);
+    // ترتيب العرض الفعلي: المثبتة ثم البقية
+    context.read<NoteListLayout>().order = [..._pinnedNotes, ..._unpinnedNotes];
   }
 
   void _onViewTypeChanged() =>
