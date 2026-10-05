@@ -1,6 +1,13 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
-import 'dart:math';import 'package:flutter/material.dart';import 'package:provider/provider.dart'; import 'package:sinan_note/controllers/settings/settings_provider.dart'; import 'package:sinan_note/screens/onboarding/tour_screen.dart';
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/onboarding/tour_screen.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/onboarding_palette.dart';
+
 class CinematicIntroScreen extends StatefulWidget {
   const CinematicIntroScreen({super.key});
 
@@ -93,7 +100,8 @@ class _CinematicIntroScreenState extends State<CinematicIntroScreen>
   void _startTour() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const TourScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const TourScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -104,85 +112,74 @@ class _CinematicIntroScreenState extends State<CinematicIntroScreen>
 
   @override
   Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final systemLocale =
-        View.of(context).platformDispatcher.locale.languageCode;
-    final currentLang = settings.languageCode == 'system'
-        ? systemLocale
-        : settings.languageCode;
-    final isArabic = currentLang == 'ar';
+    final l10n = AppLocalizations.of(context)!;
+    // الحركة تنزلق من جهة بداية السطر.
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
-    return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        body: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Stack(
-              children: [
-                _AnimatedBackground(progress: _backgroundAnimation.value),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Spacer(),
-                            Transform.translate(
-                              offset: Offset(
-                                  isArabic
-                                      ? _titleSlide.value
-                                      : -_titleSlide.value,
-                                  0),
-                              child: Opacity(
-                                opacity: _titleFade.value,
-                                child: _ShinyText(
-                                  text: 'Sinan',
-                                  fontSize: 56,
-                                  shimmerProgress: _shimmerAnimation.value,
-                                ),
+    return Scaffold(
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              _AnimatedBackground(progress: _backgroundAnimation.value),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Spacer(),
+                          Transform.translate(
+                            offset: Offset(
+                                isRtl ? _titleSlide.value : -_titleSlide.value,
+                                0),
+                            child: Opacity(
+                              opacity: _titleFade.value,
+                              child: _ShinyText(
+                                text: l10n.appShortName,
+                                style: context.text.displayLarge,
+                                shimmerProgress: _shimmerAnimation.value,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Transform.translate(
-                              offset: Offset(
-                                  isArabic
-                                      ? _subtitleSlide.value
-                                      : -_subtitleSlide.value,
-                                  0),
-                              child: Opacity(
-                                opacity: _subtitleFade.value,
-                                child: _ShinyText(
-                                  text: isArabic
-                                      ? 'رفيقك الحاد والموثوق للتدوين'
-                                      : 'Your sharp and reliable note-taking companion',
-                                  fontSize: 20,
-                                  shimmerProgress: _shimmerAnimation.value,
-                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          Transform.translate(
+                            offset: Offset(
+                                isRtl
+                                    ? _subtitleSlide.value
+                                    : -_subtitleSlide.value,
+                                0),
+                            child: Opacity(
+                              opacity: _subtitleFade.value,
+                              child: _ShinyText(
+                                text: l10n.appTagline,
+                                style: context.text.headlineSmall,
+                                shimmerProgress: _shimmerAnimation.value,
                               ),
                             ),
-                            const Spacer(),
-                            _ComplexButton(
-                              text: isArabic ? 'ابدأ الجولة' : 'Start Tour',
-                              drawProgress: _buttonDraw.value,
-                              fillProgress: _buttonFill.value,
-                              textOpacity: _buttonTextFade.value,
-                              onPressed: _startTour,
-                            ),
-                            const SizedBox(height: 32),
-                          ],
-                        ),
+                          ),
+                          const Spacer(),
+                          _ComplexButton(
+                            text: l10n.startTour,
+                            drawProgress: _buttonDraw.value,
+                            fillProgress: _buttonFill.value,
+                            textOpacity: _buttonTextFade.value,
+                            onPressed: _startTour,
+                          ),
+                          const SizedBox(height: 32),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -211,16 +208,16 @@ class _BackgroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // ✅ حماية من size صفر
     if (size.width <= 0 || size.height <= 0) return;
-    
+
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
 
     final gradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: const [
-        Color(0xFF0A1929),
-        Color(0xFF1A2332),
-        Color(0xFF0F1B2A),
+        OnboardingPalette.night,
+        OnboardingPalette.nightMid,
+        OnboardingPalette.nightDeep,
       ],
       stops: [
         0.0 + sin(progress * pi * 2) * 0.1,
@@ -236,7 +233,7 @@ class _BackgroundPainter extends CustomPainter {
       final x = (i * 50.0 + progress * 100) % size.width;
       final y = (i * 30.0 + sin(progress * pi + i) * 50) % size.height;
       final paint = Paint()
-        ..color = const Color(0xFFFFD700).withValues(alpha: 0.05)
+        ..color = OnboardingPalette.gold.withValues(alpha: 0.05)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
       canvas.drawCircle(Offset(x, y), 30, paint);
     }
@@ -248,13 +245,11 @@ class _BackgroundPainter extends CustomPainter {
 
 class _ShinyText extends StatelessWidget {
   final String text;
-  final double fontSize;
+  final TextStyle? style;
   final double shimmerProgress;
 
   const _ShinyText(
-      {required this.text,
-      required this.fontSize,
-      required this.shimmerProgress});
+      {required this.text, required this.style, required this.shimmerProgress});
 
   @override
   Widget build(BuildContext context) {
@@ -264,11 +259,11 @@ class _ShinyText extends StatelessWidget {
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: const [
-            Color(0xFFB8860B),
-            Color(0xFFFFD700),
-            Color(0xFFFFF8DC),
-            Color(0xFFFFD700),
-            Color(0xFFB8860B),
+            OnboardingPalette.goldDeep,
+            OnboardingPalette.gold,
+            OnboardingPalette.goldHighlight,
+            OnboardingPalette.gold,
+            OnboardingPalette.goldDeep,
           ],
           stops: [
             max(0, shimmerProgress - 0.3),
@@ -282,10 +277,9 @@ class _ShinyText extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: fontSize,
+        style: style?.copyWith(
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: OnboardingPalette.ink,
           letterSpacing: 2,
         ),
       ),
@@ -362,9 +356,8 @@ class _ComplexButtonState extends State<_ComplexButton>
                   opacity: widget.textOpacity,
                   child: Text(
                     widget.text,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                    style: context.text.titleLarge?.copyWith(
+                      color: OnboardingPalette.ink,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.5,
                     ),
@@ -394,7 +387,7 @@ class _ButtonPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // ✅ حماية من size صفر
     if (size.width <= 0 || size.height <= 0) return;
-    
+
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.width, size.height),
       const Radius.circular(28),
@@ -402,7 +395,7 @@ class _ButtonPainter extends CustomPainter {
 
     if (fillProgress > 0) {
       final fillPaint = Paint()
-        ..color = const Color(0xFFFFD700).withValues(alpha: 0.2 * fillProgress)
+        ..color = OnboardingPalette.gold.withValues(alpha: 0.2 * fillProgress)
         ..style = PaintingStyle.fill;
       canvas.drawRRect(rect, fillPaint);
     }
@@ -418,7 +411,7 @@ class _ButtonPainter extends CustomPainter {
       final extractPath = pathMetrics.extractPath(0, currentLength);
 
       final borderPaint = Paint()
-        ..color = const Color(0xFFFFD700)
+        ..color = OnboardingPalette.gold
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2;
       canvas.drawPath(extractPath, borderPaint);
@@ -427,7 +420,7 @@ class _ButtonPainter extends CustomPainter {
     if (pulseProgress > 0) {
       final pulsePaint = Paint()
         ..color =
-            const Color(0xFFFFD700).withValues(alpha: 0.3 * (1 - pulseProgress))
+            OnboardingPalette.gold.withValues(alpha: 0.3 * (1 - pulseProgress))
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4 + pulseProgress * 8;
       canvas.drawRRect(rect, pulsePaint);
@@ -437,4 +430,3 @@ class _ButtonPainter extends CustomPainter {
   @override
   bool shouldRepaint(_ButtonPainter oldDelegate) => true;
 }
-

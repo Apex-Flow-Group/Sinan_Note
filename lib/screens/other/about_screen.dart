@@ -1,8 +1,9 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -43,8 +44,8 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final colorScheme = Theme.of(context).colorScheme;
+    final success = context.colors.success;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.aboutApp)),
@@ -71,17 +72,15 @@ class _AboutScreenState extends State<AboutScreen> {
                           'assets/images/app_icon.png',
                           width: 88,
                           height: 88,
-                          errorBuilder: (_, __, ___) => const Icon(
-                              Icons.note_rounded,
-                              size: 80,
-                              color: Colors.blue),
+                          errorBuilder: (_, __, ___) => Icon(Icons.note_rounded,
+                              size: 80, color: colorScheme.primary),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Sinan Note | سنان نوت',
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
+                      Text(
+                        l10n.appNameBilingual,
+                        style: context.text.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -95,38 +94,35 @@ class _AboutScreenState extends State<AboutScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: Colors.green.withValues(alpha: 0.3)),
+                          border:
+                              Border.all(color: success.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.verified,
-                                size: 14, color: Colors.green),
+                            Icon(Icons.verified, size: 14, color: success),
                             const SizedBox(width: 4),
                             Text(l10n.officialVersion,
-                                style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.green,
+                                style: context.text.labelSmall?.copyWith(
+                                    color: success,
                                     fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        isArabic ? l10n.appTaglineAr : l10n.appTagline,
+                        l10n.appTagline,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500),
+                        style: context.text.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isArabic ? l10n.appTagline : l10n.appTaglineAr,
+                        l10n.appTaglineOtherLanguage,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
+                        style: context.text.labelMedium?.copyWith(
                             color:
                                 colorScheme.onSurface.withValues(alpha: 0.5)),
                       ),
@@ -144,25 +140,13 @@ class _AboutScreenState extends State<AboutScreen> {
                   _buildLinkTile(l10n.appPageGooglePlay, Icons.shop_rounded,
                       'https://play.google.com/store/apps/dev?id=5409981776310932919'),
                   _buildLinkTile(
-                      l10n.sinanAiNet,
-                      Icons.language_rounded,
-                      isArabic
-                          ? 'https://sinanai.net'
-                          : 'https://sinanai.net/en'),
+                      l10n.sinanAiNet, Icons.language_rounded, l10n.sinanAiUrl),
                   _buildLinkTile(l10n.githubRepository, Icons.code_rounded,
                       'https://github.com/Apex-Flow-Group/Sinan_Note'),
-                  _buildLinkTile(
-                      l10n.privacyPolicy,
-                      Icons.privacy_tip_outlined,
-                      isArabic
-                          ? 'https://apexflow.now/ar/projects/sinan-note/privacy'
-                          : 'https://apexflow.now/en/projects/sinan-note/privacy'),
-                  _buildLinkTile(
-                      l10n.termsOfService,
-                      Icons.gavel_rounded,
-                      isArabic
-                          ? 'https://apexflow.now/ar/projects/sinan-note/terms'
-                          : 'https://apexflow.now/en/projects/sinan-note/terms'),
+                  _buildLinkTile(l10n.privacyPolicy, Icons.privacy_tip_outlined,
+                      l10n.privacyPolicyUrl),
+                  _buildLinkTile(l10n.termsOfService, Icons.gavel_rounded,
+                      l10n.termsOfServiceUrl),
                   ListTile(
                     leading: Icon(Icons.article_outlined,
                         color: colorScheme.primary),
@@ -213,25 +197,23 @@ class _AboutScreenState extends State<AboutScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(l10n.madeWithLove,
-                              style: TextStyle(
-                                  fontSize: 12,
+                              style: context.text.labelMedium?.copyWith(
                                   color: colorScheme.onSurface
                                       .withValues(alpha: 0.6))),
                           const SizedBox(width: 4),
                           Icon(Icons.favorite,
-                              size: 14, color: Colors.red[400]),
+                              size: 14, color: context.colors.danger),
                           const SizedBox(width: 4),
                           Text(l10n.inArabWorld,
-                              style: TextStyle(
-                                  fontSize: 12,
+                              style: context.text.labelMedium?.copyWith(
                                   color: colorScheme.onSurface
                                       .withValues(alpha: 0.6))),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(l10n.contactEmail,
-                          style: TextStyle(
-                              fontSize: 12, color: colorScheme.primary)),
+                          style: context.text.labelMedium
+                              ?.copyWith(color: colorScheme.primary)),
                     ],
                   ),
                 ),
@@ -288,12 +270,11 @@ class _AboutScreenState extends State<AboutScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style:
-                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              style: context.text.bodySmall
+                  ?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(content,
-              style: TextStyle(
-                  fontSize: 12,
+              style: context.text.labelMedium?.copyWith(
                   color: Theme.of(context)
                       .colorScheme
                       .onSurface
@@ -307,8 +288,8 @@ class _AboutScreenState extends State<AboutScreen> {
 
   Widget _buildCreditTile(String name, String description) {
     return ListTile(
-      leading:
-          const Icon(Icons.check_circle_outline_rounded, color: Colors.green),
+      leading: Icon(Icons.check_circle_outline_rounded,
+          color: context.colors.success),
       title: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
       subtitle: Text(description),
     );
@@ -317,15 +298,15 @@ class _AboutScreenState extends State<AboutScreen> {
   void _showLicenses() {
     showLicensePage(
       context: context,
-      applicationName: 'Sinan Note',
+      applicationName: AppLocalizations.of(context)!.appName,
       applicationVersion: _version,
       applicationIcon: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Image.asset('assets/images/app_icon.png',
             width: 64,
             height: 64,
-            errorBuilder: (_, __, ___) =>
-                const Icon(Icons.note_rounded, size: 64, color: Colors.blue)),
+            errorBuilder: (_, __, ___) => Icon(Icons.note_rounded,
+                size: 64, color: context.scheme.primary)),
       ),
     );
   }

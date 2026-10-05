@@ -19,6 +19,7 @@ import 'package:sinan_note/screens/other/version_history/panels/diff_panel.dart'
 import 'package:sinan_note/screens/other/version_history/panels/notes_panel.dart';
 import 'package:sinan_note/screens/other/version_history/panels/versions_panel.dart';
 import 'package:sinan_note/screens/other/version_history/widgets/resizable_divider.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/note_palette.dart';
 import 'package:sinan_note/widgets/common/searchable_header.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
@@ -118,6 +119,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final warning = context.colors.warning;
 
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
@@ -150,11 +152,10 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.12),
+                  color: warning.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.restore_rounded,
-                    color: Colors.orange, size: 32),
+                child: Icon(Icons.restore_rounded, color: warning, size: 32),
               ),
               const SizedBox(height: 16),
               // Title
@@ -178,13 +179,11 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.history_rounded,
-                        size: 16, color: Colors.orange),
+                    Icon(Icons.history_rounded, size: 16, color: warning),
                     const SizedBox(width: 6),
                     Text(
                       version.title.isEmpty ? l10n.untitled : version.title,
-                      style: TextStyle(
-                        fontSize: 14,
+                      style: context.text.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: scheme.onSurface,
                       ),
@@ -196,7 +195,8 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
               // Warning text
               Text(
                 l10n.restoreWarning,
-                style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+                style: context.text.bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -221,8 +221,6 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
                       icon: const Icon(Icons.restore_rounded, size: 18),
                       label: Text(l10n.restore),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
@@ -372,7 +370,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+              color: context.colors.shadow,
               blurRadius: 6,
               offset: const Offset(0, 2),
             )
@@ -510,11 +508,14 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: Colors.grey[400]),
+            Icon(icon,
+                size: 56, color: context.colors.muted.withValues(alpha: 0.6)),
             const SizedBox(height: 16),
             Text(message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+                style: context.text.titleSmall?.copyWith(
+                    color: context.colors.muted,
+                    fontWeight: FontWeight.normal)),
           ],
         ),
       );

@@ -5,6 +5,7 @@ import 'package:sinan_note/controllers/version_history/version_history_controlle
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 
 class VersionsPanel extends StatelessWidget {
   final Note selectedNote;
@@ -59,7 +60,7 @@ class VersionsPanel extends StatelessWidget {
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -94,9 +95,9 @@ class _VersionItem extends StatelessWidget {
     final diff = DateTime.now().difference(dt);
     final l10n = AppLocalizations.of(context)!;
     if (diff.inMinutes < 1) return l10n.justNow;
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
@@ -140,13 +141,13 @@ class _VersionItem extends StatelessWidget {
                       version.title.isEmpty ? l10n.untitled : version.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
+                      style: context.text.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 3),
                     Text(_formatTimeAgo(context, version.timestamp),
-                        style:
-                            TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        style: context.text.bodySmall
+                            ?.copyWith(color: context.colors.muted)),
                   ],
                 ),
               ),

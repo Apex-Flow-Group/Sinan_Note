@@ -1,9 +1,10 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -72,7 +73,6 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
 
     setState(() => _isLoading = true);
     final l10n = AppLocalizations.of(context)!;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     try {
       final name = _nameController.text;
@@ -155,7 +155,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
             err.contains('ActivityNotFoundException') ||
             err.contains('MissingPluginException');
         if (isNoApp) {
-          _showNoEmailAppDialog(isAr);
+          _showNoEmailAppDialog();
         } else {
           UnifiedNotificationService().show(
             context: context,
@@ -169,21 +169,19 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
     }
   }
 
-  void _showNoEmailAppDialog(bool isAr) {
+  void _showNoEmailAppDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.email_outlined, size: 40, color: Colors.orange),
-        title: Text(isAr ? 'لا يوجد تطبيق بريد' : 'No Email App Found'),
+        icon:
+            Icon(Icons.email_outlined, size: 40, color: context.colors.warning),
+        title: Text(l10n.noEmailAppTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              isAr
-                  ? 'لم يتم العثور على تطبيق بريد إلكتروني على جهازك.\n\nيمكنك التواصل معنا مباشرة عبر:'
-                  : 'No email app was found on your device.\n\nYou can contact us directly at:',
-            ),
+            Text(l10n.noEmailAppMessage),
             const SizedBox(height: 12),
             const SelectableText(
               _appEmail,
@@ -194,14 +192,14 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
         actions: [
           TextButton.icon(
             icon: const Icon(Icons.copy, size: 18),
-            label: Text(isAr ? 'نسخ البريد' : 'Copy Email'),
+            label: Text(l10n.copyEmail),
             onPressed: () async {
               Navigator.pop(ctx);
               await Clipboard.setData(const ClipboardData(text: _appEmail));
               if (mounted) {
                 UnifiedNotificationService().show(
                   context: context,
-                  message: isAr ? 'تم نسخ البريد الإلكتروني' : 'Email copied',
+                  message: l10n.emailCopied,
                   type: NotificationType.success,
                 );
               }
@@ -209,7 +207,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(context)!.gotIt),
+            child: Text(l10n.gotIt),
           ),
         ],
       ),
@@ -259,12 +257,13 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          style: context.text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
         Text(
           content,
-          style: TextStyle(fontSize: 12, color: Colors.grey[700], height: 1.5),
+          style: context.text.labelMedium
+              ?.copyWith(color: context.colors.muted, height: 1.5),
         ),
       ],
     );
@@ -329,8 +328,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                                       ?.copyWith(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
                               Text(l10n.appDescription,
-                                  style: TextStyle(
-                                      fontSize: 13,
+                                  style: context.text.bodySmall?.copyWith(
                                       color: colorScheme.onSurface
                                           .withValues(alpha: 0.7))),
                             ],
@@ -447,13 +445,12 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
                           ]),
                           const SizedBox(height: 12),
                           Text(l10n.privacyDescription,
-                              style: const TextStyle(fontSize: 13)),
+                              style: context.text.bodySmall),
                           const SizedBox(height: 8),
                           GestureDetector(
                             onTap: _showPrivacyDialog,
                             child: Text(l10n.readPrivacyPolicy,
-                                style: TextStyle(
-                                    fontSize: 13,
+                                style: context.text.bodySmall?.copyWith(
                                     color: colorScheme.primary,
                                     decoration: TextDecoration.underline)),
                           ),

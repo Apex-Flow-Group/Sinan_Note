@@ -9,6 +9,7 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/common/unified_notification_service.dart';
 
 class WidgetSelectionScreen extends StatefulWidget {
@@ -93,11 +94,12 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
   }
 
   Future<void> _selectNoteForWidget(Note note) async {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.widgetType == 'checklist') {
       final stats = _parseChecklistStats(note.content);
       await WidgetService().updateChecklistWidget(
         note.id ?? 0,
-        note.title.isEmpty ? 'Checklist' : note.title,
+        note.title.isEmpty ? l10n.checklist : note.title,
         note.content,
         note.colorIndex,
         totalItems: stats['total'] ?? 0,
@@ -108,7 +110,6 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
     }
 
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
     final title = note.title.isEmpty
         ? (widget.widgetType == 'checklist' ? l10n.checklist : l10n.note)
         : note.title;
@@ -156,13 +157,12 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.widgetType == 'checklist'
-            ? (isArabic ? 'اختر قائمة للتثبيت' : 'Select Checklist')
-            : (isArabic ? 'اختر ملاحظة للتثبيت' : 'Select Note')),
+            ? l10n.selectChecklistToPin
+            : l10n.selectNoteToPin),
         centerTitle: true,
         actions: [
           // فلتر النوع
@@ -184,7 +184,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                             ? Theme.of(context).colorScheme.primary
                             : null),
                     const SizedBox(width: 8),
-                    Text(isArabic ? 'الكل' : 'All'),
+                    Text(l10n.filterAll),
                   ],
                 ),
               ),
@@ -197,7 +197,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                             ? Theme.of(context).colorScheme.primary
                             : null),
                     const SizedBox(width: 8),
-                    Text(isArabic ? 'مثبتة' : 'Pinned'),
+                    Text(l10n.filterPinned),
                   ],
                 ),
               ),
@@ -210,7 +210,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                             ? Theme.of(context).colorScheme.primary
                             : null),
                     const SizedBox(width: 8),
-                    Text(isArabic ? 'الأحدث' : 'Recent'),
+                    Text(l10n.filterRecent),
                   ],
                 ),
               ),
@@ -225,7 +225,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
             padding: const EdgeInsets.all(12.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: isArabic ? 'بحث...' : 'Search...',
+                hintText: l10n.searchNotes,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: searchQuery.isNotEmpty
                     ? IconButton(
@@ -258,12 +258,9 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
               child: Row(
                 children: [
                   Text(
-                    isArabic
-                        ? 'عدد النتائج: ${filteredNotes.length}'
-                        : 'Results: ${filteredNotes.length}',
-                    style: TextStyle(
+                    l10n.resultsCount(filteredNotes.length),
+                    style: context.text.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.secondary,
-                      fontSize: 13,
                     ),
                   ),
                   if (widget.currentNoteId > 0) ...[
@@ -276,9 +273,8 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        isArabic ? 'مثبت حالياً' : 'Currently Pinned',
-                        style: TextStyle(
-                          fontSize: 11,
+                        l10n.currentlyPinned,
+                        style: context.text.labelSmall?.copyWith(
                           color:
                               Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
@@ -303,17 +299,16 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                                   ? Icons.search_off
                                   : Icons.note_add_outlined,
                               size: 80,
-                              color: Colors.grey,
+                              color: context.colors.muted,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               searchQuery.isNotEmpty
-                                  ? (isArabic
-                                      ? 'لا توجد نتائج'
-                                      : 'No results found')
+                                  ? l10n.noResults
                                   : l10n.noNotesAvailable,
-                              style: const TextStyle(
-                                  fontSize: 18, color: Colors.grey),
+                              style: context.text.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: context.colors.muted),
                             ),
                           ],
                         ),
@@ -340,7 +335,9 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                                 note.isPinned ? Icons.push_pin : Icons.note,
                                 color: isCurrentlyPinned
                                     ? Theme.of(context).colorScheme.primary
-                                    : (note.isPinned ? Colors.orange : null),
+                                    : (note.isPinned
+                                        ? context.colors.gold
+                                        : null),
                               ),
                               title: Row(
                                 children: [
@@ -348,9 +345,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                                     child: Text(
                                       note.title.isNotEmpty
                                           ? note.title
-                                          : (isArabic
-                                              ? 'بدون عنوان'
-                                              : 'Untitled'),
+                                          : l10n.untitled,
                                       style: TextStyle(
                                         fontWeight: isCurrentlyPinned
                                             ? FontWeight.bold
@@ -376,7 +371,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
                                 Icons.chevron_right,
                                 color: isCurrentlyPinned
                                     ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey,
+                                    : context.colors.muted,
                               ),
                               onTap: () => _selectNoteForWidget(note),
                             ),

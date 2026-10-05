@@ -6,6 +6,7 @@ import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_version.dart';
 import 'package:sinan_note/domain/text/note_text.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/widgets/editor/diff_view.dart';
 
 class DiffPanel extends StatelessWidget {
@@ -30,9 +31,9 @@ class DiffPanel extends StatelessWidget {
     final diff = DateTime.now().difference(dt);
     final l10n = AppLocalizations.of(context)!;
     if (diff.inMinutes < 1) return l10n.justNow;
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
@@ -42,8 +43,7 @@ class DiffPanel extends StatelessWidget {
     final idx = allVersions.indexWhere((v) => v.id == version.id);
     final older = idx < allVersions.length - 1 ? allVersions[idx + 1] : null;
     final newText = NoteText.toDisplayText(version.content);
-    final oldText =
-        older != null ? NoteText.toDisplayText(older.content) : '';
+    final oldText = older != null ? NoteText.toDisplayText(older.content) : '';
     final spans = older != null ? computeDiff(oldText, newText) : null;
     final actionColor = VersionHistoryController.getActionColor(version.action);
     final actionIcon = VersionHistoryController.getActionIcon(version.action);
@@ -73,12 +73,12 @@ class DiffPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(version.title.isEmpty ? l10n.untitled : version.title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                        style: context.text.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
                     Text(_formatTimeAgo(context, version.timestamp),
-                        style:
-                            TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        style: context.text.bodySmall
+                            ?.copyWith(color: context.colors.muted)),
                   ],
                 ),
               ),
@@ -95,13 +95,15 @@ class DiffPanel extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
-                _legendDot(const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+                _legendDot(
+                    context.colors.success, context.colors.successContainer),
                 const SizedBox(width: 4),
-                Text(l10n.added, style: const TextStyle(fontSize: 13)),
+                Text(l10n.added, style: context.text.bodySmall),
                 const SizedBox(width: 12),
-                _legendDot(const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+                _legendDot(
+                    context.colors.danger, context.colors.dangerContainer),
                 const SizedBox(width: 4),
-                Text(l10n.deleted, style: const TextStyle(fontSize: 13)),
+                Text(l10n.deleted, style: context.text.bodySmall),
               ],
             ),
           ),
@@ -114,7 +116,8 @@ class DiffPanel extends StatelessWidget {
               child: spans != null
                   ? DiffView(spans: spans)
                   : Text(newText.isEmpty ? l10n.noHistory : newText,
-                      style: const TextStyle(fontSize: 15, height: 1.6)),
+                      style: context.text.titleSmall?.copyWith(
+                          fontWeight: FontWeight.normal, height: 1.6)),
             ),
           ),
         ),

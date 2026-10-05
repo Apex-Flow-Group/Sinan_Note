@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/core/utils/logger.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/main.dart' show navigatorKey;
 import 'package:sinan_note/screens/auth/pin_lock_screen.dart';
 import 'package:sinan_note/screens/onboarding/whats_new_dialog.dart';
@@ -21,6 +22,7 @@ import 'package:sinan_note/services/diagnostics/apex_error_manager.dart';
 import 'package:sinan_note/services/notification_service.dart';
 import 'package:sinan_note/services/security/unified_lock_service.dart';
 import 'package:sinan_note/services/widget_service.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/features/sync/view_models/sync_view_model.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -55,16 +57,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initApp() async {
     if (!mounted) return;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       // Step 2: Background services (60%)
-      _updateStatus(isArabic ? 'تحميل الخدمات...' : 'Loading services...', 0.6);
+      _updateStatus(l10n.splashLoadingServices, 0.6);
       await _initBackgroundServices();
 
       // Step 3: Wait for settings (80%)
-      _updateStatus(
-          isArabic ? 'تحميل الإعدادات...' : 'Loading settings...', 0.8);
+      _updateStatus(l10n.splashLoadingSettings, 0.8);
       if (!mounted) return;
       final settings = Provider.of<SettingsProvider>(context, listen: false);
       while (!settings.isInitialized) {
@@ -81,8 +82,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       // Step 4: Authentication check (90%)
-      _updateStatus(
-          isArabic ? 'التحقق من الأمان...' : 'Security check...', 0.9);
+      _updateStatus(l10n.splashSecurityCheck, 0.9);
       AppLogger.debug(
           '[Splash] isAppLockEnabled: ${settings.isAppLockEnabled}');
       if (settings.isAppLockEnabled) {
@@ -132,7 +132,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       // Step 5: Load notes (100%)
-      _updateStatus(isArabic ? 'تحميل الملاحظات...' : 'Loading notes...', 1.0);
+      _updateStatus(l10n.splashLoadingNotes, 1.0);
       final notesProvider = Provider.of<NotesProvider>(context, listen: false);
       // ✅ Load notes in background (non-blocking)
       notesProvider.loadNotes();
@@ -164,7 +164,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (mounted) _checkAndShowWhatsNew();
     } catch (e) {
       AppLogger.error('Splash initialization error', 'SplashScreen', e);
-      _updateStatus(isArabic ? 'حدث خطأ...' : 'Error occurred...', 0.0);
+      _updateStatus(l10n.splashError, 0.0);
     }
   }
 
@@ -205,7 +205,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -225,13 +225,13 @@ class _SplashScreenState extends State<SplashScreen> {
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.2),
+                      color: context.scheme.primary.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.note_alt_outlined,
                       size: 60,
-                      color: Colors.blue,
+                      color: context.scheme.primary,
                     ),
                   ),
                 );
@@ -241,12 +241,10 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 24),
 
             // App Name
-            const Text(
-              'Sinan Note',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+            Text(
+              l10n.appName,
+              style: context.text.headlineLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 48),
@@ -261,7 +259,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: LinearProgressIndicator(
                       value: _progress,
                       minHeight: 6,
-                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                      backgroundColor: context.scheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         Theme.of(context).colorScheme.primary,
                       ),
@@ -275,13 +273,11 @@ class _SplashScreenState extends State<SplashScreen> {
                     duration: const Duration(milliseconds: 300),
                     child: Text(
                       _statusMessage.isEmpty
-                          ? (isArabic ? 'جاري التحميل...' : 'Loading...')
+                          ? l10n.splashLoading
                           : _statusMessage,
                       key: ValueKey(_statusMessage),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: context.text.bodyMedium
+                          ?.copyWith(color: context.colors.muted),
                       textAlign: TextAlign.center,
                     ),
                   ),

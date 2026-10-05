@@ -1,8 +1,11 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sinan_note/core/utils/platform_helper.dart';
+import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/ui/core/theme/app_colors.dart';
+import 'package:sinan_note/ui/core/theme/onboarding_palette.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WhatsNewDialog extends StatelessWidget {
@@ -21,9 +24,11 @@ class WhatsNewDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // حبر بطاقة GitHub: لون GitHub في الفاتح، ونص السطح في الداكن.
+    final githubInk = isDark ? scheme.onSurface : OnboardingPalette.githubInk;
     final isDesktop = PlatformHelper.isWideDisplay(context);
 
     return Dialog(
@@ -69,12 +74,10 @@ class WhatsNewDialog extends StatelessWidget {
               // ── Title ──
               // ⚠️ ثابت: يتغير مع كل إصدار — عنوان رئيسي يعكس محتوى التحديث
               Text(
-                isAr
-                    ? 'شريط أدوات موحّد ومشاركة أذكى'
-                    : 'Unified Toolbar & Smarter Sharing',
+                l10n.whatsNewHeadline,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 21, fontWeight: FontWeight.bold, height: 1.3),
+                style: context.text.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold, height: 1.3),
               ),
               const SizedBox(height: 6),
               Container(
@@ -86,8 +89,7 @@ class WhatsNewDialog extends StatelessWidget {
                 ),
                 child: Text(
                   'v$version',
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: context.text.labelMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: scheme.primary,
                     letterSpacing: 0.5,
@@ -116,11 +118,8 @@ class WhatsNewDialog extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        isAr
-                            ? 'شريط القوائم والبحث أصبحا جزءاً واحداً، المشاركة عبر Apex أصبحت كالمزامنة، وكل وضع عرض يُحفظ منفصلاً.'
-                            : 'Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.',
-                        style: TextStyle(
-                          fontSize: 13.5,
+                        l10n.whatsNewSummary,
+                        style: context.text.bodySmall?.copyWith(
                           height: 1.75,
                           color: scheme.onSurface.withValues(alpha: 0.85),
                         ),
@@ -137,9 +136,8 @@ class WhatsNewDialog extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
-                    isAr ? 'ما الجديد' : "What's New",
-                    style: TextStyle(
-                      fontSize: 11,
+                    l10n.whatsNew,
+                    style: context.text.labelSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurface.withValues(alpha: 0.45),
                       letterSpacing: 0.8,
@@ -167,19 +165,21 @@ class WhatsNewDialog extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: isDark
                           ? [
-                              const Color(0xFF1a1a2e).withValues(alpha: 0.9),
-                              const Color(0xFF16213e).withValues(alpha: 0.9),
+                              OnboardingPalette.githubNightStart
+                                  .withValues(alpha: 0.9),
+                              OnboardingPalette.githubNightEnd
+                                  .withValues(alpha: 0.9),
                             ]
                           : [
-                              const Color(0xFF24292e).withValues(alpha: 0.06),
-                              const Color(0xFF0366d6).withValues(alpha: 0.06),
+                              OnboardingPalette.githubInk
+                                  .withValues(alpha: 0.06),
+                              OnboardingPalette.githubBlue
+                                  .withValues(alpha: 0.06),
                             ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : const Color(0xFF24292e).withValues(alpha: 0.15),
+                      color: githubInk.withValues(alpha: isDark ? 0.12 : 0.15),
                     ),
                   ),
                   child: Row(
@@ -188,16 +188,13 @@ class WhatsNewDialog extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : const Color(0xFF24292e).withValues(alpha: 0.08),
+                          color: githubInk.withValues(alpha: 0.08),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.code_rounded,
                           size: 22,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF24292e),
+                          color: githubInk,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -206,30 +203,19 @@ class WhatsNewDialog extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isAr
-                                  ? '🎉 سينان نوت أصبح مفتوح المصدر!'
-                                  : '🎉 Sinan Note is now Open Source!',
-                              style: TextStyle(
-                                fontSize: 14,
+                              l10n.whatsNewOpenSourceTitle,
+                              style: context.text.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF24292e),
+                                color: githubInk,
                                 height: 1.3,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              isAr
-                                  ? 'الكود متاح على GitHub — استكشف، تعلّم، أو شارك في البناء'
-                                  : 'Code is live on GitHub — explore, learn, or contribute',
-                              style: TextStyle(
-                                fontSize: 12,
+                              l10n.whatsNewOpenSourceSubtitle,
+                              style: context.text.labelMedium?.copyWith(
                                 height: 1.4,
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.6)
-                                    : const Color(0xFF24292e)
-                                        .withValues(alpha: 0.6),
+                                color: githubInk.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -238,9 +224,7 @@ class WhatsNewDialog extends StatelessWidget {
                       Icon(
                         Icons.open_in_new_rounded,
                         size: 16,
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.4)
-                            : const Color(0xFF24292e).withValues(alpha: 0.4),
+                        color: githubInk.withValues(alpha: 0.4),
                       ),
                     ],
                   ),
@@ -252,35 +236,27 @@ class WhatsNewDialog extends StatelessWidget {
               // ⚠️ ثابت: يتغير مع كل إصدار — قائمة الميزات/الإصلاحات المرئية للمستخدم
               _FeatureRow(
                 icon: Icons.menu_open_rounded,
-                color: Colors.indigo,
-                title: isAr ? 'شريط أدوات موحّد' : 'Unified Toolbar',
-                subtitle: isAr
-                    ? 'شريط القوائم (File, Edit, View, Help) مدمج مع البحث في شريط واحد أنيق على سطح المكتب'
-                    : 'Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop',
+                color: context.colors.info,
+                title: l10n.whatsNewUnifiedToolbarTitle,
+                subtitle: l10n.whatsNewUnifiedToolbarDesc,
               ),
               _FeatureRow(
                 icon: Icons.share_rounded,
-                color: Colors.teal,
-                title: isAr ? 'مشاركة ذكية عبر Apex' : 'Smart Sharing via Apex',
-                subtitle: isAr
-                    ? 'الملاحظات المشاركة تصل كاملة بنوعها — تشيك لست، كود، ريتش — وتُعرض بدون حفظ تلقائي'
-                    : 'Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving',
+                color: scheme.tertiary,
+                title: l10n.whatsNewApexSharingTitle,
+                subtitle: l10n.whatsNewApexSharingDesc,
               ),
               _FeatureRow(
                 icon: Icons.view_agenda_rounded,
-                color: Colors.deepPurple,
-                title: isAr ? 'حفظ عرض منفصل' : 'Separate View Modes',
-                subtitle: isAr
-                    ? 'وضع العرض (موسّع/مطوي/شبكة) يُحفظ منفصلاً للجوال وسطح المكتب'
-                    : 'View mode (expanded/compact/grid) saved separately for mobile and desktop',
+                color: scheme.secondary,
+                title: l10n.whatsNewViewModesTitle,
+                subtitle: l10n.whatsNewViewModesDesc,
               ),
               _FeatureRow(
                 icon: Icons.save_outlined,
-                color: Colors.orange,
-                title: isAr ? 'سؤال الحفظ عند الخروج' : 'Save Prompt on Exit',
-                subtitle: isAr
-                    ? 'الملاحظات المستلمة من الخارج لا تُحفظ تلقائياً — يُسألك عند الخروج'
-                    : 'Received notes are not auto-saved — you\'re asked before closing',
+                color: context.colors.warning,
+                title: l10n.whatsNewSavePromptTitle,
+                subtitle: l10n.whatsNewSavePromptDesc,
               ),
 
               const SizedBox(height: 20),
@@ -314,22 +290,16 @@ class WhatsNewDialog extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isAr
-                                  ? 'تحديث سياسة الخصوصية'
-                                  : 'Privacy Policy Updated',
-                              style: TextStyle(
-                                fontSize: 13,
+                              l10n.privacyPolicyUpdatedTitle,
+                              style: context.text.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: scheme.primary,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              isAr
-                                  ? 'تم تحديث السياسة لتعكس المميزات الجديدة — اضغط للمراجعة'
-                                  : 'Policy updated to reflect new features — tap to review',
-                              style: TextStyle(
-                                fontSize: 11.5,
+                              l10n.privacyPolicyUpdatedDesc,
+                              style: context.text.labelSmall?.copyWith(
                                 height: 1.4,
                                 color: scheme.onSurface.withValues(alpha: 0.6),
                               ),
@@ -363,11 +333,8 @@ class WhatsNewDialog extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        isAr
-                            ? 'شكراً لملاحظاتكم — كل تحسين هنا جاء من تجربتكم الحقيقية.'
-                            : 'Thanks for your feedback — every improvement here came from your real experience.',
-                        style: TextStyle(
-                          fontSize: 12.5,
+                        l10n.whatsNewThanks,
+                        style: context.text.labelMedium?.copyWith(
                           height: 1.6,
                           color: scheme.onSecondaryContainer
                               .withValues(alpha: 0.85),
@@ -388,9 +355,9 @@ class WhatsNewDialog extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                   label: Text(
-                    isAr ? 'تم' : 'Got it',
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.bold),
+                    l10n.gotIt,
+                    style: context.text.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -443,14 +410,11 @@ class _FeatureRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3)),
+                    style: context.text.bodySmall
+                        ?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
                 const SizedBox(height: 2),
                 Text(subtitle,
-                    style: TextStyle(
-                        fontSize: 12,
+                    style: context.text.labelMedium?.copyWith(
                         height: 1.4,
                         color: scheme.onSurface.withValues(alpha: 0.55))),
               ],

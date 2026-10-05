@@ -1,0 +1,93 @@
+{
+  "appShortName": { "en": "Sinan", "ar": "Sinan" },
+  "appNameBilingual": { "en": "Sinan Note | سنان نوت", "ar": "Sinan Note | سنان نوت" },
+  "appTaglineOtherLanguage": {
+    "en": "رفيقك الحاد والموثوق للتدوين",
+    "ar": "Your sharp and reliable note-taking companion"
+  },
+  "startTour": { "en": "Start Tour", "ar": "ابدأ الجولة" },
+  "splashLoading": { "en": "Loading...", "ar": "جاري التحميل..." },
+  "splashLoadingServices": { "en": "Loading services...", "ar": "تحميل الخدمات..." },
+  "splashLoadingSettings": { "en": "Loading settings...", "ar": "تحميل الإعدادات..." },
+  "splashSecurityCheck": { "en": "Security check...", "ar": "التحقق من الأمان..." },
+  "splashLoadingNotes": { "en": "Loading notes...", "ar": "تحميل الملاحظات..." },
+  "splashError": { "en": "Error occurred...", "ar": "حدث خطأ..." },
+  "termsOfServiceUrl": {
+    "en": "https://apexflow.now/en/projects/sinan-note/terms",
+    "ar": "https://apexflow.now/ar/projects/sinan-note/terms"
+  },
+  "privacyPolicyUrl": {
+    "en": "https://apexflow.now/en/projects/sinan-note/privacy",
+    "ar": "https://apexflow.now/ar/projects/sinan-note/privacy"
+  },
+  "sinanAiUrl": { "en": "https://sinanai.net/en", "ar": "https://sinanai.net" },
+  "tourHeadline": { "en": "Everything you need in one place", "ar": "كل ما تحتاجه في مكان واحد" },
+  "tourPlainNote": { "en": "Simple plain text note", "ar": "ملاحظة نصية بسيطة وسريعة" },
+  "tourCodeNote": { "en": "Code editor with syntax highlighting", "ar": "محرر كود مع تمييز الصياغة" },
+  "tourReminderNote": { "en": "Reminder with date and time", "ar": "تذكير بتاريخ ووقت محدد" },
+  "tourChecklistNote": { "en": "Interactive checklist", "ar": "قائمة مهام تفاعلية" },
+  "tourOneTimeReminders": { "en": "One-time reminders", "ar": "تذكيرات لمرة واحدة" },
+  "tourRecurringReminders": { "en": "Daily or weekly recurring reminders", "ar": "تذكيرات متكررة يومياً أو أسبوعياً" },
+  "tourInstantNotification": { "en": "Instant notification at set time", "ar": "إشعار فوري في الوقت المحدد" },
+  "tourVaultLocalOnly": { "en": "Vault is local only — never uploaded", "ar": "الخزنة محلية فقط — لا تُرفع أبداً" },
+  "tourMultiDeviceSync": { "en": "Sync across multiple devices", "ar": "مزامنة بين أجهزة متعددة" },
+  "tourAgreePrefix": { "en": "I agree to the ", "ar": "أوافق على " },
+  "whatsNewHeadline": { "en": "Unified Toolbar & Smarter Sharing", "ar": "شريط أدوات موحّد ومشاركة أذكى" },
+  "whatsNewSummary": {
+    "en": "Menu bar and search are now unified, sharing via Apex works like sync, and each layout saves its own view mode.",
+    "ar": "شريط القوائم والبحث أصبحا جزءاً واحداً، المشاركة عبر Apex أصبحت كالمزامنة، وكل وضع عرض يُحفظ منفصلاً."
+  },
+  "whatsNew": { "en": "What's New", "ar": "ما الجديد" },
+  "whatsNewOpenSourceTitle": { "en": "🎉 Sinan Note is now Open Source!", "ar": "🎉 سينان نوت أصبح مفتوح المصدر!" },
+  "whatsNewOpenSourceSubtitle": {
+    "en": "Code is live on GitHub — explore, learn, or contribute",
+    "ar": "الكود متاح على GitHub — استكشف، تعلّم، أو شارك في البناء"
+  },
+  "whatsNewUnifiedToolbarTitle": { "en": "Unified Toolbar", "ar": "شريط أدوات موحّد" },
+  "whatsNewUnifiedToolbarDesc": {
+    "en": "Menu bar (File, Edit, View, Help) merged with search into one sleek bar on desktop",
+    "ar": "شريط القوائم (File, Edit, View, Help) مدمج مع البحث في شريط واحد أنيق على سطح المكتب"
+  },
+  "whatsNewApexSharingTitle": { "en": "Smart Sharing via Apex", "ar": "مشاركة ذكية عبر Apex" },
+  "whatsNewApexSharingDesc": {
+    "en": "Shared notes arrive complete with their type — checklist, code, rich — previewed without auto-saving",
+    "ar": "الملاحظات المشاركة تصل كاملة بنوعها — تشيك لست، كود، ريتش — وتُعرض بدون حفظ تلقائي"
+  },
+  "whatsNewViewModesTitle": { "en": "Separate View Modes", "ar": "حفظ عرض منفصل" },
+  "whatsNewViewModesDesc": {
+    "en": "View mode (expanded/compact/grid) saved separately for mobile and desktop",
+    "ar": "وضع العرض (موسّع/مطوي/شبكة) يُحفظ منفصلاً للجوال وسطح المكتب"
+  },
+  "whatsNewSavePromptTitle": { "en": "Save Prompt on Exit", "ar": "سؤال الحفظ عند الخروج" },
+  "whatsNewSavePromptDesc": {
+    "en": "Received notes are not auto-saved — you're asked before closing",
+    "ar": "الملاحظات المستلمة من الخارج لا تُحفظ تلقائياً — يُسألك عند الخروج"
+  },
+  "privacyPolicyUpdatedTitle": { "en": "Privacy Policy Updated", "ar": "تحديث سياسة الخصوصية" },
+  "privacyPolicyUpdatedDesc": {
+    "en": "Policy updated to reflect new features — tap to review",
+    "ar": "تم تحديث السياسة لتعكس المميزات الجديدة — اضغط للمراجعة"
+  },
+  "whatsNewThanks": {
+    "en": "Thanks for your feedback — every improvement here came from your real experience.",
+    "ar": "شكراً لملاحظاتكم — كل تحسين هنا جاء من تجربتكم الحقيقية."
+  },
+  "noEmailAppTitle": { "en": "No Email App Found", "ar": "لا يوجد تطبيق بريد" },
+  "noEmailAppMessage": {
+    "en": "No email app was found on your device.\n\nYou can contact us directly at:",
+    "ar": "لم يتم العثور على تطبيق بريد إلكتروني على جهازك.\n\nيمكنك التواصل معنا مباشرة عبر:"
+  },
+  "copyEmail": { "en": "Copy Email", "ar": "نسخ البريد" },
+  "emailCopied": { "en": "Email copied", "ar": "تم نسخ البريد الإلكتروني" },
+  "selectChecklistToPin": { "en": "Select Checklist", "ar": "اختر قائمة للتثبيت" },
+  "selectNoteToPin": { "en": "Select Note", "ar": "اختر ملاحظة للتثبيت" },
+  "filterAll": { "en": "All", "ar": "الكل" },
+  "filterPinned": { "en": "Pinned", "ar": "مثبتة" },
+  "filterRecent": { "en": "Recent", "ar": "الأحدث" },
+  "resultsCount": {
+    "en": "Results: {count}",
+    "ar": "عدد النتائج: {count}",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "currentlyPinned": { "en": "Currently Pinned", "ar": "مثبت حالياً" }
+}
