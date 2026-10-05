@@ -37,7 +37,16 @@ abstract interface class SyncRemote {
 
 /// ملف واحد مضغوط (gzip) في Google Drive.
 class DriveSyncRemote implements SyncRemote {
-  static const fileName = 'sinan_backup.gz';
+  DriveSyncRemote({this.fileName = currentFileName});
+
+  /// ملف هذا الإصدار وما بعده.
+  static const currentFileName = 'sinan_sync_v3.gz';
+
+  /// ملف الإصدارات السابقة: تقرؤه الأجهزة المحدَّثة ولا تكتب فيه أبداً،
+  /// فلا يتضرر جهاز لم يُحدَّث بعد.
+  static const legacyFileName = 'sinan_backup.gz';
+
+  final String fileName;
 
   @override
   bool get isSignedIn => GoogleDriveAuth.isSignedIn;

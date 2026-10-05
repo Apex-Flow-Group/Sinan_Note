@@ -14,6 +14,7 @@ import '../../test_setup.dart';
 class FakeDrive implements SyncRemote {
   String? _file;
   int _version = 0;
+  int writes = 0;
   bool failing = false;
 
   Object? get contents => _file == null ? null : jsonDecode(_file!);
@@ -52,6 +53,7 @@ class FakeDrive implements SyncRemote {
   @override
   Future<RemoteFile> write(Map<String, Object?> json) async {
     _check();
+    writes++;
     contents = json;
     return RemoteFile(md5: 'v$_version');
   }
@@ -63,13 +65,15 @@ class Device {
   final TestDataLayer data;
   final SyncRepository sync;
 
-  static Future<Device> create(FakeDrive drive, DateTime Function() clock) async {
+  static Future<Device> create(FakeDrive drive, DateTime Function() clock,
+      {FakeDrive? legacy}) async {
     final data = await TestDataLayer.create(clock: clock);
     final sync = SyncRepository(
       notes: data.notes,
       categories: data.categories,
       tombstones: data.tombstones,
       remote: drive,
+      legacy: legacy,
       store: data.store,
       clock: clock,
     );
@@ -280,5 +284,96 @@ void main() {
     await a.sync.sync();
     expect(a.titles, ['old format']);
     expect((drive.contents! as Map)['version'], '3');
+  });
+
+  group('a device not yet updated (legacy file)', () {
+    late FakeDrive legacy;
+    late Device updated;
+
+    /// ملف كتبه الإصدار السابق: بلا uuid، والأرقام أرقامه.
+    Map<String, Object?> oldFile(List<(int, String, String, int)> notes) => {
+          'version': '2.0',
+          'notes': [
+            for (final (id, title, content, editedHour) in notes)
+              {
+                'id': id,
+                'title': title,
+                'content': content,
+                'createdAt': DateTime.utc(2026).toIso8601String(),
+                'updatedAt': DateTime.utc(2026)
+                    .add(Duration(hours: editedHour))
+                    .toIso8601String(),
+                'isLocked': 0,
+              }
+          ],
+          'categories': const [],
+          'deleted_ids': const {},
+        };
+
+    setUp(() async {
+      legacy = FakeDrive();
+      updated = await Device.create(drive, clock, legacy: legacy);
+    });
+    tearDown(() => updated.dispose());
+
+    test('its file is read and merged, and never written', () async {
+      legacy.contents = oldFile([(1, 'from old phone', 'c', 0)]);
+      final writesBefore = legacy.writes;
+      await updated.write('from new phone', at: DateTime.utc(2026, 3));
+      await updated.sync.sync();
+
+      expect(updated.titles, ['from new phone', 'from old phone']);
+      expect(legacy.writes, writesBefore, reason: 'the old file is untouched');
+      final onDrive = (drive.contents! as Map)['notes'] as List;
+      expect(onDrive, hasLength(2), reason: 'the new file has both');
+    });
+
+    test('an edit on the old device updates the same note, no duplicate',
+        () async {
+      // ملاحظة موجودة قبل التحديث: نفس الرقم ووقت الإنشاء على الجهازين
+      final note = await updated.data.notes.save(Note(
+          title: 'shared',
+          content: 'before',
+          createdAt: DateTime.utc(2026),
+          updatedAt: DateTime.utc(2026)));
+      legacy.contents = oldFile([(note.id!, 'shared', 'edited on old', 5)]);
+      await updated.sync.sync();
+      expect(updated.data.notes.notes.single.content, 'edited on old');
+
+      legacy.contents = oldFile([(note.id!, 'shared', 'edited again', 6)]);
+      await updated.sync.sync();
+      expect(updated.data.notes.notes.single.content, 'edited again');
+    });
+
+    test('a note deleted here does not come back when the old file changes',
+        () async {
+      legacy.contents = oldFile([(1, 'doomed', 'c', 0)]);
+      await updated.sync.sync();
+      now = now.add(const Duration(hours: 1));
+      await updated.data.notes.delete([updated.data.notes.notes.single.id!]);
+      await updated.sync.sync();
+
+      legacy.contents =
+          oldFile([(1, 'doomed', 'c', 0), (2, 'new on old phone', 'c', 0)]);
+      await updated.sync.sync();
+      expect(updated.titles, ['new on old phone']);
+    });
+
+    test('an unchanged old file is not merged again', () async {
+      legacy.contents = oldFile([(1, 'once', 'c', 0)]);
+      await updated.sync.sync();
+      final uploads = drive.writes;
+      await updated.sync.sync();
+      expect(drive.writes, uploads, reason: 'nothing new: no upload');
+    });
+
+    test('a fresh updated device restores from the old file', () async {
+      legacy.contents = oldFile([(1, 'a', 'c', 0), (2, 'b', 'c', 0)]);
+      final fresh = await Device.create(FakeDrive(), clock, legacy: legacy);
+      expect(await fresh.sync.remoteNoteCount(), 2);
+      await fresh.sync.replaceLocal();
+      expect(fresh.titles, ['a', 'b']);
+      await fresh.dispose();
+    });
   });
 }

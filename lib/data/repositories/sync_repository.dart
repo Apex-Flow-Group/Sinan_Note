@@ -1,5 +1,7 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:sinan_note/data/repositories/categories_repository.dart';
 import 'package:sinan_note/data/repositories/notes_repository.dart';
@@ -10,6 +12,7 @@ import 'package:sinan_note/data/services/sync/tombstone_store.dart';
 import 'package:sinan_note/domain/errors.dart' show SyncException;
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/sync/sync_merge.dart';
+import 'package:sinan_note/domain/sync/tombstones.dart';
 
 /// مزامنة الملاحظات غير المقفلة والتصنيفات مع لقطة في السحابة.
 ///
@@ -17,15 +20,20 @@ import 'package:sinan_note/domain/sync/sync_merge.dart';
 /// - لا يُكتب فوق السحابة إلا وهي الملف نفسه الذي رفعه هذا الجهاز آخر مرة؛
 ///   غير ذلك يُدمج أولاً ([SyncMerge]) ثم يُرفع الاتحاد.
 /// - فشل الشبكة أو Drive يرمي [SyncException] ولا يُقرأ كسحابة فارغة.
+/// - ملف الإصدارات السابقة ([legacy]) يُقرأ ويُدمج كلما تغيّر، ولا يُكتب
+///   فيه أبداً: جهاز لم يُحدَّث بعد يبقى على ملفه سليماً، وتصل تعديلاته
+///   إلى الأجهزة المحدَّثة.
 class SyncRepository extends ChangeNotifier {
   SyncRepository({
     required NotesRepository notes,
     required CategoriesRepository categories,
     required TombstoneStore tombstones,
     required SyncRemote remote,
+    SyncRemote? legacy,
     required KeyValueStore store,
     DateTime Function()? clock,
-  })  : _notes = notes,
+  })  : _legacy = legacy,
+        _notes = notes,
         _store = store,
         _categories = categories,
         _tombstones = tombstones,
@@ -39,6 +47,7 @@ class SyncRepository extends ChangeNotifier {
   final CategoriesRepository _categories;
   final TombstoneStore _tombstones;
   final SyncRemote _remote;
+  final SyncRemote? _legacy;
   final KeyValueStore _store;
   final DateTime Function() _now;
 
@@ -46,6 +55,8 @@ class SyncRepository extends ChangeNotifier {
   static const _syncedAtKey = 'sync_last_at';
   static const _dirtyKey = 'sync_dirty';
   static const _autoSyncKey = 'google_drive_auto_sync';
+  static const _legacyMd5Key = 'sync_legacy_md5';
+  static const _legacyIdsKey = 'sync_legacy_uuids';
 
   Future<void> _queue = Future.value();
   bool _isSyncing = false;
@@ -68,8 +79,9 @@ class SyncRepository extends ChangeNotifier {
     _dirty = await _store.getBool(_dirtyKey) ?? true;
     _autoSync = await _store.getBool(_autoSyncKey) ?? false;
     final at = await _store.getInt(_syncedAtKey);
-    _lastSyncedAt =
-        at == null ? null : DateTime.fromMillisecondsSinceEpoch(at, isUtc: true);
+    _lastSyncedAt = at == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(at, isUtc: true);
     notifyListeners();
   }
 
@@ -92,6 +104,7 @@ class SyncRepository extends ChangeNotifier {
     await _remote.signOut();
     await setAutoSync(false);
     await _store.setString(_md5Key, '');
+    await _store.setString(_legacyMd5Key, '');
     _lastSyncedAt = null;
     notifyListeners();
   }
@@ -106,41 +119,107 @@ class SyncRepository extends ChangeNotifier {
 
   /// يرفع التغييرات، أو يدمج أولاً إن تغيّرت السحابة منذ آخر رفع من هنا.
   Future<void> sync() => _exclusive(() async {
+        final absorbed = await _absorbLegacy();
         final file = await _remote.stat();
         if (file != null && !await _isOurs(file)) {
           await _mergeRemote();
-        } else if (file != null && !_dirty) {
+        } else if (file != null && !_dirty && !absorbed) {
           return;
         }
         await _upload();
       });
 
-  /// "استخدم ما على الجهاز": يكتب حالة الجهاز فوق السحابة.
-  Future<void> overwriteRemote() => _exclusive(_upload);
+  /// "استخدم ما على الجهاز": يكتب حالة الجهاز فوق السحابة، ويُعدّ ما في
+  /// ملف الإصدارات السابقة الآن مقروءاً.
+  Future<void> overwriteRemote() => _exclusive(() async {
+        await _skipLegacy();
+        await _upload();
+      });
 
-  /// "استخدم ما في Drive": يستبدل ملاحظات الجهاز غير المقفلة بما في السحابة.
-  /// التصنيفات تُضاف ولا يُحذف منها شيء.
+  /// "استخدم ما في Drive": يستبدل ملاحظات الجهاز غير المقفلة بما في السحابة
+  /// (أو بملف الإصدارات السابقة إن لم يوجد غيره). التصنيفات تُضاف ولا
+  /// يُحذف منها شيء.
   Future<void> replaceLocal() => _exclusive(() async {
-        final snapshot = await _read();
+        final snapshot = await _read() ?? await _legacySnapshot();
         if (snapshot == null) throw const SyncException('No backup in Drive');
         await _categories.ensureNamed(snapshot.categories.values);
-        await _notes.replaceUnlocked(_withLocalCategories(snapshot, snapshot.notes));
-        await _tombstones.write(
-            (await _tombstones.read()).union(snapshot.tombstones));
+        await _notes
+            .replaceUnlocked(_withLocalCategories(snapshot, snapshot.notes));
+        await _tombstones
+            .write((await _tombstones.read()).union(snapshot.tombstones));
+        await _skipLegacy();
         final file = await _remote.stat();
         await _markSynced(file?.md5);
       });
 
   /// عدد الملاحظات في السحابة، أو null إن لم تكن فيها نسخة.
-  Future<int?> remoteNoteCount() async => (await _read())?.notes.length;
+  Future<int?> remoteNoteCount() async =>
+      (await _read())?.notes.length ?? (await _legacySnapshot())?.notes.length;
 
-  Future<bool> hasRemote() async => await _remote.stat() != null;
+  Future<bool> hasRemote() async =>
+      await _remote.stat() != null || await _legacy?.stat() != null;
 
   // ── داخلي ────────────────────────────────────────────────────────────────
 
   Future<void> _mergeRemote() async {
     final snapshot = await _read();
-    if (snapshot == null) return;
+    if (snapshot != null) await _apply(snapshot);
+  }
+
+  /// يدمج ملف الإصدارات السابقة إن تغيّر منذ آخر قراءة. يُرجع true إن
+  /// تغيّر شيء محلياً (فيُرفع).
+  Future<bool> _absorbLegacy() async {
+    final legacy = _legacy;
+    if (legacy == null) return false;
+    final file = await legacy.stat();
+    if (file == null || file.md5 == await _store.getString(_legacyMd5Key)) {
+      return false;
+    }
+    final snapshot = await _legacySnapshot();
+    final changed = snapshot != null && await _apply(snapshot);
+    await _store.setString(_legacyMd5Key, file.md5 ?? '');
+    return changed;
+  }
+
+  /// يُعدّ ملف الإصدارات السابقة بحالته الحالية مدموجاً.
+  Future<void> _skipLegacy() async {
+    final file = await _legacy?.stat();
+    if (file != null) await _store.setString(_legacyMd5Key, file.md5 ?? '');
+  }
+
+  /// لقطة ملف الإصدارات السابقة. ملفه بلا uuid، فتُعطى كل ملاحظة هوية
+  /// ثابتة بـ (رقمها في الملف + وقت إنشائها) تُحفظ بين القراءات: تعديلها
+  /// على الجهاز القديم لا يكررها، وحذفها هنا (بشاهده) لا يعيدها. ما كان
+  /// موجوداً قبل التحديث يحمل الرقم نفسه محلياً فيأخذ uuid نسخته المحلية.
+  Future<SyncSnapshot?> _legacySnapshot() async {
+    final json = await _legacy?.read();
+    if (json == null) return null;
+    final snapshot = SyncSnapshot.fromJson(json);
+    final saved = await _store.getString(_legacyIdsKey);
+    final ids = saved == null || saved.isEmpty
+        ? <String, String>{}
+        : (jsonDecode(saved) as Map).cast<String, String>();
+    for (final n in _notes.notes) {
+      ids.putIfAbsent(_legacyIdentity(n), () => n.uuid);
+    }
+    final notes = [
+      for (final n in snapshot.notes)
+        n.copyWith(uuid: ids.putIfAbsent(_legacyIdentity(n), () => n.uuid)),
+    ];
+    await _store.setString(_legacyIdsKey, jsonEncode(ids));
+    return SyncSnapshot(
+      notes: notes,
+      categories: snapshot.categories,
+      tombstones: const Tombstones(),
+      hideProFromHome: snapshot.hideProFromHome,
+    );
+  }
+
+  static String _legacyIdentity(Note n) =>
+      '${n.id}:${n.createdAt.millisecondsSinceEpoch}';
+
+  /// يدمج [snapshot] محلياً. يُرجع true إن تغيّر شيء.
+  Future<bool> _apply(SyncSnapshot snapshot) async {
     final plan = SyncMerge.plan(
       local: _notes.notes,
       localCategories: _categories.categories,
@@ -161,6 +240,7 @@ class SyncRepository extends ChangeNotifier {
     if (hidePro != null && !_dirty) {
       await _categories.applySyncedHideProFromHome(hidePro);
     }
+    return plan.changesLocal;
   }
 
   Future<void> _upload() async {

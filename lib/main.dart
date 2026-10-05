@@ -112,6 +112,7 @@ void main() async {
     categories: categories,
     tombstones: tombstones,
     remote: DriveSyncRemote(),
+    legacy: DriveSyncRemote(fileName: DriveSyncRemote.legacyFileName),
     store: store,
   );
   await sync.initialize();
