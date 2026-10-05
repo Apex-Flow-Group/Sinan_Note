@@ -84,7 +84,10 @@ class _Rule {
   final RegExp pattern;
 }
 
-final _arabicLiteral = RegExp(r'''(['"])(?:(?!\1).)*[؀-ۿ](?:(?!\1).)*\1''');
+/// نص فيه حرف عربي. النص الخام (r'…') مستثنى: هو أنماط RegExp (نطاقات
+/// أحرف)، لا نصوص معروضة.
+final _arabicLiteral =
+    RegExp(r'''(?<![rR])(['"])(?:(?!\1).)*[؀-ۿ](?:(?!\1).)*\1''');
 
 /// نص إنجليزي معروض: `Text('…')` أو وسيط نصي للمستخدم (title, message,
 /// tooltip…) فيه حرفان لاتينيان خارج الـ interpolation.
@@ -141,7 +144,9 @@ final _rules = <_Rule>[
       'L1',
       (p, l) => _isUi(l) || l == _Layer.viewModel || l == _Layer.other,
       RegExp(
-          r'''\bisAr(abic)?\b|languageCode\s*==|'''
+          // (?:abic) لا تلتقط: مجموعة ملتقطة هنا كانت تُزيح ترقيم \1 في نمط
+          // النص العربي فلا يُلتقط إلا نص يبدأ بحرف عربي
+          r'''\bisAr(?:abic)?\b|languageCode\s*==|'''
           '${_arabicLiteral.pattern}|${_englishUiLiteral.pattern}')),
   // L2: البيانات لا تُنتج نصوصاً للمستخدم. domain/text يعالج اللغة نفسها
   // (حروف عربية في قواعد التطبيع)، وليس نصاً معروضاً.

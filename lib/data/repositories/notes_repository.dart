@@ -122,6 +122,10 @@ class NotesRepository extends ChangeNotifier {
     return (await updateMeta(id, isPinned: !current.isPinned))?.isPinned;
   }
 
+  /// تثبيت أو إلغاء تثبيت عدة ملاحظات في transaction واحدة (الأعلام فقط).
+  Future<void> setPinned(List<int> ids, bool pinned) =>
+      _setFlags(ids, (n) => n.copyWith(isPinned: pinned));
+
   Future<void> archive(List<int> ids) =>
       _setFlags(ids, (n) => n.copyWith(isArchived: true));
 

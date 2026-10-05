@@ -148,6 +148,18 @@ void main() {
       expect(effects.removed, [b.id]);
     });
 
+    test('setPinned pins several notes in one write, flags only', () async {
+      final a = await repo.save(note('a'));
+      final b = await repo.save(note('b'));
+      var notified = 0;
+      repo.addListener(() => notified++);
+      await repo.setPinned([a.id!, b.id!], true);
+      expect(repo.notes.every((n) => n.isPinned), isTrue);
+      expect(repo.cached(a.id!)!.content, 'body');
+      await repo.setPinned([], false);
+      expect(repo.notes.every((n) => n.isPinned), isTrue);
+    });
+
     test('versions follow the policy and keep at most 20', () async {
       final a = await repo.save(note('a'));
       await repo.recordVersion(a.id!, VersionTrigger.manual);

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
-import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/widgets/common/custom_share_sheet.dart';
 import 'package:sinan_note/widgets/common/glowing_search_field.dart';
@@ -89,17 +88,17 @@ class _SmartHeaderState extends State<SmartHeader>
                           Provider.of<NotesProvider>(context, listen: false);
                       final ids = List<int>.from(selectedIds);
                       final count = ids.length;
-                      final notesToRestore = <Note>[];
-                      for (final id in ids) {
-                        final note =
-                            provider.notes.firstWhere((n) => n.id == id);
-                        notesToRestore.add(note);
-                        final updatedNote = note.copyWith(
-                          isPinned: !note.isPinned,
-                          updatedAt: DateTime.now(),
-                        );
-                        await provider.updateNote(updatedNote);
-                      }
+                      // كل واحدة تنقلب، والتراجع يعيد كل واحدة لحالتها
+                      final wasPinned = {
+                        for (final n in provider.notes)
+                          if (ids.contains(n.id)) n.id!: n.isPinned,
+                      };
+                      List<int> withPin(bool pinned) => [
+                            for (final e in wasPinned.entries)
+                              if (e.value == pinned) e.key,
+                          ];
+                      await provider.setPinned(withPin(false), true);
+                      await provider.setPinned(withPin(true), false);
                       widget.selectedNoteIdsNotifier.value = {};
                       if (context.mounted) {
                         UnifiedNotificationService().showWithUndo(
@@ -109,9 +108,8 @@ class _SmartHeaderState extends State<SmartHeader>
                           type: NotificationType.success,
                           onExecute: () {},
                           onUndo: () async {
-                            for (final note in notesToRestore) {
-                              await provider.updateNote(note);
-                            }
+                            await provider.setPinned(withPin(true), true);
+                            await provider.setPinned(withPin(false), false);
                           },
                           undoLabel: l10n.undo,
                         );
@@ -179,7 +177,10 @@ class _SmartHeaderState extends State<SmartHeader>
                                 if (note.id != null) {
                                   Provider.of<NotesProvider>(context,
                                           listen: false)
-                                      .duplicateNote(note.id!);
+                                      .duplicateNote(note.id!,
+                                          copyLabel: AppLocalizations.of(
+                                                  context)!
+                                              .noteCopy);
                                 }
                               },
                             );

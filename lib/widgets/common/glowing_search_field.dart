@@ -46,21 +46,24 @@ class _GlowingSearchFieldState extends State<GlowingSearchField>
       vsync: this,
     );
 
-    _focusNode.addListener(() {
-      if (!mounted) return;
-      setState(() {});
-      if (_focusNode.hasFocus) {
-        _waveController.repeat();
-      } else {
-        _waveController.stop();
-        _waveController.animateTo(0,
-            duration: const Duration(milliseconds: 500));
-      }
-    });
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (!mounted) return;
+    setState(() {});
+    if (_focusNode.hasFocus) {
+      _waveController.repeat();
+    } else {
+      _waveController.stop();
+      _waveController.animateTo(0, duration: const Duration(milliseconds: 500));
+    }
   }
 
   @override
   void dispose() {
+    // FocusNode الممرَّر من الأب يعيش بعدنا: يُزال مستمعنا منه
+    _focusNode.removeListener(_onFocusChanged);
     _waveController.dispose();
     if (widget.focusNode == null) _focusNode.dispose();
     super.dispose();

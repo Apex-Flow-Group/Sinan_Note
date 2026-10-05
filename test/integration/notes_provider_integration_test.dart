@@ -106,7 +106,7 @@ void main() {
     test('duplicateNote يُنشئ نسخة مستقلة', () async {
       final id =
           await provider.addNote(note(title: 'Original', content: 'Content'));
-      final newId = await provider.duplicateNote(id);
+      final newId = await provider.duplicateNote(id, copyLabel: 'Copy');
       expect(newId, isNot(equals(id)));
       expect(provider.activeNotes.length, 2);
       final copy = provider.activeNotes.firstWhere((n) => n.id == newId);
@@ -114,7 +114,7 @@ void main() {
     });
 
     test('duplicateNote لملاحظة غير موجودة يُرجع -1', () async {
-      final result = await provider.duplicateNote(99999);
+      final result = await provider.duplicateNote(99999, copyLabel: 'Copy');
       expect(result, -1);
     });
   });

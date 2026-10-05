@@ -238,7 +238,10 @@ class NotesProvider extends ChangeNotifier {
         content: newContent, noteType: newNoteType, isChecklist: isChecklist);
   }
 
-  Future<int> duplicateNote(int id, {String copyLabel = 'Copy'}) async =>
+  Future<void> setPinned(List<int> ids, bool pinned) =>
+      _notes.setPinned(ids, pinned);
+
+  Future<int> duplicateNote(int id, {required String copyLabel}) async =>
       (await _notes.duplicate(id, copyLabel: copyLabel))?.id ?? -1;
 
   // ── النسخ السابقة ────────────────────────────────────────────────────────

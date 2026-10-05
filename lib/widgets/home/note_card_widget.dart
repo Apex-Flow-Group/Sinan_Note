@@ -1,4 +1,4 @@
-// Copyright � 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:ui' as ui;
 
@@ -184,6 +184,13 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
     _contentDirection = preview.contentDirection;
   }
 
+  /// موعد التذكير بلغة التطبيق: "الأحد، 5 أكتوبر · 3:30 م".
+  static String _reminderLabel(BuildContext context, DateTime at) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return '${DateFormat.MMMEd(locale).format(at)} · '
+        '${DateFormat.jm(locale).format(at)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -307,7 +314,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                         mode: mode,
                         readOnly: true,
                       );
-                      _loadingNotifier.value = false;
+                      // البطاقة قد تُزال أثناء المحرر (حذف، أرشفة، مزامنة)
+                      if (mounted) _loadingNotifier.value = false;
                       if ((result == true || result == null) && mounted) {
                         widget.onNoteChanged();
                       }
@@ -360,8 +368,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 8),
-                                              // �� ���� ������ (source == 'locked') �������� ����� ������
-                                              // ? ���� ������� ������ ����� �� "����� ����"
+                                              // خارج الخزنة (source != 'locked') لا يُعرض نص الملاحظة المقفلة،
+                                              // بل عبارة "محتوى محمي" فقط
                                               (widget.note.isLocked &&
                                                       widget.source != 'locked')
                                                   ? Text(
@@ -452,7 +460,8 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                         const SizedBox(width: 4),
                                         Flexible(
                                           child: Text(
-                                            '${DateFormat('EEE, MMM d').format(widget.note.reminderDateTime!)} � ${DateFormat('h:mm a').format(widget.note.reminderDateTime!)}',
+                                            _reminderLabel(context,
+                                                widget.note.reminderDateTime!),
                                             style: context.text.labelSmall
                                                 ?.copyWith(
                                               color: badgeColor,
@@ -583,7 +592,7 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                           ),
                         ),
                       ),
-                    // loading indicator ���� �� ������� ����� pre-build Quill
+                    // مؤشر تحميل أثناء فتح الملاحظة (بناء Quill مسبقاً)
                     ValueListenableBuilder<bool>(
                       valueListenable: _loadingNotifier,
                       builder: (_, loading, __) => loading

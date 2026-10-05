@@ -137,18 +137,12 @@ class NoteContextMenu extends StatelessWidget {
             '${note.title}\n\n$plainContent',
             subject: note.title,
             note: note,
+            // نسخة من المستودع: تبقى مقفلة إن كانت الأصل مقفلة (كانت تُنشأ
+            // هنا بنص واضح)، وبعنوان مترجم
             onNoteCopied: () async {
-              final newNote = Note(
-                title: '${note.title} (نسخة)',
-                content: note.content,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-                colorIndex: note.colorIndex,
-                noteType: note.noteType,
-                isProfessional: note.isProfessional,
-                isChecklist: note.isChecklist,
-              );
-              await notesProvider.addOrUpdateNote(newNote);
+              if (note.id == null) return;
+              await notesProvider.duplicateNote(note.id!,
+                  copyLabel: l10n.noteCopy);
             },
           );
         }
