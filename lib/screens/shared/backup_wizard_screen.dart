@@ -323,13 +323,13 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          // استعادة .db/.sinannote/.isar — متاحة دائماً لمن عنده نسخة قديمة
+          // استعادة .db (SQLite) — النسخ القديمة بصيغة Isar تُرفض لأنها تتلف القاعدة
           BackupOptionTile(
             icon: Icons.storage_outlined,
             title: isArabic ? 'استعادة قاعدة البيانات' : 'Restore Database',
             subtitle: isArabic
-                ? 'استعد من ملف .db أو .sinannote أو .isar'
-                : 'Restore from .db, .sinannote or .isar file',
+                ? 'استعد من ملف .db'
+                : 'Restore from a .db file',
             color: Colors.purple,
             actions: [
               BackupActionBtn(

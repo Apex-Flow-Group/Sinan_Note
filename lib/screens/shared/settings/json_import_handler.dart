@@ -3,7 +3,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
@@ -52,35 +51,9 @@ class JsonImportHandler {
             lang == 'ar' ? 'لا توجد ملاحظات في الملف' : 'No notes in file');
       }
 
-      // فك تشفير تلقائي لو عنده مفتاح — بدون إجبار
-      final hasKey = await VaultService.isVaultSetup();
-      enc.Key? masterKey;
-      if (hasKey) {
-        try {
-          masterKey = await VaultService.getMasterKey();
-        } catch (_) {}
-      }
-
-      final notesToImport = <Note>[];
-      for (final map in notesList) {
-        final note = Note.fromMap(map);
-        if (note.isLocked &&
-            masterKey != null &&
-            VaultService.isEncrypted(note.content)) {
-          try {
-            final decTitle = VaultService.decryptWithKey(note.title, masterKey);
-            final decContent =
-                VaultService.decryptWithKey(note.content, masterKey);
-            notesToImport
-                .add(note.copyWith(title: decTitle, content: decContent));
-          } catch (_) {
-            notesToImport.add(note);
-          }
-        } else {
-          notesToImport.add(note);
-        }
-      }
-      if (masterKey != null) VaultService.wipeMasterKey(masterKey);
+      final notesToImport = <Note>[
+        for (final map in notesList) await secureLockedNote(Note.fromMap(map)),
+      ];
 
       final dbService = SqliteDatabaseService();
       await SqliteDatabaseService.initialize();
@@ -114,6 +87,29 @@ class JsonImportHandler {
           context: context,
           message: e.toString().replaceAll('Exception:', ''),
           type: NotificationType.error);
+    }
+  }
+
+  /// الملاحظة المقفلة يجب أن تُخزَّن مشفّرة دائماً.
+  /// - مشفّرة أصلاً → تبقى كما هي (لا فك تشفير عند الاستيراد).
+  /// - غير مشفّرة والخزنة مُعدّة → تُشفَّر بالمفتاح الحالي.
+  /// - غير مشفّرة ولا خزنة → تُستورد غير مقفلة، بدل علامة قفل على نص مكشوف.
+  @visibleForTesting
+  static Future<Note> secureLockedNote(Note note) async {
+    if (!note.isLocked || note.content.isEmpty) return note;
+    if (VaultService.isEncrypted(note.content)) return note;
+    if (!await VaultService.isVaultSetup()) {
+      return note.copyWith(isLocked: false);
+    }
+    try {
+      return note.copyWith(
+        title: note.title.isEmpty
+            ? ''
+            : await VaultService.encryptWithMasterKey(note.title),
+        content: await VaultService.encryptWithMasterKey(note.content),
+      );
+    } on VaultLockedException {
+      throw Exception('افتح الخزنة أولاً لاستيراد الملاحظات المقفلة');
     }
   }
 
