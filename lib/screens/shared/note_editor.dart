@@ -83,6 +83,10 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   bool _isQuillReady = false;
   final ValueNotifier<bool> _selectionBarActive = ValueNotifier(false);
 
+  /// يُعيد بناء الرأس وشريط الأدوات فقط (حالة التنسيق، التراجع) — لا الشاشة
+  /// كلها مع كل حرف.
+  final _chrome = ValueNotifier<int>(0);
+
   @override
   bool get wantKeepAlive => true;
 
@@ -111,9 +115,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _coordinator.initialize(context);
     _isReadOnly = widget.readOnly;
     _vm = context.read<EditorSessions>().open(
-      widget.note,
-      locked: widget.originallyLocked || (widget.note?.isLocked ?? false),
-    )..attach(this);
+          widget.note,
+          locked: widget.originallyLocked || (widget.note?.isLocked ?? false),
+        )..attach(this);
 
     // بداية جلسة التحرير: الملاحظة كما خُزّنت عند الفتح
     final opened = widget.note;
@@ -197,6 +201,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     _quillChangesSubscription?.cancel();
     _coordinator.quillController?.removeListener(_onQuillSelectionChanged);
     _selectionBarActive.dispose();
+    _chrome.dispose();
     WidgetsBinding.instance.removeObserver(this);
     // ما كُتب ولم يُحفظ بعد (الحفظ التلقائي المعلّق): يُلتقط الآن ويُكتب
     _coordinator.autosaveTimer?.cancel();
@@ -219,7 +224,6 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     }
   }
 
-
   /// نهاية جلسة تحرير: نسخة واحدة إن تغيّرت الملاحظة المخزّنة منذ فُتحت
   /// (والسياسة في المستودع تقرر إن كان التغيير ذا معنى). المقفلة لا نسخ لها.
   Future<void> _endVersionSession() async {
@@ -237,9 +241,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     await provider.recordVersion(noteId, VersionTrigger.sessionEnd);
   }
 
-  static (String, String) _sessionKey(Note note) =>
-      (note.title, note.content);
-
+  static (String, String) _sessionKey(Note note) => (note.title, note.content);
 
   // ==================== DIALOG METHODS ====================
 
@@ -403,11 +405,12 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final newVaultNote = _vm.noteId == null && _vm.isLocked;
     if (!force && !newVaultNote && !state.hasChanges()) return null;
 
-    final usesQuill = _currentMode != NoteMode.code &&
-        _currentMode != NoteMode.checklist;
+    final usesQuill =
+        _currentMode != NoteMode.code && _currentMode != NoteMode.checklist;
     final quill = _coordinator.quillController;
     // المستند الكامل لم يُحمّل بعد (معاينة أول 20 سطراً): حفظه يقطع الملاحظة
-    if (usesQuill && (quill == null || !_coordinator.isQuillFullyLoaded) &&
+    if (usesQuill &&
+        (quill == null || !_coordinator.isQuillFullyLoaded) &&
         (widget.note?.content.isNotEmpty ?? false)) {
       return null;
     }
@@ -425,8 +428,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       _ => quill == null || QuillMigration.toPlainText(quill).trim().isEmpty,
     };
     final draft = NoteDraft(
-      title: _coordinator
-          .getCurrentTitle(_l10nRef?.newNoteTitle ?? 'New Note'),
+      title: _coordinator.getCurrentTitle(_l10nRef?.newNoteTitle ?? 'New Note'),
       content: content,
       isEmpty: isEmpty,
       colorIndex: state.colorIndex,
@@ -549,38 +551,41 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   /// يُعاد استدعاؤه عند تغيير الـ cursor/selection في Quill
   /// لتحديث حالة أزرار التنسيق (Bold/Italic/H1/إلخ) في الـ toolbar
   void _onQuillSelectionChanged() {
-    if (mounted) setState(() {});
+    if (mounted) _chrome.value++;
   }
 
   void _updateUndoRedoState() {
-    if (_currentMode == NoteMode.checklist) return;
-
+    if (_currentMode == NoteMode.checklist || !mounted) return;
+    final bool canUndo, canRedo;
     if (_currentMode == NoteMode.code) {
-      setState(() {
-        _coordinator.stateManager.canUndo =
-            _coordinator.codeUndoController.value.canUndo;
-        _coordinator.stateManager.canRedo =
-            _coordinator.codeUndoController.value.canRedo;
-      });
-    } else if (_currentMode == NoteMode.simple ||
-        _currentMode == NoteMode.rich ||
-        _currentMode == NoteMode.reminder) {
+      canUndo = _coordinator.codeUndoController.value.canUndo;
+      canRedo = _coordinator.codeUndoController.value.canRedo;
+    } else {
       final quill = _coordinator.quillController;
       if (quill == null) return;
-      setState(() {
-        _coordinator.stateManager.canUndo = quill.document.history.hasUndo;
-        _coordinator.stateManager.canRedo = quill.document.history.hasRedo;
-      });
+      canUndo = quill.document.history.hasUndo;
+      canRedo = quill.document.history.hasRedo;
     }
+    final state = _coordinator.stateManager;
+    if (state.canUndo == canUndo && state.canRedo == canRedo) return;
+    state
+      ..canUndo = canUndo
+      ..canRedo = canRedo;
+    _chrome.value++;
   }
 
   void _updateChecklistUndoRedo() {
-    if (_coordinator.checklistUndoRedo != null && mounted) {
-      _coordinator.stateManager.canUndo =
-          _coordinator.checklistUndoRedo!.canUndo;
-      _coordinator.stateManager.canRedo =
-          _coordinator.checklistUndoRedo!.canRedo;
+    final history = _coordinator.checklistUndoRedo;
+    final state = _coordinator.stateManager;
+    if (history == null || !mounted) return;
+    if (state.canUndo == history.canUndo && state.canRedo == history.canRedo) {
+      return;
     }
+    // الأزرار تتبع الحالة؛ إعادة البناء فقط حين تتغير
+    setState(() {
+      state.canUndo = history.canUndo;
+      state.canRedo = history.canRedo;
+    });
   }
 
   Future<void> _promptForPassword() async {
@@ -795,126 +800,137 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
                 selectionBarActive: _selectionBarActive,
               ),
             ),
-            EditorBuildMethods.buildHeader(
-              context: context,
-              coordinator: _coordinator,
-              finalTextColor: finalTextColor,
-              currentTitle: _coordinator.getCurrentTitle(l10n.newNoteTitle),
-              note: widget.note,
-              notePassword: _coordinator.notePassword,
-              onReminderTap: _showReminderDialog,
-              onHistoryTap: _showHistorySheet,
-              onTitleTap: _showRenameTitleDialog,
-              onBackTap: _handleBack,
-              onCategoryChanged: (ids) {
-                setState(() => _coordinator.stateManager.categoryIds = ids);
-                _coordinator.stateManager.markDirty();
-              },
-              originallyLocked: widget.originallyLocked,
-              scrollProgress: _coordinator.scrollProgress,
-              isReadOnly: false,
-              selectionBarActive: _selectionBarActive,
-              quillController: _coordinator.quillController,
-              onPaste: () async {
-                final ctrl = _coordinator.quillController;
-                if (ctrl == null) return;
-                final data = await Clipboard.getData(Clipboard.kTextPlain);
-                final text = data?.text;
-                if (text == null || text.isEmpty) return;
-                final sel = ctrl.selection;
-                final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
-                final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
-                if (_currentMode == NoteMode.rich && _looksLikeMarkdown(text)) {
-                  final mdDelta = MarkdownToDelta(
-                    markdownDocument: md.Document(encodeHtml: false),
-                  ).convert(text);
-                  final insertDelta = Delta();
-                  if (deleteLen > 0) {
-                    insertDelta
-                      ..retain(offset)
-                      ..delete(deleteLen);
+            ValueListenableBuilder<int>(
+              valueListenable: _chrome,
+              builder: (context, _, __) => EditorBuildMethods.buildHeader(
+                context: context,
+                coordinator: _coordinator,
+                finalTextColor: finalTextColor,
+                currentTitle: _coordinator.getCurrentTitle(l10n.newNoteTitle),
+                note: widget.note,
+                notePassword: _coordinator.notePassword,
+                onReminderTap: _showReminderDialog,
+                onHistoryTap: _showHistorySheet,
+                onTitleTap: _showRenameTitleDialog,
+                onBackTap: _handleBack,
+                onCategoryChanged: (ids) {
+                  setState(() => _coordinator.stateManager.categoryIds = ids);
+                  _coordinator.stateManager.markDirty();
+                },
+                originallyLocked: widget.originallyLocked,
+                scrollProgress: _coordinator.scrollProgress,
+                isReadOnly: false,
+                selectionBarActive: _selectionBarActive,
+                quillController: _coordinator.quillController,
+                onPaste: () async {
+                  final ctrl = _coordinator.quillController;
+                  if (ctrl == null) return;
+                  final data = await Clipboard.getData(Clipboard.kTextPlain);
+                  final text = data?.text;
+                  if (text == null || text.isEmpty) return;
+                  final sel = ctrl.selection;
+                  final offset = sel.isCollapsed ? sel.extentOffset : sel.start;
+                  final deleteLen = sel.isCollapsed ? 0 : sel.end - sel.start;
+                  if (_currentMode == NoteMode.rich &&
+                      _looksLikeMarkdown(text)) {
+                    final mdDelta = MarkdownToDelta(
+                      markdownDocument: md.Document(encodeHtml: false),
+                    ).convert(text);
+                    final insertDelta = Delta();
+                    if (deleteLen > 0) {
+                      insertDelta
+                        ..retain(offset)
+                        ..delete(deleteLen);
+                    } else {
+                      insertDelta.retain(offset);
+                    }
+                    for (final op in mdDelta.toList()) {
+                      insertDelta.push(op);
+                    }
+                    ctrl.compose(
+                      insertDelta,
+                      TextSelection.collapsed(
+                          offset: offset + mdDelta.length - 1),
+                      ChangeSource.local,
+                    );
                   } else {
-                    insertDelta.retain(offset);
+                    ctrl.replaceText(offset, deleteLen, text,
+                        TextSelection.collapsed(offset: offset + text.length));
                   }
-                  for (final op in mdDelta.toList()) {
-                    insertDelta.push(op);
-                  }
-                  ctrl.compose(
-                    insertDelta,
-                    TextSelection.collapsed(
-                        offset: offset + mdDelta.length - 1),
-                    ChangeSource.local,
-                  );
-                } else {
-                  ctrl.replaceText(offset, deleteLen, text,
-                      TextSelection.collapsed(offset: offset + text.length));
-                }
-              },
-              onSaveTap: () async {
-                if (_currentMode == NoteMode.code &&
-                    _coordinator.detectedLanguage != null) {
-                  final ext = _coordinator.smartController
-                      .getExtensionForLanguage(_coordinator.detectedLanguage!);
-                  await _showSmartSaveDialog(ext);
-                } else {
-                  await _saveNote();
-                }
-                if (context.mounted) {
-                  if (widget.onClose != null) {
-                    widget.onClose!();
+                },
+                onSaveTap: () async {
+                  if (_currentMode == NoteMode.code &&
+                      _coordinator.detectedLanguage != null) {
+                    final ext = _coordinator.smartController
+                        .getExtensionForLanguage(
+                            _coordinator.detectedLanguage!);
+                    await _showSmartSaveDialog(ext);
                   } else {
-                    Navigator.pop(
-                        context,
-                        _coordinator.savedNoteId != null ||
-                            widget.note != null);
+                    await _saveNote();
                   }
-                }
-              },
+                  if (context.mounted) {
+                    if (widget.onClose != null) {
+                      widget.onClose!();
+                    } else {
+                      Navigator.pop(
+                          context,
+                          _coordinator.savedNoteId != null ||
+                              widget.note != null);
+                    }
+                  }
+                },
+              ),
             ),
-            EditorBuildMethods.buildToolbar(
-              context: context,
-              coordinator: _coordinator,
-              finalTextColor: finalTextColor,
-              mode: _currentMode,
-              note: widget.note,
-              savedNoteId: _coordinator.savedNoteId,
-              smartController: _coordinator.smartController,
-              formattingController: _coordinator.formattingController,
-              selectionBarActive: _selectionBarActive,
-              onReminderTap: _showReminderDialog,
-              onColorPaletteTap: _showColorPalette,
-              onRebuild: () {
-                if (mounted) setState(() {});
-              },
-              onSmartSaveDialog: () async {
-                if (_coordinator.detectedLanguage != null) {
-                  final ext = _coordinator.smartController
-                      .getExtensionForLanguage(_coordinator.detectedLanguage!);
-                  await _showSmartSaveDialog(ext);
-                }
-              },
-              saveNote: _saveNote,
-              scrollProgress: _coordinator.scrollProgress,
-              onInsertSymbol: (symbol) {
-                final ctrl = _coordinator.codeController;
-                if (ctrl == null) return;
-                final sel = ctrl.selection;
-                final text = ctrl.text;
-                if (sel.isValid && !sel.isCollapsed) {
-                  ctrl.text = text.replaceRange(sel.start, sel.end, symbol);
-                } else if (sel.isValid) {
-                  final pos = sel.baseOffset;
-                  final newText =
-                      text.substring(0, pos) + symbol + text.substring(pos);
-                  ctrl.value = ctrl.value.copyWith(
-                    text: newText,
-                    selection: TextSelection.collapsed(
-                        offset: pos + symbol.length ~/ 2),
-                  );
-                } else {
-                  ctrl.text = text + symbol;
-                }
-              },
+            ValueListenableBuilder<int>(
+              valueListenable: _chrome,
+              builder: (context, _, __) => EditorBuildMethods.buildToolbar(
+                context: context,
+                coordinator: _coordinator,
+                finalTextColor: finalTextColor,
+                mode: _currentMode,
+                note: widget.note,
+                savedNoteId: _coordinator.savedNoteId,
+                smartController: _coordinator.smartController,
+                formattingController: _coordinator.formattingController,
+                selectionBarActive: _selectionBarActive,
+                onReminderTap: _showReminderDialog,
+                onColorPaletteTap: _showColorPalette,
+                onRebuild: () {
+                  if (mounted) setState(() {});
+                },
+                onSmartSaveDialog: () async {
+                  if (_coordinator.detectedLanguage != null) {
+                    final ext = _coordinator.smartController
+                        .getExtensionForLanguage(
+                            _coordinator.detectedLanguage!);
+                    await _showSmartSaveDialog(ext);
+                  }
+                },
+                saveNote: _saveNote,
+                onArchive: _archive,
+                onDelete: _delete,
+                scrollProgress: _coordinator.scrollProgress,
+                onInsertSymbol: (symbol) {
+                  final ctrl = _coordinator.codeController;
+                  if (ctrl == null) return;
+                  final sel = ctrl.selection;
+                  final text = ctrl.text;
+                  if (sel.isValid && !sel.isCollapsed) {
+                    ctrl.text = text.replaceRange(sel.start, sel.end, symbol);
+                  } else if (sel.isValid) {
+                    final pos = sel.baseOffset;
+                    final newText =
+                        text.substring(0, pos) + symbol + text.substring(pos);
+                    ctrl.value = ctrl.value.copyWith(
+                      text: newText,
+                      selection: TextSelection.collapsed(
+                          offset: pos + symbol.length ~/ 2),
+                    );
+                  } else {
+                    ctrl.text = text + symbol;
+                  }
+                },
+              ),
             ),
           ],
         ),
@@ -1229,8 +1245,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       AppShortcuts.undo: () {
         if (_isReadOnly) return;
         if (_currentMode == NoteMode.code) {
-          _coordinator.codeUndoController.value =
-              const UndoHistoryValue(canUndo: true, canRedo: false);
+          _coordinator.codeUndoController.undo();
         } else if (_currentMode == NoteMode.checklist) {
           _coordinator.checklistUndoRedo?.undo();
           _updateChecklistUndoRedo();
@@ -1244,8 +1259,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       AppShortcuts.redo: () {
         if (_isReadOnly) return;
         if (_currentMode == NoteMode.code) {
-          _coordinator.codeUndoController.value =
-              const UndoHistoryValue(canUndo: false, canRedo: true);
+          _coordinator.codeUndoController.redo();
         } else if (_currentMode == NoteMode.checklist) {
           _coordinator.checklistUndoRedo?.redo();
           _updateChecklistUndoRedo();
@@ -1258,7 +1272,9 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
       // ─── إعادة (بديل Ctrl+Shift+Z) ──────────────────────────────────
       AppShortcuts.redoAlt: () {
         if (_isReadOnly) return;
-        if (_currentMode == NoteMode.checklist) {
+        if (_currentMode == NoteMode.code) {
+          _coordinator.codeUndoController.redo();
+        } else if (_currentMode == NoteMode.checklist) {
           _coordinator.checklistUndoRedo?.redo();
           _updateChecklistUndoRedo();
         } else {

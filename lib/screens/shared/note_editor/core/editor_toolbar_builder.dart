@@ -3,8 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:provider/provider.dart';
-import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/core/utils/quill_migration.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
@@ -13,7 +11,6 @@ import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_formatting_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/controllers/editor_smart_controller.dart';
 import 'package:sinan_note/screens/shared/note_editor/core/editor_coordinator.dart';
-import 'package:sinan_note/screens/shared/note_editor/dialogs/editor_dialogs.dart';
 import 'package:sinan_note/screens/shared/note_editor/handlers/editor_dialog_handlers.dart';
 import 'package:sinan_note/services/code/code_export_service.dart';
 import 'package:sinan_note/ui/core/theme/editor_palette.dart';
@@ -38,6 +35,8 @@ class EditorToolbarBuilder {
     required VoidCallback onColorPaletteTap,
     required VoidCallback onSmartSaveDialog,
     required Future<void> Function() saveNote,
+    required VoidCallback onArchive,
+    required VoidCallback onDelete,
     ValueNotifier<bool>? selectionBarActive,
     Function(String)? onInsertSymbol,
     VoidCallback? onRebuild,
@@ -336,35 +335,13 @@ class EditorToolbarBuilder {
                         subject:
                             coordinator.getCurrentTitle(l10n.newNoteTitle));
                   },
-                  onArchiveTap: () async {
+                  // عبر جلسة التحرير: تحفظ أولاً وتغلق المحرر في مكانه (لوحة
+                  // التفاصيل على سطح المكتب، أو الشاشة على الجوال)
+                  onArchiveTap: () {
                     HapticFeedback.mediumImpact();
-                    if (note?.id != null) {
-                      await Future.delayed(const Duration(milliseconds: 150));
-                      if (!context.mounted) return;
-                      final provider =
-                          Provider.of<NotesProvider>(context, listen: false);
-                      await provider.archiveNote(note!.id!);
-                      if (!context.mounted) return;
-                      Navigator.pop(context);
-                      UnifiedNotificationService().show(
-                        context: context,
-                        message: l10n.movedToArchive,
-                        type: NotificationType.success,
-                      );
-                    } else {
-                      UnifiedNotificationService().show(
-                        context: context,
-                        message: l10n.saveNoteFirst,
-                        type: NotificationType.warning,
-                      );
-                    }
+                    onArchive();
                   },
-                  onDeleteTap: () => NoteEditorDialogs.showDeleteDialog(
-                    context: context,
-                    backgroundColor: coordinator.getBackgroundColor(context),
-                    textColor: finalTextColor,
-                    noteId: savedNoteId ?? note?.id,
-                  ),
+                  onDeleteTap: onDelete,
                   onUnderline: () {
                     HapticFeedback.lightImpact();
                     final qc = coordinator.quillController;

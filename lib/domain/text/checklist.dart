@@ -23,8 +23,13 @@ class ChecklistItem {
         // Note: isGhost is not saved to JSON (runtime-only flag)
       };
 
+  /// معرّف جديد فريد ولو أُنشئت عناصر كثيرة في اللحظة نفسها.
+  static String newId() =>
+      '${DateTime.now().microsecondsSinceEpoch}_${_sequence++}';
+  static int _sequence = 0;
+
   factory ChecklistItem.fromJson(Map<String, dynamic> json) => ChecklistItem(
-        id: json['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: json['id'] ?? newId(),
         text: json['text'] as String? ?? '',
         isDone: json['isDone'] as bool? ?? false,
         isGhost: false, // Loaded items are never ghost

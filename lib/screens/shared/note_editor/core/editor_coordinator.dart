@@ -73,6 +73,9 @@ class EditorCoordinator {
   /// يصبح true بعد اكتمال initializeQuillAsync — يُستخدم في العارض لتبديل plain→Quill
   bool isQuillFullyLoaded = false;
 
+  bool _disposed = false;
+  StreamSubscription<dynamic>? _quillGuard;
+
   EditorCoordinator({
     required this.note,
     required this.mode,
@@ -185,6 +188,8 @@ class EditorCoordinator {
     if (initialText.isEmpty) return;
 
     final deltaJson = await compute(buildDeltaJsonForIsolate, initialText);
+    // أُغلق المحرر أثناء التحميل: لا متحكم جديد بلا من يتخلص منه
+    if (_disposed) return;
 
     final delta = Delta.fromJson(jsonDecode(deltaJson) as List);
     final doc = Document.fromDelta(delta);
@@ -198,7 +203,8 @@ class EditorCoordinator {
   }
 
   void _attachQuillGuard() {
-    quillController?.document.changes.listen((_) {
+    _quillGuard?.cancel();
+    _quillGuard = quillController?.document.changes.listen((_) {
       ContentGuard.guardQuill(quillController!);
     });
     if (quillController != null) {
@@ -250,7 +256,8 @@ class EditorCoordinator {
     contentController.addListener(() {
       ContentGuard.guardText(contentController);
     });
-    quillController?.document.changes.listen((_) {
+    _quillGuard?.cancel();
+    _quillGuard = quillController?.document.changes.listen((_) {
       ContentGuard.guardQuill(quillController!);
     });
     codeController?.addListener(() {
@@ -301,6 +308,9 @@ class EditorCoordinator {
   }
 
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    _quillGuard?.cancel();
     autosaveTimer?.cancel();
     languageDetectionTimer?.cancel();
     scrollProgress.dispose();

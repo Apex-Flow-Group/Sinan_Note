@@ -117,13 +117,14 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
             .split('\n')
             .where((l) => l.trim().isNotEmpty)
             .toList();
-        _items = lines.map((line) {
-          return ChecklistItem(
-            id: DateTime.now().millisecondsSinceEpoch.toString() +
-                line.hashCode.toString(),
-            text: line.replaceAll(RegExp(r'^-\s*\[.\]\s*'), '').trim(),
-          );
-        }).toList();
+        // سطران متطابقان عنصران مختلفان
+        _items = [
+          for (final line in lines)
+            ChecklistItem(
+              id: ChecklistItem.newId(),
+              text: line.replaceAll(RegExp(r'^-\s*\[.\]\s*'), '').trim(),
+            ),
+        ];
       }
     }
 
@@ -181,7 +182,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
   void _addNewItem(
       {int? insertIndex, bool autoFocus = false, bool isGhostItem = false}) {
     final newItem = ChecklistItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: ChecklistItem.newId(),
       isGhost: isGhostItem, // Mark as ghost for smart filtering
     );
 
