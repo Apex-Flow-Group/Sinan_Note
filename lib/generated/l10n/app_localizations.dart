@@ -4375,6 +4375,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Full Sinan Note backup (encrypted notes included)'**
   String get jsonFullBackupShareText;
+
+  /// No description provided for @widgetEmptyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty note'**
+  String get widgetEmptyNote;
+
+  /// No description provided for @widgetEmptyChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty checklist'**
+  String get widgetEmptyChecklist;
+
+  /// No description provided for @widgetNoteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted'**
+  String get widgetNoteDeleted;
+
+  /// No description provided for @widgetListDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'List deleted'**
+  String get widgetListDeleted;
 }
 
 class _AppLocalizationsDelegate

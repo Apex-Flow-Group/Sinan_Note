@@ -751,5 +751,9 @@
   "daysAgo": "منذ {count} يوم",
   "notesExportedTo": "تم حفظ {count} ملاحظة في:\n{path}",
   "jsonBackupShareText": "نسخة احتياطية من Sinan Note",
-  "jsonFullBackupShareText": "نسخة احتياطية كاملة من Sinan Note (تتضمن الملاحظات المشفّرة)"
+  "jsonFullBackupShareText": "نسخة احتياطية كاملة من Sinan Note (تتضمن الملاحظات المشفّرة)",
+  "widgetEmptyNote": "ملاحظة فارغة",
+  "widgetEmptyChecklist": "قائمة فارغة",
+  "widgetNoteDeleted": "حُذفت الملاحظة",
+  "widgetListDeleted": "حُذفت القائمة"
 }

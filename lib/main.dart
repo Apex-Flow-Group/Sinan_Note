@@ -17,6 +17,7 @@ import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/controllers/selected_note_provider.dart';
 import 'package:sinan_note/controllers/settings/settings_provider.dart';
 import 'package:sinan_note/controllers/version_history/version_history_controller.dart';
+import 'package:sinan_note/core/l10n/app_strings.dart';
 import 'package:sinan_note/core/utils/app_navigator.dart';
 import 'package:sinan_note/core/utils/paste_handler.dart';
 import 'package:sinan_note/data/repositories/backup_repository.dart';
@@ -117,6 +118,12 @@ void main() async {
   SyncScheduler(
       sync: sync, localWrites: [notes.localWrites, categories.localWrites]);
   unawaited(LegacyCleanup.run());
+  // خارج شجرة الويدجت (ويدجت الشاشة الرئيسية، نافذة البصمة) بلغة التطبيق
+  AppStrings.configure(() {
+    final context = navigatorKey.currentContext;
+    return (context == null ? null : AppLocalizations.of(context)) ??
+        AppStrings.deviceLanguage();
+  });
 
   runApp(
     MultiProvider(

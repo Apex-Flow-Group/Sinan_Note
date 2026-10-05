@@ -2243,4 +2243,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get jsonFullBackupShareText =>
       'Full Sinan Note backup (encrypted notes included)';
+
+  @override
+  String get widgetEmptyNote => 'Empty note';
+
+  @override
+  String get widgetEmptyChecklist => 'Empty checklist';
+
+  @override
+  String get widgetNoteDeleted => 'Note deleted';
+
+  @override
+  String get widgetListDeleted => 'List deleted';
 }

@@ -810,5 +810,9 @@
     }
   },
   "jsonBackupShareText": "Sinan Note backup",
-  "jsonFullBackupShareText": "Full Sinan Note backup (encrypted notes included)"
+  "jsonFullBackupShareText": "Full Sinan Note backup (encrypted notes included)",
+  "widgetEmptyNote": "Empty note",
+  "widgetEmptyChecklist": "Empty checklist",
+  "widgetNoteDeleted": "Note deleted",
+  "widgetListDeleted": "List deleted"
 }

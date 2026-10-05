@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sinan_note/controllers/settings/settings_provider.dart';
+import 'package:sinan_note/core/l10n/app_strings.dart';
 import 'package:sinan_note/core/utils/logger.dart';
 import 'package:sinan_note/domain/models/note.dart';
 
@@ -16,7 +16,7 @@ class WidgetService {
 
   /// Format note content (simple truncation)
   String _formatNoteContent(String content, int maxLength) {
-    if (content.trim().isEmpty) return 'Empty note';
+    if (content.trim().isEmpty) return AppStrings.current.widgetEmptyNote;
 
     // إذا كان Delta JSON → استخرج النص العادي
     String plainText = content;
@@ -33,7 +33,7 @@ class WidgetService {
       } catch (_) {}
     }
 
-    if (plainText.trim().isEmpty) return 'Empty note';
+    if (plainText.trim().isEmpty) return AppStrings.current.widgetEmptyNote;
     return plainText.length > maxLength
         ? '${plainText.substring(0, maxLength)}...'
         : plainText;
@@ -41,7 +41,7 @@ class WidgetService {
 
   /// SNAPSHOT STRATEGY: Generate simple text snapshot for widget persistence
   String _generateChecklistSnapshot(String content) {
-    if (content.trim().isEmpty) return 'Empty checklist';
+    if (content.trim().isEmpty) return AppStrings.current.widgetEmptyChecklist;
 
     try {
       final decoded = jsonDecode(content);
@@ -53,7 +53,7 @@ class WidgetService {
         items = decoded;
       }
 
-      if (items.isEmpty) return 'Empty checklist';
+      if (items.isEmpty) return AppStrings.current.widgetEmptyChecklist;
 
       // Generate persistent text snapshot (max 5 items for widget)
       return items.take(5).map((item) {
@@ -126,9 +126,9 @@ class WidgetService {
   Future<void> _resetChecklistWidget() async {
     await HomeWidget.saveWidgetData<int>('checklist_note_id', 0);
     await HomeWidget.saveWidgetData<String>(
-        'checklist_title', await _getSelectListText());
+        'checklist_title', AppStrings.current.selectList);
     await HomeWidget.saveWidgetData<String>(
-        'checklist_preview', await _getTapToSelectText()); // Use preview key
+        'checklist_preview', AppStrings.current.tapToSelect); // Use preview key
     await HomeWidget.saveWidgetData<int>('checklist_total', 0);
     await HomeWidget.saveWidgetData<int>('checklist_completed', 0);
   }
@@ -138,7 +138,7 @@ class WidgetService {
 
     try {
       final title =
-          note.title.isEmpty ? (await _getUntitledText()) : note.title;
+          note.title.isEmpty ? AppStrings.current.untitled : note.title;
       final content = _formatNoteContent(note.content, 200);
 
       await HomeWidget.saveWidgetData<String>('title', title);
@@ -176,17 +176,19 @@ class WidgetService {
       final storedChecklistId = prefs.getInt('flutter.checklist_note_id') ?? 0;
 
       if (deletedNoteId == storedNoteId) {
-        await HomeWidget.saveWidgetData<String>('title', 'Note Deleted');
-        await HomeWidget.saveWidgetData<String>('content', 'Tap to select +');
+        await HomeWidget.saveWidgetData<String>(
+            'title', AppStrings.current.widgetNoteDeleted);
+        await HomeWidget.saveWidgetData<String>(
+            'content', AppStrings.current.tapToSelect);
         await HomeWidget.saveWidgetData<int>('note_id', 0);
         await HomeWidget.updateWidget(androidName: 'NoteWidgetProvider');
       }
 
       if (deletedNoteId == storedChecklistId) {
         await HomeWidget.saveWidgetData<String>(
-            'checklist_title', 'List Deleted');
+            'checklist_title', AppStrings.current.widgetListDeleted);
         await HomeWidget.saveWidgetData<String>(
-            'checklist_content', 'Tap to select +');
+            'checklist_content', AppStrings.current.tapToSelect);
         await HomeWidget.saveWidgetData<int>('checklist_note_id', 0);
         await HomeWidget.updateWidget(androidName: 'ChecklistWidgetProvider');
       }
@@ -230,7 +232,8 @@ class WidgetService {
       if (note.id == pinnedNoteId && !isChecklistNote) {
         await service.updateNoteWidget(note);
       } else if (note.id == pinnedChecklistId && isChecklistNote) {
-        final title = note.title.isEmpty ? 'Checklist' : note.title;
+        final title =
+            note.title.isEmpty ? AppStrings.current.checklist : note.title;
         final stats = service._parseChecklistStats(note.content);
         await service.updateChecklistWidget(
           note.id!,
@@ -245,20 +248,4 @@ class WidgetService {
       AppLogger.error('Widget update on note change failed', 'Widget', e);
     }
   }
-
-  // Helper methods for localized text
-  static Future<String> _getLocalizedText(String arText, String enText) async {
-    final settings = SettingsProvider();
-    await settings.ensureInitialized();
-    return settings.locale?.languageCode == 'ar' ? arText : enText;
-  }
-
-  static Future<String> _getUntitledText() =>
-      _getLocalizedText('بدون عنوان', 'Untitled');
-
-  static Future<String> _getTapToSelectText() =>
-      _getLocalizedText('اضغط هنا للتحديد +', 'Tap to select +');
-
-  static Future<String> _getSelectListText() =>
-      _getLocalizedText('اختر قائمة', 'Select List');
 }
