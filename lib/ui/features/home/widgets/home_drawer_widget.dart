@@ -507,7 +507,7 @@ class _HomeDrawerWidgetState extends State<HomeDrawerWidget> {
                                 : scheme.primary,
                             onTap: () {
                               if (context.read<CategoriesProvider>().isFull) {
-                                UnifiedNotificationService().show(
+                                UnifiedNotificationService.of(context).show(
                                   context: context,
                                   message: categoryIssueText(
                                       AppLocalizations.of(context)!,

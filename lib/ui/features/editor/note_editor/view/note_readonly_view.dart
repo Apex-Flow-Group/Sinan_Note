@@ -217,7 +217,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     });
     widget.onModeChanged?.call(_currentMode, _currentNote);
 
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: l10n.noteConverted,
       type: NotificationType.success,
@@ -322,7 +322,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         final provider = Provider.of<NotesProvider>(context, listen: false);
         await provider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
         if (!mounted) return;
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: l10n.noteDuplicated,
           type: NotificationType.success,
@@ -346,7 +346,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     if (!mounted) return;
     _closeOrPop();
 
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: wasArchived ? l10n.noteRestored : l10n.movedToArchive,
       type: NotificationType.success,
@@ -372,7 +372,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
     if (!mounted) return;
     _closeOrPop();
 
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: l10n.movedToTrash,
       type: NotificationType.info,
@@ -393,7 +393,7 @@ class _NoteReadOnlyViewState extends State<NoteReadOnlyView> {
         : await provider.unarchiveNote(note.id!);
     if (!mounted) return;
     _closeOrPop();
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: l10n.noteRestored,
       type: NotificationType.success,

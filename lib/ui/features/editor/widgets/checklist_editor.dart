@@ -334,7 +334,7 @@ class _ChecklistEditorState extends State<ChecklistEditor> {
       text: deletedText,
       isDone: deletedItem.isDone,
     );
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(ctx).showWithUndo(
       context: ctx,
       message: deletedText.isEmpty
           ? l10n.itemDeleted

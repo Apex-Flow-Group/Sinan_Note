@@ -16,6 +16,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/platform/platform_helper.dart';
 import 'package:sinan_note/ui/core/widgets/notification_snack_bar.dart';
@@ -117,13 +118,11 @@ class _PendingAction {
   }
 }
 
-/// خدمة الإشعارات الموحدة
+/// خدمة الإشعارات الموحدة. نسخة واحدة يحقنها التطبيق (الإجراءات المعلّقة
+/// للتراجع مشتركة بين الشاشات)؛ تُطلب بـ [of].
 class UnifiedNotificationService {
-  static final UnifiedNotificationService _instance =
-      UnifiedNotificationService._internal();
-
-  factory UnifiedNotificationService() => _instance;
-  UnifiedNotificationService._internal();
+  static UnifiedNotificationService of(BuildContext context) =>
+      context.read<UnifiedNotificationService>();
 
   final Map<String, _PendingAction> _pendingActions = {};
 
@@ -131,7 +130,7 @@ class UnifiedNotificationService {
   ///
   /// Example:
   /// ```dart
-  /// UnifiedNotificationService().show(
+  /// UnifiedNotificationService.of(context).show(
   ///   context: context,
   ///   message: 'تم الحفظ بنجاح',
   ///   type: NotificationType.success,
@@ -160,7 +159,7 @@ class UnifiedNotificationService {
   ///
   /// Example:
   /// ```dart
-  /// UnifiedNotificationService().showWithUndo(
+  /// UnifiedNotificationService.of(context).showWithUndo(
   ///   context: context,
   ///   message: 'تم حذف 3 ملاحظات',
   ///   actionKey: 'delete_notes',

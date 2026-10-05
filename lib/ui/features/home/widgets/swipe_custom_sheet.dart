@@ -127,7 +127,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
         await notesProvider.trashNote(delId);
         widget.onNoteChanged();
         if (!context.mounted) return;
-        UnifiedNotificationService().showWithUndo(
+        UnifiedNotificationService.of(context).showWithUndo(
           context: context,
           message: '${l10n.movedTo} "${widget.note.title}" ${l10n.toTrash}',
           actionKey: 'custom_delete_$delId',
@@ -146,7 +146,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
         await notesProvider.archiveNote(archId);
         widget.onNoteChanged();
         if (!context.mounted) return;
-        UnifiedNotificationService().showWithUndo(
+        UnifiedNotificationService.of(context).showWithUndo(
           context: context,
           message: '${l10n.movedTo} "${widget.note.title}" ${l10n.toArchive}',
           actionKey: 'custom_archive_$archId',
@@ -172,7 +172,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
                 copyLabel: l10n.noteCopy);
             widget.onNoteChanged();
             if (!context.mounted) return;
-            UnifiedNotificationService().show(
+            UnifiedNotificationService.of(context).show(
               context: context,
               message: l10n.copyCreated,
               type: NotificationType.success,
@@ -186,7 +186,7 @@ class _SwipeCustomSheetContentState extends State<_SwipeCustomSheetContent> {
             copyLabel: l10n.noteCopy);
         widget.onNoteChanged();
         if (!context.mounted) return;
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: l10n.copyCreated,
           type: NotificationType.success,

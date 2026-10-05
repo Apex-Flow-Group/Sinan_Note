@@ -57,7 +57,7 @@ class _GoogleDriveSyncPageContentState
   void _handleSnackBar() {
     final controller = context.read<GoogleDriveSyncController>();
     if (controller.snackBarMessage != null && mounted) {
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: controller.snackBarMessage!,
         type: NotificationType.warning,

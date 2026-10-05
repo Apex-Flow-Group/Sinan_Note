@@ -253,7 +253,7 @@ class EditorToolbarBuilder {
                       );
                       if (context.mounted) {
                         final fileName = path.split('/').last;
-                        UnifiedNotificationService().show(
+                        UnifiedNotificationService.of(context).show(
                           context: context,
                           message:
                               '${l10nSnap?.savedToDownloads ?? 'Saved'}: $fileName',
@@ -262,7 +262,7 @@ class EditorToolbarBuilder {
                       }
                     } catch (e) {
                       if (context.mounted) {
-                        UnifiedNotificationService().show(
+                        UnifiedNotificationService.of(context).show(
                           context: context,
                           message: l10n.exportFailedWithError('$e'),
                           type: NotificationType.error,
@@ -291,14 +291,14 @@ class EditorToolbarBuilder {
                           final result = await coordinator.safePaste();
                           if (!context.mounted) return;
                           if (result.isEmpty) {
-                            UnifiedNotificationService().show(
+                            UnifiedNotificationService.of(context).show(
                               context: context,
                               message: l10n.clipboardEmpty,
                               type: NotificationType.info,
                               duration: const Duration(seconds: 2),
                             );
                           } else if (result.isTruncated) {
-                            UnifiedNotificationService().show(
+                            UnifiedNotificationService.of(context).show(
                               context: context,
                               message: l10n.clipboardTruncated,
                               type: NotificationType.warning,

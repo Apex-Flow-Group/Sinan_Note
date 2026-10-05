@@ -64,9 +64,13 @@ class _HomeScreenState extends State<HomeScreen> {
   ViewType _viewType = ViewType.listExpanded;
   final ValueNotifier<String?> _activeFilterNotifier = ValueNotifier(null);
 
+  late final UnifiedNotificationService _notifications;
+
   @override
   void initState() {
     super.initState();
+    // dispose لا يصل للشجرة: النسخة تُحفظ هنا
+    _notifications = UnifiedNotificationService.of(context);
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     _viewType = _parseViewType(settings.viewType);
     _viewTypeNotifier = ValueNotifier(_viewType.name);
@@ -192,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     void showRetry(String message) {
       if (!mounted) return;
-      UnifiedNotificationService().showWithAction(
+      UnifiedNotificationService.of(context).showWithAction(
         context: context,
         message: message,
         actionLabel: l10n.retry,
@@ -270,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _isPullingNotifier.dispose();
     _pullDistanceNotifier.dispose();
     _isRefreshingNotifier.dispose();
-    UnifiedNotificationService().commitAll();
+    _notifications.commitAll();
     super.dispose();
   }
 

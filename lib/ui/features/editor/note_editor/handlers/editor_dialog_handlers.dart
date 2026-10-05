@@ -48,7 +48,7 @@ class EditorDialogHandlers {
 
         await saveCallback(isManualSave: true);
         if (!context.mounted) return;
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: l10n.reminderRemoved,
           type: NotificationType.info,
@@ -65,7 +65,7 @@ class EditorDialogHandlers {
 
         if (!hasExactAlarmPermission) {
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithAction(
+          UnifiedNotificationService.of(context).showWithAction(
             context: context,
             message: l10n.precisePermissionRequired,
             actionLabel: l10n.openSettings,
@@ -82,7 +82,7 @@ class EditorDialogHandlers {
 
         await saveCallback(isManualSave: true);
         if (!context.mounted) return;
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: l10n.reminderAdded,
           type: NotificationType.success,

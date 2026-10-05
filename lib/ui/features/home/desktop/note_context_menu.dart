@@ -74,7 +74,7 @@ class NoteContextMenu extends StatelessWidget {
         await notesProvider.updateNote(note.copyWith(isPinned: !wasPinned));
         onNoteChanged();
         if (!context.mounted) return;
-        UnifiedNotificationService().showWithUndo(
+        UnifiedNotificationService.of(context).showWithUndo(
           context: context,
           message: wasPinned ? l10n.unpin : l10n.pin,
           actionKey: 'context_pin_${note.id}',
@@ -94,7 +94,7 @@ class NoteContextMenu extends StatelessWidget {
           }
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: l10n.movedToArchive,
             actionKey: 'context_archive_${note.id}',
@@ -115,7 +115,7 @@ class NoteContextMenu extends StatelessWidget {
           }
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: l10n.restoredToHome,
             actionKey: 'context_unarchive_${note.id}',
@@ -154,7 +154,7 @@ class NoteContextMenu extends StatelessWidget {
           }
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: l10n.movedToTrash,
             actionKey: 'context_delete_${note.id}',
@@ -175,7 +175,7 @@ class NoteContextMenu extends StatelessWidget {
           }
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: l10n.restoredToHome,
             actionKey: 'context_restore_${note.id}',
@@ -201,7 +201,7 @@ class NoteContextMenu extends StatelessWidget {
             }
             onNoteChanged();
             if (!context.mounted) return;
-            UnifiedNotificationService().show(
+            UnifiedNotificationService.of(context).show(
               context: context,
               message: l10n.noteDeleted,
               type: NotificationType.info,

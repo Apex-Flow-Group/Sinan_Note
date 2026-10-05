@@ -59,7 +59,7 @@ class DesktopSelectionActions extends StatelessWidget {
 
     onClearSelection();
     if (context.mounted) {
-      UnifiedNotificationService().showWithUndo(
+      UnifiedNotificationService.of(context).showWithUndo(
         context: context,
         message: '${ids.length} ${l10n.notesPinned}',
         actionKey: 'bulk_pin',
@@ -81,7 +81,7 @@ class DesktopSelectionActions extends StatelessWidget {
     await notesProvider.archiveNotes(ids);
     onClearSelection();
     if (context.mounted) {
-      UnifiedNotificationService().showWithUndo(
+      UnifiedNotificationService.of(context).showWithUndo(
         context: context,
         message: '${ids.length} ${l10n.notesArchived}',
         actionKey: 'bulk_archive',
@@ -99,7 +99,7 @@ class DesktopSelectionActions extends StatelessWidget {
     await notesProvider.trashNotes(ids);
     onClearSelection();
     if (context.mounted) {
-      UnifiedNotificationService().showWithUndo(
+      UnifiedNotificationService.of(context).showWithUndo(
         context: context,
         message: '${ids.length} ${l10n.notesDeleted}',
         actionKey: 'bulk_delete',

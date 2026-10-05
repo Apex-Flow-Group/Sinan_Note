@@ -139,7 +139,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
 
       if (mounted) {
         _clearForm();
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: l10n.supportMessageSent,
           type: NotificationType.success,
@@ -157,7 +157,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
         if (isNoApp) {
           _showNoEmailAppDialog();
         } else {
-          UnifiedNotificationService().show(
+          UnifiedNotificationService.of(context).show(
             context: context,
             message: '${l10n.supportMessageFailed}: $err',
             type: NotificationType.error,
@@ -197,7 +197,7 @@ class _SupportFormScreenState extends State<SupportFormScreen> {
               Navigator.pop(ctx);
               await Clipboard.setData(const ClipboardData(text: _appEmail));
               if (mounted) {
-                UnifiedNotificationService().show(
+                UnifiedNotificationService.of(context).show(
                   context: context,
                   message: l10n.emailCopied,
                   type: NotificationType.success,

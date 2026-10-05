@@ -281,7 +281,7 @@ class _GoogleDriveScreenState extends State<GoogleDriveScreen> {
               if (result == true && mounted) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
-                  UnifiedNotificationService().show(
+                  UnifiedNotificationService.of(context).show(
                     context: context,
                     message: syncSuccessMsg,
                     type: NotificationType.success,

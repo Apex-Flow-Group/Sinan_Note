@@ -94,7 +94,7 @@ class CustomShareSheet {
                           if (!context.mounted) return;
                           Navigator.pop(context);
                           if (result != null) {
-                            UnifiedNotificationService().show(
+                            UnifiedNotificationService.of(context).show(
                               context: context,
                               message: strings.fileSavedSuccessfully,
                               type: NotificationType.success,
@@ -104,7 +104,7 @@ class CustomShareSheet {
                         } catch (e) {
                           if (!context.mounted) return;
                           Navigator.pop(context);
-                          UnifiedNotificationService().show(
+                          UnifiedNotificationService.of(context).show(
                             context: context,
                             message: strings.fileSaveFailed,
                             type: NotificationType.error,
@@ -128,7 +128,7 @@ class CustomShareSheet {
                       await Clipboard.setData(ClipboardData(text: text));
                       HapticFeedback.lightImpact();
                       if (context.mounted) {
-                        UnifiedNotificationService().show(
+                        UnifiedNotificationService.of(context).show(
                           context: context,
                           message: strings.textCopiedToClipboard,
                           type: NotificationType.success,
@@ -187,7 +187,7 @@ class CustomShareSheet {
         final storeUri = Uri.parse(context.read<ApexShare>().storeUrl);
         await launchUrl(storeUri, mode: LaunchMode.externalApplication);
       } else {
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: AppLocalizations.of(context)!.apexSendFailed,
           type: NotificationType.error,
@@ -195,7 +195,7 @@ class CustomShareSheet {
       }
     } catch (e) {
       if (!context.mounted) return;
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: AppLocalizations.of(context)!.apexSendFailed,
         type: NotificationType.error,

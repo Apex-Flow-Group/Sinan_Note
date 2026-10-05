@@ -31,9 +31,13 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
   bool get _isSearchActive => isSearchActive;
   void _exitSearch() => exitSearch();
 
+  late final UnifiedNotificationService _notifications;
+
   @override
   void initState() {
     super.initState();
+    // dispose لا يصل للشجرة: النسخة تُحفظ هنا
+    _notifications = UnifiedNotificationService.of(context);
     initSearch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NotesProvider>(context, listen: false).fetchTrashedNotes();
@@ -43,7 +47,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
   @override
   void dispose() {
     _closeAllSlidables.dispose();
-    UnifiedNotificationService().commitAll();
+    _notifications.commitAll();
     super.dispose();
   }
 
@@ -85,7 +89,7 @@ class _TrashScreenState extends State<TrashScreen> with SearchMixin {
       _selectedNotes.clear();
     });
 
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: message,
       actionKey: 'trash_restore',

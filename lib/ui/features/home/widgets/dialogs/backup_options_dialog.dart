@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -85,7 +85,7 @@ class BackupOptionsDialog {
                       subject: l10n.notesBackupShareSubject(allNotes.length));
                 } catch (e) {
                   if (!context.mounted) return;
-                  UnifiedNotificationService().show(
+                  UnifiedNotificationService.of(context).show(
                     context: context,
                     message: '${l10n.shareFailed}: $e',
                     type: NotificationType.error,

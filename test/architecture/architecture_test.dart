@@ -80,11 +80,9 @@ final _rules = <_Rule>[
   _Rule('A7', (p, l) => _isDataOrDomain(l),
       RegExp(r'''\bimport\s+'package:sinan_note/(main\.dart'|ui/)''')),
   // A6: لا حالة عامة على مستوى الملف ولا singletons بحالة
-  _Rule(
-      'A6',
-      (p, l) => true,
-      RegExp(
-          r'''^final\s+(ValueNotifier|ChangeNotifier|StreamController)\b|^\s*static\s+\w+\??\s+_instance\b''')),
+  _Rule('A6', (p, l) => true, RegExp(
+      // static [final|late final] Type [_]instance — كان النمط يفوّت final
+      r'''^final\s+(ValueNotifier|ChangeNotifier|StreamController)\b|^\s*static\s+(?:late\s+)?(?:final\s+)?\w+\??\s+_?instance\b''')),
   // T1: الألوان من الثيم فقط
   _Rule('T1', (p, l) => l != _Layer.theme,
       RegExp(r'''\bColors\.(?!transparent\b)[a-z]|\bColor\(0x''')),

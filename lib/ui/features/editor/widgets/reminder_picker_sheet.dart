@@ -59,7 +59,7 @@ class ReminderPickerSheet extends StatefulWidget {
         if (!context.mounted) return null;
 
         if (!nowGranted) {
-          UnifiedNotificationService().show(
+          UnifiedNotificationService.of(context).show(
             context: context,
             message: l10n.permissionsDenied,
             type: NotificationType.error,

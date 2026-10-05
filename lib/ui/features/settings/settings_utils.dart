@@ -131,7 +131,7 @@ class SettingsUtils {
               await diagnostics.clearLog();
               if (!context.mounted) return;
               Navigator.pop(ctx);
-              UnifiedNotificationService().show(
+              UnifiedNotificationService.of(context).show(
                 context: context,
                 message: l10n.cleared,
                 type: NotificationType.success,

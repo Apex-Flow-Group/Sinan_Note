@@ -50,7 +50,7 @@ class NoteCardActions {
             final ok = await notesProvider.toggleLockStatus(note.id!, false);
             onNoteChanged();
             if (!context.mounted) return;
-            UnifiedNotificationService().show(
+            UnifiedNotificationService.of(context).show(
               context: context,
               message: ok ? l10n.noteUnlocked : l10n.decryptionFailed,
               type: ok ? NotificationType.success : NotificationType.error,
@@ -82,7 +82,7 @@ class NoteCardActions {
             await notesProvider.deleteNote(noteId);
             onNoteChanged();
             if (!context.mounted) return;
-            UnifiedNotificationService().show(
+            UnifiedNotificationService.of(context).show(
               context: context,
               message: l10n.noteDeleted,
               type: NotificationType.info,
@@ -146,7 +146,7 @@ class NoteCardActions {
 
           if (!context.mounted) return;
 
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toTrash}',
             actionKey: 'swipe_delete_$noteId',
@@ -174,7 +174,7 @@ class NoteCardActions {
 
           if (!context.mounted) return;
 
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: '${l10n.movedTo} "$noteTitle" ${l10n.toArchive}',
             actionKey: 'swipe_archive_$noteId',
@@ -206,7 +206,7 @@ class NoteCardActions {
                   copyLabel: l10n.noteCopy);
               onNoteChanged();
               if (!context.mounted) return;
-              UnifiedNotificationService().show(
+              UnifiedNotificationService.of(context).show(
                 context: context,
                 message: l10n.copyCreated,
                 type: NotificationType.success,
@@ -275,7 +275,7 @@ class NoteCardActions {
           await notesProvider.duplicateNote(note.id!, copyLabel: l10n.noteCopy);
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().show(
+          UnifiedNotificationService.of(context).show(
             context: context,
             message: l10n.copyCreated,
             type: NotificationType.success,
@@ -307,7 +307,7 @@ class NoteCardActions {
           await notesProvider.restoreNote(note.id!);
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: l10n.restoredToHome,
             actionKey: 'swipe_restore_${note.id}',
@@ -346,7 +346,7 @@ class NoteCardActions {
           await notesProvider.unarchiveNote(note.id!);
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: l10n.restoredToHome,
             actionKey: 'swipe_unarchive_${note.id}',
@@ -370,7 +370,7 @@ class NoteCardActions {
           await notesProvider.trashNote(noteId);
           onNoteChanged();
           if (!context.mounted) return;
-          UnifiedNotificationService().showWithUndo(
+          UnifiedNotificationService.of(context).showWithUndo(
             context: context,
             message: '${l10n.movedTo} "${note.title}" ${l10n.toTrash}',
             actionKey: 'swipe_trash_archive_$noteId',

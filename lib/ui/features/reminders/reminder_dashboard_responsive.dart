@@ -47,9 +47,13 @@ class _ReminderDashboardResponsiveState
   final Set<int> _selectedNoteIds = {};
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
 
+  late final UnifiedNotificationService _notifications;
+
   @override
   void initState() {
     super.initState();
+    // dispose لا يصل للشجرة: النسخة تُحفظ هنا
+    _notifications = UnifiedNotificationService.of(context);
     _tabController = TabController(length: 3, vsync: this);
     initSearch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -64,7 +68,7 @@ class _ReminderDashboardResponsiveState
   void dispose() {
     _tabController.dispose();
     _closeAllSlidables.dispose();
-    UnifiedNotificationService().commitAll();
+    _notifications.commitAll();
     super.dispose();
   }
 
@@ -116,7 +120,7 @@ class _ReminderDashboardResponsiveState
     });
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: '${ids.length} ${l10n.notesArchived}',
       actionKey: 'reminder_archive',
@@ -137,7 +141,7 @@ class _ReminderDashboardResponsiveState
     });
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: '${ids.length} ${l10n.notesDeleted}',
       actionKey: 'reminder_delete',

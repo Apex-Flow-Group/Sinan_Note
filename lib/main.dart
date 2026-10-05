@@ -40,6 +40,7 @@ import 'package:sinan_note/ui/core/keyboard/editor_command_bus.dart';
 import 'package:sinan_note/ui/core/navigation/app_navigation.dart';
 import 'package:sinan_note/ui/core/navigation/app_navigator.dart';
 import 'package:sinan_note/ui/core/theme/app_theme.dart';
+import 'package:sinan_note/ui/core/widgets/unified_notification_service.dart';
 import 'package:sinan_note/ui/features/archive/archive_screen_responsive.dart';
 import 'package:sinan_note/ui/features/auth/view_models/app_lock.dart';
 import 'package:sinan_note/ui/features/auth/view_models/security_controller.dart';
@@ -172,6 +173,7 @@ void main() async {
             create: (_) => SyncViewModel(sync: sync, notes: notes)),
         ChangeNotifierProvider(create: (_) => MasterWidthProvider()),
         ChangeNotifierProvider(create: (_) => EditorCommandBus()),
+        Provider(create: (_) => UnifiedNotificationService()),
       ],
       child: ApexNoteApp(notifications: notifications, widgets: homeWidgets),
     ),

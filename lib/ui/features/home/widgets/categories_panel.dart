@@ -97,7 +97,7 @@ class _CategoriesPanelState extends State<CategoriesPanel> {
 
   void _showIssue(CategoryIssue? issue) {
     if (issue == null || !mounted) return;
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: categoryIssueText(AppLocalizations.of(context)!, issue),
       type: issue == CategoryIssue.limitReached

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:convert';
 
@@ -79,7 +79,7 @@ class _PreviewSheetState extends State<_PreviewSheet> {
     try {
       Clipboard.setData(ClipboardData(text: _displayCode));
       if (mounted) {
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: AppLocalizations.of(context)!.copied,
           type: NotificationType.success,

@@ -52,7 +52,7 @@ class VaultDialogs {
                             .setBiometricEnabled(val);
                         if (!context.mounted) return;
                         Navigator.pop(context);
-                        UnifiedNotificationService().show(
+                        UnifiedNotificationService.of(context).show(
                           context: context,
                           message: val
                               ? l10n.biometricEnabledMessage
@@ -304,7 +304,7 @@ class VaultDialogs {
     try {
       await context.read<VaultViewModel>().destroy(keepNotes: keepNotes);
       if (!context.mounted) return;
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: l10n.vaultDestroyed,
         type: NotificationType.success,
@@ -313,7 +313,7 @@ class VaultDialogs {
           .popUntil((route) => route.settings.name == '/main' || route.isFirst);
     } on Object {
       if (!context.mounted) return;
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: l10n.decryptionFailed,
         type: NotificationType.error,
@@ -425,7 +425,7 @@ class VaultDialogs {
                                     .changePassword(old, newP);
                                 if (success && context.mounted) {
                                   Navigator.pop(context);
-                                  UnifiedNotificationService().show(
+                                  UnifiedNotificationService.of(context).show(
                                     context: context,
                                     message: l10n.vaultPasswordChanged,
                                     type: NotificationType.success,

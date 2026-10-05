@@ -58,7 +58,7 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
     if (authenticated) {
       setState(() => _currentStep = _ResetStep.newPassword);
     } else {
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: AppLocalizations.of(context)!.wrongPassword,
         type: NotificationType.error,
@@ -264,7 +264,7 @@ class _VaultResetScreenState extends State<VaultResetScreen> {
               setState(() => _codeSaved = val ?? false),
           onDone: () {
             if (!_codeSaved) {
-              UnifiedNotificationService().show(
+              UnifiedNotificationService.of(context).show(
                 context: context,
                 message: l10n.saveCodeFirst,
                 type: NotificationType.warning,

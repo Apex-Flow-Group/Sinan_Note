@@ -224,7 +224,7 @@ class _BookModeViewState extends State<BookModeView> {
     await prefs.setInt('$_prefKeyPrefix${widget.noteId}', _currentPage);
     setState(() => _savedPage = _currentPage);
     if (!mounted) return;
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: AppLocalizations.of(context)!.readingPositionSaved,
       type: NotificationType.success,

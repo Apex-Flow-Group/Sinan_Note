@@ -44,9 +44,13 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
   final Set<int> _selectedNoteIds = {};
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
 
+  late final UnifiedNotificationService _notifications;
+
   @override
   void initState() {
     super.initState();
+    // dispose لا يصل للشجرة: النسخة تُحفظ هنا
+    _notifications = UnifiedNotificationService.of(context);
     initSearch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -59,7 +63,7 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
   @override
   void dispose() {
     _closeAllSlidables.dispose();
-    UnifiedNotificationService().commitAll();
+    _notifications.commitAll();
     super.dispose();
   }
 
@@ -114,7 +118,7 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
     });
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: '${ids.length} ${l10n.notesArchived}',
       actionKey: 'code_archive',
@@ -135,7 +139,7 @@ class _CodeTabResponsiveState extends State<CodeTabResponsive>
     });
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: '${ids.length} ${l10n.notesDeleted}',
       actionKey: 'code_delete',

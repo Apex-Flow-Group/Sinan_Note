@@ -354,7 +354,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         ));
     if (!mounted) return;
     if (saved) {
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: AppLocalizations.of(context)!.savedAsMarkdownSuccess,
         type: NotificationType.success,
@@ -383,7 +383,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
         ));
     if (!mounted) return;
     if (saved) {
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: AppLocalizations.of(context)!.savedSuccessfully,
         type: NotificationType.success,
@@ -456,7 +456,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   void restoreDraft() => _coordinator.stateManager.markDirty();
 
   void _showSaved() {
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: AppLocalizations.of(context)!.noteSaved,
       type: NotificationType.success,
@@ -467,7 +467,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
   /// فشل الحفظ: يُعرض ويبقى المحرر مفتوحاً بالتعديلات.
   void _showSaveError() {
     if (_vm.error == null) return;
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: AppLocalizations.of(context)!.saveFailedKeepEditing,
       type: NotificationType.error,
@@ -1076,7 +1076,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final id = _vm.noteId;
     if (!await _vm.archive()) return _showSaveError();
     if (!mounted || id == null) return;
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: l10n.movedToArchive,
       type: NotificationType.success,
@@ -1092,7 +1092,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final pinned = await _vm.togglePinned();
     if (pinned == null || !mounted) return _showSaveError();
     final l10n = AppLocalizations.of(context)!;
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: pinned ? l10n.pin : l10n.unpin,
       type: NotificationType.success,
@@ -1107,7 +1107,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     final copy = await _vm.duplicate(copyLabel: l10n.noteCopy);
     if (!mounted) return;
     if (copy == null) return _showSaveError();
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: l10n.noteCopied,
       type: NotificationType.success,
@@ -1188,7 +1188,7 @@ class _NoteEditorImmersiveState extends State<NoteEditorImmersive>
     if (confirm != true || !mounted) return;
     if (!await _vm.trash()) return _showSaveError();
     if (!mounted) return;
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: l10n.movedToTrash,
       type: NotificationType.info,

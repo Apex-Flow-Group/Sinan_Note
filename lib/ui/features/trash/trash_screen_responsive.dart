@@ -43,9 +43,13 @@ class _TrashScreenResponsiveState extends State<TrashScreenResponsive>
   String _sortBy = 'date';
   final ValueNotifier<int> _closeAllSlidables = ValueNotifier<int>(0);
 
+  late final UnifiedNotificationService _notifications;
+
   @override
   void initState() {
     super.initState();
+    // dispose لا يصل للشجرة: النسخة تُحفظ هنا
+    _notifications = UnifiedNotificationService.of(context);
     initSearch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -59,7 +63,7 @@ class _TrashScreenResponsiveState extends State<TrashScreenResponsive>
   @override
   void dispose() {
     _closeAllSlidables.dispose();
-    UnifiedNotificationService().commitAll();
+    _notifications.commitAll();
     super.dispose();
   }
 
@@ -125,7 +129,7 @@ class _TrashScreenResponsiveState extends State<TrashScreenResponsive>
       _selectedNotes.clear();
     });
 
-    UnifiedNotificationService().showWithUndo(
+    UnifiedNotificationService.of(context).showWithUndo(
       context: context,
       message: message,
       actionKey: 'trash_restore',

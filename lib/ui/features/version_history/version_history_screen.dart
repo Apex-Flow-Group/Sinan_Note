@@ -238,7 +238,7 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
     if (!mounted || confirmed != true) return;
     await _ctrl.restoreVersion(version, note);
     if (!mounted) return;
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: l10n.noteRestored,
       type: NotificationType.success,

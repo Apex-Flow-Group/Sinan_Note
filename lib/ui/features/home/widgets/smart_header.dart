@@ -101,7 +101,7 @@ class _SmartHeaderState extends State<SmartHeader>
                       await provider.setPinned(withPin(true), false);
                       widget.selectedNoteIdsNotifier.value = {};
                       if (context.mounted) {
-                        UnifiedNotificationService().showWithUndo(
+                        UnifiedNotificationService.of(context).showWithUndo(
                           context: context,
                           message: '$count ${l10n.notesPinned}',
                           actionKey: 'bulk_pin',
@@ -123,7 +123,7 @@ class _SmartHeaderState extends State<SmartHeader>
                       await provider.archiveNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
                       if (context.mounted) {
-                        UnifiedNotificationService().showWithUndo(
+                        UnifiedNotificationService.of(context).showWithUndo(
                           context: context,
                           message: '$count ${l10n.notesArchived}',
                           actionKey: 'bulk_archive',
@@ -144,7 +144,7 @@ class _SmartHeaderState extends State<SmartHeader>
                       await provider.trashNotes(ids);
                       widget.selectedNoteIdsNotifier.value = {};
                       if (context.mounted) {
-                        UnifiedNotificationService().showWithUndo(
+                        UnifiedNotificationService.of(context).showWithUndo(
                           context: context,
                           message: '$count ${l10n.notesDeleted}',
                           actionKey: 'bulk_delete',

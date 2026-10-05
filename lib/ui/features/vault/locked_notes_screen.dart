@@ -204,7 +204,7 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
         .toList();
 
     if (unlocked.isEmpty) {
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: l10n.noUnlockedNotes,
         type: NotificationType.info,
@@ -313,7 +313,8 @@ class _LockedNotesScreenState extends State<LockedNotesScreen>
                                 setState(() => _selectedNoteIds.clear());
                                 await _loadLockedNotes();
                                 if (failed > 0 && mounted) {
-                                  UnifiedNotificationService().show(
+                                  UnifiedNotificationService.of(this.context)
+                                      .show(
                                     context: this.context,
                                     message: l10n.decryptionFailedCount(failed),
                                     type: NotificationType.error,

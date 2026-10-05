@@ -172,7 +172,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                 }
                                 _selectedNoteIdsNotifier.value = {};
                                 if (context.mounted) {
-                                  UnifiedNotificationService().show(
+                                  UnifiedNotificationService.of(context).show(
                                       context: context,
                                       message:
                                           '${ids.length} ${strings.notesPinned}',
@@ -187,7 +187,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                 await provider.archiveNotes(ids);
                                 _selectedNoteIdsNotifier.value = {};
                                 if (context.mounted) {
-                                  UnifiedNotificationService().show(
+                                  UnifiedNotificationService.of(context).show(
                                       context: context,
                                       message:
                                           '${ids.length} ${strings.notesArchived}',
@@ -202,7 +202,7 @@ class _CodeTabState extends State<CodeTab> with SearchMixin {
                                 await provider.trashNotes(ids);
                                 _selectedNoteIdsNotifier.value = {};
                                 if (context.mounted) {
-                                  UnifiedNotificationService().show(
+                                  UnifiedNotificationService.of(context).show(
                                       context: context,
                                       message:
                                           '${ids.length} ${strings.notesDeleted}',

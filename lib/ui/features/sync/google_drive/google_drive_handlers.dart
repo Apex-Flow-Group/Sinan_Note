@@ -64,7 +64,7 @@ abstract final class GoogleDriveHandlers {
   }) async {
     final l10n = AppLocalizations.of(context)!;
     if (needsAccount && !context.read<SyncViewModel>().isSignedIn) {
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: l10n.pleaseSignIn,
         type: NotificationType.warning,
@@ -74,11 +74,11 @@ abstract final class GoogleDriveHandlers {
     try {
       await action();
       if (!context.mounted) return;
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
           context: context, message: success, type: NotificationType.success);
     } on Object catch (e) {
       if (!context.mounted) return;
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: '$failure ${e is SyncException ? l10n.syncUnavailable : e}',
         type: NotificationType.error,

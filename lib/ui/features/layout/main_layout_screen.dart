@@ -204,7 +204,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           _lastBackPress = now;
           if (mounted) {
             final l10n = AppLocalizations.of(context)!;
-            UnifiedNotificationService().show(
+            UnifiedNotificationService.of(context).show(
               context: context,
               message: l10n.pressBackToExit,
               type: NotificationType.info,

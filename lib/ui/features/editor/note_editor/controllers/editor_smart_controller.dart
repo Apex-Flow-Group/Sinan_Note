@@ -112,7 +112,7 @@ class EditorSmartController {
       final msg = data['message'] == 'noNumbersFound'
           ? l10n.noNumbersFound
           : l10n.noValidExpression;
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: msg,
         type: NotificationType.warning,
@@ -178,7 +178,7 @@ class EditorSmartController {
                       onTap: () {
                         Clipboard.setData(ClipboardData(text: sumResult));
                         Navigator.pop(ctx);
-                        UnifiedNotificationService().show(
+                        UnifiedNotificationService.of(context).show(
                           context: context,
                           message: l10n.copied,
                           type: NotificationType.success,
@@ -283,7 +283,7 @@ class EditorSmartController {
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: resultValue));
                       Navigator.pop(ctx);
-                      UnifiedNotificationService().show(
+                      UnifiedNotificationService.of(context).show(
                         context: context,
                         message: l10n.copied,
                         type: NotificationType.success,
@@ -420,7 +420,7 @@ class EditorSmartController {
   ) async {
     final l10n = AppLocalizations.of(context)!;
     if (detectedLanguage == null) {
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
         context: context,
         message: l10n.unableToDetectLanguage,
         type: NotificationType.warning,

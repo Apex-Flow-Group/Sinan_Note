@@ -100,7 +100,7 @@ class _WidgetSelectionScreenState extends State<WidgetSelectionScreen> {
         ? (widget.widgetType == 'checklist' ? l10n.checklist : l10n.note)
         : note.title;
 
-    UnifiedNotificationService().show(
+    UnifiedNotificationService.of(context).show(
       context: context,
       message: '${l10n.widgetPinned} "$title"',
       type: NotificationType.success,

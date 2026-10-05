@@ -54,7 +54,7 @@ class _VaultUnlockScreenState extends State<VaultUnlockScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           final l10n = AppLocalizations.of(context)!;
-          UnifiedNotificationService().show(
+          UnifiedNotificationService.of(context).show(
             context: context,
             message: l10n.authenticationFailed,
             type: NotificationType.error,

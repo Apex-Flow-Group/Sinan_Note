@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Apex Flow Group. All rights reserved.
+// Copyright © 2025 Apex Flow Group. All rights reserved.
 
 import 'dart:io';
 
@@ -112,7 +112,7 @@ class _SyncSignInWidgetState extends State<SyncSignInWidget> {
 
       if (!success) {
         final l10n = AppLocalizations.of(context)!;
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: l10n.signInFailed,
           type: NotificationType.error,

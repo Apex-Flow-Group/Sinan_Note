@@ -489,7 +489,9 @@ class _NoteCardWidgetState extends State<NoteCardWidget> {
                                                 widget.note.id!, null);
                                             widget.onNoteChanged();
                                             if (context.mounted) {
-                                              UnifiedNotificationService().show(
+                                              UnifiedNotificationService.of(
+                                                      context)
+                                                  .show(
                                                 context: context,
                                                 message: l10n.reminderRemoved,
                                                 type: NotificationType.info,

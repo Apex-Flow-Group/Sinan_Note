@@ -373,7 +373,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
         final file =
             await backups.exportJsonTo(dir, includeVault: includeVault);
         if (mounted) {
-          UnifiedNotificationService().show(
+          UnifiedNotificationService.of(context).show(
             context: context,
             message: l10n.notesExportedTo(file.count, file.path),
             type: NotificationType.success,
@@ -383,7 +383,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
       }
     } catch (e) {
       if (mounted) {
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: e is ValidationException
               ? AppLocalizations.of(context)!.noNotesToExport
@@ -414,7 +414,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
         if (!mounted) return;
         final outputPath = await context.read<BackupViewModel>().exportTo(dir);
         if (mounted) {
-          UnifiedNotificationService().show(
+          UnifiedNotificationService.of(context).show(
             context: context,
             message:
                 '${AppLocalizations.of(context)!.backupSaved}\n$outputPath',
@@ -425,7 +425,7 @@ class _BackupWizardScreenState extends State<BackupWizardScreen> {
       }
     } catch (e) {
       if (mounted) {
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message: e.toString().replaceAll('Exception:', ''),
           type: NotificationType.error,

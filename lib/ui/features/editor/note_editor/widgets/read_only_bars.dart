@@ -400,7 +400,7 @@ class _WidgetPinTile extends StatelessWidget {
         await context.read<HomeWidgets>().pin(note);
 
         if (!context.mounted) return;
-        UnifiedNotificationService().show(
+        UnifiedNotificationService.of(context).show(
           context: context,
           message:
               '${l10n.widgetPinned} ${isChecklistNote ? l10n.checklists : l10n.note}',

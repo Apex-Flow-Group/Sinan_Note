@@ -71,7 +71,7 @@ abstract final class BackupRestoreFlow {
   }
 
   static void _error(BuildContext context, String message) =>
-      UnifiedNotificationService().show(
+      UnifiedNotificationService.of(context).show(
           context: context, message: message, type: NotificationType.error);
 
   static void _success(

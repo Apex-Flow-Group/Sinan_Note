@@ -279,7 +279,7 @@ class NoteHistorySheet extends StatelessWidget {
                               Clipboard.setData(
                                   ClipboardData(text: textToCopy));
                               Navigator.pop(context);
-                              UnifiedNotificationService().show(
+                              UnifiedNotificationService.of(context).show(
                                 context: context,
                                 message: l10n.copiedOldVersion,
                                 type: NotificationType.success,
