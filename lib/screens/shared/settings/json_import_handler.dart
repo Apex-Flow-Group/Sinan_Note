@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/models/note.dart';
+import 'package:sinan_note/screens/shared/settings/backup_dialogs.dart';
 import 'package:sinan_note/screens/shared/settings/backup_validators.dart';
 import 'package:sinan_note/services/security/vault_service.dart';
 import 'package:sinan_note/services/storage/backup_service.dart';
@@ -95,28 +96,8 @@ class JsonImportHandler {
       }
 
       if (!context.mounted) return;
-      final action = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.warning),
-          content: Text(lang == 'ar'
-              ? 'لديك $localCount ملاحظة حالياً. ماذا تريد أن تفعل؟'
-              : 'You have $localCount notes. What do you want to do?'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, 'cancel'),
-                child: Text(l10n.cancel)),
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, 'merge'),
-                child: Text(l10n.merge)),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, 'replace'),
-              child: Text(l10n.replace,
-                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
-            ),
-          ],
-        ),
-      );
+      final action =
+          await BackupDialogs.showActionDialog(context, l10n, lang, localCount);
 
       if (action == null || action == 'cancel') return;
 

@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sinan_note/controllers/notes/notes_provider.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
+import 'package:sinan_note/screens/shared/settings/backup_dialogs.dart';
 import 'package:sinan_note/screens/shared/settings/backup_validators.dart';
 import 'package:sinan_note/services/storage/backup_service.dart';
 import 'package:sinan_note/services/storage/sqlite_database_service.dart';
@@ -78,7 +79,7 @@ class DatabaseRestoreHandler {
       // لديه ملاحظات — اسأله: دمج أو استبدال
       if (!context.mounted) return;
       final action =
-          await _showRestoreOptionsSheet(context, lang, l10n, localCount);
+          await BackupDialogs.showActionDialog(context, l10n, lang, localCount);
       if (action == null || action == 'cancel') return;
 
       if (!context.mounted) return;
@@ -90,10 +91,14 @@ class DatabaseRestoreHandler {
                 color: Theme.of(context).colorScheme.primary)),
       );
 
-      if (isDb) {
+      if (action == 'merge') {
+        if (isDb) {
+          await BackupService().mergeDatabaseFile(backupPath);
+        } else {
+          await BackupService().mergeDatabase(backupPath);
+        }
+      } else if (isDb) {
         await _restoreDbFile(backupPath);
-      } else if (action == 'merge') {
-        await BackupService().mergeDatabase(backupPath);
       } else {
         await BackupService().replaceDatabase(backupPath);
       }
@@ -136,84 +141,6 @@ class DatabaseRestoreHandler {
   }
 
   // ── Bottom Sheets ─────────────────────────────────────────────────────────
-
-  static Future<String?> _showRestoreOptionsSheet(
-    BuildContext context,
-    String lang,
-    AppLocalizations l10n,
-    int localCount,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppBottomSheet.show<String>(
-      context,
-      child: AppBottomSheet(
-        title: lang == 'ar' ? 'استعادة البيانات' : 'Restore Data',
-        titleIcon: Icons.restore_rounded,
-        scrollable: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        color: Colors.orange, size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        lang == 'ar'
-                            ? 'لديك $localCount ملاحظة حالياً'
-                            : 'You have $localCount notes currently',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.pop(context, 'merge'),
-                  icon: const Icon(Icons.merge_rounded),
-                  label: Text(l10n.merge),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pop(context, 'replace'),
-                  icon: Icon(Icons.swap_horiz_rounded, color: scheme.error),
-                  label:
-                      Text(l10n.replace, style: TextStyle(color: scheme.error)),
-                  style: OutlinedButton.styleFrom(
-                    side:
-                        BorderSide(color: scheme.error.withValues(alpha: 0.5)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context, 'cancel'),
-                  child: Text(l10n.cancel),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   static void _showSuccessSheet(
     BuildContext context,
@@ -263,9 +190,16 @@ class DatabaseRestoreHandler {
   // ── DB Restore ────────────────────────────────────────────────────────────
 
   static Future<void> _restoreDbFile(String backupPath) async {
+    // ملف ليس SQLite (مثل .sinannote القديمة بصيغة Isar) يُتلف قاعدة التطبيق
+    if (!await BackupService.isSqliteFile(backupPath)) {
+      throw Exception('الملف ليس قاعدة بيانات صالحة لهذا الإصدار');
+    }
     final dbService = SqliteDatabaseService();
     await dbService.closeDB();
     final dbPath = await _getSqliteDbPath();
+    // نسخة أمان من القاعدة الحالية قبل استبدالها
+    final current = File(dbPath);
+    if (await current.exists()) await current.copy('$dbPath.before-restore');
     await File(backupPath).copy(dbPath);
     await dbService.reopenDatabase();
   }

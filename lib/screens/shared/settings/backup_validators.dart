@@ -3,6 +3,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:sinan_note/services/storage/backup_service.dart';
+
 
 
 class BackupValidators {
@@ -17,6 +19,10 @@ class BackupValidators {
     if (size == 0) return 'الملف فارغ';
     if (size > _maxFileSizeBytes) {
       return 'حجم الملف كبير جداً (الحد الأقصى 100 MB)';
+    }
+
+    if (isDatabase && !await BackupService.isSqliteFile(path)) {
+      return 'الملف ليس قاعدة بيانات صالحة لهذا الإصدار (قد يكون نسخة قديمة بصيغة Isar)';
     }
 
     if (!isDatabase) {
