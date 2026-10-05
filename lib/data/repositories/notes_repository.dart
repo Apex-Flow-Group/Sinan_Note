@@ -1,0 +1,388 @@
+// Copyright © 2025 Apex Flow Group. All rights reserved.
+
+import 'package:flutter/foundation.dart';
+import 'package:sinan_note/data/repositories/vault_repository.dart';
+import 'package:sinan_note/data/services/database/note_mapper.dart';
+import 'package:sinan_note/data/services/note_side_effects.dart';
+import 'package:sinan_note/data/services/vault/vault_cipher.dart';
+import 'package:sinan_note/domain/models/note.dart';
+import 'package:sinan_note/domain/models/note_version.dart';
+import 'package:sinan_note/domain/versioning.dart';
+import 'package:sqflite/sqflite.dart';
+
+/// المصدر الوحيد للملاحظات، والكاتب الوحيد لجدول `notes`.
+///
+/// - الملاحظات غير المقفلة في ذاكرة مرتبة ([notes])، وكل كتابة تحدّثها ثم
+///   تُخطر المستمعين.
+/// - الملاحظة المقفلة تُشفَّر هنا فقط، عند الكتابة، بمفتاح [VaultRepository]؛
+///   وتُفك عند القراءة فقط والخزنة مفتوحة. خارج هذا الصنف هي دائماً نص واضح
+///   بعلامة `isLocked = true`، فلا يحتاج أحد لحراسة التشفير.
+/// - لا نسخ سابقة لملاحظة مقفلة، ولا فهرس بحث مشتق من نصها.
+class NotesRepository extends ChangeNotifier {
+  NotesRepository({
+    required Database db,
+    required VaultRepository vault,
+    required NoteSideEffects sideEffects,
+    required DeletionLog deletionLog,
+    DateTime Function()? clock,
+  })  : _db = db,
+        _vault = vault,
+        _sideEffects = sideEffects,
+        _deletionLog = deletionLog,
+        _now = clock ?? DateTime.now;
+
+  final Database _db;
+  final VaultRepository _vault;
+  final NoteSideEffects _sideEffects;
+  final DeletionLog _deletionLog;
+  final DateTime Function() _now;
+
+  List<Note> _notes = const [];
+  bool _isLoaded = false;
+
+  /// كل الملاحظات غير المقفلة (النشطة والمؤرشفة والمحذوفة)، المثبّتة أولاً ثم
+  /// الأحدث تعديلاً.
+  List<Note> get notes => _notes;
+  bool get isLoaded => _isLoaded;
+
+  Note? cached(int id) {
+    for (final n in _notes) {
+      if (n.id == id) return n;
+    }
+    return null;
+  }
+
+  // ── القراءة ──────────────────────────────────────────────────────────────
+
+  /// يعيد تحميل الذاكرة من القاعدة (عند البدء وبعد أي كتابة خارجية:
+  /// مزامنة، استعادة نسخة).
+  Future<void> load() async {
+    final rows = await _db.query('notes', where: 'isLocked = 0');
+    _notes = _sorted(rows.map(NoteMapper.fromMap));
+    _isLoaded = true;
+    notifyListeners();
+  }
+
+  /// الملاحظات المقفلة مفكوكة. يرمي `VaultLockedException` والخزنة مقفلة.
+  Future<List<Note>> lockedNotes() async {
+    final rows = await _db.query('notes', where: 'isLocked = 1');
+    return _sorted(rows.map((row) => _unseal(NoteMapper.fromMap(row))));
+  }
+
+  /// ملاحظة واحدة كما هي الآن في القاعدة (مفكوكة إن كانت مقفلة).
+  Future<Note?> find(int id) async {
+    final row = await _row(id);
+    if (row == null) return null;
+    return row.isLocked ? _unseal(row) : row;
+  }
+
+  // ── الكتابة ──────────────────────────────────────────────────────────────
+
+  /// يضيف ملاحظة جديدة (id = null) أو يحدّث موجودة. يُرجعها كما حُفظت.
+  Future<Note> save(Note note) async {
+    final stored = await _write(note);
+    _remember(stored);
+    await _sideEffects.noteChanged(_sealed(stored));
+    notifyListeners();
+    return stored;
+  }
+
+  /// يغيّر خصائص لا تمس النص، على الصف المخزن مباشرة: لا يحتاج الخزنة
+  /// مفتوحة للملاحظة المقفلة، ونصها المشفّر يبقى كما هو.
+  Future<Note?> updateMeta(
+    int id, {
+    int? colorIndex,
+    bool? isPinned,
+    Object? reminderDateTime = _keep,
+    String? recurrenceRule,
+    List<int>? categoryIds,
+    bool? isHiddenFromHome,
+  }) async {
+    final current = await _row(id);
+    if (current == null) return null;
+    return save(current.copyWith(
+      colorIndex: colorIndex,
+      isPinned: isPinned,
+      reminderDateTime: reminderDateTime,
+      recurrenceRule: recurrenceRule,
+      categoryIds: categoryIds,
+      isHiddenFromHome: isHiddenFromHome,
+    ));
+  }
+
+  /// يقلب التثبيت. يُرجع الحالة الجديدة، أو null إن لم توجد الملاحظة.
+  Future<bool?> togglePinned(int id) async {
+    final current = await _row(id);
+    if (current == null) return null;
+    return (await updateMeta(id, isPinned: !current.isPinned))?.isPinned;
+  }
+
+  Future<void> archive(List<int> ids) =>
+      _setFlags(ids, (n) => n.copyWith(isArchived: true));
+
+  Future<void> unarchive(List<int> ids) =>
+      _setFlags(ids, (n) => n.copyWith(isArchived: false));
+
+  Future<void> trash(List<int> ids) =>
+      _setFlags(ids, (n) => n.copyWith(isTrashed: true));
+
+  /// من السلة أو الأرشيف إلى الملاحظات النشطة.
+  Future<void> restore(List<int> ids) =>
+      _setFlags(ids, (n) => n.copyWith(isTrashed: false, isArchived: false));
+
+  /// حذف نهائي، مع النسخ السابقة.
+  Future<void> delete(List<int> ids) async {
+    if (ids.isEmpty) return;
+    await _db.transaction((txn) async {
+      for (final id in ids) {
+        await txn.delete('note_versions', where: 'noteId = ?', whereArgs: [id]);
+        await txn.delete('notes', where: 'id = ?', whereArgs: [id]);
+      }
+    });
+    await _deletionLog.recordDeleted(ids);
+    _notes = [
+      for (final n in _notes)
+        if (!ids.contains(n.id)) n
+    ];
+    for (final id in ids) {
+      await _sideEffects.noteRemoved(id);
+    }
+    notifyListeners();
+  }
+
+  /// يقفل أو يفك قفل ملاحظة. يرمي `VaultLockedException` والخزنة مقفلة،
+  /// و`VaultDecryptionException` إن تعذّر فكها — فلا يتغير شيء.
+  Future<void> setLocked(int id, bool locked) async {
+    final current = await find(id);
+    if (current == null || current.isLocked == locked) return;
+    final changed = current.copyWith(isLocked: locked, updatedAt: _now());
+    await _db.transaction((txn) async {
+      await txn
+          .update('notes', _toRow(changed), where: 'id = ?', whereArgs: [id]);
+      // نسخ ما قبل القفل نص واضح — لا تبقى بعده
+      if (locked) {
+        await txn.delete('note_versions', where: 'noteId = ?', whereArgs: [id]);
+      }
+    });
+    if (locked) {
+      _notes = [
+        for (final n in _notes)
+          if (n.id != id) n
+      ];
+    } else {
+      _remember(changed);
+    }
+    await _sideEffects.noteChanged(_sealed(changed));
+    notifyListeners();
+  }
+
+  /// نسخة مستقلة بهوية جديدة. يُرجع الملاحظة الجديدة.
+  Future<Note?> duplicate(int id, {required String copyLabel}) async {
+    final original = await find(id);
+    if (original == null) return null;
+    final title =
+        original.title.isEmpty ? copyLabel : '${original.title} - $copyLabel';
+    return save(
+        original.asNew(at: _now()).copyWith(title: title, isPinned: false));
+  }
+
+  /// يغيّر نوع الملاحظة ومحتواها، بعد حفظ نسخة من حالتها السابقة.
+  Future<Note?> convertType(
+    int id, {
+    required String content,
+    required String noteType,
+    required bool isChecklist,
+  }) async {
+    final current = await find(id);
+    if (current == null) return null;
+    await recordVersion(current, VersionTrigger.forced);
+    return save(current.copyWith(
+      content: content,
+      noteType: noteType,
+      isChecklist: isChecklist,
+      isProfessional: noteType == 'code',
+      updatedAt: _now(),
+    ));
+  }
+
+  // ── الخزنة ───────────────────────────────────────────────────────────────
+
+  /// يعيد تشفير قيم الصيغة القديمة (AES-CTR) بالصيغة الحالية. يُستدعى بعد
+  /// فتح الخزنة؛ في transaction واحدة.
+  Future<int> migrateLegacyCiphertext() async {
+    final rows = await _db.query('notes', where: 'isLocked = 1');
+    final legacy = rows.map(NoteMapper.fromMap).where((n) =>
+        VaultCipher.isLegacy(n.title) || VaultCipher.isLegacy(n.content));
+    final migrated = [for (final n in legacy) _sealed(_unseal(n))];
+    if (migrated.isEmpty) return 0;
+    await _db.transaction((txn) async {
+      for (final n in migrated) {
+        await txn.update('notes', NoteMapper.toMap(n)..addAll(_noIndex),
+            where: 'id = ?', whereArgs: [n.id]);
+      }
+    });
+    return migrated.length;
+  }
+
+  /// يعيد تشفير كل القيم المقفلة بـ [reseal] في transaction واحدة — لتدوير
+  /// مفتاح الخزنة (`VaultRepository.rotateKey`). أي فشل يُرجع كل شيء.
+  Future<void> resealAll(String Function(String sealed) reseal) async {
+    final rows = await _db.query('notes', where: 'isLocked = 1');
+    await _db.transaction((txn) async {
+      for (final n in rows.map(NoteMapper.fromMap)) {
+        await txn.update(
+          'notes',
+          {
+            'title': n.title.isEmpty ? '' : reseal(n.title),
+            'content': n.content.isEmpty ? '' : reseal(n.content),
+          },
+          where: 'id = ?',
+          whereArgs: [n.id],
+        );
+      }
+    });
+  }
+
+  // ── النسخ السابقة ────────────────────────────────────────────────────────
+
+  /// يحفظ نسخة من [note] حسب [VersionPolicy]. لا نسخ للملاحظات المقفلة.
+  Future<void> recordVersion(Note note, VersionTrigger trigger) async {
+    final id = note.id;
+    if (id == null || note.isLocked) return;
+    final last = await lastVersion(id);
+    if (!VersionPolicy.shouldRecord(
+        trigger: trigger,
+        last: last,
+        title: note.title,
+        content: note.content)) {
+      return;
+    }
+    await _db.transaction((txn) async {
+      await txn.insert('note_versions', {
+        'noteId': id,
+        'title': note.title,
+        'content': note.content,
+        'timestamp': _now().toUtc().toIso8601String(),
+        'action': trigger.name,
+        'noteType': note.noteType,
+      });
+      await txn.rawDelete(
+        'DELETE FROM note_versions WHERE noteId = ? AND id NOT IN '
+        '(SELECT id FROM note_versions WHERE noteId = ? '
+        'ORDER BY timestamp DESC LIMIT ?)',
+        [id, id, VersionPolicy.maxVersionsPerNote],
+      );
+    });
+  }
+
+  Future<List<NoteVersion>> history(int noteId) async {
+    final rows = await _db.query('note_versions',
+        where: 'noteId = ?', whereArgs: [noteId], orderBy: 'timestamp DESC');
+    return rows.map(_versionFrom).toList();
+  }
+
+  Future<NoteVersion?> lastVersion(int noteId) async {
+    final rows = await _db.query('note_versions',
+        where: 'noteId = ?',
+        whereArgs: [noteId],
+        orderBy: 'timestamp DESC',
+        limit: 1);
+    return rows.isEmpty ? null : _versionFrom(rows.first);
+  }
+
+  // ── داخلي ────────────────────────────────────────────────────────────────
+
+  static const _keep = Object();
+
+  /// الملاحظة المقفلة لا فهرس بحث لها مشتق من نصها.
+  static const _noIndex = {'normalizedTitle': '', 'normalizedContent': ''};
+
+  Future<Note> _write(Note note) async {
+    final row = _toRow(note);
+    if (note.id == null) {
+      row.remove('id');
+      return note.copyWith(id: await _db.insert('notes', row));
+    }
+    await _db.update('notes', row, where: 'id = ?', whereArgs: [note.id]);
+    return note;
+  }
+
+  Future<void> _setFlags(List<int> ids, Note Function(Note) change) async {
+    if (ids.isEmpty) return;
+    final now = _now();
+    final changed = <Note>[];
+    for (final id in ids) {
+      final current = await _row(id);
+      if (current != null) {
+        changed.add(change(current).copyWith(updatedAt: now));
+      }
+    }
+    await _db.transaction((txn) async {
+      for (final n in changed) {
+        // الصف كما هو مخزن (مشفّر إن كان مقفلاً) — الأعلام فقط تتغير
+        await txn.update(
+            'notes', NoteMapper.toMap(n)..addAll(n.isLocked ? _noIndex : {}),
+            where: 'id = ?', whereArgs: [n.id]);
+      }
+    });
+    for (final n in changed) {
+      if (!n.isLocked) _remember(n);
+      await _sideEffects.noteChanged(n);
+    }
+    notifyListeners();
+  }
+
+  Map<String, Object?> _toRow(Note note) {
+    final sealed = _sealed(note);
+    final row = NoteMapper.toMap(sealed);
+    return note.isLocked ? (row..addAll(_noIndex)) : row;
+  }
+
+  /// النسخة المخزنة: المقفلة بعنوان ومحتوى مشفرين (الفارغ يبقى فارغاً).
+  Note _sealed(Note note) {
+    if (!note.isLocked) return note;
+    String seal(String text) =>
+        text.isEmpty || VaultCipher.isSealed(text) ? text : _vault.seal(text);
+    return note.copyWith(title: seal(note.title), content: seal(note.content));
+  }
+
+  Note _unseal(Note stored) {
+    String open(String text) =>
+        VaultCipher.isSealed(text) ? _vault.open(text) : text;
+    return stored.copyWith(
+        title: open(stored.title), content: open(stored.content));
+  }
+
+  Future<Note?> _row(int id) async {
+    final rows =
+        await _db.query('notes', where: 'id = ?', whereArgs: [id], limit: 1);
+    return rows.isEmpty ? null : NoteMapper.fromMap(rows.first);
+  }
+
+  void _remember(Note note) {
+    if (note.isLocked) return;
+    _notes = _sorted([
+      for (final n in _notes)
+        if (n.id != note.id) n,
+      note,
+    ]);
+  }
+
+  static List<Note> _sorted(Iterable<Note> notes) => List.unmodifiable(
+        notes.toList()
+          ..sort((a, b) {
+            if (a.isPinned != b.isPinned) return a.isPinned ? -1 : 1;
+            return b.updatedAt.compareTo(a.updatedAt);
+          }),
+      );
+
+  static NoteVersion _versionFrom(Map<String, Object?> m) => NoteVersion(
+        id: m['id'] as int,
+        noteId: m['noteId'] as int,
+        title: m['title'] as String,
+        content: m['content'] as String,
+        timestamp: DateTime.parse(m['timestamp'] as String),
+        action: m['action'] as String? ?? 'update',
+        noteType: m['noteType'] as String? ?? 'simple',
+      );
+}

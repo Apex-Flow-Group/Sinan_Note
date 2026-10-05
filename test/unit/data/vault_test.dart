@@ -9,7 +9,8 @@ import 'package:sinan_note/data/services/vault/key_derivation.dart';
 import 'package:sinan_note/data/services/vault/vault_cipher.dart';
 import 'package:sinan_note/data/services/vault/vault_key_store.dart';
 import 'package:sinan_note/domain/errors.dart';
-import 'package:sinan_note/services/security/vault_service.dart' show VaultService;
+import 'package:sinan_note/services/security/vault_service.dart'
+    show VaultService;
 
 import '../../test_setup.dart';
 
