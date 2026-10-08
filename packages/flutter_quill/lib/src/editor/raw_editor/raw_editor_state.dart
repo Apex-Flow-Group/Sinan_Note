@@ -648,11 +648,8 @@ class QuillRawEditorState extends EditorState
     return result;
   }
 
-  EditableTextLine _getEditableTextLineFromNode(
-      Line node,
-      BuildContext context,
-      Map<String, Attribute<dynamic>> attrs,
-      TextDirection lineDirection) {
+  EditableTextLine _getEditableTextLineFromNode(Line node, BuildContext context,
+      Map<String, Attribute<dynamic>> attrs, TextDirection lineDirection) {
     final textLine = TextLine(
       line: node,
       textDirection: lineDirection,
@@ -1083,7 +1080,7 @@ class QuillRawEditorState extends EditorState
         contextMenuBuilder: widget.config.contextMenuBuilder == null
             ? null
             : (context) => widget.config.contextMenuBuilder!(context, this),
-        dragOffsetNotifier: widget.dragOffsetNotifier,
+        magnifierLineNotifier: widget.magnifierLineNotifier,
       );
       _selectionOverlay!.handlesVisible = _shouldShowSelectionHandles();
       _selectionOverlay!.showHandles();

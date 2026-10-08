@@ -12,7 +12,7 @@ class QuillRawEditor extends StatefulWidget {
   QuillRawEditor({
     required this.config,
     required this.controller,
-    this.dragOffsetNotifier,
+    this.magnifierLineNotifier,
     super.key,
   })  : assert(config.maxHeight == null || config.maxHeight! > 0,
             'maxHeight cannot be null'),
@@ -28,7 +28,7 @@ class QuillRawEditor extends StatefulWidget {
   final QuillRawEditorConfig config;
 
   /// {@template drag_offset_notifier}
-  /// dragOffsetNotifier - Only used on iOS and Android
+  /// magnifierLineNotifier - Only used on iOS and Android
   ///
   /// [QuillRawEditor] contains a gesture detector [EditorTextSelectionGestureDetector]
   /// within it's widget tree that includes a [RawMagnifier]. The RawMagnifier needs
@@ -40,14 +40,14 @@ class QuillRawEditor extends StatefulWidget {
   /// [EditorTextSelectionOverlay].
   ///
   /// Both [EditorTextSelectionGestureDetector] and [EditorTextSelectionOverlay] will update
-  /// the value of the dragOffsetNotifier.
+  /// the value of the magnifierLineNotifier.
   ///
   /// The [EditorTextSelectionGestureDetector] will use the value to display the magnifier in
   /// the correct location (or hide the magnifier if null). [EditorTextSelectionOverlay] will
-  /// use the value of the dragOffsetNotifier to hide the context menu when the magnifier is
+  /// use the value of the magnifierLineNotifier to hide the context menu when the magnifier is
   /// displayed and show the context menu when dragging is complete.
   /// {@endtemplate}
-  final ValueNotifier<Offset?>? dragOffsetNotifier;
+  final ValueNotifier<Rect?>? magnifierLineNotifier;
 
   @override
   State<StatefulWidget> createState() => QuillRawEditorState();

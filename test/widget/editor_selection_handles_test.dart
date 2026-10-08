@@ -6,6 +6,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +26,9 @@ const _english = [
 void main() {
   late List<String> lines;
 
+  /// ما تلقّاه منشئ العدسة أثناء السحب (سطر المؤشر بإحداثيات المحرر).
+  late List<Rect> magnified;
+
   int lineOf(int offset) {
     var end = 0;
     for (var i = 0; i < lines.length; i++) {
@@ -37,6 +41,7 @@ void main() {
   /// يحدد كلمة في منتصف السطر الأول بضغطة طويلة (كما في أندرويد).
   Future<QuillController> select(WidgetTester tester, List<String> text) async {
     lines = text;
+    magnified = [];
     final controller = QuillController(
       document: Document.fromDelta(Delta()..insert('${text.join('\n')}\n')),
       selection: const TextSelection.collapsed(offset: 0),
@@ -54,8 +59,12 @@ void main() {
               controller: controller,
               focusNode: focus,
               scrollController: ScrollController(),
-              config: const QuillEditorConfig(
+              config: QuillEditorConfig(
                 textDirectionResolver: strongDirectionOf,
+                quillMagnifierBuilder: (line) {
+                  magnified.add(line);
+                  return const SizedBox.shrink(key: ValueKey('magnifier'));
+                },
               ),
             ),
           ),
@@ -180,6 +189,72 @@ void main() {
             reason: 'one line at a time, never back: $visited');
       }
       expect(visited, contains(1), reason: 'reaches the next line: $visited');
+    });
+  });
+
+  group('feedback while dragging a handle', () {
+    testWidgets('a strong tick on grab, then one light tick per new position',
+        (tester) async {
+      await android(() async {
+        final c = await select(tester, _arabic);
+        final ticks = <String>[];
+        tester.binding.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'HapticFeedback.vibrate') {
+            ticks.add(call.arguments as String);
+          }
+          return null;
+        });
+        addTearDown(() => tester.binding.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, null));
+
+        final positions = <int>{c.selection.end};
+        final gesture =
+            await tester.startGesture(tester.getCenter(handle(end: true)));
+        for (var i = 0; i < 8; i++) {
+          await gesture.moveBy(const Offset(-10, 0));
+          await tester.pump();
+          positions.add(c.selection.end);
+        }
+        await gesture.up();
+        await tester.pumpAndSettle();
+
+        expect(ticks.first, 'HapticFeedbackType.mediumImpact');
+        final clicks =
+            ticks.where((t) => t == 'HapticFeedbackType.selectionClick');
+        expect(clicks.length, positions.length - 1,
+            reason: 'one tick per new position: $positions, $ticks');
+        expect(clicks, isNotEmpty);
+      });
+    });
+
+    testWidgets('the magnifier shows the edge\'s text line, not the finger',
+        (tester) async {
+      await android(() async {
+        await select(tester, _arabic);
+        magnified.clear();
+        final grab = tester.getCenter(handle(end: true));
+        final gesture = await tester.startGesture(grab);
+        for (var i = 0; i < 4; i++) {
+          await gesture.moveBy(const Offset(-10, 0));
+          await tester.pump();
+        }
+        await tester.pump(); // العدسة تتحدث بعد الإطار
+        expect(find.byKey(const ValueKey('magnifier')), findsOneWidget);
+        final line = magnified.last;
+        expect(line.height, greaterThan(10),
+            reason: 'a text line, not the finger\'s point: $line');
+        // الإصبع على المقبض تحت السطر؛ العدسة على السطر الأول نفسه
+        final editorTop = tester.getRect(find.byType(QuillEditor)).top;
+        expect(line.center.dy, lessThan(line.height),
+            reason: 'first line of the editor: $line');
+        expect(grab.dy - editorTop, greaterThan(line.bottom),
+            reason: 'the finger is below the line it magnifies');
+
+        await gesture.up();
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('magnifier')), findsNothing);
+      });
     });
   });
 }

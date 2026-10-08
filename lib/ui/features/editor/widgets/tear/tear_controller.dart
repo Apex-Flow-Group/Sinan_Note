@@ -362,9 +362,8 @@ class _TearWidgetState extends State<_TearWidget>
             const SizedBox.expand(),
             if (_dragging)
               TearMagnifier(
-                pos: v.pos,
-                lineTop: v.lineTop,
-                lineBottom: v.lineBottom,
+                line:
+                    Rect.fromLTRB(v.pos.dx, v.lineTop, v.pos.dx, v.lineBottom),
                 bgColor: widget.bgColor,
               ),
             // مربع لمس 48×48 (حجم أندرويد) يبدأ من أسفل المؤشر ولا يعلوه:

@@ -77,7 +77,7 @@ class EditorTextSelectionOverlay {
     this.onSelectionHandleTapped,
     this.dragStartBehavior = DragStartBehavior.start,
     this.handlesVisible = false,
-    this.dragOffsetNotifier,
+    this.magnifierLineNotifier,
   }) {
     // Clipboard status is only checked on first instance of
     // ClipboardStatusNotifier
@@ -96,7 +96,7 @@ class EditorTextSelectionOverlay {
   TextEditingValue value;
 
   /// The offset of the drag handle used to position the magnifier.
-  ValueNotifier<Offset?>? dragOffsetNotifier;
+  ValueNotifier<Rect?>? magnifierLineNotifier;
 
   /// Whether selection handles are visible.
   ///
@@ -219,7 +219,7 @@ class EditorTextSelectionOverlay {
   /// To hide the whole overlay, see [hide].
   void hideToolbar() {
     assert(toolbar != null);
-    dragOffsetNotifier?.removeListener(_dragOffsetListener);
+    magnifierLineNotifier?.removeListener(_dragOffsetListener);
     toolbar!.remove();
     toolbar = null;
   }
@@ -228,11 +228,11 @@ class EditorTextSelectionOverlay {
   void showToolbar() {
     assert(toolbar == null);
     if (contextMenuBuilder == null) return;
-    dragOffsetNotifier?.addListener(_dragOffsetListener);
+    magnifierLineNotifier?.addListener(_dragOffsetListener);
     toolbar = OverlayEntry(builder: (context) {
-      // when the dragOffsetNotifier is not null and the value is not null
+      // when the magnifierLineNotifier is not null and the value is not null
       // the magnifier is being shown, so we don't want to show the context menu
-      if (dragOffsetNotifier?.value != null) {
+      if (magnifierLineNotifier?.value != null) {
         return Container();
       }
       return contextMenuBuilder!(context);
@@ -248,7 +248,7 @@ class EditorTextSelectionOverlay {
 
   // after dragging and magnifier is removed, restore the context menu
   void _dragOffsetListener() {
-    if (dragOffsetNotifier?.value == null) {
+    if (magnifierLineNotifier?.value == null) {
       toolbar?.markNeedsBuild();
     }
   }
@@ -273,7 +273,7 @@ class EditorTextSelectionOverlay {
           selectionControls: selectionCtrls,
           position: position,
           dragStartBehavior: dragStartBehavior,
-          dragOffsetNotifier: dragOffsetNotifier,
+          magnifierLineNotifier: magnifierLineNotifier,
           resolvedDirection: _resolveSelectionDirection(),
         ));
   }
@@ -426,7 +426,7 @@ class _TextSelectionHandleOverlay extends StatefulWidget {
     required this.selectionControls,
     required this.resolvedDirection,
     this.dragStartBehavior = DragStartBehavior.start,
-    this.dragOffsetNotifier,
+    this.magnifierLineNotifier,
   });
 
   final TextSelection selection;
@@ -438,7 +438,7 @@ class _TextSelectionHandleOverlay extends StatefulWidget {
   final VoidCallback? onSelectionHandleTapped;
   final TextSelectionControls selectionControls;
   final DragStartBehavior dragStartBehavior;
-  final ValueNotifier<Offset?>? dragOffsetNotifier;
+  final ValueNotifier<Rect?>? magnifierLineNotifier;
 
   /// The resolved text direction for this selection, computed once
   /// from the first strongly-directional character in the selected text.
@@ -465,6 +465,27 @@ class _TextSelectionHandleOverlayState
   /// starts. The finger rests on the handle below the text; resolving the
   /// raw finger position would land on the next line.
   Offset _grab = Offset.zero;
+
+  /// Offset of the dragged edge, for one haptic tick per move.
+  int? _lastOffset;
+
+  /// The caret's line at [position], in global coordinates.
+  Rect _caretLine(TextPosition position) {
+    final renderObject = widget.renderObject;
+    final local = renderObject.getLocalRectForCaret(position);
+    return Rect.fromPoints(renderObject.localToGlobal(local.topLeft),
+        renderObject.localToGlobal(local.bottomRight));
+  }
+
+  /// The dragged edge reached [position]: the magnifier follows its line,
+  /// and a new offset ticks once.
+  void _moved(TextPosition position) {
+    widget.magnifierLineNotifier?.value = _caretLine(position);
+    if (position.offset != _lastOffset) {
+      _lastOffset = position.offset;
+      HapticFeedback.selectionClick();
+    }
+  }
 
   late AnimationController _controller;
 
@@ -505,10 +526,12 @@ class _TextSelectionHandleOverlayState
   }
 
   void _handleDragStart(DragStartDetails details) {
-    widget.dragOffsetNotifier?.value = details.globalPosition;
     final textPosition = widget.position == _TextSelectionHandlePosition.start
         ? widget.selection.base
         : widget.selection.extent;
+    HapticFeedback.mediumImpact();
+    _lastOffset = textPosition.offset;
+    widget.magnifierLineNotifier?.value = _caretLine(textPosition);
     final lineHeight = widget.renderObject.preferredLineHeight(textPosition);
     // The handle sits at this endpoint (bottom of its line), see paint().
     final endpoints =
@@ -523,14 +546,14 @@ class _TextSelectionHandleOverlayState
 
   void _handleDragEnd(DragEndDetails details) {
     // when the drag is complete, we need to clear the drag offset
-    widget.dragOffsetNotifier?.value = null;
+    widget.magnifierLineNotifier?.value = null;
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    widget.dragOffsetNotifier?.value = details.globalPosition;
     final position = widget.renderObject
         .getPositionForOffset(details.globalPosition - _grab);
     if (widget.selection.isCollapsed) {
+      _moved(position);
       widget.onSelectionHandleChanged(TextSelection.fromPosition(position));
       return;
     }
@@ -561,6 +584,7 @@ class _TextSelectionHandleOverlayState
       return; // don't allow order swapping.
     }
 
+    _moved(position);
     widget.onSelectionHandleChanged(newSelection);
   }
 
@@ -717,7 +741,7 @@ class EditorTextSelectionGestureDetector extends StatefulWidget {
     this.onDragSelectionEnd,
     this.behavior,
     this.detectWordBoundary = true,
-    this.dragOffsetNotifier,
+    this.magnifierLineNotifier,
     this.quillMagnifierBuilder,
     super.key,
   });
@@ -796,7 +820,7 @@ class EditorTextSelectionGestureDetector extends StatefulWidget {
 
   final bool detectWordBoundary;
 
-  final ValueNotifier<Offset?>? dragOffsetNotifier;
+  final ValueNotifier<Rect?>? magnifierLineNotifier;
 
   final QuillMagnifierBuilder? quillMagnifierBuilder;
 
@@ -819,12 +843,12 @@ class _EditorTextSelectionGestureDetectorState
   bool _isSecondaryDoubleTap = false;
 
   // The last offset of the drag gesture.
-  Offset? _magnifierPosition;
+  Rect? _magnifierLine;
 
   @override
   void initState() {
     // when the drag offset changes (from handle drag or 1st selection update the magnifier)
-    widget.dragOffsetNotifier?.addListener(_dragOffsetListener);
+    widget.magnifierLineNotifier?.addListener(_dragOffsetListener);
     super.initState();
   }
 
@@ -832,7 +856,7 @@ class _EditorTextSelectionGestureDetectorState
   void dispose() {
     _doubleTapTimer?.cancel();
     _dragUpdateThrottleTimer?.cancel();
-    widget.dragOffsetNotifier?.removeListener(_dragOffsetListener);
+    widget.magnifierLineNotifier?.removeListener(_dragOffsetListener);
     super.dispose();
   }
 
@@ -840,18 +864,19 @@ class _EditorTextSelectionGestureDetectorState
   // when selection handles are being dragged, so update during the next build
   void _dragOffsetListener() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Offset? position;
+      Rect? line;
 
-      final globalPosition = widget.dragOffsetNotifier?.value;
+      final global = widget.magnifierLineNotifier?.value;
 
-      if (globalPosition != null) {
+      if (global != null && mounted) {
         final renderBox = context.findRenderObject()! as RenderBox;
-        position = renderBox.globalToLocal(globalPosition);
+        line = Rect.fromPoints(renderBox.globalToLocal(global.topLeft),
+            renderBox.globalToLocal(global.bottomRight));
       }
 
       if (mounted) {
         setState(() {
-          _magnifierPosition = position;
+          _magnifierLine = line;
         });
       }
     });
@@ -920,6 +945,11 @@ class _EditorTextSelectionGestureDetectorState
     widget.onSecondarySingleTapCancel?.call();
   }
 
+  /// The finger's point as a zero-size line: drags on the text itself, where
+  /// the selection edge is not known here.
+  static Rect _point(Offset global) =>
+      Rect.fromLTWH(global.dx, global.dy, 0, 0);
+
   DragStartDetails? _lastDragStartDetails;
   DragUpdateDetails? _lastDragUpdateDetails;
   Timer? _dragUpdateThrottleTimer;
@@ -927,7 +957,7 @@ class _EditorTextSelectionGestureDetectorState
   void _handleDragStart(DragStartDetails details) {
     assert(_lastDragStartDetails == null);
     _lastDragStartDetails = details;
-    widget.dragOffsetNotifier?.value = details.globalPosition;
+    widget.magnifierLineNotifier?.value = _point(details.globalPosition);
     widget.onDragSelectionStart?.call(details);
   }
 
@@ -948,7 +978,9 @@ class _EditorTextSelectionGestureDetectorState
   void _handleDragUpdateThrottled() {
     assert(_lastDragStartDetails != null);
     assert(_lastDragUpdateDetails != null);
-    widget.dragOffsetNotifier?.value = _lastDragUpdateDetails?.globalPosition;
+    final update = _lastDragUpdateDetails?.globalPosition;
+    widget.magnifierLineNotifier?.value =
+        update == null ? null : _point(update);
     if (widget.onDragSelectionUpdate != null) {
       widget.onDragSelectionUpdate!(
           //_lastDragStartDetails!,
@@ -988,14 +1020,14 @@ class _EditorTextSelectionGestureDetectorState
 
   void _handleLongPressStart(LongPressStartDetails details) {
     if (!_isDoubleTap) {
-      widget.dragOffsetNotifier?.value = details.globalPosition;
+      widget.magnifierLineNotifier?.value = _point(details.globalPosition);
       widget.onSingleLongTapStart?.call(details);
     }
   }
 
   void _handleLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
     if (!_isDoubleTap) {
-      widget.dragOffsetNotifier?.value = details.globalPosition;
+      widget.magnifierLineNotifier?.value = _point(details.globalPosition);
       widget.onSingleLongTapMoveUpdate?.call(details);
     }
   }
@@ -1006,7 +1038,7 @@ class _EditorTextSelectionGestureDetectorState
     }
     // after a long press (from double tap or drag) make sure
     // magnifier is removed
-    widget.dragOffsetNotifier?.value = null;
+    widget.magnifierLineNotifier?.value = null;
     _isDoubleTap = false;
   }
 
@@ -1103,8 +1135,8 @@ class _EditorTextSelectionGestureDetectorState
           : Stack(
               children: [
                 widget.child,
-                if (_magnifierPosition != null)
-                  widget.quillMagnifierBuilder!(_magnifierPosition!)
+                if (_magnifierLine != null)
+                  widget.quillMagnifierBuilder!(_magnifierLine!)
               ],
             ),
     );

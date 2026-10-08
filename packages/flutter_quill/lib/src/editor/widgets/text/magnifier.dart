@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
-typedef QuillMagnifierBuilder = Widget Function(Offset dragPosition);
+/// Builds the magnifier for [line]: the caret's line at the selection edge
+/// being dragged (zero-width at the caret), or the finger's point when the
+/// drag is on the text itself. In the editor's local coordinates.
+typedef QuillMagnifierBuilder = Widget Function(Rect line);
 
-Widget defaultQuillMagnifierBuilder(Offset dragPosition) =>
-    QuillMagnifier(dragPosition: dragPosition);
+Widget defaultQuillMagnifierBuilder(Rect line) =>
+    QuillMagnifier(dragPosition: line.center);
 
 class QuillMagnifier extends StatelessWidget {
   const QuillMagnifier({required this.dragPosition, super.key});

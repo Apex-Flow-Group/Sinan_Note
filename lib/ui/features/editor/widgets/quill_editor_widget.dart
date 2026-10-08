@@ -9,8 +9,8 @@ import 'package:sinan_note/ui/core/input/arabic_marks_editing.dart';
 import 'package:sinan_note/ui/core/input/bidi_cursor_middleware.dart';
 import 'package:sinan_note/ui/core/theme/app_colors.dart';
 import 'package:sinan_note/ui/core/theme/app_font_size.dart';
-import 'package:sinan_note/ui/features/editor/widgets/apex_magnifier.dart';
 import 'package:sinan_note/ui/features/editor/widgets/quill_editor_controller.dart';
+import 'package:sinan_note/ui/features/editor/widgets/tear/tear_magnifier.dart';
 
 class QuillEditorWidget extends StatefulWidget {
   final QuillController quillController;
@@ -311,7 +311,9 @@ class _QuillEditorWidgetState extends State<QuillEditorWidget> {
                         });
                         return const SizedBox.shrink();
                       },
-                      quillMagnifierBuilder: apexMagnifierBuilder,
+                      // عدسة الدمعة: صورة السطر عند طرف التحديد المسحوب
+                      quillMagnifierBuilder: (line) =>
+                          tearMagnifierBuilder(line, widget.noteColor),
                       textSelectionThemeData: TextSelectionThemeData(
                         cursorColor: widget.textColor,
                         selectionColor: widget.textColor.withValues(alpha: 0.2),
