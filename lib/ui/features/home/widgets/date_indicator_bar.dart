@@ -43,7 +43,9 @@ class DateIndicatorBar extends StatefulWidget {
 
 class _DateIndicatorBarState extends State<DateIndicatorBar> {
   DateTime? _visibleDate;
-  int _lastScrollOffset = -1;
+
+  /// موضع آخر حساب أثناء التمرير: التمرير يُعاد حسابه كل 60 بكسل فقط.
+  double? _computedAt;
 
   @override
   void initState() {
@@ -51,7 +53,7 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     widget.scrollController.addListener(_onScroll);
     widget.filteredNotesNotifier.addListener(_onNotesChanged);
     widget.activeFilterNotifier.addListener(_rebuild);
-    _initVisibleDate();
+    _visibleDate = _dateAt(_scrollOffset);
   }
 
   @override
@@ -62,50 +64,46 @@ class _DateIndicatorBarState extends State<DateIndicatorBar> {
     super.dispose();
   }
 
-  void _initVisibleDate() {
-    final notes = widget.filteredNotesNotifier.value;
-    if (notes.isNotEmpty && _visibleDate == null) {
-      final date = notes.first.updatedAt;
-      _visibleDate = DateTime(date.year, date.month, date.day);
-    }
-  }
+  double get _scrollOffset =>
+      widget.scrollController.hasClients ? widget.scrollController.offset : 0;
 
   void _rebuild() {
     if (mounted) setState(() {});
   }
 
-  void _onNotesChanged() {
-    _lastScrollOffset = -1;
-    _initVisibleDate();
-    _onScroll();
-  }
+  /// الملاحظات تغيّرت (وصل التحميل، فلتر، ملاحظة جديدة): يُحسب دائماً.
+  void _onNotesChanged() => _update(_scrollOffset);
 
   void _onScroll() {
-    if (!widget.scrollController.hasClients) return;
+    final offset = _scrollOffset;
+    final last = _computedAt;
+    if (last != null && (offset - last).abs() < 60) return;
+    _update(offset);
+  }
+
+  void _update(double offset) {
+    _computedAt = offset;
+    final date = _dateAt(offset);
+    if (date != _visibleDate && mounted) setState(() => _visibleDate = date);
+  }
+
+  /// يوم الملاحظة الظاهرة أعلى القائمة عند [offset]، أو null بلا ملاحظات.
+  DateTime? _dateAt(double offset) {
     final notes = widget.filteredNotesNotifier.value;
-    if (notes.isEmpty) return;
-
-    final offset = widget.scrollController.offset.toInt();
-    if ((_lastScrollOffset - offset).abs() < 60) return;
-    _lastScrollOffset = offset;
-
-    final scrollOffset = widget.scrollController.offset;
-    double accumulated = 0;
+    if (notes.isEmpty) return null;
     const fallback = 80.0;
-
-    Note? topNote;
+    var accumulated = 0.0;
+    var top = notes.first;
     for (final note in notes) {
       final h = widget.noteHeights[note.id] ?? fallback;
-      if (accumulated + h > scrollOffset) {
-        topNote = note;
+      if (accumulated + h > offset) {
+        top = note;
         break;
       }
       accumulated += h;
     }
-
-    final date = (topNote ?? notes.first).updatedAt;
-    final newDate = DateTime(date.year, date.month, date.day);
-    if (newDate != _visibleDate) setState(() => _visibleDate = newDate);
+    final at = top.updatedAt;
+    return DateTime(at.year, at.month, at.day);
   }
 
   String _formatDate(DateTime date) {
