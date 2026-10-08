@@ -5641,6 +5641,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your PIN is better protected, repeated wrong vault attempts add a wait, and choosing a note for the widget goes through the lock.'**
   String get whatsNewStrongerLockDesc;
+
+  /// No description provided for @whatsNewSelectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise selection'**
+  String get whatsNewSelectionTitle;
+
+  /// No description provided for @whatsNewSelectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection handles follow your finger along the line, with a light haptic tick and a lens showing the selected text.'**
+  String get whatsNewSelectionDesc;
+
+  /// No description provided for @whatsNewFasterStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Faster start'**
+  String get whatsNewFasterStartTitle;
+
+  /// No description provided for @whatsNewFasterStartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Home appears without waiting for Google Drive or notifications, and tapping a reminder while the app is closed opens its note.'**
+  String get whatsNewFasterStartDesc;
 }
 
 class _AppLocalizationsDelegate

@@ -2957,4 +2957,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get whatsNewStrongerLockDesc =>
       'رمز PIN محمي بشكل أقوى، ومهلة انتظار بعد محاولات خاطئة متكررة لفتح الخزنة، واختيار ملاحظة للويدجت يمر بالقفل.';
+
+  @override
+  String get whatsNewSelectionTitle => 'تحديد أدق';
+
+  @override
+  String get whatsNewSelectionDesc =>
+      'مقبضا التحديد يتبعان إصبعك على السطر نفسه، مع اهتزاز خفيف وعدسة تُظهر النص المحدد.';
+
+  @override
+  String get whatsNewFasterStartTitle => 'تشغيل أسرع';
+
+  @override
+  String get whatsNewFasterStartDesc =>
+      'الشاشة الرئيسية تظهر دون انتظار Google Drive أو الإشعارات، ولمس تذكير والتطبيق مغلق يفتح ملاحظته.';
 }

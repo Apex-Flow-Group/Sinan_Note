@@ -259,6 +259,18 @@ class WhatsNewDialog extends StatelessWidget {
                 subtitle: l10n.whatsNewCursorDesc,
               ),
               _FeatureRow(
+                icon: Icons.highlight_alt_rounded,
+                color: scheme.primary,
+                title: l10n.whatsNewSelectionTitle,
+                subtitle: l10n.whatsNewSelectionDesc,
+              ),
+              _FeatureRow(
+                icon: Icons.bolt_rounded,
+                color: context.colors.warning,
+                title: l10n.whatsNewFasterStartTitle,
+                subtitle: l10n.whatsNewFasterStartDesc,
+              ),
+              _FeatureRow(
                 icon: Icons.lock_rounded,
                 color: scheme.secondary,
                 title: l10n.whatsNewStrongerLockTitle,

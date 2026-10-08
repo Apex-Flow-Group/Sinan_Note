@@ -2971,4 +2971,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get whatsNewStrongerLockDesc =>
       'Your PIN is better protected, repeated wrong vault attempts add a wait, and choosing a note for the widget goes through the lock.';
+
+  @override
+  String get whatsNewSelectionTitle => 'Precise selection';
+
+  @override
+  String get whatsNewSelectionDesc =>
+      'Selection handles follow your finger along the line, with a light haptic tick and a lens showing the selected text.';
+
+  @override
+  String get whatsNewFasterStartTitle => 'Faster start';
+
+  @override
+  String get whatsNewFasterStartDesc =>
+      'Home appears without waiting for Google Drive or notifications, and tapping a reminder while the app is closed opens its note.';
 }

@@ -1217,5 +1217,9 @@
   "whatsNewCursorTitle": "An Android-style cursor",
   "whatsNewCursorDesc": "The cursor handle looks like Android’s and dragging it no longer scrolls the page; swiping on the space bar follows the line’s direction.",
   "whatsNewStrongerLockTitle": "A stronger lock",
-  "whatsNewStrongerLockDesc": "Your PIN is better protected, repeated wrong vault attempts add a wait, and choosing a note for the widget goes through the lock."
+  "whatsNewStrongerLockDesc": "Your PIN is better protected, repeated wrong vault attempts add a wait, and choosing a note for the widget goes through the lock.",
+  "whatsNewSelectionTitle": "Precise selection",
+  "whatsNewSelectionDesc": "Selection handles follow your finger along the line, with a light haptic tick and a lens showing the selected text.",
+  "whatsNewFasterStartTitle": "Faster start",
+  "whatsNewFasterStartDesc": "Home appears without waiting for Google Drive or notifications, and tapping a reminder while the app is closed opens its note."
 }

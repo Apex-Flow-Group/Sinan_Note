@@ -6,7 +6,7 @@ All notable changes are documented here. Format based on [Keep a Changelog](http
 
 ## [3.2.4+3412] — 2026-10 | Clean Rebuild: Reliable Saving, Arabic Editing & Security
 
-A ground-up rebuild of the app's internals: one layered architecture, one writer per table, every rule enforced by tests. Net result since 3.2.4+3409: **+21,453 / −26,171 lines** across 417 files — the app is smaller, lighter and noticeably faster.
+A ground-up rebuild of the app's internals: one layered architecture, one writer per table, every rule enforced by tests. Net result since 3.2.4+3409: **+22,607 / −26,504 lines** across 430 files — the app is smaller, lighter and noticeably faster.
 
 ### ⚠️ Upgrade Notes
 
@@ -22,7 +22,13 @@ A ground-up rebuild of the app's internals: one layered architecture, one writer
 **Android-style cursor**
 - The cursor handle (tear) is now drawn like Android's: a circle with a sharp tip that touches the bottom of the caret, growing from the tip when it appears.
 - Dragging the handle moves the caret only — the page no longer scrolls with it. The finger-to-caret offset is fixed at grab time, so the caret follows the finger exactly wherever the 48×48 touch target is grabbed.
+- The handle's touch target starts at the bottom of the caret and never covers the text line, so a double tap on a word still selects it while the handle is shown.
 - Swiping on the keyboard's space bar (and the left/right arrow keys) now moves the caret visually, following the direction of the caret's line — in an Arabic line, right moves right.
+
+**Precise text selection**
+- Dragging a selection handle keeps the selection on its line and moves it with the finger. It used to jump to the next line and back: the finger rests on the handle below the text, and that point was read as the target.
+- A stronger haptic tick when a handle is grabbed, then one light tick for each new position.
+- The magnifier shows the selected text line above it — the same lens as the cursor handle — instead of the area under the finger.
 
 **Arabic diacritics (tashkeel) stay in place**
 - Backspace removes the last mark first (e.g. fatha, then shadda), then the letter — on both the software keyboard and hardware keys.
@@ -75,6 +81,9 @@ A ground-up rebuild of the app's internals: one layered architecture, one writer
 - The reminder badge on cards was English-only and showed a broken character between date and time; it follows the app's language.
 - Catalogs open below the catalogs button; the drawer shows tab items only in the desktop layout, with one highlight.
 
+**Reminders**
+- Tapping a reminder while the app is closed now opens its note, after the app lock (the launch notification was never read).
+
 **Sync, backup, history**
 - Sync identity is a stable uuid per note; deletions are tracked by uuid; a failed download is never read as "no notes".
 - Version history crashed when sorting ("Cannot modify an unmodifiable list").
@@ -87,6 +96,13 @@ A ground-up rebuild of the app's internals: one layered architecture, one writer
 
 ### ⚡ Performance
 
+**Faster start**
+- The loading screen waits only for the settings and the app lock. Restoring the Google Drive session (then auto-sync), notifications, the home widget and the vault's housekeeping run in the background once home is shown.
+- Notification permissions are requested when a reminder is set, not on every launch.
+- The Drive session signs in once and afterwards only refreshes its token (it requested it twice on every start).
+- Startup timing is logged step by step (`⏱ startup` lines) in debug and profile builds, to measure on a device.
+
+**Lighter screens**
 - Note cards no longer parse their content on every build (preview text ~40× faster) and keep their preview across scrolling.
 - The add menu's full-screen blur is only built while the menu is open; the search field's glow animates its border only.
 - Comparing versions runs in a background isolate, trimming the common start and end first.
@@ -98,8 +114,9 @@ A ground-up rebuild of the app's internals: one layered architecture, one writer
 - **Rules enforced by tests:** views never reach services or repositories; data and domain never import UI; no hardcoded colours, font sizes or user strings; text direction is derived, never stored; no global mutable state. Zero violations, and any new one fails the build.
 - **Dependency injection:** every service, repository and view model is created once in `main.dart` and provided; no singletons remain.
 - **Text direction** is derived from each line's text at render time (no more stored `direction` attributes).
-- **Quill fork:** small, documented hooks instead of app-side patches — `textDirectionResolver`, `backspaceResolver`, `caretResolver`, and visual left/right caret movement.
-- **CI quality gate** on every push and pull request: generated translations, `dart format`, `flutter analyze`, all tests (495).
+- **Quill fork:** small, documented hooks instead of app-side patches — `textDirectionResolver`, `backspaceResolver`, `caretResolver`, visual left/right caret movement, and a selection magnifier that receives the dragged edge's line (`magnifierLineNotifier`).
+- **Providers:** repositories are wired only in `main.dart`, never through the widget tree. A test rejects a listenable object in a plain `Provider` (the debug-only check that stopped debug builds at start).
+- **CI quality gate** on every push and pull request: generated translations, `dart format`, `flutter analyze`, all tests (519).
 - 16 unreachable files deleted; `GeneratedPluginRegistrant.java` is no longer tracked; Android `targetSdk` 36.
 
 ---
