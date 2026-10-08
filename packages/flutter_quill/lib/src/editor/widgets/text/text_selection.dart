@@ -461,8 +461,10 @@ class _TextSelectionHandleOverlay extends StatefulWidget {
 class _TextSelectionHandleOverlayState
     extends State<_TextSelectionHandleOverlay>
     with SingleTickerProviderStateMixin {
-  // ignore: unused_field
-  late Offset _dragPosition;
+  /// Finger minus the middle of the handle's line, fixed when the drag
+  /// starts. The finger rests on the handle below the text; resolving the
+  /// raw finger position would land on the next line.
+  Offset _grab = Offset.zero;
 
   late AnimationController _controller;
 
@@ -508,8 +510,15 @@ class _TextSelectionHandleOverlayState
         ? widget.selection.base
         : widget.selection.extent;
     final lineHeight = widget.renderObject.preferredLineHeight(textPosition);
-    final handleSize = widget.selectionControls.getHandleSize(lineHeight);
-    _dragPosition = details.globalPosition + Offset(0, -handleSize.height);
+    // The handle sits at this endpoint (bottom of its line), see paint().
+    final endpoints =
+        widget.renderObject.getEndpointsForSelection(widget.selection);
+    final point = widget.position == _TextSelectionHandlePosition.start
+        ? endpoints.first.point
+        : endpoints.last.point;
+    final lineMiddle =
+        widget.renderObject.localToGlobal(point.translate(0, -lineHeight / 2));
+    _grab = details.globalPosition - lineMiddle;
   }
 
   void _handleDragEnd(DragEndDetails details) {
@@ -519,9 +528,8 @@ class _TextSelectionHandleOverlayState
 
   void _handleDragUpdate(DragUpdateDetails details) {
     widget.dragOffsetNotifier?.value = details.globalPosition;
-    _dragPosition += details.delta;
-    final position =
-        widget.renderObject.getPositionForOffset(details.globalPosition);
+    final position = widget.renderObject
+        .getPositionForOffset(details.globalPosition - _grab);
     if (widget.selection.isCollapsed) {
       widget.onSelectionHandleChanged(TextSelection.fromPosition(position));
       return;
