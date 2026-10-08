@@ -148,8 +148,6 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider.value(value: notes),
-        Provider.value(value: vault),
         ChangeNotifierProvider(
             create: (_) => SettingsProvider(lock: lock, security: security)),
         ChangeNotifierProvider(
@@ -180,7 +178,8 @@ void main() async {
         Provider(create: (_) => UnifiedNotificationService()),
         Provider(create: (_) => NotePreviews()),
       ],
-      child: ApexNoteApp(notifications: notifications, widgets: homeWidgets),
+      child: ApexNoteApp(
+          notes: notes, notifications: notifications, widgets: homeWidgets),
     ),
   );
 }
@@ -188,9 +187,14 @@ void main() async {
 class ApexNoteApp extends StatefulWidget {
   const ApexNoteApp({
     super.key,
+    required this.notes,
     required this.notifications,
     required this.widgets,
   });
+
+  /// للشاشات التي تُنشئ ViewModel خاصاً بها (سجل النسخ). المستودعات لا تمر
+  /// عبر شجرة الويدجت.
+  final NotesRepository notes;
 
   /// مصادر النوايا الخارجية: لمس تذكير، ولمس ويدجت.
   final NotificationService notifications;
@@ -524,8 +528,8 @@ class _ApexNoteAppState extends State<ApexNoteApp> with WidgetsBindingObserver {
                 '/widget_selection': (context) => const WidgetSelectionScreen(),
                 '/drive': (context) => const GoogleDriveScreenResponsive(),
                 '/history': (context) => ChangeNotifierProvider(
-                      create: (_) => VersionHistoryController(
-                          notes: context.read<NotesRepository>()),
+                      create: (_) =>
+                          VersionHistoryController(notes: widget.notes),
                       child: const VersionHistoryScreen(),
                     ),
               },
