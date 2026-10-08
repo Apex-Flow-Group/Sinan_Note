@@ -27,6 +27,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   late final AppLock _lock = context.read<AppLock>();
+  late final AppStartup _startup = context.read<AppStartup>();
 
   String _statusMessage = '';
   double _progress = 0.0;
@@ -34,8 +35,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Set navigator key immediately
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initApp());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startup.trace.mark('first frame');
+      _initApp();
+    });
   }
 
   void _updateStatus(String message, double progress) {
@@ -51,30 +54,16 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
 
+    // ما يسبق الرئيسية: الإعدادات، ثم القفل. كل ما عداه في الخلفية بعدها.
     try {
-      // Step 2: Background services (60%)
-      _updateStatus(l10n.splashLoadingServices, 0.6);
-      await _initBackgroundServices();
-
-      // Step 3: Wait for settings (80%)
-      _updateStatus(l10n.splashLoadingSettings, 0.8);
-      if (!mounted) return;
+      _updateStatus(l10n.splashLoadingSettings, 0.5);
       final settings = Provider.of<SettingsProvider>(context, listen: false);
-      while (!settings.isInitialized) {
-        await Future.delayed(const Duration(milliseconds: 50));
-        if (!mounted) return;
-      }
-
-      // جلسة Google السابقة، ثم مزامنة في الخلفية إن كانت التلقائية مفعّلة.
-      // المستودعات تُخطر الشاشات بما تغيّر.
       final sync = context.read<SyncViewModel>();
-      await sync.restoreSession();
-      unawaited(sync.syncIfEnabled());
-
+      await settings.ready;
+      _startup.trace.mark('settings');
       if (!mounted) return;
 
-      // Step 4: Authentication check (90%)
-      _updateStatus(l10n.splashSecurityCheck, 0.9);
+      _updateStatus(l10n.splashSecurityCheck, 0.8);
       AppLogger.debug(
           '[Splash] isAppLockEnabled: ${settings.isAppLockEnabled}');
       if (settings.isAppLockEnabled) {
@@ -121,6 +110,7 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
       AppLogger.debug('[Splash] Security check passed');
+      _startup.trace.mark('lock');
 
       if (!mounted) return;
 
@@ -147,11 +137,18 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       );
 
-      // فحص التحديثات في الخلفية بعد التشغيل
-      final startup = context.read<AppStartup>();
+      _startup.trace.mark('home shown');
+
+      // في الخلفية بعد ظهور الرئيسية. جلسة Google لا تُنتظر: حالة الحساب
+      // تتحدث حين تكتمل، ثم المزامنة التلقائية إن كانت مفعّلة.
+      unawaited(_startup.initServices());
+      unawaited(_startup.trace.background('drive session, sync', () async {
+        await sync.restoreSession();
+        await sync.syncIfEnabled();
+      }));
       unawaited(Future.delayed(
         const Duration(seconds: 3),
-        startup.checkForUpdate,
+        _startup.checkForUpdate,
       ));
 
       // تشويق النسخة النهائية
@@ -161,9 +158,6 @@ class _SplashScreenState extends State<SplashScreen> {
       _updateStatus(l10n.splashError, 0.0);
     }
   }
-
-  Future<void> _initBackgroundServices() =>
-      context.read<AppStartup>().initServices();
 
   Future<void> _checkAndShowWhatsNew() async {
     final prefs = await SharedPreferences.getInstance();

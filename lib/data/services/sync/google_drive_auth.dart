@@ -22,6 +22,13 @@ class GoogleDriveAuth {
   String? get currentUserEmail => currentUser?.email;
 
   bool _initialized = false;
+  Future<void>? _restoring;
+
+  /// أول مرة: تسجيل دخول صامت. بعدها (العودة من الخلفية): تحديث الرمز
+  /// فقط. الطلبات المتزامنة طلب واحد. لا يُنتظر عند بدء التشغيل.
+  Future<void> restoreSession() => _restoring ??=
+      (_initialized ? refreshSessionIfNeeded() : initializeSignIn())
+          .whenComplete(() => _restoring = null);
 
   Future<void> initializeSignIn() async {
     if (_initialized) return;

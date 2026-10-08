@@ -129,6 +129,36 @@ void main() {
       expect(vault.open(sealed), 'secret');
     });
 
+    test('start-up housekeeping removes a leftover raw key, once', () async {
+      await vault.setUp('Pass123!');
+      final store = VaultKeyStore();
+      // إصدار سابق: المفتاح الخام محفوظ والبصمة غير مفعّلة
+      await store.writeBiometricKey(Uint8List.fromList(List.filled(32, 7)));
+
+      final first = vault.initialize();
+      expect(identical(vault.initialize(), first), isTrue,
+          reason: 'one run per launch');
+      await first;
+      expect(await store.biometricKey(), isNull);
+    });
+
+    test('enabling biometrics during housekeeping keeps the new key', () async {
+      // التنظيف يقرأ "البصمة غير مفعّلة" ثم يتأخر؛ تفعيلها يقع في هذه
+      // اللحظة. بلا انتظار، يحذف التنظيف المفتاح الذي كُتب للتو.
+      final slow = VaultRepository(store: _SlowFlagStore());
+      addTearDown(slow.dispose);
+      await slow.setUp('Pass123!');
+
+      final housekeeping = slow.initialize();
+      await slow.setBiometricEnabled(true);
+      await housekeeping;
+
+      final store = VaultKeyStore();
+      expect(await store.biometricEnabled(), isTrue);
+      expect(await store.biometricKey(), isNotNull,
+          reason: 'the key written while housekeeping ran survives');
+    });
+
     test('the raw key is stored only while biometrics are enabled', () async {
       await vault.setUp('Pass123!');
       final store = VaultKeyStore();
@@ -296,4 +326,14 @@ void main() {
       vault.dispose();
     });
   });
+}
+
+/// يتأخر بعد قراءة علامة البصمة، كما قد يحدث على الجهاز.
+class _SlowFlagStore extends VaultKeyStore {
+  @override
+  Future<bool> biometricEnabled() async {
+    final enabled = await super.biometricEnabled();
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    return enabled;
+  }
 }

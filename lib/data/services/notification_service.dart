@@ -15,7 +15,18 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
-  Future<void> initialize() async {
+  Future<void>? _ready;
+
+  /// مرة واحدة: المناطق الزمنية، والمكتبة، والقناة، والتذكير الذي فتح التطبيق.
+  /// لا ينتظرها بدء التشغيل؛ الجدولة والإلغاء ينتظرانها. الأذونات لا تُطلب
+  /// هنا بل عند ضبط تذكير.
+  Future<void> initialize() =>
+      _ready ??= _initialize().onError<Object>((error, stack) {
+        _ready = null; // فشل عابر: يُعاد في الطلب التالي
+        Error.throwWithStackTrace(error, stack);
+      });
+
+  Future<void> _initialize() async {
     // تهيئة المناطق الزمنية
     tz.initializeTimeZones();
 
@@ -39,9 +50,10 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    // طلب الأذونات للإشعارات والتنبيهات الدقيقة
-    if (Platform.isAndroid) {
-      await requestNotificationPermissions();
+    // التطبيق كان مغلقاً وفُتح من تذكير: الاستجابة لا تمر بالـ callback
+    final launch = await _notifications.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp ?? false) {
+      receivePayload(launch!.notificationResponse?.payload);
     }
 
     // إنشاء قناة الإشعارات بأعلى أولوية
@@ -145,6 +157,7 @@ class NotificationService {
     String? payload,
   }) async {
     if (!isSupported) return;
+    await initialize();
     // Verify permissions before scheduling
     if (Platform.isAndroid) {
       final hasNotificationPerm = await checkNotificationPermission();
@@ -242,6 +255,7 @@ class NotificationService {
 
   Future<void> cancelNotification(int id) async {
     if (!isSupported) return;
+    await initialize();
     try {
       await _notifications.cancel(id: id);
     } catch (e) {
@@ -250,12 +264,33 @@ class NotificationService {
     }
   }
 
-  /// ما يحدث عند لمس تذكير ملاحظة (يعيّنه التطبيق؛ يمر بقفل التطبيق، ولا
-  /// يفتح ملاحظة مقفلة).
-  void Function(int noteId)? onNoteTapped;
+  void Function(int noteId)? _onNoteTapped;
+  int? _pendingTap;
 
-  void _onNotificationTapped(NotificationResponse response) {
-    final noteId = int.tryParse(response.payload ?? '');
-    if (noteId != null) onNoteTapped?.call(noteId);
+  /// ما يحدث عند لمس تذكير ملاحظة (يعيّنه التطبيق؛ يمر بقفل التطبيق، ولا
+  /// يفتح ملاحظة مقفلة). لمسة وصلت قبل تعيينه تُسلَّم عند تعيينه.
+  void Function(int noteId)? get onNoteTapped => _onNoteTapped;
+  set onNoteTapped(void Function(int noteId)? callback) {
+    _onNoteTapped = callback;
+    final pending = _pendingTap;
+    if (callback != null && pending != null) {
+      _pendingTap = null;
+      callback(pending);
+    }
   }
+
+  /// حمولة تذكير لُمس (رقم الملاحظة).
+  void receivePayload(String? payload) {
+    final noteId = int.tryParse(payload ?? '');
+    if (noteId == null) return;
+    final callback = _onNoteTapped;
+    if (callback == null) {
+      _pendingTap = noteId;
+    } else {
+      callback(noteId);
+    }
+  }
+
+  void _onNotificationTapped(NotificationResponse response) =>
+      receivePayload(response.payload);
 }

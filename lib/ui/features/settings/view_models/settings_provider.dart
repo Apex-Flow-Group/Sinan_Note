@@ -84,19 +84,12 @@ class SettingsProvider with ChangeNotifier {
     required SecurityController security,
   })  : _lock = lock,
         _security = security {
-    Future.microtask(
-      () => _loadSettings().catchError((e) {
-        AppLogger.debug('Error loading settings: $e');
-        _isInitialized = true;
-        notifyListeners();
-      }),
-    );
+    ready = Future.microtask(_loadSettings);
   }
 
-  Future<void> ensureInitialized() async {
-    if (_isInitialized) return;
-    await _loadSettings();
-  }
+  /// يكتمل حين تُقرأ الإعدادات (ولو فشلت القراءة: القيم الافتراضية). من
+  /// يحتاجها قبل المتابعة ينتظره، لا يفحص [isInitialized] بحلقة.
+  late final Future<void> ready;
 
   // ── SharedPreferences helper ──────────────────────────────────────────────
 

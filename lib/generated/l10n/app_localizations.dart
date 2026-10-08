@@ -4532,12 +4532,6 @@ abstract class AppLocalizations {
   /// **'Loading...'**
   String get splashLoading;
 
-  /// No description provided for @splashLoadingServices.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading services...'**
-  String get splashLoadingServices;
-
   /// No description provided for @splashLoadingSettings.
   ///
   /// In en, this message translates to:

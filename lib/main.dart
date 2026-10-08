@@ -35,6 +35,7 @@ import 'package:sinan_note/data/services/sync_scheduler.dart';
 import 'package:sinan_note/data/services/widget_service.dart';
 import 'package:sinan_note/domain/models/note.dart';
 import 'package:sinan_note/domain/models/note_mode.dart';
+import 'package:sinan_note/domain/startup_trace.dart';
 import 'package:sinan_note/generated/l10n/app_localizations.dart';
 import 'package:sinan_note/ui/core/input/paste_handler.dart';
 import 'package:sinan_note/ui/core/keyboard/editor_command_bus.dart';
@@ -77,6 +78,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
+  final trace = StartupTrace();
   WidgetsFlutterBinding.ensureInitialized();
 
   // 🖥️ Desktop: initialize sqflite FFI
@@ -96,6 +98,7 @@ void main() async {
 
   // ── نقطة التركيب: البيانات تُنشأ مرة واحدة وتُحقن ─────────────────────
   final database = await AppDatabase.open();
+  trace.mark('database');
   final store = PreferencesStore();
   final tombstones = TombstoneStore(store);
   final errorLog = ErrorLog((await getApplicationDocumentsDirectory()).path);
@@ -111,7 +114,8 @@ void main() async {
   final notifications = NotificationService();
   final homeWidgets = WidgetService();
   final vault = VaultRepository();
-  await vault.initialize();
+  // تنظيف مواد الإصدارات السابقة: في الخلفية، تغيير البصمة ينتظره
+  unawaited(vault.initialize());
   final notes = NotesRepository(
     db: database,
     vault: vault,
@@ -135,9 +139,10 @@ void main() async {
     store: store,
   );
   await sync.initialize();
+  trace.mark('repositories');
   SyncScheduler(
       sync: sync, localWrites: [notes.localWrites, categories.localWrites]);
-  unawaited(LegacyCleanup.run());
+  unawaited(trace.background('legacy cleanup', LegacyCleanup.run));
   // خارج شجرة الويدجت (ويدجت الشاشة الرئيسية، نافذة البصمة) بلغة التطبيق
   AppStrings.configure(() {
     final context = navigatorKey.currentContext;
@@ -145,6 +150,7 @@ void main() async {
         AppStrings.deviceLanguage();
   });
 
+  trace.mark('runApp');
   runApp(
     MultiProvider(
       providers: [
@@ -162,8 +168,10 @@ void main() async {
         Provider(create: (_) => HomeWidgets(homeWidgets)),
         Provider(create: (_) => Diagnostics(errorLog)),
         Provider(
-            create: (_) =>
-                AppStartup(notifications: notifications, widgets: homeWidgets)),
+            create: (_) => AppStartup(
+                notifications: notifications,
+                widgets: homeWidgets,
+                trace: trace)),
         Provider(create: (_) => CodeTools()),
         Provider(create: (_) => ApexShare()),
         Provider(

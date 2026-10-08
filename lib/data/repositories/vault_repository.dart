@@ -33,9 +33,14 @@ class VaultRepository extends ChangeNotifier {
 
   bool get isUnlocked => _key != null;
 
+  Future<void>? _housekeeping;
+
   /// يحذف مواد إصدارات سابقة: المفتاح الخام كان يُحفظ دائماً، وأصبح يُحفظ
-  /// فقط والبصمة مفعّلة.
-  Future<void> initialize() async {
+  /// فقط والبصمة مفعّلة. مرة واحدة، في الخلفية: بدء التشغيل لا ينتظره،
+  /// وتغيير البصمة ينتظره فلا يُحذف مفتاح كُتب للتو.
+  Future<void> initialize() => _housekeeping ??= _cleanUp();
+
+  Future<void> _cleanUp() async {
     await _store.deleteObsolete();
     if (!await _store.biometricEnabled()) await _store.deleteBiometricKey();
   }
@@ -158,6 +163,7 @@ class VaultRepository extends ChangeNotifier {
   Future<bool> isBiometricEnabled() => _store.biometricEnabled();
 
   Future<void> setBiometricEnabled(bool enabled) async {
+    await initialize();
     if (enabled) {
       await _store.writeBiometricKey(_requireKey());
     } else {

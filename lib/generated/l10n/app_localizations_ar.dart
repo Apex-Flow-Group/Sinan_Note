@@ -2318,9 +2318,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get splashLoading => 'جاري التحميل...';
 
   @override
-  String get splashLoadingServices => 'تحميل الخدمات...';
-
-  @override
   String get splashLoadingSettings => 'تحميل الإعدادات...';
 
   @override

@@ -2327,9 +2327,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splashLoading => 'Loading...';
 
   @override
-  String get splashLoadingServices => 'Loading services...';
-
-  @override
   String get splashLoadingSettings => 'Loading settings...';
 
   @override

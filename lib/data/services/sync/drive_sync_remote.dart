@@ -59,10 +59,7 @@ class DriveSyncRemote implements SyncRemote {
   String? get accountEmail => _auth.currentUserEmail;
 
   @override
-  Future<void> restoreSession() async {
-    await _auth.initializeSignIn();
-    await _auth.refreshSessionIfNeeded();
-  }
+  Future<void> restoreSession() => _auth.restoreSession();
 
   @override
   Future<bool> signIn() => _auth.signIn();

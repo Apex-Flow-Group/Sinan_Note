@@ -11,8 +11,9 @@ abstract final class LegacyCleanup {
   static Future<void> run() async {
     try {
       // نسخ القاعدة قبل "إعادة تعيين الخزنة": مشفّرة بمفتاح لم يعد موجوداً
+      // قائمة غير متزامنة: لا توقف الواجهة أثناء بدء التشغيل
       final dir = await getApplicationDocumentsDirectory();
-      for (final entity in dir.listSync()) {
+      await for (final entity in dir.list()) {
         if (entity is File &&
             p.basename(entity.path).startsWith('vault_reset_backup_')) {
           await entity.delete();
