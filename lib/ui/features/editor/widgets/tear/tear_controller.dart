@@ -367,10 +367,11 @@ class _TearWidgetState extends State<_TearWidget>
                 lineBottom: v.lineBottom,
                 bgColor: widget.bgColor,
               ),
-            // مربع لمس 48×48 حول الدمعة (حجم أندرويد)، رأسها على أسفل المؤشر
+            // مربع لمس 48×48 (حجم أندرويد) يبدأ من أسفل المؤشر ولا يعلوه:
+            // السطر نفسه للنص، فالضغط المزدوج على الكلمة يصلها
             Positioned(
               left: v.pos.dx - _kHit / 2,
-              top: v.pos.dy + TearPainter.size.height / 2 - _kHit / 2,
+              top: v.pos.dy,
               child: child!,
             ),
           ],
@@ -383,7 +384,9 @@ class _TearWidgetState extends State<_TearWidget>
           child: SizedBox(
             width: _kHit,
             height: _kHit,
-            child: Center(
+            // رأس الدمعة على أعلى المربع = أسفل المؤشر
+            child: Align(
+              alignment: Alignment.topCenter,
               child: ScaleTransition(
                 scale: _scale,
                 alignment: Alignment.topCenter,

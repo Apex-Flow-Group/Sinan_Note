@@ -1,7 +1,10 @@
 // Copyright © 2025 Apex Flow Group. All rights reserved.
 
-// سحب الدمعة يحرّك المؤشر وحده: الصفحة تحتها لا تتمرر، أينما بدأت اللمسة
-// في مربع اللمس، والمؤشر يتبع حركة الإصبع بالمقدار نفسه بلا قفزة.
+// الدمعة تحت المؤشر:
+// - سحبها يحرّك المؤشر وحده: الصفحة لا تتمرر، والمؤشر يتبع حركة الإصبع
+//   بالمقدار نفسه بلا قفزة.
+// - منطقة لمسها تبدأ من أسفل السطر: لا تغطي النص، فالضغط المزدوج على الكلمة
+//   يحددها والدمعة ظاهرة.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -14,11 +17,16 @@ final _lines = List.generate(80, (i) => 'line $i').join('\n');
 /// السطر الذي فيه [offset].
 int _lineOf(int offset) => '\n'.allMatches(_lines.substring(0, offset)).length;
 
+typedef _Opened = ({
+  QuillController controller,
+  ScrollController scroll,
+  TearController tear,
+  Finder drawn,
+});
+
 void main() {
-  /// يفتح ملاحظة طويلة والمؤشر في السطر العاشر والدمعة ظاهرة، ثم يسحب من
-  /// [grabAt] (موضع داخل الدمعة المرسومة) بمقدار [by].
-  Future<({double scrolled, int line})> drag(WidgetTester tester,
-      {required Offset Function(Rect tear) grabAt, required Offset by}) async {
+  /// ملاحظة طويلة، المؤشر في السطر العاشر، والدمعة ظاهرة.
+  Future<_Opened> open(WidgetTester tester) async {
     final caret = _lines.indexOf('line 10') + 2;
     final controller = QuillController(
       document: Document.fromDelta(Delta()..insert('$_lines\n')),
@@ -58,15 +66,20 @@ void main() {
     final drawn = find
         .byWidgetPredicate((w) => w is CustomPaint && w.painter is TearPainter);
     expect(drawn, findsOneWidget);
+    return (controller: controller, scroll: scroll, tear: tear, drawn: drawn);
+  }
 
+  /// يسحب من [grabAt] (موضع بالنسبة للدمعة المرسومة) بمقدار [by].
+  Future<({double scrolled, int line})> drag(WidgetTester tester,
+      {required Offset Function(Rect tear) grabAt, required Offset by}) async {
+    final o = await open(tester);
     await tester.timedDragFrom(
-        grabAt(tester.getRect(drawn)), by, const Duration(milliseconds: 400));
+        grabAt(tester.getRect(o.drawn)), by, const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
-    tear.dispose(); // يلغي مؤقت الإخفاء قبل نهاية الاختبار
-
+    o.tear.dispose(); // يلغي مؤقت الإخفاء قبل نهاية الاختبار
     return (
-      scrolled: scroll.offset,
-      line: _lineOf(controller.selection.baseOffset),
+      scrolled: o.scroll.offset,
+      line: _lineOf(o.controller.selection.baseOffset),
     );
   }
 
@@ -87,7 +100,6 @@ void main() {
   final grabs = <String, Offset Function(Rect)>{
     'tear centre': (t) => t.center,
     'below the tear': (t) => Offset(t.center.dx, t.bottom + 6),
-    'above the tear': (t) => Offset(t.center.dx, t.top - 6),
   };
   for (final MapEntry(key: where, value: grabAt) in grabs.entries) {
     testWidgets('three lines up from the $where lands three lines up',
@@ -97,4 +109,21 @@ void main() {
       expect(r.line, 7);
     });
   }
+
+  testWidgets('a double tap on the word above the tear selects it',
+      (tester) async {
+    final o = await open(tester);
+    // أسفل سطر النص مباشرة فوق رأس الدمعة: نص، لا دمعة
+    final tip = tester.getRect(o.drawn).topCenter;
+    final onText = tip.translate(0, -4);
+    await tester.tapAt(onText);
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.tapAt(onText);
+    await tester.pumpAndSettle();
+
+    expect(o.controller.selection.isCollapsed, isFalse,
+        reason: 'the double tap reached the text and selected the word');
+    expect(_lineOf(o.controller.selection.start), 10);
+    o.tear.dispose();
+  });
 }
